@@ -1,0 +1,16 @@
+{
+  "name": "pear2",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "./boot.js",
+  "dependencies": {
+    "bare-bundle": "^1.0.0",
+    "bare-fs": "^2.1.1",
+    "bare-module": "^3.1.0",
+    "dependency-stream": "^2.0.0",
+    "drive-bundler": "^1.0.0",
+    "hyperswarm": "^4.7.13",
+    "localdrive": "^1.11.3",
+    "minimist": "^1.2.8"
+  }
+}
