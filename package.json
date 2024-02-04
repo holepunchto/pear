@@ -1,6 +1,5 @@
 {
   "name": "pear2",
-  "type": "module",
   "version": "1.0.0",
   "main": "./boot.js",
   "dependencies": {
