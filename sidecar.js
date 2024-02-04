@@ -1,6 +1,6 @@
 const Localdrive = require('localdrive')
 const subsystem  = require('./lib/subsystem.js')
-const { ROOT } = require('./lib/constants')
+const { SWAP } = require('./lib/constants')
 
 bootSidecar()
 
@@ -17,7 +17,7 @@ async function bootSidecar () {
 }
 
 function createPlatformDrive () {
-  const drive = new Localdrive(ROOT)
+  const drive = new Localdrive(SWAP)
   return drive
 }
 
