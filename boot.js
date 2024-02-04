@@ -14,13 +14,18 @@ if (global.Bare) { // tmp hack to enable bare:addon support
 }
 
 const BOOT_SIDECAR = 1
-const BOOT_CLI = 2
-const BOOT_ELECTRON = 3
-const BOOT_ELECTRON_PRELOAD = 4
+const BOOT_TERMINAL = 2
+const BOOT_CLI = 3
+const BOOT_ELECTRON = 4
+const BOOT_ELECTRON_PRELOAD = 5
 
 switch (getBootType()) {
   case BOOT_SIDECAR: {
     require('./sidecar.js')
+    break
+  }
+  case BOOT_TERMINAL: {
+    require('./terminal.js')
     break
   }
   case BOOT_CLI: {
@@ -41,8 +46,11 @@ function getBootType () {
   if (global.process && global.process.versions.electron) {
     return (global.process.type === 'renderer' || global.process.type === 'worker') ? BOOT_ELECTRON_PRELOAD : BOOT_ELECTRON
   }
-  if (global.Bare.argv.indexOf('--sidecar') > -1) {
+  if (global.Bare.argv.includes('--boot-sidecar')) {
     return BOOT_SIDECAR
+  }
+  if (global.Bare.argv.includes('--boot-terminal')) {
+    return BOOT_TERMINAL
   }
   return BOOT_CLI
 }
