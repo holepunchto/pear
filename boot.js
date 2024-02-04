@@ -13,11 +13,36 @@ if (global.Bare) { // tmp hack to enable bare:addon support
   }
 }
 
-// quick sniff is this is actually the cli for mega fast cli bool
-if (global.process) {
-  require('./electron.js')
-} else if (global.Bare.argv.indexOf('--sidecar') > -1) {
-  require('./sidecar.js')
-} else {
-  require('./cli.js')
+const BOOT_SIDECAR = 1
+const BOOT_CLI = 2
+const BOOT_ELECTRON = 3
+const BOOT_ELECTRON_PRELOAD = 4
+
+switch (getBootType()) {
+  case BOOT_SIDECAR: {
+    require('./sidecar.js')
+    break
+  }
+  case BOOT_CLI: {
+    require('./cli.js')
+    break
+  }
+  case BOOT_ELECTRON: {
+    require('./electron.js')
+    break
+  }
+  case BOOT_ELECTRON_PRELOAD: {
+    require('./preload.js')
+    break
+  }
+}
+
+function getBootType () {
+  if (global.process && global.process.versions.electron) {
+    return (global.process.type === 'renderer' || global.process.type === 'worker') ? BOOT_ELECTRON_PRELOAD : BOOT_ELECTRON
+  }
+  if (global.Bare.argv.indexOf('--sidecar') > -1) {
+    return BOOT_SIDECAR
+  }
+  return BOOT_CLI
 }

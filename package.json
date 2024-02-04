@@ -2,6 +2,10 @@
   "name": "pear2",
   "version": "1.0.0",
   "main": "./boot.js",
+  "subsystems": [
+    "./lib/updater.js",
+    "./lib/engine.js"
+  ],
   "dependencies": {
     "bare-bundle": "^1.0.0",
     "bare-fs": "^2.1.1",
