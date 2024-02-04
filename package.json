@@ -11,10 +11,14 @@
     "bare-fs": "^2.1.1",
     "bare-module": "^3.1.0",
     "bare-pipe": "^2.0.0",
+    "bare-subprocess": "^2.0.2",
     "dependency-stream": "^2.0.0",
     "drive-bundler": "^1.0.0",
+    "framed-stream": "^1.0.1",
     "hyperswarm": "^4.7.13",
+    "jsonrpc-mux": "^1.1.0",
     "localdrive": "^1.11.3",
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "protomux": "^3.5.1"
   }
 }
