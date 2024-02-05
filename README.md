@@ -5,19 +5,7 @@
 ### Install:
 
 ```sh
-npm install -g @holepunchto/pear
-```
-
-### Bootstrap
-
-```sh
-pear
-```
-
-First run will ask to bootstrap. There is also the bootstrap command:
-
-```sh
-pear bootstrap
+npm install -g pear
 ```
 
 ### Help
@@ -69,7 +57,6 @@ git clone https://github.com/holepunchto/pear && cd pear
 ```
 npm install
 ```
-
 
 The `pear.js` file in the project root provides localdev setup:
 

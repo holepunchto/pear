@@ -25,5 +25,6 @@
     "minimist": "^1.2.8",
     "protomux": "^3.5.1",
     "tiny-byte-size": "^1.1.0"
-  }
+  },
+  "license": "Apache-2.0"
 }
