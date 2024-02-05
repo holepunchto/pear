@@ -46,7 +46,7 @@ function getBootType () {
   if (global.process && global.process.versions.electron) {
     return (global.process.type === 'renderer' || global.process.type === 'worker') ? BOOT_ELECTRON_PRELOAD : BOOT_ELECTRON
   }
-  if (global.Bare.argv.includes('--boot-sidecar')) {
+  if (global.Bare.argv.includes('--sidecar')) {
     return BOOT_SIDECAR
   }
   if (global.Bare.argv.includes('--boot-terminal')) {
