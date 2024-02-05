@@ -1,19 +1,3 @@
-if (global.Bare) { // tmp hack to enable bare:addon support
-  const resolve = global.Bare.Addon.resolve
-  global.Bare.Addon.resolve = function (specifier, parent, opts) {
-    const res = global.Bare.Addon.currentResolutions || opts.referrer.resolutions
-    let dir = new URL(specifier, parent)
-    dir = new URL(dir.href.replace(':////', '://')) // tmp fix for url bug
-    const r = res && (res[dir.href.replace(/\/$/, '')] || res[decodeURI(dir.pathname).replace(/\/$/, '')])
-
-    if (r && r['bare:addon']) {
-      return new URL(r['bare:addon'])
-    }
-
-    return resolve.call(global.Bare.Addon, specifier, parent, opts)
-  }
-}
-
 const BOOT_SIDECAR = 1
 const BOOT_TERMINAL = 2
 const BOOT_CLI = 3
