@@ -3,7 +3,7 @@ if (global.Bare) { // tmp hack to enable bare:addon support
   global.Bare.Addon.resolve = function (specifier, parent, opts) {
     const res = global.Bare.Addon.currentResolutions || opts.referrer.resolutions
     const dir = new URL(specifier, parent)
-    const r = res && res[dir.href.replace(/\/$/, '')]
+    const r = res && (res[dir.href.replace(/\/$/, '')] || res[decodeURI(dir.pathname).replace(/\/$/, '')])
 
     if (r && r['bare:addon']) {
       return new URL(r['bare:addon'])
