@@ -31,5 +31,8 @@ function getBootType () {
   if (global.Bare.argv.includes('--sidecar')) {
     return BOOT_SIDECAR
   }
+  if (global.Bare.argv.includes('--terminal')) {
+    return BOOT_TERMINAL
+  }
   return BOOT_CLI
 }

@@ -1,0 +1,273 @@
+'use strict'
+const { basename } = require('bare-path')
+const { ansi, rich, print, stdio } = require('./iface')
+let usage = null
+module.exports = ({ fork, length, key }) => {
+  if (usage) return usage
+
+  const v = `${fork || 0}.${length || 'dev'}.${key}`
+
+  const version = ansi.bold(ansi.gray('v' + v))
+  let name = basename(Bare.argv[1])
+  name = name[0].toUpperCase() + name.slice(1)
+  const cmd = name.toLowerCase()
+  const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
+  const init = ansi.bold(cmd + ' init')
+  const initArgs = ansi.bold('[dir]')
+  const initBrief = 'Create initial project files.'
+  const initExplain = `${init} ${initArgs}
+
+    ${initBrief}
+    
+    --type=type     Application type: desktop (default) or terminal
+    --yes|-y        Autoselect all defaults
+  `
+  const dev = ansi.bold(cmd + ' dev')
+  const devArgs = ansi.bold('[dir]')
+  const devBrief = 'Start a project in development mode.'
+  const devExplain = `${dev} ${devArgs}
+   
+    ${devBrief}
+
+    Edit project files on disk.
+
+    --link=url       Simulate deep-link click open
+    --run=key        Run app from key in dev mode
+    --link=url       Simulate deep-link click open
+    --store|-s=path  Set the Application Storage path
+    --tmp-store|-t   Use a temporary Application Storage path
+  `
+
+  const stage = ansi.bold(cmd + ' stage')
+  const stageArgs = ansi.bold('<channel|key> [dir]')
+  const stageBrief = 'Synchronize local changes to key.'
+  const stageExplain = `${stage} ${stageArgs}
+
+    ${stageBrief}
+
+    Channel name must be specified on first stage,
+    in order to generate the initial key.
+
+    Outputs diff information and project key.
+
+    --json         Newline delimited JSON output
+    --dry-run|-d   Execute a stage without writing
+    --bare|-b      File data only, no warmup optimization
+    --ignore       Comma separated file path ignore list
+    --name         Advanced. Override app name
+  `
+  const release = ansi.bold(cmd + ' release')
+  const releaseArgs = ansi.bold('<channel|key>')
+  const releaseBrief = 'Set production release version.'
+  const releaseExplain = `${release} ${releaseArgs}
+
+    ${releaseBrief}
+
+    Set the release pointer against a version (default latest).
+
+    Use this to indicate production release points.
+    
+    --json           Newline delimited JSON output
+    --checkout=n     Set a checkout, n is version length
+  `
+
+  const info = ansi.bold(cmd + ' info')
+  const infoArgs = ansi.bold('<key>')
+  const infoBrief = 'Get metadata for a key.'
+  const infoExplain = `${info} ${infoArgs}
+
+    ${infoBrief}
+
+    --json          Newline delimited JSON output
+  `
+
+  const dump = ansi.bold(cmd + ' dump')
+  const dumpArgs = ansi.bold('<key> <dir>')
+  const dumpBrief = 'Synchronize files from key to dir.'
+  const dumpExplain = `${dump} ${dumpArgs}
+
+    ${dumpBrief}
+
+    --json          Newline delimited JSON output
+    --checkout=n    Dump from a specific checkout, n is version length
+  `
+
+  const run = ansi.bold(cmd + ' run')
+  const runArgs = ansi.bold('<key>')
+  const runBrief = 'Run an application from a key.'
+  const runExplain = `${run} ${runArgs}
+
+    ${runBrief}
+
+    --dev                      Run the app in dev mode
+    --store|-s=path            Set the Application Storage path
+    --tmp-store|-t             Automatic new tmp folder as store path
+    --checkout=n               Run a checkout, n is version length
+    --checkout=release         Run checkout from marked released length
+    --checkout=staged          Run checkout from latest version length
+  `
+
+  const seed = ansi.bold(cmd + ' seed')
+  const seedArgs = ansi.bold('<channel|key> [dir]')
+  const seedBrief = 'Seed project or reseed key.'
+  const seedExplain = `${seed} ${seedArgs}
+
+    ${seedBrief}
+
+    Specify channel or key to seed a project.
+
+    Specify a remote key to reseed.
+    
+    --json        Newline delimited JSON output
+    --seeders|-s  Additional public keys to seed from
+    --name        Advanced. Override app name
+    --verbose|-v  Additional output
+  `
+
+  const sidecar = ansi.bold(cmd + ' sidecar')
+  const sidecarBrief = 'Advanced. Run sidecar in terminal.'
+  const sidecarExplain = `${sidecar}
+
+    The ${name} Sidecar is a local-running HTTP and IPC server which
+    provides access to corestores.
+
+    This command instructs any existing sidecar process to shutdown
+    and then becomes the sidecar.
+
+    --mem              memory mode: RAM corestore
+    --attach-boot-io   include initial sidecar I/O (if applicable)
+  `
+
+  const use = ansi.bold(cmd + ' use')
+  const useArgs = ansi.bold('<key>')
+  const useBrief = 'Advanced. Switch release-line.'
+  const useExplain = `${use} ${useArgs}
+
+    Switch to a different platform release-line.
+  `
+
+  const versions = ansi.bold(cmd + ' versions')
+  const versionsBrief = 'Output version information.'
+  const versionsExplain = `${versions}
+    
+    ${versionsBrief}
+
+    --json        Single JSON object
+  `
+
+  const help = ansi.bold(cmd + ' help')
+  const helpArgs = ansi.bold('[cmd]')
+  const helpBrief = `Run ${ansi.bold('pear help')} to output full help for all commands`
+  const helpExplain = `${help} ${helpArgs} ${ansi.green(ansi.dim('~'))} ${ansi.bold(ansi.italic('pear [cmd] [--help|-h]'))}
+    ${ansi.italic(cmd + ' help dev')}, ${ansi.italic(cmd + ' run -h')}, ${ansi.italic(cmd + ' seed --help')}
+    ${helpBrief}
+  `
+
+  const url = ansi.link('https://holepunch.to')
+
+  const header = `
+  ${banner}
+  ${rich ? '🍐 ' : ''}${version}
+  `
+
+  const miniHeader = `
+  ${`${ansi.bold(name)} ~ ${ansi.dim(`«{${v}}» ${rich ? '🍐' : ''}`)}`}`
+
+  const dedot = (str) => str.slice(0, -1)
+
+  const footer = `  ${rich ? '🍐 ' : ''}${version}
+  ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
+  ${url}
+  `
+
+  usage = {
+    banner,
+    header,
+    miniHeader,
+    v,
+    url,
+    versions: versionsExplain,
+    init: initExplain,
+    dev: devExplain,
+    stage: stageExplain,
+    release: releaseExplain,
+    info: infoExplain,
+    dump: dumpExplain,
+    run: runExplain,
+    seed: seedExplain,
+    sidecar: sidecarExplain,
+    use: useExplain,
+    help: helpExplain,
+    output,
+    outputVersions,
+    outputVersionBreakdown,
+    min: `${init} ${ansi.dim(ansi.green('∞'))} ${dedot(initBrief)}
+    ${dev} ${ansi.dim(ansi.green('∞'))} ${dedot(devBrief)}
+    ${stage} ${ansi.dim(ansi.green('∞'))} ${dedot(stageBrief)}
+    ${seed} ${ansi.dim(ansi.green('∞'))} ${dedot(seedBrief)}
+    ${run} ${ansi.dim(ansi.green('∞'))} ${dedot(runBrief)}
+    ${release} ${ansi.dim(ansi.green('∞'))} ${dedot(releaseBrief)}
+    ${info} ${ansi.dim(ansi.green('∞'))} ${dedot(infoBrief)}
+    ${dump} ${ansi.dim(ansi.green('∞'))} ${dedot(dumpBrief)}
+    ${use} ${ansi.dim(ansi.green('∞'))} ${dedot(useBrief)}
+    ${sidecar} ${ansi.dim(ansi.green('∞'))} ${dedot(sidecarBrief)}
+    ${versions} ${ansi.dim(ansi.green('∞'))} ${dedot(versionsBrief)}
+
+    ${helpExplain}
+${footer}`,
+    full: `${initExplain}
+    ${devExplain}
+    ${stageExplain}
+    ${seedExplain}
+    ${runExplain}
+    ${releaseExplain}
+    ${infoExplain}
+    ${dumpExplain}
+    ${sidecarExplain}
+    ${useExplain}
+    ${versionsExplain}
+    ${helpExplain}
+${footer}`
+  }
+
+  function output (cmd = 'min', exit = true) {
+    print(usage.header)
+    if (!usage[cmd]) {
+      stdio.out.write('  ')
+      print('No help for "' + cmd + '" found\n', false)
+    } else print('    ' + usage[cmd])
+    if (exit) Bare.exit()
+  }
+
+  function outputVersionBreakdown (json) {
+    if (json) {
+      print(JSON.stringify({ key, fork, length }))
+      return
+    }
+    key += ''
+    fork += ''
+    length += ''
+    let result = 'Key' + ' '.repeat(key.length) + 'Fork' + ' '.repeat(fork.length) + 'Length' + ' '.repeat(length.length) + '\n'
+    result += key + '   ' + fork + '    ' + length
+    print(result)
+  }
+
+  function outputVersions (json) {
+    const { dependencies } = require('../package.json')
+    if (json) {
+      print(JSON.stringify({
+        pear: usage.v,
+        ...Bare.versions,
+        ...dependencies
+      }, 0, 2))
+      return
+    }
+    print(usage.banner + '\n')
+    print(`${ansi.bold(cmd)}: ${usage.v}`)
+    for (const [name, version] of Object.entries(Bare.versions)) print(`${ansi.bold(name)}: ${version}`)
+
+    for (const [name, version] of Object.entries(dependencies)) print(`${ansi.bold(name)}: ${version}`)
+  }
+
+  return usage
+}

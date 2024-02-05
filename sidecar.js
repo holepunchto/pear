@@ -1,7 +1,8 @@
+'use strict'
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
-const subsystem  = require('./lib/subsystem.js')
 const { SWAP, PLATFORM_CORESTORE } = require('./lib/constants.js')
+const subsystem = require('./lib/subsystem.js')
 
 bootSidecar().catch((err) => {
   console.error(err.stack)
@@ -9,30 +10,21 @@ bootSidecar().catch((err) => {
 })
 
 async function bootSidecar () {
-  const store = new Corestore(PLATFORM_CORESTORE)
-  await store.ready()
+  const corestore = new Corestore(PLATFORM_CORESTORE)
+  await corestore.ready()
 
-  const drive = await createPlatformDrive(store)
+  const drive = await createPlatformDrive(corestore)
 
   // always start by booting the updater - thats alfa omega
   const updater = await subsystem(drive, '/lib/updater.js')
   await updater(drive)
 
-  // and then boot the rest of the sidecar
-  const start = await subsystem(drive, '/lib/engine.js')
-  await start(drive, store)
+  const SidecarIPC = await subsystem(drive, '/ipc/sidecar.js')
+  const sidecar = new SidecarIPC({ updater, drive, corestore })
+  await sidecar.open()
 }
 
 function createPlatformDrive () {
   const drive = new Localdrive(SWAP)
   return drive
-}
-
-async function exists (filename) {
-  try {
-    await fs.promises.stat(filename)
-    return true
-  } catch {
-    return false
-  }
 }

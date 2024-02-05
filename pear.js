@@ -17,7 +17,7 @@ const isWin = process.platform === 'win32'
 if (isWin === false) {
   try {
     const peardev = path.join(__dirname, 'pear.dev')
-    fs.symlinkSync(path.join( path.join('by-arch', `${process.platform}-${process.arch}`), 'bin', 'pear-runtime'), peardev)
+    fs.symlinkSync(path.join(path.join('by-arch', `${process.platform}-${process.arch}`), 'bin', 'pear-runtime'), peardev)
     fs.chmodSync(peardev, 0o775)
   } catch (e) { /* ignore */ }
 } else {
