@@ -336,7 +336,7 @@ module.exports = class IPC {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
       console.error('DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
-      process.exit(124) // timeout
+      Bare.exit(124) // timeout
     }, ms).unref()
   }
 
