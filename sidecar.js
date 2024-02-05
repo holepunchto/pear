@@ -3,10 +3,15 @@ const Corestore = require('corestore')
 const subsystem  = require('./lib/subsystem.js')
 const { SWAP, PLATFORM_CORESTORE } = require('./lib/constants.js')
 
-bootSidecar()
+bootSidecar().catch((err) => {
+  console.error(err.stack)
+  Bare.exit(1)
+})
 
 async function bootSidecar () {
   const store = new Corestore(PLATFORM_CORESTORE)
+  await store.ready()
+
   const drive = await createPlatformDrive(store)
 
   // always start by booting the updater - thats alfa omega

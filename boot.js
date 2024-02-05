@@ -24,10 +24,6 @@ switch (getBootType()) {
     require('./sidecar.js')
     break
   }
-  case BOOT_TERMINAL: {
-    require('./terminal.js')
-    break
-  }
   case BOOT_CLI: {
     require('./cli.js')
     break
@@ -48,9 +44,6 @@ function getBootType () {
   }
   if (global.Bare.argv.includes('--sidecar')) {
     return BOOT_SIDECAR
-  }
-  if (global.Bare.argv.includes('--boot-terminal')) {
-    return BOOT_TERMINAL
   }
   return BOOT_CLI
 }
