@@ -61,7 +61,7 @@ npm install
 The `pear.js` file in the project root provides localdev setup:
 
 ```
-node pear
+node pear <KEY>
 ```
 
 First run will install runtimes in `by-arch`, create platform directory called `pear` and add a `pear.dev` symlink (Linux, Mac)or `pear.ps1` and `pear.cmd` files (Windows). These are system-specific and .gitignore'd.
