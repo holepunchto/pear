@@ -3,7 +3,6 @@ preloads
 prebuilds
 boot.bundle
 by-arch
-pear
 pear.dev
 pear.ps1
 pear.cmd
