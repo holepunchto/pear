@@ -40,6 +40,7 @@
     "quickbit-universal": "^2.2.0",
     "ready-resource": "^1.0.0",
     "safety-catch": "^1.0.2",
+    "script-linker": "github:holepunchto/script-linker#source-map-bare-import-map",
     "sodium-native": "^4.0.6",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.7.13",

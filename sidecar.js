@@ -20,7 +20,7 @@ async function bootSidecar () {
   await updater(drive)
 
   const SidecarIPC = await subsystem(drive, '/ipc/sidecar.js')
-  const sidecar = new SidecarIPC({ updater, drive, corestore })
+  const sidecar = new SidecarIPC({ updater: new class Updater { on() {} }, drive, corestore })
   await sidecar.open()
 }
 

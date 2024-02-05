@@ -52,7 +52,9 @@ module.exports = class IPC {
 
   constructor ({ updater, drive, corestore }) {
     this.updater = updater
-    if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    if (this.updater) {
+      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    }
 
     this.server = Pipe.createServer()
     this.server.listen(SOCKET_PATH)
@@ -64,6 +66,7 @@ module.exports = class IPC {
 
     this.freelist = new Freelist()
     this.engine = new Engine(this, { updater, drive, corestore })
+    let closed = null
     this.closing = new Promise((resolve) => { closed = resolve })
     this.#closed = closed
     this.#spindownCountdown()

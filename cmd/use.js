@@ -6,6 +6,7 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Updater = class Updater { // todo, need new non-boot-drive pear-updater
   close () {}
+  on () {}
 }
 const { decode } = require('hypercore-id-encoding')
 const { IS_MAC, IS_WINDOWS } = require('../lib/constants')
