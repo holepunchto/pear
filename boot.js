@@ -1,8 +1,7 @@
 const BOOT_SIDECAR = 1
-const BOOT_TERMINAL = 2
-const BOOT_CLI = 3
-const BOOT_ELECTRON = 4
-const BOOT_ELECTRON_PRELOAD = 5
+const BOOT_CLI = 2
+const BOOT_ELECTRON = 3
+const BOOT_ELECTRON_PRELOAD = 4
 
 switch (getBootType()) {
   case BOOT_SIDECAR: {
@@ -25,7 +24,9 @@ switch (getBootType()) {
 
 function getBootType () {
   if (global.process && global.process.versions.electron) {
-    return (global.process.type === 'renderer' || global.process.type === 'worker') ? BOOT_ELECTRON_PRELOAD : BOOT_ELECTRON
+    return (global.process.type === 'renderer' || global.process.type === 'worker')
+      ? BOOT_ELECTRON_PRELOAD
+      : BOOT_ELECTRON
   }
   if (global.Bare.argv.includes('--sidecar')) {
     return BOOT_SIDECAR
