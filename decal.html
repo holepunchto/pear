@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>document.querySelector('html').classList.add(process.platform)</script>
+  <link  rel="stylesheet" href="~@fontsource/open-sans/latin.css">
+  <style>
+    @font-face {
+      font-family: 'overpass-mono';
+      src: url('~redhat-overpass-font/webfonts/overpass-mono-webfont/overpass-mono-light.woff2') format('woff2');
+      font-weight: 300;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'overpass-mono';
+      src: url('~redhat-overpass-font/webfonts/overpass-mono-webfont/overpass-mono-regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'overpass-mono';
+      src: url('~redhat-overpass-font/webfonts/overpass-mono-webfont/overpass-mono-semibold.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'overpass-mono';
+      src: url('~redhat-overpass-font/webfonts/overpass-mono-webfont/overpass-mono-bold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'overpass';
+      src: url('~redhat-overpass-font/webfonts/overpass-webfont/overpass-bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'overpass';
+      src: url('~redhat-overpass-font/webfonts/overpass-webfont/overpass-regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    body {
+      user-select: none;
+      background: #151517;
+      margin:0; 
+      padding: 0;
+      border: 0.5px solid rgba(0, 0, 0, 0);
+      box-sizing: border-box;
+      border-radius: 8px;
+      font-family:'overpass-mono';
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a:visited, a:active, a { 
+      color: #95E6CB;
+      outline: none;
+    }
+    #bar {
+      background: rgba(55, 60, 72, 0.6);
+      backdrop-filter: blur(64px);
+      -webkit-app-region: drag;
+      height: 50px;
+      padding-top: 12px;
+      padding-right: 8px;
+      padding-left: 8px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: none;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 2;
+      width: calc(100vw + 2px);
+      left: -2px;
+      top: -2px;
+      display: none;
+    }
+    #bar > * {
+      -webkit-app-region: no-drag;
+    }
+    #avatar {
+      height: 28px;
+      width: 28px;
+      float: right;
+      margin-right: 2px;
+      border-radius: 8px;
+    }
+
+    #win-ctrl { 
+      display: none;
+    }
+
+    #window-controls {
+      -webkit-app-region: drag;
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      white-space: nowrap;
+      position: fixed;
+      z-index: 100;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    pear-ctrl {
+      margin-top: 9px;
+      margin-left: 9px;
+    }
+    pear-ctrl[data-platform="dawrin"] { float: left; margin-top: 4px; }
+
+  </style>
+  <div id="window-controls"><pear-ctrl></pear-ctrl></div>
+  <style>
+    /* windows styles, every selector *MUST* be preceded by .win32 */
+    .win32 #win-ctrl { 
+      display: table-row;
+      float: right;
+      margin-left: .6em;
+      margin-top: 0.22em;
+      border-spacing: 0.3em 0;
+    }
+    .win32 #win-ctrl > .win-ctrl {
+      opacity: 0.8;
+      height: 24px;
+      width: 24px;
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+    }
+    .win32 #win-ctrl > .win-ctrl:hover {
+      opacity: 1;
+    }
+
+    .win32 #bar {
+      width: calc(100vw + 8px);
+      left: -4px;
+    }
+
+    #win-ctrl.max #win-max  {
+       display: none;
+    }
+    #win-ctrl.max #win-restore  {
+       display: table-cell;
+    }
+    #win-ctrl #win-restore  {
+       display: none;
+    }
+  </style>
+  <template id="decal-upgrade-to-beta-tmpl">
+    <style>
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+        font-size: 14px;
+      }
+
+      ul > li {
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 14px;
+        margin-top: 1em;
+      }
+
+      ul > li::before {
+        content: '✨';
+        margin-right: 4px;
+      }
+      .advise {
+        line-height: 1.5em;
+      }
+    </style>
+    <div>
+      <h1>Upgrade Keet to try new features!</h2>
+      <p> Upgrade from ALPHA to BETA and access awesome new features such as:</p>
+      <ul>
+        <li>Create BIG ROOMS with thousands of peers</li>
+        <li>Message reactions! 🤘🚀😎</li>
+        <li>Improved performance for large rooms</li>
+        <li>New moderation features</li>
+        <li>... and much more!</li>
+      </ul>
+      <p class="advise">Note that Keet BETA is not compatible with Keet mobile <2.0<br>You can switch between BETA and ALPHA anytime. No data will be lost!</p>
+    </div>
+  </template>
+  <template id="decal-downgrade-to-alpha-tmpl">
+    <style>
+      h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+      p {
+        font-size: 14px;
+        margin-top: 1em;
+      }
+    </style>
+    <div>
+      <h1>Switch Keet back to ALPHA</h1>
+      <p>Switch from BETA to ALPHA to see your old rooms.</p>
+      <p>You won't be able to use the new Keet features while you are on ALPHA.</p>
+      <p>You can switch back to BETA again anytime. No data will be lost!</p>
+    </div>
+  </template>
+  <template id="decal-upgrade-to-beta-button-tmpl">
+    <style>
+      #text {
+        background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+      }
+      svg {
+        margin-top: 3px;
+        margin-bottom: -4px;
+        margin-left: -1px;
+        margin-right: 2px;
+      }
+    </style>
+    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11.9258 5.62891L11.4688 3.90625L9.74609 3.44922C9.60547 3.37891 9.5 3.23828 9.5 3.0625C9.5 2.92188 9.60547 2.78125 9.74609 2.71094L11.4688 2.21875L11.9258 0.53125C11.9961 0.390625 12.1367 0.25 12.3125 0.25C12.4531 0.25 12.5938 0.390625 12.6641 0.53125L13.1562 2.21875L14.8438 2.71094C14.9844 2.78125 15.125 2.92188 15.125 3.0625C15.125 3.23828 14.9844 3.37891 14.8438 3.44922L13.1562 3.90625L12.6641 5.62891C12.5938 5.76953 12.4531 5.875 12.3125 5.875C12.1367 5.875 11.9961 5.76953 11.9258 5.62891ZM4.54297 12.4492C4.96484 12.8359 5.14062 13.3633 5.03516 13.9258L4.71875 15.8594L6.44141 14.9453C6.93359 14.6992 7.53125 14.6992 8.02344 14.9453L9.74609 15.8594L9.42969 13.9258C9.32422 13.3984 9.5 12.8359 9.92188 12.4492L11.3281 11.043L9.35938 10.7617C8.83203 10.6914 8.33984 10.3398 8.09375 9.84766L7.21484 8.08984L6.37109 9.84766C6.125 10.3398 5.63281 10.6914 5.10547 10.7617L3.13672 11.043L4.54297 12.4492ZM6.47656 5.80469C6.79297 5.17188 7.67188 5.17188 7.98828 5.80469L9.60547 9.10938L13.2617 9.63672C13.9297 9.74219 14.2109 10.5859 13.7188 11.0781L11.082 13.6445L11.7148 17.2656C11.8203 17.9688 11.1172 18.4961 10.4844 18.1797L7.21484 16.457L3.98047 18.1797C3.34766 18.4961 2.64453 17.9688 2.75 17.2656L3.38281 13.6445L0.746094 11.0781C0.253906 10.5859 0.5 9.74219 1.20312 9.63672L4.85938 9.10938L6.47656 5.80469ZM15.5469 8.82812L14.2109 8.44141C14.0703 8.40625 14 8.26562 14 8.125C14 8.01953 14.0703 7.87891 14.2109 7.84375L15.5469 7.45703L15.9336 6.12109C15.9688 5.98047 16.1094 5.875 16.25 5.875C16.3555 5.875 16.4961 5.98047 16.5312 6.12109L16.918 7.45703L18.2539 7.84375C18.3945 7.87891 18.5 8.01953 18.5 8.125C18.5 8.26562 18.3945 8.40625 18.2539 8.44141L16.918 8.82812L16.5312 10.1641C16.4961 10.3047 16.3555 10.375 16.25 10.375C16.1094 10.375 15.9688 10.3047 15.9336 10.1641L15.5469 8.82812Z" fill="url(#paint0_linear_6964_93237)"/>
+        <defs>
+        <linearGradient id="paint0_linear_6964_93237" x1="9.5" y1="1" x2="9.5" y2="17" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#00FFCF"/>
+        <stop offset="1" stop-color="#4AA6FF"/>
+        </linearGradient>
+        </defs>
+    </svg>
+    <span id="text">Upgrade to Beta</span>
+  </template>
+  <template id="decal-downgrade-to-alpha-button-tmpl">
+    <style>
+      #text {
+        background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+      }
+      svg {
+        margin-top: 3px;
+        margin-bottom: -4px;
+        margin-left: -1px;
+        margin-right: 2px;
+      }
+    </style>
+    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1 9.21484V8.93359C1.17578 6.12109 3.53125 3.90625 6.34375 3.90625H13.8672L11.9336 1.97266C11.582 1.65625 11.582 1.12891 11.9336 0.777344C12.25 0.460938 12.7773 0.460938 13.1289 0.777344L16.5039 4.15234C16.8203 4.50391 16.8203 5.03125 16.5039 5.34766L13.1289 8.72266C12.7773 9.07422 12.25 9.07422 11.9336 8.72266C11.582 8.40625 11.582 7.87891 11.9336 7.52734L13.8672 5.59375H6.34375C4.41016 5.59375 2.79297 7.10547 2.6875 9.03906V9.32031C2.65234 9.77734 2.23047 10.1289 1.77344 10.0938C1.31641 10.0938 0.964844 9.67188 1 9.21484ZM18.9648 9.32031H19L18.9648 9.60156C18.7891 12.4141 16.4688 14.5938 13.6211 14.5938H6.09766L8.03125 16.5273C8.38281 16.8789 8.38281 17.4062 8.03125 17.7227C7.71484 18.0742 7.1875 18.0742 6.87109 17.7227L3.49609 14.3477C3.14453 14.0312 3.14453 13.5039 3.49609 13.1523L6.87109 9.8125C7.1875 9.46094 7.71484 9.46094 8.03125 9.8125C8.38281 10.1289 8.38281 10.6562 8.03125 10.9727L6.09766 12.9062H13.6211C15.5547 12.9062 17.1719 11.4297 17.2773 9.49609L17.3125 9.21484C17.3125 8.75781 17.7344 8.40625 18.1914 8.40625C18.6484 8.44141 19 8.86328 18.9648 9.32031Z" fill="#26D2E8"/>
+    </svg>
+    <span id="text">Switch to Alpha</span>
+  </template>
+  <template id="decal-dialog-tmpl">
+    <style>
+      :host { position: absolute }
+
+      #dialog {
+        position: relative;
+        height: 378px;
+        display: block;
+        font-family: Arial, sans-serif;
+        padding: 1.2em 2em;
+        font-size: 1.2em;
+        background: #202126;
+        border: 1px solid #313439;
+        border-radius: 32px;
+      }
+
+      #dialog.alpha-to-beta {
+        height: 512px
+      }
+
+      #content {
+        margin-bottom: 10px;
+        color: #fff;
+        max-width: 476px;
+      }
+
+      .button {
+        box-sizing: border-box;
+        cursor: pointer;
+        width: 476px;
+        height: 48px;
+        line-height: 48px;
+        background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
+        border-radius: 12px;
+        margin-bottom: .8em;
+        text-align:center
+      }
+
+      .button#ok {
+        margin-top: 1.6em;
+      }
+
+      .button#cancel {
+        background: #25262C;
+        border: 1px solid #313439;
+        color: #fff;
+      }
+
+      .tip {
+        color: #5E636D;
+        font-weight: 400;
+        font-size: 12px;
+        text-align:center
+      }
+    </style>
+    <div id="dialog">
+      <div id="content"></div>
+      <div class="button" id="ok"></div>
+      <div class="button" id="cancel">Cancel</div>
+      <div class="tip">You can always switch back again. This decision is not permanent.</div>
+    </div>
+    
+  </template>
+  <script type="module">
+    import { View, Window } from './lib/pear.js'
+    customElements.define('decal-dialog', class extends HTMLElement {
+      constructor () {
+        super()
+        this.template = document.querySelector('#decal-dialog-tmpl').content
+        this.root = this.attachShadow({mode: 'open'})
+      }
+      async connectedCallback() {
+        this.root.appendChild(this.template.cloneNode(true))
+        const name = this.getAttribute('name')
+        if (name !== 'alpha-to-beta' && name !== 'beta-to-alpha') return
+        const alphaToBeta = name === 'alpha-to-beta'
+        const dialog = this.root.querySelector('#dialog')
+        dialog.classList.add(name)
+        const dimensions = await View.parent.dimensions()
+        dialog.style.left = `${(dimensions.width / 2) - 280}px`
+        const height = name === 'alpha-to-beta' ? 512 : 378
+        dialog.style.top = `${((dimensions.height / 2) - (height / 2)) / 1.5}px`
+        this.content = this.root.querySelector('#content')
+        const content = alphaToBeta
+          ? document.querySelector('#decal-upgrade-to-beta-tmpl').content.cloneNode(true)
+          : document.querySelector('#decal-downgrade-to-alpha-tmpl').content.cloneNode(true)
+        this.content.appendChild(content)
+
+        this.ok = this.root.querySelector('#ok')
+        const ok = alphaToBeta
+          ? document.querySelector('#decal-upgrade-to-beta-button-tmpl').content.cloneNode(true)
+          : document.querySelector('#decal-downgrade-to-alpha-button-tmpl').content.cloneNode(true)
+        this.ok.appendChild(ok)
+
+        this.cancel = this.root.querySelector('#cancel')
+        this.cancel.textContent = alphaToBeta ? 'Not right now' : 'Cancel'
+
+        this.ok.addEventListener('click', async () => {
+          Window.parent.send(true)
+          Window.self.close()
+        })
+        const cancelListener = async () => {
+          Window.parent.send(false)
+          Window.self.close()
+        }
+        this.cancel.addEventListener('click', cancelListener)
+        addEventListener('beforeunload', cancelListener)
+      }
+    })
+  </script>
+</head>
+<body>
+  <script>
+    const { dialog } = window[Symbol.for('pear.config')]
+    if (dialog) {
+      document.body.remove()
+      document.body = document.createElement('body')
+      if (dialog === 'alpha-to-beta' || dialog === 'beta-to-alpha') {
+        const decalDialog = document.createElement('decal-dialog')
+        decalDialog.setAttribute('name', dialog)
+        document.body.style = 'background: none'
+        document.body.appendChild(decalDialog)
+      }
+    }
+  </script>
+  <div id="bar">
+    <script type="module">
+      import constants from './lib/constants.js'
+      if (window[Symbol.for('pear.config')].options.platform?.__legacyTitlebar) {
+        document.getElementById('bar').style.display = 'block'
+        document.getElementById('window-controls').style.display = 'none'
+      }
+    </script>
+    <div id="win-ctrl">
+      <div id="win-min" class="win-ctrl">
+        <svg width="18" height="2" viewBox="0 0 18 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 0.5625C0 0.28125 0.246094 0 0.5625 0H17.4375C17.7188 0 18 0.28125 18 0.5625C18 0.878906 17.7188 1.125 17.4375 1.125H0.5625C0.246094 1.125 0 0.878906 0 0.5625Z" fill="white"/>
+        </svg>
+      </div>
+      <div id="win-max" class="win-ctrl">
+        <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 2.625C0 1.39453 0.984375 0.375 2.25 0.375H15.75C16.9805 0.375 18 1.39453 18 2.625V13.875C18 15.1406 16.9805 16.125 15.75 16.125H2.25C0.984375 16.125 0 15.1406 0 13.875V2.625ZM1.125 2.625V6H16.875V2.625C16.875 2.02734 16.3477 1.5 15.75 1.5H2.25C1.61719 1.5 1.125 2.02734 1.125 2.625ZM1.125 7.125V13.875C1.125 14.5078 1.61719 15 2.25 15H15.75C16.3477 15 16.875 14.5078 16.875 13.875V7.125H1.125Z" fill="white"/>
+        </svg>
+      </div>
+      <div id="win-restore" class="win-ctrl">
+        <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.1875 1.375H7.3125C6.36328 1.375 5.625 2.14844 5.625 3.0625V3.625H4.5V3.0625C4.5 1.51562 5.73047 0.25 7.3125 0.25H15.1875C16.7344 0.25 18 1.51562 18 3.0625V10.9375C18 12.5195 16.7344 13.75 15.1875 13.75H14.625V12.625H15.1875C16.1016 12.625 16.875 11.8867 16.875 10.9375V3.0625C16.875 2.14844 16.1016 1.375 15.1875 1.375ZM11.25 4.75C12.4805 4.75 13.5 5.76953 13.5 7V16C13.5 17.2656 12.4805 18.25 11.25 18.25H2.25C0.984375 18.25 0 17.2656 0 16V7C0 5.76953 0.984375 4.75 2.25 4.75H11.25ZM11.25 5.875H2.25C1.61719 5.875 1.125 6.40234 1.125 7V9.25H12.375V7C12.375 6.40234 11.8477 5.875 11.25 5.875ZM2.25 17.125H11.25C11.8477 17.125 12.375 16.6328 12.375 16V10.375H1.125V16C1.125 16.6328 1.61719 17.125 2.25 17.125Z" fill="white"/>
+        </svg>          
+      </div>
+      <div id="win-close" class="win-ctrl">
+        <svg id="win-close" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14.8906 0.550781C15.1016 0.339844 15.4883 0.339844 15.6992 0.550781C15.9102 0.761719 15.9102 1.14844 15.6992 1.35938L8.77344 8.25L15.6992 15.1758C15.9102 15.3867 15.9102 15.7734 15.6992 15.9844C15.4883 16.1953 15.1016 16.1953 14.8906 15.9844L8 9.05859L1.07422 15.9844C0.863281 16.1953 0.476562 16.1953 0.265625 15.9844C0.0546875 15.7734 0.0546875 15.3867 0.265625 15.1758L7.19141 8.25L0.265625 1.35938C0.0546875 1.14844 0.0546875 0.761719 0.265625 0.550781C0.476562 0.339844 0.863281 0.339844 1.07422 0.550781L8 7.47656L14.8906 0.550781Z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+    <script type="module">
+      import { Window } from './lib/pear.js'
+      document.querySelector('#bar').addEventListener('dblclick', async (evt) => {
+        if (evt.target !== evt.currentTarget) return
+        if (await Window.self.isMaximized()) await Window.self.restore()
+        else await Window.self.maximize()
+      })
+      if (process.platform === 'win32') {
+        document.querySelector('#win-min').addEventListener('click', async () => { await Window.self.minimize() })
+        document.querySelector('#win-max').addEventListener('click', async () => { 
+          await Window.self.maximize() 
+          document.querySelector('#win-ctrl').classList.add('max')
+        })
+        document.querySelector('#win-restore').addEventListener('click', async () => { 
+          await Window.self.restore()
+          document.querySelector('#win-ctrl').classList.remove('max')
+        })
+      }
+    </script>
+    <svg id="avatar" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 12.8C0 8.31958 0 6.07937 0.871948 4.36808C1.63893 2.86278 2.86278 1.63893 4.36808 0.871948C6.07937 0 8.31958 0 12.8 0H15.2C19.6804 0 21.9206 0 23.6319 0.871948C25.1372 1.63893 26.3611 2.86278 27.1281 4.36808C28 6.07937 28 8.31958 28 12.8V15.2C28 19.6804 28 21.9206 27.1281 23.6319C26.3611 25.1372 25.1372 26.3611 23.6319 27.1281C21.9206 28 19.6804 28 15.2 28H12.8C8.31958 28 6.07937 28 4.36808 27.1281C2.86278 26.3611 1.63893 25.1372 0.871948 23.6319C0 21.9206 0 19.6804 0 15.2V12.8Z" fill="none"/>
+      <mask id="mask0_661:753" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
+      <rect width="28" height="28" rx="8" fill="#F27983"/>
+      </mask>
+      <g mask="url(#mask0_661:753)">
+      <path d="M14 14C16.1875 14 18 12.2188 18 10C18 7.8125 16.1875 6 14 6C11.7812 6 10 7.8125 10 10C10 12.2188 11.7812 14 14 14ZM16.7812 15H16.25C15.5625 15.3438 14.8125 15.5 14 15.5C13.1875 15.5 12.4062 15.3438 11.7188 15H11.1875C8.875 15 7 16.9062 7 19.2188V20.5C7 21.3438 7.65625 22 8.5 22H19.5C20.3125 22 21 21.3438 21 20.5V19.2188C21 16.9062 19.0938 15 16.7812 15Z" fill="white" fill-opacity="0.24"/>
+      </g>
+      <path d="M4.36808 27.1281L3.91409 28.0191L4.36808 27.1281ZM27.1281 23.6319L26.237 23.1779L27.1281 23.6319ZM23.6319 27.1281L23.1779 26.237L23.6319 27.1281ZM23.6319 0.871948L23.1779 1.76295L23.6319 0.871948ZM27.1281 4.36808L28.0191 3.91409L27.1281 4.36808ZM4.36808 0.871948L3.91409 -0.0190586L4.36808 0.871948ZM0.871948 4.36808L-0.0190586 3.91409L0.871948 4.36808ZM12.8 1H15.2V-1H12.8V1ZM27 12.8V15.2H29V12.8H27ZM15.2 27H12.8V29H15.2V27ZM1 15.2V12.8H-1V15.2H1ZM12.8 27C10.5433 27 8.9109 26.9992 7.62705 26.8943C6.35487 26.7904 5.51325 26.5892 4.82207 26.237L3.91409 28.0191C4.9342 28.5388 6.06833 28.7736 7.46418 28.8877C8.84837 29.0008 10.5763 29 12.8 29V27ZM-1 15.2C-1 17.4237 -1.00078 19.1516 -0.887685 20.5358C-0.773639 21.9317 -0.538833 23.0658 -0.0190586 24.0859L1.76295 23.1779C1.41078 22.4868 1.20961 21.6451 1.10567 20.373C1.00078 19.0891 1 17.4567 1 15.2H-1ZM4.82207 26.237C3.50493 25.5659 2.43407 24.4951 1.76295 23.1779L-0.0190586 24.0859C0.843802 25.7794 2.22063 27.1562 3.91409 28.0191L4.82207 26.237ZM27 15.2C27 17.4567 26.9992 19.0891 26.8943 20.373C26.7904 21.6451 26.5892 22.4868 26.237 23.1779L28.0191 24.0859C28.5388 23.0658 28.7736 21.9317 28.8877 20.5358C29.0008 19.1516 29 17.4237 29 15.2H27ZM15.2 29C17.4237 29 19.1516 29.0008 20.5358 28.8877C21.9317 28.7736 23.0658 28.5388 24.0859 28.0191L23.1779 26.237C22.4868 26.5892 21.6451 26.7904 20.373 26.8943C19.0891 26.9992 17.4567 27 15.2 27V29ZM26.237 23.1779C25.5659 24.4951 24.4951 25.5659 23.1779 26.237L24.0859 28.0191C25.7794 27.1562 27.1562 25.7794 28.0191 24.0859L26.237 23.1779ZM15.2 1C17.4567 1 19.0891 1.00078 20.373 1.10567C21.6451 1.20961 22.4868 1.41078 23.1779 1.76295L24.0859 -0.0190586C23.0658 -0.538833 21.9317 -0.773639 20.5358 -0.887685C19.1516 -1.00078 17.4237 -1 15.2 -1V1ZM29 12.8C29 10.5763 29.0008 8.84837 28.8877 7.46418C28.7736 6.06833 28.5388 4.9342 28.0191 3.91409L26.237 4.82207C26.5892 5.51325 26.7904 6.35487 26.8943 7.62705C26.9992 8.9109 27 10.5433 27 12.8H29ZM23.1779 1.76295C24.4951 2.43407 25.5659 3.50493 26.237 4.82207L28.0191 3.91409C27.1562 2.22063 25.7794 0.843802 24.0859 -0.0190586L23.1779 1.76295ZM12.8 -1C10.5763 -1 8.84837 -1.00078 7.46418 -0.887685C6.06833 -0.773639 4.9342 -0.538833 3.91409 -0.0190586L4.82207 1.76295C5.51325 1.41078 6.35487 1.20961 7.62705 1.10567C8.9109 1.00078 10.5433 1 12.8 1V-1ZM1 12.8C1 10.5433 1.00078 8.9109 1.10567 7.62705C1.20961 6.35487 1.41078 5.51325 1.76295 4.82207L-0.0190586 3.91409C-0.538833 4.9342 -0.773639 6.06833 -0.887685 7.46418C-1.00078 8.84837 -1 10.5763 -1 12.8H1ZM3.91409 -0.0190586C2.22063 0.843802 0.843802 2.22063 -0.0190586 3.91409L1.76295 4.82207C2.43407 3.50493 3.50493 2.43407 4.82207 1.76295L3.91409 -0.0190586Z" fill="white" fill-opacity="0.24"/>
+    </svg>
+    <decal-notifications>
+      <span slot="icon"></span>
+      <span slot="content"></span>
+      <span slot="info"></span>
+      <template id="decal-notifications-tmpl">
+        <style>
+          :host {
+            float: right;
+            font-family: 'Open Sans';
+          }
+          :host::after {
+            content: "";
+            clear: both;
+            display: table;
+          }
+          .notification {
+            float: right;
+            color: #9BF8FF;
+            background: rgba(55, 148, 195, 0.5);
+            border-radius: 8px;
+            padding: 6px 13px;
+            font-weight: 600;
+            font-size: 14px;
+            box-sizing: border-box;
+            height: 28px;
+            margin-right: 8px;
+            width: 172px;
+          }
+          .info { display: none }
+          .info, .content {
+            position: relative;
+            top: -2px;
+            text-indent: 1px;
+          }
+        </style>
+        <div class="notification">
+          <span class="icon"><slot name="icon">ICON</slot></span>
+          <span class="content"><slot name="content">CONTENT</slot></span>
+          <span class="info"><slot name="info">INFO</slot></span>
+        </div>
+      </template>
+      <script type="module">
+        customElements.define('decal-notifications', class extends HTMLElement {
+          restart () {
+            return this.loader.restart()
+          }
+          async subscribe (ipc, loader) {
+            this.ipc = ipc
+            this.loader = loader
+            for await (const notification of ipc.engine.notifications()) {
+              if (notification.type !== 'pear/updates') continue
+              if (notification.version?.force) {
+                if (document.readyState === 'complete') this.restart()
+                else addEventListener('load', () => this.restart())
+                return
+              }
+              this.notify()
+            }
+          }
+          notify () {
+            if (this.count > 0) {
+              // in future, if another type of notification is needed,
+              // this return gaurd would be removed to allow multiple `notify` calls
+              // impl of noti types would also be needed
+              return
+            }
+            this.count++
+            this.querySelector('[slot="icon"]').innerHTML = '<svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.0312 1.0625C14.75 0.96875 14.4062 1.03125 14.2188 1.25L12.625 2.8125C11.375 1.6875 9.75 1 8 1C4.90625 1 2.125 3.09375 1.25 6.0625C1.15625 6.4375 1.375 6.875 1.78125 6.96875C2.1875 7.09375 2.59375 6.875 2.6875 6.46875C3.375 4.15625 5.5625 2.5 8 2.5C9.34375 2.5 10.5938 3.03125 11.5625 3.875L9.71875 5.75C9.5 5.9375 9.4375 6.28125 9.53125 6.5625C9.65625 6.84375 9.9375 7 10.25 7H14.7188C15.1562 7 15.5 6.6875 15.5 6.25V1.75C15.5 1.46875 15.3125 1.1875 15.0312 1.0625ZM14.1875 9.03125C13.7812 8.90625 13.375 9.125 13.25 9.53125C12.5938 11.875 10.4062 13.5 7.96875 13.5C6.59375 13.5 5.34375 13 4.375 12.1562L6.25 10.2812C6.4375 10.0938 6.5 9.75 6.40625 9.46875C6.3125 9.1875 6.03125 9 5.71875 9H1.25C0.8125 9 0.46875 9.34375 0.46875 9.75V14.25C0.46875 14.5625 0.65625 14.8438 0.9375 14.9688C1.03125 15 1.125 15 1.21875 15C1.4375 15 1.625 14.9375 1.75 14.7812L3.34375 13.2188C4.59375 14.3438 6.21875 15 7.96875 15C11.0625 15 13.8125 12.9375 14.6875 9.96875C14.8125 9.5625 14.5938 9.15625 14.1875 9.03125Z" fill="#9BF8FF"/></svg>'
+            this.querySelector('[slot="content"]').innerHTML = 'UPDATE AVAILABLE'
+            this.querySelector('[slot="info"]').innerHTML = '&thinsp;CLICK TO RESTART'
+            this.root.appendChild(this.template.cloneNode(true))
+            const node = this.root.querySelector('.notification:last-child')
+            const info = node.querySelector('.info')
+            const content = node.querySelector('.content')
+            const enter = () => {
+              info.style.display = 'inline-block'
+              content.style.display = 'none'
+            }
+            const leave = () => {
+              if (content.style.display === 'none') {
+                setTimeout(() => {
+                  content.style.display = 'inline-block'
+                  info.style.display = 'none'
+                }, 2000).unref()
+              }
+            }
+            const click = () => {
+              this.querySelector('[slot="info"]').innerHTML = '&thinsp;RESTARTING NOW'
+              node.removeEventListener('click', click)
+              node.removeEventListener('mouseenter', enter)
+              node.removeEventListener('mouseleave', leave)
+              this.ipc.engine.restart({ all: true }).catch(console.error)
+            }
+            node.addEventListener('click', click)
+            node.addEventListener('mouseenter', enter)
+            node.addEventListener('mouseleave', leave)
+          }
+          constructor () {
+            super()
+            this.ipc = null
+            this.count = 0
+            this.template = document.querySelector('#decal-notifications-tmpl').content
+            this.root = this.attachShadow({mode: 'open'})
+          }
+        })
+      </script>
+    </decal-notifications> 
+
+    <decal-tier>
+      <span slot="tier"></span>
+      <template id="decal-tier-tmpl">
+        <style>
+          #tier {
+            float: right;
+            color: #F5DDF3;
+            font-size: 12px;
+            background: rgba(135, 71, 125, 0.5);
+            border-radius: 8px;
+            padding: 1.25em;
+            padding-top: 0;
+            padding-bottom: 0;
+            font-weight: 600;
+            letter-spacing: .0125rem;
+            margin-right: .75em;
+            height: 28px;
+            box-sizing: border-box;
+            line-height: 28px;
+          }
+        </style>
+        <span id="tier"><slot name="tier">TIER</slot></span>
+      </template>
+      <script type="module">
+        customElements.define('decal-tier', class extends HTMLElement {
+          tier = null
+          connected = false
+          async update (config = {}) {
+            this.tier = config.tier === 'production' ? null : (config.tier || '')
+            if (this.tier === null) {
+              const tier = this.root.querySelector('#tier')
+              if (tier && tier.isConnected) tier.remove()
+              return
+            }
+            if (this.connected === false) {
+              this.root.appendChild(this.template.cloneNode(true))
+              this.connected = true
+            }
+            this.querySelector('[slot="tier"]').innerHTML = this.tier.toUpperCase()
+          }
+          constructor() {
+            super()
+            this.template = document.querySelector('#decal-tier-tmpl').content
+            this.root = this.attachShadow({mode: 'open'})
+          }
+        })
+      </script>
+    </decal-tier>
+    <decal-distribution>
+      <span slot="distribution"></span>
+      <template id="decal-distribution-tmpl">
+        <style>
+          :host { float:right }
+          
+          :host::after {
+            content: "";
+            clear: both;
+            display: table;
+          }
+          #distribution {
+            float: right;
+            font-size: 13px;
+            border-radius: 8px;
+            padding: 1.25em;
+            padding-top: 0;
+            padding-bottom: 0;
+            font-weight: 600;
+            letter-spacing: .0125rem;
+            margin-right: .75em;
+            height: 28px;
+            box-sizing: border-box;
+            line-height: 28px;
+          }
+          #try-beta {
+            float: right;
+            display: none;
+          }
+          .alpha > #distribution {
+            background: #313439;
+            color: #5E636D
+          }
+          .alpha > #distribution > svg {
+            display: none
+          }
+          .alpha > #try-beta {
+            display: block;
+            margin-right: .75em;
+            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
+            border-radius: 8px;
+          }
+
+          .beta > #distribution {
+            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
+            color: #00FFCF
+          }
+          .beta > #distribution > slot > span {
+            display: inline-block;
+            background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
+            -webkit-background-clip: text; /* TODO: remove when background-clip is supported by renderer */
+            -webkit-text-fill-color: transparent; /* TODO: remove when text-fill-color is supported by renderer */
+            background-clip: text;
+            text-fill-color: transparent;
+          }
+
+          .alpha > #try-beta {
+            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
+            display: inline-block;
+            font-size: 12px;
+            height: 28px;
+            line-height: 12px;
+            padding: 4px 12px;
+            box-sizing: border-box;
+          }
+
+          #distribution > svg {
+            margin-top: 5px;
+            margin-bottom: -6px;
+            margin-left: -1px;
+            margin-right: 1px;
+          }
+
+          #text {
+            background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            display: inline-block;
+            transform: translateY(-4px);
+            font-weight: 600;
+          }
+
+        </style>
+        <span id="distro">
+          <span id="try-beta">
+            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.9258 5.62891L11.4688 3.90625L9.74609 3.44922C9.60547 3.37891 9.5 3.23828 9.5 3.0625C9.5 2.92188 9.60547 2.78125 9.74609 2.71094L11.4688 2.21875L11.9258 0.53125C11.9961 0.390625 12.1367 0.25 12.3125 0.25C12.4531 0.25 12.5938 0.390625 12.6641 0.53125L13.1562 2.21875L14.8438 2.71094C14.9844 2.78125 15.125 2.92188 15.125 3.0625C15.125 3.23828 14.9844 3.37891 14.8438 3.44922L13.1562 3.90625L12.6641 5.62891C12.5938 5.76953 12.4531 5.875 12.3125 5.875C12.1367 5.875 11.9961 5.76953 11.9258 5.62891ZM4.54297 12.4492C4.96484 12.8359 5.14062 13.3633 5.03516 13.9258L4.71875 15.8594L6.44141 14.9453C6.93359 14.6992 7.53125 14.6992 8.02344 14.9453L9.74609 15.8594L9.42969 13.9258C9.32422 13.3984 9.5 12.8359 9.92188 12.4492L11.3281 11.043L9.35938 10.7617C8.83203 10.6914 8.33984 10.3398 8.09375 9.84766L7.21484 8.08984L6.37109 9.84766C6.125 10.3398 5.63281 10.6914 5.10547 10.7617L3.13672 11.043L4.54297 12.4492ZM6.47656 5.80469C6.79297 5.17188 7.67188 5.17188 7.98828 5.80469L9.60547 9.10938L13.2617 9.63672C13.9297 9.74219 14.2109 10.5859 13.7188 11.0781L11.082 13.6445L11.7148 17.2656C11.8203 17.9688 11.1172 18.4961 10.4844 18.1797L7.21484 16.457L3.98047 18.1797C3.34766 18.4961 2.64453 17.9688 2.75 17.2656L3.38281 13.6445L0.746094 11.0781C0.253906 10.5859 0.5 9.74219 1.20312 9.63672L4.85938 9.10938L6.47656 5.80469ZM15.5469 8.82812L14.2109 8.44141C14.0703 8.40625 14 8.26562 14 8.125C14 8.01953 14.0703 7.87891 14.2109 7.84375L15.5469 7.45703L15.9336 6.12109C15.9688 5.98047 16.1094 5.875 16.25 5.875C16.3555 5.875 16.4961 5.98047 16.5312 6.12109L16.918 7.45703L18.2539 7.84375C18.3945 7.87891 18.5 8.01953 18.5 8.125C18.5 8.26562 18.3945 8.40625 18.2539 8.44141L16.918 8.82812L16.5312 10.1641C16.4961 10.3047 16.3555 10.375 16.25 10.375C16.1094 10.375 15.9688 10.3047 15.9336 10.1641L15.5469 8.82812Z" fill="url(#paint0_linear_6964_93237)"/>
+              <defs>
+              <linearGradient id="paint0_linear_6964_93237" x1="9.5" y1="1" x2="9.5" y2="17" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#00FFCF"/>
+              <stop offset="1" stop-color="#4AA6FF"/>
+              </linearGradient>
+              </defs>
+            </svg>
+            <span id=text>TRY NEW FEATURES</span>
+          </span>
+          <span id="distribution"><svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 9.21484V8.93359C1.17578 6.12109 3.53125 3.90625 6.34375 3.90625H13.8672L11.9336 1.97266C11.582 1.65625 11.582 1.12891 11.9336 0.777344C12.25 0.460938 12.7773 0.460938 13.1289 0.777344L16.5039 4.15234C16.8203 4.50391 16.8203 5.03125 16.5039 5.34766L13.1289 8.72266C12.7773 9.07422 12.25 9.07422 11.9336 8.72266C11.582 8.40625 11.582 7.87891 11.9336 7.52734L13.8672 5.59375H6.34375C4.41016 5.59375 2.79297 7.10547 2.6875 9.03906V9.32031C2.65234 9.77734 2.23047 10.1289 1.77344 10.0938C1.31641 10.0938 0.964844 9.67188 1 9.21484ZM18.9648 9.32031H19L18.9648 9.60156C18.7891 12.4141 16.4688 14.5938 13.6211 14.5938H6.09766L8.03125 16.5273C8.38281 16.8789 8.38281 17.4062 8.03125 17.7227C7.71484 18.0742 7.1875 18.0742 6.87109 17.7227L3.49609 14.3477C3.14453 14.0312 3.14453 13.5039 3.49609 13.1523L6.87109 9.8125C7.1875 9.46094 7.71484 9.46094 8.03125 9.8125C8.38281 10.1289 8.38281 10.6562 8.03125 10.9727L6.09766 12.9062H13.6211C15.5547 12.9062 17.1719 11.4297 17.2773 9.49609L17.3125 9.21484C17.3125 8.75781 17.7344 8.40625 18.1914 8.40625C18.6484 8.44141 19 8.86328 18.9648 9.32031Z" fill="#26D2E8"/>
+            </svg>
+            <slot name="distribution"><span>DISTRIB</span></slot>
+          </span>
+        </span>
+      </template>
+      <script type="module">
+        import { preferences, restart, Window, View } from './lib/pear.js'
+        import constants from './lib/constants.js'
+        // only supporting Keet key for alpha-beta switching atm:
+        const alphaKey = constants.EOLS.keet.z32
+        const betaKey = constants.ALIASES.keet.z32
+        customElements.define('decal-distribution', class extends HTMLElement {
+          alphaKey = alphaKey
+          betaKey = betaKey
+          allowList = new Set([ alphaKey, betaKey ])
+          launchKey = window[Symbol.for('pear.config')].key?.z32
+          name = null
+          connected = false
+          closing = null
+          distributions = null
+          async update (config) {
+            if (this.launchKey === null || this.allowList.has(this.launchKey) === false) return
+            this.distributions = config.distributions || {}
+            this.name = this.distributions.current 
+              ? this.distributions.current.toLowerCase() 
+              : this.launchKey === this.alphaKey ? 'alpha' : 'beta'
+
+            if (this.connected === false) {
+              this.root.appendChild(this.template.cloneNode(true))
+              this.connected = true
+            }
+
+            this.root.querySelector('#distribution').addEventListener('click', this.openDialog)
+            if (this.name === 'alpha') {
+              this.root.querySelector('#try-beta').addEventListener('click', this.openDialog)
+            }
+
+            if (this.name === 'alpha' || this.name === 'beta') {
+              this.root.querySelector('#distro').className = this.name
+            }
+
+            this.querySelector('[slot="distribution"]').innerHTML = this.name.toUpperCase()
+
+          }
+          openDialog = async (e) => {
+            if (this.name !== 'alpha' && this.name !== 'beta') return
+            try {
+              this.root.querySelector('#distribution').removeEventListener('click', this.openDialog)
+              if (this.name === 'alpha') {
+                this.root.querySelector('#try-beta').removeEventListener('click', this.openDialog)
+              }
+              const isAlpha = this.name === 'alpha'  
+              const distribution = isAlpha ? 'beta' : 'alpha'
+              const dialog = isAlpha ? 'alpha-to-beta' : 'beta-to-alpha'
+
+              const win = new View('/decal.html', {
+                background: '#FFFFFFFF',
+                transparent: true,
+                config: { dialog }
+              })
+
+              await win.open()
+              const granted = await new Promise((resolve) => win.once('message', resolve))
+              if (granted) {
+                const { distributions } = this
+                distributions[alphaKey] = distributions[alphaKey] || {}
+                distributions[betaKey] = distributions[betaKey] || {}
+                distributions[alphaKey].current = distributions[betaKey].current = distribution
+                distributions[alphaKey].alpha = distributions[betaKey].alpha = alphaKey
+                distributions[alphaKey].beta = distributions[betaKey].beta = betaKey
+                await preferences.set('distributions', distributions)
+                this.restarting = restart()
+                this.closing = Window.self.close()
+              }
+            } finally {
+              this.root.querySelector('#distribution').addEventListener('click', this.openDialog)
+              if (this.name === 'alpha') {
+                this.root.querySelector('#try-beta').addEventListener('click', this.openDialog)
+              }
+              await this.restarting
+              await this.closing
+            }
+
+          }
+          constructor() {
+            super()
+            this.template = document.querySelector('#decal-distribution-tmpl').content
+            this.root = this.attachShadow({mode: 'open'})
+          }
+        })
+      </script>
+    </decal-distribution>
+  </div>
+  <decal-report>
+    <span slot="headline"></span>
+    <span slot="tagline"></span>
+    <span slot="cta"></span>
+    <template id="decal-report-tmpl">
+      <style>
+        #status {
+          display: none;
+          color: white;
+          padding: 2em;
+        }
+        #headline {
+          font-weight: 800;
+          font-family: 'overpass';
+          font-size: 2em;
+          margin-top: 20vh;
+          margin-bottom: 0.6em;
+        }
+        #tagline {
+          font-family: 'Open Sans';
+          font-size: .875em;
+          font-weight: 400;
+          margin-bottom: 2em;
+        }
+        #cta {
+          font-family: 'Open Sans';
+          cursor: pointer;
+          border-radius: 8px;
+          height: 44px;
+          box-sizing: border-box;
+          display: inline-block;
+          font-weight: 700;
+          font-size: 14px;
+          padding: 28px;
+          margin-top: 24px;
+          color: rgba(29, 110, 83, 1);
+          background: #95E6CB;
+          backdrop-filter: blur(48px);
+          width: auto;
+          line-height: 0;
+          border: none;
+          outline: none;
+          letter-spacing: 0.6px;
+        }
+      </style>
+      <div id="status">
+        <div id="headline">
+          <slot name="headline">HEADLINE</slot>
+        </div>
+    
+        <div id="tagline">
+          <slot name="tagline">TAGLINE</slot>
+        </div>
+    
+        <button id="cta"><slot name="cta">CTA</slot></button>
+      </div>
+    </template>
+    <script type="module">
+      customElements.define('decal-report', class extends HTMLElement {
+        ipc = null
+        status = null
+        static get observedAttributes() { return ['show', 'action'] }
+        attributeChangedCallback(name, prior, value) {
+          if (name === 'show') {
+            if (value) this.shadowRoot.querySelector('#status').style.display = 'block'
+            else this.shadowRoot.querySelector('#status').style.display = ''
+          }
+          if (name === 'action') {
+            const cta = this.shadowRoot.querySelector('#cta')
+            const code = (value === 'reload') ? 64 : 0
+            const handler = (value === 'quit' || value === 'reload') ?
+              () => this.ipc.app.quit(code) :
+              () => {}
+            cta.addEventListener('click', handler)
+          }
+        }
+        show (type) { this.setAttribute("show", type) }
+        hide () { this.setAttribute("show", "") }
+        async subscribe (ipc, loader) {
+          this.ipc = ipc
+          for await (const report of ipc.app.reports()) {
+            this.status = report
+            loader.hide()
+            const { type, headline, tagline, cta } = this.status
+            if (type === 'update' && this.status.version?.force) {
+              await loader.updating(this.status.version)
+              continue
+            }
+            this.querySelector('[slot="headline"]').innerHTML = headline.content
+            this.querySelector('[slot="tagline"]').innerHTML = tagline.content
+            this.querySelector('[slot="cta"]').innerHTML = cta.content
+            this.setAttribute("action", cta.action)
+            this.show(type)
+          }
+        }
+        constructor () {
+          super()
+          this.ipc = null
+          const template = document.querySelector('#decal-report-tmpl').content
+          this.attachShadow({mode: 'open'}).appendChild(template.cloneNode(true))
+        }
+      })
+    </script>
+  </decal-report>
+  <decal-loader>
+    <span slot="update-length"></span>
+    <span slot="when"></span>
+    <template id="decal-loader-tmpl">
+      <style>
+        #loader {
+          display: none;
+        }
+        
+        #loader {
+          position: absolute;
+          left: 0;
+          right: 0;
+          width: 100%;
+          text-align: center;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        #logo {
+          animation: beat 1.1s infinite normal;
+          transform-origin: center;
+          display: block;
+          margin: auto;
+        }
+
+        @keyframes beat {
+          15% {
+            transform: scale(1.12);
+          }
+
+          30% {
+            transform: scale(1.0);
+          }
+
+          43% {
+            transform: scale(1.05);
+          }
+
+          67% {
+            transform: scale(1.0);
+          }
+        }	
+
+        #update {
+          display: none;
+          margin: 0 auto;
+          margin-bottom: -4em;
+          color: #fff;
+          padding: 8px;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          font-size: 0.9em;
+          padding-bottom: 6em;
+          padding-left: 3em;
+          width: 50%;
+          min-width: 600px;
+          transform: translateY(140%);
+        }
+        #update h2 {
+          margin-bottom: .5rem;
+        }
+        #update th {
+          font-weight: bold;
+          text-align: left;
+        }
+        #update td:first-child {
+          text-align: right;
+        }
+        #update td:nth-child(2) {
+          text-align: left;
+        }
+      </style>
+      <div id="loader">
+        <svg id="logo" width="102" height="146" viewBox="0 0 102 146" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_8912_10861)">
+            <path d="M47.4056 0.838379H54.5943V15.0361H47.4056V0.838379Z" fill="#B0D944"/>
+            <path d="M43.8113 19.5305V22.406H36.6226V26.0004H65.3774V22.406H58.1887V16.8347H51V19.5305H43.8113Z" fill="#B0D944"/>
+            <path d="M72.5662 27.7974H51V30.4931H29.4339V36.963H72.5662V27.7974Z" fill="#B0D944"/>
+            <path d="M79.7548 38.7593H51V41.455H22.2451V47.9249H79.7548V38.7593Z" fill="#B0D944"/>
+            <path d="M79.7548 49.7219H51V52.4177H22.2451V58.8875H79.7548V49.7219Z" fill="#B0D944"/>
+            <path d="M86.9436 60.6846H51V63.3803H15.0565V69.8502H86.9436V60.6846Z" fill="#B0D944"/>
+            <path d="M86.9436 71.6481H51V74.3438H15.0565V80.8137H86.9436V71.6481Z" fill="#B0D944"/>
+            <path d="M94.1323 82.61H51V85.3058H7.86774V91.7756H94.1323V82.61Z" fill="#B0D944"/>
+            <path d="M101.321 93.5726H51V96.2684H0.679016V102.738H101.321V93.5726Z" fill="#B0D944"/>
+            <path d="M101.321 104.536H51V107.232H0.679016V113.702H101.321V104.536Z" fill="#B0D944"/>
+            <path d="M101.321 115.499H51V118.195H0.679016V124.664H101.321V115.499Z" fill="#B0D944"/>
+            <path d="M86.9436 126.461H51V129.156H15.0565V135.626H86.9436V126.461Z" fill="#B0D944"/>
+            <path d="M72.5662 137.424H51V140.12H29.4339V144.613H72.5662V137.424Z" fill="#B0D944"/>
+          </g>
+          <defs>
+            <clipPath id="clip0_8912_10861">
+              <rect width="100.642" height="145.571" fill="white" transform="translate(0.679016 0.214233)"/>
+            </clipPath>
+          </defs>
+        </svg>
+        <table id="update">
+          <tr>
+              <th colspan="2" style="color: #95E6CB;">Auto Updating to <slot name="update-length"></slot>...</th>
+          </tr>
+          <tr id=hint>
+            <td colspan="2" style="text-align:left!important;text-indent:.2em">Application(s) will restart <slot name="when">after update</slot></th>
+          </tr>
+      </table>
+      </div>
+    </template>
+    <script type="module">
+      customElements.define('decal-loader', class extends HTMLElement {
+        #updating = false
+        async updating ({ force, key, length, fork, current }) {
+          if (!force) return
+          this.#updating = true
+          this.querySelector('[slot="update-length"]').innerHTML = length
+          this.shadowRoot.querySelector('#update').style.display = 'block'
+          this.show()
+          await this.gui.detachMainView(this.gid)
+        }
+        show () { 
+          this.shadowRoot.querySelector('#loader').style.display = 'block' 
+        }
+        hide () {
+          this.shadowRoot.querySelector('#loader').style.display = 'none' 
+        }
+        async restart () {
+          let countdown = 3000
+          while (countdown > 0) {
+            this.querySelector('[slot="when"]').innerText = `in ${countdown/1000} seconds`
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            countdown -= 1000
+          }
+          this.querySelector('[slot="when"]').innerText = 'as of now!'
+          await this.ipc.engine.restart()
+        }
+        async start (ipc, config) {
+          this.show()
+          this.ipc = ipc
+          this.gui = ipc.gui
+          this.gid = this.gui.id()
+          const { gui, gid } = this
+          await gui.afterViewLoaded(gid)
+          if (this.#updating) return true
+          this.hide()
+          await gui.attachMainView(gid)
+        }
+        constructor () {
+          super()
+          const template = document.querySelector('#decal-loader-tmpl').content
+          this.attachShadow({mode: 'open'}).appendChild(template.cloneNode(true))
+        }
+      })
+    </script>
+  </decal-loader>
+  <script type="module">
+    import { ipc, Window, message, messages } from './lib/pear.js'
+    const loader = document.querySelector('decal-loader')
+
+    let avatar = document.querySelector('#avatar')
+
+    messages({ type: 'pear/handover' }, () => {
+      // legacy, ignore
+    })
+
+    const avaClick = async () => {
+      await message({ type: 'pear/click', name: 'avatar' })
+    }
+
+    const updateAvatar = (src) => {
+      if (!src) return
+      if (!(avatar instanceof Image)) {
+        const img = document.createElement('img')
+        img.id = 'avatar'
+        img.draggable = false
+        avatar.replaceWith(img)
+        avatar = img
+        avatar.addEventListener('click', avaClick)
+      }
+      avatar.src = src
+    }
+
+    const notifications = document.querySelector('decal-notifications')
+    const report = document.querySelector('decal-report')
+  
+    notifications.subscribe(ipc, loader)
+    report.subscribe(ipc, loader)
+
+    const { decal, engine, app, gui } = ipc
+    let bg = null
+
+    decal.intra.events.once('bg', (e, color) => { bg = color })
+    decal.intra.events.once('exit', (e, code) => { process.exit(code) })
+
+    process.on('exit', (code) => {
+      const actuallyARefresh = code === undefined
+      if (actuallyARefresh) return
+      app.quit(code)
+    })
+
+    avatar.addEventListener('click', avaClick)
+
+    app.getPreference('avatar').then(updateAvatar)
+
+    const incomingPrefs = app.preferencesUpdates()
+    autoUpdateAvatar().catch(console.error)
+
+    async function autoUpdateAvatar () {
+      for await (const [op, key, value] of incomingPrefs) {
+        if (op === 'set' && key === 'avatar') {
+          updateAvatar(value)
+        }
+      }
+    }
+
+    async function start () {
+
+      const win32CloseListener = process.platform === 'win32' ? () => ipc.app.quit(0) : null
+      if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
+      let config = window[Symbol.for('pear.config')]
+
+      if (process.platform === 'win32') {
+        const close = document.querySelector('#win-close')
+        close.removeEventListener('click', win32CloseListener)
+        close.addEventListener('click', async () => {
+          await Window.self.close()
+        })
+      }
+
+      const updating = await loader.start(ipc, config)
+
+      if (updating) return
+
+      config = await app.config()
+
+      const tier = document.querySelector('decal-tier')
+      tier.update(config)
+
+      const distribution = document.querySelector('decal-distribution')
+      distribution.update(config)
+
+      if (report.status === null) document.body.style.backgroundColor = bg
+      decal.intra.events.on('bg', (e, color) => {
+        if (report.status !== null) return
+        document.body.style.backgroundColor = color
+      })
+
+      // for await (const config of engine.reconfig()) {
+      //   tier.update(config)
+      //   distribution.update(config)
+      // }
+    }
+
+    start().catch(console.error)
+  </script>
+</body>
+</html>

@@ -275,7 +275,6 @@ module.exports = class IPC {
   }
 
   closeClients (closer = null) {
-    console.log('CLOSE CLIENTS')
     if (this.freelist.emptied()) return []
     const metadata = []
     for (const client of this.clients) {
@@ -283,12 +282,10 @@ module.exports = class IPC {
       if (!client?.userData?.ctx) continue // ignore e.g. `pear sidecar` cli i/o client
       const app = client.userData
       const { pid, clientArgv, cwd, runtime, appling, argv, env } = app.ctx
-      console.lg('CLOSING', { pid, clientArgv, cwd, runtime, appling, argv, env })
       metadata.push({ pid, clientArgv, cwd, runtime, appling, argv, env })
 
       const tearingDown = !!app && app.teardown()
       if (tearingDown === false) client.close()
-      console.log('post close')
     }
     return metadata
   }

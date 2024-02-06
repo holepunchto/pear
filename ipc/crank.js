@@ -1,11 +1,12 @@
 'use strict'
-const os = require('bare-os')
-const path = require('bare-path')
-const fs = require('bare-fs')
-const { spawn } = require('bare-subprocess')
+const constants = require('../lib/constants')
+const os = constants.IS_BARE ? require('bare-os') : require('os')
+const path = constants.IS_BARE ? require('bare-path') : require('path')
+const fs = constants.IS_BARE ? require('bare-fs') : require('fs')
+const ENV = constants.IS_BARE ? require('bare-env') : process.env
+const { spawn } = constants.IS_BARE ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
-const constants = require('../lib/constants')
 
 class Crank {
   starting = null
@@ -20,9 +21,9 @@ class Crank {
     if (key !== null) args = [...args.filter((arg) => arg !== key), '--run', key]
     if (dev === true && args.includes('--dev') === false) args = ['--dev', ...args]
     args = args.map(String)
+    const cwd = constants.IS_BARE ? os.cwd() : process.cwd()
+    const { startId, type } = await this.start(args, ENV, cwd)
 
-    // if desktop appling don't do this, just spawn DESKTOP_RUNTIME
-    const { startId, type } = await this.start(args, os.getEnv(), os.cwd())
     args.push('--start-id=' + startId)
 
     const terminal = type === 'terminal'
@@ -37,7 +38,7 @@ class Crank {
     else args = [path.resolve(__dirname, '..'), ...args]
     const child = spawn(runtime, args, {
       stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe'],
-      ...(terminal ? {} : { env: { ...os.getEnv(), NODE_PRESERVE_SYMLINKS: 1 } })
+      ...(terminal ? {} : { env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } })
     })
     child.once('exit', (code) => { iterable.push({ tag: 'exit', data: { code } }) })
 

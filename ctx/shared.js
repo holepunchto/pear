@@ -1,11 +1,13 @@
 'use strict'
-const os = require('bare-os')
-const path = require('bare-path')
+const { PLATFORM_DIR, RUNTIME, IS_BARE } = require('../lib/constants')
+const os = IS_BARE ? require('bare-os') : require('os')
+const path = IS_BARE ? require('bare-path') : require('path')
 const { discoveryKey } = require('hypercore-crypto')
 const { decode } = require('hypercore-id-encoding')
-const { PLATFORM_DIR, RUNTIME } = require('../lib/constants')
-const parse = require('../lib/parse')
 
+const parse = require('../lib/parse')
+const CWD = IS_BARE ? os.cwd() : process.cwd()
+const ENV = IS_BARE ? require('bare-env') : process.env
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw new Error('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
@@ -57,7 +59,7 @@ module.exports = class Context {
     this.#onupdate()
   }
 
-  constructor ({ sidecar, id = null, argv = [], env = os.getEnv(), cwd = os.cwd(), clientArgv, distributions, onupdate = () => {} } = {}) {
+  constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, distributions, onupdate = () => {} } = {}) {
     const {
       startId, store, appling, flags, channel, checkout,
       dev, run, stage, trace, key, alias, tools,
