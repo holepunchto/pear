@@ -53,11 +53,10 @@ class Crank {
       this.client.protomux.stream.rawStream.unref()
 
       // pear://key/<entrypoint>
-      Module.load(new URL('pear://' + bundle.key + encodeURI(bundle.entrypoint)), {
+      Module.load(new URL(bundle.entrypoint), {
         protocol,
         resolutions: bundle.resolutions
       })
-
       return
     }
 
