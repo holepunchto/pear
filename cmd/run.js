@@ -25,8 +25,7 @@ module.exports = (ipc) => async function run (args) {
     if (dev === false) {
       const isKey = parse.run(positionals[0].toString()).key !== null
       const key = isKey ? positionals[0] : null
-      const loading = new Loading()
-      await output(json, ipc.run({ args, dev, key, silent }), { loading })
+      await output(json, ipc.run({ args, dev, key, silent }))
       return
     }
     const cwd = os.cwd()
