@@ -53,8 +53,9 @@ module.exports = async (channel) => {
           return await this.cmds[cmd](argv.slice(1))
         }
         return await this.help(cmd)
-      } finally {
+      } catch (err) {
         await this.teardown()
+        throw err
       }
     }
   }

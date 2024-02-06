@@ -50,8 +50,6 @@ class Crank {
         }
       })
 
-      this.client.protomux.stream.rawStream.unref()
-
       // pear://key/<entrypoint>
       Module.load(new URL(bundle.entrypoint), {
         protocol,
@@ -171,7 +169,14 @@ class Crank {
 
   dump (params, opts) { return this.#op('dump', params, opts) }
 
-  async * iterable (channel, params, { eager = false } = {}) {
+  iterable (channel, params, { eager = false } = {}) {
+    const stream = new Readable()
+    const promise = this._iterable(stream, channel, params, { eager })
+    promise.catch((err) => stream.destroy(err))
+    return stream
+  }
+
+  async _iterable (stream, channel, params, { eager = false } = {}) {
     let tick = null
     let incoming = new Promise((resolve) => { tick = resolve })
     const payloads = []
@@ -187,7 +192,7 @@ class Crank {
         while (payloads.length > 0) {
           const payload = payloads.shift()
           if (payload === null) return // end of iterable
-          yield payload.value
+          stream.push(payload.value)
         }
         await incoming
       } while (true)

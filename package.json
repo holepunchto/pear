@@ -51,6 +51,12 @@
   "standard": {
     "globals": [
       "Bare"
+    ],
+    "ignore": [
+      "__snapshots__",
+      "test/fixtures",
+      "pear",
+      "by-arch"
     ]
   },
   "dependencies": {
