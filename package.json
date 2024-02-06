@@ -2,6 +2,48 @@
   "name": "pear",
   "version": "1.0.0",
   "main": "./boot.js",
+  "private": true,
+  "scripts": {
+    "test": "node test/smoke.test.js",
+    "test:gen": "brittle -r test/all.js test/*.js",
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "archdump": "node pear --archdump"
+  },
+  "author": "Holepunch",
+  "pear": {
+    "name": "pear",
+    "type": "terminal",
+    "stage": {
+      "entrypoints": [
+        "./boot.js",
+        "./sidecar.js",
+        "./electron-main.js",
+        "./cli.js"
+      ],
+      "ignore": [
+        "prebuilds",
+        "pear",
+        ".git",
+        ".github",
+        ".DS_Store",
+        "prebuilds",
+        "coverage",
+        ".vscode",
+        "corestore",
+        "test",
+        "example",
+        "todo",
+        "pear.js",
+        "sidecar.crash.log",
+        "electron-main.crash.log",
+        "node_modules/.package-lock.json"
+      ]
+    },
+    "platform": {
+      "fullSync": 0
+    }
+  },
   "subsystems": [
     "./lib/updater.js",
     "./ipc/sidecar.js"
@@ -53,6 +95,13 @@
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.7.13",
     "unix-path-resolve": "^1.0.2"
+  },
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "hyperbee": "^2.0.1",
+    "hypercore": "^10.1.0",
+    "port-get": "^1.0.4",
+    "standard": "^17.0.0"
   },
   "license": "Apache-2.0"
 }
