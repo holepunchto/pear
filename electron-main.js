@@ -2,8 +2,8 @@
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
-// const { SWAP } = require('./lib/constants')
-// const crasher = require('./lib/crasher')
+const { SWAP } = require('./lib/constants')
+const crasher = require('./lib/crasher')
 
 const connect = require('./lib/connect.js')
 
@@ -11,7 +11,7 @@ electronMain().catch(console.error)
 
 async function electronMain () {
   const channel = await connect()
-  // crasher('electron-main', SWAP)
+  crasher('electron-main', SWAP)
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
       ? process.argv.slice(1)
