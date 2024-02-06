@@ -204,7 +204,6 @@ module.exports = class IPC {
     }
 
     starting = null
-
     return result
   }
 

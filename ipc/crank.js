@@ -1,5 +1,8 @@
 'use strict'
 const constants = require('../lib/constants')
+const Context = require('../ctx/shared')
+const API = require('../lib/api')
+const Module = constants.IS_BARE ? require('bare-module') : null
 const os = constants.IS_BARE ? require('bare-os') : require('os')
 const path = constants.IS_BARE ? require('bare-path') : require('path')
 const fs = constants.IS_BARE ? require('bare-fs') : require('fs')
@@ -16,13 +19,47 @@ class Crank {
   }
 
   async * run ({ args, dev, key = null, dir = null, dbgport = null, silent = false }) {
-    // return require('../lib/run')(this.client, key) // TODO clean up, fully integrate
-
     if (key !== null) args = [...args.filter((arg) => arg !== key), '--run', key]
     if (dev === true && args.includes('--dev') === false) args = ['--dev', ...args]
     args = args.map(String)
     const cwd = constants.IS_BARE ? os.cwd() : process.cwd()
-    const { startId, type } = await this.start(args, ENV, cwd)
+
+    const { startId, host, id, type, bundle } = await this.start(args, ENV, cwd)
+
+    if (type === 'terminal') {
+      const ctx = new Context({ argv: args })
+
+      ctx.update({ host, id })
+
+      if (ctx.error) {
+        console.error(ctx.error)
+        global.process?.exit(1) || global.Bare.exit(1)
+        return
+      }
+
+      const pear = new API(this, ctx)
+      await pear.init()
+      global.Pear = pear
+
+      const protocol = new Module.Protocol({
+        exists (url) {
+          return Object.hasOwn(bundle.sources, url.href)
+        },
+        read (url) {
+          return bundle.sources[url.href]
+        }
+      })
+
+      this.client.protomux.stream.rawStream.unref()
+
+      // pear://key/<entrypoint>
+      Module.load(new URL('pear://' + bundle.key + encodeURI(bundle.entrypoint)), {
+        protocol,
+        resolutions: bundle.resolutions
+      })
+
+      return
+    }
 
     args.push('--start-id=' + startId)
 
