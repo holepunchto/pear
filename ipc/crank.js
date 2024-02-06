@@ -15,8 +15,7 @@ class Crank {
   }
 
   async * run ({ args, dev, key = null, dir = null, dbgport = null, silent = false }) {
-
-    return require('../lib/run')(this.client, key) // TODO clean up, fully integrate
+    // return require('../lib/run')(this.client, key) // TODO clean up, fully integrate
 
     if (key !== null) args = [...args.filter((arg) => arg !== key), '--run', key]
     if (dev === true && args.includes('--dev') === false) args = ['--dev', ...args]

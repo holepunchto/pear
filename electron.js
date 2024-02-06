@@ -1,5 +1,4 @@
 const { app, BrowserWindow } = require('electron')
-const path = require('path')
 const http = require('http')
 
 app.whenReady().then(function () {

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Example</title>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #6c9368;
+      color: #f2f2f2;
+      font-size: 20px;
+      padding-left: 1em;
+    }
+
+    table {
+      width: 600px;
+      margin: 70px auto;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #dddddd;
+    }
+
+    th {
+      background-color: #405b40;
+      color: #ffffff;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #b0d4b0;
+    }
+
+    tr:nth-child(even) {
+      background-color: #92c482;
+    }
+
+    td.key-field {
+      width: 50%; 
+    }
+
+    td.length-field,
+    td.fork-field {
+      width: 25%;
+    }
+
+    body {
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+    }
+
+    #bar {
+      background: rgba(55, 60, 72, 0.6);
+      backdrop-filter: blur(64px);
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+    pear-ctrl {
+      margin-top: 9px;
+      margin-left: 9px;
+    }
+    pear-ctrl[data-platform="dawrin"] { float: left; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
+  <h1>Hello Pear 🍐</h1>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Key</th>
+        <th>Fork</th>
+        <th>Length</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Platform</td>
+        <td id="platformKey" class="key"></td>
+        <td id="platformFork" class="fork"></td>
+        <td id="platformLength" class="length"></td>
+      </tr>
+      <tr>
+        <td>App</td>
+        <td id="appKey" class="key"></td>
+        <td id="appFork" class="fork"></td>
+        <td id="appLength" class="length"></td>
+      </tr>
+    </tbody>
+  </table>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>

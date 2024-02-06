@@ -1,5 +1,4 @@
 'use strict'
-const { basename } = require('bare-path')
 const { ansi, rich, print, stdio } = require('./iface')
 let usage = null
 module.exports = ({ fork, length, key }) => {
@@ -8,8 +7,7 @@ module.exports = ({ fork, length, key }) => {
   const v = `${fork || 0}.${length || 'dev'}.${key}`
 
   const version = ansi.bold(ansi.gray('v' + v))
-  let name = basename(Bare.argv[1])
-  name = name[0].toUpperCase() + name.slice(1)
+  const name = 'Pear'
   const cmd = name.toLowerCase()
   const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
   const init = ansi.bold(cmd + ' init')

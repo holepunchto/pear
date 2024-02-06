@@ -6,6 +6,9 @@
     "./lib/updater.js",
     "./ipc/sidecar.js"
   ],
+  "standard": {
+    "globals": [ "Bare" ]
+  },
   "dependencies": {
     "@hyperswarm/seeders": "github:hyperswarm/seeders#bare-imports-map",
     "bare-ansi-escapes": "^2.1.0",

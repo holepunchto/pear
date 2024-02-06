@@ -28,8 +28,7 @@ module.exports = (ipc) => async function sidecar (args) {
   Bare.argv.push('--spindown-timeout=2147483647', ...args)
   Bare.argv.push('--runtime', RUNTIME)
 
-  const { boot } = require('../boot')
-  await boot()
+  require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)

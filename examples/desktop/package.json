@@ -1,0 +1,24 @@
+{
+  "name": "deskex",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "brittle"
+  },
+  "type": "module",
+  "pear": {
+    "name": "deskex",
+    "gui": {
+      "width": 900,
+      "height": 500,
+      "minWidth": 500,
+      "backgroundColor": "#1F2430"
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "",
+  "dependencies": {
+  }
+}

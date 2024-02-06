@@ -4,10 +4,13 @@ const { spawn } = require('bare-subprocess')
 const { join } = require('bare-path')
 const fsp = require('bare-fs/promises')
 const clog = require('pear-changelog')
-const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, IS_WINDOWS, IS_MAC } = require('../lib/constants')
+const Protomux = require('protomux')
+const FramedStream = require('framed-stream')
+const Channel = require('jsonrpc-mux')
 const preferences = require('../lib/preferences')
 const Engine = require('../lib/engine')
 const parse = require('../lib/parse')
+const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, IS_WINDOWS, IS_MAC } = require('../lib/constants')
 
 const { constructor: AGF } = async function * () {}
 
@@ -17,34 +20,6 @@ module.exports = class IPC {
   decomissioned = false
   #closed = null
   updateAvailable = null
-
-  async open () {
-    await unlisten()
-
-    let active = 0
-    let idle = null
-
-    const server = Pipe.createServer()
-
-    const onconnection = (sock) => {
-      active++
-      clearTimeout(idle)
-      idle = null
-      sock.on('close', onclose)
-
-      const framed = new FramedStream(sock)
-      const mux = new Protomux(framed)
-      this.handle(new JSONRPC(mux))
-    }
-
-    function onclose () {
-      active--
-      if (active === 0) idle = setTimeout(() => this.teardown(), IDLE_TIMEOUT)
-    }
-
-    server.on('connection', onconnection)
-    server.listen(SOCKET_PATH)
-  }
 
   teardown () {
     global.Bare.exit()
@@ -57,11 +32,16 @@ module.exports = class IPC {
     }
 
     this.server = Pipe.createServer()
-    this.server.listen(SOCKET_PATH)
     this.connections = new Set()
+
     this.server.on('connection', (c) => {
       this.connections.add(c)
       c.on('close', () => this.connections.delete(c))
+      const stream = new FramedStream(c)
+      const client = new Channel(new Protomux(stream), this.freelist.nextId())
+      this.handle(client)
+      // we only use the stream for this, so always end the stream on channel close
+      client.on('close', () => stream.end())
     })
 
     this.freelist = new Freelist()
@@ -70,6 +50,13 @@ module.exports = class IPC {
     this.closing = new Promise((resolve) => { closed = resolve })
     this.#closed = closed
     this.#spindownCountdown()
+  }
+
+  async listen () {
+    try {
+      if (!IS_WINDOWS) await fsp.unlink(SOCKET_PATH)
+    } catch {}
+    this.server.listen(SOCKET_PATH)
   }
 
   clientFrom (id) {
@@ -288,6 +275,7 @@ module.exports = class IPC {
   }
 
   closeClients (closer = null) {
+    console.log('CLOSE CLIENTS')
     if (this.freelist.emptied()) return []
     const metadata = []
     for (const client of this.clients) {
@@ -295,9 +283,12 @@ module.exports = class IPC {
       if (!client?.userData?.ctx) continue // ignore e.g. `pear sidecar` cli i/o client
       const app = client.userData
       const { pid, clientArgv, cwd, runtime, appling, argv, env } = app.ctx
+      console.lg('CLOSING', { pid, clientArgv, cwd, runtime, appling, argv, env })
       metadata.push({ pid, clientArgv, cwd, runtime, appling, argv, env })
+
       const tearingDown = !!app && app.teardown()
       if (tearingDown === false) client.close()
+      console.log('post close')
     }
     return metadata
   }
@@ -552,10 +543,4 @@ function deserializeArgs (args) {
   } catch (err) {
     console.error('Pear Platform: argument deserialization error', err)
   }
-}
-
-async function unlisten () {
-  try {
-    if (!IS_WINDOWS) await fsp.unlink(SOCKET_PATH)
-  } catch {}
 }

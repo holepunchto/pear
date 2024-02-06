@@ -1,10 +1,10 @@
 'use strict'
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
-const { SWAP, PLATFORM_CORESTORE } = require('./lib/constants.js')
 const subsystem = require('./lib/subsystem.js')
+const { SWAP, PLATFORM_CORESTORE } = require('./lib/constants.js')
 
-bootSidecar().catch((err) => {
+module.exports = bootSidecar().catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
 })
@@ -20,8 +20,8 @@ async function bootSidecar () {
   await updater(drive)
 
   const SidecarIPC = await subsystem(drive, '/ipc/sidecar.js')
-  const sidecar = new SidecarIPC({ updater: new class Updater { on() {} }, drive, corestore })
-  await sidecar.open()
+  const sidecar = new SidecarIPC({ updater: new class Updater { on () {} }(), drive, corestore })
+  await sidecar.listen()
 }
 
 function createPlatformDrive () {

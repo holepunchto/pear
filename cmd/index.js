@@ -11,13 +11,12 @@ const run = require('./run')
 const use = require('./use')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
-
 module.exports = async (channel) => {
   const ipc = new Crank(channel)
   Bare.prependListener('exit', () => { ipc.close() })
   const usage = require('./usage')(CHECKOUT)
   ipc.usage = usage
-  const argv = Bare.argv.slice(2)
+  const argv = Bare.argv.slice(1)
   const { _, version } = parse.args(argv, {
     boolean: ['help', 'version'],
     alias: { version: 'v', help: 'h' }
