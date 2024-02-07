@@ -19,7 +19,7 @@ async function bootSidecar () {
   // always start by booting the updater - thats alfa omega
   const checkout = getUpgradeTarget()
   const updater = await subsystem(drive, '/lib/updater.js')
-  await updater(drive, checkout)
+  if (!LOCALDEV) await updater(drive, checkout)
 
   const SidecarIPC = await subsystem(drive, '/ipc/sidecar.js')
   const sidecar = new SidecarIPC({ updater: new class Updater { on () {} }(), drive, corestore })
