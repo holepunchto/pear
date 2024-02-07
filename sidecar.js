@@ -33,7 +33,7 @@ async function bootSidecar () {
     return new Updater(updateDrive, { directory: PLATFORM_DIR, swap: SWAP, lock: UPGRADE_LOCK, checkout })
   }
 
-  async function createPlatformDrive (corestore) {
+  async function createPlatformDrive () {
     if (LOCALDEV) return new Localdrive(SWAP)
 
     const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
