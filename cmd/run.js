@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { outputter, print, InputError, stdio, Loading } = require('./iface')
+const { outputter, print, InputError, stdio } = require('./iface')
 const parse = require('../lib/parse')
 
 const output = outputter('run', {
