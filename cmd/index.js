@@ -8,7 +8,6 @@ const info = require('./info')
 const dump = require('./dump')
 const sidecar = require('./sidecar')
 const run = require('./run')
-const use = require('./use')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
 module.exports = async (channel) => {
@@ -72,7 +71,6 @@ module.exports = async (channel) => {
   cmd.add('launch', launch) // launch is legacy alias for run
   cmd.add('info', info(ipc))
   cmd.add('dump', dump(ipc))
-  cmd.add('use', use(ipc))
   cmd.add('build', build)
   cmd.add('sidecar', (args) => sidecar(ipc)(args))
 

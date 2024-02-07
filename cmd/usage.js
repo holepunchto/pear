@@ -136,14 +136,6 @@ module.exports = ({ fork, length, key }) => {
     --attach-boot-io   include initial sidecar I/O (if applicable)
   `
 
-  const use = ansi.bold(cmd + ' use')
-  const useArgs = ansi.bold('<key>')
-  const useBrief = 'Advanced. Switch release-line.'
-  const useExplain = `${use} ${useArgs}
-
-    Switch to a different platform release-line.
-  `
-
   const versions = ansi.bold(cmd + ' versions')
   const versionsBrief = 'Output version information.'
   const versionsExplain = `${versions}
@@ -194,7 +186,6 @@ module.exports = ({ fork, length, key }) => {
     run: runExplain,
     seed: seedExplain,
     sidecar: sidecarExplain,
-    use: useExplain,
     help: helpExplain,
     output,
     outputVersions,
@@ -207,7 +198,6 @@ module.exports = ({ fork, length, key }) => {
     ${release} ${ansi.dim(ansi.green('∞'))} ${dedot(releaseBrief)}
     ${info} ${ansi.dim(ansi.green('∞'))} ${dedot(infoBrief)}
     ${dump} ${ansi.dim(ansi.green('∞'))} ${dedot(dumpBrief)}
-    ${use} ${ansi.dim(ansi.green('∞'))} ${dedot(useBrief)}
     ${sidecar} ${ansi.dim(ansi.green('∞'))} ${dedot(sidecarBrief)}
     ${versions} ${ansi.dim(ansi.green('∞'))} ${dedot(versionsBrief)}
 
@@ -222,7 +212,6 @@ ${footer}`,
     ${infoExplain}
     ${dumpExplain}
     ${sidecarExplain}
-    ${useExplain}
     ${versionsExplain}
     ${helpExplain}
 ${footer}`
