@@ -2,8 +2,9 @@
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
+const HypercoreID = require('hypercore-id-encoding')
 const subsystem = require('./lib/subsystem.js')
-const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV } = require('./lib/constants.js')
+const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV, UPGRADE_LOCK, PLATFORM_DIR } = require('./lib/constants.js')
 
 module.exports = bootSidecar().catch((err) => {
   console.error(err.stack)
@@ -14,25 +15,33 @@ async function bootSidecar () {
   const corestore = new Corestore(PLATFORM_CORESTORE)
   await corestore.ready()
 
-  const drive = await createPlatformDrive(corestore)
+  const drive = await createPlatformDrive()
+  const { SidecarIPC, Updater } = await subsystem(drive, '/subsystems/sidecar.js')
 
-  // always start by booting the updater - thats alfa omega
-  const checkout = getUpgradeTarget()
-  const updater = await subsystem(drive, '/lib/updater.js')
-  if (!LOCALDEV) await updater(drive, checkout)
-
-  const SidecarIPC = await subsystem(drive, '/ipc/sidecar.js')
-  const sidecar = new SidecarIPC({ updater: new class Updater { on () {} }(), drive, corestore })
+  const updater = createUpdater()
+  const sidecar = new SidecarIPC({ updater, drive, corestore })
   await sidecar.listen()
-}
 
-async function createPlatformDrive (corestore) {
-  if (LOCALDEV) return new Localdrive(SWAP)
-  const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
-  const checkout = drive.checkout(CHECKOUT.length)
-  await checkout.ready()
-  checkout.on('close', () => drive.close())
-  return checkout
+  function createUpdater () {
+    if (LOCALDEV) return null
+
+    const checkout = getUpgradeTarget()
+    const updateDrive = checkout === CHECKOUT || HypercoreID.normalize(checkout.key) === CHECKOUT.key
+      ? drive
+      : new Hyperdrive(corestore.session(), checkout.key)
+
+    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap: SWAP, lock: UPGRADE_LOCK, checkout })
+  }
+
+  async function createPlatformDrive (corestore) {
+    if (LOCALDEV) return new Localdrive(SWAP)
+
+    const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
+    const checkout = drive.checkout(CHECKOUT.length)
+    await checkout.ready()
+    checkout.on('close', () => drive.close())
+    return checkout
+  }
 }
 
 function getUpgradeTarget () {

@@ -16,12 +16,6 @@
     "name": "pear",
     "type": "terminal",
     "stage": {
-      "entrypoints": [
-        "./boot.js",
-        "./sidecar.js",
-        "./electron-main.js",
-        "./cli.js"
-      ],
       "ignore": [
         "prebuilds",
         "pear",
@@ -46,8 +40,7 @@
     }
   },
   "subsystems": [
-    "./lib/updater.js",
-    "./ipc/sidecar.js"
+    "./subsystems/sidecar.js"
   ],
   "standard": {
     "globals": [
