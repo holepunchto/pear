@@ -2,7 +2,7 @@
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
-const { SWAP } = require('./lib/constants')
+const { SWAP, RUNTIME } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
 
@@ -38,11 +38,10 @@ async function electronMain () {
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
-
 function configureElectron () {
   const electron = require('electron')
   if (process.platform === 'linux') {
-    linuxSetup(path.join(SWAP, 'by-arch', 'linux-' + process.arch, 'bin', 'pear-runtime'))
+    linuxSetup(RUNTIME)
   }
 
   if (process.platform === 'win32') {
@@ -109,7 +108,7 @@ function applingName () {
   return null
 }
 
-function linuxSetup () {
+function linuxSetup (executable) {
   const fs = require('fs')
   const os = require('os')
   const { join } = require('path')
@@ -124,20 +123,18 @@ function linuxSetup () {
     'x-scheme-handler/pear' // pear
   ]
 
-  function linux (executable) {
-    if (!executable) return
-    try {
-      if (!checkDesktopFile(executable)) {
-        fs.writeFileSync(DESKTOP_FILE_PATH, generateDesktopFile(executable), { encoding: 'utf-8' })
-      }
-      for (const mimeType of MIME_TYPES) {
-        if (!checkMimeType(mimeType)) {
-          registerMimeType(mimeType)
-        }
-      }
-    } catch (err) {
-      console.warn('could not install protocol handler:', err)
+  if (!executable) return
+  try {
+    if (!checkDesktopFile(executable)) {
+      fs.writeFileSync(DESKTOP_FILE_PATH, generateDesktopFile(executable), { encoding: 'utf-8' })
     }
+    for (const mimeType of MIME_TYPES) {
+      if (!checkMimeType(mimeType)) {
+        registerMimeType(mimeType)
+      }
+    }
+  } catch (err) {
+    console.warn('could not install protocol handler:', err)
   }
 
   function checkDesktopFile () {
