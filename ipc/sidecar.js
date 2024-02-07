@@ -316,7 +316,10 @@ module.exports = class IPC {
     const serverClosing = new Promise((resolve) => this.server.close(resolve))
     for (const c of this.connections) c.destroy()
     await serverClosing
-    if (this.updater) await this.updater.applyUpdate()
+    if (this.updater) {
+      await this.updater.applyUpdate()
+      console.log('✔ Applied update')
+    }
     this.#closed()
   }
 
