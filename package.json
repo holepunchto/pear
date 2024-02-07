@@ -84,7 +84,6 @@
     "jsonrpc-mux": "^1.1.0",
     "localdrive": "^1.11.3",
     "mime-db": "^1.52.0",
-    "minimist": "^1.2.8",
     "mirror-drive": "^1.3.0",
     "mutexify": "^1.4.0",
     "pear-changelog": "^1.0.1",
