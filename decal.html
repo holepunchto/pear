@@ -391,9 +391,11 @@
   <div id="bar">
     <script type="module">
       import constants from './lib/constants.js'
-      if (window[Symbol.for('pear.config')].options.platform?.__legacyTitlebar) {
-        document.getElementById('bar').style.display = 'block'
-        document.getElementById('window-controls').style.display = 'none'
+      if (constants.ALIASES.keet.z32 !== window[Symbol.for('pear.config')].key.z32) {
+        if (window[Symbol.for('pear.config')].options.platform?.__legacyTitlebar) {
+          document.getElementById('bar').style.display = 'block'
+          document.getElementById('window-controls').style.display = 'none'
+        }
       }
     </script>
     <div id="win-ctrl">
