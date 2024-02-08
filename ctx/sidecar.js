@@ -32,6 +32,7 @@ module.exports = class Context extends SharedContext {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
+
     if (this.key) {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
@@ -51,7 +52,7 @@ module.exports = class Context extends SharedContext {
       if (app?.reported) return
     }
 
-    const tier = this.dev && !this.key ? 'dev' : bundle.live ? 'production' : 'staging'
+    const tier = !this.key ? 'dev' : bundle.live ? 'production' : 'staging'
     if (app?.reported) return
 
     if (this.stage && this.manifest === null) throw new Error(`"${this.pkgPath}" not found. Pear project must have a package.json`)

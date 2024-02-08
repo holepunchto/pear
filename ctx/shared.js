@@ -49,9 +49,9 @@ module.exports = class Context {
   }
 
   static configFrom (ctx) {
-    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, tools, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir } = ctx
+    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, tools, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir, pearDir }
+    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir, pearDir }
   }
 
   update (state) {
@@ -61,11 +61,10 @@ module.exports = class Context {
 
   constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, distributions, onupdate = () => {} } = {}) {
     const {
-      startId, store, appling, flags, channel, checkout,
-      dev, run, stage, trace, key, alias, tools,
-      local, dir, appArgs, pkg, pkgPath,
-      clearAppStorage, clearPreferences,
-      chromeWebrtcInternals
+      startId, store, appling, flags, channel,
+      checkout, dev, run, stage, trace, key, link,
+      alias, local, dir, appArgs, pkg, pkgPath,
+      clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = parse.argv(argv, env, cwd)
 
     this.#onupdate = onupdate
@@ -84,14 +83,13 @@ module.exports = class Context {
     this.stage = stage
     this.trace = trace
     this.distributions = distributions?.[key?.z32] || null
-    this.link = this.flags.run || this.flags.link || 'pear:dev'
-    if (this.link && !this.link.startsWith('pear:') && !this.link.startsWith('punch:')) this.link = 'pear://' + this.link
-    this.linkData = parse.run(this.link).data
+    this.link = link
+    if (this.link && !this.link.startsWith('pear:')) this.link = 'pear://' + this.link
+    this.linkData = parse.runkey(this.link).data
     this.key = (this.distributions?.current)
       ? { z32: this.distributions[this.distributions.current], hex: decode(this.distributions[this.distributions.current]).toString('hex') }
       : key
     this.alias = alias
-    this.tools = tools
     this.local = local
     this.dir = dir
     this.manifest = pkg

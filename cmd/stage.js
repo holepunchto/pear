@@ -33,7 +33,7 @@ module.exports = (ipc) => async function stage (args) {
     const [from] = _
     let [, dir = ''] = _
 
-    const isKey = from && parse.run(from.toString()).key !== null
+    const isKey = from && parse.runkey(from.toString()).key !== null
     const channel = isKey ? null : from
     const key = isKey ? from : null
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')

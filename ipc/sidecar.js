@@ -143,7 +143,7 @@ module.exports = class IPC {
         resolve(false)
         return
       }
-      const parsed = parse.run(link)
+      const parsed = parse.runkey(link)
       if (parsed.key === null && appdev === null) {
         resolve(false)
         return
@@ -151,10 +151,10 @@ module.exports = class IPC {
       const matches = [...this.freelist].filter((client) => {
         const app = client.userData
         if (!app || !app.ctx) return false
-        return app.ctx.storage === storage && (appdev ? app.ctx.cwd === appdev : app.ctx.key?.z32 === parsed.key?.z32)
+        return app.ctx.storage === storage && (appdev ? app.ctx.dir === appdev : app.ctx.key?.z32 === parsed.key?.z32)
       })
 
-      if (matches.length === 0) {
+      if (matches.length <= 1) {
         resolve(false)
         return
       }

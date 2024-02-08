@@ -7,3 +7,4 @@ pear.dev
 pear.ps1
 pear.cmd
 pear/current
+*.log

@@ -302,7 +302,13 @@ const interact = (desktopTemplate, terminalTemplate, desktopParams, terminalPara
   return new Interact(desktopTemplate, terminalTemplate, desktopParams, terminalParams, header)
 }
 
-class InputError extends Error { code = 'ERR_INPUT' }
+class InputError extends Error {
+  code = 'ERR_INPUT'
+  constructor (message, { showUsage = true } = {}) {
+    super(message)
+    this.showUsage = showUsage
+  }
+}
 
 class Loading {
   y = 0
