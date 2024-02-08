@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "pear": {
     "name": "termex",
     "type": "terminal",
@@ -18,6 +17,9 @@
   "license": "ISC",
   "dependencies": {
     "bare-events": "^2.2.0",
-    "bare-tty": "^3.0.0"
+    "bare-os": "^2.1.1",
+    "bare-path": "^2.1.0",
+    "bare-tty": "^3.0.0",
+    "brittle": "^3.4.0"
   }
 }
