@@ -68,7 +68,6 @@
     "bare-pipe": "^2.0.0",
     "bare-subprocess": "^2.0.2",
     "bare-tty": "^3.0.1",
-    "blind-relay": "github:holepunchto/blind-relay",
     "compact-encoding": "^2.13.0",
     "corestore": "^6.16.2",
     "crc-universal": "^1.0.4",
