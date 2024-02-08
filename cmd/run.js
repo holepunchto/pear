@@ -12,12 +12,20 @@ const output = outputter('run', {
   loaded: (data, { loading }) => loading && loading.clear(data.forceClear || false)
 })
 
-module.exports = (ipc) => async function run (args) {
+module.exports = (ipc) => async function run (args, devrun = false) {
   try {
     const { json, dev, _ } = parse.args(args, { boolean: ['json', 'dev'], default: { json: false, dev: false } })
+    if (!_[0]) {
+      if (devrun) {
+        _[0] = '.'
+        args.push(_[0])
+      } else {
+        throw new InputError('Missing argument: pear run <key|dir|alias>')
+      }
+    }
     const key = parse.runkey(_[0]).key
     const cwd = os.cwd()
-    let dir = key == null ? (_[0] || '.') : cwd
+    let dir = key == null ? _[0] : cwd
 
     if (path.isAbsolute(dir) === false) {
       const resolved = path.resolve(cwd, dir)
@@ -28,7 +36,7 @@ module.exports = (ipc) => async function run (args) {
       try {
         JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
       } catch (err) {
-        throw new Error(`Pear: A valid package.json file must exist at ${dir}`, -1)
+        throw new InputError(`A valid package.json file must exist at "${dir}"`, { showUsage: false })
       }
     }
 
@@ -36,7 +44,7 @@ module.exports = (ipc) => async function run (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await ipc.usage.output('run')
+      if (err.showUsage) await ipc.usage.output('run')
     } else {
       print('An error occured', false)
       console.error(err)

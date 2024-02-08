@@ -88,7 +88,7 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<dir|key|alias>')
+  const runArgs = ansi.bold('<key|dir|alias>')
   const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 

@@ -25,7 +25,7 @@ async function electronMain () {
   }
   const client = channel
   const ipc = new IPC(ctx, client)
-  
+
   if (await ipc.wakeup()) { // note: would be unhandled rejection on failure, but should never fail
     require('electron').app.quit(0)
     return

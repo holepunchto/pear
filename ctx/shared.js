@@ -66,7 +66,7 @@ module.exports = class Context {
       alias, local, dir, appArgs, pkg, pkgPath,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = parse.argv(argv, env, cwd)
-    
+
     this.#onupdate = onupdate
     this.startId = startId || null
     this.sidecar = sidecar

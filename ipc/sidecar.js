@@ -153,7 +153,7 @@ module.exports = class IPC {
         if (!app || !app.ctx) return false
         return app.ctx.storage === storage && (appdev ? app.ctx.dir === appdev : app.ctx.key?.z32 === parsed.key?.z32)
       })
-      
+
       if (matches.length <= 1) {
         resolve(false)
         return

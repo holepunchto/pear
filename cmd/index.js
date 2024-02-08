@@ -63,7 +63,7 @@ module.exports = async (channel) => {
   cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
   cmd.add('versions', (args) => usage.outputVersions(args.includes('--json')))
   cmd.add('init', init(ipc))
-  cmd.add('dev', (args) => run(ipc)(['--dev', ...args]))
+  cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
   cmd.add('stage', stage(ipc))
   cmd.add('seed', seed(ipc))
   cmd.add('release', release(ipc))
