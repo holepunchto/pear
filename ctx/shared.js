@@ -43,7 +43,7 @@ module.exports = class Context {
     const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex')] : ['by-name', validateAppName(ctx.name)])
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (ctx.storage.startsWith(ctx.dir)) {
-      ctx.error = new Error('Application Storage may not be inside the project directory. --store "' + ctx.store + '" is invalid')
+      ctx.error = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
       ctx.error.code = 'ERR_INVALID_APPLICATION_STORAGE'
     }
   }
