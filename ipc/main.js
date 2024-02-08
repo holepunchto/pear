@@ -227,6 +227,18 @@ class Handlers {
     front({ name: 'chrome' }, async function chrome ({ ctx }, name) {
       return gui.chrome(name)
     })
+
+    front({ name: 'setWindowButtonPosition' }, async function setWindowButtonPosition (info, id, point) {
+      const instance = gui.get(id)
+      if (!instance) return
+      instance.setWindowButtonPosition(point)
+    })
+
+    front({ name: 'setWindowButtonVisibility' }, async function setWindowButtonVisibility (info, id, visible) {
+      const instance = gui.get(id)
+      if (!instance) return
+      instance.setWindowButtonVisibility(visible)
+    })
   }
 
   #app () {

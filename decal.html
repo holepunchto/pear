@@ -108,11 +108,10 @@
       top: 0;
     }
 
-    pear-ctrl {
-      margin-top: 9px;
-      margin-left: 9px;
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 12px;
+      margin-left: 12px;
     }
-    pear-ctrl[data-platform="dawrin"] { float: left; margin-top: 4px; }
 
   </style>
   <div id="window-controls"><pear-ctrl></pear-ctrl></div>
@@ -376,7 +375,7 @@
 </head>
 <body>
   <script>
-    const { dialog } = window[Symbol.for('pear.config')]
+    const { dialog } = Pear.config
     if (dialog) {
       document.body.remove()
       document.body = document.createElement('body')
@@ -391,8 +390,8 @@
   <div id="bar">
     <script type="module">
       import constants from './lib/constants.js'
-      if (constants.ALIASES.keet.z32 !== window[Symbol.for('pear.config')].key.z32) {
-        if (window[Symbol.for('pear.config')].options.platform?.__legacyTitlebar) {
+      if (Pear.config.key?.z32 !== constants.ALIASES.keet.z32) {
+        if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
           document.getElementById('window-controls').style.display = 'none'
         }
@@ -720,7 +719,7 @@
           alphaKey = alphaKey
           betaKey = betaKey
           allowList = new Set([ alphaKey, betaKey ])
-          launchKey = window[Symbol.for('pear.config')].key?.z32
+          launchKey = Pear.config.key?.z32
           name = null
           connected = false
           closing = null
@@ -1056,7 +1055,8 @@
     </script>
   </decal-loader>
   <script type="module">
-    import { ipc, Window, message, messages } from './lib/pear.js'
+    const { Window, message, messages } = Pear
+    const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
 
     let avatar = document.querySelector('#avatar')
@@ -1119,7 +1119,7 @@
 
       const win32CloseListener = process.platform === 'win32' ? () => ipc.app.quit(0) : null
       if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
-      let config = window[Symbol.for('pear.config')]
+      let config = Pear.config
 
       if (process.platform === 'win32') {
         const close = document.querySelector('#win-close')

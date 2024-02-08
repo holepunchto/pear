@@ -1,4 +1,5 @@
 'use strict'
+/* global Pear */
 /* eslint-env node, browser */
 if (process.isMainFrame) {
   const timers = require('timers')
@@ -7,16 +8,15 @@ if (process.isMainFrame) {
   const electron = require('electron')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
-  const isWin = process.platform === 'win32'
-  const isMac = process.platform === 'darwin'
-  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(isWin ? -2 : -1)[0])
+  const IS_WINDOWS = process.platform === 'win32'
+  const IS_MAC = process.platform === 'darwin'
+  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(IS_WINDOWS ? -2 : -1)[0])
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
-  const pear = require('./lib/pear')
-  window.Pear = pear
-  const { ipc } = pear
-
+  window.Pear = require('./lib/pear')
+  const ipc = Pear[Symbol.for('pear.ipc')]
+  const guiid = ipc.gui.id()
   if (isDecal === false) {
     window[Symbol.for('pear.config')] = config
     window[Symbol.for('pear.id')] = id
@@ -27,15 +27,14 @@ if (process.isMainFrame) {
     let unloading = null
     window[Symbol.for('pear.unloading')] = new Promise((resolve) => { unloading = resolve })
     const unload = async () => {
-      const id = ipc.gui.id()
-      const action = await ipc.gui.unloading(id) // only resolves when unloading occurs
+      const action = await ipc.gui.unloading(guiid) // only resolves when unloading occurs
       unloading(action) // resolve global promise and trigger user suspend functions
       const MAX_TEARDOWN_WAIT = 5000
       const timeout = new Promise((resolve) => setTimeout(resolve, MAX_TEARDOWN_WAIT))
       await Promise.race([window[Symbol.for('pear.unloading')], timeout])
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
-      await ipc.gui.completeUnload(id, action)
+      await ipc.gui.completeUnload(guiid, action)
     }
 
     const syncConfig = async () => {
@@ -141,8 +140,28 @@ if (process.isMainFrame) {
     #onfocus = null
     #onblur = null
     #demax = null
+
     connectedCallback () {
       this.dataset.platform = process.platform
+      if (IS_MAC) {
+        const ctrl = this.root.querySelector('#ctrl')
+        this.mutations = new MutationObserver(async (m) => {
+          const { x, y } = ctrl.getBoundingClientRect()
+          await ipc.gui.setWindowButtonPosition(guiid, { x, y })
+        })
+        this.mutations.observe(this, { attributes: true })
+
+        this.intesections = new IntersectionObserver(async ([element]) => {
+          await ipc.gui.setWindowButtonVisibility(guiid, element.isIntersecting)
+          const { x, y } = ctrl.getBoundingClientRect()
+          await ipc.gui.setWindowButtonPosition(guiid, { x, y })
+        }, { threshold: 0 })
+
+        this.intesections.observe(this)
+        return
+      }
+      if (!IS_WINDOWS) return // linux uses frame
+
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
@@ -153,7 +172,6 @@ if (process.isMainFrame) {
       close.addEventListener('click', this.#close)
       window.addEventListener('focus', this.#onfocus)
       window.addEventListener('blur', this.#onblur)
-      window.addEventListener('__macos-exit-fullscreen', this.#demax)
       window.addEventListener('mouseover', (e) => {
         const x = e.clientX
         const y = e.clientY
@@ -162,6 +180,12 @@ if (process.isMainFrame) {
     }
 
     disconnectedCallback () {
+      if (IS_MAC) {
+        this.mutations.disconnect()
+        this.intesections.disconnect()
+        return
+      }
+
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
@@ -172,13 +196,12 @@ if (process.isMainFrame) {
       close.removeEventListener('click', this.#close)
       window.removeEventListener('focus', this.#onfocus)
       window.removeEventListener('blur', this.#onblur)
-      window.removeEventListener('__macos-exit-fullscreen', this.#demax)
     }
 
     constructor () {
       super()
       this.template = document.createElement('template')
-      this.template.innerHTML = isWin ? this.#win() : (isMac ? this.#mac() : this.#gen())
+      this.template.innerHTML = IS_WINDOWS ? this.#win() : (IS_MAC ? this.#mac() : this.#gen())
       this.root = this.attachShadow({ mode: 'open' })
       this.root.appendChild(this.template.content.cloneNode(true))
       this.#onfocus = () => this.root.querySelector('#ctrl').classList.add('focused')
@@ -186,19 +209,19 @@ if (process.isMainFrame) {
       this.#demax = () => this.root.querySelector('#ctrl').classList.remove('max')
     }
 
-    async #min () { await pear.Window.self.minimize() }
+    async #min () { await Pear.Window.self.minimize() }
     async #max (e) {
-      if (isMac) await pear.Window.self.fullscreen()
-      else await pear.Window.self.maximize()
+      if (IS_MAC) await Pear.Window.self.fullscreen()
+      else await Pear.Window.self.maximize()
       e.target.root.querySelector('#ctrl').classList.add('max')
     }
 
     async #restore (e) {
-      await pear.Window.self.restore()
+      await Pear.Window.self.restore()
       e.target.root.querySelector('#ctrl').classList.remove('max')
     }
 
-    async #close () { await pear.Window.self.close() }
+    async #close () { await Pear.Window.self.close() }
     #win () {
       return `
     <style>
@@ -260,127 +283,16 @@ if (process.isMainFrame) {
 
     #mac () {
       return `
-      <style>
-        :host {
-          display: table;
-          font-family: none;
-        }
-        #ctrl {
-          -webkit-app-region: no-drag;
-          user-select: none;
-          display: table-row;
-          float: right;
-        }
-
-        #ctrl > .ctrl {
-          border-radius: 100%;
-          padding: 0;
-          height: 12px;
-          width: 12px;
-          outline: 1px solid rgba(0, 0, 0, 0.06);
-          margin-right: 2px;
-          margin-left: 1px;
-          position: relative;
-          display: table-cell;
-          vertical-align: middle;
-        }
-        #ctrl.max {
-          display: none;
-        }
-        #ctrl > .ctrl:before, #ctrl > .ctrl:after {
-          content: "";
-          position: absolute;
-          border-radius: 1px;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          margin: auto;
-          visibility: hidden;
-        }
-
-        #ctrl:hover > .ctrl:before, #ctrl:hover > .ctrl:after {
-          visibility: visible;
-        }
-
-        .ctrl {
-          background-color: rgb(73, 76, 76);
-          border: 1px solid rgb(73, 76, 76);
-        }
-
-        #ctrl:hover > #close, #ctrl.focused > #close {
-          background-color: rgb(253, 119, 114);
-          border: 1px solid rgb(253, 119, 114);
-        }
-
-        #close:active {
-          background-color: rgb(253, 70, 70)
-        }
-
-        #close:after, #close:before {
-          background-color: rgba(77, 0, 0, 75%);
-          width: 8px;
-          height: 1px;
-          transform: rotate(45deg);
-        }
-
-        #close:before {
-          transform: rotate(-45deg);
-        }
-
-        #ctrl:hover > #min, #ctrl.focused > #min  {
-          background-color: rgb(254, 176, 36);
-          border: 1px solid  rgb(254, 176, 36);
-        }
-        #min:active {
-          background-color: rgb(254, 252, 75)!important;
-        }
-
-        #ctrl:hover > #max, #ctrl.focused > #max  {
-          background-color: rgb(42, 193, 49, .9);
-          border: 1px solid  rgb(42, 193, 49, .9);
-        }
-
-        #max:before {
-          background-color: #006500;
-          width: 6px;
-          height: 6px;
-        }
-        #max:after {
-          background-color: rgb(42, 193, 49, .9);
-          width: 10px;
-          height: 2px;
-          transform: rotate(-45deg);
-        }
-        #max:active, #max:active:after {
-          background-color: rgb(78, 250, 92)!important;
-        }
-
-        #min:before {
-          background-color: rgb(160, 93, 12);
-          width: 8px;
-          height: 1px;
-        }
-
-        #min:after {
-          background-color: rgb(179, 108, 17, .9);
-          width: 8px;
-          height: 2px;
-        }
-      </style>
-      <div id="ctrl">
-        <button id="close" class="ctrl"></button>
-        <button id="min" class="ctrl"></button>
-        <button id="max" class="ctrl"></button>
-      </div>
+      <style>:host {display: block;}</style>
+      <div id=ctrl></div>
       `
     }
 
     #gen () {
-      return '<span></span>' // linux uses frame
+      return '' // linux uses frame
     }
   })
 }
 
 // support for native addons triggering uncaughtExceptions
-process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
+// process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
