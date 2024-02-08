@@ -86,7 +86,7 @@ async function * downloader (key, all) {
   yield `\n  Extracting platform runtime${all ? 's' : ''} to disk\n`
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
-    prefix: '/by-arch' + (all ? '/' + ADDON_HOST : '')
+    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
   for await (const { op, key, bytesAdded } of runtime) {
