@@ -16,7 +16,7 @@ module.exports = (ipc) => async function release (args) {
   try {
     const [from] = _
     let [, dir = ''] = _
-    const isKey = parse.run(from.toString()).key !== null
+    const isKey = parse.runkey(from.toString()).key !== null
     const channel = isKey ? null : from
     const key = isKey ? from : null
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')

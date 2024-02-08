@@ -2,7 +2,6 @@ const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 const BOOT_ELECTRON = 3
 const BOOT_ELECTRON_PRELOAD = 4
-
 switch (getBootType()) {
   case BOOT_SIDECAR: {
     require('./sidecar.js')

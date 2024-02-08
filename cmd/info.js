@@ -33,7 +33,7 @@ module.exports = (ipc) => async function info (args) {
     })
     const { _, json } = flags
     const [key] = _
-    const isKey = parse.run(key).key !== null
+    const isKey = parse.runkey(key).key !== null
     if (isKey === false) throw new Error('Key "' + key + '" is not valid')
     const id = Bare.pid
     await output(json, ipc.info({ id, key }))

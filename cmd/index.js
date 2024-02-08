@@ -77,10 +77,6 @@ module.exports = async (channel) => {
   await cmd.run(argv)
 
   function launch (args) {
-    if (args.includes('--dev')) {
-      args.splice(args.indexOf('--dev'), 1)
-      args = ['--dev', '--run', ...args]
-    }
     return run(ipc)(args)
   }
 

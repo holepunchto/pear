@@ -22,18 +22,15 @@ module.exports = ({ fork, length, key }) => {
   `
   const dev = ansi.bold(cmd + ' dev')
   const devArgs = ansi.bold('[dir]')
-  const devBrief = 'Start a project in development mode.'
+  const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
-   
+
     ${devBrief}
+    Alias for: ${ansi.italic('pear run --dev <dir>')}
 
-    Edit project files on disk.
-
-    --link=url       Simulate deep-link click open
-    --run=key        Run app from key in dev mode
-    --link=url       Simulate deep-link click open
-    --store|-s=path  Set the Application Storage path
-    --tmp-store|-t   Use a temporary Application Storage path
+    --link=url                 Simulate deep-link click open
+    --store|-s=path            Set the Application Storage path
+    --tmp-store|-t             Automatic new tmp folder as store path
   `
 
   const stage = ansi.bold(cmd + ' stage')
@@ -91,13 +88,20 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<key>')
-  const runBrief = 'Run an application from a key.'
+  const runArgs = ansi.bold('<dir|key|alias>')
+  const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
-
+    ${ansi.dim(ansi.italic(`
+     pear run ./an-app-folder
+     pear run an-app-folder
+     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run pear://keet
+     `))}
     --dev                      Run the app in dev mode
+    --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
     --checkout=n               Run a checkout, n is version length

@@ -14,28 +14,17 @@ const output = outputter('run', {
 
 module.exports = (ipc) => async function run (args) {
   try {
-    const {
-      json, dev, silent, launch, run = launch, _: positionals
-    } = parse.args(args, {
-      string: ['checkout', 'store', 'link'],
-      boolean: ['silent', 'dev', 'run', 'launch', 'tmp-store'],
-      default: { silent: false, dev: false },
-      alias: { store: 's', 'tmp-store': 't' }
-    })
-    if (dev === false) {
-      const isKey = parse.run(positionals[0].toString()).key !== null
-      const key = isKey ? positionals[0] : null
-      await output(json, ipc.run({ args, dev, key, silent }))
-      return
-    }
+    const { json, dev, _ } = parse.args(args, { boolean: ['json', 'dev'], default: { json: false, dev: false } })
+    const key = parse.runkey(_[0]).key
     const cwd = os.cwd()
-    let dir = positionals[0] || '.'
+    let dir = key == null ? (_[0] || '.') : cwd
+
     if (path.isAbsolute(dir) === false) {
       const resolved = path.resolve(cwd, dir)
       dir = args[args.indexOf(dir)] = resolved
     }
     if (dir !== cwd) os.chdir(dir)
-    if (!run) {
+    if (key === null) {
       try {
         JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
       } catch (err) {
@@ -43,7 +32,7 @@ module.exports = (ipc) => async function run (args) {
       }
     }
 
-    await output(json, ipc.run({ key: null, args, dev, dir, silent }))
+    await output(json, ipc.run({ key, args, dev, dir }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)

@@ -18,11 +18,9 @@ class Crank {
     this.client = client
   }
 
-  async * run ({ args, dev, key = null, dir = null, dbgport = null, silent = false }) {
-    if (key !== null) args = [...args.filter((arg) => arg !== key), '--run', key]
-    if (dev === true && args.includes('--dev') === false) args = ['--dev', ...args]
-    args = args.map(String)
-    const cwd = constants.IS_BARE ? os.cwd() : process.cwd()
+  async * run ({ args }) {
+    const cwd = constants.IS_BARE ? os.cwd() : global.process.cwd()
+    args.unshift('--run')
 
     const { startId, host, id, type, bundle } = await this.start(args, ENV, cwd)
 
@@ -50,7 +48,6 @@ class Crank {
         }
       })
 
-      // pear://key/<entrypoint>
       Module.load(new URL(bundle.entrypoint), {
         protocol,
         resolutions: bundle.resolutions
@@ -58,38 +55,25 @@ class Crank {
       return
     }
 
-    args.push('--start-id=' + startId)
-
-    const terminal = type === 'terminal'
-
-    if (terminal) args = [...args, '--ua', 'pear/' + type]
+    args.unshift('--start-id=' + startId)
 
     const iterable = new Readable({ objectMode: true })
-    if (terminal === false) iterable.push({ tag: 'loaded', data: { forceClear: true } })
-
-    const runtime = terminal ? constants.TERMINAL_RUNTIME : constants.DESKTOP_RUNTIME
-    if (terminal) iterable.push({ tag: 'loaded' })
-    else args = [path.resolve(__dirname, '..'), ...args]
-    const child = spawn(runtime, args, {
-      stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe'],
-      ...(terminal ? {} : { env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } })
+    args = [path.resolve(__dirname, '..'), ...args]
+    const child = spawn(constants.DESKTOP_RUNTIME, args, {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
     child.once('exit', (code) => { iterable.push({ tag: 'exit', data: { code } }) })
-
-    if (silent === false) {
-      child.stdout.on('data', (data) => { iterable.push({ tag: 'stdout', data }) })
-      child.stderr.on('data', terminal
-        ? (data) => { iterable.push({ tag: 'stderr', data }) }
-        : (data) => {
-            const str = data.toString()
-            const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
-              str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
-              str.indexOf('devtools://devtools/bundled/panels/elements/elements.js') > -1 ||
-              str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1')
-            if (ignore) return
-            iterable.push({ tag: 'stderr', data })
-          })
-    }
+    child.stdout.on('data', (data) => { iterable.push({ tag: 'stdout', data }) })
+    child.stderr.on('data', (data) => {
+      const str = data.toString()
+      const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
+        str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
+        str.indexOf('devtools://devtools/bundled/panels/elements/elements.js') > -1 ||
+        str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1')
+      if (ignore) return
+      iterable.push({ tag: 'stderr', data })
+    })
 
     yield * iterable
   }

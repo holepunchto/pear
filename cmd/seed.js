@@ -25,7 +25,7 @@ module.exports = (ipc) => async function seed (args) {
   const { _, json, verbose, seeders } = parsed
   try {
     const [from, dir = os.cwd()] = _
-    const isKey = parse.run(from.toString()).key !== null
+    const isKey = parse.runkey(from.toString()).key !== null
     const channel = isKey ? null : from
     const key = isKey ? from : null
     let { name } = parsed

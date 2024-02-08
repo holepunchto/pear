@@ -44,11 +44,11 @@ module.exports = class IPC {
   }
 
   wakeup () {
-    let link = this.ctx.flags.run || this.ctx.flags.link
+    let link = this.ctx.link
     if (!link) return false
     if (link.startsWith('pear:') === false && link.startsWith('punch:') === false) link = 'pear://' + link
     const devlink = link.startsWith('pear://dev') || link.startsWith('pear:dev') || link.startsWith('punch//:dev') || link.startsWith('punch:dev')
-    const appdev = devlink && this.ctx.cwd
+    const appdev = devlink && this.ctx.dir
     return this.sidecar.wakeup(link, this.ctx.storage, appdev)
   }
 

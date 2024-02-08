@@ -11,8 +11,8 @@ configureElectron()
 electronMain().catch(console.error)
 
 async function electronMain () {
-  const channel = await connect()
   crasher('electron-main', SWAP)
+  const channel = await connect()
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
       ? process.argv.slice(1)
@@ -25,6 +25,7 @@ async function electronMain () {
   }
   const client = channel
   const ipc = new IPC(ctx, client)
+  
   if (await ipc.wakeup()) { // note: would be unhandled rejection on failure, but should never fail
     require('electron').app.quit(0)
     return
