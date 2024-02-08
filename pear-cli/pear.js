@@ -27,25 +27,24 @@ if (isInstalled()) {
   }).on('exit', function (code) {
     process.exit(code)
   })
-  return
+} else {
+  const bootstrap = require('pear-updater-bootstrap')
+
+  console.log('Installing Pear Runtime (this might take a bit...)')
+  bootstrap(PEAR_KEY, PEAR_DIR).then(function () {
+    console.log('Pear Runtime installed!')
+    console.log()
+    console.log('Finish the installation by opening the runtime app')
+    console.log()
+    console.log('pear run pear://runtime')
+    if (makeBin()) {
+      console.log()
+      console.log('Or by adding the following to your path')
+      console.log()
+      console.log('export PATH="' + BIN + ':$PATH"')
+    }
+  })
 }
-
-const bootstrap = require('pear-updater-bootstrap')
-
-console.log('Installing Pear Runtime (this might take a bit...)')
-bootstrap(PEAR_KEY, PEAR_DIR).then(function () {
-  console.log('Pear Runtime installed!')
-  console.log()
-  console.log('Finish the installation by opening the runtime app')
-  console.log()
-  console.log('pear run pear://runtime')
-  if (makeBin()) {
-    console.log()
-    console.log('Or by adding the following to your path')
-    console.log()
-    console.log('export PATH="' + BIN + ':$PATH"')
-  }
-})
 
 function makeBin () {
   if (IS_WIN) return false
