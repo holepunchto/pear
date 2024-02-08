@@ -68,6 +68,7 @@ const outputter = (cmd, taggers = {}) => async (json, iterable, state = {}) => {
         const err = new Error(data.message)
         err.sidecarCode = data.code
         err.sidecarStack = data.stack
+        console.log(err.sidecarStack)
         throw err
       }
       let result = typeof taggers[tag] === 'function' ? taggers[tag](data, state) : (taggers[tag] || false)

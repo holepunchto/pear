@@ -47,7 +47,7 @@ module.exports = ({ fork, length, key }) => {
 
     --json         Newline delimited JSON output
     --dry-run|-d   Execute a stage without writing
-    --bare|-b      File data only, no warmup optimization
+    --data         Data-only non-application
     --ignore       Comma separated file path ignore list
     --name         Advanced. Override app name
   `

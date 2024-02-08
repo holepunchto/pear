@@ -28,7 +28,7 @@ module.exports = class Context extends SharedContext {
     this.reconfigure()
   }
 
-  async initialize ({ bundle, app, dryRun = false } = {}) {
+  async initialize ({ bundle, app, dryRun = false, data = false } = {}) {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
@@ -44,6 +44,7 @@ module.exports = class Context extends SharedContext {
 
       this.constructor.injestPackage(this, result.value)
     } else if (this.stage) {
+      if (data) return
       const result = await bundle.db.get('manifest')
 
       if (!result || !sameData(result.value, this.manifest)) {
