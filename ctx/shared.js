@@ -84,7 +84,7 @@ module.exports = class Context {
     this.trace = trace
     this.distributions = distributions?.[key?.z32] || null
     this.link = link
-    if (this.link && !this.link.startsWith('pear:') && !this.link.startsWith('punch:')) this.link = 'pear://' + this.link
+    if (this.link && !this.link.startsWith('pear:')) this.link = 'pear://' + this.link
     this.linkData = parse.runkey(this.link).data
     this.key = (this.distributions?.current)
       ? { z32: this.distributions[this.distributions.current], hex: decode(this.distributions[this.distributions.current]).toString('hex') }

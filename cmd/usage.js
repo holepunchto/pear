@@ -93,13 +93,11 @@ module.exports = ({ fork, length, key }) => {
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
-    ${ansi.dim(ansi.italic(`
-     pear run ./an-app-folder
-     pear run an-app-folder
-     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
-     pear run u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
-     pear run pear://keet
-     `))}
+
+    ${ansi.bold('key')}    pear://<key>
+    ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
+    ${ansi.bold('alias')}  pear://<alias>
+
     --dev                      Run the app in dev mode
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
@@ -107,7 +105,12 @@ module.exports = ({ fork, length, key }) => {
     --checkout=n               Run a checkout, n is version length
     --checkout=release         Run checkout from marked released length
     --checkout=staged          Run checkout from latest version length
-  `
+    ${ansi.dim(ansi.italic(`
+     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run pear://keet
+     pear run file://path/to/an-app-folder
+     pear run path/to/an-app-folder
+     `))}`
 
   const seed = ansi.bold(cmd + ' seed')
   const seedArgs = ansi.bold('<channel|key> [dir]')

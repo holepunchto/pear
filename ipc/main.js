@@ -46,8 +46,8 @@ module.exports = class IPC {
   wakeup () {
     let link = this.ctx.link
     if (!link) return false
-    if (link.startsWith('pear:') === false && link.startsWith('punch:') === false) link = 'pear://' + link
-    const devlink = link.startsWith('pear://dev') || link.startsWith('pear:dev') || link.startsWith('punch//:dev') || link.startsWith('punch:dev')
+    if (link.startsWith('pear:') === false) link = 'pear://' + link
+    const devlink = link.startsWith('pear://dev') || link.startsWith('pear:dev') || link.startsWith('punch//:dev')
     const appdev = devlink && this.ctx.dir
     return this.sidecar.wakeup(link, this.ctx.storage, appdev)
   }
@@ -136,7 +136,7 @@ class Handlers {
 
       const args = ['--run', entry]
 
-      const appkin = entry.startsWith('pear:') || entry.startsWith('punch:') // punch: is legacy
+      const appkin = entry.startsWith('pear:')
         ? sidecar.start(args).then(({ host, id }) => new Context({ sidecar: host, id, args, env: ctx?.env, cwd: ctx?.cwd, config: Context.configFrom(ctx) }))
         : null
       if (appkin) entry = '/'
