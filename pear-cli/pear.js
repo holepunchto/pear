@@ -14,8 +14,8 @@ const HOST = process.platform + '-' + process.arch
 const PEAR_DIR = process.platform === 'darwin'
   ? path.join(os.homedir(), 'Library', 'Application Support', 'pear')
   : process.platform === 'linux'
-    ? path.join(os.homedir(), 'tmp', 'pear') // todo
-    : path.join(os.homedir(), 'tmp', 'pear') // todo
+    ? path.join(os.homedir(), '.config', 'pear')
+    : path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
 
 const LINK = path.join(PEAR_DIR, 'current')
 const BIN = path.join(PEAR_DIR, 'bin')
