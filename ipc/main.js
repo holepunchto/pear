@@ -416,7 +416,10 @@ class Handler {
       electron.ipcMain.on(channel, this.#ipceh(async (event, ...args) => {
         const sender = event.sender.id
         const ua = event.sender.getUserAgent()
-        if (iter === null) iter = sidecar.iterable(channel, { id, sender, ua, channel, args: serializeArgs(args) }, { eager })
+        if (iter === null) {
+          iter = sidecar.iterable(channel, { id, sender, ua, channel, args: serializeArgs(args) }, { eager })
+          if (!iter.next) iter = iter[Symbol.asyncIterator]()
+        }
         renderClients.add(event)
         if (broadcasting) return
         broadcasting = true
