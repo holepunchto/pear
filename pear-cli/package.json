@@ -1,0 +1,26 @@
+{
+  "name": "@holepunchto/pear",
+  "version": "4.0.0",
+  "description": "pear",
+  "bin": {
+    "pear": "./pear.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/pear.git"
+  },
+  "keywords": [
+    "pear"
+  ],
+  "author": "Holepunch Inc",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/pear/issues"
+  },
+  "homepage": "https://github.com/holepunchto/pear#readme",
+  "dependencies": {
+    "hypercore": "^10.32.8",
+    "hypercore-id-encoding": "^1.2.0",
+    "pear-updater-bootstrap": "^1.0.1"
+  }
+}
