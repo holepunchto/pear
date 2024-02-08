@@ -29,7 +29,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       throw new InputError('Key must start with pear://')
     }
     const key = parse.runkey(_[0]).key
-    if (!key !== null && _[0].startsWith('pear://') === false) {
+    if (key !== null && _[0].startsWith('pear://') === false) {
       throw new InputError('Key must start with pear://')
     }
     const cwd = os.cwd()
