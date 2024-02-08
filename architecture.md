@@ -1,4 +1,4 @@
-# The Pear Platform
+# The Pear Runtime
 
 ```
 platform-dir: 
@@ -22,7 +22,7 @@ swap: incremental integer dirname (default: 0) - incremented with `swap + 1 & 3`
       - /bin
         - /pear-runtime (mac|linux) | pear-runtime.exe (win)
         - /pear-runtime.lib (win only)
-        - /holepunch-runtime (win|linux) | /Holepunch Runtime.app (mac) <-- the ui engine (will be deprecated in the future to just be a shared lib)
+        - /pear-runtime-app (win|linux) | /Pear Runtime.app (mac) <-- the ui engine (will be deprecated in the future to just be a shared lib)
         - /Pear.app (mac) | pear.exe (win) | pear (linux) <-- the bootstrap app that registers links etc
       - /lib
         - pear.dylib (shared lib entry point)
@@ -43,6 +43,6 @@ When the platform updates, `boot.bundle` updates the drive in the background and
 
 If the `by-arch` folder updates, a new swap is needed for a full atomic update. When a new swap has been extracted on disk, the `[platform-dir]/current` symlink is updated.
 
-## The Bare Runtime
+## Pear on Bare
 
-Pear runtime runs on [bare](https://github.com/holepunchto/bare) runtime.
+Pear Runtime runs on [bare](https://github.com/holepunchto/bare), which is a cross-platform (including mobile) minimal JS runtime.
