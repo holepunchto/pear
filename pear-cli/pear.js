@@ -39,7 +39,7 @@ bootstrap(PEAR_KEY, PEAR_DIR).then(function () {
   console.log('Finish the installation by opening the runtime app')
   console.log()
   console.log('pear run pear://runtime')
-  if (!IS_WIN) {
+  if (makeBin()) {
     console.log()
     console.log('Or by adding the following to your path')
     console.log()
@@ -48,11 +48,12 @@ bootstrap(PEAR_KEY, PEAR_DIR).then(function () {
 })
 
 function makeBin () {
-  if (IS_WIN) return
+  if (IS_WIN) return false
   try {
     fs.mkdirSync(BIN, { recursive: true })
     fs.symlinkSync(CURRENT_BIN, path.join(BIN, 'pear'))
   } catch {}
+  return true
 }
 
 function isInstalled () {
