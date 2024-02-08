@@ -10,8 +10,6 @@ npm install -g pear
 
 ### Help
 
-**General**
-
 ```sh
 pear help <cmd>
 ```
@@ -20,27 +18,13 @@ pear help <cmd>
 pear <cmd> --help
 ```
 
-```
-pear <cmd> -h
-```
-**Specific**
-
-
 ```sh
-pear help <cmd>
-```
-
-```sh
-pear <cmd> --help
-```
-
-```
 pear <cmd> -h
 ```
 
 ## Documentation
 
-[Documentation](./doc/readme.md)
+[Documentation](https://docs.pears.com)
 
 ## Platform Development
 
@@ -48,20 +32,20 @@ Platform development is generally referred to as **localdev**.
 
 **Clone:**
 
-```
+```sh
 git clone https://github.com/holepunchto/pear && cd pear
 ```
 
 **Install deps:**
 
-```
+```sh
 npm install
 ```
 
-The `pear.js` file in the project root provides localdev setup:
+Bootstrap the runtime binaries with
 
-```
-node pear <KEY>
+```sh
+npm run bootstrap <KEY>
 ```
 
 First run will install runtimes in `by-arch`, create platform directory called `pear` and add a `pear.dev` symlink (Linux, Mac)or `pear.ps1` and `pear.cmd` files (Windows). These are system-specific and .gitignore'd.
