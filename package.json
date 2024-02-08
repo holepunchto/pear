@@ -4,7 +4,7 @@
   "main": "./boot.js",
   "private": true,
   "scripts": {
-    "test": "node test/smoke.test.js",
+    "test": "./pear.dev dev test",
     "test:gen": "brittle -r test/all.js test/*.js",
     "lint": "standard",
     "lint:fix": "standard --fix",
