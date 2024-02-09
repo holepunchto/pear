@@ -5,7 +5,7 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 
-const PEAR_KEY = '1x6o7dik6g7hnhx9xxs3pbdzcuz3ds6wyw7y4ntje86iotejqfqy'
+const PEAR_KEY = process.env.PEAR_KEY
 const DKEY = Hypercore.discoveryKey(HypercoreID.decode(PEAR_KEY)).toString('hex')
 
 const IS_WIN = process.platform === 'win32'
@@ -30,7 +30,7 @@ if (isInstalled()) {
 } else {
   const bootstrap = require('pear-updater-bootstrap')
 
-  console.log('Installing Pear Runtime (this might take a bit...)')
+  console.log('Installing Pear Runtime (Please stand by, this might take a bit...)')
   bootstrap(PEAR_KEY, PEAR_DIR).then(function () {
     console.log('Pear Runtime installed!')
     console.log()

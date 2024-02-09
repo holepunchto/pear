@@ -1,6 +1,6 @@
 {
-  "name": "@holepunchto/pear",
-  "version": "4.0.3",
+  "name": "pear",
+  "version": "1.0.0",
   "description": "pear",
   "bin": {
     "pear": "./pear.js"
