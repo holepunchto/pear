@@ -106,18 +106,6 @@ class Helper {
       stdio: (global.Bare || global.process).argv.includes('--attach-boot-io') ? 'inherit' : 'ignore',
       cwd: this.platformDir
     })
-
-    sc.stdout.on('data',
-      (data) => {
-        const str = data.toString()
-      }
-    )
-    sc.stderr.on('data',
-      (data) => {
-        const str = data.toString()
-      }
-    )
-
     sc.unref()
   }
 
@@ -377,63 +365,7 @@ class Helper {
     }
 
     async provision () {
-      const KEY = decode(key || Bare.argv.slice(keyIndex).find(([c]) => c !== '-'))
-      const store = path.join(PEAR_DIR, 'corestores', 'platform')
-      const drive = new Hyperdrive(new Corestore(store), KEY)
-
-      let onupdate = null
-      const bootable = new Promise((resolve) => { onupdate = resolve })
-      const updater = new Updater(drive, {
-        additionalBuiltins,
-        directory: PEAR_DIR,
-        checkout: { key: KEY, length: 0, fork: 0 },
-        onupdate (checkout) { onupdate(checkout) }
-      })
-      await drive.ready()
-      const swarm = new Hyperswarm()
-      swarm.on('connection', (connection) => drive.replicate(connection))
-      swarm.join(drive.discoveryKey, { server: false, client: true })
-      const checkout = await bootable // TODO: use u.bootable when available
-      try {
-        return checkout
-      } finally {
-        await drive.close()
-        await updater.close()
-        await swarm.destroy()
-      }
-    }
-
-    async download (cwd, key, all = false) {
-      const store = path.join(cwd, 'pear', 'corestores', 'platform')
-      const corestore = new Corestore(store)
-      let runtimes = new Hyperdrive(corestore, decode(key))
-
-      const swarm = new Hyperswarm()
-      goodbye(() => swarm.destroy())
-
-      swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
-
-      await runtimes.ready()
-
-      swarm.join(runtimes.discoveryKey, { server: false, client: true })
-      const done = runtimes.corestore.findingPeers()
-      swarm.flush().then(done, done)
-
-      await runtimes.core.update()
-
-      runtimes = runtimes.checkout(runtimes.version)
-      goodbye(() => runtimes.close())
-
-      const runtime = runtimes.mirror(new Localdrive(cwd), {
-        prefix: '/by-arch',
-        filter (key) {
-          return all ? key.startsWith('/by-arch') : key.startsWith(`/by-arch/${Helper.PLATFORM}-${Helper.ARCH}`)
-        }
-      })
-
-      await runtimes.close()
-      await swarm.destroy()
-      await corestore.close()
+      // TODO: use new pear-updater
     }
   }
 }

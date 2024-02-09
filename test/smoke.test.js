@@ -58,4 +58,3 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
   const { code } = await app.exit
   is(code, 0, 'exit code is 0')
 })
-

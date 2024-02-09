@@ -40,7 +40,7 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: bootstrap
-      run: node pear ${{ secrets.PEAR_KEY }}
+      run: npm run bootstrap 1x6o7dik6g7hnhx9xxs3pbdzcuz3ds6wyw7y4ntje86iotejqfqy
     - name: run tests
       run: npm test
     - name: lint
