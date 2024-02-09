@@ -19,39 +19,30 @@ const IS_WINDOWS = (global.Bare?.platform || global.process.platform) === 'win32
 const PEAR = path.join(__dirname, '..', 'pear')
 const SWAP = path.join(__dirname, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
-console.log('HOST:', HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-')
 if (!RUNTIMES_DRIVE_KEY) throw new Error('provide key')
 
-try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { console.log('e1:',e)/* ignore */ }
+try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
 
 if (IS_WINDOWS === false) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
-    console.log('peardev:', peardev)
     fs.symlinkSync(path.join(path.join('by-arch', ADDON_HOST), 'bin', 'pear-runtime'), peardev)
     fs.chmodSync(peardev, 0o775)
-  } catch (e) { console.log('e2:', e)/* ignore */ }
+  } catch (e) { /* ignore */ }
 } else {
-  console.log('todo gen PS1 and cmd localdev wrappers for win')
   // todo gen PS1 and cmd localdev wrappers for win
 }
 
 if (ARCHDUMP) {
-  console.log('ARCHDUMP:', ARCHDUMP)
   const downloading = download(RUNTIMES_DRIVE_KEY, true)
   downloading.catch(console.error).then(advise)
 } else if (DLRUNTIME || fs.existsSync(HOST) === false) {
-  console.log('DLRUNTIME:', DLRUNTIME)
-  console.log('fs.existsSync(HOST):', fs.existsSync(HOST))
   const downloading = download(RUNTIMES_DRIVE_KEY, false)
-  console.log('dc1')
   downloading.catch(console.error)
-  console.log('dc2')
-  if (DLRUNTIME === false) {console.log("dlrt false");downloading.catch(console.error).then(advise)}
-  console.log('dc3')
+  if (DLRUNTIME === false) downloading.catch(console.error).then(advise)
 } else {
   console.log('Now run ./pear.dev')
 }
@@ -71,18 +62,15 @@ async function download (key, all = false) {
 async function * downloader (key, all) {
   if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
-  console.log('key:', key)
 
-  const store = path.join(PEAR, 'corestores', 'platform') // /Users/runner/work/pear-next/pear-next/pear/corestores/platform
-  console.log('store:', store)
+  const store = path.join(PEAR, 'corestores', 'platform')
   const corestore = new Corestore(store)
   let runtimes = new Hyperdrive(corestore, decode(key))
-  // console.log('runtimes:', runtimes)
 
   const swarm = new Hyperswarm()
   goodbye(() => swarm.destroy())
 
-  swarm.on('connection', (socket) => { console.log('connected to socket'); runtimes.corestore.replicate(socket) })
+  swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
 
   await runtimes.ready()
 
@@ -92,28 +80,16 @@ async function * downloader (key, all) {
 
   await runtimes.core.update() // make sure we have latest version
 
-  console.log('runtimes.version:', runtimes.version)
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
   yield `\n  Extracting platform runtime${all ? 's' : ''} to disk\n`
 
-  console.log('SWAP:', SWAP) // /Users/runner/work/pear-next/pear-next
-  console.log('ADDON_HOST:', ADDON_HOST) // ADDON_HOST: darwin-x64
-  const loc = new Localdrive(SWAP)
-  console.log('loc.root:', loc.root)
-  for await (const name of loc.readdir()) {
-    console.log('name:', name)
-  }
-  const runtime = runtimes.mirror(loc, {
-    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST) // /by-arch/darwin-x64
+  const runtime = runtimes.mirror(new Localdrive(SWAP), {
+    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
-  // console.log('runtime:', runtime)
 
   for await (const { op, key, bytesAdded } of runtime) {
-    // console.log('op:',op)
-    // console.log('key:',key)
-    // console.log('bytesAdded:', bytesAdded)
     if (op === 'add') {
       yield '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
     } else if (op === 'change') {
@@ -132,5 +108,3 @@ async function * downloader (key, all) {
   if (all) yield '\x1B[32m✔\x1B[39m Download complete\n'
   else yield '\x1B[32m✔\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
 }
-
-process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
