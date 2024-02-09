@@ -87,7 +87,7 @@ class Helper {
   
     return channel
   
-    function onerror (err) {
+    function onerror () {
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       next(false)

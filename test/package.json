@@ -2,7 +2,7 @@
   "name": "test",
   "version": "1.0.0",
   "description": "",
-  "main": "smoke.test.js",
+  "main": "./smoke.test.js",
   "pear": {
     "name": "test",
     "type": "terminal",
@@ -14,8 +14,7 @@
     }
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Holepunch",
   "dependencies": {
     "bare-env": "^2.1.0",
     "bare-fs": "^2.1.1",
