@@ -64,8 +64,10 @@ async function * downloader (key, all) {
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
 
   const store = path.join(PEAR, 'corestores', 'platform')
+  console.log('store:', store)
   const corestore = new Corestore(store)
   let runtimes = new Hyperdrive(corestore, decode(key))
+  console.log('runtimes:', runtimes)
 
   const swarm = new Hyperswarm()
   goodbye(() => swarm.destroy())
@@ -85,11 +87,17 @@ async function * downloader (key, all) {
 
   yield `\n  Extracting platform runtime${all ? 's' : ''} to disk\n`
 
+  console.log('SWAP:', SWAP)
+  console.log('ADDON_HOST:', ADDON_HOST)
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
+  console.log('runtime:', runtime)
 
   for await (const { op, key, bytesAdded } of runtime) {
+    console.log('op:',op)
+    console.log('key:',key)
+    console.log('bytesAdded:', bytesAdded)
     if (op === 'add') {
       yield '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
     } else if (op === 'change') {
