@@ -92,7 +92,7 @@
     "ready-resource": "^1.0.0",
     "redhat-overpass-font": "^1.0.0",
     "safety-catch": "^1.0.2",
-    "script-linker": "github:holepunchto/script-linker#source-map-bare-import-map",
+    "script-linker": "^2.5.2",
     "sodium-native": "^4.0.6",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.7.13",
