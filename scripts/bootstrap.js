@@ -71,6 +71,7 @@ async function download (key, all = false) {
 async function * downloader (key, all) {
   if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
+  console.log('key:', key)
 
   const store = path.join(PEAR, 'corestores', 'platform') // /Users/runner/work/pear-next/pear-next/pear/corestores/platform
   console.log('store:', store)
@@ -81,7 +82,7 @@ async function * downloader (key, all) {
   const swarm = new Hyperswarm()
   goodbye(() => swarm.destroy())
 
-  swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
+  swarm.on('connection', (socket) => { console.log('connected to socket:',socket); runtimes.corestore.replicate(socket) })
 
   await runtimes.ready()
 
@@ -98,7 +99,12 @@ async function * downloader (key, all) {
 
   console.log('SWAP:', SWAP) // /Users/runner/work/pear-next/pear-next
   console.log('ADDON_HOST:', ADDON_HOST) // ADDON_HOST: darwin-x64
-  const runtime = runtimes.mirror(new Localdrive(SWAP), {
+  const loc = new Localdrive(SWAP)
+  console.log('loc.root:', loc.root)
+  for await (const name of loc.readdir()) {
+    console.log('name:', name)
+  }
+  const runtime = runtimes.mirror(loc, {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST) // /by-arch/darwin-x64
   })
   // console.log('runtime:', runtime)
