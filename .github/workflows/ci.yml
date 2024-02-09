@@ -41,6 +41,8 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: bootstrap
       run: npm run bootstrap 1x6o7dik6g7hnhx9xxs3pbdzcuz3ds6wyw7y4ntje86iotejqfqy
+    - name: pwd
+      run: pwd
     - name: list
       run: ls -la
     - name: file
