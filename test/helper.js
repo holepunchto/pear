@@ -17,9 +17,8 @@ const ReadyResource = require('ready-resource')
 const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
 
-
 class Helper {
-  constructor(teardown, opts = {}) {
+  constructor (teardown, opts = {}) {
     this.teardown = teardown
     this.opts = opts
     this.logging = this.opts.logging
@@ -44,55 +43,55 @@ class Helper {
   static IS_MAC = Helper.PLATFORM === 'darwin'
   static CONNECT_TIMEOUT = 20_000
 
-  async bootstrap() {
+  async bootstrap () {
     this.client = await this.bootpipe()
   }
 
   connect () {
     return new Pipe(this.socketPath)
   }
-  
+
   async bootpipe () {
     let trycount = 0
     let pipe = null
     let timedout = false
     let next = null
-  
+
     const timeout = setTimeout(() => {
       timedout = true
       if (pipe) pipe.destroy()
     }, Helper.CONNECT_TIMEOUT)
-  
+
     while (true) {
       const promise = new Promise((resolve) => { next = resolve })
-  
+
       pipe = this.connect()
       pipe.on('connect', onconnect)
       pipe.on('error', onerror)
-  
+
       if (await promise) break
       if (timedout) throw new Error('Could not connect in time')
       if (trycount++ === 0) this.tryboot()
-  
+
       await new Promise((resolve) => setTimeout(resolve, trycount < 2 ? 5 : trycount < 10 ? 10 : 100))
     }
-  
+
     clearTimeout(timeout)
-  
+
     const framed = new FramedStream(pipe)
     const mux = new Protomux(framed)
     const channel = new JSONRPC(mux)
-  
+
     channel.on('close', () => framed.end())
-  
+
     return channel
-  
+
     function onerror () {
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       next(false)
     }
-  
+
     function onconnect () {
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
@@ -109,20 +108,20 @@ class Helper {
     })
 
     sc.stdout.on('data',
-        (data) => {
-          const str = data.toString()
-        }
+      (data) => {
+        const str = data.toString()
+      }
     )
     sc.stderr.on('data',
-        (data) => {
-          const str = data.toString()
-        }
+      (data) => {
+        const str = data.toString()
+      }
     )
-  
+
     sc.unref()
   }
 
-  async * run({ args, key = null, silent = false }) {
+  async * run ({ args, key = null, silent = false }) {
     if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
 
     args = [...args, '--ua', 'pear/terminal', '--debug']
@@ -130,11 +129,11 @@ class Helper {
     const iterable = new Readable({ objectMode: true })
 
     const child = spawn(this.runtime, args, {
-      stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe'],
+      stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe']
     })
 
-    child.once('exit', (code, signal) => { 
-      iterable.push({ tag: 'exit', data: { code, signal } }) 
+    child.once('exit', (code, signal) => {
+      iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
     child.stdout.on('data', (data) => {
@@ -153,23 +152,23 @@ class Helper {
         })
     }
 
-    yield* iterable
+    yield * iterable
   }
 
   start (...args) {
     return this.client.request('start', { args })
   }
 
-  async restart(args) {
+  async restart (args) {
     return await this.client.request('restart', { args }, { errorlessClose: true })
   }
 
-  async closeClients() {
+  async closeClients () {
     if (this.client.closed) return
     return this.client.request('closeClients')
   }
 
-  async shutdown() {
+  async shutdown () {
     if (this.client.closed) return
     this.client.notify('shutdown')
 
@@ -193,27 +192,27 @@ class Helper {
     }))
   }
 
-  stage(params, opts) { return this.#notify('stage', params, opts) }
+  stage (params, opts) { return this.#notify('stage', params, opts) }
 
-  seed(params, opts) { return this.#notify('seed', params, opts) }
+  seed (params, opts) { return this.#notify('seed', params, opts) }
 
-  respond(channel, responder) {
+  respond (channel, responder) {
     return this.client.method(channel, responder)
   }
 
-  unrespond(channel) {
+  unrespond (channel) {
     return this.client.method(channel, null)
   }
 
-  request(params) {
+  request (params) {
     return this.client.request(params.channel, params)
   }
 
-  notify(params) {
+  notify (params) {
     return this.client.notify('request', params)
   }
 
-  async * #notify(name, params, { close = true } = {}) {
+  async * #notify (name, params, { close = true } = {}) {
     let tick = null
     let incoming = new Promise((resolve) => { tick = resolve })
     const payloads = []
@@ -242,7 +241,7 @@ class Helper {
     }
   }
 
-  async pick(iter, ptn = {}) {
+  async pick (iter, ptn = {}) {
     for await (const output of iter) {
       if (this.logging) console.log('output', output)
       if (this.matchesPattern(output, ptn)) {
@@ -253,7 +252,7 @@ class Helper {
     return null
   }
 
-  pickMany(iter, patterns = []) {
+  pickMany (iter, patterns = []) {
     const picks = {}
     const resolvers = {}
 
@@ -267,7 +266,7 @@ class Helper {
       return Object.keys(pattern).every(key => pattern[key] === output[key])
     };
 
-    (async function match() {
+    (async function match () {
       for await (const output of iter) {
         for (const ptn of patterns) {
           if (matchesPattern(output, ptn)) {
@@ -287,13 +286,13 @@ class Helper {
     return picks
   }
 
-  async sink(iter, ptn) {
+  async sink (iter, ptn) {
     for await (const output of iter) {
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
   }
 
-  matchesPattern(message, pattern) {
+  matchesPattern (message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
       if (Object.hasOwnProperty.call(pattern, key) === false) continue
@@ -311,14 +310,14 @@ class Helper {
   }
 
   static Mirror = class extends ReadyResource {
-    constructor(teardown, { src = null, dest = null } = {}) {
+    constructor (teardown, { src = null, dest = null } = {}) {
       super()
       this.teardown = teardown
       this.srcDir = src
       this.destDir = dest
     }
 
-    async _open() {
+    async _open () {
       this.srcDrive = new Localdrive(this.srcDir)
       this.destDrive = new Localdrive(this.destDir)
 
@@ -331,18 +330,18 @@ class Helper {
       await mirror.done()
     }
 
-    async _close() {
+    async _close () {
       await this.srcDrive.close()
       await this.destDrive.close()
     }
 
-    get drive() {
+    get drive () {
       return this.destDrive
     }
   }
 
   static Provision = class extends ReadyResource {
-    constructor(teardown, key, pearDir) {
+    constructor (teardown, key, pearDir) {
       super()
       if (!key || !pearDir) throw new Error('Both key and pearDir params are required')
 
@@ -351,7 +350,7 @@ class Helper {
       this.pearDir = pearDir
     }
 
-    async _open() {
+    async _open () {
       const KEY = decode(this.key)
 
       const storePath = path.join(this.pearDir, 'corestores', 'platform')
@@ -368,7 +367,7 @@ class Helper {
       this.swarm.on('connection', (socket) => { this.codebase.corestore.replicate(socket) })
     }
 
-    async _close() {
+    async _close () {
       await this.swarm.clear()
       await this.swarm.destroy()
 
@@ -377,7 +376,7 @@ class Helper {
       await this.platformDir.close()
     }
 
-    async provision() {
+    async provision () {
       const KEY = decode(key || Bare.argv.slice(keyIndex).find(([c]) => c !== '-'))
       const store = path.join(PEAR_DIR, 'corestores', 'platform')
       const drive = new Hyperdrive(new Corestore(store), KEY)
@@ -388,7 +387,7 @@ class Helper {
         additionalBuiltins,
         directory: PEAR_DIR,
         checkout: { key: KEY, length: 0, fork: 0 },
-        onupdate(checkout) { onupdate(checkout) }
+        onupdate (checkout) { onupdate(checkout) }
       })
       await drive.ready()
       const swarm = new Hyperswarm()
@@ -404,7 +403,7 @@ class Helper {
       }
     }
 
-    async download(cwd, key, all = false) {
+    async download (cwd, key, all = false) {
       const store = path.join(cwd, 'pear', 'corestores', 'platform')
       const corestore = new Corestore(store)
       let runtimes = new Hyperdrive(corestore, decode(key))
@@ -420,14 +419,14 @@ class Helper {
       const done = runtimes.corestore.findingPeers()
       swarm.flush().then(done, done)
 
-      await runtimes.core.update() 
+      await runtimes.core.update()
 
       runtimes = runtimes.checkout(runtimes.version)
       goodbye(() => runtimes.close())
 
       const runtime = runtimes.mirror(new Localdrive(cwd), {
         prefix: '/by-arch',
-        filter(key) {
+        filter (key) {
           return all ? key.startsWith('/by-arch') : key.startsWith(`/by-arch/${Helper.PLATFORM}-${Helper.ARCH}`)
         }
       })
@@ -436,7 +435,6 @@ class Helper {
       await swarm.destroy()
       await corestore.close()
     }
-
   }
 }
 
