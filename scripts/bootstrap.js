@@ -82,7 +82,7 @@ async function * downloader (key, all) {
   const swarm = new Hyperswarm()
   goodbye(() => swarm.destroy())
 
-  swarm.on('connection', (socket) => { console.log('connected to socket:',socket); runtimes.corestore.replicate(socket) })
+  swarm.on('connection', (socket) => { console.log('connected to socket'); runtimes.corestore.replicate(socket) })
 
   await runtimes.ready()
 
@@ -92,6 +92,7 @@ async function * downloader (key, all) {
 
   await runtimes.core.update() // make sure we have latest version
 
+  console.log('runtimes.version:', runtimes.version)
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
@@ -131,3 +132,5 @@ async function * downloader (key, all) {
   if (all) yield '\x1B[32m✔\x1B[39m Download complete\n'
   else yield '\x1B[32m✔\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
 }
+
+process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
