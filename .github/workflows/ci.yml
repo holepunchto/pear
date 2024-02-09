@@ -43,6 +43,8 @@ jobs:
       run: npm run bootstrap 1x6o7dik6g7hnhx9xxs3pbdzcuz3ds6wyw7y4ntje86iotejqfqy
     - name: list
       run: ls -la
+    - name: file
+      run: file pear.dev
     - name: run tests
       run: npm test
     - name: lint
