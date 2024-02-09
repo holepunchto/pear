@@ -6,6 +6,7 @@
   "scripts": {
     "test": "./pear.dev dev test",
     "test:gen": "brittle -r test/all.js test/*.js",
+    "test:i": "cd test && npm i && cd fixtures/terminal && npm i",
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",

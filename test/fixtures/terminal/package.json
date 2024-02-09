@@ -7,7 +7,6 @@
   "pear": {
     "name": "test-terminal-app",
     "type": "terminal",
-    "bin": "termex",
     "builtinsMap": {
       "tty": "bare-tty",
       "events": "bare-events"
