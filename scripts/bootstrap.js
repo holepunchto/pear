@@ -19,30 +19,39 @@ const IS_WINDOWS = (global.Bare?.platform || global.process.platform) === 'win32
 const PEAR = path.join(__dirname, '..', 'pear')
 const SWAP = path.join(__dirname, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
+console.log('HOST:', HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-')
 if (!RUNTIMES_DRIVE_KEY) throw new Error('provide key')
 
-try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
+try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { console.log('e1:',e)/* ignore */ }
 
 if (IS_WINDOWS === false) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
+    console.log('peardev:', peardev)
     fs.symlinkSync(path.join(path.join('by-arch', ADDON_HOST), 'bin', 'pear-runtime'), peardev)
     fs.chmodSync(peardev, 0o775)
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.log('e2:', e)/* ignore */ }
 } else {
+  console.log('todo gen PS1 and cmd localdev wrappers for win')
   // todo gen PS1 and cmd localdev wrappers for win
 }
 
 if (ARCHDUMP) {
+  console.log('ARCHDUMP:', ARCHDUMP)
   const downloading = download(RUNTIMES_DRIVE_KEY, true)
   downloading.catch(console.error).then(advise)
 } else if (DLRUNTIME || fs.existsSync(HOST) === false) {
+  console.log('DLRUNTIME:', DLRUNTIME)
+  console.log('fs.existsSync(HOST):', fs.existsSync(HOST))
   const downloading = download(RUNTIMES_DRIVE_KEY, false)
+  console.log('dc1')
   downloading.catch(console.error)
-  if (DLRUNTIME === false) downloading.catch(console.error).then(advise)
+  console.log('dc2')
+  if (DLRUNTIME === false) {console.log("dlrt false");downloading.catch(console.error).then(advise)}
+  console.log('dc3')
 } else {
   console.log('Now run ./pear.dev')
 }
