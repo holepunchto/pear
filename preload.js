@@ -8,12 +8,9 @@ if (process.isMainFrame) {
   const electron = require('electron')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
-  let IS_WINDOWS = process.platform === 'win32'
-  let IS_MAC = process.platform === 'darwin'
+  const IS_WINDOWS = process.platform === 'win32'
+  const IS_MAC = process.platform === 'darwin'
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(IS_WINDOWS ? -2 : -1)[0])
-
-  IS_WINDOWS = true
-  IS_MAC = false
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
