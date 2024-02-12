@@ -8,9 +8,12 @@ if (process.isMainFrame) {
   const electron = require('electron')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
-  const IS_WINDOWS = process.platform === 'win32'
-  const IS_MAC = process.platform === 'darwin'
+  let IS_WINDOWS = process.platform === 'win32'
+  let IS_MAC = process.platform === 'darwin'
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(IS_WINDOWS ? -2 : -1)[0])
+
+  IS_WINDOWS = true
+  IS_MAC = false
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
@@ -258,23 +261,30 @@ if (process.isMainFrame) {
     </style>
     <div id="ctrl">
       <div id="min" class="ctrl">
-        <svg width="18" height="2" viewBox="0 0 18 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0.5625C0 0.28125 0.246094 0 0.5625 0H17.4375C17.7188 0 18 0.28125 18 0.5625C18 0.878906 17.7188 1.125 17.4375 1.125H0.5625C0.246094 1.125 0 0.878906 0 0.5625Z" fill="white"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 12.998H5V10.998H19V12.998Z" fill="white"/>
         </svg>
       </div>
       <div id="max" class="ctrl">
-        <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 2.625C0 1.39453 0.984375 0.375 2.25 0.375H15.75C16.9805 0.375 18 1.39453 18 2.625V13.875C18 15.1406 16.9805 16.125 15.75 16.125H2.25C0.984375 16.125 0 15.1406 0 13.875V2.625ZM1.125 2.625V6H16.875V2.625C16.875 2.02734 16.3477 1.5 15.75 1.5H2.25C1.61719 1.5 1.125 2.02734 1.125 2.625ZM1.125 7.125V13.875C1.125 14.5078 1.61719 15 2.25 15H15.75C16.3477 15 16.875 14.5078 16.875 13.875V7.125H1.125Z" fill="white"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="6" width="12" height="12" stroke="white" stroke-width="2"/>
         </svg>
       </div>
       <div id="restore" class="ctrl">
-        <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15.1875 1.375H7.3125C6.36328 1.375 5.625 2.14844 5.625 3.0625V3.625H4.5V3.0625C4.5 1.51562 5.73047 0.25 7.3125 0.25H15.1875C16.7344 0.25 18 1.51562 18 3.0625V10.9375C18 12.5195 16.7344 13.75 15.1875 13.75H14.625V12.625H15.1875C16.1016 12.625 16.875 11.8867 16.875 10.9375V3.0625C16.875 2.14844 16.1016 1.375 15.1875 1.375ZM11.25 4.75C12.4805 4.75 13.5 5.76953 13.5 7V16C13.5 17.2656 12.4805 18.25 11.25 18.25H2.25C0.984375 18.25 0 17.2656 0 16V7C0 5.76953 0.984375 4.75 2.25 4.75H11.25ZM11.25 5.875H2.25C1.61719 5.875 1.125 6.40234 1.125 7V9.25H12.375V7C12.375 6.40234 11.8477 5.875 11.25 5.875ZM2.25 17.125H11.25C11.8477 17.125 12.375 16.6328 12.375 16V10.375H1.125V16C1.125 16.6328 1.61719 17.125 2.25 17.125Z" fill="white"/>
-        </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_9105_112084)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.11108 6H17.2222V15.1111H19.2222V5V4H18.2222H8.11108V6ZM6 10.3333H12.8889V17.2222H6V10.3333ZM4 8.33333H6H12.8889H14.8889V10.3333V17.2222V19.2222H12.8889H6H4V17.2222V10.3333V8.33333Z" fill="white"/>
+          </g>
+          <defs>
+            <clipPath id="clip0_9105_112084">
+              <rect width="24" height="24" fill="white"/>
+            </clipPath>
+          </defs>
+        </svg>      
       </div>
       <div id="close" class="ctrl">
-        <svg id="close" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14.8906 0.550781C15.1016 0.339844 15.4883 0.339844 15.6992 0.550781C15.9102 0.761719 15.9102 1.14844 15.6992 1.35938L8.77344 8.25L15.6992 15.1758C15.9102 15.3867 15.9102 15.7734 15.6992 15.9844C15.4883 16.1953 15.1016 16.1953 14.8906 15.9844L8 9.05859L1.07422 15.9844C0.863281 16.1953 0.476562 16.1953 0.265625 15.9844C0.0546875 15.7734 0.0546875 15.3867 0.265625 15.1758L7.19141 8.25L0.265625 1.35938C0.0546875 1.14844 0.0546875 0.761719 0.265625 0.550781C0.476562 0.339844 0.863281 0.339844 1.07422 0.550781L8 7.47656L14.8906 0.550781Z" fill="white"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="white"/>
         </svg>
       </div>
     </div>
