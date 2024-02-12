@@ -227,9 +227,9 @@ module.exports = class IPC {
     return this.#transmit(`release:${params.id}`, client, this.engine.release(params, client), params.silent)
   }
 
-  async restart (client, { all = false } = {}) {
-    console.log('Restarting ' + (all ? 'all' : 'client'))
-    if (all === false) {
+  async restart (client, { platform = false } = {}) {
+    console.log('Restarting ' + (platform ? 'all' : 'client'))
+    if (platform === false) {
       const { cwd, runtime, argv, env } = client.userData.ctx
       const appling = client.userData.ctx.appling
       const opts = { cwd, env, detached: true, stdio: 'ignore' }

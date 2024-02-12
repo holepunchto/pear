@@ -544,7 +544,7 @@
               node.removeEventListener('click', click)
               node.removeEventListener('mouseenter', enter)
               node.removeEventListener('mouseleave', leave)
-              this.ipc.engine.restart({ all: true }).catch(console.error)
+              this.ipc.engine.restart({ platform: true }).catch(console.error)
             }
             node.addEventListener('click', click)
             node.addEventListener('mouseenter', enter)
