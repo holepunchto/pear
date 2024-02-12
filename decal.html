@@ -114,6 +114,11 @@
     }
   </style>
   <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
+  <script type="module">
+    if (Pear.config.options.platform?.__legacyTitlebar === false) {
+      document.getElementById('window-controls').remove()
+    }
+  </script>
   <script>document.addEventListener('DOMContentLoaded', () => { 
     const winctrls = document.getElementById('window-controls')
     if (winctrls) winctrls.style.display = 'block'
