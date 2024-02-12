@@ -58,7 +58,7 @@ function advise () {
     console.log('🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.')
     return
   }
-  console.log('🍐 The .\\pear.cmd and .\\pear.ps1 scripts wrap the runtime. Use .\\pear.cmd or .\\pear.ps1 as localdev pear.')
+  console.log('🍐 The pear.cmd and pear.ps1 scripts wrap the runtime. Use pear.cmd or pear.ps1 as localdev pear.')
 }
 
 async function download (key, all = false) {
