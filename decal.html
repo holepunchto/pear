@@ -114,10 +114,12 @@
     }
   </style>
   <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <script>document.addEventListener('DOMContentLoaded', () => { 
-    const winctrls = document.getElementById('window-controls')
-    if (winctrls) winctrls.style.display = 'block'
-  })</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { 
+      const wc = document.getElementById('window-controls')
+      if (wc) wc.style.display = 'block'
+    })
+  </script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
@@ -1045,6 +1047,7 @@
           this.gid = this.gui.id()
           const { gui, gid } = this
           await gui.afterViewLoaded(gid)
+          document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
           await gui.attachMainView(gid)
