@@ -30,10 +30,6 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Bootstrap
       run: npm run bootstrap 4jhsxnio7cnctka35qopfd4rhkesupaw895gy5u8dsnrxki43rey
-    - name: Pretest
-      run: npm run pretest
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Run tests
       run: npm test
     - name: Lint

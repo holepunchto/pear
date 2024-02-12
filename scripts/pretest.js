@@ -39,7 +39,7 @@ const run = (cmd, args, opts) => {
   for (const dir of dirs) {
     if (!await exists(dir)) {
       console.log(`node_modules not found in ${path.dirname(dir)}\nRunning npm install...`)
-      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir) })
+      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: true })
     }
   }
 
