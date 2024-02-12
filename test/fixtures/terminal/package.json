@@ -1,21 +1,19 @@
 {
-  "name": "termex",
+  "name": "test-terminal-app",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "pear": {
-    "name": "termex",
+    "name": "test-terminal-app",
     "type": "terminal",
-    "bin": "termex",
     "builtinsMap": {
       "tty": "bare-tty",
       "events": "bare-events"
     }
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Holepunch",
   "dependencies": {
     "bare-events": "^2.2.0",
     "bare-tty": "^3.0.0"

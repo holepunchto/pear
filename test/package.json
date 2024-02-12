@@ -1,0 +1,36 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./smoke.test.js",
+  "pear": {
+    "name": "test",
+    "type": "terminal",
+    "bin": "termex",
+    "builtinsMap": {
+      "path": "bare-path"
+    }
+  },
+  "keywords": [],
+  "author": "Holepunch",
+  "dependencies": {
+    "bare-fs": "^2.1.2",
+    "bare-module": "^3.1.2",
+    "bare-os": "^2.1.2",
+    "bare-path": "^2.1.0",
+    "bare-pipe": "^2.0.2",
+    "bare-subprocess": "^2.0.3",
+    "brittle": "^3.4.0",
+    "corestore": "^6.16.2",
+    "framed-stream": "^1.0.1",
+    "fs-native-extensions": "^1.2.7",
+    "hypercore-id-encoding": "^1.2.0",
+    "hyperdrive": "^11.6.3",
+    "hyperswarm": "^4.7.14",
+    "jsonrpc-mux": "^1.1.1",
+    "localdrive": "^1.11.3",
+    "protomux": "^3.5.1",
+    "ready-resource": "^1.0.3",
+    "streamx": "^2.15.7"
+  }
+}

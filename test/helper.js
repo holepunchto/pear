@@ -1,76 +1,131 @@
 'use strict'
-const { createRequire } = require('module')
+
+const FramedStream = require('framed-stream')
 const Protomux = require('protomux')
-const Channel = require('jsonrpc-mux')
-const portget = require('port-get')
-const Crank = require('../ipc/crank')
-const path = require('path')
-const { spawn } = require('child_process')
+const JSONRPC = require('jsonrpc-mux')
+const path = require('bare-path')
+const { spawn } = require('bare-subprocess')
 const Corestore = require('corestore')
-const Bootdrive = require('boot-drive')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Localdrive = require('localdrive')
-const fs = require('fs')
+const fs = require('bare-fs')
+const os = require('bare-os')
 const fsext = require('fs-native-extensions')
 const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
 const { Readable } = require('streamx')
-
-// TODO: need to support  again for testnet
-// TODO: support option for --swap path w/ creation of dir (OR add --tmp-swap option to codebase and just use that)
-// TODO: consider smoke testing keet desktop (stage -> seed -> launch) (can we just clone from key??)
+const Pipe = require('bare-pipe')
 
 class Helper {
   constructor (teardown, opts = {}) {
     this.teardown = teardown
     this.opts = opts
-    this.logging = this.opts.logging || !!process.env.TESTLOG
-    this.argv = [...process.argv]
+    this.logging = this.opts.logging
+
     this.client = null
-    this.platformDir = this.opts.platformDir || path.resolve(__dirname, '..', 'pear')
-    this.swap = this.opts.swap || path.resolve(__dirname, '..', 'pear', 'current')
+
+    this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
+
+    this.socketPath = Helper.PLATFORM === 'win32' ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
+    this.bin = 'by-arch/' + Helper.PLATFORM + '-' + Helper.ARCH + '/bin/'
+    this.runtime = path.join(this.swap, 'by-arch', Helper.PLATFORM + '-' + Helper.ARCH, 'bin', 'pear-runtime')
+
     if (this.logging) this.argv.push('--attach-boot-io')
   }
 
-  port = portget
+  static PLATFORM = (global.Bare || global.process).platform
+  static ARCH = (global.Bare || global.process).arch
+  static IPC_ID = 'pear'
+  static IS_WINDOWS = Helper.PLATFORM === 'win32'
+  static IS_LINUX = Helper.PLATFORM === 'linux'
+  static IS_MAC = Helper.PLATFORM === 'darwin'
+  static CONNECT_TIMEOUT = 20_000
 
-  async bootstrap ({ forceFresh = false } = {}) {
-    const { bootstrap } = require('../boot')
-
-    const compile = (source) => {
-      this.teardown(() => this.destroy(this.client))
-      return (stream) => {
-        this.client = new Channel(new Protomux(stream))
-        return new Function('require', 'return ' + source)(createRequire(require.resolve('../boot.js')))(stream) // eslint-disable-line no-new-func
-      }
-    }
-    const trycount = await bootstrap(compile, this.opts.ua || 'pear/noop', this.argv)
-    if (forceFresh && trycount === 0) {
-      throw new Error('Test helper unable to bootstrap fresh sidecar, no way to set local DHT. Ensure conflicting sidecars are closed')
-    }
-    return this.client
+  async bootstrap () {
+    this.client = await this.bootpipe()
   }
 
-  start (...args) {
-    return this.client.request('start', { args })
+  connect () {
+    return new Pipe(this.socketPath)
   }
 
-  async * run ({ args, dev, key = null, dir = null, silent = false }) {
-    if (key !== null) args = [...args.filter((arg) => arg !== key), '--run', key]
-    if (dev === true && args.includes('--dev') === false) args = ['--dev', ...args]
+  async bootpipe () {
+    let trycount = 0
+    let pipe = null
+    let timedout = false
+    let next = null
 
-    args = [...args, '--ua', 'pear/terminal', '--debug']
+    const timeout = setTimeout(() => {
+      timedout = true
+      if (pipe) pipe.destroy()
+    }, Helper.CONNECT_TIMEOUT)
+
+    while (true) {
+      const promise = new Promise((resolve) => { next = resolve })
+
+      pipe = this.connect()
+      pipe.on('connect', onconnect)
+      pipe.on('error', onerror)
+
+      if (await promise) break
+      if (timedout) throw new Error('Could not connect in time')
+      if (trycount++ === 0) this.tryboot()
+
+      await new Promise((resolve) => setTimeout(resolve, trycount < 2 ? 5 : trycount < 10 ? 10 : 100))
+    }
+
+    clearTimeout(timeout)
+
+    const framed = new FramedStream(pipe)
+    const mux = new Protomux(framed)
+    const channel = new JSONRPC(mux)
+
+    channel.on('close', () => framed.end())
+
+    return channel
+
+    function onerror () {
+      pipe.removeListener('error', onerror)
+      pipe.removeListener('connect', onconnect)
+      next(false)
+    }
+
+    function onconnect () {
+      pipe.removeListener('error', onerror)
+      pipe.removeListener('connect', onconnect)
+      clearTimeout(timeout)
+      next(true)
+    }
+  }
+
+  tryboot () {
+    const sc = spawn(this.runtime, ['--sidecar'], {
+      detached: true,
+      stdio: (global.Bare || global.process).argv.includes('--attach-boot-io') ? 'inherit' : 'ignore',
+      cwd: this.platformDir
+    })
+    sc.unref()
+  }
+
+  async * run ({ args, key = null, silent = false }) {
+    if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
+
+    args = [...args, '--ua', 'pear/terminal']
+
+    const di = args.findIndex(arg => arg.startsWith('--debug='))
+    if (di > -1) args.push(args.splice(di, 1)[0])
 
     const iterable = new Readable({ objectMode: true })
 
-    const swap = this.swap || path.resolve(__dirname, '..', 'pear', 'current')
-    const runtime = this.terminalRuntime(swap)
-
-    const child = spawn(runtime, args.map(String), {
+    const child = spawn(this.runtime, args, {
       stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe']
     })
-    child.once('exit', (code, signal) => { iterable.push({ tag: 'exit', data: { code, signal } }) })
+
+    child.once('exit', (code, signal) => {
+      iterable.push({ tag: 'exit', data: { code, signal } })
+    })
 
     child.stdout.on('data', (data) => {
       const str = data.toString()
@@ -82,7 +137,6 @@ class Helper {
       child.stderr.on('data',
         (data) => {
           const str = data.toString()
-          console.log('run stderr:', str)
           const ignore = str.indexOf('DevTools listening on ws://') > -1
           if (ignore) return
           iterable.push({ tag: 'stderr', data })
@@ -90,6 +144,10 @@ class Helper {
     }
 
     yield * iterable
+  }
+
+  start (...args) {
+    return this.client.request('start', { args })
   }
 
   async restart (args) {
@@ -105,7 +163,7 @@ class Helper {
     if (this.client.closed) return
     this.client.notify('shutdown')
 
-    const pdir = this.platformDir || path.resolve(__dirname, '..', 'pear')
+    const pdir = this.platformDir || path.resolve(os.cwd(), '..', 'pear')
     const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
       if (err) {
         reject(err)
@@ -124,8 +182,6 @@ class Helper {
       resolve()
     }))
   }
-
-  info (params, opts) { return this.#notify('info', params, opts) }
 
   stage (params, opts) { return this.#notify('stage', params, opts) }
 
@@ -174,14 +230,6 @@ class Helper {
       this.unrespond(rcv)
       if (close) this.close()
     }
-  }
-
-  async apploaded (inspect) {
-    await inspect.Runtime.enable()
-    await inspect.Page.enable()
-    const loading = inspect.Page.loadEventFired()
-    const readyState = await inspect.Runtime.evaluate({ expression: 'document.readyState', returnByValue: true })
-    if (readyState.result.value !== 'complete') await loading
   }
 
   async pick (iter, ptn = {}) {
@@ -235,24 +283,6 @@ class Helper {
     }
   }
 
-  async destroy () {
-    const { bootstrap } = require('../boot')
-    try {
-      await this.closeClients()
-      await this.shutdown()
-    } catch (err) {
-      if (err.code !== 'E_SESSION_CLOSED') throw err
-      await bootstrap((source) => {
-        return (stream) => {
-          this.client = new Crank(new Channel(new Protomux(stream)))
-          return new Function('require', 'return ' + source)(createRequire(require.resolve('../boot.js')))(stream) // eslint-disable-line no-new-func
-        }
-      }, 'pear/noop')
-      await this.closeClients()
-      await this.shutdown()
-    }
-  }
-
   matchesPattern (message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
@@ -268,16 +298,6 @@ class Helper {
       }
     }
     return true
-  }
-
-  async launchFromDir ({ platformDir, dbgport }) {
-    const entry = path.join(platformDir, './current/boot.js')
-    const args = [entry, 'launch', 'keet', `--platform-dir=${platformDir}`, '--inspector-port', dbgport.toString()]
-
-    spawn(process.execPath, args, {
-      stdio: 'ignore',
-      env: { ...process.env, NODE_PRESERVE_SYMLINKS: 1 }
-    })
   }
 
   static Mirror = class extends ReadyResource {
@@ -345,143 +365,6 @@ class Helper {
       await this.store.close()
       await this.codebase.close()
       await this.platformDir.close()
-    }
-
-    async provision () {
-      let codebase = this.codebase
-      const platformDir = this.platformDir
-      const swarm = this.swarm
-      const key = this.key
-      const pearDir = this.pearDir
-
-      const length = null
-      const fork = null
-
-      const current = path.join(pearDir, 'current')
-
-      const dkey = codebase.discoveryKey.toString('hex')
-
-      let latest = '0'
-      for await (const swap of platformDir.readdir(`/by-dkey/${dkey}`)) {
-        if (Number.isInteger(+swap)) latest = swap
-      }
-
-      swarm.join(codebase.discoveryKey, { server: false, client: true })
-      const done = codebase.corestore.findingPeers()
-      swarm.flush().then(done, done)
-
-      await codebase.core.update() // make sure we have latest version
-
-      codebase = codebase.checkout(codebase.version)
-
-      await codebase.ready()
-
-      const checkout = { key, length, fork }
-
-      if (checkout.length === null) {
-        checkout.length = codebase.version
-        checkout.fork = codebase.core.fork
-      }
-
-      const prefix = '/by-arch/' + process.platform + '-' + process.arch + '/'
-      let completed = 0
-
-      if (await codebase.get('/boot.js') === null) {
-        throw new Error('  🚫 Couldn\'t get entrypoint /boot.js.\n     Either no such file exists or it\'s not available on the network\n')
-      }
-
-      let total = 0
-      const dls = []
-      for await (const entry of codebase.list('/', { recursive: true })) {
-        if (!entry.value.blob) continue
-        if (entry.key.startsWith('/by-arch') && entry.key.startsWith(prefix) === false) continue
-        total++
-      }
-
-      for await (const entry of codebase.list('/', { recursive: true })) {
-        if (!entry.value.blob) continue
-        if (entry.key.startsWith('/by-arch') && entry.key.startsWith(prefix) === false) continue
-        const blobs = await codebase.getBlobs()
-        const r = blobs.core.download({ start: entry.value.blob.blockOffset, length: entry.value.blob.blockLength })
-        const dl = r.downloaded()
-        dls.push(dl)
-        dl.then(() => { completed++ })
-      }
-
-      const settled = Promise.allSettled(dls)
-
-      /* eslint-disable no-unmodified-loop-condition */
-      while (completed < total) {
-        await new Promise(resolve => setTimeout(resolve, 50))
-      }
-      /* eslint-enable no-unmodified-loop-condition */
-
-      const result = await settled
-
-      for (const promise of result) {
-        if (promise.status === 'rejected') {
-          throw new Error('A promise was rejected')
-        }
-      }
-
-      const swap = path.join(pearDir, 'by-dkey', dkey, latest)
-
-      const checkoutjs = `module.exports = {key: '${checkout.key}', fork: ${checkout.fork}, length: ${checkout.length}}`
-      if (this.logging) console.log('   key: ' + checkout.key + ',     fork: ' + checkout.fork + ',     length: ' + checkout.length)
-
-      const boot = new Bootdrive(codebase, {
-        entrypoint: 'boot.js',
-        cwd: swap,
-        additionalBuiltins: [
-          'pear', // lazily self-injected
-          'module', 'events', 'path', 'os', 'timers', 'buffer', 'console', 'assert', 'tty',
-          'http', 'fs', 'fs/promises', 'url', 'child_process', 'readline', 'repl', 'inspector',
-          'electron', 'net', 'util', 'stream', 'dns', 'https', 'tls', 'crypto', 'zlib', 'constants', // Holepunch Runtime only
-          'bare-pipe', 'bare-bundle', 'bare-hrtime', // bare
-          'fsctl', 'bufferutil', 'utf-8-validate' // optional deps (ignore)
-        ],
-        sourceOverwrites: {
-          '/checkout.js': Buffer.from(checkoutjs)
-        }
-      })
-
-      await boot.warmup()
-
-      const bootjs = boot.stringify()
-
-      await platformDir.put(`./by-dkey/${dkey}/${latest}/boot.js`, bootjs)
-
-      const preferences = 'preferences.json'
-      if (await platformDir.entry(preferences) === null) await platformDir.put(preferences, Buffer.from('{}'))
-
-      try { await fs.promises.unlink(current) } catch { }
-      await fs.promises.symlink(swap, current, 'junction')
-    }
-  }
-
-  desktopRuntime (swap) {
-    switch (process.platform) {
-      case ('darwin'):
-        return path.join(swap, 'by-arch', process.platform + '-' + process.arch, 'bin', 'Holepunch Runtime.app', 'Contents', 'MacOS', 'Holepunch Runtime')
-      case ('win32'):
-        return path.join(swap, 'by-arch', process.platform + '-' + process.arch, 'bin', 'holepunch-runtime', 'Holepunch Runtime.exe')
-      default:
-        return path.join(swap, 'by-arch', process.platform + '-' + process.arch, 'bin', 'holepunch-runtime', 'holepunch-runtime')
-    }
-  }
-
-  terminalRuntime (swap) { return path.join(swap, 'by-arch', process.platform + '-' + process.arch, 'bin', 'pear-runtime') }
-
-  clearRequireCache () {
-    const files = [
-      '../boot.js',
-      '../bootstrap.js',
-      '../lib/constants.js'
-    ]
-
-    for (const file of files) {
-      const path = require.resolve(file)
-      delete require.cache[path]
     }
   }
 }
