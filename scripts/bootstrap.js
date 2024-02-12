@@ -26,14 +26,20 @@ if (!RUNTIMES_DRIVE_KEY) throw new Error('provide key')
 
 try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
 
+const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
 if (IS_WINDOWS === false) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
-    fs.symlinkSync(path.join(path.join('by-arch', ADDON_HOST), 'bin', 'pear-runtime'), peardev)
+    fs.symlinkSync(runtime, peardev)
     fs.chmodSync(peardev, 0o775)
   } catch (e) { /* ignore */ }
 } else {
-  // todo gen PS1 and cmd localdev wrappers for win
+  const ps1tmp = path.join(SWAP, Math.floor(Math.random() * 1000) + '.pear')
+  fs.writeFileSync(ps1tmp, `function pear { & "${runtime}" }; pear`)
+  fs.renameSync(ps1tmp, path.join(SWAP, 'pear.ps1'))
+  const cmdtmp = path.join(SWAP, Math.floor(Math.random() * 1000) + '.pear')
+  fs.writeFileSync(cmdtmp, `@echo off\n"${runtime}" %*`)
+  fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
 if (ARCHDUMP) {
