@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: checkout
+    - name: Checkout
       uses: actions/checkout@v4
       with:
         persist-credentials: false
@@ -25,23 +25,17 @@ jobs:
         node-version: ${{ matrix.node-version }}
         registry-url: 'https://npm.pkg.github.com'
         scope: '@holepunchto'
-    - name: install dependencies
+    - name: Install dependencies
       run: npm install
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: install test dependencies
-      run: npm install
-      working-directory: test
+    - name: Bootstrap
+      run: npm run bootstrap 4jhsxnio7cnctka35qopfd4rhkesupaw895gy5u8dsnrxki43rey
+    - name: Pretest
+      run: npm run pretest
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: install test fixture dependencies
-      run: npm install
-      working-directory: test/fixtures/terminal
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: bootstrap
-      run: npm run bootstrap 1x6o7dik6g7hnhx9xxs3pbdzcuz3ds6wyw7y4ntje86iotejqfqy
-    - name: run tests
+    - name: Run tests
       run: npm test
-    - name: lint
+    - name: Lint
       run: npm run lint

@@ -112,7 +112,10 @@ class Helper {
   async * run ({ args, key = null, silent = false }) {
     if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
 
-    args = [...args, '--ua', 'pear/terminal', '--debug']
+    args = [...args, '--ua', 'pear/terminal']
+
+    const di = args.findIndex(arg => arg.startsWith('--debug='))
+    if (di > -1) args.push(args.splice(di, 1)[0])
 
     const iterable = new Readable({ objectMode: true })
 
@@ -362,10 +365,6 @@ class Helper {
       await this.store.close()
       await this.codebase.close()
       await this.platformDir.close()
-    }
-
-    async provision () {
-      // TODO: use new pear-updater
     }
   }
 }

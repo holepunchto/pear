@@ -44,7 +44,7 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
 
   comment('running')
   const app = helper.pickMany(helper.run({
-    args: [key],
+    args: [key, '--debug=ready'],
     dev: true,
     key,
     dir
