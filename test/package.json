@@ -20,7 +20,6 @@
     "bare-path": "^2.1.0",
     "bare-pipe": "^2.0.2",
     "bare-subprocess": "^2.0.3",
-    "blind-relay": "github:holepunchto/blind-relay",
     "brittle": "^3.4.0",
     "corestore": "^6.16.2",
     "framed-stream": "^1.0.1",
@@ -30,8 +29,6 @@
     "hyperswarm": "^4.7.14",
     "jsonrpc-mux": "^1.1.1",
     "localdrive": "^1.11.3",
-    "pear-updater": "^3.0.3",
-    "pear-updater-bootstrap": "^1.1.0",
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7"
