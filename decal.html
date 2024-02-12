@@ -109,12 +109,12 @@
     }
 
     pear-ctrl[data-platform=darwin] {
-      margin-top: 12px;
+      margin-top: 24px;
       margin-left: 12px;
     }
-
   </style>
-  <div id="window-controls"><pear-ctrl></pear-ctrl></div>
+  <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
+  <script>document.addEventListener('DOMContentLoaded', () => { document.getElementById('window-controls').style.display = 'block'})</script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
@@ -393,7 +393,7 @@
       if (Pear.config.key?.z32 !== constants.ALIASES.keet.z32) {
         if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
-          document.getElementById('window-controls').style.display = 'none'
+          document.getElementById('window-controls').remove()
         }
       }
     </script>

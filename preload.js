@@ -147,14 +147,14 @@ if (process.isMainFrame) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async (m) => {
           const { x, y } = ctrl.getBoundingClientRect()
-          await ipc.gui.setWindowButtonPosition(guiid, { x, y })
+          await ipc.gui.setWindowButtonPosition(guiid, { x, y: y - 6 })
         })
         this.mutations.observe(this, { attributes: true })
 
         this.intesections = new IntersectionObserver(async ([element]) => {
           await ipc.gui.setWindowButtonVisibility(guiid, element.isIntersecting)
           const { x, y } = ctrl.getBoundingClientRect()
-          await ipc.gui.setWindowButtonPosition(guiid, { x, y })
+          await ipc.gui.setWindowButtonPosition(guiid, { x, y: y - 6 })
         }, { threshold: 0 })
 
         this.intesections.observe(this)
