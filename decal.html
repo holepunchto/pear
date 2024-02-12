@@ -114,7 +114,10 @@
     }
   </style>
   <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <script>document.addEventListener('DOMContentLoaded', () => { document.getElementById('window-controls')?.style.display = 'block'})</script>
+  <script>document.addEventListener('DOMContentLoaded', () => { 
+    const winctrls = document.getElementById('window-controls')
+    if (winctrls) winctrls.style.display = 'block'
+  })</script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
