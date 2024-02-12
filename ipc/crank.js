@@ -70,7 +70,7 @@ class Crank {
       const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
         str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
         str.indexOf('devtools://devtools/bundled/panels/elements/elements.js') > -1 ||
-        str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1')
+        str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1') > -1
       if (ignore) return
       iterable.push({ tag: 'stderr', data })
     })
