@@ -118,11 +118,12 @@
     if (Pear.config.options.platform?.__legacyTitlebar === false) {
       document.getElementById('window-controls').remove()
     }
+
+    document.addEventListener('DOMContentLoaded', () => { 
+      const winctrls = document.getElementById('window-controls')
+      if (winctrls) winctrls.style.display = 'block'
+    })
   </script>
-  <script>document.addEventListener('DOMContentLoaded', () => { 
-    const winctrls = document.getElementById('window-controls')
-    if (winctrls) winctrls.style.display = 'block'
-  })</script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
