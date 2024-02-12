@@ -32,7 +32,7 @@ class Helper {
     this.bin = 'by-arch/' + Helper.PLATFORM + '-' + Helper.ARCH + '/bin/'
     this.runtime = path.join(this.swap, 'by-arch', Helper.PLATFORM + '-' + Helper.ARCH, 'bin', 'pear-runtime')
 
-    if (this.logging) this.argv.push('--attach-boot-io')
+    if (this.logging) (global.Bare || global.process).argv.push('--attach-boot-io')
   }
 
   static PLATFORM = (global.Bare || global.process).platform
@@ -366,6 +366,52 @@ class Helper {
       await this.codebase.close()
       await this.platformDir.close()
     }
+  }
+
+  async getProcess (name) {
+    return new Promise((resolve) => {
+      let ps
+      if (Helper.IS_WINDOWS) {
+        ps = spawn('powershell', ['Get-Process | Where-Object { $_.ProcessName -like "*' + name + '*" }'])
+      } else {
+        ps = spawn('sh', ['-c', `ps aux | grep [${name.charAt(0)}]${name.slice(1)}`])
+      }
+
+      let output = ''
+
+      ps.stdout.on('data', (data) => {
+        output += data.toString()
+      })
+
+      ps.on('close', () => {
+        if (output.trim()) {
+          const match = output.match(/\b\d+\b/)
+          if (match) {
+            resolve(match[0])
+          } else {
+            resolve(null)
+          }
+        } else {
+          resolve(null)
+        }
+      })
+    })
+  }
+
+  async lookup (name) {
+    const [sh, cmdArgs] = Helper.IS_WINDOWS
+      ? ['powershell', [`Get-Process | Where-Object { $_.ProcessName -like "*${name}*" }`]]
+      : ['sh', ['-c', `ps aux | grep ${name} | grep -v grep`]]
+
+    return new Promise((resolve) => {
+      let output = ''
+      spawn(sh, cmdArgs, { stdio: ['ignore', 'pipe', 'ignore'] })
+        .stdout.on('data', data => { output += data.toString() })
+        .on('end', () => {
+          const match = output.trim() ? output.match(/\b\d+\b/) : null
+          resolve(match ? match[0] : null)
+        })
+    })
   }
 }
 
