@@ -77,9 +77,9 @@ module.exports = (ipc) => async function init (args) {
 </html>
 `
 
-  const terminalEntry = `import pear from 'pear'
+  const terminalEntry = `const { versions } = Pear
 console.log('Pear terminal application running')
-console.log(await pear.versions())
+console.log(await versions())
 `
   const test = 'import test from \'brittle\' // https://github.com/holepunchto/brittle\n'
 
