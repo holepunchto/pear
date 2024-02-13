@@ -12,7 +12,7 @@ module.exports = bootSidecar().catch((err) => {
 })
 
 async function bootSidecar () {
-  const corestore = new Corestore(PLATFORM_CORESTORE)
+  const corestore = new Corestore(PLATFORM_CORESTORE, { manifestVersion: 1, compat: false })
   await corestore.ready()
 
   const drive = await createPlatformDrive()
