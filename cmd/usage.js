@@ -31,6 +31,7 @@ module.exports = ({ fork, length, key }) => {
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
+    --no-updates               Application file change updates opt-out
   `
 
   const stage = ansi.bold(cmd + ' stage')
@@ -102,6 +103,7 @@ module.exports = ({ fork, length, key }) => {
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
+    --no-updates               App and platform updates opt-out
     --checkout=n               Run a checkout, n is version length
     --checkout=release         Run checkout from marked released length
     --checkout=staged          Run checkout from latest version length

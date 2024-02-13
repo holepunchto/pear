@@ -63,7 +63,7 @@ module.exports = class Context {
     const {
       startId, store, appling, flags, channel,
       checkout, dev, run, stage, trace, key, link,
-      alias, local, dir, appArgs, pkg, pkgPath,
+      alias, local, dir, appArgs, pkg, pkgPath, updates,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = parse.argv(argv, env, cwd)
 
@@ -78,6 +78,7 @@ module.exports = class Context {
     this.cwd = cwd
     this.env = { ...env }
     this.flags = flags
+    this.updates = updates
     this.dev = dev
     this.run = run
     this.stage = stage
