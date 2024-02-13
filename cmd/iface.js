@@ -92,7 +92,7 @@ class Interact {
     this._params = params
     this._type = type
     stdio.out.write('\n')
-    stdio.out.write(this._header + '\n')
+    stdio.out.write(this._header)
   }
 
   async run (opts = {}) {
