@@ -106,5 +106,13 @@
     "port-get": "^1.0.4",
     "standard": "^17.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/pear.git"
+  },
+  "bugs": {
+    "url": "https://github.com/holepunchto/pear/issues"
+  },
+  "homepage": "https://github.com/holepunchto/pear#readme",
   "license": "Apache-2.0"
 }

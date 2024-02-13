@@ -49,7 +49,7 @@ function getUpgradeTarget () {
   for (let i = 0; i < Bare.argv.length; i++) {
     const arg = Bare.argv[i]
     if (arg.startsWith('--key=')) return { key: arg.slice(6), length: 0, fork: 0 }
-    if (arg === '--key' && Bare.argv.length > i + 1) return { key: arg[i + 1], length: 0, fork: 0 }
+    if (arg === '--key' && Bare.argv.length > i + 1) return { key: Bare.argv[i + 1], length: 0, fork: 0 }
   }
   return CHECKOUT
 }

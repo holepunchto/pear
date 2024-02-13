@@ -16,7 +16,12 @@ const output = outputter('run', {
 module.exports = (ipc) => async function run (args, devrun = false) {
   let dir = null
   try {
-    const { json, dev, _ } = parse.args(args, { boolean: ['json', 'dev'], default: { json: false, dev: false } })
+    const { json, dev, _ } = parse.args(args, {
+      boolean: ['json', 'dev', 'tmp-store'],
+      string: ['store', 'link', 'checkout'],
+      alias: { store: 's', 'tmp-store': 't' },
+      default: { json: false, dev: false }
+    })
     if (!_[0]) {
       if (devrun) {
         _[0] = '.'
