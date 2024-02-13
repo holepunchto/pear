@@ -33,7 +33,6 @@ module.exports = (ipc) => async function init (args) {
   try { pkg = JSON.parse(await readFile(pkgPath)) } catch {}
 
   const cfg = pkg?.pear || pkg?.holepunch || {}
-  const backgroundColor = cfg.gui ? cfg.gui.backgroundColor : '#1F2430'
   const height = cfg.gui ? cfg.gui.height : 540
   const width = cfg.gui ? cfg.gui.width : 720
 
@@ -49,20 +48,12 @@ module.exports = (ipc) => async function init (args) {
 
   const name = cfg?.name || pkg?.name || basename(cwd)
 
-  const scripts = pkg?.scripts
-    ? `${JSON.stringify(pkg.scripts, 0, 6).slice(0, -1)}    }`
-    : `{
-        "dev": "pear dev",
-        "test": "brittle test/*.test.js"
-      }`
-
-  const extra = cfg.gui && Object.keys(cfg.gui).length > 0 ? `,\n${JSON.stringify(cfg.gui, 0, 8).slice(2, -2)}` : ''
+  const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
+  const extra = cfg.gui || {}
 
   const header = `${banner}${ansi.dim('›')}
-
-    [ configure package.json ]
-    ${pkg === null ? '' : ansi.bold('\nExisting package.json detected, will merge\n')}
-    ${ansi.dim('exit: ctrl^c  select: tab/shift^tab  submit: return')}${force ? ansi.bold('\n\n    🚨 FORCE MODE ENGAGED: ENSURE SURETY') : ''}
+    ${pkg === null ? '' : ansi.bold('\nExisting package.json detected, will merge')}
+    ${force ? ansi.bold('\n🚨 FORCE MODE ENGAGED: ENSURE SURETY') : ''}
   `
 
   const desktopEntry = `<!DOCTYPE html>
@@ -85,134 +76,80 @@ console.log(await versions())
 
   const appJs = 'document.querySelector(\'h1\').addEventListener(\'click\', (e) => { e.target.innerHTML = \'🍐\'})'
 
-  const desktopTemplate = `
-    {
-      "name": "$name",
-      "main": "$main",
-      "type": "module",
-      "scripts": ${scripts},
-      "pear": {
-        "name": "$pear-name",
-        "type": "$type",
-        "gui": {
-          "backgroundColor": "$backgroundColor",
-          "height": $height,
-          "width": $width${extra}
-        }
-      },
-      "author": "$author",
-      "license": "$license",
-      "devDependencies": {
-        "brittle": "^3.0.0"
-      }
-    }
-`
-
-  const terminalTemplate = `
-    {
-      "name": "$name",
-      "main": "$main",
-      "type": "module",
-      "scripts": ${scripts},
-      "pear": {
-        "name": "$pear-name",
-        "type": "$type"${extra}
-      },
-      "author": "$author",
-      "license": "$license",
-      "devDependencies": {
-        "brittle": "^3.0.0"
-      }
-    }
-`
   const desktopParams = [
     {
-      name: 'name',
-      default: name
-    },
-    {
       name: 'main',
-      default: pkg?.main || 'index.html',
-      valid: (v) => extname(v) === '.html' || extname(v) === '.js',
-      vmsg: 'must have an .html or .js file extension'
-    },
-    {
-      name: 'pear-name',
-      default: name
-    },
-    {
-      name: 'type',
-      default: 'desktop',
-      valid: (v) => v === 'desktop' || v === 'terminal',
-      vmsg: 'must be "desktop" or "terminal"'
-    },
-    {
-      name: 'backgroundColor',
-      default: backgroundColor
+      default: 'index.html',
+      prompt: 'main',
+      type: 'desktop',
+      validation: (value) => extname(value) === '.js' || extname(value) === '.html',
+      msg: 'must have an .html or .js file extension'
     },
     {
       name: 'height',
       default: height,
-      valid: (h) => Number.isInteger(+h),
-      vmsg: 'must be an integer'
+      validation: (value) => Number.isInteger(+value),
+      prompt: 'height',
+      msg: 'must be an integer',
+      type: 'desktop'
     },
     {
       name: 'width',
       default: width,
-      valid: (h) => Number.isInteger(+h),
-      vmsg: 'must be an integer'
-    },
-    {
-      name: 'author',
-      default: pkg?.author || ''
-    },
-    {
-      name: 'license',
-      default: pkg?.license || 'MIT'
+      validation: (value) => Number.isInteger(+value),
+      prompt: 'width',
+      msg: 'must be an integer',
+      type: 'desktop'
     }
   ]
 
   const terminalParams = [
     {
-      name: 'name',
-      default: name
-    },
-    {
       name: 'main',
-      default: pkg?.main || 'index.js',
-      valid: (v) => extname(v) === '.js',
-      vmsg: 'must have an .js file extension'
-    },
-    {
-      name: 'pear-name',
-      default: name
-    },
+      default: 'index.js',
+      prompt: 'main',
+      type: 'terminal',
+      validation: (value) => extname(value) === '.js',
+      msg: 'must have an .js file extension'
+    }
+  ]
+
+  const params = [
     {
       name: 'type',
-      default: 'terminal',
-      valid: (v) => v === 'desktop' || v === 'terminal',
-      vmsg: 'must be "desktop" or "terminal"'
+      default: 'desktop',
+      validation: (value) => value === 'desktop' || value === 'terminal',
+      prompt: 'type',
+      msg: 'type must be "desktop" or "terminal"'
+
     },
     {
-      name: 'author',
-      default: pkg?.author || ''
+      name: 'name',
+      default: name,
+      prompt: 'name'
+
     },
+    ...desktopParams,
+    ...terminalParams,
     {
       name: 'license',
-      default: pkg?.license || 'MIT'
+      default: pkg?.license || 'Apache-2.0',
+      prompt: 'license'
     }
   ]
 
   try {
-    const prompt = interact(desktopTemplate, terminalTemplate, desktopParams, terminalParams, header)
-    const { result, fields } = await prompt.run(type, { autosubmit: yes })
+    const prompt = interact(header, params, type)
+    const { result, fields } = await prompt.run({ autosubmit: yes })
+    result.scripts = scripts
+    if (fields.type === 'desktop') result.gui = { ...extra, ...result.gui }
     const created = pkg === null ? [pkgPath] : []
     const refusals = []
-    const entryPath = resolve(dir, fields.main.value)
+    const entryPath = resolve(dir, fields.main)
     const appPath = resolve(dir, 'app.js')
     const testDir = resolve(dir, 'test')
     const testPath = resolve(testDir, 'index.test.js')
-    const isDesktop = fields.type.value === 'desktop'
+    const isDesktop = fields.type === 'desktop'
 
     if (force || await exists(entryPath) === false) {
       await writeFile(entryPath, isDesktop ? desktopEntry : terminalEntry)
@@ -236,7 +173,7 @@ console.log(await versions())
       }
     }
 
-    const final = JSON.stringify({ ...JSON.parse(result), ...diff }, 0, 2)
+    const final = JSON.stringify({ ...result, ...diff }, 0, 2)
     await writeFile(pkgPath, final)
     print(`\n ${final.split('\n').join('\n ')}\n`)
     if (created.length > 0) print(`${ansi.bold('Created')}:-\n\n  * ${created.join('\n  * ')}\n`)
