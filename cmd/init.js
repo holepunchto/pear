@@ -53,8 +53,7 @@ module.exports = (ipc) => async function init (args) {
 
   const header = `${banner}${ansi.dim('›')}
     ${pkg === null ? '' : ansi.bold('\nExisting package.json detected, will merge')}
-    ${force ? ansi.bold('\n🚨 FORCE MODE ENGAGED: ENSURE SURETY') : ''}
-  `
+    ${force ? ansi.bold('\n🚨 FORCE MODE ENGAGED: ENSURE SURETY\n') : ''}`
 
   const desktopEntry = `<!DOCTYPE html>
 <html>

@@ -105,6 +105,7 @@ class Interact {
           let answer = await this._input(`${param.prompt}:${param.default && ' (' + param.default + ')'} `)
           if (answer.length === 0) answer = param.default
           if (!param.validation || await param.validation(answer)) {
+            if (typeof answer === 'string') answer = answer.replace(rx, '')
             fields[param.name] = answer
             break
           } else {
@@ -116,7 +117,7 @@ class Interact {
       }
     }
 
-    return { fields, result: this._getResult(fields).replace(rx, '') }
+    return { fields, result: this._getResult(fields) }
   }
 
   _autosubmit () {
