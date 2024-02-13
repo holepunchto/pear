@@ -154,16 +154,13 @@ module.exports = class IPC {
         return app.ctx.storage === storage && (appdev ? app.ctx.dir === appdev : app.ctx.key?.z32 === parsed.key?.z32)
       })
 
-      if (matches.length <= 1) {
-        resolve(false)
-        return
-      }
-      resolve(true)
       for (const client of matches) {
         const app = client.userData
         if (!app) continue
         app.message({ type: 'pear/wakeup', data: parsed.data, link })
       }
+
+      resolve(matches.length > 1)
     })
   }
 
