@@ -49,11 +49,11 @@ module.exports = (ipc) => async function init (args) {
   const name = cfg?.name || pkg?.name || basename(cwd)
 
   const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
-  const extra = cfg.gui || {}
+  const extra = cfg.gui || null
 
-  const header = `${banner}${ansi.dim('›')}
-    ${pkg === null ? '' : ansi.bold('\nExisting package.json detected, will merge')}
-    ${force ? ansi.bold('\n🚨 FORCE MODE ENGAGED: ENSURE SURETY\n') : ''}`
+  let header = `${banner}${ansi.dim('›')}\n\n`
+  if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
+  if (force) header += ansi.bold('🚨 FORCE MODE ENGAGED: ENSURE SURETY\n\n')
 
   const desktopEntry = `<!DOCTYPE html>
 <html>
@@ -141,7 +141,7 @@ console.log(await versions())
     const prompt = interact(header, params, type)
     const { result, fields } = await prompt.run({ autosubmit: yes })
     result.scripts = scripts
-    if (fields.type === 'desktop') result.gui = { ...extra, ...result.gui }
+    if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
     const created = pkg === null ? [pkgPath] : []
     const refusals = []
     const entryPath = resolve(dir, fields.main)
