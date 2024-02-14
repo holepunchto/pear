@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         node-version: [lts/*]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
@@ -29,7 +29,7 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Bootstrap
-      run: npm run bootstrap 4jhsxnio7cnctka35qopfd4rhkesupaw895gy5u8dsnrxki43rey
+      run: npm run bootstrap pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
     - name: Run tests
       run: npm test
     - name: Lint
