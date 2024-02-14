@@ -136,7 +136,7 @@ class Interact {
   async _input (prompt) {
     stdio.out.write(prompt)
     const answer = (await once(stdio.in, 'data')).toString()
-    return answer.slice(0, answer.length - 1) // remove return char
+    return answer.trim() // remove return char
   }
 
   _evaluate (param, fields) {
