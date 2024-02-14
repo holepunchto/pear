@@ -5,7 +5,7 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 
-const PEAR_KEY = process.env.PEAR_KEY
+const PEAR_KEY = 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
 const DKEY = Hypercore.discoveryKey(HypercoreID.decode(PEAR_KEY)).toString('hex')
 
 const IS_WIN = process.platform === 'win32'
