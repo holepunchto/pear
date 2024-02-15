@@ -15,7 +15,7 @@ test('Too short key in pear url', t => {
   t.plan(1)
   t.exception(() => {
     url('pear://some-short-key')
-  }, /pear key needs to be 64 characters long/)
+  }, /Key is not valid/)
 })
 
 test('Pear url with an alias', t => {
@@ -83,7 +83,7 @@ test('Unsupported protocol', t => {
   t.plan(1)
   t.exception(() => {
     url('someprotocol://thats-not-supported')
-  }, /Protocol, "someprotocol:", is not supported/)
+  }, /Protocol is not supported/)
 })
 
 test('No :// in url', t => {
