@@ -54,6 +54,12 @@
       "by-arch"
     ]
   },
+  "imports": {
+    "url": {
+      "bare": "bare-url",
+      "default": "url"
+    }
+  },
   "dependencies": {
     "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
