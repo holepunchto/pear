@@ -3,18 +3,43 @@
 const test = require('brittle')
 const url = require('../lib/url')
 
-test('Pear url', t => {
-  t.plan(2)
-  const { protocol, key } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+test('Pear url with key', t => {
+  t.plan(3)
+  const { protocol, key, path } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
   t.is(protocol, 'pear')
   t.is(key, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+  t.absent(path)
 })
 
-test('Too short key in pear url', async t => {
+test('Too short key in pear url', t => {
   t.plan(1)
   t.exception(() => {
     url('pear://some-short-key')
   }, /pear key needs to be 64 characters long/)
+})
+
+test('Pear url with an alias', t => {
+  t.plan(3)
+  const { protocol, key, path } = url('pear://keet')
+  t.is(protocol, 'pear')
+  t.is(key, 'keet')
+  t.absent(path)
+})
+
+test('Pear url with alias and path', t => {
+  t.plan(3)
+  const { protocol, key, path } = url('pear://keet/some/path')
+  t.is(protocol, 'pear')
+  t.is(key, 'keet')
+  t.is(path, '/some/path')
+})
+
+test('Pear url with key and path', t => {
+  t.plan(3)
+  const { protocol, key, path } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2/some/path')
+  t.is(protocol, 'pear')
+  t.is(key, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+  t.is(path, '/some/path')
 })
 
 test('File url with path', t => {
