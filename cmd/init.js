@@ -58,10 +58,43 @@ module.exports = (ipc) => async function init (args) {
   const desktopEntry = `<!DOCTYPE html>
 <html>
 <head>
-  <style>body > h1:nth-of-type(1) { cursor: pointer }</style>
+  <style>
+    body > h1:nth-of-type(1) {
+      cursor: pointer
+    }
+
+    body {
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+    }
+
+    #bar {
+      background: rgba(55, 60, 72, 0.6);
+      backdrop-filter: blur(64px);
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 12px;
+      margin-left: 12px;
+    }
+  </style>
   <script type='module' src='./app.js'></script>
 </head>
 <body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
   <h1>${name}</h1>
 </body>
 </html>
