@@ -9,9 +9,9 @@ const parse = require('../lib/parse')
 module.exports = (ipc) => async function init (args) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
-  const { _, yes, force, type = 'desktop' } = parse.args(args, {
+  const { _, yes, force, type = 'desktop', node } = parse.args(args, {
     string: ['type'],
-    boolean: ['yes', 'force'],
+    boolean: ['yes', 'force', 'node'],
     alias: {
       yes: 'y',
       from: 'f',
@@ -58,10 +58,40 @@ module.exports = (ipc) => async function init (args) {
   const desktopEntry = `<!DOCTYPE html>
 <html>
 <head>
-  <style>body > h1:nth-of-type(1) { cursor: pointer }</style>
+  <style>
+    body {
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+    }
+    body > h1:nth-of-type(1) {
+      cursor: pointer
+    }
+    #bar[data-platform=darwin] {
+      background: rgba(55, 60, 72, 0.6);
+      backdrop-filter: blur(64px);
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 12px;
+      margin-left: 12px;
+    }
+  </style>
   <script type='module' src='./app.js'></script>
 </head>
 <body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
   <h1>${name}</h1>
 </body>
 </html>
@@ -137,11 +167,39 @@ console.log(await versions())
     }
   ]
 
+  const nodeDependecies = {
+    'bare-subprocess': '^2.0.4',
+    child_process: 'npm:bare-node-child-process',
+    'bare-console': '^4.1.0',
+    console: 'npm:bare-node-console',
+    'bare-events': '^2.2.0',
+    events: 'npm:bare-node-events',
+    'bare-fs': '^2.1.5',
+    fs: 'npm:bare-node-fs',
+    'bare-http1': '^2.0.3',
+    http: 'npm:bare-node-http',
+    'bare-inspector': '^1.1.2',
+    inspector: 'npm:bare-node-inspector',
+    'bare-os': '^2.2.0',
+    os: 'npm:bare-node-os',
+    'bare-path': '^2.1.0',
+    path: 'npm:bare-node-path',
+    'bare-process': '^1.3.0',
+    process: 'npm:bare-node-process',
+    'bare-readline': '^1.0.0',
+    readline: 'npm:bare-node-readline',
+    'bare-repl': '^1.0.3',
+    repl: 'npm:bare-node-repl',
+    'bare-url': '^1.0.5',
+    url: 'npm:bare-node-url'
+  }
+
   try {
     const prompt = interact(header, params, type)
     const { result, fields } = await prompt.run({ autosubmit: yes })
     result.scripts = scripts
     if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
+    if (node) result.dependecies = nodeDependecies
     const created = pkg === null ? [pkgPath] : []
     const refusals = []
     const entryPath = resolve(dir, fields.main)
