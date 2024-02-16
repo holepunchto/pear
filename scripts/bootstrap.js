@@ -21,8 +21,7 @@ const SWAP = path.join(__dirname, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
-const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-')
-if (!RUNTIMES_DRIVE_KEY) throw new Error('provide key')
+const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
 
 try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
 
