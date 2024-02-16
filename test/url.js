@@ -3,8 +3,15 @@
 const test = require('brittle')
 const url = require('../lib/url')
 const ALIASES = { // require('./constants') <-- throws an error when required
-  keet: require('hypercore-id-encoding').decode('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
-  runtime: require('hypercore-id-encoding').decode('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro')
+  keet: getKeys('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
+  runtime: getKeys('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro')
+}
+function getKeys (z32) {
+  return {
+    z32,
+    buffer: require('hypercore-id-encoding').decode(z32),
+    hex: require('hypercore-id-encoding').decode(z32).toString('hex')
+  }
 }
 
 test('pear://key', t => {
@@ -40,7 +47,7 @@ test('pear://alias', t => {
   t.is(protocol, 'pear:')
   t.is(length, 0)
   t.is(fork, null)
-  t.is(key.toString('hex'), ALIASES.keet.toString('hex'))
+  t.is(key.toString('hex'), ALIASES.keet.hex)
   t.absent(pathname)
 })
 
@@ -50,7 +57,7 @@ test('pear://alias/path', t => {
   t.is(protocol, 'pear:')
   t.is(length, 0)
   t.is(fork, null)
-  t.is(key.toString('hex'), ALIASES.keet.toString('hex'))
+  t.is(key.toString('hex'), ALIASES.keet.hex)
   t.is(pathname, '/some/path')
 })
 
