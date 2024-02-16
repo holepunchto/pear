@@ -2,81 +2,70 @@
 
 const test = require('brittle')
 const url = require('../lib/url')
+const ALIASES = { // require('./constants') <-- throws an error when required
+  keet: require('hypercore-id-encoding').decode('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
+  runtime: require('hypercore-id-encoding').decode('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro')
+}
 
-test('Pear url with key', t => {
-  t.plan(3)
-  const { protocol, key, pathname } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+test('pear://key', t => {
+  t.plan(5)
+  const { protocol, length, fork, key, pathname } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
   t.is(protocol, 'pear:')
-  t.is(key, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+  t.is(length, 0)
+  t.is(fork, null)
+  t.is(key.toString('hex'), 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
   t.absent(pathname)
 })
 
-test('Too short key in pear url', t => {
+test('pear://key/pathname', t => {
+  t.plan(5)
+  const { protocol, length, fork, key, pathname } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2/some/path.js')
+  t.is(protocol, 'pear:')
+  t.is(length, 0)
+  t.is(fork, null)
+  t.is(key.toString('hex'), 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
+  t.is(pathname, '/some/path.js')
+})
+
+test('pear://invalid-key', t => {
   t.plan(1)
   t.exception(() => {
-    url('pear://some-short-key')
-  }, /Key is not valid/)
+    url('pear://some-invalid-key')
+  }, /Error: Invalid Hypercore key/)
 })
 
-test('Pear url with an alias', t => {
-  t.plan(3)
-  const { protocol, key, pathname } = url('pear://keet')
+test('pear://alias', t => {
+  t.plan(5)
+  const { protocol, length, fork, key, pathname } = url('pear://keet')
   t.is(protocol, 'pear:')
-  t.is(key, 'keet')
+  t.is(length, 0)
+  t.is(fork, null)
+  t.is(key.toString('hex'), ALIASES.keet.toString('hex'))
   t.absent(pathname)
 })
 
-test('Pear url with alias and path', t => {
-  t.plan(3)
-  const { protocol, key, pathname } = url('pear://keet/some/path')
+test('pear://alias/path', t => {
+  t.plan(5)
+  const { protocol, length, fork, key, pathname } = url('pear://keet/some/path')
   t.is(protocol, 'pear:')
-  t.is(key, 'keet')
+  t.is(length, 0)
+  t.is(fork, null)
+  t.is(key.toString('hex'), ALIASES.keet.toString('hex'))
   t.is(pathname, '/some/path')
 })
 
-test('Pear url with key and path', t => {
-  t.plan(3)
-  const { protocol, key, pathname } = url('pear://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2/some/path')
-  t.is(protocol, 'pear:')
-  t.is(key, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
-  t.is(pathname, '/some/path')
-})
-
-test('File url with path', t => {
+test('file:///path', t => {
   t.plan(2)
   const { protocol, pathname } = url('file:///path/to/file.js')
   t.is(protocol, 'file:')
   t.is(pathname, '/path/to/file.js')
 })
 
-test('File url that does not start from root', t => {
+test('file://non-root-path', t => {
   t.plan(1)
   t.exception(() => {
     url('file://file.js')
   }, /Path needs to start from the root, "\/"/)
-})
-
-test('Local url with a path', t => {
-  t.plan(3)
-  const { protocol, appToken, pathname } = url('local://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2/path/to/a/file.js')
-  t.is(protocol, 'local:')
-  t.is(appToken, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
-  t.is(pathname, '/path/to/a/file.js')
-})
-
-test('Local url without a path', t => {
-  t.plan(3)
-  const { protocol, appToken, pathname } = url('local://a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
-  t.is(protocol, 'local:')
-  t.is(appToken, 'a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2c3d4e5a1b2')
-  t.absent(pathname)
-})
-
-test('Too short appToken in local url ', t => {
-  t.plan(1)
-  t.exception(() => {
-    url('local://some-short-key')
-  }, /App token neeeds to be 64 characters long/)
 })
 
 test('Unsupported protocol', t => {
