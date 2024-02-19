@@ -16,6 +16,7 @@ const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
 const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
+const whichRuntime = require('which-runtime')
 
 class Helper {
   constructor (teardown, opts = {}) {
@@ -28,19 +29,14 @@ class Helper {
     this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
     this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
 
-    this.socketPath = Helper.PLATFORM === 'win32' ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
-    this.bin = 'by-arch/' + Helper.PLATFORM + '-' + Helper.ARCH + '/bin/'
-    this.runtime = path.join(this.swap, 'by-arch', Helper.PLATFORM + '-' + Helper.ARCH, 'bin', 'pear-runtime')
+    this.socketPath = whichRuntime.platform === 'win32' ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
+    this.bin = 'by-arch/' + whichRuntime.platform + '-' + whichRuntime.arch + '/bin/'
+    this.runtime = path.join(this.swap, 'by-arch', whichRuntime.platform + '-' + whichRuntime.arch, 'bin', 'pear-runtime')
 
     if (this.logging) this.argv.push('--attach-boot-io')
   }
 
-  static PLATFORM = (global.Bare || global.process).platform
-  static ARCH = (global.Bare || global.process).arch
   static IPC_ID = 'pear'
-  static IS_WINDOWS = Helper.PLATFORM === 'win32'
-  static IS_LINUX = Helper.PLATFORM === 'linux'
-  static IS_MAC = Helper.PLATFORM === 'darwin'
   static CONNECT_TIMEOUT = 20_000
 
   async bootstrap () {

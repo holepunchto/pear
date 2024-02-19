@@ -1,13 +1,14 @@
 'use strict'
-const { PLATFORM_DIR, RUNTIME, IS_BARE } = require('../lib/constants')
-const os = IS_BARE ? require('bare-os') : require('os')
-const path = IS_BARE ? require('bare-path') : require('path')
+const { PLATFORM_DIR, RUNTIME } = require('../lib/constants')
+const whichRuntime = require('which-runtime')
+const os = whichRuntime.isBare ? require('bare-os') : require('os')
+const path = whichRuntime.isBare ? require('bare-path') : require('path')
 const { discoveryKey } = require('hypercore-crypto')
 const { decode } = require('hypercore-id-encoding')
 
 const parse = require('../lib/parse')
-const CWD = IS_BARE ? os.cwd() : process.cwd()
-const ENV = IS_BARE ? require('bare-env') : process.env
+const CWD = whichRuntime.isBare ? os.cwd() : process.cwd()
+const ENV = whichRuntime.isBare ? require('bare-env') : process.env
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw new Error('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
