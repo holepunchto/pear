@@ -5,6 +5,7 @@ const { App } = require('./lib/gui')
 const { SWAP, RUNTIME } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
+const { isWindows, isMac, isLinux } = require('which-runtime')
 
 configureElectron()
 
@@ -41,11 +42,11 @@ async function electronMain () {
 
 function configureElectron () {
   const electron = require('electron')
-  if (process.platform === 'linux') {
+  if (isLinux) {
     linuxSetup(RUNTIME)
   }
 
-  if (process.platform === 'win32') {
+  if (isWindows) {
     const ap = applingPath()
     if (ap) {
       electron.app.setAsDefaultProtocolClient('holepunch', ap) // legacy
@@ -78,7 +79,7 @@ function configureElectron () {
   // Needed for running fully-local WebRTC proxies
   electron.app.commandLine.appendSwitch('allow-loopback-in-peer-connection')
 
-  if (process.platform === 'linux' && process.env.XDG_SESSION_TYPE === 'wayland') {
+  if (isLinux && process.env.XDG_SESSION_TYPE === 'wayland') {
     electron.app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer,WaylandWindowDecorations')
     electron.app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
   }
@@ -94,14 +95,14 @@ function applingName () {
   const a = applingPath()
   if (!a) return null
 
-  if (process.platform === 'darwin') {
+  if (isMac) {
     const end = a.indexOf('.app')
     if (end === -1) return null
     const start = a.lastIndexOf('/', end) + 1
     return a.slice(start, end)
   }
 
-  if (process.platform === 'win32') {
+  if (isWindows) {
     const name = a.slice(a.lastIndexOf('\\') + 1).replace(/\.exe$/i, '')
     return name || null
   }

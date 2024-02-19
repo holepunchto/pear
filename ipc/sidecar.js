@@ -10,7 +10,8 @@ const Channel = require('jsonrpc-mux')
 const preferences = require('../lib/preferences')
 const Engine = require('../lib/engine')
 const parse = require('../lib/parse')
-const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, IS_WINDOWS, IS_MAC } = require('../lib/constants')
+const { isWindows, isMac } = require('which-runtime')
+const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH } = require('../lib/constants')
 
 const { constructor: AGF } = async function * () {}
 
@@ -54,7 +55,7 @@ module.exports = class IPC {
 
   async listen () {
     try {
-      if (!IS_WINDOWS) await fsp.unlink(SOCKET_PATH)
+      if (!isWindows) await fsp.unlink(SOCKET_PATH)
     } catch {}
     this.server.listen(SOCKET_PATH)
   }
@@ -243,7 +244,7 @@ module.exports = class IPC {
         })
       }
       if (appling) {
-        if (IS_MAC) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
         spawn(runtime, argv, opts).unref()
@@ -260,7 +261,7 @@ module.exports = class IPC {
     for (const { cwd, appling, argv, env } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (IS_MAC) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts

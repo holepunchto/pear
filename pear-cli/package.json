@@ -21,6 +21,7 @@
   "dependencies": {
     "hypercore": "^10.32.8",
     "hypercore-id-encoding": "^1.2.0",
-    "pear-updater-bootstrap": "^1.0.1"
+    "pear-updater-bootstrap": "^1.0.1",
+    "which-runtime": "^1.2.0"
   }
 }

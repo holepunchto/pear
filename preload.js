@@ -6,11 +6,10 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { builtins, platform, app } = require('./lib/gunk')
   const electron = require('electron')
+  const { isMac, isWindows } = require('which-runtime')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
-  const IS_WINDOWS = process.platform === 'win32'
-  const IS_MAC = process.platform === 'darwin'
-  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(IS_WINDOWS ? -2 : -1)[0])
+  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
@@ -142,8 +141,8 @@ if (process.isMainFrame) {
     #demax = null
 
     connectedCallback () {
-      this.dataset.platform = process.platform
-      if (IS_MAC) {
+      this.dataset.platform = platform
+      if (isMac) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async (m) => {
           const { x, y } = ctrl.getBoundingClientRect()
@@ -160,7 +159,7 @@ if (process.isMainFrame) {
         this.intesections.observe(this)
         return
       }
-      if (!IS_WINDOWS) return // linux uses frame
+      if (!isWindows) return // linux uses frame
 
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
@@ -180,7 +179,7 @@ if (process.isMainFrame) {
     }
 
     disconnectedCallback () {
-      if (IS_MAC) {
+      if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
         return
@@ -201,7 +200,7 @@ if (process.isMainFrame) {
     constructor () {
       super()
       this.template = document.createElement('template')
-      this.template.innerHTML = IS_WINDOWS ? this.#win() : (IS_MAC ? this.#mac() : this.#gen())
+      this.template.innerHTML = isWindows ? this.#win() : (isMac ? this.#mac() : this.#gen())
       this.root = this.attachShadow({ mode: 'open' })
       this.root.appendChild(this.template.content.cloneNode(true))
       this.#onfocus = () => this.root.querySelector('#ctrl').classList.add('focused')
@@ -211,7 +210,7 @@ if (process.isMainFrame) {
 
     async #min () { await Pear.Window.self.minimize() }
     async #max (e) {
-      if (IS_MAC) await Pear.Window.self.fullscreen()
+      if (isMac) await Pear.Window.self.fullscreen()
       else await Pear.Window.self.maximize()
       e.target.root.querySelector('#ctrl').classList.add('max')
     }

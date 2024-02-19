@@ -1,12 +1,12 @@
 'use strict'
 const { once } = require('bare-events')
 const byteSize = require('tiny-byte-size')
-const { IS_WINDOWS } = require('../lib/constants')
+const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
-const rich = IS_WINDOWS === false && stdio.out.isTTY
+const rich = isWindows === false && stdio.out.isTTY
 const pt = (arg) => arg
 const es = () => ''
 const ansi = rich

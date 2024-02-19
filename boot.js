@@ -1,3 +1,5 @@
+const { isElectron, isElectronRenderer, isElectronWorker } = require('which-runtime')
+
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 const BOOT_ELECTRON = 3
@@ -22,8 +24,8 @@ switch (getBootType()) {
 }
 
 function getBootType () {
-  if (global.process && global.process.versions.electron) {
-    return (global.process.type === 'renderer' || global.process.type === 'worker')
+  if (isElectron) {
+    return (isElectronRenderer || isElectronWorker)
       ? BOOT_ELECTRON_PRELOAD
       : BOOT_ELECTRON
   }
