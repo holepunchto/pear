@@ -1,4 +1,8 @@
 'use strict'
+const electron = require('electron')
+electron.app.on('open-url', (evt, link) => {
+  electron.dialog.showErrorBox('Welcome Back', `You arrived from: ${link}`)
+})
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
@@ -20,16 +24,17 @@ async function electronMain () {
   })
   if (ctx.error) {
     console.error(ctx.error)
-    require('electron').app.quit(1)
+    electron.app.quit(1)
     return
   }
   const client = channel
   const ipc = new IPC(ctx, client)
 
   if (await ipc.wakeup()) { // note: would be unhandled rejection on failure, but should never fail
-    require('electron').app.quit(0)
+    electron.app.quit(0)
     return
   }
+
   const app = new App(ctx)
   client.once('close', async () => { app.quit() })
   app.start(ipc).catch(console.error)

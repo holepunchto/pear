@@ -141,6 +141,7 @@ module.exports = class IPC {
   }
 
   wakeup (link, storage, appdev = null) {
+    console.log('wakeup', link, storage, appdev)
     return new Promise((resolve) => {
       if (this.freelist.emptied()) {
         resolve(false)

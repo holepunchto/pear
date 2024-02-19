@@ -43,8 +43,7 @@ module.exports = class IPC {
     return this.sidecar.identify()
   }
 
-  wakeup () {
-    let link = this.ctx.link
+  wakeup (link = this.ctx.link) {
     if (!link) return false
     if (link.startsWith('pear:') === false) link = 'pear://' + link
     const devlink = link.startsWith('pear://dev') || link.startsWith('pear:dev') || link.startsWith('punch//:dev')
