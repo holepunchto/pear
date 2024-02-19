@@ -10,8 +10,13 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [lts/*]
-        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
@@ -28,7 +33,7 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2 https://github.com/actions/setup-node/releases/tag/v4.0.2
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: lts/*
     - name: Install dependencies
       run: npm install
       env:
