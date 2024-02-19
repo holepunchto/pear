@@ -5,7 +5,7 @@ const { App } = require('./lib/gui')
 const { SWAP, RUNTIME } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
-const { platform, isWindows, isMac, isLinux } = require('which-runtime')
+const { isWindows, isMac, isLinux } = require('which-runtime')
 
 configureElectron()
 
