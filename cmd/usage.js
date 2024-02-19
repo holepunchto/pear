@@ -1,5 +1,5 @@
 'use strict'
-const { ansi, rich, print, stdio } = require('./iface')
+const { ansi, print, stdio } = require('./iface')
 let usage = null
 module.exports = ({ fork, length, key }) => {
   if (usage) return usage
@@ -164,15 +164,15 @@ module.exports = ({ fork, length, key }) => {
 
   const header = `
   ${banner}
-  ${rich ? '🍐 ' : ''}${version}
+  ${ansi.pear + ' '}${version}
   `
 
   const miniHeader = `
-  ${`${ansi.bold(name)} ~ ${ansi.dim(`«{${v}}» ${rich ? '🍐' : ''}`)}`}`
+  ${`${ansi.bold(name)} ~ ${ansi.dim(`«{${v}}» ${ansi.pear}`)}`}`
 
   const dedot = (str) => str.slice(0, -1)
 
-  const footer = `  ${rich ? '🍐 ' : ''}${version}
+  const footer = `  ${ansi.pear + ' '}${version}
   ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
   ${url}
   `
@@ -197,16 +197,16 @@ module.exports = ({ fork, length, key }) => {
     output,
     outputVersions,
     outputVersionBreakdown,
-    min: `${init} ${ansi.dim(ansi.green('∞'))} ${dedot(initBrief)}
-    ${dev} ${ansi.dim(ansi.green('∞'))} ${dedot(devBrief)}
-    ${stage} ${ansi.dim(ansi.green('∞'))} ${dedot(stageBrief)}
-    ${seed} ${ansi.dim(ansi.green('∞'))} ${dedot(seedBrief)}
-    ${run} ${ansi.dim(ansi.green('∞'))} ${dedot(runBrief)}
-    ${release} ${ansi.dim(ansi.green('∞'))} ${dedot(releaseBrief)}
-    ${info} ${ansi.dim(ansi.green('∞'))} ${dedot(infoBrief)}
-    ${dump} ${ansi.dim(ansi.green('∞'))} ${dedot(dumpBrief)}
-    ${sidecar} ${ansi.dim(ansi.green('∞'))} ${dedot(sidecarBrief)}
-    ${versions} ${ansi.dim(ansi.green('∞'))} ${dedot(versionsBrief)}
+    min: `${init} ${ansi.sep} ${dedot(initBrief)}
+    ${dev} ${ansi.sep} ${dedot(devBrief)}
+    ${stage} ${ansi.sep} ${dedot(stageBrief)}
+    ${seed} ${ansi.sep} ${dedot(seedBrief)}
+    ${run} ${ansi.sep} ${dedot(runBrief)}
+    ${release} ${ansi.sep} ${dedot(releaseBrief)}
+    ${info} ${ansi.sep} ${dedot(infoBrief)}
+    ${dump} ${ansi.sep} ${dedot(dumpBrief)}
+    ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
+    ${versions} ${ansi.sep} ${dedot(versionsBrief)}
 
     ${helpExplain}
 ${footer}`,

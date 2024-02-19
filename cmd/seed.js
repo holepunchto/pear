@@ -6,13 +6,13 @@ const parse = require('../lib/parse')
 const { outputter, print, ansi, InputError } = require('./iface')
 
 const output = outputter('seed', {
-  seeding: ({ key, name, channel }) => `\n🍐 Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
+  seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
   key: (info) => `-o-:-\n    pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
   'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
   announced: '^_^ announced',
-  'peer-add': (info) => `•-• peer join ${info}`,
+  'peer-add': (info) => `o-o peer join ${info}`,
   'peer-remove': (info) => `-_- peer drop ${info}`
 })
 

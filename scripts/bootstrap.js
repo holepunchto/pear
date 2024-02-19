@@ -109,6 +109,8 @@ async function * downloader (key, all) {
   await swarm.destroy()
   await corestore.close()
 
-  if (all) yield '\x1B[32m✔\x1B[39m Download complete\n'
-  else yield '\x1B[32m✔\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
+  const tick = isWindows ? '^' : '✔'
+
+  if (all) yield '\x1B[32m' + tick + '\x1B[39m Download complete\n'
+  else yield '\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
 }

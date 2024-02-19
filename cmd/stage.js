@@ -8,7 +8,7 @@ let blocks = 0
 let total = 0
 const output = outputter('stage', {
   staging: ({ name, channel, key, current, release }) => {
-    return `\n🍐 Staging ${name} into ${channel}\n\n[ ${ansi.dim(key)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
+    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[ ${ansi.dim(key)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
   },
   skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',

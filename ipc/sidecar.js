@@ -49,6 +49,7 @@ module.exports = class IPC {
     this.engine = new Engine(this, { updater, drive, corestore })
     let closed = null
     this.closing = new Promise((resolve) => { closed = resolve })
+    this.closing.finally(() => console.log((isWindows ? '^' : '✔') + ' Sidecar closed'))
     this.#closed = closed
     this.#spindownCountdown()
   }
@@ -299,7 +300,6 @@ module.exports = class IPC {
     this.spindownms = 0
     this.#spindownCountdown()
     await this.closing
-    console.log('✔ Sidecar closed')
     return restarts
   }
 
@@ -315,8 +315,9 @@ module.exports = class IPC {
     for (const c of this.connections) c.destroy()
     await serverClosing
     if (this.updater) {
-      await this.updater.applyUpdate()
-      console.log('✔ Applied update')
+      if (await this.updater.applyUpdate() !== null) {
+        console.log((isWindows ? '^' : '✔') + ' Applied update')
+      }
     }
     this.#closed()
   }
