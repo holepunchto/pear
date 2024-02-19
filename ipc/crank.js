@@ -2,13 +2,13 @@
 const constants = require('../lib/constants')
 const Context = require('../ctx/shared')
 const API = require('../lib/api')
-const whichRuntime = require('which-runtime')
-const Module = whichRuntime.isBare ? require('bare-module') : null
-const os = whichRuntime.isBare ? require('bare-os') : require('os')
-const path = whichRuntime.isBare ? require('bare-path') : require('path')
-const fs = whichRuntime.isBare ? require('bare-fs') : require('fs')
-const ENV = whichRuntime.isBare ? require('bare-env') : process.env
-const { spawn } = whichRuntime.isBare ? require('bare-subprocess') : require('child_process')
+const { isBare } = require('which-runtime')
+const Module = isBare ? require('bare-module') : null
+const os = isBare ? require('bare-os') : require('os')
+const path = isBare ? require('bare-path') : require('path')
+const fs = isBare ? require('bare-fs') : require('fs')
+const ENV = isBare ? require('bare-env') : process.env
+const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
 
@@ -20,7 +20,7 @@ class Crank {
   }
 
   async * run ({ args }) {
-    const cwd = whichRuntime.isBare ? os.cwd() : global.process.cwd()
+    const cwd = isBare ? os.cwd() : global.process.cwd()
     args.unshift('--run')
 
     const { startId, host, id, type, bundle } = await this.start(args, ENV, cwd)

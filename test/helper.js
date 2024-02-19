@@ -16,7 +16,7 @@ const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
 const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
-const whichRuntime = require('which-runtime')
+const { arch, platform } = require('which-runtime')
 
 class Helper {
   constructor (teardown, opts = {}) {
@@ -29,9 +29,9 @@ class Helper {
     this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
     this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
 
-    this.socketPath = whichRuntime.platform === 'win32' ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
-    this.bin = 'by-arch/' + whichRuntime.platform + '-' + whichRuntime.arch + '/bin/'
-    this.runtime = path.join(this.swap, 'by-arch', whichRuntime.platform + '-' + whichRuntime.arch, 'bin', 'pear-runtime')
+    this.socketPath = platform === 'win32' ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
+    this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
+    this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
 
     if (this.logging) this.argv.push('--attach-boot-io')
   }

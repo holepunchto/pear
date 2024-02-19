@@ -1,4 +1,4 @@
-const { IS_ELECTRON, IS_ELECTRON_RENDERER, IS_ELECTRON_WORKER } = require('./lib/constants')
+const { IS_ELECTRON, IS_ELECTRON_RENDERER, IS_ELECTRON_WORKER } = require('which-runtime')
 
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
