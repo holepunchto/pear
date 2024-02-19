@@ -8,11 +8,10 @@ const connect = require('./lib/connect.js')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 
 configureElectron()
-
+crasher('electron-main', SWAP)
 electronMain().catch(console.error)
 
 async function electronMain () {
-  crasher('electron-main', SWAP)
   const channel = await connect()
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
