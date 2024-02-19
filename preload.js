@@ -6,10 +6,9 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { builtins, platform, app } = require('./lib/gunk')
   const electron = require('electron')
+  const { IS_WINDOWS, IS_MAC, PLATFORM } = require('./lib/constants')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
-  const IS_WINDOWS = process.platform === 'win32'
-  const IS_MAC = process.platform === 'darwin'
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(IS_WINDOWS ? -2 : -1)[0])
 
   window[Symbol.for('pear.config')] = config
@@ -142,7 +141,7 @@ if (process.isMainFrame) {
     #demax = null
 
     connectedCallback () {
-      this.dataset.platform = process.platform
+      this.dataset.platform = PLATFORM
       if (IS_MAC) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async (m) => {

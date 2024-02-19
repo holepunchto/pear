@@ -2,8 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
-
-const IS_WINDOWS = (global.Bare?.platform || global.process.platform) === 'win32'
+const { isWindows } = require('which-runtime')
 
 const root = path.join(__dirname, '..')
 
@@ -43,7 +42,7 @@ const run = (cmd, args, opts) => {
     }
   }
 
-  if (IS_WINDOWS) {
+  if (isWindows) {
     await run('pear.cmd', ['run', 'test'], { stdio: 'inherit', shell: true })
   } else {
     await run('./pear.dev', ['run', 'test'], { stdio: 'inherit' })

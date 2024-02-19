@@ -4,22 +4,22 @@ const HypercoreID = require('hypercore-id-encoding')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
+const { isWindows, isLinux, platform, arch } = require('which-runtime')
 
 const PEAR_KEY = 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
 const DKEY = Hypercore.discoveryKey(HypercoreID.decode(PEAR_KEY)).toString('hex')
 
-const IS_WIN = process.platform === 'win32'
-const HOST = process.platform + '-' + process.arch
+const HOST = platform + '-' + arch
 
-const PEAR_DIR = process.platform === 'darwin'
+const PEAR_DIR = platform === 'darwin'
   ? path.join(os.homedir(), 'Library', 'Application Support', 'pear')
-  : process.platform === 'linux'
+  : isLinux
     ? path.join(os.homedir(), '.config', 'pear')
     : path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
 
 const LINK = path.join(PEAR_DIR, 'current')
 const BIN = path.join(PEAR_DIR, 'bin')
-const CURRENT_BIN = path.join(LINK, 'by-arch', HOST, 'bin/pear-runtime' + (IS_WIN ? '.exe' : ''))
+const CURRENT_BIN = path.join(LINK, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
 
 if (isInstalled()) {
   require('child_process').spawn(CURRENT_BIN, process.argv.slice(2), {
@@ -47,7 +47,7 @@ if (isInstalled()) {
 }
 
 function makeBin () {
-  if (IS_WIN) return false
+  if (isWindows) return false
   try {
     fs.mkdirSync(BIN, { recursive: true })
     fs.symlinkSync(CURRENT_BIN, path.join(BIN, 'pear'))
