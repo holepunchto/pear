@@ -87,7 +87,7 @@ module.exports = (ipc) => async function init (args) {
     }
 
     pear-ctrl[data-platform=darwin] {
-      margin-top: 12px;
+      margin-top: 18px;
       margin-left: 12px;
     }
   </style>

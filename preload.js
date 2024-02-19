@@ -4,9 +4,9 @@
 if (process.isMainFrame) {
   const timers = require('timers')
   const runtime = require('script-linker/runtime')
-  const { builtins, platform, app } = require('./lib/gunk')
+  const gunk = require('./lib/gunk')
   const electron = require('electron')
-  const { isMac, isWindows } = require('which-runtime')
+  const { isMac, isWindows, platform } = require('which-runtime')
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
 
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
@@ -78,11 +78,11 @@ if (process.isMainFrame) {
 
   // platform runtime:
   const pltsl = runtime({
-    builtins,
-    map: platform.map,
-    mapImport: platform.mapImport,
-    symbol: platform.symbol,
-    protocol: platform.protocol,
+    builtins: gunk.builtins,
+    map: gunk.platform.map,
+    mapImport: gunk.platform.mapImport,
+    symbol: gunk.platform.symbol,
+    protocol: gunk.platform.protocol,
     getSync (url) {
       const xhr = new XMLHttpRequest()
       xhr.open('GET', url, false)
@@ -101,11 +101,11 @@ if (process.isMainFrame) {
 
   // app runtime:
   const appsl = runtime({
-    builtins,
-    map: app.map,
-    mapImport: app.mapImport,
-    symbol: app.symbol,
-    protocol: app.protocol,
+    builtins: gunk.builtins,
+    map: gunk.app.map,
+    mapImport: gunk.app.mapImport,
+    symbol: gunk.app.symbol,
+    protocol: gunk.app.protocol,
     getSync (url) {
       const xhr = new XMLHttpRequest()
       xhr.open('GET', url, false)
