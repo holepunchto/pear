@@ -1,4 +1,4 @@
-const { IS_ELECTRON, IS_ELECTRON_RENDERER, IS_ELECTRON_WORKER } = require('which-runtime')
+const { isElectron, isElectronRenderer, isElectronWorker } = require('which-runtime')
 
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
@@ -24,8 +24,8 @@ switch (getBootType()) {
 }
 
 function getBootType () {
-  if (IS_ELECTRON) {
-    return (IS_ELECTRON_RENDERER || IS_ELECTRON_WORKER)
+  if (isElectron) {
+    return (isElectronRenderer || isElectronWorker)
       ? BOOT_ELECTRON_PRELOAD
       : BOOT_ELECTRON
   }

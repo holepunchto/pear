@@ -4,14 +4,14 @@ const HypercoreID = require('hypercore-id-encoding')
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
-const { isWindows, isLinux, platform, arch } = require('which-runtime')
+const { isWindows, isLinux, isMac, platform, arch } = require('which-runtime')
 
 const PEAR_KEY = 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
 const DKEY = Hypercore.discoveryKey(HypercoreID.decode(PEAR_KEY)).toString('hex')
 
 const HOST = platform + '-' + arch
 
-const PEAR_DIR = platform === 'darwin'
+const PEAR_DIR = isMac
   ? path.join(os.homedir(), 'Library', 'Application Support', 'pear')
   : isLinux
     ? path.join(os.homedir(), '.config', 'pear')
