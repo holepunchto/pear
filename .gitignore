@@ -8,3 +8,4 @@ pear.ps1
 pear.cmd
 pear/current
 *.log
+.DS_Store
