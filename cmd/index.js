@@ -5,6 +5,7 @@ const stage = require('./stage')
 const seed = require('./seed')
 const release = require('./release')
 const info = require('./info')
+const changelog = require('./changelog')
 const dump = require('./dump')
 const sidecar = require('./sidecar')
 const run = require('./run')
@@ -74,6 +75,7 @@ module.exports = async (channel) => {
   cmd.add('dump', dump(ipc))
   cmd.add('build', build)
   cmd.add('sidecar', (args) => sidecar(ipc)(args))
+  cmd.add('changelog', (args) => changelog(ipc)(args))
 
   await cmd.run(argv)
 

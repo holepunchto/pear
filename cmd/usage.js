@@ -16,7 +16,7 @@ module.exports = ({ fork, length, key }) => {
   const initExplain = `${init} ${initArgs}
 
     ${initBrief}
-    
+
     --yes|-y         Autoselect all defaults
     --type|-t=type   Project type: desktop (default) or terminal
     --force|-f       Force overwrite existing files
@@ -63,7 +63,7 @@ module.exports = ({ fork, length, key }) => {
     Set the release pointer against a version (default latest).
 
     Use this to indicate production release points.
-    
+
     --json           Newline delimited JSON output
     --checkout=n     Set a checkout, n is version length
   `
@@ -124,7 +124,7 @@ module.exports = ({ fork, length, key }) => {
     Specify channel or key to seed a project.
 
     Specify a remote key to reseed.
-    
+
     --json        Newline delimited JSON output
     --seeders|-s  Additional public keys to seed from
     --name        Advanced. Override app name
@@ -148,10 +148,18 @@ module.exports = ({ fork, length, key }) => {
   const versions = ansi.bold(cmd + ' versions')
   const versionsBrief = 'Output version information.'
   const versionsExplain = `${versions}
-    
+
     ${versionsBrief}
 
     --json        Single JSON object
+  `
+
+  const changelog = ansi.bold(cmd + ' changelog')
+  const changelogBrief = 'Output changelog.'
+  const changelogExplain = `${changelog}
+
+    ${changelogBrief}
+
   `
 
   const help = ansi.bold(cmd + ' help')
@@ -195,6 +203,7 @@ module.exports = ({ fork, length, key }) => {
     run: runExplain,
     seed: seedExplain,
     sidecar: sidecarExplain,
+    changelog: changelogExplain,
     help: helpExplain,
     output,
     outputVersions,
@@ -209,6 +218,7 @@ module.exports = ({ fork, length, key }) => {
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
+    ${changelog} ${ansi.sep} ${dedot(changelogBrief)}
 
     ${helpExplain}
 ${footer}`,
@@ -222,6 +232,7 @@ ${footer}`,
     ${dumpExplain}
     ${sidecarExplain}
     ${versionsExplain}
+    ${changelogExplain}
     ${helpExplain}
 ${footer}`
   }

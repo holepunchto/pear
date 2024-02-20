@@ -86,6 +86,7 @@ module.exports = class IPC {
     client.method('restart', (params) => this.restart(client, ...params.args))
     client.method('shutdown', () => this.shutdown(client))
     client.method('closeClients', () => this.closeClients(client))
+    client.method('changelog', (params) => this.changelog(...params.args))
   }
 
   #spindownCountdown () {
@@ -169,6 +170,13 @@ module.exports = class IPC {
 
   sniff (client, ...args) {
     return this.engine.sniff(client, ...args)
+  }
+
+  async changelog (...args) {
+    const file = await this.engine.drive.get('/CHANGELOG.md')
+    if (!file) throw new Error('Failed to retrieve changelog file')
+
+    return await clog.parse(file).at(-1)[1]
   }
 
   async start (client, ...args) {
