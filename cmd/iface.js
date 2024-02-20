@@ -26,8 +26,8 @@ const ansi = isWindows
     }
 
 ansi.sep = isWindows ? '-' : ansi.dim(ansi.green('∞'))
-ansi.tick = isWindows ? '^' : '✔'
-ansi.cross = isWindows ? 'x' : '✖'
+ansi.tick = isWindows ? '^' : ansi.green('✔')
+ansi.cross = isWindows ? 'x' : ansi.red('✖')
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
 const rx = /[\x1B\x9B][[\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\d/#&.:=?%@~_]+)*|[a-zA-Z\d]+(?:;[-a-zA-Z\d/#&.:=?%@~_]*)*)?\x07)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g // eslint-disable-line no-control-regex
@@ -56,7 +56,7 @@ function indicator (value, type = 'success') {
   else if (value === false) value = -1
   else if (value == null) value = 0
   if (type === 'diff') return value === 0 ? ansi.yellow('~') : (value === 1 ? ansi.green('+') : ansi.red('-'))
-  return value < 0 ? ansi.red(ansi.cross) + ' ' : (value > 0 ? ansi.green(ansi.tick) + ' ' : ansi.gray('- '))
+  return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
 const outputter = (cmd, taggers = {}) => async (json, iterable, state = {}) => {
@@ -86,7 +86,7 @@ const outputter = (cmd, taggers = {}) => async (json, iterable, state = {}) => {
     }
   } catch (err) {
     if (err.sidecarCode === 'ERR_BARE_CORE') print(err.message, -1)
-    else console.error(err)
+    else if (err.code === 'E_MUX_REMOTE') throw (err.remote || err)
   }
 }
 
@@ -95,7 +95,6 @@ class Interact {
     this._header = header
     this._params = params
     this._type = type
-    stdio.out.write('\n')
     stdio.out.write(this._header)
   }
 
@@ -106,7 +105,7 @@ class Interact {
       const param = this._params.shift()
       if (await this._evaluate(param, fields, this._params)) {
         while (true) {
-          let answer = await this._input(`${param.prompt}:${param.default && ' (' + param.default + ')'} `)
+          let answer = await this._input(`${param.prompt}${param.delim || ':'}${param.default && ' (' + param.default + ')'} `)
           if (answer.length === 0) answer = param.default
           if (!param.validation || await param.validation(answer)) {
             if (typeof answer === 'string') answer = answer.replace(rx, '')

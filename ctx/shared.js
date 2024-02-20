@@ -4,7 +4,6 @@ const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
 const { discoveryKey } = require('hypercore-crypto')
-const { decode } = require('hypercore-id-encoding')
 
 const parse = require('../lib/parse')
 const CWD = isBare ? os.cwd() : process.cwd()
@@ -20,7 +19,6 @@ module.exports = class Context {
   channel = null
   argv = null
   checkpoint = null
-  distributions = null
   #onupdate = null
   runtime = RUNTIME
   reloadingSince = 0
@@ -50,9 +48,9 @@ module.exports = class Context {
   }
 
   static configFrom (ctx) {
-    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir } = ctx
+    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, distributions, dir, pearDir }
+    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {
@@ -60,7 +58,7 @@ module.exports = class Context {
     this.#onupdate()
   }
 
-  constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, distributions, onupdate = () => {} } = {}) {
+  constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, onupdate = () => {} } = {}) {
     const {
       startId, store, appling, flags, channel,
       checkout, dev, run, stage, trace, key, link,
@@ -83,13 +81,10 @@ module.exports = class Context {
     this.run = run
     this.stage = stage
     this.trace = trace
-    this.distributions = distributions?.[key?.z32] || null
     this.link = link
     if (this.link && !this.link.startsWith('pear:')) this.link = 'pear://' + this.link
     this.linkData = parse.runkey(this.link).data
-    this.key = (this.distributions?.current)
-      ? { z32: this.distributions[this.distributions.current], hex: decode(this.distributions[this.distributions.current]).toString('hex') }
-      : key
+    this.key = key
     this.alias = alias
     this.local = local
     this.dir = dir
