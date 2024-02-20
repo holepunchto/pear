@@ -62,7 +62,7 @@ module.exports = () => async function init (args) {
   const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
   const extra = cfg.gui || null
 
-  let header = `${banner}${ansi.dim('›')}\n\n`
+  let header = `\n${banner}${ansi.dim('›')}\n\n`
   if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
   if (force) header += ansi.bold('FORCE MODE\n\n')
 

@@ -1,3 +1,4 @@
+'use strict'
 const { isElectron, isElectronRenderer, isElectronWorker } = require('which-runtime')
 
 const BOOT_SIDECAR = 1

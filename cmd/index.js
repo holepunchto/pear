@@ -10,6 +10,7 @@ const sidecar = require('./sidecar')
 const run = require('./run')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
+
 module.exports = async (channel) => {
   const ipc = new Crank(channel)
   Bare.prependListener('exit', () => { ipc.close() })

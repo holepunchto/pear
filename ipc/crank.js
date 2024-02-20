@@ -95,6 +95,10 @@ class Crank {
     return this.client.request('wakeup', { args: [link, storage, appdev] })
   }
 
+  trust (params) {
+    return this.client.request('trust', params)
+  }
+
   unloading () {
     return this.client.request('unloading', {}, { errorlessClose: true })
   }

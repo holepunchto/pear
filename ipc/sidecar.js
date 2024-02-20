@@ -78,6 +78,7 @@ module.exports = class IPC {
     client.method('seed', (params) => this.seed(client, params))
     client.method('stage', (params) => this.stage(client, params))
     client.method('release', (params) => this.release(client, params))
+    client.method('trust', (params) => this.trust(params))
     client.method('identify', () => this.identify(client))
     client.method('wakeup', (params) => this.wakeup(...params.args))
     client.method('sniff', (params) => this.sniff(client, ...params.args))
@@ -224,6 +225,12 @@ module.exports = class IPC {
 
   release (client, params) {
     return this.#transmit(`release:${params.id}`, client, this.engine.release(params, client), params.silent)
+  }
+
+  async trust ({ z32 } = {}) {
+    const trusted = new Set((await preferences.get('trusted')) || [])
+    trusted.add(z32)
+    return await preferences.set('trusted', Array.from(trusted))
   }
 
   async restart (client, { platform = false } = {}) {
