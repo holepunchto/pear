@@ -17,8 +17,10 @@ module.exports = ({ fork, length, key }) => {
 
     ${initBrief}
     
-    --type=type     Application type: desktop (default) or terminal
-    --yes|-y        Autoselect all defaults
+    --yes|-y         Autoselect all defaults
+    --type|-t=type   Project type: desktop (default) or terminal
+    --force|-f       Force overwrite existing files
+    --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
   const devArgs = ansi.bold('[dir]')

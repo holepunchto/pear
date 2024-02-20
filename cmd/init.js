@@ -6,16 +6,27 @@ const { ansi, print, interact } = require('./iface')
 const constants = require('../lib/constants')
 const parse = require('../lib/parse')
 
-module.exports = (ipc) => async function init (args) {
+module.exports = () => async function init (args) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
-  const { _, yes, force, type = 'desktop', node } = parse.args(args, {
-    string: ['type'],
-    boolean: ['yes', 'force', 'node'],
+  console.log(parse.args(args, {
+    string: ['type', 'with'],
+    boolean: ['yes', 'force'],
     alias: {
       yes: 'y',
       from: 'f',
-      type: 't'
+      type: 't',
+      with: 'w'
+    }
+  }))
+  const { _, yes, force, type = 'desktop', with: w } = parse.args(args, {
+    string: ['type', 'with'],
+    boolean: ['yes', 'force'],
+    alias: {
+      yes: 'y',
+      from: 'f',
+      type: 't',
+      with: 'w'
     }
   })
 
@@ -53,7 +64,7 @@ module.exports = (ipc) => async function init (args) {
 
   let header = `${banner}${ansi.dim('›')}\n\n`
   if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
-  if (force) header += ansi.bold('🚨 FORCE MODE ENGAGED: ENSURE SURETY\n\n')
+  if (force) header += ansi.bold('FORCE MODE\n\n')
 
   const desktopEntry = `<!DOCTYPE html>
 <html>
@@ -202,7 +213,7 @@ console.log(await versions())
     const { result, fields } = await prompt.run({ autosubmit: yes })
     result.scripts = scripts
     if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
-    if (node) result.dependencies = nodeDependecies
+    if (type === 'terminal' && w === 'node') result.dependencies = nodeDependecies
     const created = pkg === null ? [pkgPath] : []
     const refusals = []
     const entryPath = resolve(dir, fields.main)
