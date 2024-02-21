@@ -107,6 +107,11 @@
     "port-get": "^1.0.4",
     "standard": "^17.0.0"
   },
+  "imports": {
+    "bare-signals": {
+      "bare": "bare-signals"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/holepunchto/pear.git"
