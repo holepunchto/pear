@@ -80,7 +80,7 @@ test('smoke', async function ({ teardown, ok, is, not, plan, timeout, comment })
 
   comment('releasing')
   const { released } = await helper.pick(helper.release({
-    id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', key,
+    id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', key
   }, { close: false }), { tag: 'released' })
   await released
 

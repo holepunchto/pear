@@ -1,5 +1,6 @@
-/* global Pear */
 import Pipe from 'bare-pipe'
+
+/* global Pear */
 const { config, versions, updates } = Pear
 const [grn, rst, dim] = ['\x1b[32m', '\x1b[0m', '\x1b[2m']
 const v = ({ key, length, fork }) => `v${fork}.${length}.${(key += '').length <= 12 ? key : key.slice(0, 12) + '…'}`
@@ -36,7 +37,7 @@ if (debug.ready) {
   const stdout = new Pipe(1)
   stdout.write('[DEBUG] READY\n')
 
-  let counter = 0;
+  let counter = 0
   updates(() => {
     stdout.write(`[DEBUG] UPDATE${++counter}\n`)
     if (counter >= 2) Bare.exit(0)
