@@ -181,6 +181,8 @@ class Helper {
 
   stage (params, opts) { return this.#notify('stage', params, opts) }
 
+  release (params, opts) { return this.#notify('release', params, opts) }
+
   seed (params, opts) { return this.#notify('seed', params, opts) }
 
   respond (channel, responder) {
