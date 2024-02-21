@@ -16,7 +16,7 @@ module.exports = ({ fork, length, key }) => {
   const initExplain = `${init} ${initArgs}
 
     ${initBrief}
-    
+
     --yes|-y         Autoselect all defaults
     --type|-t=type   Project type: desktop (default) or terminal
     --force|-f       Force overwrite existing files
@@ -63,14 +63,14 @@ module.exports = ({ fork, length, key }) => {
     Set the release pointer against a version (default latest).
 
     Use this to indicate production release points.
-    
+
     --json           Newline delimited JSON output
     --checkout=n     Set a checkout, n is version length
   `
 
   const info = ansi.bold(cmd + ' info')
   const infoArgs = ansi.bold('<key>')
-  const infoBrief = 'Get metadata for a key.'
+  const infoBrief = 'View project information.'
   const infoExplain = `${info} ${infoArgs}
 
     ${infoBrief}
@@ -124,7 +124,7 @@ module.exports = ({ fork, length, key }) => {
     Specify channel or key to seed a project.
 
     Specify a remote key to reseed.
-    
+
     --json        Newline delimited JSON output
     --seeders|-s  Additional public keys to seed from
     --name        Advanced. Override app name
@@ -148,7 +148,7 @@ module.exports = ({ fork, length, key }) => {
   const versions = ansi.bold(cmd + ' versions')
   const versionsBrief = 'Output version information.'
   const versionsExplain = `${versions}
-    
+
     ${versionsBrief}
 
     --json        Single JSON object
