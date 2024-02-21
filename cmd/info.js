@@ -11,12 +11,12 @@ const keys = ({ content, discovery, project }) => `
 `
 
 const info = ({ channel, release, name, live }) => `
- info         value             notes
------------  ----------------- ------------------------------------------------
- live         ${live}           ${live ? '   released' : '  staged'}
- name         ${name}           project name
- channel      ${channel}${Array.from({ length: 19 - channel.length }).join(' ')}release channel
- release      ${release}${Array.from({ length: 19 - (release?.toString().length || 0) }).join(' ')}release version
+ info         value
+-----------  -----------------
+ live         ${live}
+ name         ${name}
+ channel      ${channel}
+ release      ${release}
 `
 
 const output = outputter('info', {
