@@ -259,15 +259,15 @@ class Helper {
     };
 
     (async function match () {
-      iterloop: for await (const output of iter) {
+      for await (const output of iter) {
         for (const ptn of patterns) {
           if (matchesPattern(output, ptn)) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
-
-            if (Object.keys(resolvers).length === 0) break iterloop
           }
         }
+
+        if (Object.keys(resolvers).length === 0) break
       }
 
       patterns.forEach(({ tag }) => {
@@ -303,7 +303,7 @@ class Helper {
     return true
   }
 
-  async sleep(ms) {
+  async sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
