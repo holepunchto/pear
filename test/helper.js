@@ -300,6 +300,10 @@ class Helper {
     return true
   }
 
+  async sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
   static Mirror = class extends ReadyResource {
     constructor (teardown, { src = null, dest = null } = {}) {
       super()
