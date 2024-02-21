@@ -113,13 +113,9 @@
       margin-left: 12px;
     }
   </style>
+</head>
+<body>
   <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => { 
-      const wc = document.getElementById('window-controls')
-      if (wc) wc.style.display = 'block'
-    })
-  </script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
@@ -344,7 +340,7 @@
         const alphaToBeta = name === 'alpha-to-beta'
         const dialog = this.root.querySelector('#dialog')
         dialog.classList.add(name)
-        const dimensions = await Pear.View.parent.dimensions()
+        const dimensions = aw.parent.dimensions()
         dialog.style.left = `${(dimensions.width / 2) - 280}px`
         const height = name === 'alpha-to-beta' ? 512 : 378
         dialog.style.top = `${((dimensions.height / 2) - (height / 2)) / 1.5}px`
@@ -376,8 +372,6 @@
       }
     })
   </script>
-</head>
-<body>
   <script>
     const { dialog } = Pear.config
     if (dialog) {
@@ -397,7 +391,10 @@
       if (Pear.config.key?.z32 !== constants.ALIASES.keet.z32) {
         if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
-          document.getElementById('window-controls').remove()
+          const winctrl = document.getElementById('window-controls')
+          const clone = winctrl.cloneNode()
+          // winctrl.remove()
+          global.winctrl = clone
         }
       }
     </script>
@@ -690,6 +687,7 @@
           this.ipc = ipc
           for await (const report of ipc.app.reports()) {
             this.status = report
+            this.gid = loader.gid
             loader.hide()
             const { type, headline, tagline, cta } = this.status
             if (type === 'update' && this.status.version?.force) {
@@ -700,7 +698,16 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
+            await this.ipc.gui.detachMainView(this.gid)
+            const winctrl = document.getElementById('windows-controls')
+            if (!winctrl) {
+              const div = document.createElement('div')
+              div.id = 'windows-controls'
+              div.appendChild(document.createElement('pear-ctrl'))
+              document.body.prepend(div)
+            }
             this.show(type)
+            await this.ipc.gui.detachMainView(this.gid)
           }
         }
         constructor () {
@@ -828,7 +835,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.gui.detachMainPear.View(this.gid)
+          await this.gui.detachMainView(this.gid)
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 
