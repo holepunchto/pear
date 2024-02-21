@@ -1,5 +1,6 @@
 'use strict'
 const electron = require('electron')
+electron.dialog.showErrorBox('prepping', `dialog is functional`)
 electron.app.on('open-url', (evt, link) => {
   electron.dialog.showErrorBox('Welcome Back', `You arrived from: ${link}`)
 })
