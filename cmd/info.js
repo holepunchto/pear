@@ -19,14 +19,14 @@ const info = ({ channel, release, name, live }) => `
  release      ${release}
 `
 
-const changelog = ({ changelog }) => `
- changelog
+const changelog = ({ changelog, full }) => `
+ changelog [ ${full ? 'full' : 'latest'} ]
 -------------------------------------------------------------------------------
  ${changelog}
 `
 
 const output = outputter('info', {
-  retrieving: ({ z32 }) => `🔑 :-\n     pear:${z32}\n...`,
+  retrieving: ({ z32 }) => `🔑 :-\n     pear://${z32}\n...`,
   keys,
   info,
   changelog,
