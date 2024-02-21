@@ -22,4 +22,3 @@ document.getElementById('platformLength').innerText = platform.length
 document.getElementById('appKey').innerText = app.key
 document.getElementById('appFork').innerText = app.fork
 document.getElementById('appLength').innerText = app.length
-
