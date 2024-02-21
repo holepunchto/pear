@@ -331,7 +331,6 @@
     
   </template>
   <script type="module">
-    import { View, Window } from './lib/pear.js'
     customElements.define('decal-dialog', class extends HTMLElement {
       constructor () {
         super()
@@ -345,7 +344,7 @@
         const alphaToBeta = name === 'alpha-to-beta'
         const dialog = this.root.querySelector('#dialog')
         dialog.classList.add(name)
-        const dimensions = await View.parent.dimensions()
+        const dimensions = await Pear.View.parent.dimensions()
         dialog.style.left = `${(dimensions.width / 2) - 280}px`
         const height = name === 'alpha-to-beta' ? 512 : 378
         dialog.style.top = `${((dimensions.height / 2) - (height / 2)) / 1.5}px`
@@ -365,12 +364,12 @@
         this.cancel.textContent = alphaToBeta ? 'Not right now' : 'Cancel'
 
         this.ok.addEventListener('click', async () => {
-          Window.parent.send(true)
-          Window.self.close()
+          Pear.Window.parent.send(true)
+          Pear.Window.self.close()
         })
         const cancelListener = async () => {
-          Window.parent.send(false)
-          Window.self.close()
+          Pear.Window.parent.send(false)
+          Pear.Window.self.close()
         }
         this.cancel.addEventListener('click', cancelListener)
         addEventListener('beforeunload', cancelListener)
@@ -425,20 +424,19 @@
       </div>
     </div>
     <script type="module">
-      import { Window } from './lib/pear.js'
       document.querySelector('#bar').addEventListener('dblclick', async (evt) => {
         if (evt.target !== evt.currentTarget) return
-        if (await Window.self.isMaximized()) await Window.self.restore()
-        else await Window.self.maximize()
+        if (await Pear.Window.self.isMaximized()) await Pear.Window.self.restore()
+        else await Pear.Window.self.maximize()
       })
       if (process.platform === 'win32') {
-        document.querySelector('#win-min').addEventListener('click', async () => { await Window.self.minimize() })
+        document.querySelector('#win-min').addEventListener('click', async () => { await Pear.Window.self.minimize() })
         document.querySelector('#win-max').addEventListener('click', async () => { 
-          await Window.self.maximize() 
+          await Pear.Window.self.maximize() 
           document.querySelector('#win-ctrl').classList.add('max')
         })
         document.querySelector('#win-restore').addEventListener('click', async () => { 
-          await Window.self.restore()
+          await Pear.Window.self.restore()
           document.querySelector('#win-ctrl').classList.remove('max')
         })
       }
@@ -830,7 +828,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.gui.detachMainView(this.gid)
+          await this.gui.detachMainPear.View(this.gid)
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 
@@ -869,7 +867,7 @@
     </script>
   </decal-loader>
   <script type="module">
-    const { Window, message, messages } = Pear
+    const { message, messages } = Pear
     const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
 
@@ -939,7 +937,7 @@
         const close = document.querySelector('#win-close')
         close.removeEventListener('click', win32CloseListener)
         close.addEventListener('click', async () => {
-          await Window.self.close()
+          await Pear.Window.self.close()
         })
       }
 
@@ -952,19 +950,12 @@
       const tier = document.querySelector('decal-tier')
       tier.update(config)
 
-      const distribution = document.querySelector('decal-distribution')
-      distribution.update(config)
-
       if (report.status === null) document.body.style.backgroundColor = bg
       decal.intra.events.on('bg', (e, color) => {
         if (report.status !== null) return
         document.body.style.backgroundColor = color
       })
 
-      // for await (const config of engine.reconfig()) {
-      //   tier.update(config)
-      //   distribution.update(config)
-      // }
     }
 
     start().catch(console.error)
