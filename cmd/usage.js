@@ -70,7 +70,7 @@ module.exports = ({ fork, length, key }) => {
 
   const info = ansi.bold(cmd + ' info')
   const infoArgs = ansi.bold('[key]')
-  const infoBrief = 'View project information.'
+  const infoBrief = 'Read project information.'
   const infoExplain = `${info} ${infoArgs}
     
     ${infoBrief}
