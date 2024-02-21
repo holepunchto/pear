@@ -14,7 +14,7 @@ async function receiveWakeups () {
 
 receiveWakeups().catch(console.error)
 document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
-document.getElementById('release').innerText = config.release || 'none [ dev ]'
+document.getElementById('release').innerText = config.release || (config.dev ? 'none [ dev ]' : '0')
 const { app, platform } = await versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork
