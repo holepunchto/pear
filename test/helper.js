@@ -256,11 +256,13 @@ class Helper {
     };
 
     (async function match () {
-      for await (const output of iter) {
+      iterloop: for await (const output of iter) {
         for (const ptn of patterns) {
           if (matchesPattern(output, ptn)) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
+
+            if (Object.keys(resolvers).length === 0) break iterloop
           }
         }
       }
