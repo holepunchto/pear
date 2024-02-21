@@ -123,11 +123,14 @@ class Helper {
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
+    // NOTE: Right now, this only gets triggered in real-time when the child process writes to stdout.
+    //       Using console.log only triggers data when the process exits.
     child.stdout.on('data', (data) => {
       const str = data.toString()
       if (silent === false) iterable.push({ tag: 'stdout', data })
       if (str.indexOf('READY') > -1) iterable.push({ tag: 'ready', data })
-      if (str.indexOf('UPDATE') > -1) iterable.push({ tag: 'update', data })
+      if (str.indexOf('UPDATE1') > -1) iterable.push({ tag: 'update1', data })
+      if (str.indexOf('UPDATE2') > -1) iterable.push({ tag: 'update2', data })
     })
     if (silent === false) {
       child.stderr.on('data',
