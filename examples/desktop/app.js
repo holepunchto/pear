@@ -13,6 +13,8 @@ async function receiveWakeups () {
 }
 
 receiveWakeups().catch(console.error)
+document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
+document.getElementById('release').innerText = config.release || 'none [ dev ]'
 const { app, platform } = await versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork
@@ -20,3 +22,4 @@ document.getElementById('platformLength').innerText = platform.length
 document.getElementById('appKey').innerText = app.key
 document.getElementById('appFork').innerText = app.fork
 document.getElementById('appLength').innerText = app.length
+

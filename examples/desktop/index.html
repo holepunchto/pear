@@ -13,10 +13,9 @@
 
     table {
       width: 600px;
-      margin: 70px auto;
+      margin: 50px auto;
       border-collapse: collapse;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: #ffffff;
     }
 
     th,
@@ -72,7 +71,7 @@
     }
 
     pear-ctrl[data-platform=darwin] {
-      margin-top: 12px;
+      margin-top: 18px;
       margin-left: 12px;
     }
   </style>
@@ -102,6 +101,16 @@
         <td id="appFork" class="fork"></td>
         <td id="appLength" class="length"></td>
       </tr>
+      <table style="width:300px;">
+        <tr>
+          <th>Channel</th>
+          <td id="channel"></td>
+        </tr>
+        <tr>
+          <th>Release</th>
+          <td id="release"></td>
+        </tr>
+      </table>
     </tbody>
   </table>
   <script src="./app.js" type="module"></script>
