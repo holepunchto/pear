@@ -23,7 +23,7 @@ module.exports = ({ fork, length, key }) => {
     --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
-  const devArgs = ansi.bold('[dir]')
+  const devArgs = ansi.bold('[dir] [...args]')
   const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
 
@@ -94,7 +94,7 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<key|dir|alias>')
+  const runArgs = ansi.bold('<key|dir|alias> [...args]')
   const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 
@@ -115,7 +115,7 @@ module.exports = ({ fork, length, key }) => {
      pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
      pear run pear://keet
      pear run file://path/to/an-app-folder
-     pear run path/to/an-app-folder
+     pear run path/to/an-app-folder --some args
      `))}`
 
   const seed = ansi.bold(cmd + ' seed')
