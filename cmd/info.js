@@ -19,10 +19,17 @@ const info = ({ channel, release, name, live }) => `
  release      ${release}
 `
 
+const changelog = ({ changelog }) => `
+ changelog
+-------------------------------------------------------------------------------
+ ${changelog}
+`
+
 const output = outputter('info', {
   retrieving: ({ z32 }) => `🔑 :-\n     pear:${z32}\n...`,
   keys,
   info,
+  changelog,
   error: ({ code, stack }) => `Info Error (code: ${code || 'none'}) ${stack}`
 })
 
@@ -33,8 +40,8 @@ module.exports = (ipc) => async function info (args) {
     })
     const { _, json } = flags
     const [key] = _
-    const isKey = parse.runkey(key).key !== null
-    if (isKey === false) throw new Error('Key "' + key + '" is not valid')
+    const isKey = key ? parse.runkey(key).key !== null : false
+    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
     const id = Bare.pid
     await output(json, ipc.info({ id, key }))
   } catch (err) {

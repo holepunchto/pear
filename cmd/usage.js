@@ -70,7 +70,7 @@ module.exports = ({ fork, length, key }) => {
 
   const info = ansi.bold(cmd + ' info')
   const infoArgs = ansi.bold('<key>')
-  const infoBrief = 'Get metadata for a key.'
+  const infoBrief = 'View project information.'
   const infoExplain = `${info} ${infoArgs}
 
     ${infoBrief}
@@ -154,14 +154,6 @@ module.exports = ({ fork, length, key }) => {
     --json        Single JSON object
   `
 
-  const changelog = ansi.bold(cmd + ' changelog')
-  const changelogBrief = 'Output changelog.'
-  const changelogExplain = `${changelog}
-
-    ${changelogBrief}
-
-  `
-
   const help = ansi.bold(cmd + ' help')
   const helpArgs = ansi.bold('[cmd]')
   const helpBrief = `Run ${ansi.bold('pear help')} to output full help for all commands`
@@ -203,7 +195,6 @@ module.exports = ({ fork, length, key }) => {
     run: runExplain,
     seed: seedExplain,
     sidecar: sidecarExplain,
-    changelog: changelogExplain,
     help: helpExplain,
     output,
     outputVersions,
@@ -218,7 +209,6 @@ module.exports = ({ fork, length, key }) => {
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
-    ${changelog} ${ansi.sep} ${dedot(changelogBrief)}
 
     ${helpExplain}
 ${footer}`,
@@ -232,7 +222,6 @@ ${footer}`,
     ${dumpExplain}
     ${sidecarExplain}
     ${versionsExplain}
-    ${changelogExplain}
     ${helpExplain}
 ${footer}`
   }

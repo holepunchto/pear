@@ -103,10 +103,6 @@ class Crank {
     return this.client.request('unloading', {}, { errorlessClose: true })
   }
 
-  changelog (...args) {
-    return this.client.request('changelog', { args })
-  }
-
   async closeClients () {
     return this.client.request('closeClients')
   }
