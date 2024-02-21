@@ -261,7 +261,8 @@ class Helper {
     (async function match () {
       for await (const output of iter) {
         for (const ptn of patterns) {
-          if (matchesPattern(output, ptn)) {
+          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
+          if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
           }
