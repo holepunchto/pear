@@ -69,11 +69,15 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const info = ansi.bold(cmd + ' info')
-  const infoArgs = ansi.bold('<key>')
+  const infoArgs = ansi.bold('[key]')
   const infoBrief = 'View project information.'
   const infoExplain = `${info} ${infoArgs}
-
+    
     ${infoBrief}
+
+    Supply a key to view application info
+
+    Without a key pear info shows Pear info
 
     --json          Newline delimited JSON output
   `
