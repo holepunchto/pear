@@ -95,10 +95,11 @@ module.exports = ({ fork, length, key }) => {
 
   const run = ansi.bold(cmd + ' run')
   const runArgs = ansi.bold('[flags] <key|dir|alias> [...app-args]')
-  const runBrief = 'Run an application from a key or dir. app-args are passed directly to the app.'
+  const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
+    app-args are passed directly to the app.
 
     ${ansi.bold('key')}    pear://<key>
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
