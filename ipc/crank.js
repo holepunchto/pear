@@ -166,8 +166,6 @@ class Crank {
     return this.client.notify('request', params)
   }
 
-  link (params) { return this.client.request('link', params) }
-
   release (params, opts) { return this.#op('release', params, opts) }
 
   stage (params, opts) { return this.#op('stage', params, opts) }
