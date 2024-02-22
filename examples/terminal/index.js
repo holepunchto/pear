@@ -20,6 +20,6 @@ const out = `${grn}           ▅
 `
 console.log('\n\x1b[s\x1b[J' + out)
 
-teardown(async function () {
-  console.log('i am run before exit')
+teardown(async () => {
+  console.log('[ teardown function that runs before exit ]')
 })
