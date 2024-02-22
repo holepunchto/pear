@@ -23,13 +23,14 @@ module.exports = ({ fork, length, key }) => {
     --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
-  const devArgs = ansi.bold('[dir] [...args]')
+  const devArgs = ansi.bold('[flags] [dir] [...args]')
   const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
 
     ${devBrief}
     Alias for: ${ansi.italic('pear run --dev <dir>')}
 
+    ${ansi.bold('flags')}
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
