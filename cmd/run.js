@@ -16,13 +16,15 @@ const output = outputter('run', {
 module.exports = (ipc) => async function run (args, devrun = false) {
   let dir = null
   let key = null
+  let askTrust = false
   try {
-    const { json, dev, detached, store, 'ask-trust': askTrust, _ } = parse.args(args, {
+    const { json, dev, detached, store, 'ask-trust': ask, _ } = parse.args(args, {
       boolean: ['json', 'dev', 'tmp-store', 'detached', 'ask-trust'],
       string: ['store', 'link', 'checkout'],
       alias: { store: 's', 'tmp-store': 't' },
-      default: { json: false, dev: false, detached: false, ['ask-trust']: true }
+      default: { json: false, dev: false, detached: false, 'ask-trust': true }
     })
+    askTrust = ask
     if (!_[0]) {
       if (devrun) {
         _[0] = '.'
