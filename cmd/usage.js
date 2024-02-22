@@ -99,7 +99,6 @@ module.exports = ({ fork, length, key }) => {
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
-    app-args are passed directly to the app.
 
     ${ansi.bold('key')}    pear://<key>
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
@@ -116,9 +115,9 @@ module.exports = ({ fork, length, key }) => {
     --detached                 Wakeup existing app or run detached
     ${ansi.dim(ansi.italic(`
      pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run -s /tmp/app-storage path/to/an-app-folder some --app args
+     pear run -t file://path/to/an-app-folder --some app --args
      pear run pear://keet
-     pear run file://path/to/an-app-folder
-     pear run path/to/an-app-folder --some args
     `))}`
 
   const seed = ansi.bold(cmd + ' seed')
