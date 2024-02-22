@@ -10,14 +10,14 @@ First public release 🍐
 
 - `pear init -t terminal --with node` to create a Node.js-like Pear Terminal App
 - `pear run <key>` now only runs explicitly trusted keys, also `--no-ask-trust` flag to auto-decline unknown keys
-- `pear run --detached` attempts to wake running app instancee else runs app in detached, prefers appling if available
+- `pear run --detached` attempts to wake running app instance else runs app detached, prefers appling if available
 - `pear info <key>` to `pear info [key]`. When no key is provided `pear info` now outputs Pear info
-- `pear info [key]` now also outputs changelog. 
+- `pear info [key]` now also outputs latest changelog
 - `Pear.teardown` now supported in Pear Terminal Apps
 
 ### Fixes
 
-- Windows - pear init input validation fix
+- Windows - `pear init` input validation fix
 - Windows - terminal output fixes
 - Mac - deep link click handling when application instance is already opening
 - Application `pear release` marking and running fix
