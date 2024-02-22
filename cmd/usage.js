@@ -115,12 +115,10 @@ module.exports = ({ fork, length, key }) => {
     --no-ask-trust             Exit instead of asking to trust unknown keys
     --detached                 Wakeup existing app or run detached
     ${ansi.dim(ansi.italic(`
-    pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
-    pear run pear://keet
-    pear run file://path/to/an-app-folder
-    pear run path/to/an-app-folder --some args
-    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder
-    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder --some args
+     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run pear://keet
+     pear run file://path/to/an-app-folder
+     pear run path/to/an-app-folder --some args
     `))}`
 
   const seed = ansi.bold(cmd + ' seed')
