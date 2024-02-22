@@ -10,7 +10,7 @@ const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
 const constants = require('../lib/constants')
 const Context = require('../ctx/shared')
-const API = require('../lib/api')
+const API = isBare ? require('../lib/api') : null
 
 class Crank {
   starting = null

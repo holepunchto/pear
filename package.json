@@ -62,7 +62,7 @@
     "bare-events": "^2.2.0",
     "bare-fs": "^2.1.1",
     "bare-http1": "^2.0.1",
-    "bare-module": "3.1.4",
+    "bare-module": "^3.1.6",
     "bare-os": "^2.1.1",
     "bare-pipe": "^2.0.0",
     "bare-signals": "^2.1.1",
