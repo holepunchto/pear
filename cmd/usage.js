@@ -30,7 +30,6 @@ module.exports = ({ fork, length, key }) => {
     ${devBrief}
     Alias for: ${ansi.italic('pear run --dev <dir>')}
 
-    ${ansi.bold('flags')}
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
@@ -105,13 +104,14 @@ module.exports = ({ fork, length, key }) => {
     ${ansi.bold('key')}    pear://<key>
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     ${ansi.bold('alias')}  pear://<alias>
-    ${ansi.bold('flags')}  --dev                      Run the app in dev mode
-           --link=url                 Simulate deep-link click open
-           --store|-s=path            Set the Application Storage path
-           --tmp-store|-t             Automatic new tmp folder as store path
-           --checkout=n               Run a checkout, n is version length
-           --checkout=release         Run checkout from marked released length
-           --checkout=staged          Run checkout from latest version length
+
+    --dev                      Run the app in dev mode
+    --link=url                 Simulate deep-link click open
+    --store|-s=path            Set the Application Storage path
+    --tmp-store|-t             Automatic new tmp folder as store path
+    --checkout=n               Run a checkout, n is version length
+    --checkout=release         Run checkout from marked released length
+    --checkout=staged          Run checkout from latest version length
     ${ansi.dim(ansi.italic(`
     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
     pear run pear://keet
