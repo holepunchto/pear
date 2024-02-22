@@ -10,8 +10,9 @@ const Channel = require('jsonrpc-mux')
 const preferences = require('../lib/preferences')
 const Engine = require('../lib/engine')
 const parse = require('../lib/parse')
+const { discoveryKey } = require('hypercore-crypto')
 const { isWindows, isMac } = require('which-runtime')
-const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH } = require('../lib/constants')
+const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, PLATFORM_DIR } = require('../lib/constants')
 
 const { constructor: AGF } = async function * () {}
 
@@ -78,6 +79,7 @@ module.exports = class IPC {
     client.method('seed', (params) => this.seed(client, params))
     client.method('stage', (params) => this.stage(client, params))
     client.method('release', (params) => this.release(client, params))
+    client.method('detached', (params) => this.detached(params))
     client.method('trust', (params) => this.trust(params))
     client.method('identify', () => this.identify(client))
     client.method('wakeup', (params) => this.wakeup(...params.args))
@@ -138,6 +140,17 @@ module.exports = class IPC {
     const id = this.engine.identify(client)
     const host = await this.address()
     return { host, id }
+  }
+
+  async detached ({ key, storage, appdev }) {
+    if (!key) return false // ignore bad requests
+    if (!storage) {
+      storage = join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+    }
+    const wokeup = await this.wakeup(key.link, storage, appdev)
+    if (wokeup) return { wokeup, appling: null }
+    const appling = (await this.engine.applings.get(key.hex)) || null
+    return { wokeup, appling }
   }
 
   wakeup (link, storage, appdev = null) {

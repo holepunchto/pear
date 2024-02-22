@@ -111,6 +111,8 @@ module.exports = ({ fork, length, key }) => {
     --checkout=n               Run a checkout, n is version length
     --checkout=release         Run checkout from marked released length
     --checkout=staged          Run checkout from latest version length
+    --no-ask-trust             Exit instead of asking to trust unknown keys
+    --detached                 Wakeup existing app or run detached
     ${ansi.dim(ansi.italic(`
      pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
      pear run pear://keet
