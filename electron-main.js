@@ -149,11 +149,19 @@ function linuxSetup (executable) {
   }
 
   function checkMimeType (mimeType) {
-    return execSync(`xdg-mime query default ${mimeType}`) === DESKTOP_FILE_NAME
+    try {
+      return execSync(`xdg-mime query default ${mimeType}`) === DESKTOP_FILE_NAME
+    } catch {
+      return false
+    }
   }
 
   function registerMimeType (mimeType) {
-    return execSync(`xdg-mime default ${DESKTOP_FILE_NAME} ${mimeType}`)
+    try {
+      return execSync(`xdg-mime default ${DESKTOP_FILE_NAME} ${mimeType}`)
+    } catch {
+      return false
+    }
   }
 
   function generateDesktopFile (executable) {
