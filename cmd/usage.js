@@ -23,7 +23,7 @@ module.exports = ({ fork, length, key }) => {
     --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
-  const devArgs = ansi.bold('[flags] [dir] [...args]')
+  const devArgs = ansi.bold('[flags] [dir] [...app-args]')
   const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
 
