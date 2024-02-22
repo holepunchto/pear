@@ -23,7 +23,7 @@ module.exports = ({ fork, length, key }) => {
     --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
-  const devArgs = ansi.bold('[dir] [...args]')
+  const devArgs = ansi.bold('[flags] [dir] [...app-args]')
   const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
 
@@ -72,7 +72,7 @@ module.exports = ({ fork, length, key }) => {
   const infoArgs = ansi.bold('[key]')
   const infoBrief = 'Read project information.'
   const infoExplain = `${info} ${infoArgs}
-    
+
     ${infoBrief}
 
     Supply a key to view application info
@@ -94,11 +94,12 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<key|dir|alias> [...args]')
+  const runArgs = ansi.bold('[flags] <key|dir|alias> [...app-args]')
   const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
+    app-args are passed directly to the app.
 
     ${ansi.bold('key')}    pear://<key>
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
@@ -114,11 +115,13 @@ module.exports = ({ fork, length, key }) => {
     --no-ask-trust             Exit instead of asking to trust unknown keys
     --detached                 Wakeup existing app or run detached
     ${ansi.dim(ansi.italic(`
-     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
-     pear run pear://keet
-     pear run file://path/to/an-app-folder
-     pear run path/to/an-app-folder --some args
-     `))}`
+    pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+    pear run pear://keet
+    pear run file://path/to/an-app-folder
+    pear run path/to/an-app-folder --some args
+    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder
+    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder --some args
+    `))}`
 
   const seed = ansi.bold(cmd + ' seed')
   const seedArgs = ansi.bold('<channel|key> [dir]')
