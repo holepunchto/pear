@@ -72,7 +72,7 @@ module.exports = ({ fork, length, key }) => {
   const infoArgs = ansi.bold('[key]')
   const infoBrief = 'Read project information.'
   const infoExplain = `${info} ${infoArgs}
-    
+
     ${infoBrief}
 
     Supply a key to view application info
@@ -94,8 +94,8 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<key|dir|alias> [...args]')
-  const runBrief = 'Run an application from a key or dir.'
+  const runArgs = ansi.bold('[flags] <key|dir|alias> [...app-args]')
+  const runBrief = 'Run an application from a key or dir. app-args are passed directly to the app.'
   const runExplain = `${run} ${runArgs}
 
     ${runBrief}
@@ -103,20 +103,21 @@ module.exports = ({ fork, length, key }) => {
     ${ansi.bold('key')}    pear://<key>
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     ${ansi.bold('alias')}  pear://<alias>
-
-    --dev                      Run the app in dev mode
-    --link=url                 Simulate deep-link click open
-    --store|-s=path            Set the Application Storage path
-    --tmp-store|-t             Automatic new tmp folder as store path
-    --checkout=n               Run a checkout, n is version length
-    --checkout=release         Run checkout from marked released length
-    --checkout=staged          Run checkout from latest version length
+    ${ansi.bold('flags')}  --dev                      Run the app in dev mode
+           --link=url                 Simulate deep-link click open
+           --store|-s=path            Set the Application Storage path
+           --tmp-store|-t             Automatic new tmp folder as store path
+           --checkout=n               Run a checkout, n is version length
+           --checkout=release         Run checkout from marked released length
+           --checkout=staged          Run checkout from latest version length
     ${ansi.dim(ansi.italic(`
-     pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
-     pear run pear://keet
-     pear run file://path/to/an-app-folder
-     pear run path/to/an-app-folder --some args
-     `))}`
+    pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+    pear run pear://keet
+    pear run file://path/to/an-app-folder
+    pear run path/to/an-app-folder --some args
+    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder
+    pear run -s /tmp/secondTestInstanceName path/to/an-app-folder --some args
+    `))}`
 
   const seed = ansi.bold(cmd + ' seed')
   const seedArgs = ansi.bold('<channel|key> [dir]')
