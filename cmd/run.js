@@ -17,11 +17,11 @@ module.exports = (ipc) => async function run (args, devrun = false) {
   let dir = null
   let key = null
   try {
-    const { json, dev, _ } = parse.args(args, {
-      boolean: ['json', 'dev', 'tmp-store'],
+    const { json, dev, detached, store, 'ask-trust': askTrust, _ } = parse.args(args, {
+      boolean: ['json', 'dev', 'tmp-store', 'detached', 'ask-trust'],
       string: ['store', 'link', 'checkout'],
       alias: { store: 's', 'tmp-store': 't' },
-      default: { json: false, dev: false }
+      default: { json: false, dev: false, detached: false, ['ask-trust']: true }
     })
     if (!_[0]) {
       if (devrun) {
@@ -53,9 +53,13 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
-    await output(json, ipc.run({ key, args, dev, dir }))
+    await output(json, ipc.run({ key, args, dev, dir, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
+      if (askTrust === false) {
+        Bare.exit(1)
+        return
+      }
       const sure = ansi.cross + ' Key pear://' + key?.z32 + ' is not known\n\nBe sure that software is trusted before running it\n\nType "TRUST" to allow execution or anything else to exit\n\n'
       const prompt = interact(sure, [
         {

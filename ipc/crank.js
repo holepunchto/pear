@@ -1,8 +1,5 @@
 'use strict'
-const constants = require('../lib/constants')
-const Context = require('../ctx/shared')
-const API = require('../lib/api')
-const { isBare } = require('which-runtime')
+const { isBare, isMac } = require('which-runtime')
 const Module = isBare ? require('bare-module') : null
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
@@ -11,6 +8,9 @@ const ENV = isBare ? require('bare-env') : process.env
 const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
+const constants = require('../lib/constants')
+const Context = require('../ctx/shared')
+const API = require('../lib/api')
 
 class Crank {
   starting = null
@@ -19,7 +19,27 @@ class Crank {
     this.client = client
   }
 
-  async * run ({ args }) {
+  async * run ({ args, key, storage, detached, dev, dir }) {
+    if (detached) {
+      const { wokeup, appling } = await this.client.request('detached', { key, storage, appdev: dev && dir })
+      if (wokeup) return
+
+      args = args.filter((arg) => arg !== '--detached')
+      const opts = { detached: true }
+
+      if (!appling) {
+        args.unshift('run', '--no-ask-trust')
+        spawn(constants.RUNTIME, args, opts).unref()
+        return
+      }
+
+      if (isMac) spawn('open', [appling.split('.app')[0] + '.app', ...args], opts).unref()
+      else spawn(appling, args, opts).unref()
+
+      this.client.close()
+      return
+    }
+
     const cwd = isBare ? os.cwd() : global.process.cwd()
     args.unshift('--run')
 
@@ -146,7 +166,7 @@ class Crank {
     return this.client.notify('request', params)
   }
 
-  repl () { return this.client.request('repl') }
+  link (params) { return this.client.request('link', params) }
 
   release (params, opts) { return this.#op('release', params, opts) }
 
