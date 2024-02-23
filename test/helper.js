@@ -129,8 +129,9 @@ class Helper {
       const str = data.toString()
       if (silent === false) iterable.push({ tag: 'stdout', data })
       if (str.indexOf('READY') > -1) iterable.push({ tag: 'ready', data })
-      if (str.indexOf('UPDATE1') > -1) iterable.push({ tag: 'update1', data })
-      if (str.indexOf('UPDATE2') > -1) iterable.push({ tag: 'update2', data })
+
+      const updateMatches = str.match(/UPDATE(\d+)/)
+      if (updateMatches) iterable.push({ tag: `update${updateMatches[1]}`, data })
     })
     if (silent === false) {
       child.stderr.on('data',
