@@ -106,10 +106,10 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, appLink = null) {
+  async updateNotify (version, info) {
     this.spindownms = 0
     this.updateAvailable = version
-    if (!appLink) {
+    if (!info.link) {
       if (version.force) {
         console.log('Force update (' + version.force.reason + '). Updating to:')
       } else {
@@ -127,10 +127,10 @@ module.exports = class IPC {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (appLink) {
-        if (appLink === app.bundle.link) {
-          app.notify({ type: 'pear/updates', app: true, version, diff: null })
-          app.message({ type: 'pear/updates', app: true, version, diff: null })
+      if (info.app && info.link === app.bundle.link) {
+        if (version.key === null || app.ctx.key?.hex === version.key) {
+          app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
+          app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         }
         continue
       }
