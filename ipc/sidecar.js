@@ -106,19 +106,21 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, info) {
+  async updateNotify (version, info = {}) {
     this.spindownms = 0
     this.updateAvailable = version
-    if (!info.link) {
-      if (version.force) {
-        console.log('Force update (' + version.force.reason + '). Updating to:')
-      } else {
-        console.log('Update Available. Restart to update to')
-      }
-    }
+
+    if (info.link) {
+      console.log('Application update available:')
+    } else if (version.force) {
+      console.log('Platform Force update (' + version.force.reason + '). Updating to:')
+    } else {
+      console.log('Platform update Available. Restart to update to:')
+    } 
+
     console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
+    
     this.#spindownCountdown()
-    const messaged = new Set()
 
     for await (const client of this.clients) {
       const app = client?.userData
@@ -127,7 +129,7 @@ module.exports = class IPC {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (info.app && info.link === app.bundle.link) {
+      if (info.link && info.link === app.bundle.link) {
         if (version.key === null || app.ctx.key?.hex === version.key) {
           app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
           app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
