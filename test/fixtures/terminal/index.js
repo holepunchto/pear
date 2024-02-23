@@ -40,7 +40,7 @@ if (debug.updates) {
   updates(() => {
     stdout.write(`[DEBUG] UPDATE${++counter}\n`)
 
-    if (counter >= 3) {
+    if (counter >= 1) {
       stdout.unref()
 
       // Give time for stdout to drain before exiting
