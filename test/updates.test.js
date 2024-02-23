@@ -4,7 +4,7 @@ const path = require('bare-path')
 const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 
-test('Pear.updates', async function ({ teardown, ok, is, not, plan, timeout, comment }) {
+test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment }) {
   plan(12)
   timeout(180000)
 
@@ -40,7 +40,7 @@ test('Pear.updates', async function ({ teardown, ok, is, not, plan, timeout, com
   }), [{ tag: 'ready' }, { tag: 'exit' }, { tag: 'update1' }, { tag: 'update2' }, { tag: 'update3' }])
 
   const ready = await app.ready
-  not(ready, undefined, 'app is ready')
+  is(ready?.toString(), '[DEBUG] READY\n', 'app is ready')
 
   comment('2. Create new file, restage, reseed, and release')
 
