@@ -116,7 +116,7 @@ module.exports = class IPC {
       console.log('Platform Force update (' + version.force.reason + '). Updating to:')
     } else {
       console.log('Platform update Available. Restart to update to:')
-    } 
+    }
 
     console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
     
