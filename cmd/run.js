@@ -41,7 +41,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       throw new InputError('Key must start with pear://')
     }
     const cwd = os.cwd()
-    dir = key == null ? (_[0].startsWith('file:') ? fileURLToPath(_[0]) : _[0]) : cwd
+    dir = key === null ? (_[0].startsWith('file:') ? fileURLToPath(_[0]) : _[0]) : cwd
 
     if (path.isAbsolute(dir) === false) {
       const resolved = path.resolve(cwd, dir)

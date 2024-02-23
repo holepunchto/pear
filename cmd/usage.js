@@ -104,7 +104,10 @@ module.exports = ({ fork, length, key }) => {
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     ${ansi.bold('alias')}  pear://<alias>
 
-    --dev                      Run the app in dev mode
+    --dev                      Enable --devtools & --updates-diff
+    --devtools                 Open devtools with application [Desktop]
+    --updates-diff             Enable diff computation for Pear.updates
+    --no-updates               Disable updates firing via Pear.updates
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
@@ -162,7 +165,7 @@ module.exports = ({ fork, length, key }) => {
 
   const help = ansi.bold(cmd + ' help')
   const helpArgs = ansi.bold('[cmd]')
-  const helpBrief = `Run ${ansi.bold('pear help')} to output full help for all commands`
+  const helpBrief = `${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n    Run ${ansi.bold('pear help')} to output full help for all commands`
   const helpExplain = `${help} ${helpArgs} ${ansi.green(ansi.dim('~'))} ${ansi.bold(ansi.italic('pear [cmd] [--help|-h]'))}
     ${ansi.italic(cmd + ' help dev')}, ${ansi.italic(cmd + ' run -h')}, ${ansi.italic(cmd + ' seed --help')}
     ${helpBrief}
