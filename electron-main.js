@@ -113,7 +113,7 @@ function linuxSetup (executable) {
   const fs = require('fs')
   const os = require('os')
   const { join } = require('path')
-  const { execSync } = require('child_process')
+  const { spawnSync } = require('child_process')
   const APP_NAME = 'Keet'
   const ICON_NAME = 'keet'
   const DESKTOP_FILE_NAME = 'keet.desktop'
