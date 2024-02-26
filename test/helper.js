@@ -19,7 +19,7 @@ const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
 
 class Helper {
-  constructor (teardown, opts = {}) {
+  constructor(teardown, opts = {}) {
     this.teardown = teardown
     this.opts = opts
     this.logging = this.opts.logging
@@ -39,15 +39,15 @@ class Helper {
   static IPC_ID = 'pear'
   static CONNECT_TIMEOUT = 20_000
 
-  async bootstrap () {
+  async bootstrap() {
     this.client = await this.bootpipe()
   }
 
-  connect () {
+  connect() {
     return new Pipe(this.socketPath)
   }
 
-  async bootpipe () {
+  async bootpipe() {
     let trycount = 0
     let pipe = null
     let timedout = false
@@ -82,13 +82,13 @@ class Helper {
 
     return channel
 
-    function onerror () {
+    function onerror() {
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       next(false)
     }
 
-    function onconnect () {
+    function onconnect() {
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       clearTimeout(timeout)
@@ -96,66 +96,86 @@ class Helper {
     }
   }
 
-  tryboot () {
+  tryboot() {
     const sc = spawn(this.runtime, ['--sidecar'], {
       detached: true,
       stdio: (global.Bare || global.process).argv.includes('--attach-boot-io') ? 'inherit' : 'ignore',
       cwd: this.platformDir
     })
+
+    sc.stdout.on('data', (data) => {
+      const str = data.toString()
+      console.log('run stdout:', str)
+    })
+    sc.stderr.on('data',
+      (data) => {
+        const str = data.toString()
+        console.log('run stderr:', str)
+      })
+
+
     sc.unref()
   }
 
-  async * run ({ args, key = null, silent = false }) {
+  async * run({ args, key = null, silent = false }) {
     if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
 
     args = [...args, '--ua', 'pear/terminal']
 
-    const di = args.findIndex(arg => arg.startsWith('--debug='))
-    if (di > -1) args.push(args.splice(di, 1)[0])
-
     const iterable = new Readable({ objectMode: true })
 
+    console.log('this.runtime:', this.runtime)
+    console.log('args:', args)
     const child = spawn(this.runtime, args, {
-      stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe']
+      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'pipe']
     })
 
     child.once('exit', (code, signal) => {
+      console.log('run exit code:', code)
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
     child.stdout.on('data', (data) => {
       const str = data.toString()
+      console.log('run stdout:', str)
       if (silent === false) iterable.push({ tag: 'stdout', data })
-      if (str.indexOf('READY') > -1) iterable.push({ tag: 'ready', data })
-      if (str.indexOf('UPDATE') > -1) iterable.push({ tag: 'update', data })
+      if (str.indexOf('ready') > -1) {
+        iterable.push({ tag: 'ready', data })
+      }
+      if (str.indexOf('update') > -1) iterable.push({ tag: 'update', data })
+      if (str.indexOf('key') > -1) {
+        const match = str.match(/\[ inspect \] key: ([a-f0-9]+)\n/)
+        if(match) iterable.push({ tag: 'inspectorKey', data: match[1]})
+        }
     })
     if (silent === false) {
       child.stderr.on('data',
         (data) => {
           const str = data.toString()
+          console.log('run stderr:', str)
           const ignore = str.indexOf('DevTools listening on ws://') > -1
           if (ignore) return
           iterable.push({ tag: 'stderr', data })
         })
     }
 
-    yield * iterable
+    yield* iterable
   }
 
-  start (...args) {
+  start(...args) {
     return this.client.request('start', { args })
   }
 
-  async restart (args) {
+  async restart(args) {
     return await this.client.request('restart', { args }, { errorlessClose: true })
   }
 
-  async closeClients () {
+  async closeClients() {
     if (this.client.closed) return
     return this.client.request('closeClients')
   }
 
-  async shutdown () {
+  async shutdown() {
     if (this.client.closed) return
     this.client.notify('shutdown')
 
@@ -179,27 +199,27 @@ class Helper {
     }))
   }
 
-  stage (params, opts) { return this.#notify('stage', params, opts) }
+  stage(params, opts) { return this.#notify('stage', params, opts) }
 
-  seed (params, opts) { return this.#notify('seed', params, opts) }
+  seed(params, opts) { return this.#notify('seed', params, opts) }
 
-  respond (channel, responder) {
+  respond(channel, responder) {
     return this.client.method(channel, responder)
   }
 
-  unrespond (channel) {
+  unrespond(channel) {
     return this.client.method(channel, null)
   }
 
-  request (params) {
+  request(params) {
     return this.client.request(params.channel, params)
   }
 
-  notify (params) {
+  notify(params) {
     return this.client.notify('request', params)
   }
 
-  async * #notify (name, params, { close = true } = {}) {
+  async * #notify(name, params, { close = true } = {}) {
     let tick = null
     let incoming = new Promise((resolve) => { tick = resolve })
     const payloads = []
@@ -228,7 +248,7 @@ class Helper {
     }
   }
 
-  async pick (iter, ptn = {}) {
+  async pick(iter, ptn = {}) {
     for await (const output of iter) {
       if (this.logging) console.log('output', output)
       if (this.matchesPattern(output, ptn)) {
@@ -239,7 +259,7 @@ class Helper {
     return null
   }
 
-  pickMany (iter, patterns = []) {
+  pickMany(iter, patterns = []) {
     const picks = {}
     const resolvers = {}
 
@@ -253,14 +273,17 @@ class Helper {
       return Object.keys(pattern).every(key => pattern[key] === output[key])
     };
 
-    (async function match () {
+    (async function match() {
       for await (const output of iter) {
         for (const ptn of patterns) {
-          if (matchesPattern(output, ptn)) {
+          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
+          if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
           }
         }
+
+        if (Object.keys(resolvers).length === 0) break
       }
 
       patterns.forEach(({ tag }) => {
@@ -273,13 +296,13 @@ class Helper {
     return picks
   }
 
-  async sink (iter, ptn) {
+  async sink(iter, ptn) {
     for await (const output of iter) {
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
   }
 
-  matchesPattern (message, pattern) {
+  matchesPattern(message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
       if (Object.hasOwnProperty.call(pattern, key) === false) continue
@@ -297,14 +320,14 @@ class Helper {
   }
 
   static Mirror = class extends ReadyResource {
-    constructor (teardown, { src = null, dest = null } = {}) {
+    constructor(teardown, { src = null, dest = null } = {}) {
       super()
       this.teardown = teardown
       this.srcDir = src
       this.destDir = dest
     }
 
-    async _open () {
+    async _open() {
       this.srcDrive = new Localdrive(this.srcDir)
       this.destDrive = new Localdrive(this.destDir)
 
@@ -317,18 +340,18 @@ class Helper {
       await mirror.done()
     }
 
-    async _close () {
+    async _close() {
       await this.srcDrive.close()
       await this.destDrive.close()
     }
 
-    get drive () {
+    get drive() {
       return this.destDrive
     }
   }
 
   static Provision = class extends ReadyResource {
-    constructor (teardown, key, pearDir) {
+    constructor(teardown, key, pearDir) {
       super()
       if (!key || !pearDir) throw new Error('Both key and pearDir params are required')
 
@@ -337,7 +360,7 @@ class Helper {
       this.pearDir = pearDir
     }
 
-    async _open () {
+    async _open() {
       const KEY = decode(this.key)
 
       const storePath = path.join(this.pearDir, 'corestores', 'platform')
@@ -354,7 +377,7 @@ class Helper {
       this.swarm.on('connection', (socket) => { this.codebase.corestore.replicate(socket) })
     }
 
-    async _close () {
+    async _close() {
       await this.swarm.clear()
       await this.swarm.destroy()
 
