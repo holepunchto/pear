@@ -17,6 +17,7 @@ const ReadyResource = require('ready-resource')
 const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
+const { Session } = require('pear-inspect')
 
 class Helper {
   constructor (teardown, opts = {}) {
@@ -123,16 +124,14 @@ class Helper {
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
-    // NOTE: Right now, this only gets triggered in real-time when the child process writes to stdout.
-    //       Using console.log only triggers data when the process exits.
-    child.stdout.on('data', (data) => {
-      const str = data.toString()
-      if (silent === false) iterable.push({ tag: 'stdout', data })
-      if (str.indexOf('READY') > -1) iterable.push({ tag: 'ready', data })
+    child.stdout.once('data', data => {
+      const inspectorKey = Buffer.from(data.toString().trim(), 'hex')
+      const session = new Session({ inspectorKey })
+      session.connect()
 
-      const updateMatches = str.match(/UPDATE(\d+)/)
-      if (updateMatches) iterable.push({ tag: `update${updateMatches[1]}`, data })
+      iterable.push({ tag: 'inspector', data: session })
     })
+
     if (silent === false) {
       child.stderr.on('data',
         (data) => {
@@ -144,6 +143,25 @@ class Helper {
     }
 
     yield * iterable
+  }
+
+  async evaluate(session, expression, awaitPromise = false) {
+    const id = Math.floor(Math.random() * 10000)
+
+    const reply = new Promise((resolve, reject) => {
+      const messageHandler = session.on('message', ({ id: messageId, result, error }) => {
+        if (messageId !== id) return
+
+        if (error) reject(error)
+        else resolve(result?.result)
+
+        session.off('message', messageHandler)
+      })
+    })
+
+    session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+
+    return reply
   }
 
   start (...args) {
