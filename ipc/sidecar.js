@@ -119,8 +119,9 @@ module.exports = class IPC {
     }
 
     console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
-    
+
     this.#spindownCountdown()
+    const messaged = new Set()
 
     for await (const client of this.clients) {
       const app = client?.userData
