@@ -149,14 +149,16 @@ class Helper {
     const id = Math.floor(Math.random() * 10000)
 
     const reply = new Promise((resolve, reject) => {
-      const messageHandler = session.on('message', ({ id: messageId, result, error }) => {
+      const messageHandler = ({ id: messageId, result, error }) => {
         if (messageId !== id) return
 
         if (error) reject(error)
         else resolve(result?.result)
 
         session.off('message', messageHandler)
-      })
+      }
+
+      session.on('message', messageHandler)
     })
 
     session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
