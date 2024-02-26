@@ -10,7 +10,8 @@ stdout.unref()
 const inspector = new Inspector({ inspector: nodeInspector})
 const inspectorKey = await inspector.enable()
 
-stdout.write(`[ inspect ] key: ${inspectorKey.toString('hex')}\n`)
-stdout.write('[ inspect ] ready\n')
+global.inspector = inspector
 
-teardown(async() => inspector.disable())
+stdout.write(`[ inspect ] key: ${inspectorKey.toString('hex')}\n`)
+
+teardown(async() => await inspector.disable())

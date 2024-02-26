@@ -1,5 +1,4 @@
 'use strict'
-
 const FramedStream = require('framed-stream')
 const Protomux = require('protomux')
 const JSONRPC = require('jsonrpc-mux')
@@ -14,7 +13,6 @@ const os = require('bare-os')
 const fsext = require('fs-native-extensions')
 const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
-const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
 
@@ -25,7 +23,6 @@ class Helper {
     this.logging = this.opts.logging
 
     this.client = null
-    this.app = null
 
     this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
     this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
@@ -100,19 +97,9 @@ class Helper {
   tryboot () {
     const sc = spawn(this.runtime, ['--sidecar'], {
       detached: true,
-      stdio: (global.Bare || global.process).argv.includes('--attach-boot-io') ? 'inherit' : 'ignore',
+      stdio: 'inherit',
       cwd: this.platformDir
     })
-
-    sc.stdout.on('data', (data) => {
-      const str = data.toString()
-      console.log('run stdout:', str)
-    })
-    sc.stderr.on('data',
-      (data) => {
-        const str = data.toString()
-        console.log('run stderr:', str)
-      })
 
     sc.unref()
   }
@@ -122,45 +109,11 @@ class Helper {
 
     args = [...args, '--ua', 'pear/terminal']
 
-    const iterable = new Readable({ objectMode: true })
-
-    this.app = spawn(this.runtime, args, {
+    const child = spawn(this.runtime, args, {
       stdio: silent ? 'ignore' : ['pipe', 'pipe', 'pipe']
     })
 
-    this.app.once('exit', (code, signal) => {
-      iterable.push({ tag: 'exit', data: { code, signal } })
-    })
-
-    this.app.stdout.on('data', (data) => {
-      const str = data.toString()
-      if (silent === false) iterable.push({ tag: 'stdout', data })
-      if (str.indexOf('ready') > -1) {
-        iterable.push({ tag: 'ready', data })
-      }
-      if (str.indexOf('update') > -1) iterable.push({ tag: 'update', data })
-      if (str.indexOf('key') > -1) {
-        const match = str.match(/\[ inspect \] key: ([a-f0-9]+)\n/)
-        if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
-      }
-      if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data })
-    })
-    if (silent === false) {
-      this.app.stderr.on('data',
-        (data) => {
-          const str = data.toString()
-          console.error(str)
-          const ignore = str.indexOf('DevTools listening on ws://') > -1
-          if (ignore) return
-          iterable.push({ tag: 'stderr', data })
-        })
-    }
-
-    yield * iterable
-  }
-
-  closeApp (signal) {
-    this.app.kill(signal)
+    yield { tag: 'child', data: child }
   }
 
   start (...args) {
@@ -277,7 +230,6 @@ class Helper {
     (async function match () {
       for await (const output of iter) {
         for (const ptn of patterns) {
-          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]

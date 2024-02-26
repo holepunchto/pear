@@ -4,6 +4,7 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 const { Session } = require('pear-inspect')
+const { Readable } = require('streamx')
 
 test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
   plan(3)
@@ -27,11 +28,31 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const app = helper.pickMany(helper.run({ args: [key], dev: true, key, dir }), [{ tag: 'ready' }, { tag: 'inspectkey' }, { tag: 'teardown' }, { tag: 'exit' }])
+  const app = await helper.pick(helper.run({ args: [key], dev: true, key, dir }), { tag: 'child' })
 
-  await app.ready
+  const iterable = new Readable({ objectMode: true })
 
-  const ik = await app.inspectkey
+  app.once('exit', (code, signal) => {
+    iterable.push({ tag: 'exit', data: { code, signal } })
+  })
+
+  app.stdout.on('data', (data) => {
+    const str = data.toString()
+    if (str.indexOf('key') > -1) {
+      const match = str.match(/\[ inspect \] key: ([a-f0-9]+)\n/)
+      if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
+    }
+    if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data })
+  })
+  app.stderr.on('data', (data) => {
+    const err = data.toString()
+    console.error(err)
+    iterable.push({ tag: 'stderr', data })
+  })
+
+  const tag = helper.pickMany(iterable, [{ tag: 'inspectkey' }, { tag: 'teardown' }, { tag: 'exit' }])
+
+  const ik = await tag.inspectkey
   const session = new Session({ inspectorKey: Buffer.from(ik, 'hex') })
 
   session.connect()
@@ -54,14 +75,14 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
     await helper.closeClients()
     await helper.shutdown()
 
-    helper.closeApp('SIGTERM')
+    app.kill('SIGTERM')
 
-    await app.teardown
+    await tag.teardown
 
     session.disconnect()
     await session.destroy()
 
-    const { code } = await app.exit
+    const { code } = await tag.exit
     is(code, 130, 'exit code is 130')
   })
 })
