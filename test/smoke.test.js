@@ -5,7 +5,7 @@ const os = require('bare-os')
 const Helper = require('./helper')
 
 test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(3)
+  plan(5)
   timeout(180000)
 
   const helper = new Helper(teardown)
@@ -44,13 +44,16 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
 
   comment('running')
   const app = helper.pickMany(helper.run({
-    args: [key, '--debug=ready'],
-    dev: true,
-    key,
-    dir
-  }), [{ tag: 'ready' }, { tag: 'exit' }])
+    args: [key, '--debug=ready'], dev: true, key, dir
+  }), [{ tag: 'inspector' }, { tag: 'exit' }])
 
-  await app.ready
+  const inspector = await app.inspector
+  ok(inspector, 'inspector is ready')
+
+  const result = await helper.evaluate(inspector, '(() => \'READY\')()')
+  is(result?.value, 'READY', 'app is ready')
+
+  await helper.evaluate(inspector, 'global.endInspection()')
 
   await helper.closeClients()
   await helper.shutdown()
