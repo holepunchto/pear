@@ -32,9 +32,7 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   ok(announced, 'seeding announced')
 
   comment('\trunning')
-  const app = helper.pickMany(helper.run({
-    args: [key, '--debug=ready,updates'], dev: true, key, dir
-  }), [{ tag: 'exit' }, { tag: 'inspector' }])
+  const app = helper.pickMany(helper.run({ dev: true, key, dir }), [{ tag: 'exit' }, { tag: 'inspector' }])
 
   const inspector = await app.inspector
   ok(inspector, 'inspector is ready')

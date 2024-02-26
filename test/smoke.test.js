@@ -43,9 +43,7 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const app = helper.pickMany(helper.run({
-    args: [key, '--debug=ready'], dev: true, key, dir
-  }), [{ tag: 'inspector' }, { tag: 'exit' }])
+  const app = helper.pickMany(helper.run({ dev: true, key, dir }), [{ tag: 'inspector' }, { tag: 'exit' }])
 
   const inspector = await app.inspector
   ok(inspector, 'inspector is ready')
