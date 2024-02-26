@@ -45,6 +45,7 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   comment('\tlistening to updates')
   const watchUpdates = (() => {
     global._updates = []
+    /* global Pear */
     Pear.updates((data) => {
       global._updates = [...global._updates, data]
     })
@@ -68,12 +69,13 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
   ok(seed2Announced, 'reseed announced')
 
-  const awaitUpdates = (async function (length) {
-    while (global._updates?.length < length)
+  const awaitUpdates = async function (length) {
+    while (global._updates?.length < length) {
       await new Promise(resolve => setTimeout(resolve, 100))
+    }
 
     return global._updates
-  }).toString()
+  }.toString()
   const updates = await helper.evaluate(inspector, `(${awaitUpdates})(1)`, true)
   is(updates?.value?.length, 1, 'app updated after stage')
 

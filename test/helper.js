@@ -145,7 +145,7 @@ class Helper {
     yield * iterable
   }
 
-  async evaluate(session, expression, awaitPromise = false) {
+  async evaluate (session, expression, awaitPromise = false) {
     const id = Math.floor(Math.random() * 10000)
 
     const reply = new Promise((resolve, reject) => {
