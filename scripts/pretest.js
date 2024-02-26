@@ -25,7 +25,7 @@ const run = (cmd, args, opts) => {
     const child = spawn(cmd, args, opts)
 
     child.on('close', (code) => {
-      if (code === 0) {
+      if (code === 0 || code === null) {
         resolve()
       } else {
         reject(new Error(`Command failed with code ${code}`))
