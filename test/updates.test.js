@@ -5,7 +5,7 @@ const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 
 test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(7)
+  plan(8)
   timeout(180000)
 
   const helper = new Helper(teardown)
@@ -21,42 +21,63 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
 
   comment('1. Stage, seed, and run app')
 
-  comment('staging')
+  comment('\tstaging')
   await helper.sink(helper.stage(stageOpts(), { close: false }))
 
-  comment('seeding')
+  comment('\tseeding')
   const seed = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
   const announced = await seed.announced
   ok(key, `seeded platform key (${key})`)
   ok(announced, 'seeding announced')
 
-  comment('running')
+  comment('\trunning')
   const app = helper.pickMany(helper.run({
     args: [key, '--debug=ready,updates'], dev: true, key, dir
-  }), [{ tag: 'ready' }, { tag: 'exit' }, { tag: 'update1' }])
+  }), [{ tag: 'exit' }, { tag: 'inspector' }])
 
-  const ready = await app.ready
-  is(ready?.toString(), '[DEBUG] READY\n', 'app is ready')
+  const inspector = await app.inspector
+  ok(inspector, 'inspector is ready')
+
+  const result = await helper.evaluate(inspector, '(() => \'READY\')()')
+  is(result?.value, 'READY', 'app is ready')
+
+  comment('\tlistening to updates')
+  const watchUpdates = (() => {
+    global._updates = []
+    Pear.updates((data) => {
+      global._updates = [...global._updates, data]
+    })
+  }).toString()
+  await helper.evaluate(inspector, `(${watchUpdates})()`)
 
   comment('2. Create new file, restage, and reseed')
 
-  comment(`creating test file (${ts}.txt)`)
+  comment(`\tcreating test file (${ts}.txt)`)
   writeFileSync(path.join(dir, `${ts}.txt`), 'test')
-  teardown(() => unlinkSync(path.join(dir, `${ts}.txt`)))
 
-  comment('staging')
+  comment('\tstaging')
   await helper.sink(helper.stage(stageOpts(), { close: false }))
 
-  comment('seeding')
+  unlinkSync(path.join(dir, `${ts}.txt`))
+
+  comment('\tseeding')
   const seed2 = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
   const seed2Announced = await seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
   ok(seed2Announced, 'reseed announced')
 
-  const updated = await Promise.any([app.update1, helper.sleep(5000)])
-  is(updated?.toString(), '[DEBUG] UPDATE1\n', 'app updated after stage')
+  const awaitUpdates = (async function (length) {
+    while (global._updates?.length < length)
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+    return global._updates
+  }).toString()
+  const updates = await helper.evaluate(inspector, `(${awaitUpdates})(1)`, true)
+  is(updates?.value?.length, 1, 'app updated after stage')
+
+  await helper.evaluate(inspector, 'global.endInspection()')
 
   await helper.closeClients()
   await helper.shutdown()
