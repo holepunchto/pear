@@ -5,7 +5,7 @@ console.log('link', config.link)
 console.log('linkData', config.linkData)
 console.log('key', config.key)
 
-updates(function (data) { // foo
+updates(function (data) {
   console.log('update available:', data)
 })
 
