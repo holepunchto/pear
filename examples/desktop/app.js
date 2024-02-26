@@ -1,9 +1,13 @@
 /* global Pear */
-const { versions, config, messages, Window } = Pear
+const { versions, config, messages, updates, Window } = Pear
 
 console.log('link', config.link)
 console.log('linkData', config.linkData)
 console.log('key', config.key)
+
+updates(function (data) { // foo
+  console.log('update available:', data)
+})
 
 async function receiveWakeups () {
   for await (const msg of messages({ type: 'pear/wakeup' })) {

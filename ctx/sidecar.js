@@ -8,6 +8,7 @@ const SharedContext = require('./shared')
 module.exports = class Context extends SharedContext {
   initialized = false
   tier = null
+  link = null
   version = { key: null, length: 0, fork: 0 }
   checkpoint = null
   onreconfig = null // extern set
@@ -32,6 +33,7 @@ module.exports = class Context extends SharedContext {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
+    this.link = bundle.link
 
     if (this.key) {
       const result = await bundle.db.get('manifest')
