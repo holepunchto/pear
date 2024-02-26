@@ -12,11 +12,23 @@
       "events": "bare-events"
     }
   },
+  "imports": {
+    "inspector": {
+      "bare": "bare-inspector",
+      "default": "inspector"
+    },
+    "events": {
+      "bare": "bare-events",
+      "default": "events"
+    }
+  },
   "keywords": [],
   "author": "Holepunch",
   "dependencies": {
     "bare-events": "^2.2.0",
+    "bare-inspector": "^1.1.2",
     "bare-pipe": "^2.0.4",
-    "bare-tty": "^3.0.0"
+    "bare-tty": "^3.0.0",
+    "pear-inspect": "^1.0.7"
   }
 }
