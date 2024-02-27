@@ -7,7 +7,7 @@ const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 
 test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(3)
+  plan(4)
   timeout(30000)
 
   const helper = new Helper(teardown)
@@ -39,10 +39,10 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
   app.stdout.on('data', (data) => {
     const str = data.toString()
     if (str.indexOf('key') > -1) {
-      const match = str.match(/\[ inspect \] key: ([a-f0-9]+)\n/)
+      const match = str.match(/\[inspect\] key: ([a-f0-9]+)\n/)
       if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
     }
-    if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data })
+    if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data: str })
   })
   app.stderr.on('data', (data) => {
     const err = data.toString()
@@ -60,16 +60,14 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
     id: 1,
     method: 'Runtime.evaluate',
     params: {
-      expression: `(async () => {
+      expression: `(() => {
           const { teardown } = Pear;
-          teardown(async () => console.log('[ inspect ] teardown'));
-        })()`,
-      awaitPromise: true,
-      returnByValue: true
+          teardown(() => console.log('[inspect] teardown'));
+        })()`
     }
   })
 
-  session.once('message', async ({ id, result, error }) => {
+  session.once('message', async ({ error }) => {
     if (error) console.error(error)
 
     await helper.closeClients()
@@ -77,7 +75,8 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
 
     app.kill('SIGTERM')
 
-    await tag.teardown
+    const td = await tag.teardown
+    ok(td, 'teardown triggered')
 
     session.disconnect()
     await session.destroy()

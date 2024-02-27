@@ -39,7 +39,7 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
   app.stdout.on('data', (data) => {
     const str = data.toString()
     if (str.indexOf('key') > -1) {
-      const match = str.match(/\[ inspect \] key: ([a-f0-9]+)\n/)
+      const match = str.match(/\[inspect\] key: ([a-f0-9]+)\n/)
       if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
     }
   })

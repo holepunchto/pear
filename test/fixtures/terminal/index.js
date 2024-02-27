@@ -12,6 +12,6 @@ const inspectorKey = await inspector.enable()
 
 global.inspector = inspector
 
-stdout.write(`[ inspect ] key: ${inspectorKey.toString('hex')}\n`)
+stdout.write(`[inspect] key: ${inspectorKey.toString('hex')}\n`)
 
 teardown(async() => await inspector.disable())
