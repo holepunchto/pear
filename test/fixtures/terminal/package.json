@@ -8,7 +8,6 @@
     "name": "test-terminal-app",
     "type": "terminal",
     "builtinsMap": {
-      "tty": "bare-tty",
       "events": "bare-events"
     }
   },
@@ -28,7 +27,6 @@
     "bare-events": "^2.2.0",
     "bare-inspector": "^1.1.2",
     "bare-pipe": "^2.0.4",
-    "bare-tty": "^3.0.0",
     "pear-inspect": "^1.0.7"
   }
 }
