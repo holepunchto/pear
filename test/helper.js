@@ -255,6 +255,27 @@ class Helper {
     }
   }
 
+  async evaluate (session, expression, awaitPromise = false) {
+    const id = Math.floor(Math.random() * 10000)
+
+    const reply = new Promise((resolve, reject) => {
+      const messageHandler = ({ id: messageId, result, error }) => {
+        if (messageId !== id) return
+
+        if (error) reject(error)
+        else resolve(result?.result)
+
+        session.off('message', messageHandler)
+      }
+
+      session.on('message', messageHandler)
+    })
+
+    session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+
+    return reply
+  }
+
   matchesPattern (message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
