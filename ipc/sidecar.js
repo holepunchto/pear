@@ -131,10 +131,8 @@ module.exports = class IPC {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle.link) {
-        if (app.ctx.key?.hex === version.key) {
-          app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
-          app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
-        }
+        app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         continue
       }
       app.notify({ type: 'pear/updates', app: false, version, diff: null })
