@@ -68,7 +68,7 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
     }
   })
 
-  session.on('message', async ({ id, result, error }) => {
+  session.on('message', async ({ result, error }) => {
     if (error) console.error(error)
 
     const { result: { value } } = result
