@@ -106,17 +106,20 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, appLink = null) {
+  async updateNotify (version, info = {}) {
     this.spindownms = 0
     this.updateAvailable = version
-    if (!appLink) {
-      if (version.force) {
-        console.log('Force update (' + version.force.reason + '). Updating to:')
-      } else {
-        console.log('Update Available. Restart to update to')
-      }
+
+    if (info.link) {
+      console.log('Application update available:')
+    } else if (version.force) {
+      console.log('Platform Force update (' + version.force.reason + '). Updating to:')
+    } else {
+      console.log('Platform update Available. Restart to update to:')
     }
+
     console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
+
     this.#spindownCountdown()
     const messaged = new Set()
 
@@ -127,11 +130,9 @@ module.exports = class IPC {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (appLink) {
-        if (appLink === app.bundle.link) {
-          app.notify({ type: 'pear/updates', app: true, version, diff: null })
-          app.message({ type: 'pear/updates', app: true, version, diff: null })
-        }
+      if (info.link && info.link === app.bundle.link) {
+        app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         continue
       }
       app.notify({ type: 'pear/updates', app: false, version, diff: null })
