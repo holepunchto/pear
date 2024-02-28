@@ -6,9 +6,8 @@ const Helper = require('./helper')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 
-test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
+test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   plan(4)
-  timeout(30000)
 
   const helper = new Helper(teardown)
   await helper.bootstrap()
@@ -32,71 +31,31 @@ test('smoke', async function ({ teardown, ok, is, plan, timeout, comment }) {
 
   const iterable = new Readable({ objectMode: true })
 
-  app.once('exit', (code, signal) => {
-    iterable.push({ tag: 'exit', data: { code, signal } })
-  })
+  app.once('exit', (code, signal) => { iterable.push({ tag: 'exit', data: { code, signal } }) })
+  app.stdout.on('data', (data) => { iterable.push({ tag: 'inspector', data: data.toString() }) })
 
-  app.stdout.on('data', (data) => {
-    const str = data.toString()
-    if (str.indexOf('key') > -1) {
-      const match = str.match(/\[inspect\] key: ([a-f0-9]+)\n/)
-      if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
-    }
-  })
-  app.stderr.on('data', (data) => {
-    const err = data.toString()
-    console.error(err)
-    iterable.push({ tag: 'stderr', data })
-  })
+  const tag = helper.pickMany(iterable, [{ tag: 'inspector' }, { tag: 'teardown' }, { tag: 'exit' }])
 
-  const tag = helper.pickMany(iterable, [{ tag: 'inspectkey' }, { tag: 'teardown' }, { tag: 'exit' }])
-
-  const ik = await tag.inspectkey
-  const session = new Session({ inspectorKey: Buffer.from(ik, 'hex') })
-
+  const ikey = await tag.inspector
+  const session = new Session({ inspectorKey: Buffer.from(ikey, 'hex') })
   session.connect()
-  session.post({
-    id: 1,
-    method: 'Runtime.evaluate',
-    params: {
-      expression: `(async () => {
-          const { versions } = Pear;
-          return await versions();
-        })()`,
-      awaitPromise: true,
-      returnByValue: true
-    }
-  })
 
-  session.on('message', async ({ result, error }) => {
-    if (error) console.error(error)
+  const { value } = await helper.evaluate(session,
+    `(async () => {
+        const { versions } = Pear;
+        return await versions();
+      })()`,
+    true)
 
-    const { result: { value } } = result
+  is(value?.app?.key, key, 'app version matches staged key')
 
-    if (value !== 'exit') {
-      is(value.app.key, key, 'app version matches staged key')
+  await helper.evaluate(session, '(() => { return global.endInspection() })()')
 
-      session.post({
-        id: 2,
-        method: 'Runtime.evaluate',
-        params: {
-          expression: `(() => {
-            global.inspector.disable();
-            return 'exit';
-        })()`
-        }
-      })
-    }
+  session.disconnect()
+  await session.destroy()
 
-    if (value === 'exit') {
-      await helper.closeClients()
-      await helper.shutdown()
+  await helper.destroy()
 
-      session.disconnect()
-      await session.destroy()
-
-      const { code } = await tag.exit
-      is(code, 0, 'exit code is 0')
-    }
-  })
+  const { code } = await tag.exit
+  is(code, 0, 'exit code is 0')
 })

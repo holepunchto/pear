@@ -110,7 +110,7 @@ class Helper {
     args = [...args, '--ua', 'pear/terminal']
 
     const child = spawn(this.runtime, args, {
-      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'pipe']
+      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
     })
 
     yield { tag: 'child', data: child }
@@ -274,6 +274,11 @@ class Helper {
     session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
 
     return reply
+  }
+
+  async destroy () {
+    await this.closeClients()
+    await this.shutdown()
   }
 
   matchesPattern (message, pattern) {

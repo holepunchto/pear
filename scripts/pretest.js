@@ -43,7 +43,7 @@ const run = (cmd, args, opts) => {
   }
 
   if (isWindows) {
-    await run('pear.cmd', ['run', 'test', '--atach-boot-io'], { stdio: 'inherit', shell: true })
+    await run('pear.cmd', ['run', 'test', '--attach-boot-io'], { stdio: 'inherit', shell: true })
   } else {
     await run('./pear.dev', ['run', 'test', '--attach-boot-io'], { stdio: 'inherit' })
   }

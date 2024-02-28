@@ -6,9 +6,8 @@ const Helper = require('./helper')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 
-test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
+test('teardown', async function ({ teardown, ok, is, plan, comment }) {
   plan(4)
-  timeout(30000)
 
   const helper = new Helper(teardown)
   await helper.bootstrap()
@@ -32,63 +31,38 @@ test('teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
 
   const iterable = new Readable({ objectMode: true })
 
-  app.once('exit', (code, signal) => {
-    iterable.push({ tag: 'exit', data: { code, signal } })
-  })
-
+  app.once('exit', (code, signal) => { iterable.push({ tag: 'exit', data: { code, signal } }) })
   app.stdout.on('data', (data) => {
-    const str = data.toString()
-    if (str.indexOf('key') > -1) {
-      const match = str.match(/\[inspect\] key: ([a-f0-9]+)\n/)
-      if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
-    }
-    if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data: str })
-  })
-  app.stderr.on('data', (data) => {
-    const err = data.toString()
-    console.error(err)
-    iterable.push({ tag: 'stderr', data })
+    if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString() })
+    iterable.push({ tag: 'inspector', data: data.toString() })
   })
 
-  const tag = helper.pickMany(iterable, [{ tag: 'inspectkey' }, { tag: 'teardown' }, { tag: 'exit' }])
+  const tag = helper.pickMany(iterable, [{ tag: 'inspector' }, { tag: 'teardown' }, { tag: 'exit' }])
 
-  const ik = await tag.inspectkey
-  const session = new Session({ inspectorKey: Buffer.from(ik, 'hex') })
-
+  const ikey = await tag.inspector
+  const session = new Session({ inspectorKey: Buffer.from(ikey, 'hex') })
   session.connect()
-  session.post({
-    id: 1,
-    method: 'Runtime.evaluate',
-    params: {
-      expression: `(() => {
-          const { teardown } = Pear;
-          teardown(() => console.log('[inspect] teardown'));
-        })()`
-    }
-  })
 
-  session.once('message', async ({ error }) => {
-    if (error) console.error(error)
+  await helper.evaluate(session, `(() => {
+    const { teardown } = Pear;
+    teardown(() => console.log('[inspect] teardown'));
+  })()`)
 
-    await helper.closeClients()
-    await helper.shutdown()
+  app.kill('SIGTERM')
 
-    app.kill('SIGTERM')
+  const td = await tag.teardown
+  ok(td, 'teardown triggered')
 
-    const td = await tag.teardown
-    ok(td, 'teardown triggered')
+  session.disconnect()
+  await session.destroy()
+  await helper.destroy()
 
-    session.disconnect()
-    await session.destroy()
-
-    const { code } = await tag.exit
-    is(code, 130, 'exit code is 130')
-  })
+  const { code } = await tag.exit
+  is(code, 130, 'exit code is 130')
 })
 
-test('teardown during teardown', async function ({ teardown, ok, is, plan, timeout, comment }) {
+test('teardown during teardown', async function ({ teardown, ok, is, plan, comment }) {
   plan(4)
-  timeout(30000)
 
   const helper = new Helper(teardown)
   await helper.bootstrap()
@@ -112,58 +86,34 @@ test('teardown during teardown', async function ({ teardown, ok, is, plan, timeo
 
   const iterable = new Readable({ objectMode: true })
 
-  app.once('exit', (code, signal) => {
-    iterable.push({ tag: 'exit', data: { code, signal } })
-  })
-
+  app.once('exit', (code, signal) => { iterable.push({ tag: 'exit', data: { code, signal } }) })
   app.stdout.on('data', (data) => {
-    const str = data.toString()
-    if (str.indexOf('key') > -1) {
-      const match = str.match(/\[inspect\] key: ([a-f0-9]+)\n/)
-      if (match) iterable.push({ tag: 'inspectkey', data: match[1] })
-    }
-    if (str.indexOf('teardown') > -1) iterable.push({ tag: 'teardown', data: str })
-  })
-  app.stderr.on('data', (data) => {
-    const err = data.toString()
-    console.error(err)
-    iterable.push({ tag: 'stderr', data })
+    if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString() })
+    iterable.push({ tag: 'inspector', data: data.toString() })
   })
 
-  const tag = helper.pickMany(iterable, [{ tag: 'inspectkey' }, { tag: 'teardown' }, { tag: 'exit' }])
+  const tag = helper.pickMany(iterable, [{ tag: 'inspector' }, { tag: 'teardown' }, { tag: 'exit' }])
 
-  const ik = await tag.inspectkey
-  const session = new Session({ inspectorKey: Buffer.from(ik, 'hex') })
-
+  const ikey = await tag.inspector
+  const session = new Session({ inspectorKey: Buffer.from(ikey, 'hex') })
   session.connect()
-  session.post({
-    id: 1,
-    method: 'Runtime.evaluate',
-    params: {
-      expression: `(async () => {
-          const { teardown } = Pear
-          const a = () => { b() }
-          const b = () => { teardown(() => console.log('teardown from b')) }
-          teardown( () => a() )
-        })()`
-    }
-  })
 
-  session.once('message', async ({ error }) => {
-    if (error) console.error(error)
+  await helper.evaluate(session, `(() => {
+      const { teardown } = Pear
+      const a = () => { b() }
+      const b = () => { teardown(() => console.log('teardown from b')) }
+      teardown( () => a() )
+  })()`)
 
-    await helper.closeClients()
-    await helper.shutdown()
+  app.kill('SIGTERM')
 
-    app.kill('SIGTERM')
+  const td = await tag.teardown
+  is(td.trim(), 'teardown from b', 'teardown from b has been triggered')
 
-    const td = await tag.teardown
-    is(td.trim(), 'teardown from b', 'teardown from b has been triggered')
+  session.disconnect()
+  await session.destroy()
+  await helper.destroy()
 
-    session.disconnect()
-    await session.destroy()
-
-    const { code } = await tag.exit
-    is(code, 130, 'exit code is 130')
-  })
+  const { code } = await tag.exit
+  is(code, 130, 'exit code is 130')
 })
