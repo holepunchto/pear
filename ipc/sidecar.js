@@ -130,7 +130,7 @@ module.exports = class IPC {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (info.link && info.link === app.bundle.link) {
+      if (info.link && info.link === app.bundle?.link) {
         app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
         app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         continue
