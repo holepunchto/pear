@@ -3,8 +3,6 @@ const test = require('brittle')
 const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
-const { Session } = require('pear-inspect')
-const { Readable } = require('streamx')
 
 test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   plan(4)
@@ -26,36 +24,25 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   ok(key, 'app key is ok')
   ok(announced, 'seeding is announced')
 
+  global.testAppKey = key
+
   comment('running')
-  const app = await helper.pick(helper.run({ args: [key], dev: true, key, dir }), { tag: 'child' })
+  const { inspector, pick } = await helper.launch(key, { tags: ['exit'] })
 
-  const iterable = new Readable({ objectMode: true })
-
-  app.once('exit', (code, signal) => { iterable.push({ tag: 'exit', data: { code, signal } }) })
-  app.stdout.on('data', (data) => { iterable.push({ tag: 'inspector', data: data.toString() }) })
-
-  const tag = helper.pickMany(iterable, [{ tag: 'inspector' }, { tag: 'teardown' }, { tag: 'exit' }])
-
-  const ikey = await tag.inspector
-  const session = new Session({ inspectorKey: Buffer.from(ikey, 'hex') })
-  session.connect()
-
-  const { value } = await helper.evaluate(session,
+  const { value } = await inspector.evaluate(
     `(async () => {
         const { versions } = Pear;
         return await versions();
       })()`,
-    true)
+    { awaitPromise: true })
 
   is(value?.app?.key, key, 'app version matches staged key')
 
-  await helper.evaluate(session, '(() => { return global.endInspection() })()')
+  await inspector.evaluate('(() => { return global.endInspection() })()')
 
-  session.disconnect()
-  await session.destroy()
+  await inspector.close()
+  await helper.close()
 
-  await helper.destroy()
-
-  const { code } = await tag.exit
+  const { code } = await pick.exit
   is(code, 0, 'exit code is 0')
 })

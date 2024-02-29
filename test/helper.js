@@ -15,10 +15,12 @@ const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
 const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
+const { Session } = require('pear-inspect')
+const { Readable } = require('streamx')
 
 class Helper {
-  constructor (teardown, opts = {}) {
-    this.teardown = teardown
+  constructor (t, opts = {}) {
+    this.teardown = t.teardown
     this.opts = opts
     this.logging = this.opts.logging
 
@@ -30,6 +32,8 @@ class Helper {
     this.socketPath = isWindows ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
     this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
     this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
+
+    this.dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
     if (this.logging) this.argv.push('--attach-boot-io')
   }
@@ -102,6 +106,33 @@ class Helper {
     })
 
     sc.unref()
+  }
+
+  async launch (key, { tags = [] } = {}) {
+    if (!key) throw new Error('Key is missing')
+
+    tags = ['inspector', ...tags].map(tag => ({ tag }))
+
+    const app = await this.pick(this.run({ args: [key], dev: true, key, dir: this.dir }), { tag: 'child' })
+
+    const iterable = new Readable({ objectMode: true })
+
+    app.once('exit', (code, signal) => {
+      iterable.push({ tag: 'exit', data: { code, signal } })
+    })
+
+    app.stdout.on('data', (data) => {
+      if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString().trim() })
+      iterable.push({ tag: 'inspector', data: data.toString().trim() })
+    })
+
+    const pick = this.pickMany(iterable, tags)
+
+    const ikey = await pick.inspector
+    const inspector = new Helper.Inspector(ikey)
+    await inspector.ready()
+
+    return { inspector, pick, app }
   }
 
   async * run ({ args, key = null, silent = false }) {
@@ -255,28 +286,7 @@ class Helper {
     }
   }
 
-  async evaluate (session, expression, awaitPromise = false) {
-    const id = Math.floor(Math.random() * 10000)
-
-    const reply = new Promise((resolve, reject) => {
-      const messageHandler = ({ id: messageId, result, error }) => {
-        if (messageId !== id) return
-
-        if (error) reject(error)
-        else resolve(result?.result)
-
-        session.off('message', messageHandler)
-      }
-
-      session.on('message', messageHandler)
-    })
-
-    session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
-
-    return reply
-  }
-
-  async destroy () {
+  async close () {
     await this.closeClients()
     await this.shutdown()
   }
@@ -363,6 +373,45 @@ class Helper {
       await this.store.close()
       await this.codebase.close()
       await this.platformDir.close()
+    }
+  }
+
+  static Inspector = class extends ReadyResource {
+    #session = null
+
+    constructor (key) {
+      super()
+      this.#session = new Session({ inspectorKey: Buffer.from(key, 'hex') })
+    }
+
+    async _open () {
+      this.#session.connect()
+    }
+
+    async _close () {
+      this.#session.disconnect()
+      await this.#session.destroy()
+    }
+
+    async evaluate (expression, { awaitPromise = false } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+
+      const reply = new Promise((resolve, reject) => {
+        const handler = ({ id: messageId, result, error }) => {
+          if (messageId !== id) return
+
+          if (error) reject(error)
+          else resolve(result?.result)
+
+          this.#session.off('message', handler)
+        }
+
+        this.#session.on('message', handler)
+      })
+
+      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+
+      return reply
     }
   }
 }
