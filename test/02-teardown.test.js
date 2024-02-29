@@ -19,12 +19,12 @@ test('teardown', async function ({ teardown, is, plan, comment }) {
         teardown(() => console.log('teardown'));
     })()`)
 
+  await inspector.close()
   app.kill('SIGTERM')
 
   const td = await pick.teardown
   is(td, 'teardown', 'teardown has been triggered')
 
-  await inspector.close()
   await helper.close()
 
   const { code } = await pick.exit
@@ -50,12 +50,12 @@ test('teardown during teardown', async function ({ teardown, is, plan, comment }
         teardown( () => a() )
     })()`)
 
+  await inspector.close()
   app.kill('SIGTERM')
 
   const td = await pick.teardown
   is(td, 'teardown from b', 'teardown from b has been triggered')
 
-  await inspector.close()
   await helper.close()
 
   const { code } = await pick.exit
