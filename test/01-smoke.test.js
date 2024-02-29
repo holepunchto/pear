@@ -24,8 +24,6 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   ok(key, 'app key is ok')
   ok(announced, 'seeding is announced')
 
-  global.testAppKey = key
-
   comment('running')
   const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
@@ -38,7 +36,9 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
 
   is(value?.app?.key, key, 'app version matches staged key')
 
-  await inspector.evaluate('(() => { return global.endInspection() })()')
+  global.__PEAR_TEST__ = { appKey: key, ...global.__PEAR_TEST__ }
+
+  await inspector.evaluate('(() => { return global.__PEAR_TEST__.inspector.disable() })()')
 
   await inspector.close()
   await helper.close()

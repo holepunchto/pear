@@ -8,7 +8,7 @@ test('teardown', async function ({ teardown, is, plan, comment }) {
   const helper = new Helper(teardown)
   await helper.bootstrap()
 
-  const key = global.testAppKey
+  const key = global.__PEAR_TEST__?.appKey
 
   comment('running')
   const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
@@ -37,7 +37,7 @@ test('teardown during teardown', async function ({ teardown, is, plan, comment }
   const helper = new Helper(teardown)
   await helper.bootstrap()
 
-  const key = global.testAppKey
+  const key = global.__PEAR_TEST__?.appKey
 
   comment('running')
   const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })

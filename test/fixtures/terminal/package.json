@@ -11,16 +11,6 @@
       "events": "bare-events"
     }
   },
-  "imports": {
-    "events": {
-      "bare": "bare-events",
-      "default": "events"
-    },
-    "inspector": {
-      "bare": "bare-inspector",
-      "default": "inspector"
-    }
-  },
   "keywords": [],
   "author": "Holepunch",
   "dependencies": {

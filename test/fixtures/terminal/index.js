@@ -1,19 +1,18 @@
 /* global Pear */
 const { teardown } = Pear
-import nodeInspector from 'bare-inspector'
+import bareInspector from 'bare-inspector'
 import { Inspector } from 'pear-inspect'
 import Pipe from 'bare-pipe'
 
 const stdout = new Pipe(1)
 stdout.unref()
 
-const inspector = new Inspector({ inspector: nodeInspector})
-const inspectorKey = await inspector.enable()
+const inspector = new Inspector({ inspector: bareInspector })
+const key = await inspector.enable()
+const inspectorKey = key.toString('hex')
 
-global.endInspection = async function () {
-  await inspector.disable()
-}
+stdout.write(inspectorKey)
 
-stdout.write(inspectorKey.toString('hex'))
+global.__PEAR_TEST__ = { inspector, inspectorKey }
 
 teardown(async() => await inspector.disable())
