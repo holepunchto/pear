@@ -2,7 +2,7 @@
   "name": "test",
   "version": "1.0.0",
   "description": "",
-  "main": "./smoke.test.js",
+  "main": "./all.js",
   "pear": {
     "name": "test",
     "type": "terminal",

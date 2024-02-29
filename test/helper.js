@@ -123,11 +123,15 @@ class Helper {
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
+    // NOTE: Right now, this only gets triggered in real-time when the child process writes to stdout.
+    //       Using console.log only triggers data when the process exits.
     child.stdout.on('data', (data) => {
       const str = data.toString()
       if (silent === false) iterable.push({ tag: 'stdout', data })
       if (str.indexOf('READY') > -1) iterable.push({ tag: 'ready', data })
-      if (str.indexOf('UPDATE') > -1) iterable.push({ tag: 'update', data })
+
+      const updateMatches = str.match(/UPDATE(\d+)/)
+      if (updateMatches) iterable.push({ tag: `update${updateMatches[1]}`, data })
     })
     if (silent === false) {
       child.stderr.on('data',
@@ -180,6 +184,8 @@ class Helper {
   }
 
   stage (params, opts) { return this.#notify('stage', params, opts) }
+
+  release (params, opts) { return this.#notify('release', params, opts) }
 
   seed (params, opts) { return this.#notify('seed', params, opts) }
 
@@ -256,11 +262,14 @@ class Helper {
     (async function match () {
       for await (const output of iter) {
         for (const ptn of patterns) {
-          if (matchesPattern(output, ptn)) {
+          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
+          if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
           }
         }
+
+        if (Object.keys(resolvers).length === 0) break
       }
 
       patterns.forEach(({ tag }) => {
@@ -294,6 +303,10 @@ class Helper {
       }
     }
     return true
+  }
+
+  async sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   static Mirror = class extends ReadyResource {
