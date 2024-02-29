@@ -108,7 +108,7 @@ class Helper {
     sc.unref()
   }
 
-  async launch (key, { tags = [] } = {}) {
+  async open (key, { tags = [] } = {}) {
     if (!key) throw new Error('Key is missing')
 
     tags = ['inspector', ...tags].map(tag => ({ tag }))

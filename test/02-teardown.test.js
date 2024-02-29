@@ -11,7 +11,7 @@ test('teardown', async function ({ teardown, is, plan, comment }) {
   const key = global.testAppKey
 
   comment('running')
-  const { inspector, pick, app } = await helper.launch(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
 
   await inspector.evaluate(
     `(() => {
@@ -40,7 +40,7 @@ test('teardown during teardown', async function ({ teardown, is, plan, comment }
   const key = global.testAppKey
 
   comment('running')
-  const { inspector, pick, app } = await helper.launch(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
 
   await inspector.evaluate(
     `(() => {

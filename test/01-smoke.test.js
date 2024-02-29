@@ -27,7 +27,7 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   global.testAppKey = key
 
   comment('running')
-  const { inspector, pick } = await helper.launch(key, { tags: ['exit'] })
+  const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
   const { value } = await inspector.evaluate(
     `(async () => {
