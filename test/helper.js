@@ -33,8 +33,6 @@ class Helper {
     this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
     this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
 
-    this.dir = path.join(os.cwd(), 'fixtures', 'terminal')
-
     if (this.logging) this.argv.push('--attach-boot-io')
   }
 
@@ -113,7 +111,7 @@ class Helper {
 
     tags = ['inspector', ...tags].map(tag => ({ tag }))
 
-    const app = await this.pick(this.run({ args: [key], dev: true, key, dir: this.dir }), { tag: 'child' })
+    const app = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
 
     const iterable = new Readable({ objectMode: true })
 

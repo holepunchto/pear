@@ -12,11 +12,13 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
+  const id = Math.floor(Math.random() * 10000)
+
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', dir, dryRun: false, bare: true }, { close: false }))
+  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
 
   comment('seeding')
-  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await seed.key
   const announced = await seed.announced
@@ -35,8 +37,6 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
     { awaitPromise: true })
 
   is(value?.app?.key, key, 'app version matches staged key')
-
-  global.__PEAR_TEST__ = { appKey: key, ...global.__PEAR_TEST__ }
 
   await inspector.evaluate('(() => { return global.__PEAR_TEST__.inspector.disable() })()')
 
