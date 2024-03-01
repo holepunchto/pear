@@ -1,5 +1,4 @@
 'use strict'
-
 const FramedStream = require('framed-stream')
 const Protomux = require('protomux')
 const JSONRPC = require('jsonrpc-mux')
@@ -14,14 +13,14 @@ const os = require('bare-os')
 const fsext = require('fs-native-extensions')
 const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
-const { Readable } = require('streamx')
 const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
+const { Readable } = require('streamx')
 
 class Helper {
-  constructor (teardown, opts = {}) {
-    this.teardown = teardown
+  constructor (t, opts = {}) {
+    this.teardown = t.teardown
     this.opts = opts
     this.logging = this.opts.logging
 
@@ -100,10 +99,38 @@ class Helper {
   tryboot () {
     const sc = spawn(this.runtime, ['--sidecar'], {
       detached: true,
-      stdio: (global.Bare || global.process).argv.includes('--attach-boot-io') ? 'inherit' : 'ignore',
+      stdio: 'inherit',
       cwd: this.platformDir
     })
+
     sc.unref()
+  }
+
+  async open (key, { tags = [] } = {}) {
+    if (!key) throw new Error('Key is missing')
+
+    tags = ['inspector', ...tags].map(tag => ({ tag }))
+
+    const app = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
+
+    const iterable = new Readable({ objectMode: true })
+
+    app.once('exit', (code, signal) => {
+      iterable.push({ tag: 'exit', data: { code, signal } })
+    })
+
+    app.stdout.on('data', (data) => {
+      if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString().trim() })
+      iterable.push({ tag: 'inspector', data: data.toString().trim() })
+    })
+
+    const pick = this.pickMany(iterable, tags)
+
+    const ikey = await pick.inspector
+    const inspector = new Helper.Inspector(ikey)
+    await inspector.ready()
+
+    return { inspector, pick, app }
   }
 
   async * run ({ args, key = null, silent = false }) {
@@ -111,59 +138,11 @@ class Helper {
 
     args = [...args, '--ua', 'pear/terminal']
 
-    const di = args.findIndex(arg => arg.startsWith('--debug='))
-    if (di > -1) args.push(args.splice(di, 1)[0])
-
-    const iterable = new Readable({ objectMode: true })
-
     const child = spawn(this.runtime, args, {
-      stdio: silent ? 'ignore' : ['inherit', 'pipe', 'pipe']
+      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
     })
 
-    child.once('exit', (code, signal) => {
-      iterable.push({ tag: 'exit', data: { code, signal } })
-    })
-
-    child.stdout.once('data', data => {
-      const inspectorKey = Buffer.from(data.toString().trim(), 'hex')
-      const session = new Session({ inspectorKey })
-      session.connect()
-
-      iterable.push({ tag: 'inspector', data: session })
-    })
-
-    if (silent === false) {
-      child.stderr.on('data',
-        (data) => {
-          const str = data.toString()
-          const ignore = str.indexOf('DevTools listening on ws://') > -1
-          if (ignore) return
-          iterable.push({ tag: 'stderr', data })
-        })
-    }
-
-    yield * iterable
-  }
-
-  async evaluate (session, expression, awaitPromise = false) {
-    const id = Math.floor(Math.random() * 10000)
-
-    const reply = new Promise((resolve, reject) => {
-      const messageHandler = ({ id: messageId, result, error }) => {
-        if (messageId !== id) return
-
-        if (error) reject(error)
-        else resolve(result?.result)
-
-        session.off('message', messageHandler)
-      }
-
-      session.on('message', messageHandler)
-    })
-
-    session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
-
-    return reply
+    yield { tag: 'child', data: child }
   }
 
   start (...args) {
@@ -308,6 +287,11 @@ class Helper {
     }
   }
 
+  async close () {
+    await this.closeClients()
+    await this.shutdown()
+  }
+
   matchesPattern (message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
@@ -394,6 +378,45 @@ class Helper {
       await this.store.close()
       await this.codebase.close()
       await this.platformDir.close()
+    }
+  }
+
+  static Inspector = class extends ReadyResource {
+    #session = null
+
+    constructor (key) {
+      super()
+      this.#session = new Session({ inspectorKey: Buffer.from(key, 'hex') })
+    }
+
+    async _open () {
+      this.#session.connect()
+    }
+
+    async _close () {
+      this.#session.disconnect()
+      await this.#session.destroy()
+    }
+
+    async evaluate (expression, { awaitPromise = false } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+
+      const reply = new Promise((resolve, reject) => {
+        const handler = ({ id: messageId, result, error }) => {
+          if (messageId !== id) return
+
+          if (error) reject(error)
+          else resolve(result?.result)
+
+          this.#session.off('message', handler)
+        }
+
+        this.#session.on('message', handler)
+      })
+
+      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+
+      return reply
     }
   }
 }
