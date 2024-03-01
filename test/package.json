@@ -2,7 +2,7 @@
   "name": "test",
   "version": "1.0.0",
   "description": "",
-  "main": "./smoke.test.js",
+  "main": "./all.js",
   "pear": {
     "name": "test",
     "type": "terminal",
@@ -29,6 +29,7 @@
     "hyperswarm": "^4.7.14",
     "jsonrpc-mux": "^1.1.1",
     "localdrive": "^1.11.3",
+    "pear-inspect": "^1.0.7",
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7",
