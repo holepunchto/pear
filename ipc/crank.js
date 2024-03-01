@@ -33,7 +33,7 @@ class Crank {
         return
       }
 
-      if (isMac) spawn('open', [appling.split('.app')[0] + '.app', ...args], opts).unref()
+      if (isMac) spawn('open', [appling.split('.app')[0] + '.app', '--args', ...args], opts).unref()
       else spawn(appling, args, opts).unref()
 
       this.client.close()
