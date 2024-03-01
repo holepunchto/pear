@@ -33,8 +33,16 @@ class Crank {
         return
       }
 
-      if (isMac) spawn('open', [appling.split('.app')[0] + '.app', '--args', ...args], opts).unref()
-      else spawn(appling, args, opts).unref()
+      const applingApp = isMac ? appling.split('.app')[0] + '.app' : appling
+
+      try {
+        await fs.promises.stat(applingApp)
+      } catch {
+        throw new Error('Appling does not exist')
+      }
+
+      if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+      else spawn(applingApp, args, opts).unref()
 
       this.client.close()
       return
