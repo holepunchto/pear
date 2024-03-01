@@ -1,5 +1,5 @@
 'use strict'
-const IPC = require('pear-ipc')
+const RPC = require('pear-rpc')
 const cmd = require('./cmd')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
@@ -9,11 +9,10 @@ crasher('cli', SWAP)
 cli()
 
 async function cli () {
-  const ipc = new IPC({
+  const rpc = new RPC({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
-    connect: tryboot
+    tryboot
   })
-  await ipc.ready()
-  await cmd(ipc)
+  await cmd(rpc)
 }

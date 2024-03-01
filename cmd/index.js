@@ -10,10 +10,10 @@ const run = require('./run')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
 
-module.exports = async (ipc) => {
-  Bare.prependListener('exit', () => { ipc.close() })
+module.exports = async (rpc) => {
+  Bare.prependListener('exit', () => { rpc.close() })
   const usage = require('./usage')(CHECKOUT)
-  ipc.userData = { usage }
+  rpc.usage = usage
   const argv = Bare.argv.slice(1)
   const { _, version } = parse.args(argv, {
     boolean: ['help', 'version'],
@@ -58,28 +58,28 @@ module.exports = async (ipc) => {
     }
   }
 
-  const cmd = new Cmd(usage.output, () => { ipc.close() })
+  const cmd = new Cmd(usage.output, () => { rpc.close() })
   cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
   cmd.add('versions', (args) => usage.outputVersions(args.includes('--json')))
-  cmd.add('init', init(ipc))
-  cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
-  cmd.add('stage', stage(ipc))
-  cmd.add('seed', seed(ipc))
-  cmd.add('release', release(ipc))
+  cmd.add('init', init(rpc))
+  cmd.add('dev', (args) => run(rpc)(['--dev', ...args], true))
+  cmd.add('stage', stage(rpc))
+  cmd.add('seed', seed(rpc))
+  cmd.add('release', release(rpc))
   cmd.add('run', launch)
   cmd.add('launch', launch) // launch is legacy alias for run
-  cmd.add('info', info(ipc))
-  cmd.add('dump', dump(ipc))
+  cmd.add('info', info(rpc))
+  cmd.add('dump', dump(rpc))
   cmd.add('build', build)
-  cmd.add('sidecar', (args) => sidecar(ipc)(args))
+  cmd.add('sidecar', (args) => sidecar(rpc)(args))
 
   await cmd.run(argv)
 
   function launch (args) {
-    return run(ipc)(args)
+    return run(rpc)(args)
   }
 
   function build () { throw new Error('Not Implemented: build') }
 
-  return ipc
+  return rpc
 }

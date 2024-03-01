@@ -13,7 +13,7 @@ const output = outputter('run', {
   loaded: (data, { loading }) => loading && loading.clear(data.forceClear || false)
 })
 
-module.exports = (ipc) => async function run (args, devrun = false) {
+module.exports = (rpc) => async function run (args, devrun = false) {
   let dir = null
   let key = null
   let askTrust = false
@@ -55,7 +55,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
-    await output(json, await require('../lib/run')({ ipc, key, args, dev, dir, storage: store, detached }))
+    await output(json, await require('../lib/run')({ rpc, key, args, dev, dir, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
       if (askTrust === false) {
@@ -75,7 +75,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       ])
       const result = await prompt.run()
       if (result.fields.trust === 'TRUST') {
-        await ipc.trust(key)
+        await rpc.trust(key)
         print('\n' + ansi.tick + ' pear://' + key?.z32 + ' is now trusted\n')
         print('Use pear run again to execute trusted application\n')
       } else {
@@ -84,7 +84,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       }
     } else if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      if (err.showUsage) ipc.userData.usage.output('run')
+      if (err.showUsage) await rpc.usage.output('run')
     } else if (err.code === 'ENOENT') {
       print(err.message[0].toUpperCase() + err.message.slice(1) + ': "' + dir + '"', false)
     } else {

@@ -349,7 +349,7 @@ class App {
   menu = null
   sidecar = null
   ctx = null
-  ipc = null
+  rpc = null
   id = null
   handle = null
   closing = null
@@ -418,7 +418,7 @@ class App {
   async report ({ err, upgrade }) {
     err = err?.remote || err || new Error(`Unknown error: "${err}"`)
     const x = '\x1B[31m✖ \x1B[39m'
-    const pregui = this.handle === null || this.open === false
+    const pregui = this.handle === null || this.rpc.open === false
     if (pregui) {
       if (err.code === 'ERR_CONNECTION') {
         console.error(`${x} Connection Error\n   * check network connection\n   * check run key`)
@@ -430,11 +430,12 @@ class App {
       process.exit(1)
     }
     try {
-      return await this.ipc.createReport({
+      return await this.rpc.request({
+        channel: this.rpc.id + ':app:createReport',
         args: [{ message: err.message, stack: err.stack, code: err.code, upgrade }]
-      })
-    } catch (ipcErr) {
-      const timedout = ipcErr.name === 'TimeoutError' && ipcErr.code === ipcErr.TIMEOUT_ERR
+      }, this.rpc.id + ':app:createReport')
+    } catch (rpcErr) {
+      const timedout = rpcErr.name === 'TimeoutError' && rpcErr.code === rpcErr.TIMEOUT_ERR
       if (err?.code === 'ERR_FAILED') {
         console.error('Failed to load app (or app was closed early)')
         return
@@ -442,12 +443,14 @@ class App {
       if (err.code === 'E_HALTED') return
       if (err) console.error(`${x} Platform`, err)
       else if (err && timedout) return
-      if (ipcErr.code === 'E_HALTED') return
-      console.error(`${x} Platform IPC`, ipcErr)
+      if (rpcErr.code === 'E_HALTED') return
+      console.error(`${x} Platform IPC`, rpcErr)
     }
   }
 
-  async start () {
+  async start (rpc) {
+    this.rpc = rpc
+
     electron.app.once('will-quit', async (e) => {
       if (this.closing === null && this.closed === false) {
         e.preventDefault()
@@ -458,12 +461,7 @@ class App {
 
     const { ctx } = this
 
-    this.starting = this.ipc.start({
-      argv: ctx.argv,
-      env: ctx.env,
-      cwd: ctx.cwd,
-      startId: ctx.startId
-    })
+    this.starting = rpc.start(ctx.argv, ctx.env, ctx.cwd, ctx.startId)
 
     this.starting.catch(async (err) => {
       await this.report({ err })
@@ -514,11 +512,13 @@ class App {
       decalSession.setUserAgent('Pear Platform')
 
       const entry = '/' + ctx.main
-      const identify = await this.ipc.identify({ startId: ctx.startId })
+      const identify = await rpc.identify()
       const { id, host } = identify
 
+      this.warming = ctx.trace ? rpc.warming({ id }) : null
+
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
-      this.ipc.id = id
+      rpc.id = id
 
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
@@ -576,7 +576,9 @@ class App {
 
             const { bail } = await this.starting
             if (bail) return false
-            ctx.update({ config: await this.ipc.config() })
+
+            ctx.update({ config: await rpc.request({ channel: `${id}:app:config` }) })
+
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
             if (app.closing) return false
             return true
@@ -632,6 +634,10 @@ class App {
     const result = await Promise.race([timeout, unloading])
     this.closed = true
     return result
+  }
+
+  destroy () {
+    return this.rpc.close()
   }
 
   quit (code) {

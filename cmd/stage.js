@@ -23,7 +23,7 @@ const output = outputter('stage', {
   addendum: ({ version, release, channel, key }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(key)} ]\n`
 })
 
-module.exports = (ipc) => async function stage (args) {
+module.exports = (rpc) => async function stage (args) {
   try {
     const { _, dryRun, bare, json, ignore, name, truncate } = parse.args(args, {
       boolean: ['dryRun', 'bare', 'json'],
@@ -43,7 +43,7 @@ module.exports = (ipc) => async function stage (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      ipc.userData.usage.output('stage')
+      await rpc.usage.output('stage')
     } else {
       print('An error occured', false)
       console.error(err)
