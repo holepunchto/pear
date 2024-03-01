@@ -27,10 +27,10 @@ async function bootSidecar () {
   await corestore.ready()
 
   const drive = await createPlatformDrive()
-  const { SidecarIPC, Updater } = await subsystem(drive, '/subsystems/sidecar.js')
+  const Sidecar = await subsystem(drive, '/subsystems/sidecar.js')
 
   const updater = createUpdater()
-  const sidecar = new SidecarIPC({ updater, drive, corestore })
+  const sidecar = new Sidecar({ updater, drive, corestore })
   await sidecar.listen()
 
   registerUrlHandler(WAKEUP)
@@ -43,7 +43,7 @@ async function bootSidecar () {
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
+    return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
   }
 
   async function createPlatformDrive () {

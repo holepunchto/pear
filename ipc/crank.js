@@ -1,16 +1,10 @@
 'use strict'
-const { isBare, isMac } = require('which-runtime')
-const Module = isBare ? require('bare-module') : null
-const os = isBare ? require('bare-os') : require('os')
+const { isBare } = require('which-runtime')
 const path = isBare ? require('bare-path') : require('path')
 const fs = isBare ? require('bare-fs') : require('fs')
-const ENV = isBare ? require('bare-env') : process.env
-const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
 const constants = require('../lib/constants')
-const Context = require('../ctx/shared')
-const API = isBare ? require('../lib/api') : null
 
 class Crank {
   starting = null

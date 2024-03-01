@@ -1,13 +1,18 @@
 'use strict'
+const RPC = require('pear-rpc')
 const cmd = require('./cmd')
-const connect = require('./lib/connect.js')
 const crasher = require('./lib/crasher')
-const { SWAP } = require('./lib/constants.js')
+const tryboot = require('./lib/tryboot')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants.js')
 crasher('cli', SWAP)
 
 cli()
 
 async function cli () {
-  const channel = await connect()
-  await cmd(channel)
+  const rpc = new RPC({
+    socketPath: SOCKET_PATH,
+    connectTimeout: CONNECT_TIMEOUT,
+    tryboot
+  })
+  await cmd(rpc)
 }

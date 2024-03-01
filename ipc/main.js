@@ -2,7 +2,6 @@
 const electron = require('electron')
 const gui = require('../lib/gui')
 const Context = require('../ctx/shared')
-const Crank = require('./crank')
 const { constructor: AGF } = async function * () {}
 const constants = require('../lib/constants')
 
@@ -20,8 +19,8 @@ module.exports = class IPC {
   id = null
   handlers = null
   app = null
-  constructor (ctx, client) {
-    this.sidecar = new Crank(client)
+  constructor (ctx, rpc) {
+    this.sidecar = rpc
     this.ctx = ctx
   }
 
@@ -59,7 +58,7 @@ module.exports = class IPC {
         event.returnValue = this.id
         return this.id
       }
-      const { id } = await this.app.starting
+      const { id } = await this.app.opening
       event.returnValue = id
       return id
     })
@@ -118,8 +117,6 @@ class Handlers {
     side({ name: 'resolve', sync: true })
 
     side({ name: 'platformResolve' })
-
-    side({ name: 'notifications', iterable: true, eager: true })
 
     side({ name: 'restart' })
 
