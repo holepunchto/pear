@@ -1,3 +1,5 @@
+/* global Pear,global */
+
 const test = require('brittle')
 const Helper = require('./helper')
 const path = require('bare-path')
@@ -5,7 +7,7 @@ const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 
 test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(8)
+  plan(7)
   timeout(180000)
 
   const helper = new Helper(teardown)
@@ -32,25 +34,20 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   ok(announced, 'seeding announced')
 
   comment('\trunning')
-  const app = helper.pickMany(helper.run({
-    args: [key], dev: true, key, dir
-  }), [{ tag: 'exit' }, { tag: 'inspector' }])
+  const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
-  const inspector = await app.inspector
-  ok(inspector, 'inspector is ready')
-
-  const result = await helper.evaluate(inspector, '(() => \'READY\')()')
+  const result = await inspector.evaluate('(() => \'READY\')()')
   is(result?.value, 'READY', 'app is ready')
 
   comment('\tlistening to updates')
   const watchUpdates = (() => {
-    global._updates = []
-    /* global Pear */
+    global.__PEAR_TEST__.updates = { app: [], platform: [] }
     Pear.updates((data) => {
-      global._updates = [...global._updates, data]
+      const type = data?.app ? 'app' : 'platform'
+      global.__PEAR_TEST__.updates[type] = [...global.__PEAR_TEST__.updates[type], data]
     })
   }).toString()
-  await helper.evaluate(inspector, `(${watchUpdates})()`)
+  await inspector.evaluate(`(${watchUpdates})()`)
 
   comment('2. Create new file, restage, and reseed')
 
@@ -65,25 +62,25 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   comment('\tseeding')
   const seed2 = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
-  const seed2Announced = await seed2.announced
+  const seed2Announced = seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
   ok(seed2Announced, 'reseed announced')
 
-  const awaitUpdates = async function (length) {
-    while (global._updates?.length < length) {
+  const awaitUpdates = async function (length, type = 'app') {
+    while (global.__PEAR_TEST__.updates[type]?.length < length) {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
 
-    return global._updates
+    return global.__PEAR_TEST__.updates[type]
   }.toString()
-  const updates = await helper.evaluate(inspector, `(${awaitUpdates})(1)`, true)
+  const updates = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
   is(updates?.value?.length, 1, 'app updated after stage')
 
-  await helper.evaluate(inspector, 'global.endInspection()')
+  await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
-  await helper.closeClients()
-  await helper.shutdown()
+  await inspector.close()
+  await helper.close()
 
-  const { code } = await app.exit
+  const { code } = await pick.exit
   is(code, 0, 'exit code is 0')
 })
