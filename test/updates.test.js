@@ -1,5 +1,6 @@
-/* global Pear,global */
+'use strict'
 
+/* global Pear,global */
 const test = require('brittle')
 const Helper = require('./helper')
 const path = require('bare-path')
@@ -7,7 +8,7 @@ const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 
 test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(7)
+  plan(8)
   timeout(180000)
 
   const helper = new Helper(teardown)
@@ -19,6 +20,7 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
     channel: 'test', name: 'test', key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
   })
   const stageOpts = () => ({ ...seedOpts(), dryRun: false, bare: true, ignore: [] })
+  const releaseOpts = (key) => ({ id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', key })
   const ts = new Date().toISOString().replace(/[:.]/g, '-')
 
   comment('1. Stage, seed, and run app')
@@ -75,6 +77,13 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   }.toString()
   const updates = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
   is(updates?.value?.length, 1, 'app updated after stage')
+
+  comment('releasing')
+  await helper.pick(helper.release(releaseOpts(key), { close: false }), { tag: 'released' })
+
+  comment('waiting for update')
+  const reupdated = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
+  is(reupdated?.value?.length, 2, 'app reupdated after release')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
