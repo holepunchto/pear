@@ -13,6 +13,7 @@ const parse = require('../lib/parse')
 const { discoveryKey } = require('hypercore-crypto')
 const { isWindows, isMac } = require('which-runtime')
 const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, PLATFORM_DIR } = require('../lib/constants')
+const safetyCatch = require('safety-catch')
 
 const { constructor: AGF } = async function * () {}
 
@@ -30,7 +31,8 @@ module.exports = class IPC {
   constructor ({ updater, drive, corestore }) {
     this.updater = updater
     if (this.updater) {
-      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+      // TODO: await and debounce?
+      this.updater.on('update', (checkout) => this.updateNotify(checkout).catch(safetyCatch))
     }
 
     this.server = Pipe.createServer()
