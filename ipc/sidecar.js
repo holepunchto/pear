@@ -256,7 +256,7 @@ module.exports = class IPC {
   }
 
   async restart (client, { platform = false } = {}) {
-    console.log('Restarting ' + (platform ? 'all' : 'client'))
+    console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
       const { cwd, runtime, argv, env } = client.userData.ctx
       const appling = client.userData.ctx.appling
@@ -513,8 +513,8 @@ class Handlers {
       return app.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
     })
 
-    method({ name: 'restart' }, async function restart ({ client }) {
-      return ipc.restart(client)
+    method({ name: 'restart' }, async function restart ({ client }, opts = {}) {
+      return ipc.restart(client, opts)
     })
   }
 
