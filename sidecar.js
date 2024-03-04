@@ -8,7 +8,6 @@ const crasher = require('./lib/crasher')
 const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV, UPGRADE_LOCK, PLATFORM_DIR } = require('./lib/constants.js')
 
 crasher('sidecar', SWAP)
-
 module.exports = bootSidecar().catch((err) => {
   console.error(err.stack)
   Bare.exit(1)

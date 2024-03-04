@@ -284,6 +284,8 @@ module.exports = class IPC {
     }
 
     const restarts = await this.shutdown(client)
+    // ample time for any OS cleanup operations:
+    await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
