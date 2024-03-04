@@ -51,7 +51,7 @@ module.exports = ({ fork, length, key }) => {
     --dry-run|-d      Execute a stage without writing
     --bare|-b         File data only, no warmup optimization
     --ignore          Comma separated file path ignore list
-    --truncate=to     Truncate to metadataVersion.blobsVersion     
+    --truncate=to     Truncate to metadataVersion[.blobsVersion]
     --name            Advanced. Override app name
   `
   const release = ansi.bold(cmd + ' release')
