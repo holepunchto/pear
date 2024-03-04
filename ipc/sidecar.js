@@ -106,7 +106,7 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, info = {}) {
+  updateNotify (version, info = {}) {
     this.spindownms = 0
     this.updateAvailable = version
 
@@ -123,7 +123,7 @@ module.exports = class IPC {
     this.#spindownCountdown()
     const messaged = new Set()
 
-    for await (const client of this.clients) {
+    for (const client of this.clients) {
       const app = client?.userData
       if (!app || (app.minvering === true && !version.force)) continue
 
