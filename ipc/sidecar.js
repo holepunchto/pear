@@ -274,8 +274,8 @@ module.exports = class IPC {
         })
       }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app', '--args', ...argv], opts).unref()
+        else spawn(appling.path, argv, opts).unref()
       } else {
         spawn(runtime, argv, opts).unref()
       }
@@ -291,8 +291,11 @@ module.exports = class IPC {
     for (const { cwd, appling, argv, env } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        if (isMac) {
+          spawn('open', [appling.path.split('.app')[0] + '.app', '--args', ...argv], opts).unref()
+        } else {
+          spawn(appling.path, argv, opts).unref()
+        }
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
