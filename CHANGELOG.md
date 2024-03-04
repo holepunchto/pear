@@ -31,3 +31,4 @@ First public release 🍐
 - `<pear-ctrl>` added to Desktop example
 - `<pear-ctrl>` added to pear init Desktop template
 - usage: pear run / pear dev clarifications
+- more update flow tests 
