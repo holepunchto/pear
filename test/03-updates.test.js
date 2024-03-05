@@ -8,11 +8,13 @@ const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 const z32 = require('z32')
 
-const seedOpts = () => ({
-  channel: 'test', name: 'test', key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
+const seedOpts = (id) => ({
+  channel: `test-${id}`, name: `test-${id}`, key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
 })
-const stageOpts = () => ({ ...seedOpts(), dryRun: false, bare: true, ignore: [] })
-const releaseOpts = (key) => ({ id: Math.floor(Math.random() * 10000), channel: 'test', name: 'test', key })
+const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore: [] })
+const releaseOpts = (id, key) => ({
+  id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, key
+})
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
@@ -22,16 +24,18 @@ test('Pear.updates be called on restage and release', async function (t) {
   plan(10)
   timeout(180000)
 
+  const testId = Math.floor(Math.random() * 100000)
+
   const helper = new Helper(teardown)
   await helper.bootstrap()
 
   comment('1. Stage, seed, and run app')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(), { close: false }))
+  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   comment('\tseeding')
-  const seed = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
   const announced = seed.announced
   ok(key, `seeded platform key (${key})`)
@@ -57,12 +61,12 @@ test('Pear.updates be called on restage and release', async function (t) {
   writeFileSync(path.join(dir, file1), 'test')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(), { close: false }))
+  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
 
   comment('\tseeding')
-  const seed2 = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed2 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
   const seed2Announced = seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
@@ -81,7 +85,7 @@ test('Pear.updates be called on restage and release', async function (t) {
   is(z32.encode(Buffer.from(firstUpdateVersion?.key, 'hex')), key, 'app updated with matching key')
 
   comment('releasing')
-  await helper.pick(helper.release(releaseOpts(key), { close: false }), { tag: 'released' })
+  await helper.pick(helper.release(releaseOpts(testId, key), { close: false }), { tag: 'released' })
 
   comment('waiting for update')
   const reupdated = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
@@ -106,6 +110,8 @@ test('Pear.updates should update twice after restaging twice', async function (t
   plan(12)
   timeout(180000)
 
+  const testId = Math.floor(Math.random() * 100000)
+
   const helper = new Helper(teardown)
   await helper.bootstrap()
 
@@ -114,10 +120,10 @@ test('Pear.updates should update twice after restaging twice', async function (t
   comment('1. Stage, seed, and run app')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(), { close: false }))
+  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   comment('\tseeding')
-  const seed = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
   const announced = seed.announced
   ok(key, `seeded platform key (${key})`)
@@ -143,12 +149,12 @@ test('Pear.updates should update twice after restaging twice', async function (t
   writeFileSync(path.join(dir, file1), 'test')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(), { close: false }))
+  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
 
   comment('\tseeding')
-  const seed2 = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed2 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
   const seed2Announced = seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
@@ -173,12 +179,12 @@ test('Pear.updates should update twice after restaging twice', async function (t
   writeFileSync(path.join(dir, file2), 'test')
 
   comment('\trestaging')
-  await helper.sink(helper.stage(stageOpts(), { close: false }))
+  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file2))
 
   comment('\treseeding')
-  const seed3 = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed3 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed3Key = await seed3.key
   const seed3Announced = seed3.announced
   ok(seed3Key, `reseeded platform key (${seed3Key})`)
