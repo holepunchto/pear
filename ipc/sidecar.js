@@ -106,7 +106,7 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, info = {}) {
+  updateNotify (version, info = {}) {
     this.spindownms = 0
     this.updateAvailable = version
 
@@ -123,7 +123,7 @@ module.exports = class IPC {
     this.#spindownCountdown()
     const messaged = new Set()
 
-    for await (const client of this.clients) {
+    for (const client of this.clients) {
       const app = client?.userData
       if (!app || (app.minvering === true && !version.force)) continue
 
@@ -256,7 +256,7 @@ module.exports = class IPC {
   }
 
   async restart (client, { platform = false } = {}) {
-    console.log('Restarting ' + (platform ? 'all' : 'client'))
+    console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
       const { cwd, runtime, argv, env } = client.userData.ctx
       const appling = client.userData.ctx.appling
@@ -284,6 +284,8 @@ module.exports = class IPC {
     }
 
     const restarts = await this.shutdown(client)
+    // ample time for any OS cleanup operations:
+    await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
@@ -513,8 +515,8 @@ class Handlers {
       return app.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
     })
 
-    method({ name: 'restart' }, async function restart ({ client }) {
-      return ipc.restart(client)
+    method({ name: 'restart' }, async function restart ({ client }, opts = {}) {
+      return ipc.restart(client, opts)
     })
   }
 
