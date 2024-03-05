@@ -25,9 +25,9 @@ const output = outputter('stage', {
 
 module.exports = (ipc) => async function stage (args) {
   try {
-    const { _, dryRun, bare, json, ignore, name } = parse.args(args, {
+    const { _, dryRun, bare, json, ignore, name, truncate } = parse.args(args, {
       boolean: ['dryRun', 'bare', 'json'],
-      string: ['ignore', 'name'],
+      string: ['ignore', 'name', 'truncate'],
       alias: { dryRun: ['d', 'dry-run'], verbose: 'v', bare: 'b' }
     })
     const [from] = _
@@ -39,7 +39,7 @@ module.exports = (ipc) => async function stage (args) {
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const id = Bare.pid
-    await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, clientArgv: Bare.argv }))
+    await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)

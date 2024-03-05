@@ -47,11 +47,12 @@ module.exports = ({ fork, length, key }) => {
 
     Outputs diff information and project key.
 
-    --json         Newline delimited JSON output
-    --dry-run|-d   Execute a stage without writing
-    --bare|-b      File data only, no warmup optimization
-    --ignore       Comma separated file path ignore list
-    --name         Advanced. Override app name
+    --json             Newline delimited JSON output
+    --dry-run|-d       Execute a stage without writing
+    --bare|-b          File data only, no warmup optimization
+    --ignore           Comma separated file path ignore list
+    --truncate=length  Truncate to specified version length
+    --name             Advanced. Override app name
   `
   const release = ansi.bold(cmd + ' release')
   const releaseArgs = ansi.bold('<channel|key>')
