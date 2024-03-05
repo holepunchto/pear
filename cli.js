@@ -14,5 +14,6 @@ async function cli () {
     connectTimeout: CONNECT_TIMEOUT,
     tryboot
   })
+  await rpc.ready()
   await cmd(rpc)
 }

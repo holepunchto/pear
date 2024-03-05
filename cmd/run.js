@@ -84,7 +84,7 @@ module.exports = (rpc) => async function run (args, devrun = false) {
       }
     } else if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      if (err.showUsage) await rpc.usage.output('run')
+      if (err.showUsage) rpc.userData.usage.output('run')
     } else if (err.code === 'ENOENT') {
       print(err.message[0].toUpperCase() + err.message.slice(1) + ': "' + dir + '"', false)
     } else {

@@ -131,10 +131,10 @@ class Handlers {
       ;[entry] = entry.split('+')
       const sessname = null
 
-      const args = ['--run', entry]
+      const argv = ['--run', entry]
 
       const appkin = entry.startsWith('pear:')
-        ? sidecar.start(args).then(({ host, id }) => new Context({ sidecar: host, id, args, env: ctx?.env, cwd: ctx?.cwd, config: Context.configFrom(ctx) }))
+        ? sidecar.start({ argv }).then(({ host, id }) => new Context({ sidecar: host, id, argv, env: ctx?.env, cwd: ctx?.cwd, config: Context.configFrom(ctx) }))
         : null
       if (appkin) entry = '/'
       const instance = await gui.ctrl(type, entry, { parentId, ctx, ua, sessname, appkin }, options, openOptions)

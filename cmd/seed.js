@@ -41,7 +41,7 @@ module.exports = (rpc) => async function seed (args) {
         print(JSON.stringify({ cmd: 'seed', type: 'error', message: err.message, stack: err.stack, code: err.code }))
       } else {
         print(err.message, false)
-        await rpc.usage.output('seed')
+        rpc.userData.usage.output('seed')
       }
     } else {
       print('An error occured', false)

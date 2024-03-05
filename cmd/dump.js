@@ -19,7 +19,7 @@ module.exports = (rpc) => async function dump (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await rpc.usage.output('dump')
+      rpc.userData.usage.output('dump')
     } else {
       console.error(err)
     }

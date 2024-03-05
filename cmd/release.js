@@ -30,7 +30,7 @@ module.exports = (rpc) => async function release (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await rpc.usage.output('release', false)
+      rpc.userData.usage.output('release', false)
     } else {
       print('An error occured', false)
       console.error(err)

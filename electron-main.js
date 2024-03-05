@@ -33,7 +33,7 @@ async function electronMain () {
     connectTimeout: CONNECT_TIMEOUT,
     tryboot
   })
-
+  await rpc.ready()
   // note: would be unhandled rejection on failure, but should never fail:
   if (await rpc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
     electron.app.quit(0)
