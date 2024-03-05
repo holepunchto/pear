@@ -8,7 +8,7 @@ const os = require('bare-os')
 const { writeFileSync, unlinkSync } = require('bare-fs')
 
 test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment }) {
-  plan(8)
+  plan(11)
   timeout(180000)
 
   const helper = new Helper(teardown)
@@ -76,14 +76,19 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
     return global.__PEAR_TEST__.updates[type]
   }.toString()
   const updates = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
+  const firstUpdateVersion = updates?.value?.[0]?.version
   is(updates?.value?.length, 1, 'app updated after stage')
+  is(firstUpdateVersion?.key, key, 'app updated with matching key')
 
   comment('releasing')
   await helper.pick(helper.release(releaseOpts(key), { close: false }), { tag: 'released' })
 
   comment('waiting for update')
   const reupdated = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
+  const secondUpdateVersion = reupdated?.value?.[1]?.version
   is(reupdated?.value?.length, 2, 'app reupdated after release')
+  is(secondUpdateVersion?.key, key, 'app reupdated with matching key')
+  is(secondUpdateVersion?.length - firstUpdateVersion?.length, 3, 'app version incremented by 3')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
