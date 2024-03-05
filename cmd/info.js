@@ -45,7 +45,7 @@ module.exports = (rpc) => async function info (args) {
     const id = Bare.pid
     await output(json, rpc.info({ id, key }))
   } catch (err) {
-    await rpc.usage.output('info', false)
+    rpc.userData.usage.output('info', false)
     print(err.message, false)
     Bare.exit(1)
   }

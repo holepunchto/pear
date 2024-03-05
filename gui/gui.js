@@ -461,7 +461,12 @@ class App {
 
     const { ctx } = this
 
-    this.starting = rpc.start(ctx.argv, ctx.env, ctx.cwd, ctx.startId)
+    this.starting = rpc.start({
+      argv: ctx.argv,
+      env: ctx.env,
+      cwd: ctx.cwd,
+      startId: ctx.startId
+    })
 
     this.starting.catch(async (err) => {
       await this.report({ err })

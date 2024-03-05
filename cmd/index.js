@@ -13,7 +13,7 @@ const { CHECKOUT } = require('../lib/constants')
 module.exports = async (rpc) => {
   Bare.prependListener('exit', () => { rpc.close() })
   const usage = require('./usage')(CHECKOUT)
-  rpc.usage = usage
+  rpc.userData = { usage }
   const argv = Bare.argv.slice(1)
   const { _, version } = parse.args(argv, {
     boolean: ['help', 'version'],

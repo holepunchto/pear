@@ -43,7 +43,7 @@ module.exports = (rpc) => async function stage (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await rpc.usage.output('stage')
+      rpc.userData.usage.output('stage')
     } else {
       print('An error occured', false)
       console.error(err)

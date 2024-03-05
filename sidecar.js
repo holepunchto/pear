@@ -35,7 +35,7 @@ async function bootSidecar () {
 
   const updater = createUpdater()
   const sidecar = new Sidecar({ updater, drive, corestore })
-  await sidecar.listen()
+  await sidecar.ready()
 
   registerUrlHandler(WAKEUP)
 
