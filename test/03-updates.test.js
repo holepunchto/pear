@@ -18,7 +18,7 @@ const releaseOpts = (id, key) => ({
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
-test('Pear.updates be called on restage and release', async function (t) {
+test('Pear.updates() should be called when restaging and releasing', async function (t) {
   const { teardown, ok, is, plan, timeout, comment } = t
 
   plan(10)
@@ -104,7 +104,7 @@ test('Pear.updates be called on restage and release', async function (t) {
   is(code, 0, 'exit code is 0')
 })
 
-test('Pear.updates should update twice after restaging twice', async function (t) {
+test('Pear.updates() should be called twice when restaging twice', async function (t) {
   const { teardown, ok, is, plan, timeout, comment } = t
 
   plan(12)
