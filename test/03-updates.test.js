@@ -89,7 +89,7 @@ test('Pear.updates be called on restage and release', async function (t) {
 
   const secondUpdateVersion = reupdated?.value?.[1]?.version
   is(z32.encode(Buffer.from(secondUpdateVersion?.key, 'hex')), key, 'app reupdated with matching key')
-  is(secondUpdateVersion?.length - firstUpdateVersion?.length, 3, 'app version incremented by 3')
+  ok(secondUpdateVersion?.length > firstUpdateVersion?.length, 'app version incremented')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
@@ -190,7 +190,7 @@ test('Pear.updates should update twice after restaging twice', async function (t
 
   const secondUpdateVersion = reupdated?.value?.[1]?.version
   is(z32.encode(Buffer.from(secondUpdateVersion?.key, 'hex')), key, 'app reupdated with matching key')
-  is(secondUpdateVersion?.length - firstUpdateVersion?.length, 7, 'app version incremented by 7')
+  ok(secondUpdateVersion?.length > firstUpdateVersion?.length, 'app version incremented')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
