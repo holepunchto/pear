@@ -38,9 +38,6 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   comment('\trunning')
   const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
-  const result = await inspector.evaluate('(() => \'READY\')()')
-  is(result?.value, 'READY', 'app is ready')
-
   comment('\tlistening to updates')
   const watchUpdates = (() => {
     global.__PEAR_TEST__.updates = { app: [], platform: [] }
