@@ -31,7 +31,7 @@ test('Pear.updates', async function ({ teardown, ok, is, plan, timeout, comment 
   comment('\tseeding')
   const seed = helper.pickMany(helper.seed(seedOpts(), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
-  const announced = await seed.announced
+  const announced = seed.announced
   ok(key, `seeded platform key (${key})`)
   ok(announced, 'seeding announced')
 
