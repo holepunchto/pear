@@ -1,9 +1,5 @@
 # Pear Runtime Changelog
 
-## v1.0.0
-
-First public release 🍐
-
 ## v1.1.0
 
 ### Features
@@ -31,4 +27,8 @@ First public release 🍐
 - `<pear-ctrl>` added to Desktop example
 - `<pear-ctrl>` added to pear init Desktop template
 - usage: pear run / pear dev clarifications
-- more update flow tests 
+- more update flow tests
+
+## v1.0.0
+
+First public release 🍐

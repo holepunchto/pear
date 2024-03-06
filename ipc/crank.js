@@ -22,7 +22,10 @@ class Crank {
   async * run ({ args, key, storage, detached, dir }) {
     if (detached) {
       const { wokeup, appling } = await this.client.request('detached', { key, storage, appdev: key === null && dir })
-      if (wokeup) return
+      if (wokeup) {
+        this.client.close()
+        return
+      }
 
       args = args.filter((arg) => arg !== '--detached')
       const opts = { detached: true }
@@ -41,8 +44,13 @@ class Crank {
         throw new Error('Appling does not exist')
       }
 
-      if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
-      else spawn(applingApp, args, opts).unref()
+      if (args[0].startsWith('pear://runtime')) {
+        args = [constants.BOOT, '--appling', appling, '--run', ...args]
+        spawn(constants.DESKTOP_RUNTIME, args).unref()
+      } else {
+        if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+        else spawn(applingApp, args, opts).unref()
+      }
 
       this.client.close()
       return
@@ -87,7 +95,7 @@ class Crank {
     args.unshift('--start-id=' + startId)
 
     const iterable = new Readable({ objectMode: true })
-    args = [path.resolve(__dirname, '..'), ...args]
+    args = [constants.BOOT, ...args]
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio: ['inherit', 'pipe', 'pipe'],
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
