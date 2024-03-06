@@ -44,8 +44,13 @@ class Crank {
         throw new Error('Appling does not exist')
       }
 
-      if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
-      else spawn(applingApp, args, opts).unref()
+      if (args[0].startsWith('pear://runtime')) {
+        args = [path.resolve(__dirname, '..'), '--appling', appling, '--run', ...args]
+        spawn(constants.DESKTOP_RUNTIME, args).unref()
+      } else {
+        if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+        else spawn(applingApp, args, opts).unref()
+      }
 
       this.client.close()
       return
