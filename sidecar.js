@@ -70,7 +70,7 @@ function getUpgradeTarget () {
   if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
 
   return {
-    checkout: { key: HypercoreID.normalize(key), length: 0, fork: 0 },
+    checkout: { key, length: 0, fork: 0 },
     swap: path.join(PLATFORM_DIR, Hypercore.discoveryKey(HypercoreID.decode(key)).toString('hex'), '0')
   }
 }
