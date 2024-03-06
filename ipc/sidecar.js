@@ -156,9 +156,12 @@ module.exports = class IPC {
     if (!storage) {
       storage = join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
     }
+
     const wokeup = await this.wakeup(key.link, storage, appdev)
+
     if (wokeup) return { wokeup, appling: null }
     const appling = (await this.engine.applings.get(key.hex)) || null
+
     return { wokeup, appling }
   }
 
@@ -185,7 +188,7 @@ module.exports = class IPC {
         app.message({ type: 'pear/wakeup', data: parsed.data, link })
       }
 
-      resolve(matches.length > 1)
+      resolve(matches.length > 0)
     })
   }
 
