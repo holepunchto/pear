@@ -3,6 +3,8 @@ const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const HypercoreID = require('hypercore-id-encoding')
+const Hypercore = require('hypercore')
+const path = require('path')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
 const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV, UPGRADE_LOCK, PLATFORM_DIR } = require('./lib/constants.js')
@@ -27,12 +29,12 @@ async function bootSidecar () {
   function createUpdater () {
     if (LOCALDEV) return null
 
-    const checkout = getUpgradeTarget()
+    const { checkout, swap } = getUpgradeTarget()
     const updateDrive = checkout === CHECKOUT || HypercoreID.normalize(checkout.key) === CHECKOUT.key
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap: SWAP, lock: UPGRADE_LOCK, checkout })
+    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
   }
 
   async function createPlatformDrive () {
@@ -47,11 +49,18 @@ async function bootSidecar () {
 }
 
 function getUpgradeTarget () {
-  if (LOCALDEV) return CHECKOUT
+  if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
   for (let i = 0; i < Bare.argv.length; i++) {
     const arg = Bare.argv[i]
-    if (arg.startsWith('--key=')) return { key: arg.slice(6), length: 0, fork: 0 }
-    if (arg === '--key' && Bare.argv.length > i + 1) return { key: Bare.argv[i + 1], length: 0, fork: 0 }
+    if (arg.startsWith('--key=')) return createCheckout(arg.slice(6))
+    if (arg === '--key' && Bare.argv.length > i + 1) return createCheckout(Bare.argv[i + 1])
   }
-  return CHECKOUT
+  return { checkout: CHECKOUT, swap: SWAP }
+}
+
+function createCheckout (key) {
+  return {
+    checkout: { key: HypercoreID.normalize(key), length: 0, fork: 0 },
+    swap: path.join(PLATFORM_DIR, Hypercore.discoveryKey(HypercoreID.decode(key)).toString('hex'), '0')
+  }
 }
