@@ -157,7 +157,7 @@ module.exports = class IPC {
       storage = join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
     }
 
-    const wokeup = await this.wakeup(key.link, storage, appdev)
+    const wokeup = await this.wakeup(key.link, storage, appdev, false)
 
     if (wokeup) return { wokeup, appling: null }
     const appling = (await this.engine.applings.get(key.hex)) || null
@@ -165,7 +165,7 @@ module.exports = class IPC {
     return { wokeup, appling }
   }
 
-  wakeup (link, storage, appdev = null) {
+  wakeup (link, storage, appdev = null, selfwake = true) {
     return new Promise((resolve) => {
       if (this.freelist.emptied()) {
         resolve(false)
@@ -188,7 +188,8 @@ module.exports = class IPC {
         app.message({ type: 'pear/wakeup', data: parsed.data, link })
       }
 
-      resolve(matches.length > 0)
+      const min = selfwake ? 1 : 0
+      resolve(matches.length > min)
     })
   }
 
