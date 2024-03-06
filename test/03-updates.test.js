@@ -79,21 +79,21 @@ test('Pear.updates() should be called when restaging and releasing', async funct
 
     return global.__PEAR_TEST__.updates[type]
   }.toString()
-  const updates = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
-  const firstUpdateVersion = updates?.value?.[0]?.version
-  is(updates?.value?.length, 1, 'app updated after stage')
-  is(z32.encode(Buffer.from(firstUpdateVersion?.key, 'hex')), key, 'app updated with matching key')
+  const update1 = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
+  const update1Version = update1?.value?.[0]?.version
+  is(update1?.value?.length, 1, 'app updated after stage')
+  is(z32.encode(Buffer.from(update1Version?.key, 'hex')), key, 'app updated with matching key')
 
   comment('releasing')
   await helper.pick(helper.release(releaseOpts(testId, key), { close: false }), { tag: 'released' })
 
   comment('waiting for update')
-  const reupdated = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
-  is(reupdated?.value?.length, 2, 'app reupdated after release')
+  const update2 = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
+  is(update2?.value?.length, 2, 'app reupdated after release')
 
-  const secondUpdateVersion = reupdated?.value?.[1]?.version
-  is(z32.encode(Buffer.from(secondUpdateVersion?.key, 'hex')), key, 'app reupdated with matching key')
-  ok(secondUpdateVersion?.length > firstUpdateVersion?.length, 'app version incremented')
+  const update2Version = update2?.value?.[1]?.version
+  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app update2 with matching key')
+  ok(update2Version?.length > update1Version?.length, 'app version incremented')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
@@ -167,10 +167,10 @@ test('Pear.updates() should be called twice when restaging twice', async functio
 
     return global.__PEAR_TEST__.updates[type]
   }.toString()
-  const updates = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
-  const firstUpdateVersion = updates?.value?.[0]?.version
-  is(updates?.value?.length, 1, 'app updated after stage')
-  is(z32.encode(Buffer.from(firstUpdateVersion?.key, 'hex')), key, 'app updated with matching key')
+  const update1 = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
+  const update1Version = update1?.value?.[0]?.version
+  is(update1?.value?.length, 1, 'app updated after stage')
+  is(z32.encode(Buffer.from(update1Version?.key, 'hex')), key, 'app updated with matching key')
 
   comment('3. Create another file, restage, and reseed')
 
@@ -191,12 +191,12 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   ok(seed3Announced, 'reseed announced')
 
   comment('waiting for update')
-  const reupdated = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
-  is(reupdated?.value?.length, 2, 'app reupdated after staging again')
+  const update2 = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
+  is(update2?.value?.length, 2, 'app reupdated after staging again')
 
-  const secondUpdateVersion = reupdated?.value?.[1]?.version
-  is(z32.encode(Buffer.from(secondUpdateVersion?.key, 'hex')), key, 'app reupdated with matching key')
-  ok(secondUpdateVersion?.length > firstUpdateVersion?.length, 'app version incremented')
+  const update2Version = update2?.value?.[1]?.version
+  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app update2 with matching key')
+  ok(update2Version?.length > update1Version?.length, 'app version incremented')
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
