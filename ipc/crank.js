@@ -22,7 +22,10 @@ class Crank {
   async * run ({ args, key, storage, detached, dir }) {
     if (detached) {
       const { wokeup, appling } = await this.client.request('detached', { key, storage, appdev: key === null && dir })
-      if (wokeup) return
+      if (wokeup) {
+        this.client.close()
+        return
+      }
 
       args = args.filter((arg) => arg !== '--detached')
       const opts = { detached: true }
