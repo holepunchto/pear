@@ -71,6 +71,6 @@ function getUpgradeTarget () {
 
   return {
     checkout: { key, length: 0, fork: 0 },
-    swap: path.join(PLATFORM_DIR, Hypercore.discoveryKey(HypercoreID.decode(key)).toString('hex'), '0')
+    swap: path.join(PLATFORM_DIR, 'by-arch', Hypercore.discoveryKey(HypercoreID.decode(key)).toString('hex'), '0')
   }
 }
