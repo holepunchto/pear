@@ -1,5 +1,15 @@
 # Pear Runtime Changelog
 
+
+## v1.1.1
+
+### Fixes
+
+- `pear release` updates release watching pre-init fix to post-init
+- `pear info` changelog ordering
+- in-app link clicking of pear:// links
+- wakeup fixes
+
 ## v1.1.0
 
 ### Features
