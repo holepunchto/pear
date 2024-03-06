@@ -45,7 +45,7 @@ class Crank {
       }
 
       if (args[0].startsWith('pear://runtime')) {
-        args = [path.resolve(__dirname, '..'), '--appling', appling, '--run', ...args]
+        args = [constants.BOOT, '--appling', appling, '--run', ...args]
         spawn(constants.DESKTOP_RUNTIME, args).unref()
       } else {
         if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
@@ -95,7 +95,7 @@ class Crank {
     args.unshift('--start-id=' + startId)
 
     const iterable = new Readable({ objectMode: true })
-    args = [path.resolve(__dirname, '..'), ...args]
+    args = [constants.BOOT, ...args]
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio: ['inherit', 'pipe', 'pipe'],
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
