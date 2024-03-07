@@ -265,66 +265,121 @@
   </template>
   <template id="decal-dialog-tmpl">
     <style>
-      :host { position: absolute }
-
-      #dialog {
-        position: relative;
-        height: 378px;
-        display: block;
-        font-family: Arial, sans-serif;
-        padding: 1.2em 2em;
-        font-size: 1.2em;
-        background: #202126;
-        border: 1px solid #313439;
-        border-radius: 32px;
-      }
-
-      #dialog.alpha-to-beta {
-        height: 512px
-      }
-
-      #content {
-        margin-bottom: 10px;
-        color: #fff;
-        max-width: 476px;
-      }
-
-      .button {
-        box-sizing: border-box;
-        cursor: pointer;
-        width: 476px;
-        height: 48px;
-        line-height: 48px;
-        background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
-        border-radius: 12px;
-        margin-bottom: .8em;
-        text-align:center
-      }
-
-      .button#ok {
-        margin-top: 1.6em;
-      }
-
-      .button#cancel {
-        background: #25262C;
-        border: 1px solid #313439;
-        color: #fff;
-      }
-
-      .tip {
-        color: #5E636D;
-        font-weight: 400;
-        font-size: 12px;
-        text-align:center
-      }
+     #dialog {
+       width: 500px;
+       height: 340px;
+       position: absolute;
+       top: 100px;
+       left: 100px;
+       background-color: #25262C;
+       padding: 35px;
+       border-radius: 16px;
+       font-family: "Inter", sans-serif;
+       z-index: 99;
+     }
+     #header {
+       color: #FFFFFF;
+       font-size: 18px;
+       margin-left: 50px;
+     }
+     #p1 {
+       color: #FFFFFF;
+       margin-top: 30px;
+       margin-bottom: 5px;
+       font-size: 14px;
+       font-weight: 400;
+     }
+     #key {
+       color:#B0D944;
+       font-size: 14px;
+       font-weight: 600;
+       margin-top: 0px;
+       margin-bottom: 25px;
+     }
+     #p2 {
+       color: #ACB1BB;
+       font-size: 14px;
+       font-weight: 400;
+     }
+     #p2 > span {
+       color: #FFFFFF;
+       font-weight: 600;
+     }
+     input {
+       display: block;
+       padding: 16px 16px 16px 16px;
+       border: 2px solid #4A4E56;
+       color: #5E636D;
+       background-color: #202126;
+       width: 100%;
+       font-size: 14px;
+       border-radius: 8px;
+       margin-top: 25px;
+       outline: none;
+     }
+     #cancel, #confirm {
+       border: 2px solid #4A4E56;
+       color: #FFFFFF;
+       font-weight: 600;
+       background-color: #202126;
+       border-radius: 8px;
+       font-size: 16px;
+       width: 48%;
+       height: 55px;
+       cursor: pointer;
+     }
+     #cancel {
+       margin-right: 2%;
+     }
+     #logo {
+       float: left;
+     }
+     #confirm {
+       background-color: #4A4E56;
+       color: #8C919D;
+     }
+     .green-confirm {
+       color: #B0D944 !important;
+       background-color: #222E02 !important;
+       border: 2px solid #B0D944 !important;
+     }
+     #error {
+       color: #FF6161;
+       font-size: 12px;
+       margin-bottom: 30px;
+       visibility: hidden;
+     }
+     .show {
+       visibility: visible !important;
+     }
     </style>
     <div id="dialog">
-      <div id="content"></div>
-      <div class="button" id="ok"></div>
-      <div class="button" id="cancel">Cancel</div>
-      <div class="tip">You can always switch back again. This decision is not permanent.</div>
+      <svg id="logo" width="36" height="37" viewBox="0 0 36 37" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17.7632 2.75H19.3421V5.7125H17.7632V2.75Z" fill="#B0D944"/>
+        <path d="M16.9737 6.65V7.25H15.3947V8H21.7105V7.25H20.1316V6.0875H18.5526V6.65H16.9737Z" fill="#B0D944"/>
+        <path d="M23.2895 8.375H18.5526V8.9375H13.8158V10.2875H23.2895V8.375Z" fill="#B0D944"/>
+        <path d="M24.8684 10.6625H18.5526V11.225H12.2368V12.575H24.8684V10.6625Z" fill="#B0D944"/>
+        <path d="M24.8684 12.95H18.5526V13.5125H12.2368V14.8625H24.8684V12.95Z" fill="#B0D944"/>
+        <path d="M26.4474 15.2375H18.5526V15.8H10.6579V17.15H26.4474V15.2375Z" fill="#B0D944"/>
+        <path d="M26.4474 17.525H18.5526V18.0875H10.6579V19.4375H26.4474V17.525Z" fill="#B0D944"/>
+        <path d="M28.0263 19.8125H18.5526V20.375H9.07895V21.725H28.0263V19.8125Z" fill="#B0D944"/>
+        <path d="M29.6053 22.1H18.5526V22.6625H7.5V24.0125H29.6053V22.1Z" fill="#B0D944"/>
+        <path d="M29.6053 24.3875H18.5526V24.95H7.5V26.3H29.6053V24.3875Z" fill="#B0D944"/>
+        <path d="M29.6053 26.675H18.5526V27.2375H7.5V28.5875H29.6053V26.675Z" fill="#B0D944"/>
+        <path d="M26.4474 28.9625H18.5526V29.525H10.6579V30.875H26.4474V28.9625Z" fill="#B0D944"/>
+        <path d="M23.2895 31.25H18.5526V31.8125H13.8158V32.75H23.2895V31.25Z" fill="#B0D944"/>
+        <path d="M19.5 24.7143L27.75 20L36 24.7143V25.5627C36 30.6414 32.6333 35.1048 27.75 36.5C22.8667 35.1048 19.5 30.6414 19.5 25.5627V24.7143Z" fill="#E44B44"/>
+        <path d="M27.75 25.1562V29.5562M27.75 32.3062V32.3172" stroke="#391C20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 id="header">Unknown app</h1>
+      <p id="p1">You have not run this application before:</p>
+      <p id="key">pear://o4wws3t5ot68pctkowpcznwh9s589hs4565kmz4peooxfabqoyfy</p>
+      <p id="p2">Type <span>TRUST</span> to continue if you know it's safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span></p>
+      <input type="text" placeholder="Type to confirm"></input>
+      <p id="error">Please, enter TRUST (uppercase) </p>
+      <button id="cancel">Cancel</button>
+      <button id="confirm">Confirm</button>
     </div>
-    
   </template>
   <script type="module">
     customElements.define('decal-dialog', class extends HTMLElement {
@@ -332,58 +387,32 @@
         super()
         this.template = document.querySelector('#decal-dialog-tmpl').content
         this.root = this.attachShadow({mode: 'open'})
+        this.confirmButton = this.root.querySelector('#confirm')
       }
       async connectedCallback() {
-        this.root.appendChild(this.template.cloneNode(true))
-        const name = this.getAttribute('name')
-        if (name !== 'alpha-to-beta' && name !== 'beta-to-alpha') return
-        const alphaToBeta = name === 'alpha-to-beta'
-        const dialog = this.root.querySelector('#dialog')
-        dialog.classList.add(name)
-        const dimensions = aw.parent.dimensions()
-        dialog.style.left = `${(dimensions.width / 2) - 280}px`
-        const height = name === 'alpha-to-beta' ? 512 : 378
-        dialog.style.top = `${((dimensions.height / 2) - (height / 2)) / 1.5}px`
-        this.content = this.root.querySelector('#content')
-        const content = alphaToBeta
-          ? document.querySelector('#decal-upgrade-to-beta-tmpl').content.cloneNode(true)
-          : document.querySelector('#decal-downgrade-to-alpha-tmpl').content.cloneNode(true)
-        this.content.appendChild(content)
-
-        this.ok = this.root.querySelector('#ok')
-        const ok = alphaToBeta
-          ? document.querySelector('#decal-upgrade-to-beta-button-tmpl').content.cloneNode(true)
-          : document.querySelector('#decal-downgrade-to-alpha-button-tmpl').content.cloneNode(true)
-        this.ok.appendChild(ok)
-
-        this.cancel = this.root.querySelector('#cancel')
-        this.cancel.textContent = alphaToBeta ? 'Not right now' : 'Cancel'
-
-        this.ok.addEventListener('click', async () => {
-          Pear.Window.parent.send(true)
-          Pear.Window.self.close()
+        const input = this.root.querySelector('input')
+        const error = this.root.querySelector('#error')
+        input.addEventListener('keyup', (event) => {
+          const value = event.target.value
+          if (value === 'TRUST') {
+            confirm.classList.add('green-confirm')
+          } else {
+            confirm.classList.remove('green-confirm')
+          }
+          if (value === 'trust') {
+            error.classList.add('show')
+          } else {
+            error.classList.remove('show')
+          }
         })
-        const cancelListener = async () => {
-          Pear.Window.parent.send(false)
-          Pear.Window.self.close()
-        }
-        this.cancel.addEventListener('click', cancelListener)
-        addEventListener('beforeunload', cancelListener)
       }
     })
   </script>
   <script>
-    const { dialog } = Pear.config
-    if (dialog) {
-      document.body.remove()
-      document.body = document.createElement('body')
-      if (dialog === 'alpha-to-beta' || dialog === 'beta-to-alpha') {
-        const decalDialog = document.createElement('decal-dialog')
-        decalDialog.setAttribute('name', dialog)
-        document.body.style = 'background: none'
-        document.body.appendChild(decalDialog)
-      }
-    }
+     if (location.hash === '#trust-dialog') {
+       const decalDialog = document.createElement('decal-dialog')
+       document.body.appendChild(decalDialog)
+     }
   </script>
   <div id="bar">
     <script type="module">
