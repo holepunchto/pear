@@ -1,6 +1,5 @@
 'use strict'
 
-/* global Pear,global */
 const test = require('brittle')
 const Helper = require('./helper')
 const path = require('bare-path')
@@ -17,11 +16,12 @@ const releaseOpts = (id, key) => ({
 })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+const awaitUpdate = '(async () => new Promise(resolve => Pear.updates().once("data", resolve)))()'
 
 test('Pear.updates() should be called when restaging and releasing', async function (t) {
   const { teardown, ok, is, plan, timeout, comment } = t
 
-  plan(10)
+  plan(11)
   timeout(180000)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -44,16 +44,6 @@ test('Pear.updates() should be called when restaging and releasing', async funct
   comment('\trunning')
   const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
-  comment('\tlistening to updates')
-  const watchUpdates = (() => {
-    global.__PEAR_TEST__.updates = { app: [], platform: [] }
-    Pear.updates((data) => {
-      const type = data?.app ? 'app' : 'platform'
-      global.__PEAR_TEST__.updates[type] = [...global.__PEAR_TEST__.updates[type], data]
-    })
-  }).toString()
-  await inspector.evaluate(`(${watchUpdates})()`)
-
   comment('2. Create new file, restage, and reseed')
 
   const file1 = `${ts()}.txt`
@@ -61,6 +51,7 @@ test('Pear.updates() should be called when restaging and releasing', async funct
   writeFileSync(path.join(dir, file1), 'test')
 
   comment('\tstaging')
+  const update1Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
   await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
@@ -72,28 +63,22 @@ test('Pear.updates() should be called when restaging and releasing', async funct
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
   ok(seed2Announced, 'reseed announced')
 
-  const awaitUpdates = async function (length, type = 'app') {
-    while (global.__PEAR_TEST__.updates[type]?.length < length) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
-
-    return global.__PEAR_TEST__.updates[type]
-  }.toString()
-  const update1 = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
-  const update1Version = update1?.value?.[0]?.version
-  is(update1?.value?.length, 1, 'app updated after stage')
+  const update1 = await inspector.awaitPromise(update1Promise.objectId)
+  const update1Version = update1?.value?.version
   is(z32.encode(Buffer.from(update1Version?.key, 'hex')), key, 'app updated with matching key')
+  is(update1Version?.fork, 0, 'app version.fork is 0')
+  ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
   comment('releasing')
+  const update2Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
   await helper.pick(helper.release(releaseOpts(testId, key), { close: false }), { tag: 'released' })
 
   comment('waiting for update')
-  const update2 = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
-  is(update2?.value?.length, 2, 'app reupdated after release')
-
-  const update2Version = update2?.value?.[1]?.version
-  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app update2 with matching key')
-  ok(update2Version?.length > update1Version?.length, 'app version incremented')
+  const update2 = await inspector.awaitPromise(update2Promise.objectId)
+  const update2Version = update2?.value?.version
+  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app updated with matching key')
+  is(update2Version?.fork, 0, 'app version.fork is 0')
+  ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
@@ -107,7 +92,7 @@ test('Pear.updates() should be called when restaging and releasing', async funct
 test('Pear.updates() should be called twice when restaging twice', async function (t) {
   const { teardown, ok, is, plan, timeout, comment } = t
 
-  plan(12)
+  plan(13)
   timeout(180000)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -132,16 +117,6 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   comment('\trunning')
   const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
 
-  comment('\tlistening to updates')
-  const watchUpdates = (() => {
-    global.__PEAR_TEST__.updates = { app: [], platform: [] }
-    Pear.updates((data) => {
-      const type = data?.app ? 'app' : 'platform'
-      global.__PEAR_TEST__.updates[type] = [...global.__PEAR_TEST__.updates[type], data]
-    })
-  }).toString()
-  await inspector.evaluate(`(${watchUpdates})()`)
-
   comment('2. Create new file, restage, and reseed')
 
   const file1 = `${ts()}.txt`
@@ -149,6 +124,7 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   writeFileSync(path.join(dir, file1), 'test')
 
   comment('\tstaging')
+  const update1Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
   await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
@@ -160,17 +136,11 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
   ok(seed2Announced, 'reseed announced')
 
-  const awaitUpdates = async function (length, type = 'app') {
-    while (global.__PEAR_TEST__.updates[type]?.length < length) {
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
-
-    return global.__PEAR_TEST__.updates[type]
-  }.toString()
-  const update1 = await inspector.evaluate(`(${awaitUpdates})(1)`, { awaitPromise: true })
-  const update1Version = update1?.value?.[0]?.version
-  is(update1?.value?.length, 1, 'app updated after stage')
+  const update1 = await inspector.awaitPromise(update1Promise.objectId)
+  const update1Version = update1?.value?.version
   is(z32.encode(Buffer.from(update1Version?.key, 'hex')), key, 'app updated with matching key')
+  is(update1Version?.fork, 0, 'app version.fork is 0')
+  ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
   comment('3. Create another file, restage, and reseed')
 
@@ -179,6 +149,7 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   writeFileSync(path.join(dir, file2), 'test')
 
   comment('\trestaging')
+  const update2Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
   await helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file2))
@@ -191,12 +162,11 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   ok(seed3Announced, 'reseed announced')
 
   comment('waiting for update')
-  const update2 = await inspector.evaluate(`(${awaitUpdates})(2)`, { awaitPromise: true })
-  is(update2?.value?.length, 2, 'app reupdated after staging again')
-
-  const update2Version = update2?.value?.[1]?.version
-  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app update2 with matching key')
-  ok(update2Version?.length > update1Version?.length, 'app version incremented')
+  const update2 = await inspector.awaitPromise(update2Promise.objectId)
+  const update2Version = update2?.value?.version
+  is(z32.encode(Buffer.from(update2Version?.key, 'hex')), key, 'app updated with matching key')
+  is(update2Version?.fork, 0, 'app version.fork is 0')
+  ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
 
