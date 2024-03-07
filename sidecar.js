@@ -3,8 +3,6 @@ const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const HypercoreID = require('hypercore-id-encoding')
-const Hypercore = require('hypercore')
-const path = require('bare-path')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
 const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV, UPGRADE_LOCK, PLATFORM_DIR } = require('./lib/constants.js')
@@ -71,6 +69,6 @@ function getUpgradeTarget () {
 
   return {
     checkout: { key, length: 0, fork: 0 },
-    swap: path.join(PLATFORM_DIR, 'by-arch', Hypercore.discoveryKey(HypercoreID.decode(key)).toString('hex'), '0')
+    swap: null
   }
 }
