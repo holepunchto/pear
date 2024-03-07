@@ -113,14 +113,12 @@ function linuxSetup (executable) {
   const fs = require('fs')
   const os = require('os')
   const { join } = require('path')
-  const { execSync } = require('child_process')
+  const { spawnSync } = require('child_process')
   const APP_NAME = 'Keet'
   const ICON_NAME = 'keet'
   const DESKTOP_FILE_NAME = 'keet.desktop'
   const DESKTOP_FILE_PATH = join(os.homedir(), '.local', 'share', 'applications', DESKTOP_FILE_NAME)
   const MIME_TYPES = [
-    'x-scheme-handler/holepunch', // legacy
-    'x-scheme-handler/punch', // legacy
     'x-scheme-handler/pear' // pear
   ]
 
@@ -150,7 +148,7 @@ function linuxSetup (executable) {
 
   function checkMimeType (mimeType) {
     try {
-      return execSync(`xdg-mime query default ${mimeType}`) === DESKTOP_FILE_NAME
+      return spawnSync('xdg-mime', ['query', 'default', mimeType]).stdout.toString() === DESKTOP_FILE_NAME
     } catch {
       return false
     }
@@ -158,7 +156,8 @@ function linuxSetup (executable) {
 
   function registerMimeType (mimeType) {
     try {
-      return execSync(`xdg-mime default ${DESKTOP_FILE_NAME} ${mimeType}`)
+      spawnSync('xdg-mime', ['default', DESKTOP_FILE_NAME, mimeType])
+      return true
     } catch {
       return false
     }
