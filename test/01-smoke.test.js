@@ -38,8 +38,6 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
 
   is(value?.app?.key, key, 'app version matches staged key')
 
-  await inspector.evaluate('(() => { return global.__PEAR_TEST__.inspector.disable() })()')
-
   await inspector.close()
   await helper.close()
 

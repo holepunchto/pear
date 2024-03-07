@@ -394,6 +394,8 @@ class Helper {
     }
 
     async _close () {
+      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => {})
+
       this.#session.disconnect()
       await this.#session.destroy()
     }
