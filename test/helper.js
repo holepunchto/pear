@@ -398,10 +398,8 @@ class Helper {
       await this.#session.destroy()
     }
 
-    async evaluate (expression, { awaitPromise = false } = {}) {
-      const id = Math.floor(Math.random() * 10000)
-
-      const reply = new Promise((resolve, reject) => {
+    async _awaitReply (id) {
+      return new Promise((resolve, reject) => {
         const handler = ({ id: messageId, result, error }) => {
           if (messageId !== id) return
 
@@ -413,8 +411,20 @@ class Helper {
 
         this.#session.on('message', handler)
       })
+    }
 
-      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+    async evaluate (expression, { awaitPromise = false, returnByValue = true } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+      const reply = this._awaitReply(id)
+      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue } })
+
+      return reply
+    }
+
+    async awaitPromise (promiseObjectId, { returnByValue = true } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+      const reply = this._awaitReply(id)
+      this.#session.post({ method: 'Runtime.awaitPromise', id, params: { promiseObjectId, returnByValue } })
 
       return reply
     }
