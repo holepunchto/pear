@@ -60,7 +60,7 @@ module.exports = class Context {
 
   constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, onupdate = () => {} } = {}) {
     const {
-      startId, store, appling, flags, channel,
+      startId, store, appling, flags, channel, devtools,
       checkout, run, stage, trace, key, link, updates,
       alias, local, dir, appArgs, pkg, pkgPath, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
@@ -78,6 +78,7 @@ module.exports = class Context {
     this.env = { ...env }
     this.flags = flags
     this.dev = key === null
+    this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff
     this.run = run
