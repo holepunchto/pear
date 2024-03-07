@@ -80,8 +80,6 @@ test('Pear.updates() should be called when restaging and releasing', async funct
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
-  await inspector.evaluate('global.__PEAR_TEST__.inspector.disable()')
-
   await inspector.close()
   await helper.close()
 
