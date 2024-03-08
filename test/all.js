@@ -9,6 +9,7 @@ async function runTests () {
 
   await import('./01-smoke.test.js')
   await import('./02-teardown.test.js')
+  await import('./03-updates.test.js')
 
   test.resume()
 }
