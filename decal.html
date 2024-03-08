@@ -269,8 +269,8 @@
        width: 500px;
        height: 340px;
        position: absolute;
-       top: 100px;
-       left: 100px;
+       top: 70px;
+       left: 80px;
        background-color: #25262C;
        padding: 35px;
        border-radius: 16px;
@@ -311,7 +311,7 @@
        border: 2px solid #4A4E56;
        color: #5E636D;
        background-color: #202126;
-       width: 100%;
+       width: 90%;
        font-size: 14px;
        border-radius: 8px;
        margin-top: 25px;
@@ -385,34 +385,38 @@
     customElements.define('decal-dialog', class extends HTMLElement {
       constructor () {
         super()
-        this.template = document.querySelector('#decal-dialog-tmpl').content
+        const template = document.querySelector('#decal-dialog-tmpl').content
         this.root = this.attachShadow({mode: 'open'})
-        this.confirmButton = this.root.querySelector('#confirm')
+        this.root.appendChild(template.cloneNode(true))
+        this.confirm = this.root.querySelector('#confirm')
+        this.input = this.root.querySelector('input')
+        this.error = this.root.querySelector('#error')
+        this.key = this.root.querySelector('#key')
+        this.trust = null
       }
       async connectedCallback() {
-        const input = this.root.querySelector('input')
-        const error = this.root.querySelector('#error')
-        input.addEventListener('keyup', (event) => {
+        this.input.addEventListener('keyup', (event) => {
           const value = event.target.value
           if (value === 'TRUST') {
-            confirm.classList.add('green-confirm')
+            this.confirm.classList.add('green-confirm')
           } else {
-            confirm.classList.remove('green-confirm')
+            this.confirm.classList.remove('green-confirm')
           }
           if (value === 'trust') {
-            error.classList.add('show')
+            this.error.classList.add('show')
           } else {
-            error.classList.remove('show')
+            this.error.classList.remove('show')
           }
         })
+
+        this.confirm.addEventListener('click', async () => {
+          await this.trust()
+        })
+      }
+      setKey (key) {
+        this.key.innerText = 'pear://' + key
       }
     })
-  </script>
-  <script>
-     if (location.hash === '#trust-dialog') {
-       const decalDialog = document.createElement('decal-dialog')
-       document.body.appendChild(decalDialog)
-     }
   </script>
   <div id="bar">
     <script type="module">
@@ -723,6 +727,19 @@
               await loader.updating(this.status.version)
               continue
             }
+
+            if (type === 'trust') {
+              const decalDialog = document.createElement('decal-dialog')
+              document.body.appendChild(decalDialog)
+              decalDialog.setKey(report.key)
+              decalDialog.trust = async () => {
+                // await this.ipc.trust(report.key)
+                this.ipc.app.quit(64)
+              }
+              await this.ipc.gui.detachMainView(this.gid)
+              continue
+            }
+
             this.querySelector('[slot="headline"]').innerHTML = headline.content
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
