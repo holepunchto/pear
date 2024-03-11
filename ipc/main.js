@@ -167,6 +167,8 @@ class Handlers {
 
     front({ name: 'maximize' }, function maximize (info, id) { return gui.get(id).maximize() })
 
+    front({ name: 'setSize' }, function setSize (info, id, width, height) { return gui.get(id).setSize(width, height) })
+
     front({ name: 'fullscreen' }, function fullscreen (info, id) { return gui.get(id).fullscreen() })
 
     front({ name: 'restore' }, function restore (info, id) { return gui.get(id).restore() })

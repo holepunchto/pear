@@ -269,11 +269,10 @@
        width: 500px;
        height: 340px;
        position: absolute;
-       top: 70px;
-       left: 80px;
+       top: 40px;
+       left: 0px;
        background-color: #25262C;
        padding: 35px;
-       border-radius: 16px;
        font-family: "Inter", sans-serif;
        z-index: 99;
      }
@@ -730,12 +729,15 @@
 
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
+              document.body.appendChild(document.createElement('pear-ctrl'))
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
               decalDialog.trust = async () => {
                 // await this.ipc.trust(report.key)
                 this.ipc.app.quit(64)
               }
+
+              await this.ipc.gui.setSize(this.gid, 560, 450)
               await this.ipc.gui.detachMainView(this.gid)
               continue
             }
