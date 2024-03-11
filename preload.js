@@ -160,8 +160,6 @@ if (process.isMainFrame) {
         this.intesections.observe(this)
         return
       }
-      if (!IS_WINDOWS) return // linux uses frame
-
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
@@ -302,11 +300,12 @@ if (process.isMainFrame) {
           #ctrl {
             user-select: none;
             -webkit-app-region: no-drag;
-            display: table-row;
+            display: flex;
             float: right;
             margin-left: .6em;
-            margin-top: 0.22em;
+            margin-top: 0.8em;
             border-spacing: 0.3em 0;
+            margin-right: .9em;
           }
           #ctrl > .ctrl {
             opacity: 0.8;
@@ -315,6 +314,7 @@ if (process.isMainFrame) {
             display: table-cell;
             vertical-align: middle;
             text-align: center;
+            margin-left: .9em;
           }
           #ctrl > .ctrl:hover {
             opacity: 1;
@@ -328,6 +328,10 @@ if (process.isMainFrame) {
           .max #restore.ctrl  {
             display: table-cell;
           }
+          svg {
+            width: 1em;
+            height: 1em;
+         }
         </style>
         <div id="ctrl">
           <div id="min" class="ctrl">
