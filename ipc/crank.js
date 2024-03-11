@@ -19,7 +19,7 @@ class Crank {
     this.client = client
   }
 
-  async * run ({ args, key, storage, detached, dir }) {
+  async * run ({ args, key, storage, detached, dir, dev }) {
     if (detached) {
       const { wokeup, appling } = await this.client.request('detached', { key, storage, appdev: key === null && dir })
       if (wokeup) {

@@ -184,6 +184,8 @@ class Helper {
 
   stage (params, opts) { return this.#notify('stage', params, opts) }
 
+  release (params, opts) { return this.#notify('release', params, opts) }
+
   seed (params, opts) { return this.#notify('seed', params, opts) }
 
   respond (channel, responder) {
@@ -259,6 +261,7 @@ class Helper {
     (async function match () {
       for await (const output of iter) {
         for (const ptn of patterns) {
+          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
             resolvers[ptn.tag](output.data ? output.data : true)
             delete resolvers[ptn.tag]
@@ -304,6 +307,10 @@ class Helper {
       }
     }
     return true
+  }
+
+  async sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   static Mirror = class extends ReadyResource {
@@ -387,14 +394,14 @@ class Helper {
     }
 
     async _close () {
+      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => {})
+
       this.#session.disconnect()
       await this.#session.destroy()
     }
 
-    async evaluate (expression, { awaitPromise = false } = {}) {
-      const id = Math.floor(Math.random() * 10000)
-
-      const reply = new Promise((resolve, reject) => {
+    async _awaitReply (id) {
+      return new Promise((resolve, reject) => {
         const handler = ({ id: messageId, result, error }) => {
           if (messageId !== id) return
 
@@ -406,8 +413,20 @@ class Helper {
 
         this.#session.on('message', handler)
       })
+    }
 
-      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue: true } })
+    async evaluate (expression, { awaitPromise = false, returnByValue = true } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+      const reply = this._awaitReply(id)
+      this.#session.post({ method: 'Runtime.evaluate', id, params: { expression, awaitPromise, returnByValue } })
+
+      return reply
+    }
+
+    async awaitPromise (promiseObjectId, { returnByValue = true } = {}) {
+      const id = Math.floor(Math.random() * 10000)
+      const reply = this._awaitReply(id)
+      this.#session.post({ method: 'Runtime.awaitPromise', id, params: { promiseObjectId, returnByValue } })
 
       return reply
     }

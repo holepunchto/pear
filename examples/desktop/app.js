@@ -1,5 +1,5 @@
 /* global Pear */
-const { versions, config, updates, wakeup, Window } = Pear
+const { versions, config, updates, wakeups, Window } = Pear
 
 console.log('link', config.link)
 console.log('linkData', config.linkData)
@@ -9,7 +9,7 @@ updates(function (data) {
   console.log('update available:', data)
 })
 
-wakeup(async (wakeup) => {
+wakeups(async (wakeup) => {
   console.log('GOT WAKEUP', wakeup)
   await Window.self.focus({ steal: true })
 })

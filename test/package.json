@@ -33,6 +33,7 @@
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7",
-    "which-runtime": "^1.2.0"
+    "which-runtime": "^1.2.0",
+    "z32": "^1.0.1"
   }
 }

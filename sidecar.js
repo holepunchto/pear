@@ -27,12 +27,12 @@ async function bootSidecar () {
   function createUpdater () {
     if (LOCALDEV) return null
 
-    const checkout = getUpgradeTarget()
+    const { checkout, swap } = getUpgradeTarget()
     const updateDrive = checkout === CHECKOUT || HypercoreID.normalize(checkout.key) === CHECKOUT.key
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap: SWAP, lock: UPGRADE_LOCK, checkout })
+    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
   }
 
   async function createPlatformDrive () {
@@ -47,11 +47,28 @@ async function bootSidecar () {
 }
 
 function getUpgradeTarget () {
-  if (LOCALDEV) return CHECKOUT
+  if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
+
+  let key = null
+
   for (let i = 0; i < Bare.argv.length; i++) {
     const arg = Bare.argv[i]
-    if (arg.startsWith('--key=')) return { key: arg.slice(6), length: 0, fork: 0 }
-    if (arg === '--key' && Bare.argv.length > i + 1) return { key: Bare.argv[i + 1], length: 0, fork: 0 }
+
+    if (arg.startsWith('--key=')) {
+      key = HypercoreID.normalize(arg.slice(6))
+      break
+    }
+
+    if (arg === '--key' && Bare.argv.length > i + 1) {
+      key = HypercoreID.normalize(Bare.argv[i + 1])
+      break
+    }
   }
-  return CHECKOUT
+
+  if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
+
+  return {
+    checkout: { key, length: 0, fork: 0 },
+    swap: null
+  }
 }
