@@ -6,23 +6,46 @@ if (process.isMainFrame) {
   const timers = require('timers')
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
-  const GUI = require('./gui')
-  const API = require('./lib/api')
-  const gunk = require('./lib/gunk')
-
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = ctx
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
-  ctx.config = config
-  const gui = new GUI({ API, ctx })
-  window.Pear = gui.api
+
+  const RPC = require('pear-rpc')
+  const API = require('./gui/api')
+  const rpc = new RPC({
+    methods: API.methods
+
+  })
+  window.Pear = new API(rpc, ctx, async (fn) => {
+    if (isDecal === false) return
+    const action = await rpc.unloading() // only resolves when unloading occurs
+    fn(action) // resolve global promise and trigger user suspend functions
+    const MAX_TEARDOWN_WAIT = 5000
+    const timeout = new Promise((resolve) => setTimeout(resolve, MAX_TEARDOWN_WAIT))
+    await Promise.race([window[Symbol.for('pear.unloading')], timeout])
+    if (action.type === 'reload') location.reload()
+    else if (action.type === 'nav') location.href = action.url
+    await rpc.completeUnload(action)
+  })
+
+  const ipc = Pear[Symbol.for('pear.ipc')]
+  if (isDecal === false) {
 
   if (isDecal === false) {
     Object.assign(process.env, env)
     process.chdir(cwd)
+
+    const syncConfig = async () => {
+      for await (const config of rpc.reconfig()) {
+        Object.assign(window[Symbol.for('pear.config')], config)
+      }
+    }
+
+    syncConfig().catch(console.error)
+    unload().catch(console.error)
   }
 
   {
@@ -130,14 +153,14 @@ if (process.isMainFrame) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async () => {
           const { x, y } = ctrl.getBoundingClientRect()
-          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+          await rpc.setWindowButtonPosition({ x, y: y - 6 })
         })
         this.mutations.observe(this, { attributes: true })
 
         this.intesections = new IntersectionObserver(async ([element]) => {
-          await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
+          await rpc.setWindowButtonVisibility(element.isIntersecting)
           const { x, y } = ctrl.getBoundingClientRect()
-          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+          await rpc.setWindowButtonPosition({ x, y: y - 6 })
         }, { threshold: 0 })
 
         this.intesections.observe(this)

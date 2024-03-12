@@ -1,6 +1,6 @@
 'use strict'
 const electron = require('electron')
-const gui = require('../lib/gui')
+const gui = require('../gui')
 const Context = require('../ctx/shared')
 const { constructor: AGF } = async function * () {}
 const constants = require('../lib/constants')
@@ -142,8 +142,6 @@ class Handlers {
     })
 
     front({ name: 'id', sync: true }, function id ({ sender }) { return sender })
-
-    front({ name: 'closing', sync: true }, function closing (info, id) { return !!(gui.get(id)?.closing) })
 
     front({ name: 'parentId', sync: true }, function parentId ({ sender }) {
       const instance = gui.get(sender)

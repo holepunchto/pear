@@ -5,8 +5,8 @@ const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
 const { isMac, isWindows, isLinux } = require('which-runtime')
-const IPC = require('pear-ipc')
-const ReadyResource = require('ready-resource')
+const { FORCE_SHOW, ALIASES, BOOT } = require('../lib/constants')
+const methods = require('./methods')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -86,7 +86,7 @@ class Menu {
         click: async () => {
           if (app.ctx.devtools === true) {
             await app.ctx.update({ devtools: false })
-            for (const { contentView } of PearGUI.ofSession(app.handle?.session)) {
+            for (const { contentView } of Gui.ofSession(app.handle?.session)) {
               await contentView.webContents.closeDevTools()
             }
           } else {
@@ -119,7 +119,7 @@ class Menu {
           if (!win) return // no windows selected, nothing to do
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
-          for (const ctrl of PearGUI.ofSession(session)) {
+          for (const ctrl of Gui.ofSession(session)) {
             await ctrl.close()
           }
         }
@@ -395,7 +395,7 @@ class App {
       })
 
       wc.on('context-menu', (e, { x, y }) => {
-        const ctrl = PearGUI.fromWebContents(wc)
+        const ctrl = Gui.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
@@ -528,7 +528,7 @@ class App {
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      const ctrl = await PearGUI.ctrl('window', entry, { ctx }, {
+      await Gui.ctrl('window', entry, { ctx }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -561,8 +561,9 @@ class App {
         afterNativeWindowClose: () => this.close(),
         afterNativeViewCreated: devtools && ((app) => {
           if (trace) return
-          app.view.webContents.openDevTools({ mode: 'detach' })
-          if (app.ctx.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
+          if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
+
+          if (app.ctx.chromeWebrtcInternals) Gui.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace
           ? async () => {
@@ -625,7 +626,7 @@ class App {
       }
     })
 
-    const unloaders = PearGUI.ctrls().map((ctrl) => {
+    const unloaders = Gui.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -1322,16 +1323,13 @@ class View extends GuiCtrl {
   }
 }
 
-class GUI {
-
-}
-
-const gui = {
-  App,
-  GUI,
-  View,
-  Window,
-  async ctrl (type, entry, { ctx, parentId = 0, ua, sessname, appkin }, options = {}, openOptions = {}) {
+class Gui {
+  static App = App
+  static View = View
+  static Window = Window
+  static methods = methods
+  static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
+    ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
     if (entry[0] !== '/') entry = `/~${entry}`
     const state = { ctx, parentId, ua, sessname, appkin }
@@ -1350,25 +1348,33 @@ const gui = {
     }
     return null
   }
-
   static ofSession (session) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
   }
-
   static ofContext (ctx) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
   }
-
   static reportMode (ctx) {
     const ctrls = this.ofContext(ctx)
     for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
   }
-
   static chrome (name) {
     const win = new electron.BrowserWindow({ show: true })
     win.loadURL('chrome://' + name)
   }
 
+
+  constructor () {
+    electron.ipcMain.on('id', async (event) => {
+      return (event.returnValue = event.sender.id)
+    })
+  
+    electron.ipcMain.on('parentId', (event) => {
+      const instance = this.get(event.sender.id)
+      return (event.returnValue = instance.parentId)
+    })
+  }
+  
   has (id) { return GuiCtrl[kMap].has(id) }
 
   get (id) {
@@ -1410,10 +1416,10 @@ const gui = {
   }
 
   chrome ({ name }) { return this.constructor.chrome(name) }
-
+  
   async ctrl (params) {
-    const { parentId, type, entry, options = {}, openOptions, ctx } = params
-    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx }, options, openOptions)
+    const { parentId, type, entry, options = {}, openOptions } = params
+    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx, ua }, options, openOptions)
     return instance.id
   }
 
@@ -1435,8 +1441,7 @@ const gui = {
 
   open ({ id, options }) { return this.get(id).open(options) }
 
-  // guiClose because ReadyResource needs close (affects internal naming only)
-  guiClose ({ id }) { return this.get(id).close() }
+  close ({ id }) { return this.get(id).close() }
 
   show ({ id }) { return this.get(id).show() }
 
@@ -1468,13 +1473,12 @@ const gui = {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
-  unloading ({ id }) {
-    if (this._unloading) return this._unloading
-    this._unloading = this.get(id).unloading()
-    return this._unloading
+  async unloading ({ id }) {
+    const action = await this.get(id).unloading()
+    return action
   }
 
-  async completeUnload ({ id, action }) {
+  async completeUnload ({ id , action }) {
     const instance = this.get(id)
     if (!instance) return
     instance.completeUnload(action)
@@ -1488,37 +1492,18 @@ const gui = {
     return this.get(id).afterViewLoaded()
   }
 
-  async setWindowButtonPosition ({ id, point }) {
+  async setWindowButtonPosition ({ id , point }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonPosition(point)
   }
 
-  async setWindowButtonVisibility ({ id, visible }) {
+  async setWindowButtonVisibility ({ id , visible }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
 
-  message (msg) { return this.ipc.message(msg) }
-
-  messages (pattern) { return this.ipc.messages(pattern) }
-
-  checkpoint (state) { return this.ipc.checkpoint(state) }
-
-  versions () { return this.ipc.versions() }
-
-  restart (opts = {}) { return this.ipc.restart(opts) }
-
-  warming () { return this.ipc.warming() }
-
-  reports () { return this.ipc.reports() }
-
-  // DEPRECATED - assess to remove from Sep 2024
-  preferences () { return this.ipc.preferences() }
-  setPreference (key, value) { return this.ipc.setPreference(key, value) }
-  getPreference (key) { return this.ipc.getPreference(key) }
-  iteratePreference () { return this.ipc.iteratePreference() }
 }
 
-module.exports = PearGUI
+module.exports = Gui
