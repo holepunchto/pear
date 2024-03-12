@@ -11,6 +11,7 @@ const fsext = require('fs-native-extensions')
 const constants = require('../lib/constants')
 const Context = require('../ctx/shared')
 const API = isBare ? require('../lib/api') : null
+const teardown = isBare ? require('../lib/teardown') : null
 
 class Crank {
   starting = null
@@ -91,6 +92,11 @@ class Crank {
       })
       return
     }
+
+    teardown(async () => {
+      this.unloading()
+      await this.closeClients()
+    })
 
     args.unshift('--start-id=' + startId)
 
