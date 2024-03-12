@@ -3,7 +3,7 @@ const electron = require('electron')
 const RPC = require('pear-rpc')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const Context = require('./ctx/shared')
-const { App } = require('./lib/gui')
+const { GUI, App } = require('./lib/gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, RUNTIME, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
@@ -31,6 +31,7 @@ async function electronMain () {
   const rpc = new RPC({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
+    handlers: new GUI(),
     tryboot
   })
   await rpc.ready()
