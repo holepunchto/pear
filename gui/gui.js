@@ -1322,124 +1322,16 @@ class View extends GuiCtrl {
   }
 }
 
-class PearGUI extends ReadyResource {
-  static View = View
-  static Window = Window
-  constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
-    super()
-    const gui = this
-    this.ctx = ctx
-    this.ipc = new IPC({
-      socketPath,
-      connectTimeout,
-      api: {
-        reports (method) {
-          return (params) => {
-            const stream = method.createRequestStream()
-            stream.once('data', () => { gui.reportMode(ctx) })
-            stream.write(params)
-            return stream
-          }
-        }
-      },
-      connect: tryboot
-    })
-    this.ipc.once('close', () => this.close())
+class GUI {
 
-    electron.ipcMain.on('id', async (event) => {
-      return (event.returnValue = event.sender.id)
-    })
+}
 
-    electron.ipcMain.on('parentId', (event) => {
-      const instance = this.get(event.sender.id)
-      return (event.returnValue = instance.parentId)
-    })
-
-    electron.ipcMain.on('warming', (event) => {
-      const warming = this.warming()
-      warming.on('data', (data) => event.reply('warming', data))
-      warming.on('end', () => event.reply('warming', null))
-    })
-
-    electron.ipcMain.on('reports', (event) => {
-      const reports = this.reports()
-      reports.on('data', (data) => event.reply('reports', data))
-      reports.on('end', () => event.reply('reports', null))
-    })
-
-    electron.ipcMain.on('messages', (event, pattern) => {
-      const messages = this.messages(pattern)
-      messages.on('data', (data) => event.reply('messages', data))
-      messages.on('end', () => event.reply('messages', null))
-    })
-
-    electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
-    electron.ipcMain.handle('askForMediaAccess', (evt, ...args) => this.askForMediaAccess(...args))
-    electron.ipcMain.handle('desktopSources', (evt, ...args) => this.desktopSources(...args))
-    electron.ipcMain.handle('chrome', (evt, ...args) => this.chrome(...args))
-    electron.ipcMain.handle('ctrl', (evt, ...args) => this.ctrl(...args))
-    electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
-    electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
-    electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
-    electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
-    electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
-    electron.ipcMain.handle('minimize ', (evt, ...args) => this.minimize(...args))
-    electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
-    electron.ipcMain.handle('fullscreen ', (evt, ...args) => this.fullscreen(...args))
-    electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
-    electron.ipcMain.handle('focus ', (evt, ...args) => this.focus(...args))
-    electron.ipcMain.handle('blur', (evt, ...args) => this.blur(...args))
-    electron.ipcMain.handle('getMediaSourceId', (evt, ...args) => this.getMediaSourceId(...args))
-    electron.ipcMain.handle('dimensions ', (evt, ...args) => this.dimensions(...args))
-    electron.ipcMain.handle('isVisible', (evt, ...args) => this.isVisible(...args))
-    electron.ipcMain.handle('isClosed', (evt, ...args) => this.isClosed(...args))
-    electron.ipcMain.handle('isMinimized', (evt, ...args) => this.isMinimized(...args))
-    electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
-    electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
-    electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
-    electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
-    electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
-    electron.ipcMain.handle('detachMainView', (evt, ...args) => this.detachMainView(...args))
-    electron.ipcMain.handle('afterViewLoaded', (evt, ...args) => this.afterViewLoaded(...args))
-    electron.ipcMain.handle('setWindowButtonPosition', (evt, ...args) => this.setWindowButtonPosition(...args))
-    electron.ipcMain.handle('setWindowButtonVisibility', (evt, ...args) => this.setWindowButtonVisibility(...args))
-    electron.ipcMain.handle('message', (evt, ...args) => this.message(...args))
-    electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
-    electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
-    electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
-
-    // DEPRECATED - assess to remove from Sep 2024
-    electron.ipcMain.on('preferences', (event) => {
-      const preferences = this.preferences()
-      preferences.on('data', (data) => event.reply('preferences', data))
-      preferences.on('end', () => event.reply('preferences', null))
-    })
-    electron.ipcMain.handle('setPreference', (evt, ...args) => this.setPreference(...args))
-    electron.ipcMain.handle('getPreference', (evt, ...args) => this.getPreference(...args))
-    electron.ipcMain.on('iteratePreferences', (event) => {
-      const iteratePreferences = this.iteratePreferences()
-      iteratePreferences.on('data', (data) => event.reply('iteratePreferences', data))
-      iteratePreferences.on('end', () => event.reply('iteratePreferences', null))
-    })
-  }
-
-  async app () {
-    const app = new App(this.ctx, this.ipc)
-    this.once('close', async () => { app.quit() })
-    await app.start()
-    return app
-  }
-
-  async _open () {
-    await this.ipc.ready()
-  }
-
-  async _close () {
-    await this.ipc.close()
-  }
-
-  static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
-    ;[entry] = entry.split('+')
+const gui = {
+  App,
+  GUI,
+  View,
+  Window,
+  async ctrl (type, entry, { ctx, parentId = 0, ua, sessname, appkin }, options = {}, openOptions = {}) {
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
     if (entry[0] !== '/') entry = `/~${entry}`
     const state = { ctx, parentId, ua, sessname, appkin }
