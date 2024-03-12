@@ -3,7 +3,7 @@ const electron = require('electron')
 const RPC = require('pear-rpc')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const Context = require('./ctx/shared')
-const { GUI, App } = require('./lib/gui')
+const Gui = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, RUNTIME, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
@@ -27,11 +27,23 @@ async function electronMain () {
   // then pipeline(rpc.stream, guirpc.stream, rpc.stream)
   // if necessary can also hookup incoming electron ipc to guirpc stream in lib/gui
   // lib/gui guirpc becomes part of pear-gui, pear-gui/rpc maybe?
-
+  const gui = new Gui()
   const rpc = new RPC({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
-    handlers: new GUI(),
+    handlers: gui,
+    methods: Gui.methods,
+    userData: { ctx },
+    api: {
+      reports (method) {
+        return (params) => {
+          const stream = method.createRequestStream()
+          stream.once('data', () => { gui.reportMode(ctx) })
+          stream.write(params)
+          return stream
+        }
+      }
+    },
     tryboot
   })
   await rpc.ready()
@@ -41,17 +53,7 @@ async function electronMain () {
     return
   }
 
-  electron.ipcMain.on('id', async (event) => {
-    if (typeof rpc.id === 'number') {
-      event.returnValue = rpc.id
-      return rpc.id
-    }
-    await rpc.opening
-    event.returnValue = rpc.id
-    return rpc.id
-  })
-
-  const app = new App(ctx)
+  const app = new Gui.App(ctx)
   rpc.once('close', async () => { app.quit() })
   app.start(rpc).catch(console.error)
   await app.starting

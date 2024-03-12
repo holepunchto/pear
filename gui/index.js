@@ -4,8 +4,9 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
-const { FORCE_SHOW, ALIASES, BOOT } = require('./constants')
 const { isMac, isWindows, isLinux } = require('which-runtime')
+const { FORCE_SHOW, ALIASES, BOOT } = require('../lib/constants')
+const methods = require('./methods')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -85,7 +86,7 @@ class Menu {
         click: async () => {
           if (app.ctx.devtools === true) {
             await app.ctx.update({ devtools: false })
-            for (const { contentView } of gui.ofSession(app.handle?.session)) {
+            for (const { contentView } of Gui.ofSession(app.handle?.session)) {
               await contentView.webContents.closeDevTools()
             }
           } else {
@@ -118,7 +119,7 @@ class Menu {
           if (!win) return // no windows selected, nothing to do
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
-          for (const ctrl of gui.ofSession(session)) {
+          for (const ctrl of Gui.ofSession(session)) {
             await ctrl.close()
           }
         }
@@ -393,7 +394,7 @@ class App {
       })
 
       wc.on('context-menu', (e, { x, y }) => {
-        const ctrl = gui.fromWebContents(wc)
+        const ctrl = Gui.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
@@ -527,7 +528,7 @@ class App {
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      await gui.ctrl('window', entry, { ctx }, {
+      await Gui.ctrl('window', entry, { ctx }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -562,7 +563,7 @@ class App {
           if (trace) return
           if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
 
-          if (app.ctx.chromeWebrtcInternals) gui.chrome('webrtc-internals')
+          if (app.ctx.chromeWebrtcInternals) Gui.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace
           ? async () => {
@@ -624,7 +625,7 @@ class App {
       }
     })
 
-    const unloaders = gui.ctrls().map((ctrl) => {
+    const unloaders = Gui.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -1326,16 +1327,13 @@ class View extends GuiCtrl {
   }
 }
 
-class GUI {
-
-}
-
-const gui = {
-  App,
-  GUI,
-  View,
-  Window,
-  async ctrl (type, entry, { ctx, parentId = 0, ua, sessname, appkin }, options = {}, openOptions = {}) {
+class Gui {
+  static App = App
+  static View = View
+  static Window = Window
+  static methods = methods
+  static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
+    ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
     if (entry[0] !== '/') entry = `/~${entry}`
     const state = { ctx, parentId, ua, sessname, appkin }
@@ -1345,7 +1343,44 @@ const gui = {
     await instance.open(openOptions)
 
     return instance
-  },
+  }
+
+  static ctrls () { return Array.from(GuiCtrl[kMap].values()) }
+  static fromWebContents (wc) {
+    for (const [, ctrl] of GuiCtrl[kMap]) {
+      if (ctrl.view?.webContents === wc || ctrl.win?.webContents === wc) return ctrl
+    }
+    return null
+  }
+  static ofSession (session) {
+    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
+  }
+  static ofContext (ctx) {
+    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
+  }
+  static reportMode (ctx) {
+    const ctrls = this.ofContext(ctx)
+    for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
+  }
+  static chrome (name) {
+    const win = new electron.BrowserWindow({ show: true })
+    win.loadURL('chrome://' + name)
+  }
+
+
+  constructor () {
+    electron.ipcMain.on('id', async (event) => {
+      return (event.returnValue = event.sender.id)
+    })
+  
+    electron.ipcMain.on('parentId', (event) => {
+      const instance = this.get(event.sender.id)
+      return (event.returnValue = instance.parentId)
+    })
+  }
+  
+  has (id) { return GuiCtrl[kMap].has(id) }
+
   get (id) {
     const instance = GuiCtrl[kMap].get(id)
     if (!instance) {
@@ -1369,29 +1404,110 @@ const gui = {
       }
     }
     return instance
-  },
-  has (id) { return GuiCtrl[kMap].has(id) },
-  ctrls () { return Array.from(GuiCtrl[kMap].values()) },
-  fromWebContents (wc) {
-    for (const [, ctrl] of GuiCtrl[kMap]) {
-      if (ctrl.view?.webContents === wc || ctrl.win?.webContents === wc) return ctrl
-    }
-    return null
-  },
-  ofSession (session) {
-    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
-  },
-  ofContext (ctx) {
-    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
-  },
-  reportMode (ctx) {
-    const ctrls = gui.ofContext(ctx)
-    for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
-  },
-  chrome (name) {
-    const win = new electron.BrowserWindow({ show: true })
-    win.loadURL('chrome://' + name)
   }
+
+  getMediaAccessStatus ({ mediaType }) {
+    return electron.systemPreferences.getMediaAccessStatus(mediaType)
+  }
+
+  async askForMediaAccess (mediaType, client) {
+    if (mediaType === 'screen') return !!(await client.ctx.top.getMediaSourceId())
+    return electron.systemPreferences.askForMediaAccess(mediaType)
+  }
+
+  desktopSources (params) {
+    return electron.desktopCapturer.getSources(params)
+  }
+
+  chrome ({ name }) { return this.constructor.chrome(name) }
+  
+  async ctrl (params) {
+    const { parentId, type, entry, options = {}, openOptions } = params
+    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx, ua }, options, openOptions)
+    return instance.id
+  }
+
+  async parent ({ id, act, args }) {
+    const instance = this.get(id)
+    if (!instance) throw new Error(`Could not find parent with id "${id}" to perform action "${act}"!`)
+    if (act === 'focus') return instance.focus(...args)
+    if (act === 'blur') return instance.blur()
+    if (act === 'show') return instance.show()
+    if (act === 'hide') return instance.hide()
+    if (act === 'dimensions') return instance.dimensions(...args)
+    if (act === 'getMediaSourceId') return instance.getMediaSourceId()
+    if (act === 'isClosed') return instance.isClosed()
+    if (act === 'isVisible') return instance.isVisible()
+    if (act === 'isMinimized') return instance.isMinimized()
+    if (act === 'isMaximized') return instance.isMaximized()
+    if (act === 'isFullscreen') return instance.isFullscreen()
+  }
+
+  open ({ id, options }) { return this.get(id).open(options) }
+
+  close ({ id }) { return this.get(id).close() }
+
+  show ({ id }) { return this.get(id).show() }
+
+  hide ({ id }) { return this.get(id).hide() }
+
+  minimize ({ id }) { return this.get(id).minimize() }
+
+  maximize ({ id }) { return this.get(id).maximize() }
+
+  fullscreen ({ id }) { return this.get(id).fullscreen() }
+
+  restore ({ id }) { return this.get(id).restore() }
+
+  focus ({ id, options }) { return this.get(id).focus(options) }
+
+  blur ({ id }) { return this.get(id).blur() }
+
+  getMediaSourceId ({ id }) { return this.get(id).getMediaSourceId() }
+
+  dimensions ({ id, options }) { return this.get(id).dimensions(options) }
+
+  isVisible ({ id }) { return this.get(id).isVisible() }
+
+  isClosed ({ id }) { return (this.has(id)) ? this.get(id).isClosed() : true }
+
+  isMinimized ({ id }) { return this.get(id).isMinimized() }
+
+  isMaximized ({ id }) { return this.get(id).isMaximized() }
+
+  isFullscreen ({ id }) { return this.get(id).isFullscreen() }
+
+  async unloading ({ id }) {
+    const action = await this.get(id).unloading()
+    return action
+  }
+
+  async completeUnload ({ id , action }) {
+    const instance = this.get(id)
+    if (!instance) return
+    instance.completeUnload(action)
+  }
+
+  async attachMainView ({ id }) { this.get(id).attachMainView() }
+
+  async detachMainView ({ id }) { this.get(id).detachMainView() }
+
+  async afterViewLoaded ({ id }) {
+    return this.get(id).afterViewLoaded()
+  }
+
+  async setWindowButtonPosition ({ id , point }) {
+    const instance = this.get(id)
+    if (!instance) return
+    instance.setWindowButtonPosition(point)
+  }
+
+  async setWindowButtonVisibility ({ id , visible }) {
+    const instance = this.get(id)
+    if (!instance) return
+    instance.setWindowButtonVisibility(visible)
+  }
+
 }
 
-module.exports = gui
+module.exports = Gui
