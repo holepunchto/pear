@@ -6,6 +6,7 @@ const { SWAP, RUNTIME } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
 const { isWindows, isMac, isLinux } = require('which-runtime')
+const { spawnSync } = require('child_process')
 
 configureElectron()
 crasher('electron-main', SWAP)
@@ -179,7 +180,7 @@ function windowsSetup (executable) {
   const { spawnSync } = require('child_process')
 
   const PROTOCOL = 'pear'
-  const HANDLER_NAME = 'Pear Protocol'
+  const HANDLER_NAME = 'Pear Application'
   const HANDLER_COMMAND = `"${executable}" run "%1"`
 
   const REGISTRY_PATH = `HKCU\\Software\\Classes\\${PROTOCOL}`
