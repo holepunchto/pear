@@ -161,7 +161,7 @@ function linuxSetup (executable) {
     return `\
 [Desktop Entry]
 Name=${APP_NAME}
-Exec=${executable} run %U
+Exec=${executable} %U
 Terminal=false
 Icon=${ICON_NAME}
 Type=Application
@@ -180,7 +180,7 @@ function windowsSetup (executable) {
 
   const PROTOCOL = 'pear'
   const HANDLER_NAME = 'Pear Application'
-  const HANDLER_COMMAND = `"${executable}" run "%1"`
+  const HANDLER_COMMAND = `"${executable}" "%1"`
 
   const REGISTRY_PATH = `HKCU\\Software\\Classes\\${PROTOCOL}`
   const REGISTRY_COMMAND_PATH = `${REGISTRY_PATH}\\shell\\open\\command`
