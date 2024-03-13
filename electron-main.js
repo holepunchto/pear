@@ -2,7 +2,7 @@
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
-const { SWAP, RUNTIME } = require('./lib/constants')
+const { SWAP, WAKEUP } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
 const { isWindows, isMac, isLinux } = require('which-runtime')
@@ -42,11 +42,11 @@ async function electronMain () {
 function configureElectron () {
   const electron = require('electron')
   if (isLinux) {
-    linuxSetup(RUNTIME)
+    linuxSetup(WAKEUP)
   }
 
   if (isWindows) {
-    windowsSetup(RUNTIME)
+    windowsSetup(WAKEUP)
   }
 
   const appName = applingName()
