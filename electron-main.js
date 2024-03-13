@@ -169,7 +169,7 @@ Type=Application
 StartupWMClass=${APP_NAME}
 X-AppImage-Version=1.0.1
 Comment=${APP_NAME}
-MimeType=${MIME_TYPES.join(';')}
+MimeType=${MIME_TYPES.join(';')};
 `
   }
 }
