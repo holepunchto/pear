@@ -5,7 +5,9 @@ const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
 const { isMac, isWindows, isLinux } = require('which-runtime')
-const { FORCE_SHOW, ALIASES, BOOT } = require('../lib/constants')
+const RPC = require('pear-rpc')
+const streamx = require('streamx')
+const ReadyResource = require('ready-resource')
 const methods = require('./methods')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
@@ -345,9 +347,8 @@ class ContextMenu {
 
 electron.app.userAgentFallback = 'Pear Platform'
 
-class App {
+class App extends ReadyResource {
   menu = null
-  ready = false
   sidecar = null
   ctx = null
   rpc = null
@@ -355,9 +356,14 @@ class App {
   handle = null
   closing = null
   closed = false
+  appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
+  async _open () {
+    await this.starting
+  }
 
   constructor (ctx) {
+    super()
     this.ctx = ctx
     this.contextMenu = null
     electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
@@ -429,10 +435,9 @@ class App {
       process.exit(1)
     }
     try {
-      return await this.rpc.request({
-        channel: this.rpc.id + ':app:createReport',
+      return await this.rpc.createReport({
         args: [{ message: err.message, stack: err.stack, code: err.code, upgrade }]
-      }, this.rpc.id + ':app:createReport')
+      })
     } catch (rpcErr) {
       const timedout = rpcErr.name === 'TimeoutError' && rpcErr.code === rpcErr.TIMEOUT_ERR
       if (err?.code === 'ERR_FAILED') {
@@ -473,16 +478,15 @@ class App {
     })
 
     try {
-      if (this.ready === false) {
+      if (this.appReady === false) {
         await electron.app.whenReady()
         const name = ctx?.name || 'pear'
         this.name = name[0].toUpperCase() + name.slice(1)
-        this.allowRendererProcessReuse = false
-        this.ready = true
+        this.appReady = true
       }
 
       const { dev, trace, stage } = ctx
-      const show = FORCE_SHOW || (!trace && (dev || !stage))
+      const show = (!trace && (dev || !stage))
       const unfilteredGuiOptions = ctx.options.gui || ctx.options
       const guiOptions = {
         autoresize: unfilteredGuiOptions.autoresize,
@@ -583,8 +587,7 @@ class App {
             const { bail } = await this.starting
             if (bail) return false
 
-            ctx.update({ config: await rpc.request({ channel: `${id}:app:config` }) })
-
+            ctx.update({ config: await rpc.config() })
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
             if (app.closing) return false
             return true
@@ -649,8 +652,6 @@ class App {
     return electron.app.quit(code)
   }
 }
-
-module.exports = App
 
 function linuxViewSize ({ win, view }, tbh = 0) {
   const [width, height] = win.getSize()
@@ -766,7 +767,7 @@ class GuiCtrl {
   static [kCtrl] = null
   static [kMap] = new Map()
 
-  constructor (entry, options, { ctx, parentId, ua, sessname, appkin }) {
+  constructor (entry, options, { ctx, parentId, sessname, appkin }) {
     this.hidden = false
     this[kCtrl] = this.constructor[kCtrl]
     if (!entry) throw new Error(`No path provided, cannot open ${this[kCtrl]}`)
@@ -777,11 +778,9 @@ class GuiCtrl {
     this.id = null
     this.sidecar = this.ctx.sidecar
     this.entry = `${this.sidecar}${entry}`
-    this.ua = ua
     this.sessname = sessname
     this.appkin = appkin
-    if (ALIASES.keet.z32 === this.ctx.key?.z32) this.tbh = 0
-    else this.tbh = this.ctx.options.platform?.__legacyTitlebar ? 48 : 0
+    this.tbh = this.ctx.tbh
   }
 
   get session () {
@@ -965,7 +964,7 @@ class Window extends GuiCtrl {
       this.ctx = await this.appkin
       this.appkin = null
     }
-    const ua = this.ua || `Pear ${this.ctx.id}`
+    const ua = `Pear ${this.ctx.id}`
     const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
     session.setUserAgent(ua)
 
@@ -981,7 +980,7 @@ class Window extends GuiCtrl {
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
-        preload: BOOT,
+        preload: require.main.filename,
         ...(decal === false ? { session } : {}),
         partition: 'persist:pear',
         additionalArguments: [JSON.stringify({ ...this.ctx.config, isDecal: true })],
@@ -1045,7 +1044,7 @@ class Window extends GuiCtrl {
       ...(options.view || options),
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
-        preload: BOOT,
+        preload: require.main.filename,
         session,
         additionalArguments: [JSON.stringify({ ...this.ctx.config, parentWcId: this.win.webContents.id, decalled: true })],
         autoHideMenuBar: true,
@@ -1227,7 +1226,7 @@ class View extends GuiCtrl {
       this.ctx = await this.appkin
       this.appkin = null
     }
-    const ua = this.ua || `Pear ${this.ctx.id}`
+    const ua = `Pear ${this.ctx.id}`
     const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
     session.setUserAgent(ua)
 
@@ -1235,7 +1234,7 @@ class View extends GuiCtrl {
       ...(options?.view || options),
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
-        preload: BOOT,
+        preload: require.main.filename,
         session,
         additionalArguments: [JSON.stringify({ ...this.ctx.config, ...(options?.view?.config || options.config || {}), parentWcId: this.win.webContents.id })],
         autoHideMenuBar: true,
@@ -1327,11 +1326,69 @@ class View extends GuiCtrl {
   }
 }
 
-class Gui {
-  static App = App
+class Gui extends ReadyResource {
   static View = View
   static Window = Window
-  static methods = methods
+  constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
+    super()
+    const gui = this
+    this.ctx = ctx
+    this.scrpc = new RPC({
+      socketPath,
+      connectTimeout,
+      api: {
+        reports (method) {
+          return (params) => {
+            const stream = method.createRequestStream()
+            stream.once('data', () => { gui.reportMode(ctx) })
+            stream.write(params)
+            return stream
+          }
+        }
+      },
+      tryboot
+    })
+    this.stream = new streamx.PassThrough()
+    this.rpc = new RPC({
+      stream: this.stream,
+      handlers: this,
+      unhandled: (def, params) => this.scrpc[def.name](params),
+      methods,
+      userData: { ctx }
+    })
+
+    electron.ipcMain.on('rpc', (event, data) => {
+      this.stream.on('data', (data) => event.reply('rpc', data))
+      this.stream.push(data)
+    })
+
+    electron.ipcMain.on('id', async (event) => {
+      return (event.returnValue = event.sender.id)
+    })
+
+    electron.ipcMain.on('parentId', (event) => {
+      const instance = this.get(event.sender.id)
+      return (event.returnValue = instance.parentId)
+    })
+  }
+
+  app () {
+    const app = new App(this.ctx)
+    this.rpc.once('close', async () => { app.quit() })
+    app.start(this.rpc).catch(console.error)
+    return app
+  }
+
+  async _open () {
+    await this.scrpc.ready()
+    await this.rpc.ready()
+  }
+
+  async _close () {
+    await this.rpc.close()
+    await this.scrpc.close()
+  }
+
   static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
     ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
@@ -1352,33 +1409,25 @@ class Gui {
     }
     return null
   }
+
   static ofSession (session) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
   }
+
   static ofContext (ctx) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
   }
+
   static reportMode (ctx) {
     const ctrls = this.ofContext(ctx)
     for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
   }
+
   static chrome (name) {
     const win = new electron.BrowserWindow({ show: true })
     win.loadURL('chrome://' + name)
   }
 
-
-  constructor () {
-    electron.ipcMain.on('id', async (event) => {
-      return (event.returnValue = event.sender.id)
-    })
-  
-    electron.ipcMain.on('parentId', (event) => {
-      const instance = this.get(event.sender.id)
-      return (event.returnValue = instance.parentId)
-    })
-  }
-  
   has (id) { return GuiCtrl[kMap].has(id) }
 
   get (id) {
@@ -1420,10 +1469,10 @@ class Gui {
   }
 
   chrome ({ name }) { return this.constructor.chrome(name) }
-  
+
   async ctrl (params) {
-    const { parentId, type, entry, options = {}, openOptions } = params
-    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx, ua }, options, openOptions)
+    const { parentId, type, entry, options = {}, openOptions, ctx } = params
+    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx }, options, openOptions)
     return instance.id
   }
 
@@ -1482,7 +1531,7 @@ class Gui {
     return action
   }
 
-  async completeUnload ({ id , action }) {
+  async completeUnload ({ id, action }) {
     const instance = this.get(id)
     if (!instance) return
     instance.completeUnload(action)
@@ -1496,18 +1545,17 @@ class Gui {
     return this.get(id).afterViewLoaded()
   }
 
-  async setWindowButtonPosition ({ id , point }) {
+  async setWindowButtonPosition ({ id, point }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonPosition(point)
   }
 
-  async setWindowButtonVisibility ({ id , visible }) {
+  async setWindowButtonVisibility ({ id, visible }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
-
 }
 
 module.exports = Gui

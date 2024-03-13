@@ -14,12 +14,19 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
 
+  const streamx = require('streamx')
   const RPC = require('pear-rpc')
-  const API = require('./gui/api')
+  const API = require('./lib/api')
   const rpc = new RPC({
-    methods: API.methods
-
+    methods: API.methods,
+    stream: new streamx.Duplex({
+      write (data, cb) {
+        electron.ipcRenderer.send('rpc', data)
+        cb()
+      }
+    })
   })
+  electron.ipcRenderer.on('rpc', (e, data) => rpc.stream.push(Buffer.from(data)))
   window.Pear = new API(rpc, ctx, async (fn) => {
     if (isDecal === false) return
     const action = await rpc.unloading() // only resolves when unloading occurs
@@ -31,21 +38,20 @@ if (process.isMainFrame) {
     else if (action.type === 'nav') location.href = action.url
     await rpc.completeUnload(action)
   })
+  window.Pear._ready()
 
-  const ipc = Pear[Symbol.for('pear.ipc')]
   if (isDecal === false) {
-
     Object.assign(process.env, env)
     process.chdir(cwd)
 
     const syncConfig = async () => {
+      await rpc.ready()
       for await (const config of rpc.reconfig()) {
         Object.assign(window[Symbol.for('pear.config')], config)
       }
     }
 
     syncConfig().catch(console.error)
-    unload().catch(console.error)
   }
 
   {
@@ -130,7 +136,8 @@ if (process.isMainFrame) {
   })
 
   async function warm () {
-    for await (const { batch, protocol } of ipc.app.warming()) {
+    await rpc.ready()
+    for await (const { batch, protocol } of rpc.warming()) {
       let sl = null
       if (protocol === 'pear' || protocol === 'holepunch') sl = pltsl
       if (protocol === 'app') sl = appsl

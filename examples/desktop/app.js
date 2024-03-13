@@ -1,4 +1,5 @@
 /* global Pear */
+await Pear._ready()
 const { versions, config, updates, wakeups, Window } = Pear
 
 console.log('link', config.link)

@@ -1,9 +1,8 @@
 'use strict'
 const electron = require('electron')
-const RPC = require('pear-rpc')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const Context = require('./ctx/shared')
-const Gui = require('./gui')
+const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, RUNTIME, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
@@ -23,42 +22,28 @@ async function electronMain () {
     electron.app.quit(1)
     return
   }
-  // create another RPC, lib/gui Gui.RPC , with PassThrough stream and handlers matching ipc/main
-  // then pipeline(rpc.stream, guirpc.stream, rpc.stream)
-  // if necessary can also hookup incoming electron ipc to guirpc stream in lib/gui
-  // lib/gui guirpc becomes part of pear-gui, pear-gui/rpc maybe?
-  const gui = new Gui()
-  const rpc = new RPC({
+  const gui = new GUI({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
-    handlers: gui,
-    methods: Gui.methods,
-    userData: { ctx },
-    api: {
-      reports (method) {
-        return (params) => {
-          const stream = method.createRequestStream()
-          stream.once('data', () => { gui.reportMode(ctx) })
-          stream.write(params)
-          return stream
-        }
-      }
-    },
-    tryboot
+    tryboot,
+    ctx
   })
-  await rpc.ready()
+  await gui.ready()
+
+  const { rpc } = gui
+
   // note: would be unhandled rejection on failure, but should never fail:
   if (await rpc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
     electron.app.quit(0)
     return
   }
 
-  const app = new Gui.App(ctx)
-  rpc.once('close', async () => { app.quit() })
-  app.start(rpc).catch(console.error)
-  await app.starting
-  rpc.unloading().then(() => {
-    app.close()
+  const app = gui.app()
+
+  await app.ready()
+
+  rpc.unloading({ id: ctx.id }).then(() => {
+    // app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
