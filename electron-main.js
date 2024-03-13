@@ -3,10 +3,9 @@ const { isWindows, isMac, isLinux } = require('which-runtime')
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
-const { SWAP, WAKEUP } = require('./lib/constants')
+const { SWAP } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
-const registerUrlHandler = require('./lib/url-handler')
 
 configureElectron()
 crasher('electron-main', SWAP)
@@ -42,8 +41,6 @@ async function electronMain () {
 
 function configureElectron () {
   const electron = require('electron')
-
-  registerUrlHandler(WAKEUP)
 
   const appName = applingName()
   if (appName) {

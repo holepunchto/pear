@@ -5,7 +5,16 @@ const Hyperdrive = require('hyperdrive')
 const HypercoreID = require('hypercore-id-encoding')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
-const { SWAP, PLATFORM_CORESTORE, CHECKOUT, LOCALDEV, UPGRADE_LOCK, PLATFORM_DIR } = require('./lib/constants.js')
+const {
+  SWAP,
+  PLATFORM_CORESTORE,
+  CHECKOUT,
+  LOCALDEV,
+  UPGRADE_LOCK,
+  PLATFORM_DIR,
+  WAKEUP
+} = require('./lib/constants.js')
+const registerUrlHandler = require('./lib/url-handler')
 
 crasher('sidecar', SWAP)
 module.exports = bootSidecar().catch((err) => {
@@ -23,6 +32,8 @@ async function bootSidecar () {
   const updater = createUpdater()
   const sidecar = new SidecarIPC({ updater, drive, corestore })
   await sidecar.listen()
+
+  registerUrlHandler(WAKEUP)
 
   function createUpdater () {
     if (LOCALDEV) return null
