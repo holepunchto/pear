@@ -109,9 +109,9 @@ function linuxSetup (executable) {
   const os = require('os')
   const { join } = require('path')
   const { spawnSync } = require('child_process')
-  const APP_NAME = 'Keet'
-  const ICON_NAME = 'keet'
-  const DESKTOP_FILE_NAME = 'keet.desktop'
+  const APP_NAME = 'Pear'
+  const ICON_NAME = 'pear'
+  const DESKTOP_FILE_NAME = 'pear.desktop'
   const DESKTOP_FILE_PATH = join(os.homedir(), '.local', 'share', 'applications', DESKTOP_FILE_NAME)
   const MIME_TYPES = [
     'x-scheme-handler/pear' // pear
