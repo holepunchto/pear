@@ -6,7 +6,6 @@ const { SWAP, RUNTIME } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
 const { isWindows, isMac, isLinux } = require('which-runtime')
-const { spawnSync } = require('child_process')
 
 configureElectron()
 crasher('electron-main', SWAP)
