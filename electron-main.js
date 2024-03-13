@@ -46,12 +46,7 @@ function configureElectron () {
   }
 
   if (isWindows) {
-    const ap = applingPath()
-    if (ap) {
-      electron.app.setAsDefaultProtocolClient('holepunch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('punch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('pear', ap)
-    }
+    windowsSetup(RUNTIME)
   }
 
   const appName = applingName()
@@ -176,5 +171,28 @@ function linuxSetup (executable) {
   Comment=${APP_NAME}
   MimeType=${MIME_TYPES.join(';')}
   `
+  }
+}
+
+function windowsSetup (executable) {
+  if (!executable) return
+
+  const { spawnSync } = require('child_process')
+
+  const PROTOCOL = 'pear'
+  const HANDLER_NAME = 'Pear Protocol'
+  const HANDLER_COMMAND = `"${executable}" "%1"`
+
+  const REGISTRY_PATH = `HKCU\\Software\\Classes\\${PROTOCOL}`
+  const REGISTRY_COMMAND_PATH = `${REGISTRY_PATH}\\shell\\open\\command`
+
+  try {
+    if (spawnSync('reg', ['query', REGISTRY_PATH]).status === 0) return
+
+    spawnSync('reg', ['add', REGISTRY_PATH, '/v', 'URL Protocol', '/t', 'REG_SZ', '/d', '', '/f'])
+    spawnSync('reg', ['add', REGISTRY_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_NAME, '/f'])
+    spawnSync('reg', ['add', REGISTRY_COMMAND_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_COMMAND, '/f'])
+  } catch (err) {
+    console.warn('could not install protocol handler:', err)
   }
 }
