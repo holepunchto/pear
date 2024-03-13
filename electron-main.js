@@ -180,7 +180,7 @@ function windowsSetup (executable) {
 
   const PROTOCOL = 'pear'
   const HANDLER_NAME = 'Pear Protocol'
-  const HANDLER_COMMAND = `"${executable}" "%1"`
+  const HANDLER_COMMAND = `"${executable}" run "%1"`
 
   const REGISTRY_PATH = `HKCU\\Software\\Classes\\${PROTOCOL}`
   const REGISTRY_COMMAND_PATH = `${REGISTRY_PATH}\\shell\\open\\command`
