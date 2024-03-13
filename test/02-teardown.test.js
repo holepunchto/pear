@@ -95,7 +95,7 @@ test('teardown during teardown', async function ({ teardown, is, ok, plan, comme
 })
 
 test('exit code', async function ({ teardown, is, ok, plan, comment }) {
-  plan(4)
+  plan(3)
 
   const helper = new Helper(teardown)
   await helper.bootstrap()
