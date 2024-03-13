@@ -160,17 +160,17 @@ function linuxSetup (executable) {
 
   function generateDesktopFile (executable) {
     return `\
-  [Desktop Entry]
-  Name=${APP_NAME}
-  Exec=${executable} %U
-  Terminal=false
-  Icon=${ICON_NAME}
-  Type=Application
-  StartupWMClass=${APP_NAME}
-  X-AppImage-Version=1.0.1
-  Comment=${APP_NAME}
-  MimeType=${MIME_TYPES.join(';')}
-  `
+[Desktop Entry]
+Name=${APP_NAME}
+Exec=${executable} run %U
+Terminal=false
+Icon=${ICON_NAME}
+Type=Application
+StartupWMClass=${APP_NAME}
+X-AppImage-Version=1.0.1
+Comment=${APP_NAME}
+MimeType=${MIME_TYPES.join(';')}
+`
   }
 }
 
