@@ -187,11 +187,17 @@ function windowsSetup (executable) {
   const REGISTRY_COMMAND_PATH = `${REGISTRY_PATH}\\shell\\open\\command`
 
   try {
-    if (spawnSync('reg', ['query', REGISTRY_PATH]).status === 0) return
+    if (spawnSync('reg', ['query', REGISTRY_PATH, '/v', 'URL Protocol']).status !== 0) {
+      spawnSync('reg', ['add', REGISTRY_PATH, '/v', 'URL Protocol', '/t', 'REG_SZ', '/d', '', '/f'])
+      spawnSync('reg', ['add', REGISTRY_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_NAME, '/f'])
+    }
 
-    spawnSync('reg', ['add', REGISTRY_PATH, '/v', 'URL Protocol', '/t', 'REG_SZ', '/d', '', '/f'])
-    spawnSync('reg', ['add', REGISTRY_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_NAME, '/f'])
-    spawnSync('reg', ['add', REGISTRY_COMMAND_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_COMMAND, '/f'])
+    const currentHandler = spawnSync('reg', ['query', REGISTRY_COMMAND_PATH])
+      .stdout.toString()?.match(/REG_SZ\s+"([^"]+)"/)?.[1]
+
+    if (currentHandler !== HANDLER_COMMAND) {
+      spawnSync('reg', ['add', REGISTRY_COMMAND_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_COMMAND, '/f'])
+    }
   } catch (err) {
     console.warn('could not install protocol handler:', err)
   }
