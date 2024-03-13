@@ -133,8 +133,7 @@ function linuxSetup (executable) {
 
   function checkDesktopFile () {
     try {
-      fs.statSync(DESKTOP_FILE_PATH)
-      return true
+      return fs.readFileSync(DESKTOP_FILE_PATH, 'utf-8').includes(`Exec=${executable} run %U`)
     } catch (err) {
       if (err.code !== 'ENOENT') throw err
       return false
