@@ -5,7 +5,9 @@ const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
 const { isMac, isWindows, isLinux } = require('which-runtime')
-const { FORCE_SHOW, ALIASES, BOOT } = require('../lib/constants')
+const RPC = require('pear-rpc')
+const streamx = require('streamx')
+const ReadyResource = require('ready-resource')
 const methods = require('./methods')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
@@ -345,7 +347,7 @@ class ContextMenu {
 
 electron.app.userAgentFallback = 'Pear Platform'
 
-class App {
+class App extends ReadyResource {
   menu = null
   sidecar = null
   ctx = null
@@ -356,10 +358,13 @@ class App {
   closed = false
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
+  async _open () {
+    await this.starting
+  }
 
-  constructor (ctx, ipc) {
+  constructor (ctx) {
+    super()
     this.ctx = ctx
-    this.ipc = ipc
     this.contextMenu = null
     electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
 
@@ -430,10 +435,9 @@ class App {
       process.exit(1)
     }
     try {
-      return await this.rpc.request({
-        channel: this.rpc.id + ':app:createReport',
+      return await this.rpc.createReport({
         args: [{ message: err.message, stack: err.stack, code: err.code, upgrade }]
-      }, this.rpc.id + ':app:createReport')
+      })
     } catch (rpcErr) {
       const timedout = rpcErr.name === 'TimeoutError' && rpcErr.code === rpcErr.TIMEOUT_ERR
       if (err?.code === 'ERR_FAILED') {
@@ -470,7 +474,7 @@ class App {
 
     this.starting.catch(async (err) => {
       await this.report({ err })
-      this.close()
+      this.destroy()
     })
 
     try {
@@ -481,7 +485,7 @@ class App {
         this.appReady = true
       }
 
-      const { dev, devtools, trace, stage } = ctx
+      const { dev, trace, stage } = ctx
       const show = (!trace && (dev || !stage))
       const unfilteredGuiOptions = ctx.options.gui || ctx.options
       const guiOptions = {
@@ -528,7 +532,7 @@ class App {
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      await Gui.ctrl('window', entry, { ctx }, {
+      await PearGUI.ctrl('window', entry, { ctx }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -559,7 +563,7 @@ class App {
           }
         },
         afterNativeWindowClose: () => this.close(),
-        afterNativeViewCreated: devtools && ((app) => {
+        afterNativeViewCreated: dev && ((app) => {
           if (trace) return
           if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
 
@@ -568,7 +572,7 @@ class App {
         afterNativeViewLoaded: (trace
           ? async () => {
             await new Promise((resolve) => setTimeout(resolve, 750)) // time for final blocks to be received
-            this.close()
+            this.destroy()
             this.quit()
           }
           : (isLinux ? (app) => linuxViewSize(app, app.tbh) : null)),
@@ -583,25 +587,23 @@ class App {
             const { bail } = await this.starting
             if (bail) return false
 
-            ctx.update({ config: await rpc.request({ channel: `${id}:app:config` }) })
-
+            ctx.update({ config: await rpc.config() })
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
             if (app.closing) return false
             return true
           } catch (err) {
             await this.report({ err })
-            await this.close()
+            await this.destroy()
             return false
           }
         }
       })
-      this.id = ctrl.id
+
       await this.starting
+      this.starting = null
     } catch (err) {
       await this.report({ err })
-      this.close()
-    } finally {
-      this.starting = null
+      this.destroy()
     }
   }
 
@@ -626,7 +628,7 @@ class App {
       }
     })
 
-    const unloaders = Gui.ctrls().map((ctrl) => {
+    const unloaders = PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -900,6 +902,7 @@ class GuiCtrl {
   isMinimized () { return false }
   isFullscreen () { return false }
   isVisible () { return !this.hidden }
+
   async unloading () {
     const { webContents } = (this.view || this.win)
     const until = new Promise((resolve) => { this.unload = resolve })
@@ -1323,11 +1326,70 @@ class View extends GuiCtrl {
   }
 }
 
-class Gui {
-  static App = App
+class PearGUI extends ReadyResource {
   static View = View
   static Window = Window
-  static methods = methods
+  constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
+    super()
+    const gui = this
+    this.ctx = ctx
+    this.scrpc = new RPC({
+      socketPath,
+      connectTimeout,
+      api: {
+        reports (method) {
+          return (params) => {
+            const stream = method.createRequestStream()
+            stream.once('data', () => { gui.reportMode(ctx) })
+            stream.write(params)
+            return stream
+          }
+        }
+      },
+      tryboot
+    })
+    this.stream = new streamx.PassThrough()
+    this.rpc = new RPC({
+      stream: this.stream,
+      handlers: this,
+      unhandled: (def, params) => this.scrpc[def.name](params),
+      unhandledStreamClose: (data) => {/*this.scrpc.stream.write(data)*/},
+      methods,
+      userData: { ctx }
+    })
+
+    electron.ipcMain.on('rpc', (event, data) => {
+      this.stream.on('data', (data) => event.reply('rpc', data))
+      this.stream.push(data)
+    })
+
+    electron.ipcMain.on('id', async (event) => {
+      return (event.returnValue = event.sender.id)
+    })
+
+    electron.ipcMain.on('parentId', (event) => {
+      const instance = this.get(event.sender.id)
+      return (event.returnValue = instance.parentId)
+    })
+  }
+
+  app () {
+    const app = new App(this.ctx)
+    this.rpc.once('close', async () => { app.quit() })
+    app.start(this.rpc).catch(console.error)
+    return app
+  }
+
+  async _open () {
+    await this.scrpc.ready()
+    await this.rpc.ready()
+  }
+
+  async _close () {
+    await this.rpc.close()
+    await this.scrpc.close()
+  }
+
   static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
     ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
@@ -1348,33 +1410,25 @@ class Gui {
     }
     return null
   }
+
   static ofSession (session) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
   }
+
   static ofContext (ctx) {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
   }
+
   static reportMode (ctx) {
     const ctrls = this.ofContext(ctx)
     for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
   }
+
   static chrome (name) {
     const win = new electron.BrowserWindow({ show: true })
     win.loadURL('chrome://' + name)
   }
 
-
-  constructor () {
-    electron.ipcMain.on('id', async (event) => {
-      return (event.returnValue = event.sender.id)
-    })
-  
-    electron.ipcMain.on('parentId', (event) => {
-      const instance = this.get(event.sender.id)
-      return (event.returnValue = instance.parentId)
-    })
-  }
-  
   has (id) { return GuiCtrl[kMap].has(id) }
 
   get (id) {
@@ -1382,7 +1436,7 @@ class Gui {
     if (!instance) {
       return {
         ghost: true,
-        guiClose () { return false },
+        close () { return false },
         show () { return false },
         hide () { return false },
         focus () { return false },
@@ -1416,10 +1470,10 @@ class Gui {
   }
 
   chrome ({ name }) { return this.constructor.chrome(name) }
-  
+
   async ctrl (params) {
-    const { parentId, type, entry, options = {}, openOptions } = params
-    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx, ua }, options, openOptions)
+    const { parentId, type, entry, options = {}, openOptions, ctx } = params
+    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx }, options, openOptions)
     return instance.id
   }
 
@@ -1478,7 +1532,7 @@ class Gui {
     return action
   }
 
-  async completeUnload ({ id , action }) {
+  async completeUnload ({ id, action }) {
     const instance = this.get(id)
     if (!instance) return
     instance.completeUnload(action)
@@ -1492,18 +1546,17 @@ class Gui {
     return this.get(id).afterViewLoaded()
   }
 
-  async setWindowButtonPosition ({ id , point }) {
+  async setWindowButtonPosition ({ id, point }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonPosition(point)
   }
 
-  async setWindowButtonVisibility ({ id , visible }) {
+  async setWindowButtonVisibility ({ id, visible }) {
     const instance = this.get(id)
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
-
 }
 
-module.exports = Gui
+module.exports = PearGUI
