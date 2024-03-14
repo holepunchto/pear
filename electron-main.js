@@ -1,11 +1,11 @@
 'use strict'
+const { isWindows, isMac, isLinux } = require('which-runtime')
 const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
 const { App } = require('./lib/gui')
-const { SWAP, RUNTIME } = require('./lib/constants')
+const { SWAP } = require('./lib/constants')
 const crasher = require('./lib/crasher')
 const connect = require('./lib/connect.js')
-const { isWindows, isMac, isLinux } = require('which-runtime')
 
 configureElectron()
 crasher('electron-main', SWAP)
@@ -41,18 +41,6 @@ async function electronMain () {
 
 function configureElectron () {
   const electron = require('electron')
-  if (isLinux) {
-    linuxSetup(RUNTIME)
-  }
-
-  if (isWindows) {
-    const ap = applingPath()
-    if (ap) {
-      electron.app.setAsDefaultProtocolClient('holepunch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('punch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('pear', ap)
-    }
-  }
 
   const appName = applingName()
   if (appName) {
@@ -107,74 +95,4 @@ function applingName () {
   }
 
   return null
-}
-
-function linuxSetup (executable) {
-  const fs = require('fs')
-  const os = require('os')
-  const { join } = require('path')
-  const { spawnSync } = require('child_process')
-  const APP_NAME = 'Keet'
-  const ICON_NAME = 'keet'
-  const DESKTOP_FILE_NAME = 'keet.desktop'
-  const DESKTOP_FILE_PATH = join(os.homedir(), '.local', 'share', 'applications', DESKTOP_FILE_NAME)
-  const MIME_TYPES = [
-    'x-scheme-handler/pear' // pear
-  ]
-
-  if (!executable) return
-  try {
-    if (!checkDesktopFile(executable)) {
-      fs.writeFileSync(DESKTOP_FILE_PATH, generateDesktopFile(executable), { encoding: 'utf-8' })
-    }
-    for (const mimeType of MIME_TYPES) {
-      if (!checkMimeType(mimeType)) {
-        registerMimeType(mimeType)
-      }
-    }
-  } catch (err) {
-    console.warn('could not install protocol handler:', err)
-  }
-
-  function checkDesktopFile () {
-    try {
-      fs.statSync(DESKTOP_FILE_PATH)
-      return true
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err
-      return false
-    }
-  }
-
-  function checkMimeType (mimeType) {
-    try {
-      return spawnSync('xdg-mime', ['query', 'default', mimeType]).stdout.toString() === DESKTOP_FILE_NAME
-    } catch {
-      return false
-    }
-  }
-
-  function registerMimeType (mimeType) {
-    try {
-      spawnSync('xdg-mime', ['default', DESKTOP_FILE_NAME, mimeType])
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  function generateDesktopFile (executable) {
-    return `\
-  [Desktop Entry]
-  Name=${APP_NAME}
-  Exec=${executable} %U
-  Terminal=false
-  Icon=${ICON_NAME}
-  Type=Application
-  StartupWMClass=${APP_NAME}
-  X-AppImage-Version=1.0.1
-  Comment=${APP_NAME}
-  MimeType=${MIME_TYPES.join(';')}
-  `
-  }
 }
