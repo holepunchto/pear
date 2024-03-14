@@ -2,43 +2,24 @@
 /* global Pear */
 /* eslint-env node, browser */
 if (process.isMainFrame) {
+  const electron = require('electron')
   const timers = require('timers')
   const runtime = require('script-linker/runtime')
-  const gunk = require('./lib/gunk')
-  const electron = require('electron')
   const { isMac, isWindows, platform } = require('which-runtime')
+  const GUI = require('./gui')
+  const API = require('./lib/api')
+  const gunk = require('./lib/gunk')
+
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
   const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = ctx
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
-
-  const streamx = require('streamx')
-  const RPC = require('pear-rpc')
-  const API = require('./lib/api')
-  const rpc = new RPC({
-    methods: API.methods,
-    stream: new streamx.Duplex({
-      write (data, cb) {
-        electron.ipcRenderer.send('rpc', data)
-        cb()
-      }
-    })
-  })
-  electron.ipcRenderer.on('rpc', (e, data) => rpc.stream.push(Buffer.from(data)))
-  window.Pear = new API(rpc, ctx, async (fn) => {
-    if (isDecal === false) return
-    const action = await rpc.unloading() // only resolves when unloading occurs
-    fn(action) // resolve global promise and trigger user suspend functions
-    const MAX_TEARDOWN_WAIT = 5000
-    const timeout = new Promise((resolve) => setTimeout(resolve, MAX_TEARDOWN_WAIT))
-    await Promise.race([window[Symbol.for('pear.unloading')], timeout])
-    if (action.type === 'reload') location.reload()
-    else if (action.type === 'nav') location.href = action.url
-    await rpc.completeUnload(action)
-  })
-  window.Pear._ready()
+  ctx.config = config
+  const gui = new GUI({ API, ctx })
+  const rpc = gui.rpc
+  window.Pear = gui.api
 
   if (isDecal === false) {
     Object.assign(process.env, env)
