@@ -1,5 +1,15 @@
 # Pear Runtime Changelog
 
+## v1.1.2
+
+### Fixes
+
+* Windows & Linux - deep link click handling
+* Windows - icon fix, shows appling icon
+* Decal - constants in decal error fix 
+* Bare - always link vcruntime statically
+* Bare - custom inspect
+* Bare - fixes issues relating to early exiting
 
 ## v1.1.1
 
