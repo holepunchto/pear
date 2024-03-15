@@ -32,8 +32,6 @@ class Helper {
     this.socketPath = isWindows ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
     this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
     this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
-
-    if (this.logging) this.argv.push('--attach-boot-io')
   }
 
   static IPC_ID = 'pear'
@@ -89,6 +87,7 @@ class Helper {
     }
 
     function onconnect () {
+      if (this.logging) console.log('bootpipe connected to sidecar')
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       clearTimeout(timeout)

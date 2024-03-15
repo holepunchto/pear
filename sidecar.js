@@ -17,7 +17,9 @@ const {
 const registerUrlHandler = require('./lib/url-handler')
 
 crasher('sidecar', SWAP)
-module.exports = bootSidecar().catch((err) => {
+module.exports = bootSidecar().then(() => {
+  console.log('- Sidecar successfully booted')
+}).catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
 })
