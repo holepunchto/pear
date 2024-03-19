@@ -158,6 +158,22 @@ class Helper {
     return this.client.request('closeClients')
   }
 
+  async accessLock () {
+    const pdir = this.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve(fd)
+    }))
+
+    const granted = fsext.tryLock(fd)
+    if (granted) fsext.unlock(fd)
+
+    return granted
+  }
+
   async shutdown () {
     if (this.client.closed) return
     this.client.notify('shutdown')
