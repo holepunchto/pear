@@ -118,7 +118,7 @@ module.exports = class IPC {
       console.log('Platform update Available. Restart to update to:')
     }
 
-    console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
+    console.log('  v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
     const messaged = new Set()
@@ -135,6 +135,7 @@ module.exports = class IPC {
         app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         continue
       }
+      if (info.link) continue
       app.notify({ type: 'pear/updates', app: false, version, diff: null })
       app.message({ type: 'pear/updates', app: false, version, diff: null })
     }
