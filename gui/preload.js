@@ -4,7 +4,7 @@ const { EventEmitter } = require('events')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
 const streamx = require('streamx')
-const RPC = require('pear-rpc')
+const RPC = require('pear-ipc')
 const methods = require('./methods')
 
 module.exports = class PearGUI extends ReadyResource {
