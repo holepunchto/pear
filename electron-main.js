@@ -5,7 +5,7 @@ const Context = require('./ctx/shared')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
-const { SWAP, RUNTIME, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
 
 configureElectron()
 crasher('electron-main', SWAP)
@@ -30,10 +30,8 @@ async function electronMain () {
   })
   await gui.ready()
 
-  const { rpc } = gui
-
   // note: would be unhandled rejection on failure, but should never fail:
-  if (await rpc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
+  if (await gui.scipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
     electron.app.quit(0)
     return
   }
@@ -42,7 +40,7 @@ async function electronMain () {
 
   await app.ready()
 
-  rpc.unloading({ id: ctx.id }).then(() => {
+  gui.emipc.unloading({ id: ctx.id }).then(() => {
     // app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }

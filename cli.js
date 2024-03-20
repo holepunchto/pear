@@ -12,7 +12,7 @@ async function cli () {
   const rpc = new RPC({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
-    tryboot
+    connect: tryboot
   })
   await rpc.ready()
   await cmd(rpc)

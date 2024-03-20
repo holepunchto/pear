@@ -7,6 +7,7 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
   const GUI = require('./gui')
+  const constants = require('./lib/constants')
   const API = require('./lib/api')
   const gunk = require('./lib/gunk')
 
@@ -17,22 +18,12 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   ctx.config = config
-  const gui = new GUI({ API, ctx })
-  const rpc = gui.rpc
+  const gui = new GUI({ socketPath: constants.SOCKET_PATH, connectTimeout: constants.CONNECT_TIMEOUT, API, ctx })
   window.Pear = gui.api
 
   if (isDecal === false) {
     Object.assign(process.env, env)
     process.chdir(cwd)
-
-    const syncConfig = async () => {
-      await rpc.ready()
-      for await (const config of rpc.reconfig()) {
-        Object.assign(window[Symbol.for('pear.config')], config)
-      }
-    }
-
-    syncConfig().catch(console.error)
   }
 
   {
@@ -117,8 +108,8 @@ if (process.isMainFrame) {
   })
 
   async function warm () {
-    await rpc.ready()
-    for await (const { batch, protocol } of rpc.warming()) {
+    await gui.ready()
+    for await (const { batch, protocol } of gui.scipc.warming()) {
       let sl = null
       if (protocol === 'pear' || protocol === 'holepunch') sl = pltsl
       if (protocol === 'app') sl = appsl
@@ -140,14 +131,14 @@ if (process.isMainFrame) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async () => {
           const { x, y } = ctrl.getBoundingClientRect()
-          await rpc.setWindowButtonPosition({ x, y: y - 6 })
+          await gui.emipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         })
         this.mutations.observe(this, { attributes: true })
 
         this.intesections = new IntersectionObserver(async ([element]) => {
-          await rpc.setWindowButtonVisibility(element.isIntersecting)
+          await gui.emipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
           const { x, y } = ctrl.getBoundingClientRect()
-          await rpc.setWindowButtonPosition({ x, y: y - 6 })
+          await gui.emipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         }, { threshold: 0 })
 
         this.intesections.observe(this)

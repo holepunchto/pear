@@ -749,11 +749,11 @@
         async start (rpc, config) {
           this.show()
           this.rpc = rpc
-          await rpc.afterViewLoaded(Pear.Window.self.id)
+          await rpc.afterViewLoaded({ id: Pear.Window.self.id })
           document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
-          await rpc.attachMainView(Pear.Window.self.id)
+          await rpc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
           super()

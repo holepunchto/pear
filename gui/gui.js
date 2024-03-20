@@ -88,7 +88,7 @@ class Menu {
         click: async () => {
           if (app.ctx.devtools === true) {
             await app.ctx.update({ devtools: false })
-            for (const { contentView } of Gui.ofSession(app.handle?.session)) {
+            for (const { contentView } of PearGUI.ofSession(app.handle?.session)) {
               await contentView.webContents.closeDevTools()
             }
           } else {
@@ -121,7 +121,7 @@ class Menu {
           if (!win) return // no windows selected, nothing to do
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
-          for (const ctrl of Gui.ofSession(session)) {
+          for (const ctrl of PearGUI.ofSession(session)) {
             await ctrl.close()
           }
         }
@@ -351,7 +351,7 @@ class App extends ReadyResource {
   menu = null
   sidecar = null
   ctx = null
-  rpc = null
+  ipc = null
   id = null
   handle = null
   closing = null
@@ -400,7 +400,7 @@ class App extends ReadyResource {
       })
 
       wc.on('context-menu', (e, { x, y }) => {
-        const ctrl = Gui.fromWebContents(wc)
+        const ctrl = PearGUI.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
@@ -423,7 +423,7 @@ class App extends ReadyResource {
   async report ({ err, upgrade }) {
     err = err?.remote || err || new Error(`Unknown error: "${err}"`)
     const x = '\x1B[31m✖ \x1B[39m'
-    const pregui = this.handle === null || this.rpc.open === false
+    const pregui = this.handle === null || this.open === false
     if (pregui) {
       if (err.code === 'ERR_CONNECTION') {
         console.error(`${x} Connection Error\n   * check network connection\n   * check run key`)
@@ -435,11 +435,11 @@ class App extends ReadyResource {
       process.exit(1)
     }
     try {
-      return await this.rpc.createReport({
+      return await this.ipc.createReport({
         args: [{ message: err.message, stack: err.stack, code: err.code, upgrade }]
       })
-    } catch (rpcErr) {
-      const timedout = rpcErr.name === 'TimeoutError' && rpcErr.code === rpcErr.TIMEOUT_ERR
+    } catch (ipcErr) {
+      const timedout = ipcErr.name === 'TimeoutError' && ipcErr.code === ipcErr.TIMEOUT_ERR
       if (err?.code === 'ERR_FAILED') {
         console.error('Failed to load app (or app was closed early)')
         return
@@ -447,13 +447,13 @@ class App extends ReadyResource {
       if (err.code === 'E_HALTED') return
       if (err) console.error(`${x} Platform`, err)
       else if (err && timedout) return
-      if (rpcErr.code === 'E_HALTED') return
-      console.error(`${x} Platform IPC`, rpcErr)
+      if (ipcErr.code === 'E_HALTED') return
+      console.error(`${x} Platform IPC`, ipcErr)
     }
   }
 
-  async start (rpc) {
-    this.rpc = rpc
+  async start (ipc) {
+    this.ipc = ipc
 
     electron.app.once('will-quit', async (e) => {
       if (this.closing === null && this.closed === false) {
@@ -465,7 +465,7 @@ class App extends ReadyResource {
 
     const { ctx } = this
 
-    this.starting = rpc.start({
+    this.starting = ipc.start({
       argv: ctx.argv,
       env: ctx.env,
       cwd: ctx.cwd,
@@ -521,13 +521,13 @@ class App extends ReadyResource {
       decalSession.setUserAgent('Pear Platform')
 
       const entry = '/' + ctx.main
-      const identify = await rpc.identify()
+      const identify = await ipc.identify()
       const { id, host } = identify
 
-      this.warming = ctx.trace ? rpc.warming({ id }) : null
+      this.warming = ctx.trace ? ipc.warming({ id }) : null
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
-      rpc.id = id
+      ipc.id = id
 
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
@@ -567,7 +567,7 @@ class App extends ReadyResource {
           if (trace) return
           if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
 
-          if (app.ctx.chromeWebrtcInternals) Gui.chrome('webrtc-internals')
+          if (app.ctx.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace
           ? async () => {
@@ -586,8 +586,7 @@ class App extends ReadyResource {
 
             const { bail } = await this.starting
             if (bail) return false
-
-            ctx.update({ config: await rpc.config() })
+            ctx.update({ config: await ipc.config() })
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
             if (app.closing) return false
             return true
@@ -645,7 +644,7 @@ class App extends ReadyResource {
   }
 
   destroy () {
-    return this.rpc.close()
+    return this.ipc.close()
   }
 
   quit (code) {
@@ -1327,13 +1326,15 @@ class View extends GuiCtrl {
 }
 
 class PearGUI extends ReadyResource {
+  #event = null
   static View = View
   static Window = Window
   constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
     super()
     const gui = this
     this.ctx = ctx
-    this.scrpc = new RPC({
+    this.scipc = new RPC({
+      name: 'scipc',
       socketPath,
       connectTimeout,
       api: {
@@ -1346,21 +1347,28 @@ class PearGUI extends ReadyResource {
           }
         }
       },
-      tryboot
+      connect: tryboot
     })
-    this.stream = new streamx.PassThrough()
-    this.rpc = new RPC({
-      stream: this.stream,
+    this.scipc.once('close', () => this.close())
+    this.emipc = new RPC({
+      name: 'emipc',
+      stream: new streamx.Duplex({
+        write: (data, cb) => {
+          this.#event.reply('ipc', data)
+          cb()
+        }
+      }),
+      unhandled: (def, params) => {
+        return this.scipc[def.name](params)
+      },
       handlers: this,
-      unhandled: (def, params) => this.scrpc[def.name](params),
-      unhandledStreamClose: (data) => {/*this.scrpc.stream.write(data)*/},
       methods,
       userData: { ctx }
     })
 
-    electron.ipcMain.on('rpc', (event, data) => {
-      this.stream.on('data', (data) => event.reply('rpc', data))
-      this.stream.push(data)
+    electron.ipcMain.on('ipc', (event, data) => {
+      this.#event = event
+      this.emipc.stream.push(data)
     })
 
     electron.ipcMain.on('id', async (event) => {
@@ -1375,19 +1383,20 @@ class PearGUI extends ReadyResource {
 
   app () {
     const app = new App(this.ctx)
-    this.rpc.once('close', async () => { app.quit() })
-    app.start(this.rpc).catch(console.error)
+
+    // this.once('close', async () => { app.quit() })
+    app.start(this.scipc).catch(console.error)
     return app
   }
 
   async _open () {
-    await this.scrpc.ready()
-    await this.rpc.ready()
+    await this.scipc.ready()
+    await this.emipc.ready()
   }
 
   async _close () {
-    await this.rpc.close()
-    await this.scrpc.close()
+    await this.emrpc.close()
+    await this.scipc.close()
   }
 
   static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
