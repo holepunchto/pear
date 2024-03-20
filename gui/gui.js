@@ -360,6 +360,7 @@ class App extends ReadyResource {
   static root = unixPathResolve(resolve(__dirname, '..'))
   async _open () {
     await this.starting
+    this.id = await this.ctrl
   }
 
   constructor (ctx) {
@@ -532,7 +533,7 @@ class App extends ReadyResource {
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      await PearGUI.ctrl('window', entry, { ctx }, {
+      this.ctrl = PearGUI.ctrl('window', entry, { ctx }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -1381,11 +1382,13 @@ class PearGUI extends ReadyResource {
     })
   }
 
-  app () {
+  async app () {
     const app = new App(this.ctx)
-
     // this.once('close', async () => { app.quit() })
     app.start(this.scipc).catch(console.error)
+    await app.ready()
+    const ctrl = await app.ctrl
+    app.id = ctrl.id
     return app
   }
 

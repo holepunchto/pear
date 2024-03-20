@@ -36,12 +36,10 @@ async function electronMain () {
     return
   }
 
-  const app = gui.app()
+  const app = await gui.app()
 
-  await app.ready()
-
-  gui.emipc.unloading({ id: ctx.id }).then(() => {
-    // app.close()
+  gui.emipc.unloading({ id: app.id }).then(() => {
+    app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
