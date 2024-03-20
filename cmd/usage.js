@@ -1,5 +1,5 @@
 'use strict'
-const { ansi, rich, print, stdio } = require('./iface')
+const { ansi, print, stdio } = require('./iface')
 let usage = null
 module.exports = ({ fork, length, key }) => {
   if (usage) return usage
@@ -16,12 +16,14 @@ module.exports = ({ fork, length, key }) => {
   const initExplain = `${init} ${initArgs}
 
     ${initBrief}
-    
-    --type=type     Application type: desktop (default) or terminal
-    --yes|-y        Autoselect all defaults
+
+    --yes|-y         Autoselect all defaults
+    --type|-t=type   Project type: desktop (default) or terminal
+    --force|-f       Force overwrite existing files
+    --with|-w=name   Additional functionality. Available: node
   `
   const dev = ansi.bold(cmd + ' dev')
-  const devArgs = ansi.bold('[dir]')
+  const devArgs = ansi.bold('[flags] [dir] [...app-args]')
   const devBrief = 'Run a project in development mode.'
   const devExplain = `${dev} ${devArgs}
 
@@ -45,11 +47,11 @@ module.exports = ({ fork, length, key }) => {
 
     Outputs diff information and project key.
 
-    --json         Newline delimited JSON output
-    --dry-run|-d   Execute a stage without writing
-    --bare|-b      File data only, no warmup optimization
-    --ignore       Comma separated file path ignore list
-    --name         Advanced. Override app name
+    --json             Newline delimited JSON output
+    --dry-run|-d       Execute a stage without writing
+    --bare|-b          File data only, no warmup optimization
+    --ignore           Comma separated file path ignore list
+    --name             Advanced. Override app name
   `
   const release = ansi.bold(cmd + ' release')
   const releaseArgs = ansi.bold('<channel|key>')
@@ -61,17 +63,21 @@ module.exports = ({ fork, length, key }) => {
     Set the release pointer against a version (default latest).
 
     Use this to indicate production release points.
-    
+
     --json           Newline delimited JSON output
     --checkout=n     Set a checkout, n is version length
   `
 
   const info = ansi.bold(cmd + ' info')
-  const infoArgs = ansi.bold('<key>')
-  const infoBrief = 'Get metadata for a key.'
+  const infoArgs = ansi.bold('[key]')
+  const infoBrief = 'Read project information.'
   const infoExplain = `${info} ${infoArgs}
 
     ${infoBrief}
+
+    Supply a key to view application info
+
+    Without a key pear info shows Pear info
 
     --json          Newline delimited JSON output
   `
@@ -88,7 +94,7 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const run = ansi.bold(cmd + ' run')
-  const runArgs = ansi.bold('<key|dir|alias>')
+  const runArgs = ansi.bold('[flags] <key|dir|alias> [...app-args]')
   const runBrief = 'Run an application from a key or dir.'
   const runExplain = `${run} ${runArgs}
 
@@ -98,19 +104,24 @@ module.exports = ({ fork, length, key }) => {
     ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     ${ansi.bold('alias')}  pear://<alias>
 
-    --dev                      Run the app in dev mode
+    --dev                      Enable --devtools & --updates-diff
+    --devtools                 Open devtools with application [Desktop]
+    --updates-diff             Enable diff computation for Pear.updates
+    --no-updates               Disable updates firing via Pear.updates
     --link=url                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
     --checkout=n               Run a checkout, n is version length
     --checkout=release         Run checkout from marked released length
     --checkout=staged          Run checkout from latest version length
+    --no-ask-trust             Exit instead of asking to trust unknown keys
+    --detached                 Wakeup existing app or run detached
     ${ansi.dim(ansi.italic(`
      pear run pear://u6c6it1hhb5serppr3tghdm96j1gprtesygejzhmhnk5xsse8kmy
+     pear run -s /tmp/app-storage path/to/an-app-folder some --app args
+     pear run -t file://path/to/an-app-folder --some app --args
      pear run pear://keet
-     pear run file://path/to/an-app-folder
-     pear run path/to/an-app-folder
-     `))}`
+    `))}`
 
   const seed = ansi.bold(cmd + ' seed')
   const seedArgs = ansi.bold('<channel|key> [dir]')
@@ -122,7 +133,7 @@ module.exports = ({ fork, length, key }) => {
     Specify channel or key to seed a project.
 
     Specify a remote key to reseed.
-    
+
     --json        Newline delimited JSON output
     --seeders|-s  Additional public keys to seed from
     --name        Advanced. Override app name
@@ -146,7 +157,7 @@ module.exports = ({ fork, length, key }) => {
   const versions = ansi.bold(cmd + ' versions')
   const versionsBrief = 'Output version information.'
   const versionsExplain = `${versions}
-    
+
     ${versionsBrief}
 
     --json        Single JSON object
@@ -154,7 +165,7 @@ module.exports = ({ fork, length, key }) => {
 
   const help = ansi.bold(cmd + ' help')
   const helpArgs = ansi.bold('[cmd]')
-  const helpBrief = `Run ${ansi.bold('pear help')} to output full help for all commands`
+  const helpBrief = `${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n    Run ${ansi.bold('pear help')} to output full help for all commands`
   const helpExplain = `${help} ${helpArgs} ${ansi.green(ansi.dim('~'))} ${ansi.bold(ansi.italic('pear [cmd] [--help|-h]'))}
     ${ansi.italic(cmd + ' help dev')}, ${ansi.italic(cmd + ' run -h')}, ${ansi.italic(cmd + ' seed --help')}
     ${helpBrief}
@@ -164,15 +175,15 @@ module.exports = ({ fork, length, key }) => {
 
   const header = `
   ${banner}
-  ${rich ? '🍐 ' : ''}${version}
+  ${ansi.pear + ' '}${version}
   `
 
   const miniHeader = `
-  ${`${ansi.bold(name)} ~ ${ansi.dim(`«{${v}}» ${rich ? '🍐' : ''}`)}`}`
+  ${`${ansi.bold(name)} ~ ${ansi.dim(`«{${v}}» ${ansi.pear}`)}`}`
 
   const dedot = (str) => str.slice(0, -1)
 
-  const footer = `  ${rich ? '🍐 ' : ''}${version}
+  const footer = `  ${ansi.pear + ' '}${version}
   ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
   ${url}
   `
@@ -197,16 +208,16 @@ module.exports = ({ fork, length, key }) => {
     output,
     outputVersions,
     outputVersionBreakdown,
-    min: `${init} ${ansi.dim(ansi.green('∞'))} ${dedot(initBrief)}
-    ${dev} ${ansi.dim(ansi.green('∞'))} ${dedot(devBrief)}
-    ${stage} ${ansi.dim(ansi.green('∞'))} ${dedot(stageBrief)}
-    ${seed} ${ansi.dim(ansi.green('∞'))} ${dedot(seedBrief)}
-    ${run} ${ansi.dim(ansi.green('∞'))} ${dedot(runBrief)}
-    ${release} ${ansi.dim(ansi.green('∞'))} ${dedot(releaseBrief)}
-    ${info} ${ansi.dim(ansi.green('∞'))} ${dedot(infoBrief)}
-    ${dump} ${ansi.dim(ansi.green('∞'))} ${dedot(dumpBrief)}
-    ${sidecar} ${ansi.dim(ansi.green('∞'))} ${dedot(sidecarBrief)}
-    ${versions} ${ansi.dim(ansi.green('∞'))} ${dedot(versionsBrief)}
+    min: `${init} ${ansi.sep} ${dedot(initBrief)}
+    ${dev} ${ansi.sep} ${dedot(devBrief)}
+    ${stage} ${ansi.sep} ${dedot(stageBrief)}
+    ${seed} ${ansi.sep} ${dedot(seedBrief)}
+    ${run} ${ansi.sep} ${dedot(runBrief)}
+    ${release} ${ansi.sep} ${dedot(releaseBrief)}
+    ${info} ${ansi.sep} ${dedot(infoBrief)}
+    ${dump} ${ansi.sep} ${dedot(dumpBrief)}
+    ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
+    ${versions} ${ansi.sep} ${dedot(versionsBrief)}
 
     ${helpExplain}
 ${footer}`,

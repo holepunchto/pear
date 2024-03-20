@@ -113,13 +113,9 @@
       margin-left: 12px;
     }
   </style>
+</head>
+<body>
   <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => { 
-      const wc = document.getElementById('window-controls')
-      if (wc) wc.style.display = 'block'
-    })
-  </script>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl { 
@@ -331,7 +327,6 @@
     
   </template>
   <script type="module">
-    import { View, Window } from './lib/pear.js'
     customElements.define('decal-dialog', class extends HTMLElement {
       constructor () {
         super()
@@ -345,7 +340,7 @@
         const alphaToBeta = name === 'alpha-to-beta'
         const dialog = this.root.querySelector('#dialog')
         dialog.classList.add(name)
-        const dimensions = await View.parent.dimensions()
+        const dimensions = aw.parent.dimensions()
         dialog.style.left = `${(dimensions.width / 2) - 280}px`
         const height = name === 'alpha-to-beta' ? 512 : 378
         dialog.style.top = `${((dimensions.height / 2) - (height / 2)) / 1.5}px`
@@ -365,20 +360,18 @@
         this.cancel.textContent = alphaToBeta ? 'Not right now' : 'Cancel'
 
         this.ok.addEventListener('click', async () => {
-          Window.parent.send(true)
-          Window.self.close()
+          Pear.Window.parent.send(true)
+          Pear.Window.self.close()
         })
         const cancelListener = async () => {
-          Window.parent.send(false)
-          Window.self.close()
+          Pear.Window.parent.send(false)
+          Pear.Window.self.close()
         }
         this.cancel.addEventListener('click', cancelListener)
         addEventListener('beforeunload', cancelListener)
       }
     })
   </script>
-</head>
-<body>
   <script>
     const { dialog } = Pear.config
     if (dialog) {
@@ -398,7 +391,10 @@
       if (Pear.config.key?.z32 !== constants.ALIASES.keet.z32) {
         if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
-          document.getElementById('window-controls').remove()
+          const winctrl = document.getElementById('window-controls')
+          const clone = winctrl.cloneNode()
+          // winctrl.remove()
+          global.winctrl = clone
         }
       }
     </script>
@@ -425,20 +421,19 @@
       </div>
     </div>
     <script type="module">
-      import { Window } from './lib/pear.js'
       document.querySelector('#bar').addEventListener('dblclick', async (evt) => {
         if (evt.target !== evt.currentTarget) return
-        if (await Window.self.isMaximized()) await Window.self.restore()
-        else await Window.self.maximize()
+        if (await Pear.Window.self.isMaximized()) await Pear.Window.self.restore()
+        else await Pear.Window.self.maximize()
       })
       if (process.platform === 'win32') {
-        document.querySelector('#win-min').addEventListener('click', async () => { await Window.self.minimize() })
+        document.querySelector('#win-min').addEventListener('click', async () => { await Pear.Window.self.minimize() })
         document.querySelector('#win-max').addEventListener('click', async () => { 
-          await Window.self.maximize() 
+          await Pear.Window.self.maximize() 
           document.querySelector('#win-ctrl').classList.add('max')
         })
         document.querySelector('#win-restore').addEventListener('click', async () => { 
-          await Window.self.restore()
+          await Pear.Window.self.restore()
           document.querySelector('#win-ctrl').classList.remove('max')
         })
       }
@@ -609,198 +604,6 @@
         })
       </script>
     </decal-tier>
-    <decal-distribution>
-      <span slot="distribution"></span>
-      <template id="decal-distribution-tmpl">
-        <style>
-          :host { float:right }
-          
-          :host::after {
-            content: "";
-            clear: both;
-            display: table;
-          }
-          #distribution {
-            float: right;
-            font-size: 13px;
-            border-radius: 8px;
-            padding: 1.25em;
-            padding-top: 0;
-            padding-bottom: 0;
-            font-weight: 600;
-            letter-spacing: .0125rem;
-            margin-right: .75em;
-            height: 28px;
-            box-sizing: border-box;
-            line-height: 28px;
-          }
-          #try-beta {
-            float: right;
-            display: none;
-          }
-          .alpha > #distribution {
-            background: #313439;
-            color: #5E636D
-          }
-          .alpha > #distribution > svg {
-            display: none
-          }
-          .alpha > #try-beta {
-            display: block;
-            margin-right: .75em;
-            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
-            border-radius: 8px;
-          }
-
-          .beta > #distribution {
-            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
-            color: #00FFCF
-          }
-          .beta > #distribution > slot > span {
-            display: inline-block;
-            background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
-            -webkit-background-clip: text; /* TODO: remove when background-clip is supported by renderer */
-            -webkit-text-fill-color: transparent; /* TODO: remove when text-fill-color is supported by renderer */
-            background-clip: text;
-            text-fill-color: transparent;
-          }
-
-          .alpha > #try-beta {
-            background: linear-gradient(180deg, rgba(0, 255, 207, 0.2) 0%, rgba(74, 166, 255, 0.2) 100%);
-            display: inline-block;
-            font-size: 12px;
-            height: 28px;
-            line-height: 12px;
-            padding: 4px 12px;
-            box-sizing: border-box;
-          }
-
-          #distribution > svg {
-            margin-top: 5px;
-            margin-bottom: -6px;
-            margin-left: -1px;
-            margin-right: 1px;
-          }
-
-          #text {
-            background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
-            display: inline-block;
-            transform: translateY(-4px);
-            font-weight: 600;
-          }
-
-        </style>
-        <span id="distro">
-          <span id="try-beta">
-            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.9258 5.62891L11.4688 3.90625L9.74609 3.44922C9.60547 3.37891 9.5 3.23828 9.5 3.0625C9.5 2.92188 9.60547 2.78125 9.74609 2.71094L11.4688 2.21875L11.9258 0.53125C11.9961 0.390625 12.1367 0.25 12.3125 0.25C12.4531 0.25 12.5938 0.390625 12.6641 0.53125L13.1562 2.21875L14.8438 2.71094C14.9844 2.78125 15.125 2.92188 15.125 3.0625C15.125 3.23828 14.9844 3.37891 14.8438 3.44922L13.1562 3.90625L12.6641 5.62891C12.5938 5.76953 12.4531 5.875 12.3125 5.875C12.1367 5.875 11.9961 5.76953 11.9258 5.62891ZM4.54297 12.4492C4.96484 12.8359 5.14062 13.3633 5.03516 13.9258L4.71875 15.8594L6.44141 14.9453C6.93359 14.6992 7.53125 14.6992 8.02344 14.9453L9.74609 15.8594L9.42969 13.9258C9.32422 13.3984 9.5 12.8359 9.92188 12.4492L11.3281 11.043L9.35938 10.7617C8.83203 10.6914 8.33984 10.3398 8.09375 9.84766L7.21484 8.08984L6.37109 9.84766C6.125 10.3398 5.63281 10.6914 5.10547 10.7617L3.13672 11.043L4.54297 12.4492ZM6.47656 5.80469C6.79297 5.17188 7.67188 5.17188 7.98828 5.80469L9.60547 9.10938L13.2617 9.63672C13.9297 9.74219 14.2109 10.5859 13.7188 11.0781L11.082 13.6445L11.7148 17.2656C11.8203 17.9688 11.1172 18.4961 10.4844 18.1797L7.21484 16.457L3.98047 18.1797C3.34766 18.4961 2.64453 17.9688 2.75 17.2656L3.38281 13.6445L0.746094 11.0781C0.253906 10.5859 0.5 9.74219 1.20312 9.63672L4.85938 9.10938L6.47656 5.80469ZM15.5469 8.82812L14.2109 8.44141C14.0703 8.40625 14 8.26562 14 8.125C14 8.01953 14.0703 7.87891 14.2109 7.84375L15.5469 7.45703L15.9336 6.12109C15.9688 5.98047 16.1094 5.875 16.25 5.875C16.3555 5.875 16.4961 5.98047 16.5312 6.12109L16.918 7.45703L18.2539 7.84375C18.3945 7.87891 18.5 8.01953 18.5 8.125C18.5 8.26562 18.3945 8.40625 18.2539 8.44141L16.918 8.82812L16.5312 10.1641C16.4961 10.3047 16.3555 10.375 16.25 10.375C16.1094 10.375 15.9688 10.3047 15.9336 10.1641L15.5469 8.82812Z" fill="url(#paint0_linear_6964_93237)"/>
-              <defs>
-              <linearGradient id="paint0_linear_6964_93237" x1="9.5" y1="1" x2="9.5" y2="17" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#00FFCF"/>
-              <stop offset="1" stop-color="#4AA6FF"/>
-              </linearGradient>
-              </defs>
-            </svg>
-            <span id=text>TRY NEW FEATURES</span>
-          </span>
-          <span id="distribution"><svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 9.21484V8.93359C1.17578 6.12109 3.53125 3.90625 6.34375 3.90625H13.8672L11.9336 1.97266C11.582 1.65625 11.582 1.12891 11.9336 0.777344C12.25 0.460938 12.7773 0.460938 13.1289 0.777344L16.5039 4.15234C16.8203 4.50391 16.8203 5.03125 16.5039 5.34766L13.1289 8.72266C12.7773 9.07422 12.25 9.07422 11.9336 8.72266C11.582 8.40625 11.582 7.87891 11.9336 7.52734L13.8672 5.59375H6.34375C4.41016 5.59375 2.79297 7.10547 2.6875 9.03906V9.32031C2.65234 9.77734 2.23047 10.1289 1.77344 10.0938C1.31641 10.0938 0.964844 9.67188 1 9.21484ZM18.9648 9.32031H19L18.9648 9.60156C18.7891 12.4141 16.4688 14.5938 13.6211 14.5938H6.09766L8.03125 16.5273C8.38281 16.8789 8.38281 17.4062 8.03125 17.7227C7.71484 18.0742 7.1875 18.0742 6.87109 17.7227L3.49609 14.3477C3.14453 14.0312 3.14453 13.5039 3.49609 13.1523L6.87109 9.8125C7.1875 9.46094 7.71484 9.46094 8.03125 9.8125C8.38281 10.1289 8.38281 10.6562 8.03125 10.9727L6.09766 12.9062H13.6211C15.5547 12.9062 17.1719 11.4297 17.2773 9.49609L17.3125 9.21484C17.3125 8.75781 17.7344 8.40625 18.1914 8.40625C18.6484 8.44141 19 8.86328 18.9648 9.32031Z" fill="#26D2E8"/>
-            </svg>
-            <slot name="distribution"><span>DISTRIB</span></slot>
-          </span>
-        </span>
-      </template>
-      <script type="module">
-        import { preferences, restart, Window, View } from './lib/pear.js'
-        import constants from './lib/constants.js'
-        // only supporting Keet key for alpha-beta switching atm:
-        const alphaKey = constants.EOLS.keet.z32
-        const betaKey = constants.ALIASES.keet.z32
-        customElements.define('decal-distribution', class extends HTMLElement {
-          alphaKey = alphaKey
-          betaKey = betaKey
-          allowList = new Set([ alphaKey, betaKey ])
-          launchKey = Pear.config.key?.z32
-          name = null
-          connected = false
-          closing = null
-          distributions = null
-          async update (config) {
-            if (this.launchKey === null || this.allowList.has(this.launchKey) === false) return
-            this.distributions = config.distributions || {}
-            this.name = this.distributions.current 
-              ? this.distributions.current.toLowerCase() 
-              : this.launchKey === this.alphaKey ? 'alpha' : 'beta'
-
-            if (this.connected === false) {
-              this.root.appendChild(this.template.cloneNode(true))
-              this.connected = true
-            }
-
-            this.root.querySelector('#distribution').addEventListener('click', this.openDialog)
-            if (this.name === 'alpha') {
-              this.root.querySelector('#try-beta').addEventListener('click', this.openDialog)
-            }
-
-            if (this.name === 'alpha' || this.name === 'beta') {
-              this.root.querySelector('#distro').className = this.name
-            }
-
-            this.querySelector('[slot="distribution"]').innerHTML = this.name.toUpperCase()
-
-          }
-          openDialog = async (e) => {
-            if (this.name !== 'alpha' && this.name !== 'beta') return
-            try {
-              this.root.querySelector('#distribution').removeEventListener('click', this.openDialog)
-              if (this.name === 'alpha') {
-                this.root.querySelector('#try-beta').removeEventListener('click', this.openDialog)
-              }
-              const isAlpha = this.name === 'alpha'  
-              const distribution = isAlpha ? 'beta' : 'alpha'
-              const dialog = isAlpha ? 'alpha-to-beta' : 'beta-to-alpha'
-
-              const win = new View('/decal.html', {
-                background: '#FFFFFFFF',
-                transparent: true,
-                config: { dialog }
-              })
-
-              await win.open()
-              const granted = await new Promise((resolve) => win.once('message', resolve))
-              if (granted) {
-                const { distributions } = this
-                distributions[alphaKey] = distributions[alphaKey] || {}
-                distributions[betaKey] = distributions[betaKey] || {}
-                distributions[alphaKey].current = distributions[betaKey].current = distribution
-                distributions[alphaKey].alpha = distributions[betaKey].alpha = alphaKey
-                distributions[alphaKey].beta = distributions[betaKey].beta = betaKey
-                await preferences.set('distributions', distributions)
-                this.restarting = restart()
-                this.closing = Window.self.close()
-              }
-            } finally {
-              this.root.querySelector('#distribution').addEventListener('click', this.openDialog)
-              if (this.name === 'alpha') {
-                this.root.querySelector('#try-beta').addEventListener('click', this.openDialog)
-              }
-              await this.restarting
-              await this.closing
-            }
-
-          }
-          constructor() {
-            super()
-            this.template = document.querySelector('#decal-distribution-tmpl').content
-            this.root = this.attachShadow({mode: 'open'})
-          }
-        })
-      </script>
-    </decal-distribution>
   </div>
   <decal-report>
     <span slot="headline"></span>
@@ -884,6 +687,7 @@
           this.ipc = ipc
           for await (const report of ipc.app.reports()) {
             this.status = report
+            this.gid = loader.gid
             loader.hide()
             const { type, headline, tagline, cta } = this.status
             if (type === 'update' && this.status.version?.force) {
@@ -894,7 +698,16 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
+            await this.ipc.gui.detachMainView(this.gid)
+            const winctrl = document.getElementById('windows-controls')
+            if (!winctrl) {
+              const div = document.createElement('div')
+              div.id = 'windows-controls'
+              div.appendChild(document.createElement('pear-ctrl'))
+              document.body.prepend(div)
+            }
             this.show(type)
+            await this.ipc.gui.detachMainView(this.gid)
           }
         }
         constructor () {
@@ -1061,7 +874,7 @@
     </script>
   </decal-loader>
   <script type="module">
-    const { Window, message, messages } = Pear
+    const { message, messages } = Pear
     const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
 
@@ -1131,7 +944,7 @@
         const close = document.querySelector('#win-close')
         close.removeEventListener('click', win32CloseListener)
         close.addEventListener('click', async () => {
-          await Window.self.close()
+          await Pear.Window.self.close()
         })
       }
 
@@ -1144,19 +957,12 @@
       const tier = document.querySelector('decal-tier')
       tier.update(config)
 
-      const distribution = document.querySelector('decal-distribution')
-      distribution.update(config)
-
       if (report.status === null) document.body.style.backgroundColor = bg
       decal.intra.events.on('bg', (e, color) => {
         if (report.status !== null) return
         document.body.style.backgroundColor = color
       })
 
-      // for await (const config of engine.reconfig()) {
-      //   tier.update(config)
-      //   distribution.update(config)
-      // }
     }
 
     start().catch(console.error)

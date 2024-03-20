@@ -6,16 +6,27 @@ const { ansi, print, interact } = require('./iface')
 const constants = require('../lib/constants')
 const parse = require('../lib/parse')
 
-module.exports = (ipc) => async function init (args) {
+module.exports = () => async function init (args) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
-  const { _, yes, force, type = 'desktop' } = parse.args(args, {
-    string: ['type'],
+  console.log(parse.args(args, {
+    string: ['type', 'with'],
     boolean: ['yes', 'force'],
     alias: {
       yes: 'y',
       from: 'f',
-      type: 't'
+      type: 't',
+      with: 'w'
+    }
+  }))
+  const { _, yes, force, type = 'desktop', with: w } = parse.args(args, {
+    string: ['type', 'with'],
+    boolean: ['yes', 'force'],
+    alias: {
+      yes: 'y',
+      from: 'f',
+      type: 't',
+      with: 'w'
     }
   })
 
@@ -33,7 +44,6 @@ module.exports = (ipc) => async function init (args) {
   try { pkg = JSON.parse(await readFile(pkgPath)) } catch {}
 
   const cfg = pkg?.pear || pkg?.holepunch || {}
-  const backgroundColor = cfg.gui ? cfg.gui.backgroundColor : '#1F2430'
   const height = cfg.gui ? cfg.gui.height : 540
   const width = cfg.gui ? cfg.gui.width : 720
 
@@ -49,170 +59,168 @@ module.exports = (ipc) => async function init (args) {
 
   const name = cfg?.name || pkg?.name || basename(cwd)
 
-  const scripts = pkg?.scripts
-    ? `${JSON.stringify(pkg.scripts, 0, 6).slice(0, -1)}    }`
-    : `{
-        "dev": "pear dev",
-        "test": "brittle test/*.test.js"
-      }`
+  const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
+  const extra = cfg.gui || null
 
-  const extra = cfg.gui && Object.keys(cfg.gui).length > 0 ? `,\n${JSON.stringify(cfg.gui, 0, 8).slice(2, -2)}` : ''
-
-  const header = `${banner}${ansi.dim('›')}
-
-    [ configure package.json ]
-    ${pkg === null ? '' : ansi.bold('\nExisting package.json detected, will merge\n')}
-    ${ansi.dim('exit: ctrl^c  select: tab/shift^tab  submit: return')}${force ? ansi.bold('\n\n    🚨 FORCE MODE ENGAGED: ENSURE SURETY') : ''}
-  `
+  let header = `\n${banner}${ansi.dim('›')}\n\n`
+  if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
+  if (force) header += ansi.bold('FORCE MODE\n\n')
 
   const desktopEntry = `<!DOCTYPE html>
 <html>
 <head>
-  <style>body > h1:nth-of-type(1) { cursor: pointer }</style>
+  <style>
+    body > h1:nth-of-type(1) {
+      cursor: pointer
+    }
+
+    body {
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+    }
+
+    #bar {
+      background: rgba(55, 60, 72, 0.6);
+      backdrop-filter: blur(64px);
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 18px;
+      margin-left: 12px;
+    }
+  </style>
   <script type='module' src='./app.js'></script>
 </head>
 <body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
   <h1>${name}</h1>
 </body>
 </html>
 `
 
-  const terminalEntry = `import pear from 'pear'
+  const terminalEntry = `const { versions } = Pear
 console.log('Pear terminal application running')
-console.log(await pear.versions())
+console.log(await versions())
 `
   const test = 'import test from \'brittle\' // https://github.com/holepunchto/brittle\n'
 
   const appJs = 'document.querySelector(\'h1\').addEventListener(\'click\', (e) => { e.target.innerHTML = \'🍐\'})'
 
-  const desktopTemplate = `
-    {
-      "name": "$name",
-      "main": "$main",
-      "type": "module",
-      "scripts": ${scripts},
-      "pear": {
-        "name": "$pear-name",
-        "type": "$type",
-        "gui": {
-          "backgroundColor": "$backgroundColor",
-          "height": $height,
-          "width": $width${extra}
-        }
-      },
-      "author": "$author",
-      "license": "$license",
-      "devDependencies": {
-        "brittle": "^3.0.0"
-      }
-    }
-`
-
-  const terminalTemplate = `
-    {
-      "name": "$name",
-      "main": "$main",
-      "type": "module",
-      "scripts": ${scripts},
-      "pear": {
-        "name": "$pear-name",
-        "type": "$type"${extra}
-      },
-      "author": "$author",
-      "license": "$license",
-      "devDependencies": {
-        "brittle": "^3.0.0"
-      }
-    }
-`
   const desktopParams = [
     {
-      name: 'name',
-      default: name
-    },
-    {
       name: 'main',
-      default: pkg?.main || 'index.html',
-      valid: (v) => extname(v) === '.html' || extname(v) === '.js',
-      vmsg: 'must have an .html or .js file extension'
-    },
-    {
-      name: 'pear-name',
-      default: name
-    },
-    {
-      name: 'type',
-      default: 'desktop',
-      valid: (v) => v === 'desktop' || v === 'terminal',
-      vmsg: 'must be "desktop" or "terminal"'
-    },
-    {
-      name: 'backgroundColor',
-      default: backgroundColor
+      default: 'index.html',
+      prompt: 'main',
+      type: 'desktop',
+      validation: (value) => extname(value) === '.js' || extname(value) === '.html',
+      msg: 'must have an .html or .js file extension'
     },
     {
       name: 'height',
       default: height,
-      valid: (h) => Number.isInteger(+h),
-      vmsg: 'must be an integer'
+      validation: (value) => Number.isInteger(+value),
+      prompt: 'height',
+      msg: 'must be an integer',
+      type: 'desktop'
     },
     {
       name: 'width',
       default: width,
-      valid: (h) => Number.isInteger(+h),
-      vmsg: 'must be an integer'
-    },
-    {
-      name: 'author',
-      default: pkg?.author || ''
-    },
-    {
-      name: 'license',
-      default: pkg?.license || 'MIT'
+      validation: (value) => Number.isInteger(+value),
+      prompt: 'width',
+      msg: 'must be an integer',
+      type: 'desktop'
     }
   ]
 
   const terminalParams = [
     {
-      name: 'name',
-      default: name
-    },
-    {
       name: 'main',
-      default: pkg?.main || 'index.js',
-      valid: (v) => extname(v) === '.js',
-      vmsg: 'must have an .js file extension'
-    },
-    {
-      name: 'pear-name',
-      default: name
-    },
-    {
-      name: 'type',
-      default: 'terminal',
-      valid: (v) => v === 'desktop' || v === 'terminal',
-      vmsg: 'must be "desktop" or "terminal"'
-    },
-    {
-      name: 'author',
-      default: pkg?.author || ''
-    },
-    {
-      name: 'license',
-      default: pkg?.license || 'MIT'
+      default: 'index.js',
+      prompt: 'main',
+      type: 'terminal',
+      validation: (value) => extname(value) === '.js',
+      msg: 'must have an .js file extension'
     }
   ]
 
+  const params = [
+    {
+      name: 'type',
+      default: 'desktop',
+      validation: (value) => value === 'desktop' || value === 'terminal',
+      prompt: 'type',
+      msg: 'type must be "desktop" or "terminal"'
+
+    },
+    {
+      name: 'name',
+      default: name,
+      prompt: 'name'
+
+    },
+    ...desktopParams,
+    ...terminalParams,
+    {
+      name: 'license',
+      default: pkg?.license || 'Apache-2.0',
+      prompt: 'license'
+    }
+  ]
+
+  const nodeDependecies = {
+    'bare-subprocess': '^2.0.4',
+    child_process: 'npm:bare-node-child-process',
+    'bare-console': '^4.1.0',
+    console: 'npm:bare-node-console',
+    'bare-events': '^2.2.0',
+    events: 'npm:bare-node-events',
+    'bare-fs': '^2.1.5',
+    fs: 'npm:bare-node-fs',
+    'bare-http1': '^2.0.3',
+    http: 'npm:bare-node-http',
+    'bare-inspector': '^1.1.2',
+    inspector: 'npm:bare-node-inspector',
+    'bare-os': '^2.2.0',
+    os: 'npm:bare-node-os',
+    'bare-path': '^2.1.0',
+    path: 'npm:bare-node-path',
+    'bare-process': '^1.3.0',
+    process: 'npm:bare-node-process',
+    'bare-readline': '^1.0.0',
+    readline: 'npm:bare-node-readline',
+    'bare-repl': '^1.0.3',
+    repl: 'npm:bare-node-repl',
+    'bare-url': '^1.0.5',
+    url: 'npm:bare-node-url'
+  }
+
   try {
-    const prompt = interact(desktopTemplate, terminalTemplate, desktopParams, terminalParams, header)
-    const { result, fields } = await prompt.run(type, { autosubmit: yes })
+    const prompt = interact(header, params, type)
+    const { result, fields } = await prompt.run({ autosubmit: yes })
+    result.scripts = scripts
+    if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
+    if (type === 'terminal' && w === 'node') result.dependencies = nodeDependecies
     const created = pkg === null ? [pkgPath] : []
     const refusals = []
-    const entryPath = resolve(dir, fields.main.value)
+    const entryPath = resolve(dir, fields.main)
     const appPath = resolve(dir, 'app.js')
     const testDir = resolve(dir, 'test')
     const testPath = resolve(testDir, 'index.test.js')
-    const isDesktop = fields.type.value === 'desktop'
+    const isDesktop = fields.type === 'desktop'
 
     if (force || await exists(entryPath) === false) {
       await writeFile(entryPath, isDesktop ? desktopEntry : terminalEntry)
@@ -236,7 +244,7 @@ console.log(await pear.versions())
       }
     }
 
-    const final = JSON.stringify({ ...JSON.parse(result), ...diff }, 0, 2)
+    const final = JSON.stringify({ ...result, ...diff }, 0, 2)
     await writeFile(pkgPath, final)
     print(`\n ${final.split('\n').join('\n ')}\n`)
     if (created.length > 0) print(`${ansi.bold('Created')}:-\n\n  * ${created.join('\n  * ')}\n`)

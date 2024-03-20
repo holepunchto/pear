@@ -1,12 +1,12 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, print, InputError } = require('./iface')
+const { outputter, print, InputError, ansi } = require('./iface')
 const parse = require('../lib/parse')
 
 const output = outputter('release', {
-  releasing: ({ name, channel }) => `\nReleasing ${name} [ ${channel} ]\n`,
-  'updating-to': ({ length }) => `Setting release to ${length}\n`,
+  releasing: ({ name, channel }) => `\n${ansi.pear} Releasing ${name} [ ${channel} ]\n`,
+  'updating-to': ({ releaseLength, currentLength }) => `Current length is ${currentLength}\nSetting release to ${releaseLength}\n`,
   released: ({ name, channel, length }) => `The ${name} app (${channel} channel) was successfully released.\nLatest length: ${length}\n`,
   final: { output: 'print', message: 'Release complete\n', success: true }
 })

@@ -7,17 +7,10 @@
   "pear": {
     "name": "termex",
     "type": "terminal",
-    "bin": "termex",
-    "builtinsMap": {
-      "tty": "bare-tty",
-      "events": "bare-events"
-    }
+    "bin": "termex"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bare-events": "^2.2.0",
-    "bare-tty": "^3.0.0"
-  }
+  "license": "",
+  "dependencies": {}
 }

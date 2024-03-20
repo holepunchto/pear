@@ -11,18 +11,25 @@ const keys = ({ content, discovery, project }) => `
 `
 
 const info = ({ channel, release, name, live }) => `
- info         value             notes
------------  ----------------- ------------------------------------------------
- live         ${live}           ${live ? '   released' : '  staged'}
- name         ${name}           project name
- channel      ${channel}${Array.from({ length: 19 - channel.length }).join(' ')}release channel
- release      ${release}${Array.from({ length: 19 - (release?.toString().length || 0) }).join(' ')}release version
+ info         value
+-----------  -----------------
+ live         ${live}
+ name         ${name}
+ channel      ${channel}
+ release      ${release}
+`
+
+const changelog = ({ changelog, full }) => `
+ changelog [ ${full ? 'full' : 'latest'} ]
+-------------------------------------------------------------------------------
+ ${changelog}
 `
 
 const output = outputter('info', {
-  retrieving: ({ z32 }) => `🔑 :-\n     pear:${z32}\n...`,
+  retrieving: ({ z32 }) => `🔑 :-\n     pear://${z32}\n...`,
   keys,
   info,
+  changelog,
   error: ({ code, stack }) => `Info Error (code: ${code || 'none'}) ${stack}`
 })
 
@@ -33,8 +40,8 @@ module.exports = (ipc) => async function info (args) {
     })
     const { _, json } = flags
     const [key] = _
-    const isKey = parse.runkey(key).key !== null
-    if (isKey === false) throw new Error('Key "' + key + '" is not valid')
+    const isKey = key ? parse.runkey(key).key !== null : false
+    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
     const id = Bare.pid
     await output(json, ipc.info({ id, key }))
   } catch (err) {

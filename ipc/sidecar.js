@@ -10,7 +10,9 @@ const Channel = require('jsonrpc-mux')
 const preferences = require('../lib/preferences')
 const Engine = require('../lib/engine')
 const parse = require('../lib/parse')
-const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, IS_WINDOWS, IS_MAC } = require('../lib/constants')
+const { discoveryKey } = require('hypercore-crypto')
+const { isWindows, isMac } = require('which-runtime')
+const { SWAP, INTERNAL_UNSAFE, SPINDOWN_TIMEOUT, DESKTOP_RUNTIME, SOCKET_PATH, PLATFORM_DIR } = require('../lib/constants')
 
 const { constructor: AGF } = async function * () {}
 
@@ -48,13 +50,14 @@ module.exports = class IPC {
     this.engine = new Engine(this, { updater, drive, corestore })
     let closed = null
     this.closing = new Promise((resolve) => { closed = resolve })
+    this.closing.finally(() => console.log((isWindows ? '^' : '✔') + ' Sidecar closed'))
     this.#closed = closed
     this.#spindownCountdown()
   }
 
   async listen () {
     try {
-      if (!IS_WINDOWS) await fsp.unlink(SOCKET_PATH)
+      if (!isWindows) await fsp.unlink(SOCKET_PATH)
     } catch {}
     this.server.listen(SOCKET_PATH)
   }
@@ -76,6 +79,8 @@ module.exports = class IPC {
     client.method('seed', (params) => this.seed(client, params))
     client.method('stage', (params) => this.stage(client, params))
     client.method('release', (params) => this.release(client, params))
+    client.method('detached', (params) => this.detached(params))
+    client.method('trust', (params) => this.trust(params))
     client.method('identify', () => this.identify(client))
     client.method('wakeup', (params) => this.wakeup(...params.args))
     client.method('sniff', (params) => this.sniff(client, ...params.args))
@@ -101,26 +106,36 @@ module.exports = class IPC {
     return this.freelist.from(id) || null
   }
 
-  async updateNotify (version, appUpdate = false) {
+  updateNotify (version, info = {}) {
     this.spindownms = 0
     this.updateAvailable = version
-    if (version.force) {
-      console.log('Force update (' + version.force.reason + '). Updating to:')
+
+    if (info.link) {
+      console.log('Application update available:')
+    } else if (version.force) {
+      console.log('Platform Force update (' + version.force.reason + '). Updating to:')
     } else {
-      console.log('Update Available. Restart to update to')
+      console.log('Platform update Available. Restart to update to:')
     }
-    console.log('  v' + version.fork + '.' + version.length + '.' + version.key)
+
+    console.log('  v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
+
     this.#spindownCountdown()
-    for await (const client of this.clients) {
+    const messaged = new Set()
+
+    for (const client of this.clients) {
       const app = client?.userData
       if (!app || (app.minvering === true && !version.force)) continue
-      if (appUpdate) {
-        if (app.ctx.key?.hex === version.key) {
-          app.notify({ type: 'pear/updates', app: true, version, diff: null })
-          app.message({ type: 'pear/updates', app: true, version, diff: null })
-        }
+
+      if (messaged.has(app)) continue
+      messaged.add(app)
+
+      if (info.link && info.link === app.bundle?.link) {
+        app.notify({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
         continue
       }
+      if (info.link) continue
       app.notify({ type: 'pear/updates', app: false, version, diff: null })
       app.message({ type: 'pear/updates', app: false, version, diff: null })
     }
@@ -137,7 +152,21 @@ module.exports = class IPC {
     return { host, id }
   }
 
-  wakeup (link, storage, appdev = null) {
+  async detached ({ key, storage, appdev }) {
+    if (!key) return false // ignore bad requests
+    if (!storage) {
+      storage = join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+    }
+
+    const wokeup = await this.wakeup(key.link, storage, appdev, false)
+
+    if (wokeup) return { wokeup, appling: null }
+    const appling = (await this.engine.applings.get(key.hex)) || null
+
+    return { wokeup, appling }
+  }
+
+  wakeup (link, storage, appdev = null, selfwake = true) {
     return new Promise((resolve) => {
       if (this.freelist.emptied()) {
         resolve(false)
@@ -154,16 +183,14 @@ module.exports = class IPC {
         return app.ctx.storage === storage && (appdev ? app.ctx.dir === appdev : app.ctx.key?.z32 === parsed.key?.z32)
       })
 
-      if (matches.length <= 1) {
-        resolve(false)
-        return
-      }
-      resolve(true)
       for (const client of matches) {
         const app = client.userData
         if (!app) continue
         app.message({ type: 'pear/wakeup', data: parsed.data, link })
       }
+
+      const min = selfwake ? 1 : 0
+      resolve(matches.length > min)
     })
   }
 
@@ -227,8 +254,14 @@ module.exports = class IPC {
     return this.#transmit(`release:${params.id}`, client, this.engine.release(params, client), params.silent)
   }
 
+  async trust ({ z32 } = {}) {
+    const trusted = new Set((await preferences.get('trusted')) || [])
+    trusted.add(z32)
+    return await preferences.set('trusted', Array.from(trusted))
+  }
+
   async restart (client, { platform = false } = {}) {
-    console.log('Restarting ' + (platform ? 'all' : 'client'))
+    console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
       const { cwd, runtime, argv, env } = client.userData.ctx
       const appling = client.userData.ctx.appling
@@ -246,7 +279,7 @@ module.exports = class IPC {
         })
       }
       if (appling) {
-        if (IS_MAC) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
         spawn(runtime, argv, opts).unref()
@@ -256,6 +289,8 @@ module.exports = class IPC {
     }
 
     const restarts = await this.shutdown(client)
+    // ample time for any OS cleanup operations:
+    await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
@@ -263,7 +298,7 @@ module.exports = class IPC {
     for (const { cwd, appling, argv, env } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (IS_MAC) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts
@@ -301,7 +336,6 @@ module.exports = class IPC {
     this.spindownms = 0
     this.#spindownCountdown()
     await this.closing
-    console.log('✔ Sidecar closed')
     return restarts
   }
 
@@ -317,8 +351,9 @@ module.exports = class IPC {
     for (const c of this.connections) c.destroy()
     await serverClosing
     if (this.updater) {
-      await this.updater.applyUpdate()
-      console.log('✔ Applied update')
+      if (await this.updater.applyUpdate() !== null) {
+        console.log((isWindows ? '^' : '✔') + ' Applied update')
+      }
     }
     this.#closed()
   }
@@ -485,8 +520,8 @@ class Handlers {
       return app.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
     })
 
-    method({ name: 'restart' }, async function restart ({ client }) {
-      return ipc.restart(client)
+    method({ name: 'restart' }, async function restart ({ client }, opts = {}) {
+      return ipc.restart(client, opts)
     })
   }
 

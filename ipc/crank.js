@@ -1,15 +1,16 @@
 'use strict'
-const constants = require('../lib/constants')
-const Context = require('../ctx/shared')
-const API = require('../lib/api')
-const Module = constants.IS_BARE ? require('bare-module') : null
-const os = constants.IS_BARE ? require('bare-os') : require('os')
-const path = constants.IS_BARE ? require('bare-path') : require('path')
-const fs = constants.IS_BARE ? require('bare-fs') : require('fs')
-const ENV = constants.IS_BARE ? require('bare-env') : process.env
-const { spawn } = constants.IS_BARE ? require('bare-subprocess') : require('child_process')
+const { isBare, isMac } = require('which-runtime')
+const Module = isBare ? require('bare-module') : null
+const os = isBare ? require('bare-os') : require('os')
+const path = isBare ? require('bare-path') : require('path')
+const fs = isBare ? require('bare-fs') : require('fs')
+const ENV = isBare ? require('bare-env') : process.env
+const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const fsext = require('fs-native-extensions')
+const constants = require('../lib/constants')
+const Context = require('../ctx/shared')
+const API = isBare ? require('../lib/api') : null
 
 class Crank {
   starting = null
@@ -18,8 +19,44 @@ class Crank {
     this.client = client
   }
 
-  async * run ({ args }) {
-    const cwd = constants.IS_BARE ? os.cwd() : global.process.cwd()
+  async * run ({ args, key, storage, detached, dir, dev }) {
+    if (detached) {
+      const { wokeup, appling } = await this.client.request('detached', { key, storage, appdev: key === null && dir })
+      if (wokeup) {
+        this.client.close()
+        return
+      }
+
+      args = args.filter((arg) => arg !== '--detached')
+      const opts = { detached: true }
+
+      if (!appling) {
+        args.unshift('run', '--no-ask-trust')
+        spawn(constants.RUNTIME, args, opts).unref()
+        return
+      }
+
+      const applingApp = isMac ? appling.split('.app')[0] + '.app' : appling
+
+      try {
+        await fs.promises.stat(applingApp)
+      } catch {
+        throw new Error('Appling does not exist')
+      }
+
+      if (args[0].startsWith('pear://runtime')) {
+        args = [constants.BOOT, '--appling', appling, '--run', ...args]
+        spawn(constants.DESKTOP_RUNTIME, args).unref()
+      } else {
+        if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+        else spawn(applingApp, args, opts).unref()
+      }
+
+      this.client.close()
+      return
+    }
+
+    const cwd = isBare ? os.cwd() : global.process.cwd()
     args.unshift('--run')
 
     const { startId, host, id, type, bundle } = await this.start(args, ENV, cwd)
@@ -58,7 +95,7 @@ class Crank {
     args.unshift('--start-id=' + startId)
 
     const iterable = new Readable({ objectMode: true })
-    args = [path.resolve(__dirname, '..'), ...args]
+    args = [constants.BOOT, ...args]
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio: ['inherit', 'pipe', 'pipe'],
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
@@ -92,6 +129,10 @@ class Crank {
 
   wakeup (link, storage, appdev) {
     return this.client.request('wakeup', { args: [link, storage, appdev] })
+  }
+
+  trust (params) {
+    return this.client.request('trust', params)
   }
 
   unloading () {
@@ -140,8 +181,6 @@ class Crank {
   notify (params) {
     return this.client.notify('request', params)
   }
-
-  repl () { return this.client.request('repl') }
 
   release (params, opts) { return this.#op('release', params, opts) }
 

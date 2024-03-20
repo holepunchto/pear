@@ -1,18 +1,21 @@
 /* global Pear */
-const { versions, config, messages, Window } = Pear
+const { versions, config, updates, wakeups, Window } = Pear
 
 console.log('link', config.link)
 console.log('linkData', config.linkData)
 console.log('key', config.key)
 
-async function receiveWakeups () {
-  for await (const msg of messages({ type: 'pear/wakeup' })) {
-    console.log('GOT WAKEUP', msg)
-    await Window.self.focus({ steal: true })
-  }
-}
+updates(function (data) {
+  console.log('update available:', data)
+})
 
-receiveWakeups().catch(console.error)
+wakeups(async (wakeup) => {
+  console.log('GOT WAKEUP', wakeup)
+  await Window.self.focus({ steal: true })
+})
+
+document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
+document.getElementById('release').innerText = config.release || (config.dev ? 'none [ dev ]' : '0')
 const { app, platform } = await versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork

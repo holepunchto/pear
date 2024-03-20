@@ -1,9 +1,9 @@
 #!/usr/bin/env bare
 'use strict'
-const IS_BARE = !!global.Bare
 
-const fs = IS_BARE ? require('bare-fs') : require('fs')
-const path = IS_BARE ? require('bare-path') : require('path')
+const { platform, arch, isWindows, isBare } = require('which-runtime')
+const fs = isBare ? require('bare-fs') : require('fs')
+const path = isBare ? require('bare-path') : require('path')
 const Corestore = require('corestore')
 const Localdrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
@@ -14,20 +14,18 @@ const { decode } = require('hypercore-id-encoding')
 
 const argv = global.Bare?.argv || global.process.argv
 
-const ADDON_HOST = require.addon?.host || global.process.platform + '-' + global.process.arch
-const IS_WINDOWS = (global.Bare?.platform || global.process.platform) === 'win32'
+const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(__dirname, '..', 'pear')
 const SWAP = path.join(__dirname, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
-const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-')
-if (!RUNTIMES_DRIVE_KEY) throw new Error('provide key')
+const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
 
-try { fs.symlinkSync(IS_WINDOWS ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
+try { fs.symlinkSync(isWindows ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
-if (IS_WINDOWS === false) {
+if (isWindows === false) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
     fs.symlinkSync(runtime, peardev)
@@ -54,7 +52,7 @@ if (ARCHDUMP) {
 }
 
 function advise () {
-  if (IS_WINDOWS === false) {
+  if (isWindows === false) {
     console.log('🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.')
     return
   }
@@ -111,6 +109,8 @@ async function * downloader (key, all) {
   await swarm.destroy()
   await corestore.close()
 
-  if (all) yield '\x1B[32m✔\x1B[39m Download complete\n'
-  else yield '\x1B[32m✔\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
+  const tick = isWindows ? '^' : '✔'
+
+  if (all) yield '\x1B[32m' + tick + '\x1B[39m Download complete\n'
+  else yield '\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
 }
