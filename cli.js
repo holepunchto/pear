@@ -1,5 +1,5 @@
 'use strict'
-const RPC = require('pear-rpc')
+const RPC = require('pear-ipc')
 const cmd = require('./cmd')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
