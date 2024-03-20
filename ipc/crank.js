@@ -85,10 +85,15 @@ class Crank {
         }
       })
 
-      Module.load(new URL(bundle.entrypoint), {
-        protocol,
-        resolutions: bundle.resolutions
-      })
+      try {
+        Module.load(new URL(bundle.entrypoint), {
+          protocol,
+          resolutions: bundle.resolutions
+        })
+      } catch (err) {
+        console.log(err)
+      }
+
       return
     }
 
