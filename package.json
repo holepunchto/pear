@@ -41,7 +41,8 @@
     }
   },
   "subsystems": [
-    "./subsystems/sidecar.js"
+    "./subsystems/sidecar.js",
+    "./subsystems/build.js"
   ],
   "standard": {
     "globals": [
