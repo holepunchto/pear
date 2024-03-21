@@ -11,7 +11,7 @@ const output = outputter('release', {
   final: { output: 'print', message: 'Release complete\n', success: true }
 })
 
-module.exports = (rpc) => async function release (args) {
+module.exports = (ipc) => async function release (args) {
   const { _, checkout, name, json } = parse.args(args, { boolean: ['json'], string: ['name', 'checkout'] })
   try {
     const [from] = _
@@ -26,11 +26,11 @@ module.exports = (rpc) => async function release (args) {
       throw new InputError('--checkout flag must supply an integer if set')
     }
     const id = Bare.pid
-    await output(json, rpc.release({ id, name, channel, key, checkout, dir }))
+    await output(json, ipc.release({ id, name, channel, key, checkout, dir }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      rpc.userData.usage.output('release', false)
+      ipc.userData.usage.output('release', false)
     } else {
       print('An error occured', false)
       console.error(err)

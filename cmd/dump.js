@@ -9,17 +9,17 @@ const output = outputter('stage', {
   error: ({ code, stack }) => `Dumping Error (code: ${code || 'none'}) ${stack}`
 })
 
-module.exports = (rpc) => async function dump (args) {
+module.exports = (ipc) => async function dump (args) {
   try {
     const { _, checkout, json } = parse.args(args, { boolean: ['json'] })
     const [key, dir] = _
     if (!dir) throw new InputError('Output dir must be specified.')
     if (!key) throw new InputError('The pear key must be specified.')
-    await output(json, rpc.dump({ id: Bare.pid, key, dir: isAbsolute(dir) ? dir : resolve(os.cwd(), dir), checkout }))
+    await output(json, ipc.dump({ id: Bare.pid, key, dir: isAbsolute(dir) ? dir : resolve(os.cwd(), dir), checkout }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      rpc.userData.usage.output('dump')
+      ipc.userData.usage.output('dump')
     } else {
       console.error(err)
     }

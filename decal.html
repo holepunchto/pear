@@ -557,7 +557,7 @@
     </template>
     <script type="module">
       customElements.define('decal-report', class extends HTMLElement {
-        rpc = Pear[Symbol.for('pear.rpc')]
+        ipc = Pear[Symbol.for('pear.ipc')]
         status = null
         static get observedAttributes() { return ['show', 'action'] }
         attributeChangedCallback(name, prior, value) {
@@ -569,16 +569,16 @@
             const cta = this.shadowRoot.querySelector('#cta')
             const code = (value === 'reload') ? 64 : 0
             const handler = (value === 'quit' || value === 'reload') ?
-              () => this.rpc.quit(code) :
+              () => this.ipc.quit(code) :
               () => {}
             cta.addEventListener('click', handler)
           }
         }
         show (type) { this.setAttribute("show", type) }
         hide () { this.setAttribute("show", "") }
-        async subscribe (rpc, loader) {
-          this.rpc = rpc
-          for await (const report of rpc.reports()) {
+        async subscribe (ipc, loader) {
+          this.ipc = ipc
+          for await (const report of ipc.reports()) {
             this.status = report
             this.gid = Pear.Window.self.id
             loader.hide()
@@ -591,7 +591,7 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
-            await this.rpc.detachMainView(this.gid)
+            await this.ipc.detachMainView(this.gid)
             const winctrl = document.getElementById('windows-controls')
             if (!winctrl) {
               const div = document.createElement('div')
@@ -600,12 +600,12 @@
               document.body.prepend(div)
             }
             this.show(type)
-            await this.rpc.detachMainView(this.gid)
+            await this.ipc.detachMainView(this.gid)
           }
         }
         constructor () {
           super()
-          this.rpc = Pear[Symbol.for('pear.rpc')]
+          this.ipc = Pear[Symbol.for('pear.ipc')]
           const template = document.querySelector('#decal-report-tmpl').content
           this.attachShadow({mode: 'open'}).appendChild(template.cloneNode(true))
         }
@@ -728,7 +728,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.rpc.detachMainView(Pear.Window.self.id)
+          await this.ipc.detachMainView(Pear.Window.self.id)
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 
@@ -744,16 +744,16 @@
             countdown -= 1000
           }
           this.querySelector('[slot="when"]').innerText = 'as of now!'
-          await this.rpc.restart()
+          await this.ipc.restart()
         }
-        async start (rpc, config) {
+        async start (ipc, config) {
           this.show()
-          this.rpc = rpc
-          await rpc.afterViewLoaded({ id: Pear.Window.self.id })
+          this.ipc = ipc
+          await ipc.afterViewLoaded({ id: Pear.Window.self.id })
           document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
-          await rpc.attachMainView({ id: Pear.Window.self.id })
+          await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
           super()
@@ -765,7 +765,7 @@
   </decal-loader>
   <script type="module">
     const { message, messages } = Pear
-    const rpc = Pear[Symbol.for('pear.rpc')]
+    const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
 
     let avatar = document.querySelector('#avatar')
@@ -792,17 +792,17 @@
     }
 
     const report = document.querySelector('decal-report')  
-    report.subscribe(rpc, loader)
+    report.subscribe(ipc, loader)
 
     process.on('exit', (code) => {
       const actuallyARefresh = code === undefined
       if (actuallyARefresh) return
-      rpc.quit(code)
+      ipc.quit(code)
     })
 
     async function start () {
 
-      const win32CloseListener = process.platform === 'win32' ? () => rpc.quit(0) : null
+      const win32CloseListener = process.platform === 'win32' ? () => ipc.quit(0) : null
       if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
       let config = Pear.config
 
@@ -814,11 +814,11 @@
         })
       }
 
-      const updating = await loader.start(rpc, config)
+      const updating = await loader.start(ipc, config)
 
       if (updating) return
 
-      config = await rpc.config()
+      config = await ipc.config()
 
       const tier = document.querySelector('decal-tier')
       tier.update(config)

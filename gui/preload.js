@@ -29,7 +29,7 @@ module.exports = class PearGUI extends ReadyResource {
     API = class extends API {
       constructor (ipc, ctx, onteardown) {
         super(ipc, ctx, onteardown)
-        this[Symbol.for('pear.rpc')] = ipc
+        this[Symbol.for('pear.ipc')] = ipc
         this.media = {
           status: {
             microphone: () => ipc.getMediaAccessStatus({ id, media: 'microphone' }),

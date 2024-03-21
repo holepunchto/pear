@@ -3,13 +3,13 @@ const path = require('bare-path')
 const { print, ansi, stdio } = require('./iface')
 const parse = require('../lib/parse')
 
-module.exports = (rpc) => async function sidecar (args) {
+module.exports = (ipc) => async function sidecar (args) {
   print('Closing any current Sidecar clients...', 0)
-  const restarts = await rpc.closeClients()
+  const restarts = await ipc.closeClients()
   const n = restarts.length
   if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed`, true)
   print('Shutting down current Sidecar...', 0)
-  await rpc.shutdown()
+  await ipc.shutdown()
 
   print('Sidecar has shutdown', true)
 
