@@ -5,10 +5,8 @@ const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
 const { isMac, isWindows, isLinux } = require('which-runtime')
-const RPC = require('pear-ipc')
-const streamx = require('streamx')
+const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
-const methods = require('./methods')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -347,7 +345,7 @@ class ContextMenu {
 
 electron.app.userAgentFallback = 'Pear Platform'
 
-class App extends ReadyResource {
+class App {
   menu = null
   sidecar = null
   ctx = null
@@ -358,12 +356,8 @@ class App extends ReadyResource {
   closed = false
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
-  async _open () {
-    return this.start()
-  }
 
   constructor (ctx, ipc) {
-    super()
     this.ctx = ctx
     this.ipc = ipc
     this.contextMenu = null
@@ -522,8 +516,6 @@ class App extends ReadyResource {
       const entry = '/' + ctx.main
       const identify = await this.ipc.identify()
       const { id, host } = identify
-
-      this.warming = ctx.trace ? this.ipc.warming({ id }) : null
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
       this.ipc.id = id
@@ -897,7 +889,6 @@ class GuiCtrl {
   isMinimized () { return false }
   isFullscreen () { return false }
   isVisible () { return !this.hidden }
-
   async unloading () {
     const { webContents } = (this.view || this.win)
     const until = new Promise((resolve) => { this.unload = resolve })
@@ -1322,15 +1313,13 @@ class View extends GuiCtrl {
 }
 
 class PearGUI extends ReadyResource {
-  #event = null
   static View = View
   static Window = Window
   constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
     super()
     const gui = this
     this.ctx = ctx
-    this.scipc = new RPC({
-      name: 'scipc',
+    this.ipc = new IPC({
       socketPath,
       connectTimeout,
       api: {
@@ -1345,23 +1334,7 @@ class PearGUI extends ReadyResource {
       },
       connect: tryboot
     })
-    this.scipc.once('close', () => this.close())
-    this.emipc = new RPC({
-      name: 'emipc',
-      stream: new streamx.Duplex({
-        write: (data, cb) => {
-          this.#event.reply('ipc', data)
-          cb()
-        }
-      }),
-      handlers: this,
-      methods
-    })
-
-    electron.ipcMain.on('ipc', (event, data) => {
-      this.#event = event
-      if (data !== null) this.emipc.stream.push(data)
-    })
+    this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('id', async (event) => {
       return (event.returnValue = event.sender.id)
@@ -1371,23 +1344,68 @@ class PearGUI extends ReadyResource {
       const instance = this.get(event.sender.id)
       return (event.returnValue = instance.parentId)
     })
+
+    electron.ipcMain.on('warming', (event) => {
+      const warming = this.warming()
+      warming.on('data', (data) => event.reply('warming', data))
+      warming.on('end', () => event.reply('warming', null))
+    })
+
+    electron.ipcMain.on('messages', (event, ...args) => {
+      const messages = this.messages(...args)
+      messages.on('data', (data) => event.reply('messages', data))
+      messages.on('end', () => event.reply('messages', null))
+    })
+
+    electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
+    electron.ipcMain.handle('askForMediaAccess', (evt, ...args) => this.askForMediaAccess(...args))
+    electron.ipcMain.handle('desktopSources', (evt, ...args) => this.desktopSources(...args))
+    electron.ipcMain.handle('chrome', (evt, ...args) => this.chrome(...args))
+    electron.ipcMain.handle('ctrl', (evt, ...args) => this.ctrl(...args))
+    electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
+    electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
+    electron.ipcMain.handle('close', (evt, ...args) => this.close(...args))
+    electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
+    electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
+    electron.ipcMain.handle('minimize ', (evt, ...args) => this.minimize(...args))
+    electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
+    electron.ipcMain.handle('fullscreen ', (evt, ...args) => this.fullscreen(...args))
+    electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
+    electron.ipcMain.handle('focus ', (evt, ...args) => this.focus(...args))
+    electron.ipcMain.handle('blur', (evt, ...args) => this.blur(...args))
+    electron.ipcMain.handle('getMediaSourceId', (evt, ...args) => this.getMediaSourceId(...args))
+    electron.ipcMain.handle('dimensions ', (evt, ...args) => this.dimensions(...args))
+    electron.ipcMain.handle('isVisible', (evt, ...args) => this.isVisible(...args))
+    electron.ipcMain.handle('isClosed', (evt, ...args) => this.isClosed(...args))
+    electron.ipcMain.handle('isMinimized', (evt, ...args) => this.isMinimized(...args))
+    electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
+    electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
+    electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
+    electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
+    electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
+    electron.ipcMain.handle('detachMainView', (evt, ...args) => this.detachMainView(...args))
+    electron.ipcMain.handle('afterViewLoaded', (evt, ...args) => this.afterViewLoaded(...args))
+    electron.ipcMain.handle('setWindowButtonPosition', (evt, ...args) => this.setWindowButtonPosition(...args))
+    electron.ipcMain.handle('setWindowButtonVisibility', (evt, ...args) => this.setWindowButtonVisibility(...args))
+    electron.ipcMain.handle('message', (evt, ...args) => this.message(...args))
+    electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
+    electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
+    electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
   }
 
   async app () {
-    const app = new App(this.ctx, this.scipc)
-    // this.once('close', async () => { app.quit() })
-    await app.ready()
+    const app = new App(this.ctx, this.ipc)
+    this.once('close', async () => { app.quit() })
+    await app.start()
     return app
   }
 
   async _open () {
-    await this.scipc.ready()
-    await this.emipc.ready()
+    await this.ipc.ready()
   }
 
   async _close () {
-    await this.emipc.close()
-    await this.scipc.close()
+    await this.ipc.close()
   }
 
   static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
@@ -1527,9 +1545,10 @@ class PearGUI extends ReadyResource {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
-  async unloading ({ id }) {
-    const action = await this.get(id).unloading()
-    return action
+  unloading ({ id }) {
+    if (this._unloading) return this._unloading
+    this._unloading = this.get(id).unloading()
+    return this._unloading
   }
 
   async completeUnload ({ id, action }) {
@@ -1558,15 +1577,17 @@ class PearGUI extends ReadyResource {
     instance.setWindowButtonVisibility(visible)
   }
 
-  message (msg) { return this.scipc.message(msg) }
+  message (msg) { return this.ipc.message(msg) }
 
-  messages (pattern) { return this.scipc.messages(pattern) }
+  messages (pattern) { return this.ipc.messages(pattern) }
 
-  checkpoint (state) { return this.scipc.checkpoint(state) }
+  checkpoint (state) { return this.ipc.checkpoint(state) }
 
-  versions () { return this.scipc.versions() }
+  versions () { return this.ipc.versions() }
 
-  restart (opts = {}) { return this.scipc.restart(opts) }
+  restart (opts = {}) { return this.ipc.restart(opts) }
+
+  warming () { return this.ipc.warming() }
 }
 
 module.exports = PearGUI

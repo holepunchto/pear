@@ -109,7 +109,7 @@ if (process.isMainFrame) {
 
   async function warm () {
     await gui.ready()
-    for await (const { batch, protocol } of gui.emipc.warming()) {
+    for await (const { batch, protocol } of gui.ipc.warming()) {
       let sl = null
       if (protocol === 'pear' || protocol === 'holepunch') sl = pltsl
       if (protocol === 'app') sl = appsl
@@ -131,14 +131,14 @@ if (process.isMainFrame) {
         const ctrl = this.root.querySelector('#ctrl')
         this.mutations = new MutationObserver(async () => {
           const { x, y } = ctrl.getBoundingClientRect()
-          await gui.emipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         })
         this.mutations.observe(this, { attributes: true })
 
         this.intesections = new IntersectionObserver(async ([element]) => {
-          await gui.emipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
+          await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
           const { x, y } = ctrl.getBoundingClientRect()
-          await gui.emipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         }, { threshold: 0 })
 
         this.intesections.observe(this)

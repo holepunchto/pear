@@ -31,15 +31,15 @@ async function electronMain () {
   await gui.ready()
 
   // note: would be unhandled rejection on failure, but should never fail:
-  if (await gui.scipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
+  if (await gui.ipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
     electron.app.quit(0)
     return
   }
 
   const app = await gui.app()
 
-  gui.emipc.unloading({ id: app.id }).then(() => {
-    app.close()
+  gui.unloading({ id: app.id }).then(async () => {
+    await app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
