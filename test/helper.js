@@ -23,7 +23,6 @@ class Helper {
     this.teardown = t.teardown
     this.opts = opts
     this.logging = this.opts.logging
-    this.verbose = true
 
     this.client = null
 
@@ -88,7 +87,7 @@ class Helper {
     }
 
     function onconnect () {
-      if (this.verbose) console.log('bootpipe connected to sidecar')
+      console.log('bootpipe connected to sidecar')
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       clearTimeout(timeout)
