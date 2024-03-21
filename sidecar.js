@@ -15,10 +15,12 @@ const {
   WAKEUP
 } = require('./lib/constants.js')
 const registerUrlHandler = require('./lib/url-handler')
+const parse = require('./lib/parse')
+const { verbose } = parse.args(Bare.argv, { boolean: ['verbose'] })
 
 crasher('sidecar', SWAP)
 module.exports = bootSidecar().then(() => {
-  console.log('- Sidecar successfully booted')
+  if (verbose) console.log('- Sidecar successfully booted')
 }).catch((err) => {
   console.error(err.stack)
   Bare.exit(1)

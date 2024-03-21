@@ -23,6 +23,7 @@ class Helper {
     this.teardown = t.teardown
     this.opts = opts
     this.logging = this.opts.logging
+    this.verbose = true
 
     this.client = null
 
@@ -87,7 +88,7 @@ class Helper {
     }
 
     function onconnect () {
-      if (this.logging) console.log('bootpipe connected to sidecar')
+      if (this.verbose) console.log('bootpipe connected to sidecar')
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       clearTimeout(timeout)
@@ -96,7 +97,7 @@ class Helper {
   }
 
   tryboot () {
-    const sc = spawn(this.runtime, ['--sidecar'], {
+    const sc = spawn(this.runtime, ['--sidecar', '--verbose'], {
       detached: true,
       stdio: 'inherit',
       cwd: this.platformDir

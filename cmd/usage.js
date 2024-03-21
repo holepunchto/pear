@@ -150,8 +150,8 @@ module.exports = ({ fork, length, key }) => {
     This command instructs any existing sidecar process to shutdown
     and then becomes the sidecar.
 
-    --mem              memory mode: RAM corestore
-    --attach-boot-io   include initial sidecar I/O (if applicable)
+    --mem              Memory mode: RAM corestore
+    --verbose          Additional output
   `
 
   const versions = ansi.bold(cmd + ' versions')

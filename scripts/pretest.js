@@ -45,5 +45,5 @@ const run = (cmd, args, opts) => {
     }
   }
 
-  await run(pear, ['run', 'test', '--attach-boot-io'], { stdio: 'inherit', shell: isWindows })
+  await run(pear, ['run', 'test', '--verbose'], { stdio: 'inherit', shell: isWindows })
 })()

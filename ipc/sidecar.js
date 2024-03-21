@@ -22,12 +22,15 @@ module.exports = class IPC {
   decomissioned = false
   #closed = null
   updateAvailable = null
+  verbose = false
 
   teardown () {
     global.Bare.exit()
   }
 
   constructor ({ updater, drive, corestore }) {
+    const { verbose } = parse.args(global.Bare.argv, { boolean: ['verbose'] })
+    this.verbose = verbose
     this.updater = updater
     if (this.updater) {
       this.updater.on('update', (checkout) => this.updateNotify(checkout))
@@ -50,7 +53,7 @@ module.exports = class IPC {
     this.engine = new Engine(this, { updater, drive, corestore })
     let closed = null
     this.closing = new Promise((resolve) => { closed = resolve })
-    this.closing.finally(() => console.log((isWindows ? '^' : '✔') + ' Sidecar closed'))
+    this.closing.finally(() => { if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed') })
     this.#closed = closed
     this.#spindownCountdown()
   }
@@ -110,15 +113,16 @@ module.exports = class IPC {
     this.spindownms = 0
     this.updateAvailable = version
 
-    if (info.link) {
-      console.log('Application update available:')
-    } else if (version.force) {
-      console.log('Platform Force update (' + version.force.reason + '). Updating to:')
-    } else {
-      console.log('Platform update Available. Restart to update to:')
+    if (this.verbose) {
+      if (info.link) {
+        console.log('Application update available:')
+      } else if (version.force) {
+        console.log('Platform Force update (' + version.force.reason + '). Updating to:')
+      } else {
+        console.log('Platform update Available. Restart to update to:')
+      }
+      console.log('  v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
     }
-
-    console.log('  v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
     const messaged = new Set()
@@ -261,7 +265,7 @@ module.exports = class IPC {
   }
 
   async restart (client, { platform = false } = {}) {
-    console.log('Restarting ' + (platform ? 'platform' : 'client'))
+    if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
       const { cwd, runtime, argv, env } = client.userData.ctx
       const appling = client.userData.ctx.appling
@@ -294,7 +298,7 @@ module.exports = class IPC {
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
-    console.log('Restarting', restarts.length, 'apps')
+    if (this.verbose) console.log('Restarting', restarts.length, 'apps')
     for (const { cwd, appling, argv, env } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
@@ -325,7 +329,7 @@ module.exports = class IPC {
   }
 
   async shutdown (client) {
-    console.log('- Sidecar shutting down...')
+    if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
     const tearingDown = !!app && app.teardown()
     if (tearingDown === false) client.close()
@@ -352,7 +356,7 @@ module.exports = class IPC {
     await serverClosing
     if (this.updater) {
       if (await this.updater.applyUpdate() !== null) {
-        console.log((isWindows ? '^' : '✔') + ' Applied update')
+        if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Applied update')
       }
     }
     this.#closed()
