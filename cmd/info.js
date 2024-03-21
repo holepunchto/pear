@@ -38,18 +38,31 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json']
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
     })
-    const { _, json } = flags
+    const { _, json, changelog, 'full-changelog': full, metadata, key, keys } = flags
     const [from] = _
     let [, dir = ''] = _
     const isKey = from ? parse.runkey(from).key !== null : false
     const channel = isKey ? null : from
-    const key = isKey ? from : null
-    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
+    const runkey = isKey ? from : null
+    if (runkey && isKey === false) throw new Error('Key "' + runkey + '" is not valid')
     const id = Bare.pid
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-    await output(json, ipc.info({ id, key, channel, dir }))
+
+    const clogtype = full ? 'full' : 'latest'
+
+    let display = {
+      key: key !== false,
+      keys: keys !== false,
+      metadata: metadata !== false,
+      changelog: changelog !== false ? clogtype : false
+    }
+
+    const exclusive = changelog === true || full === true || metadata === true || key === true || keys === true
+    if (exclusive) display = { key, keys, metadata, changelog: changelog || full ? clogtype : false }
+
+    await output(json, ipc.info({ id, key: runkey, channel, dir, display }))
   } catch (err) {
     await ipc.usage.output('info', false)
     print(err.message, false)
