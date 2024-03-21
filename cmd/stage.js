@@ -23,7 +23,7 @@ const output = outputter('stage', {
   addendum: ({ version, release, channel, key }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(key)} ]\n`
 })
 
-module.exports = (rpc) => async function stage (args) {
+module.exports = (ipc) => async function stage (args) {
   try {
     const { _, dryRun, bare, json, ignore, name, truncate } = parse.args(args, {
       boolean: ['dryRun', 'bare', 'json'],
@@ -39,11 +39,11 @@ module.exports = (rpc) => async function stage (args) {
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const id = Bare.pid
-    await output(json, rpc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
+    await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      rpc.userData.usage.output('stage')
+      ipc.userData.usage.output('stage')
     } else {
       print('An error occured', false)
       console.error(err)

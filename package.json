@@ -80,7 +80,6 @@
     "hyperdrive": "^11.7.0",
     "hyperswarm": "^4.7.13",
     "iambus": "^1.0.3",
-    "jsonrpc-mux": "^1.1.0",
     "localdrive": "^1.11.3",
     "localwatch": "^1.4.0",
     "mime-db": "^1.52.0",

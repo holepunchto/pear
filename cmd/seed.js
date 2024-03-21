@@ -16,7 +16,7 @@ const output = outputter('seed', {
   'peer-remove': (info) => `-_- peer drop ${info}`
 })
 
-module.exports = (rpc) => async function seed (args) {
+module.exports = (ipc) => async function seed (args) {
   const parsed = parse.args(args, {
     boolean: ['verbose', 'json'],
     string: ['seeders', 'name'],
@@ -34,14 +34,14 @@ module.exports = (rpc) => async function seed (args) {
       name = pkg.pear?.name || pkg.name
     }
     const id = Bare.pid
-    await output(json, rpc.seed({ id, name, channel, key, verbose, seeders, dir, clientArgv: Bare.argv }))
+    await output(json, ipc.seed({ id, name, channel, key, verbose, seeders, dir, clientArgv: Bare.argv }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       if (json) {
         print(JSON.stringify({ cmd: 'seed', type: 'error', message: err.message, stack: err.stack, code: err.code }))
       } else {
         print(err.message, false)
-        rpc.userData.usage.output('seed')
+        ipc.userData.usage.output('seed')
       }
     } else {
       print('An error occured', false)

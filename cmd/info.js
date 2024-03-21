@@ -33,7 +33,7 @@ const output = outputter('info', {
   error: ({ code, stack }) => `Info Error (code: ${code || 'none'}) ${stack}`
 })
 
-module.exports = (rpc) => async function info (args) {
+module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
       boolean: ['json']
@@ -43,9 +43,9 @@ module.exports = (rpc) => async function info (args) {
     const isKey = key ? parse.runkey(key).key !== null : false
     if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
     const id = Bare.pid
-    await output(json, rpc.info({ id, key }))
+    await output(json, ipc.info({ id, key }))
   } catch (err) {
-    rpc.userData.usage.output('info', false)
+    ipc.userData.usage.output('info', false)
     print(err.message, false)
     Bare.exit(1)
   }
