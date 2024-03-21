@@ -19,6 +19,11 @@ module.exports = (ipc) => async function (args) {
 
   print(`Building for ${os.platform()}-${os.arch()}...`)
 
+  // TODO: Cleanup this workaround once pear-dev no longer relies on process
+  global.process = require('bare-process')
+  global.process.getuid = () => 1000
+  global.process.getgid = () => 1000
+
   const id = Math.random().toString(36).substring(7)
   const buildDir = args[1] ? path.resolve(args[1]) : createTmpDir('build', id)
   const srcDir = path.resolve(buildDir, 'src')
