@@ -26,19 +26,17 @@ module.exports = (ipc) => async function (args) {
 
   const id = Math.random().toString(36).substring(7)
   const buildDir = args[1] ? path.resolve(args[1]) : createTmpDir('build', id)
-  const srcDir = path.resolve(buildDir, 'src')
 
   print(`Using build directory: ${buildDir}`)
-  print(`Using source directory: ${srcDir}`)
 
   print('Creating dump...')
-  await createDump({ srcDir, key, ipc })
+  await createDump({ buildDir, key, ipc })
 
   print('Running init...')
   await init({ key, buildDir })
 
   print('Running configure...')
-  await configure({ srcDir, buildDir })
+  await configure({ buildDir })
 
   print('Running build...')
   await build({ buildDir })
@@ -57,14 +55,14 @@ function createTmpDir (type, id) {
   return dir
 }
 
-async function createDump ({ srcDir, key, ipc }) {
+async function createDump ({ buildDir, key, ipc }) {
   const output = outputter('stage', {
     dumping: ({ key, dir }) => `  Dumping ${key} into ${dir}`,
     complete: '  Dumping complete!\n',
     error: ({ code, stack }) => `  Dumping Error (code: ${code || 'none'}) ${stack}`
   })
 
-  await output(undefined, ipc.dump({ id: Bare.pid, key, dir: srcDir }))
+  await output(undefined, ipc.dump({ id: Bare.pid, key, dir: buildDir }))
 }
 
 async function createPlatformDrive () {
@@ -118,11 +116,11 @@ async function init ({ key, buildDir }) {
   }
 }
 
-async function configure ({ srcDir, buildDir }) {
+async function configure ({ buildDir }) {
   const drive = await createPlatformDrive()
   const { configure } = await subsystem(drive, '/subsystems/build.js')
 
-  const opts = { source: srcDir, cwd: buildDir }
+  const opts = { source: buildDir, cwd: buildDir }
 
   await configure(opts)
 }
