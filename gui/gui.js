@@ -359,13 +359,13 @@ class App extends ReadyResource {
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
   async _open () {
-    await this.starting
-    this.id = await this.ctrl
+    return this.start()
   }
 
-  constructor (ctx) {
+  constructor (ctx, ipc) {
     super()
     this.ctx = ctx
+    this.ipc = ipc
     this.contextMenu = null
     electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
 
@@ -453,9 +453,7 @@ class App extends ReadyResource {
     }
   }
 
-  async start (ipc) {
-    this.ipc = ipc
-
+  async start () {
     electron.app.once('will-quit', async (e) => {
       if (this.closing === null && this.closed === false) {
         e.preventDefault()
@@ -466,7 +464,7 @@ class App extends ReadyResource {
 
     const { ctx } = this
 
-    this.starting = ipc.start({
+    this.starting = this.ipc.start({
       argv: ctx.argv,
       env: ctx.env,
       cwd: ctx.cwd,
@@ -475,7 +473,7 @@ class App extends ReadyResource {
 
     this.starting.catch(async (err) => {
       await this.report({ err })
-      this.destroy()
+      this.close()
     })
 
     try {
@@ -522,18 +520,18 @@ class App extends ReadyResource {
       decalSession.setUserAgent('Pear Platform')
 
       const entry = '/' + ctx.main
-      const identify = await ipc.identify()
+      const identify = await this.ipc.identify()
       const { id, host } = identify
 
-      this.warming = ctx.trace ? ipc.warming({ id }) : null
+      this.warming = ctx.trace ? this.ipc.warming({ id }) : null
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
-      ipc.id = id
+      this.ipc.id = id
 
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      this.ctrl = PearGUI.ctrl('window', entry, { ctx }, {
+      const ctrl = await PearGUI.ctrl('window', entry, { ctx }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -573,7 +571,7 @@ class App extends ReadyResource {
         afterNativeViewLoaded: (trace
           ? async () => {
             await new Promise((resolve) => setTimeout(resolve, 750)) // time for final blocks to be received
-            this.destroy()
+            this.close()
             this.quit()
           }
           : (isLinux ? (app) => linuxViewSize(app, app.tbh) : null)),
@@ -587,23 +585,24 @@ class App extends ReadyResource {
 
             const { bail } = await this.starting
             if (bail) return false
-            ctx.update({ config: await ipc.config() })
+            ctx.update({ config: await this.ipc.config() })
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
             if (app.closing) return false
             return true
           } catch (err) {
             await this.report({ err })
-            await this.destroy()
+            await this.close()
             return false
           }
         }
       })
-
+      this.id = ctrl.id
       await this.starting
-      this.starting = null
     } catch (err) {
       await this.report({ err })
-      this.destroy()
+      this.close()
+    } finally {
+      this.starting = null
     }
   }
 
@@ -642,10 +641,6 @@ class App extends ReadyResource {
     const result = await Promise.race([timeout, unloading])
     this.closed = true
     return result
-  }
-
-  destroy () {
-    return this.ipc.close()
   }
 
   quit (code) {
@@ -1359,17 +1354,13 @@ class PearGUI extends ReadyResource {
           cb()
         }
       }),
-      unhandled: (def, params) => {
-        return this.scipc[def.name](params)
-      },
       handlers: this,
-      methods,
-      userData: { ctx }
+      methods
     })
 
     electron.ipcMain.on('ipc', (event, data) => {
       this.#event = event
-      this.emipc.stream.push(data)
+      if (data !== null) this.emipc.stream.push(data)
     })
 
     electron.ipcMain.on('id', async (event) => {
@@ -1383,12 +1374,9 @@ class PearGUI extends ReadyResource {
   }
 
   async app () {
-    const app = new App(this.ctx)
+    const app = new App(this.ctx, this.scipc)
     // this.once('close', async () => { app.quit() })
-    app.start(this.scipc).catch(console.error)
     await app.ready()
-    const ctrl = await app.ctrl
-    app.id = ctrl.id
     return app
   }
 
@@ -1398,7 +1386,7 @@ class PearGUI extends ReadyResource {
   }
 
   async _close () {
-    await this.emrpc.close()
+    await this.emipc.close()
     await this.scipc.close()
   }
 
@@ -1569,6 +1557,16 @@ class PearGUI extends ReadyResource {
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
+
+  message (msg) { return this.scipc.message(msg) }
+
+  messages (pattern) { return this.scipc.messages(pattern) }
+
+  checkpoint (state) { return this.scipc.checkpoint(state) }
+
+  versions () { return this.scipc.versions() }
+
+  restart (opts = {}) { return this.scipc.restart(opts) }
 }
 
 module.exports = PearGUI

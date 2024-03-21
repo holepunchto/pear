@@ -109,7 +109,7 @@ if (process.isMainFrame) {
 
   async function warm () {
     await gui.ready()
-    for await (const { batch, protocol } of gui.scipc.warming()) {
+    for await (const { batch, protocol } of gui.emipc.warming()) {
       let sl = null
       if (protocol === 'pear' || protocol === 'holepunch') sl = pltsl
       if (protocol === 'app') sl = appsl

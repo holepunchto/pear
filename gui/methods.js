@@ -27,7 +27,14 @@ const methods = [
   { id: 280, name: 'detachMainView' },
   { id: 281, name: 'afterViewLoaded' },
   { id: 282, name: 'setWindowButtonPosition' },
-  { id: 283, name: 'setWindowButtonVisibility' }
+  { id: 283, name: 'setWindowButtonVisibility' },
+  // forwarding methods
+  { id: 384, name: 'messages', stream: true },
+  { id: 385, name: 'message' },
+  { id: 386, name: 'checkpoint' },
+  { id: 387, name: 'versions' },
+  { id: 388, name: 'restart' }
+
 ]
 
 module.exports = methods

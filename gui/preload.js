@@ -4,25 +4,22 @@ const { EventEmitter } = require('events')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
 const streamx = require('streamx')
-const RPC = require('pear-ipc')
+const IPC = require('pear-ipc')
 const methods = require('./methods')
 
 module.exports = class PearGUI extends ReadyResource {
   async _open () {
-    await this.scipc.ready()
     await this.emipc.ready()
   }
 
   async _close () {
     await this.emipc.close()
-    await this.scipc.close()
   }
 
-  constructor ({ socketPath, connectTimeout, API, ctx }) {
+  constructor ({ API, ctx }) {
     super()
     const id = this.id = electron.ipcRenderer.sendSync('id')
-    this.scipc = new RPC({ connect: true, socketPath, connectTimeout, methods })
-    this.emipc = new RPC({
+    this.emipc = new IPC({
       methods,
       stream: new streamx.Duplex({
         write (data, cb) {
