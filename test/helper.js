@@ -87,7 +87,7 @@ class Helper {
     }
 
     function onconnect () {
-      console.log('bootpipe connected to sidecar')
+      console.log('- Bootpipe connected to sidecar')
       pipe.removeListener('error', onerror)
       pipe.removeListener('connect', onconnect)
       clearTimeout(timeout)
