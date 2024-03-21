@@ -10,6 +10,7 @@
 * Bare - always link vcruntime statically
 * Bare - custom inspect
 * Bare - fixes issues relating to early exiting
+* Updates - phantom update fix
 
 ## v1.1.1
 
