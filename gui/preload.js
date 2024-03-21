@@ -1,48 +1,30 @@
 /* eslint-env browser */
 'use strict'
+const streamx = require('streamx')
 const { EventEmitter } = require('events')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
-const streamx = require('streamx')
-const IPC = require('pear-ipc')
-const methods = require('./methods')
 
 module.exports = class PearGUI extends ReadyResource {
-  async _open () {
-    await this.emipc.ready()
-  }
-
-  async _close () {
-    await this.emipc.close()
-  }
-
   constructor ({ API, ctx }) {
     super()
     const id = this.id = electron.ipcRenderer.sendSync('id')
-    this.emipc = new IPC({
-      methods,
-      stream: new streamx.Duplex({
-        write (data, cb) {
-          electron.ipcRenderer.send('ipc', data)
-          cb()
-        }
-      })
-    })
+    this.ipc = new IPC()
     electron.ipcRenderer.on('ipc', (e, data) => {
-      this.emipc.stream.push(Buffer.from(data))
+      this.ipc.stream.push(Buffer.from(data))
     })
 
     const onteardown = async (fn) => {
       if (!ctx.isDecal) return
       await this.ready()
-      const action = await this.emipc.unloading({ id }) // only resolves when unloading occurs
+      const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       fn(action) // resolve global promise and trigger user suspend functions
       const MAX_TEARDOWN_WAIT = 5000
       const timeout = new Promise((resolve) => setTimeout(resolve, MAX_TEARDOWN_WAIT))
       await Promise.race([window[Symbol.for('pear.unloading')], timeout])
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
-      await this.emipc.completeUnload({ id, action })
+      await this.ipc.completeUnload({ id, action })
     }
     API = class extends API {
       constructor (ipc, ctx, onteardown) {
@@ -235,6 +217,59 @@ module.exports = class PearGUI extends ReadyResource {
         electron.app.quit()
       }
     }
-    this.api = new API(this.emipc, ctx, onteardown)
+    this.api = new API(this.ipc, ctx, onteardown)
   }
+}
+
+class IPC {
+  getMediaAccessStatus (...args) { return electron.ipcRenderer.invoke('getMediaAccessStatus', ...args) }
+  askForMediaAccess (...args) { return electron.ipcRenderer.invoke('askForMediaAccess', ...args) }
+  desktopSources (...args) { return electron.ipcRenderer.invoke('desktopSources', ...args) }
+  chrome (...args) { return electron.ipcRenderer.invoke('chrome', ...args) }
+  ctrl (...args) { return electron.ipcRenderer.invoke('ctrl', ...args) }
+  parent (...args) { return electron.ipcRenderer.invoke('parent', ...args) }
+  open (...args) { return electron.ipcRenderer.invoke('open', ...args) }
+  close (...args) { return electron.ipcRenderer.invoke('close', ...args) }
+  show (...args) { return electron.ipcRenderer.invoke('show', ...args) }
+  hide (...args) { return electron.ipcRenderer.invoke('hide', ...args) }
+  minimize (...args) { return electron.ipcRenderer.invoke('minimize', ...args) }
+  maximize (...args) { return electron.ipcRenderer.invoke('maximize', ...args) }
+  fullscreen (...args) { return electron.ipcRenderer.invoke('fullscreen', ...args) }
+  restore (...args) { return electron.ipcRenderer.invoke('restore', ...args) }
+  focus (...args) { return electron.ipcRenderer.invoke('focus', ...args) }
+  blur (...args) { return electron.ipcRenderer.invoke('blur', ...args) }
+  getMediaSourceId (...args) { return electron.ipcRenderer.invoke('getMediaSourceId', ...args) }
+  dimensions (...args) { return electron.ipcRenderer.invoke('dimensions', ...args) }
+  isVisible (...args) { return electron.ipcRenderer.invoke('isVisible', ...args) }
+  isClosed (...args) { return electron.ipcRenderer.invoke('isClosed', ...args) }
+  isMinimized (...args) { return electron.ipcRenderer.invoke('isMinimized', ...args) }
+  isMaximized (...args) { return electron.ipcRenderer.invoke('isMaximized', ...args) }
+  isFullscreen (...args) { return electron.ipcRenderer.invoke('isFullscreen', ...args) }
+  unloading (...args) { return electron.ipcRenderer.invoke('unloading', ...args) }
+  completeUnload (...args) { return electron.ipcRenderer.invoke('completeUnload', ...args) }
+  attachMainView (...args) { return electron.ipcRenderer.invoke('attachMainView', ...args) }
+  detachMainView (...args) { return electron.ipcRenderer.invoke('detachMainView', ...args) }
+  afterViewLoaded (...args) { return electron.ipcRenderer.invoke('afterViewLoaded', ...args) }
+  setWindowButtonPosition (...args) { return electron.ipcRenderer.invoke('setWindowButtonPosition', ...args) }
+  setWindowButtonVisibility (...args) { return electron.ipcRenderer.invoke('setWindowButtonVisibility', ...args) }
+  message (...args) { return electron.ipcRenderer.invoke('message', ...args) }
+  checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
+  versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
+  restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
+  messages () {
+    electron.ipcRenderer.send('messages')
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('messages', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+  warming () {
+    electron.ipcRenderer.send('warming')
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+  ref () {}
+  unref () {}
 }
