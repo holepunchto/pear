@@ -29,7 +29,7 @@ module.exports = (ipc) => async function (args) {
   const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
 
   const id = Math.random().toString(36).substring(7)
-  const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir('build', id)
+  const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir({ key, id, type: 'build' })
 
   print(`Using build directory: ${buildDir}`)
 
@@ -54,9 +54,8 @@ module.exports = (ipc) => async function (args) {
   Bare.exit(0)
 }
 
-function createTmpDir (type, id) {
+function createTmpDir ({ key, type, id }) {
   const tmpdir = os.tmpdir()
-  const key = 'test'
   const dir = path.join(tmpdir, `pear-${type}-${key}-${id}`)
 
   fs.mkdirSync(dir)
