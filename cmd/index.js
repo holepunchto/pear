@@ -82,6 +82,5 @@ module.exports = async (ipc) => {
     return run(ipc)(args)
   }
 
-
   return ipc
 }
