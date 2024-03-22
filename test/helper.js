@@ -126,6 +126,7 @@ class Helper extends IPC {
 
   static async sink (iter, ptn) {
     for await (const output of iter) {
+      if (output.tag === 'error') throw new Error(output.data?.stack)
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
   }
