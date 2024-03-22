@@ -140,6 +140,18 @@ module.exports = ({ fork, length, key }) => {
     --verbose|-v  Additional output
   `
 
+  const build = ansi.bold(cmd + ' build')
+  const buildArgs = ansi.bold('<channel|key> [dir]')
+  const buildBrief = 'Build project distributable.'
+  const buildExplain = `${build} ${buildArgs}
+
+    ${buildBrief}
+
+    Specify channel or key to build a distributable for the project.
+
+    --verbose|-v  Additional output
+  `
+
   const sidecar = ansi.bold(cmd + ' sidecar')
   const sidecarBrief = 'Advanced. Run sidecar in terminal.'
   const sidecarExplain = `${sidecar}
@@ -203,6 +215,7 @@ module.exports = ({ fork, length, key }) => {
     dump: dumpExplain,
     run: runExplain,
     seed: seedExplain,
+    build: buildExplain,
     sidecar: sidecarExplain,
     help: helpExplain,
     output,
@@ -216,6 +229,7 @@ module.exports = ({ fork, length, key }) => {
     ${release} ${ansi.sep} ${dedot(releaseBrief)}
     ${info} ${ansi.sep} ${dedot(infoBrief)}
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
+    ${build} ${ansi.sep} ${dedot(buildBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
 
