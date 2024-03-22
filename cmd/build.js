@@ -25,6 +25,9 @@ module.exports = (ipc) => async function (args) {
   global.process.getuid = () => 1000
   global.process.getgid = () => 1000
 
+  const drive = await createPlatformDrive()
+  const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
+
   const id = Math.random().toString(36).substring(7)
   const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir('build', id)
 
@@ -34,13 +37,18 @@ module.exports = (ipc) => async function (args) {
   await createDump({ buildDir, key, ipc })
 
   print('Running init...')
-  await init({ key, buildDir, verbose })
+  if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
+    print('  Using existing CMakeLists.txt')
+  } else {
+    print('  No CMakeLists.txt found, creating one...')
+    await buildSubsystem.init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
+  }
 
   print('Running configure...')
-  await configure({ buildDir, verbose })
+  await buildSubsystem.configure({ source: buildDir, cwd: buildDir, verbose, quiet: false })
 
   print('Running build...')
-  await build({ buildDir, verbose })
+  await buildSubsystem.build({ cwd: buildDir, verbose, quiet: false })
 
   print('Build complete!')
   Bare.exit(0)
@@ -158,34 +166,4 @@ function loadApplingOpts (buildDir) {
       }
     }
   }
-}
-
-async function init ({ key, buildDir, verbose }) {
-  if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
-    print('  Using existing CMakeLists.txt')
-    return
-  }
-
-  print('  No CMakeLists.txt found, creating one...')
-
-  const drive = await createPlatformDrive()
-  const { init } = await subsystem(drive, '/subsystems/build.js')
-
-  await init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
-}
-
-async function configure ({ buildDir, verbose }) {
-  const drive = await createPlatformDrive()
-  const { configure } = await subsystem(drive, '/subsystems/build.js')
-
-  const opts = { source: buildDir, cwd: buildDir, verbose, quiet: false }
-
-  await configure(opts)
-}
-
-async function build ({ buildDir, verbose }) {
-  const drive = await createPlatformDrive()
-  const { build } = await subsystem(drive, '/subsystems/build.js')
-
-  await build({ cwd: buildDir, verbose, quiet: false })
 }
