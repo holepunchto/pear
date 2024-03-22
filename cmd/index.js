@@ -1,5 +1,4 @@
 'use strict'
-const Crank = require('../ipc/crank')
 const init = require('./init')
 const stage = require('./stage')
 const seed = require('./seed')
@@ -11,11 +10,10 @@ const run = require('./run')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
 
-module.exports = async (channel) => {
-  const ipc = new Crank(channel)
+module.exports = async (ipc) => {
   Bare.prependListener('exit', () => { ipc.close() })
   const usage = require('./usage')(CHECKOUT)
-  ipc.usage = usage
+  ipc.userData = { usage }
   const argv = Bare.argv.slice(1)
   const { _, version } = parse.args(argv, {
     boolean: ['help', 'version'],

@@ -11,7 +11,6 @@ module.exports = class Context extends SharedContext {
   link = null
   version = { key: null, length: 0, fork: 0 }
   checkpoint = null
-  onreconfig = null // extern set
   constructor (opts) {
     super(opts)
     this.reconfigure()
@@ -19,9 +18,6 @@ module.exports = class Context extends SharedContext {
 
   reconfigure () {
     this.config = this.constructor.configFrom(this)
-    if (this.onreconfig && this.initialized && !this.stage) {
-      this.onreconfig()
-    }
   }
 
   update (state) {

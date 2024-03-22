@@ -1,18 +1,17 @@
 'use strict'
-const IPC = require('./ipc/main')
-const Context = require('./ctx/shared')
-const { App } = require('./lib/gui')
-const { SWAP, RUNTIME } = require('./lib/constants')
-const crasher = require('./lib/crasher')
-const connect = require('./lib/connect.js')
+const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
+const Context = require('./ctx/shared')
+const GUI = require('./gui')
+const crasher = require('./lib/crasher')
+const tryboot = require('./lib/tryboot')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
 
 configureElectron()
 crasher('electron-main', SWAP)
 electronMain().catch(console.error)
 
 async function electronMain () {
-  const channel = await connect()
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
       ? process.argv.slice(1)
@@ -20,40 +19,31 @@ async function electronMain () {
   })
   if (ctx.error) {
     console.error(ctx.error)
-    require('electron').app.quit(1)
+    electron.app.quit(1)
     return
   }
-  const client = channel
-  const ipc = new IPC(ctx, client)
+  const gui = new GUI({
+    socketPath: SOCKET_PATH,
+    connectTimeout: CONNECT_TIMEOUT,
+    tryboot,
+    ctx
+  })
+  await gui.ready()
 
-  if (await ipc.wakeup()) { // note: would be unhandled rejection on failure, but should never fail
-    require('electron').app.quit(0)
+  // note: would be unhandled rejection on failure, but should never fail:
+  if (await gui.ipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
+    electron.app.quit(0)
     return
   }
-  const app = new App(ctx)
-  client.once('close', async () => { app.quit() })
-  app.start(ipc).catch(console.error)
-  await app.starting
-  ipc.unloading().then(() => {
-    app.close()
+
+  const app = await gui.app()
+
+  gui.unloading({ id: app.id }).then(async () => {
+    await app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
 function configureElectron () {
-  const electron = require('electron')
-  if (isLinux) {
-    linuxSetup(RUNTIME)
-  }
-
-  if (isWindows) {
-    const ap = applingPath()
-    if (ap) {
-      electron.app.setAsDefaultProtocolClient('holepunch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('punch', ap) // legacy
-      electron.app.setAsDefaultProtocolClient('pear', ap)
-    }
-  }
-
   const appName = applingName()
   if (appName) {
     process.title = appName
@@ -107,74 +97,4 @@ function applingName () {
   }
 
   return null
-}
-
-function linuxSetup (executable) {
-  const fs = require('fs')
-  const os = require('os')
-  const { join } = require('path')
-  const { spawnSync } = require('child_process')
-  const APP_NAME = 'Keet'
-  const ICON_NAME = 'keet'
-  const DESKTOP_FILE_NAME = 'keet.desktop'
-  const DESKTOP_FILE_PATH = join(os.homedir(), '.local', 'share', 'applications', DESKTOP_FILE_NAME)
-  const MIME_TYPES = [
-    'x-scheme-handler/pear' // pear
-  ]
-
-  if (!executable) return
-  try {
-    if (!checkDesktopFile(executable)) {
-      fs.writeFileSync(DESKTOP_FILE_PATH, generateDesktopFile(executable), { encoding: 'utf-8' })
-    }
-    for (const mimeType of MIME_TYPES) {
-      if (!checkMimeType(mimeType)) {
-        registerMimeType(mimeType)
-      }
-    }
-  } catch (err) {
-    console.warn('could not install protocol handler:', err)
-  }
-
-  function checkDesktopFile () {
-    try {
-      fs.statSync(DESKTOP_FILE_PATH)
-      return true
-    } catch (err) {
-      if (err.code !== 'ENOENT') throw err
-      return false
-    }
-  }
-
-  function checkMimeType (mimeType) {
-    try {
-      return spawnSync('xdg-mime', ['query', 'default', mimeType]).stdout.toString() === DESKTOP_FILE_NAME
-    } catch {
-      return false
-    }
-  }
-
-  function registerMimeType (mimeType) {
-    try {
-      spawnSync('xdg-mime', ['default', DESKTOP_FILE_NAME, mimeType])
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  function generateDesktopFile (executable) {
-    return `\
-  [Desktop Entry]
-  Name=${APP_NAME}
-  Exec=${executable} %U
-  Terminal=false
-  Icon=${ICON_NAME}
-  Type=Application
-  StartupWMClass=${APP_NAME}
-  X-AppImage-Version=1.0.1
-  Comment=${APP_NAME}
-  MimeType=${MIME_TYPES.join(';')}
-  `
-  }
 }

@@ -1,5 +1,5 @@
 'use strict'
-const { PLATFORM_DIR, RUNTIME } = require('../lib/constants')
+const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
@@ -100,5 +100,7 @@ module.exports = class Context {
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.constructor.injestPackage(this, pkg)
+    if (ALIASES.keet.z32 === this.key?.z32) this.tbh = 0
+    else this.tbh = this.options.platform?.__legacyTitlebar ? 48 : 0
   }
 }

@@ -19,7 +19,7 @@ module.exports = (ipc) => async function dump (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await ipc.usage.output('dump')
+      ipc.userData.usage.output('dump')
     } else {
       console.error(err)
     }

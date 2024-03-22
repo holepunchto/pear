@@ -12,5 +12,7 @@
   "keywords": [],
   "author": "",
   "license": "",
-  "dependencies": {}
+  "dependencies": {
+    "brittle": "^3.4.0"
+  }
 }

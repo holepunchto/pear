@@ -480,113 +480,6 @@
       </g>
       <path d="M4.36808 27.1281L3.91409 28.0191L4.36808 27.1281ZM27.1281 23.6319L26.237 23.1779L27.1281 23.6319ZM23.6319 27.1281L23.1779 26.237L23.6319 27.1281ZM23.6319 0.871948L23.1779 1.76295L23.6319 0.871948ZM27.1281 4.36808L28.0191 3.91409L27.1281 4.36808ZM4.36808 0.871948L3.91409 -0.0190586L4.36808 0.871948ZM0.871948 4.36808L-0.0190586 3.91409L0.871948 4.36808ZM12.8 1H15.2V-1H12.8V1ZM27 12.8V15.2H29V12.8H27ZM15.2 27H12.8V29H15.2V27ZM1 15.2V12.8H-1V15.2H1ZM12.8 27C10.5433 27 8.9109 26.9992 7.62705 26.8943C6.35487 26.7904 5.51325 26.5892 4.82207 26.237L3.91409 28.0191C4.9342 28.5388 6.06833 28.7736 7.46418 28.8877C8.84837 29.0008 10.5763 29 12.8 29V27ZM-1 15.2C-1 17.4237 -1.00078 19.1516 -0.887685 20.5358C-0.773639 21.9317 -0.538833 23.0658 -0.0190586 24.0859L1.76295 23.1779C1.41078 22.4868 1.20961 21.6451 1.10567 20.373C1.00078 19.0891 1 17.4567 1 15.2H-1ZM4.82207 26.237C3.50493 25.5659 2.43407 24.4951 1.76295 23.1779L-0.0190586 24.0859C0.843802 25.7794 2.22063 27.1562 3.91409 28.0191L4.82207 26.237ZM27 15.2C27 17.4567 26.9992 19.0891 26.8943 20.373C26.7904 21.6451 26.5892 22.4868 26.237 23.1779L28.0191 24.0859C28.5388 23.0658 28.7736 21.9317 28.8877 20.5358C29.0008 19.1516 29 17.4237 29 15.2H27ZM15.2 29C17.4237 29 19.1516 29.0008 20.5358 28.8877C21.9317 28.7736 23.0658 28.5388 24.0859 28.0191L23.1779 26.237C22.4868 26.5892 21.6451 26.7904 20.373 26.8943C19.0891 26.9992 17.4567 27 15.2 27V29ZM26.237 23.1779C25.5659 24.4951 24.4951 25.5659 23.1779 26.237L24.0859 28.0191C25.7794 27.1562 27.1562 25.7794 28.0191 24.0859L26.237 23.1779ZM15.2 1C17.4567 1 19.0891 1.00078 20.373 1.10567C21.6451 1.20961 22.4868 1.41078 23.1779 1.76295L24.0859 -0.0190586C23.0658 -0.538833 21.9317 -0.773639 20.5358 -0.887685C19.1516 -1.00078 17.4237 -1 15.2 -1V1ZM29 12.8C29 10.5763 29.0008 8.84837 28.8877 7.46418C28.7736 6.06833 28.5388 4.9342 28.0191 3.91409L26.237 4.82207C26.5892 5.51325 26.7904 6.35487 26.8943 7.62705C26.9992 8.9109 27 10.5433 27 12.8H29ZM23.1779 1.76295C24.4951 2.43407 25.5659 3.50493 26.237 4.82207L28.0191 3.91409C27.1562 2.22063 25.7794 0.843802 24.0859 -0.0190586L23.1779 1.76295ZM12.8 -1C10.5763 -1 8.84837 -1.00078 7.46418 -0.887685C6.06833 -0.773639 4.9342 -0.538833 3.91409 -0.0190586L4.82207 1.76295C5.51325 1.41078 6.35487 1.20961 7.62705 1.10567C8.9109 1.00078 10.5433 1 12.8 1V-1ZM1 12.8C1 10.5433 1.00078 8.9109 1.10567 7.62705C1.20961 6.35487 1.41078 5.51325 1.76295 4.82207L-0.0190586 3.91409C-0.538833 4.9342 -0.773639 6.06833 -0.887685 7.46418C-1.00078 8.84837 -1 10.5763 -1 12.8H1ZM3.91409 -0.0190586C2.22063 0.843802 0.843802 2.22063 -0.0190586 3.91409L1.76295 4.82207C2.43407 3.50493 3.50493 2.43407 4.82207 1.76295L3.91409 -0.0190586Z" fill="white" fill-opacity="0.24"/>
     </svg>
-    <decal-notifications>
-      <span slot="icon"></span>
-      <span slot="content"></span>
-      <span slot="info"></span>
-      <template id="decal-notifications-tmpl">
-        <style>
-          :host {
-            float: right;
-            font-family: 'Open Sans';
-          }
-          :host::after {
-            content: "";
-            clear: both;
-            display: table;
-          }
-          .notification {
-            float: right;
-            color: #9BF8FF;
-            background: rgba(55, 148, 195, 0.5);
-            border-radius: 8px;
-            padding: 6px 13px;
-            font-weight: 600;
-            font-size: 14px;
-            box-sizing: border-box;
-            height: 28px;
-            margin-right: 8px;
-            width: 172px;
-          }
-          .info { display: none }
-          .info, .content {
-            position: relative;
-            top: -2px;
-            text-indent: 1px;
-          }
-        </style>
-        <div class="notification">
-          <span class="icon"><slot name="icon">ICON</slot></span>
-          <span class="content"><slot name="content">CONTENT</slot></span>
-          <span class="info"><slot name="info">INFO</slot></span>
-        </div>
-      </template>
-      <script type="module">
-        customElements.define('decal-notifications', class extends HTMLElement {
-          restart () {
-            return this.loader.restart()
-          }
-          async subscribe (ipc, loader) {
-            this.ipc = ipc
-            this.loader = loader
-            for await (const notification of ipc.engine.notifications()) {
-              if (notification.type !== 'pear/updates') continue
-              if (notification.version?.force) {
-                if (document.readyState === 'complete') this.restart()
-                else addEventListener('load', () => this.restart())
-                return
-              }
-              this.notify()
-            }
-          }
-          notify () {
-            if (this.count > 0) {
-              // in future, if another type of notification is needed,
-              // this return gaurd would be removed to allow multiple `notify` calls
-              // impl of noti types would also be needed
-              return
-            }
-            this.count++
-            this.querySelector('[slot="icon"]').innerHTML = '<svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.0312 1.0625C14.75 0.96875 14.4062 1.03125 14.2188 1.25L12.625 2.8125C11.375 1.6875 9.75 1 8 1C4.90625 1 2.125 3.09375 1.25 6.0625C1.15625 6.4375 1.375 6.875 1.78125 6.96875C2.1875 7.09375 2.59375 6.875 2.6875 6.46875C3.375 4.15625 5.5625 2.5 8 2.5C9.34375 2.5 10.5938 3.03125 11.5625 3.875L9.71875 5.75C9.5 5.9375 9.4375 6.28125 9.53125 6.5625C9.65625 6.84375 9.9375 7 10.25 7H14.7188C15.1562 7 15.5 6.6875 15.5 6.25V1.75C15.5 1.46875 15.3125 1.1875 15.0312 1.0625ZM14.1875 9.03125C13.7812 8.90625 13.375 9.125 13.25 9.53125C12.5938 11.875 10.4062 13.5 7.96875 13.5C6.59375 13.5 5.34375 13 4.375 12.1562L6.25 10.2812C6.4375 10.0938 6.5 9.75 6.40625 9.46875C6.3125 9.1875 6.03125 9 5.71875 9H1.25C0.8125 9 0.46875 9.34375 0.46875 9.75V14.25C0.46875 14.5625 0.65625 14.8438 0.9375 14.9688C1.03125 15 1.125 15 1.21875 15C1.4375 15 1.625 14.9375 1.75 14.7812L3.34375 13.2188C4.59375 14.3438 6.21875 15 7.96875 15C11.0625 15 13.8125 12.9375 14.6875 9.96875C14.8125 9.5625 14.5938 9.15625 14.1875 9.03125Z" fill="#9BF8FF"/></svg>'
-            this.querySelector('[slot="content"]').innerHTML = 'UPDATE AVAILABLE'
-            this.querySelector('[slot="info"]').innerHTML = '&thinsp;CLICK TO RESTART'
-            this.root.appendChild(this.template.cloneNode(true))
-            const node = this.root.querySelector('.notification:last-child')
-            const info = node.querySelector('.info')
-            const content = node.querySelector('.content')
-            const enter = () => {
-              info.style.display = 'inline-block'
-              content.style.display = 'none'
-            }
-            const leave = () => {
-              if (content.style.display === 'none') {
-                setTimeout(() => {
-                  content.style.display = 'inline-block'
-                  info.style.display = 'none'
-                }, 2000).unref()
-              }
-            }
-            const click = () => {
-              this.querySelector('[slot="info"]').innerHTML = '&thinsp;RESTARTING NOW'
-              node.removeEventListener('click', click)
-              node.removeEventListener('mouseenter', enter)
-              node.removeEventListener('mouseleave', leave)
-              this.ipc.engine.restart({ platform: true }).catch(console.error)
-            }
-            node.addEventListener('click', click)
-            node.addEventListener('mouseenter', enter)
-            node.addEventListener('mouseleave', leave)
-          }
-          constructor () {
-            super()
-            this.ipc = null
-            this.count = 0
-            this.template = document.querySelector('#decal-notifications-tmpl').content
-            this.root = this.attachShadow({mode: 'open'})
-          }
-        })
-      </script>
-    </decal-notifications> 
 
     <decal-tier>
       <span slot="tier"></span>
@@ -696,7 +589,7 @@
     </template>
     <script type="module">
       customElements.define('decal-report', class extends HTMLElement {
-        ipc = null
+        ipc = Pear[Symbol.for('pear.ipc')]
         status = null
         static get observedAttributes() { return ['show', 'action'] }
         attributeChangedCallback(name, prior, value) {
@@ -708,7 +601,7 @@
             const cta = this.shadowRoot.querySelector('#cta')
             const code = (value === 'reload') ? 64 : 0
             const handler = (value === 'quit' || value === 'reload') ?
-              () => this.ipc.app.quit(code) :
+              () => this.ipc.quit(code) :
               () => {}
             cta.addEventListener('click', handler)
           }
@@ -717,7 +610,7 @@
         hide () { this.setAttribute("show", "") }
         async subscribe (ipc, loader) {
           this.ipc = ipc
-          for await (const report of ipc.app.reports()) {
+          for await (const report of ipc.reports()) {
             this.status = report
             this.gid = loader.gid
             loader.hide()
@@ -746,7 +639,7 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
-            await this.ipc.gui.detachMainView(this.gid)
+            await this.ipc.detachMainView(this.gid)
             const winctrl = document.getElementById('windows-controls')
             if (!winctrl) {
               const div = document.createElement('div')
@@ -755,12 +648,12 @@
               document.body.prepend(div)
             }
             this.show(type)
-            await this.ipc.gui.detachMainView(this.gid)
+            await this.ipc.detachMainView(this.gid)
           }
         }
         constructor () {
           super()
-          this.ipc = null
+          this.ipc = Pear[Symbol.for('pear.ipc')]
           const template = document.querySelector('#decal-report-tmpl').content
           this.attachShadow({mode: 'open'}).appendChild(template.cloneNode(true))
         }
@@ -883,7 +776,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.gui.detachMainView(this.gid)
+          await this.ipc.detachMainView(Pear.Window.self.id)
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 
@@ -899,19 +792,16 @@
             countdown -= 1000
           }
           this.querySelector('[slot="when"]').innerText = 'as of now!'
-          await this.ipc.engine.restart()
+          await this.ipc.restart()
         }
         async start (ipc, config) {
           this.show()
           this.ipc = ipc
-          this.gui = ipc.gui
-          this.gid = this.gui.id()
-          const { gui, gid } = this
-          await gui.afterViewLoaded(gid)
+          await ipc.afterViewLoaded({ id: Pear.Window.self.id })
           document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
-          await gui.attachMainView(gid)
+          await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
           super()
@@ -949,42 +839,18 @@
       avatar.src = src
     }
 
-    const notifications = document.querySelector('decal-notifications')
-    const report = document.querySelector('decal-report')
-  
-    notifications.subscribe(ipc, loader)
+    const report = document.querySelector('decal-report')  
     report.subscribe(ipc, loader)
-
-    const { decal, engine, app, gui } = ipc
-    let bg = null
-
-    decal.intra.events.once('bg', (e, color) => { bg = color })
-    decal.intra.events.once('exit', (e, code) => { process.exit(code) })
 
     process.on('exit', (code) => {
       const actuallyARefresh = code === undefined
       if (actuallyARefresh) return
-      app.quit(code)
+      ipc.quit(code)
     })
-
-    avatar.addEventListener('click', avaClick)
-
-    app.getPreference('avatar').then(updateAvatar)
-
-    const incomingPrefs = app.preferencesUpdates()
-    autoUpdateAvatar().catch(console.error)
-
-    async function autoUpdateAvatar () {
-      for await (const [op, key, value] of incomingPrefs) {
-        if (op === 'set' && key === 'avatar') {
-          updateAvatar(value)
-        }
-      }
-    }
 
     async function start () {
 
-      const win32CloseListener = process.platform === 'win32' ? () => ipc.app.quit(0) : null
+      const win32CloseListener = process.platform === 'win32' ? () => ipc.quit(0) : null
       if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
       let config = Pear.config
 
@@ -1000,16 +866,10 @@
 
       if (updating) return
 
-      config = await app.config()
+      config = await ipc.config()
 
       const tier = document.querySelector('decal-tier')
       tier.update(config)
-
-      if (report.status === null) document.body.style.backgroundColor = bg
-      decal.intra.events.on('bg', (e, color) => {
-        if (report.status !== null) return
-        document.body.style.backgroundColor = color
-      })
 
     }
 

@@ -45,7 +45,7 @@ module.exports = (ipc) => async function info (args) {
     const id = Bare.pid
     await output(json, ipc.info({ id, key }))
   } catch (err) {
-    await ipc.usage.output('info', false)
+    ipc.userData.usage.output('info', false)
     print(err.message, false)
     Bare.exit(1)
   }

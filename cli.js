@@ -1,13 +1,19 @@
 'use strict'
+const IPC = require('pear-ipc')
 const cmd = require('./cmd')
-const connect = require('./lib/connect.js')
 const crasher = require('./lib/crasher')
-const { SWAP } = require('./lib/constants.js')
+const tryboot = require('./lib/tryboot')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants.js')
 crasher('cli', SWAP)
 
 cli()
 
 async function cli () {
-  const channel = await connect()
-  await cmd(channel)
+  const ipc = new IPC({
+    socketPath: SOCKET_PATH,
+    connectTimeout: CONNECT_TIMEOUT,
+    connect: tryboot
+  })
+  await ipc.ready()
+  await cmd(ipc)
 }
