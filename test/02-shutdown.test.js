@@ -7,7 +7,7 @@ test('basic shutdown file lock', async function ({ is, plan }) {
 
   const helper = new Helper()
   await helper.ready()
-  await helper.shutdown()
+  await helper._close()
 
   const unlocked = await helper.accessLock()
   is(unlocked, true, 'platform file is not locked')

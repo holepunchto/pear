@@ -4,25 +4,23 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown }) {
+test('smoke', async function ({ ok, is, plan, comment }) {
   plan(5)
-  const stager = new Helper()
-  await stager.ready()
+
+  const helper = new Helper()
+  await helper.ready()
+
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(staging, { tag: 'final' })
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(async () => seeder.shutdown())
-  await seeder.ready()
-  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, key: null, clientArgv: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await until.key
   const announced = await until.announced
@@ -31,6 +29,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
+  const { inspector, pick } = await Helper.open(key, { tags: ['exit'] })
 
   const running = await Helper.open(key, { tags: ['exit'] })
 
@@ -38,7 +37,9 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   is(value?.app?.key, key, 'app version matches staged key')
 
-  await running.inspector.close()
-  const { code } = await running.until.exit
+  await inspector.close()
+  await helper._close()
+
+  const { code } = await pick.exit
   is(code, 0, 'exit code is 0')
 })

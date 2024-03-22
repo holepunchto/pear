@@ -14,82 +14,21 @@ const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch, 'bin
 class Helper extends IPC {
   #expectSidecar = false
 
-    this.client = null
+  constructor (opts = {}) {
+    const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    super({
+      socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
+      connectTimeout: 20_000,
+      connect: opts.expectSidecar
+        ? true
+        : () => {
+            const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
+              detached: true,
+              stdio: 'inherit'
+            })
 
-    this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
-    this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
-
-    this.socketPath = isWindows ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
-    this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
-    this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
-  }
-
-  static IPC_ID = 'pear'
-  static CONNECT_TIMEOUT = 20_000
-
-  async bootstrap () {
-    this.client = await this.bootpipe()
-  }
-
-  connect () {
-    return new Pipe(this.socketPath)
-  }
-
-  async bootpipe () {
-    let trycount = 0
-    let pipe = null
-    let timedout = false
-    let next = null
-
-    const timeout = setTimeout(() => {
-      timedout = true
-      if (pipe) pipe.destroy()
-    }, Helper.CONNECT_TIMEOUT)
-
-    while (true) {
-      const promise = new Promise((resolve) => { next = resolve })
-
-      pipe = this.connect()
-      pipe.on('connect', onconnect)
-      pipe.on('error', onerror)
-
-      if (await promise) break
-      if (timedout) throw new Error('Could not connect in time')
-      if (trycount++ === 0) this.tryboot()
-
-      await new Promise((resolve) => setTimeout(resolve, trycount < 2 ? 5 : trycount < 10 ? 10 : 100))
-    }
-
-    clearTimeout(timeout)
-
-    const framed = new FramedStream(pipe)
-    const mux = new Protomux(framed)
-    const channel = new JSONRPC(mux)
-
-    channel.on('close', () => framed.end())
-
-    return channel
-
-    function onerror () {
-      pipe.removeListener('error', onerror)
-      pipe.removeListener('connect', onconnect)
-      next(false)
-    }
-
-    function onconnect () {
-      console.log('- Bootpipe connected to sidecar')
-      pipe.removeListener('error', onerror)
-      pipe.removeListener('connect', onconnect)
-      clearTimeout(timeout)
-      next(true)
-    }
-  }
-
-  tryboot () {
-    const sc = spawn(this.runtime, ['--sidecar'], {
-      detached: true,
-      stdio: 'inherit',
-      cwd: this.platformDir
+            sc.unref()
+          }
     })
     this.#expectSidecar = opts.expectSidecar
     this.opts = opts
@@ -97,7 +36,7 @@ class Helper extends IPC {
 
   static logging = false
 
-  static async open (key, { tags = [] } = {}, opts = {}) {
+  static async open (key, { tags = [] } = {}) {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
@@ -132,8 +71,19 @@ class Helper extends IPC {
     return { inspector, until, subprocess }
   }
 
-  static async pick (iter, ptn = {}, by = 'tag') {
-    if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
+  static async * run ({ args, key = null, silent = false }) {
+    if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
+
+    args = [...args, '--ua', 'pear/terminal']
+
+    const child = spawn(RUNTIME, args, {
+      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
+    })
+
+    yield { tag: 'child', data: child }
+  }
+
+  static async pick (iter, ptn = {}) {
     for await (const output of iter) {
       if (this.logging) console.log('output', output)
       if (this.matchesPattern(output, ptn)) {
@@ -144,7 +94,7 @@ class Helper extends IPC {
     return null
   }
 
-  static #pickify (iter, patterns = [], by) {
+  static pickMany (iter, patterns = []) {
     const picks = {}
     const resolvers = {}
 
@@ -156,7 +106,7 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        if (output[by] === 'error') throw new Error(output.data?.stack)
+        if (output.tag === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: only resolves to first match, subsequent matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn[by]]) {
@@ -195,6 +145,12 @@ class Helper extends IPC {
     if (granted) fsext.unlock(fd)
 
     return granted
+  }
+
+  async _close () {
+    await this.closeClients()
+    await this.shutdown()
+    await super._close()
   }
 
   static matchesPattern (message, pattern) {

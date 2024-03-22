@@ -4,85 +4,80 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
-  timeout(180000)
-
+test('teardown', async function ({ is, ok, plan, comment }) {
   plan(5)
 
-  const stager = new Helper()
-  await stager.ready()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.shutdown())
-  await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+
+  const key = await seed.key
+  const announced = await seed.announced
 
   ok(key, 'app key is ok')
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
-  await running.inspector.evaluate(
+  await inspector.evaluate(
     `(() => {
         const { teardown } = Pear;
         teardown(() => console.log('teardown'));
     })()`)
 
-  await running.inspector.close()
-  running.subprocess.kill('SIGINT')
+  await inspector.close()
+  await helper.closeClients()
+  app.kill('SIGTERM')
 
-  const td = await running.until.teardown
+  const td = await pick.teardown
   is(td, 'teardown', 'teardown has been triggered')
 
-  const { code } = await running.until.exit
+  await helper.shutdown()
+
+  const { code } = await pick.exit
   is(code, 130, 'exit code is 130')
 })
 
-test('teardown during teardown', async function ({ is, ok, plan, comment, teardown }) {
+test('teardown during teardown', async function ({ is, ok, plan, comment }) {
   plan(5)
 
-  const stager = new Helper()
-  await stager.ready()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.shutdown())
-  await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+
+  const key = await seed.key
+  const announced = await seed.announced
 
   ok(key, 'app key is ok')
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
-  await running.inspector.evaluate(
+  await inspector.evaluate(
     `(() => {
         const { teardown } = Pear
         const a = () => { b() }
@@ -90,56 +85,59 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
         teardown( () => a() )
     })()`)
 
-  await running.inspector.close()
-  running.subprocess.kill('SIGINT')
+  await inspector.close()
+  await helper.closeClients()
+  app.kill('SIGTERM')
 
-  const td = await running.until.teardown
+  const td = await pick.teardown
   is(td, 'teardown from b', 'teardown from b has been triggered')
 
-  const { code } = await running.until.exit
+  await helper.shutdown()
+
+  const { code } = await pick.exit
   is(code, 130, 'exit code is 130')
 })
 
-test('exit code', async function ({ is, ok, plan, comment, teardown }) {
+test('exit code', async function ({ is, ok, plan, comment }) {
   plan(4)
 
-  const stager = new Helper()
-  await stager.ready()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.shutdown())
-  await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
+  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+
+  const key = await seed.key
+  const announced = await seed.announced
 
   ok(key, 'app key is ok')
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
-  await running.inspector.evaluate(
+  await inspector.evaluate(
     `(() => {
         const { teardown } = Pear;
         teardown(() => global.Bare.exit(124));
     })()`)
 
-  await running.inspector.evaluate('(() => { return global.__PEAR_TEST__.running.inspector.disable() })()')
-  await running.inspector.close()
-  running.subprocess.kill('SIGINT')
+  await inspector.evaluate('(() => { return global.__PEAR_TEST__.inspector.disable() })()')
+  await inspector.close()
+  await helper.closeClients()
+  app.kill('SIGTERM')
 
-  const { code } = await running.until.exit
+  await helper.shutdown()
+
+  const { code } = await pick.exit
   is(code, 124, 'exit code is 124')
 })
