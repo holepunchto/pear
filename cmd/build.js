@@ -4,55 +4,73 @@ const Corestore = require('corestore')
 const fs = require('bare-fs')
 const os = require('bare-os')
 const path = require('bare-path')
-const { print, outputter } = require('./iface')
+const { print, outputter, InputError } = require('./iface')
 const subsystem = require('../lib/subsystem')
 const { LOCALDEV, SWAP, CHECKOUT, PLATFORM_CORESTORE } = require('../lib/constants')
 const parse = require('../lib/parse')
 
+class RequirementError extends Error {
+  constructor (message) {
+    super(message)
+    this.name = 'RequirementError'
+  }
+}
+
 /* global Bare */
 module.exports = (ipc) => async function (args) {
-  const { _: [passedKey, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
+  try {
+    const { _: [passedKey, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
 
-  const key = parse.runkey(passedKey)?.key?.z32
-  if (!key) {
-    print(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided', false)
+    const key = parse.runkey(passedKey)?.key?.z32
+    if (!key) {
+      print(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided', false)
+      Bare.exit(1)
+    }
+
+    print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
+
+    // TODO: Cleanup this workaround once pear-dev no longer relies on process
+    global.process = require('bare-process')
+    global.process.getuid = () => 1000
+    global.process.getgid = () => 1000
+
+    const drive = await createPlatformDrive()
+    const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
+
+    const id = Math.random().toString(36).substring(7)
+    const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir({ key, id, type: 'build' })
+
+    print(`Using build directory: ${buildDir}`)
+
+    print('Creating dump...')
+    await createDump({ buildDir, key, ipc })
+
+    print('Running init...')
+    if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
+      print('  Using existing CMakeLists.txt')
+    } else {
+      print('  No CMakeLists.txt found, creating one...')
+      await buildSubsystem.init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
+    }
+
+    print('Running configure...')
+    await buildSubsystem.configure({ source: buildDir, cwd: buildDir, verbose, quiet: false })
+
+    print('Running build...')
+    await buildSubsystem.build({ cwd: buildDir, verbose, quiet: false })
+
+    print('Build complete!', true)
+    Bare.exit(0)
+  } catch (err) {
+    if (err instanceof RequirementError) {
+      print(err.message, false)
+    } else if (err instanceof InputError) {
+      await ipc.usage.output('info', false)
+      print(err.message, false)
+    } else throw err
+
     Bare.exit(1)
   }
-
-  print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
-
-  // TODO: Cleanup this workaround once pear-dev no longer relies on process
-  global.process = require('bare-process')
-  global.process.getuid = () => 1000
-  global.process.getgid = () => 1000
-
-  const drive = await createPlatformDrive()
-  const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
-
-  const id = Math.random().toString(36).substring(7)
-  const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir({ key, id, type: 'build' })
-
-  print(`Using build directory: ${buildDir}`)
-
-  print('Creating dump...')
-  await createDump({ buildDir, key, ipc })
-
-  print('Running init...')
-  if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
-    print('  Using existing CMakeLists.txt')
-  } else {
-    print('  No CMakeLists.txt found, creating one...')
-    await buildSubsystem.init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
-  }
-
-  print('Running configure...')
-  await buildSubsystem.configure({ source: buildDir, cwd: buildDir, verbose, quiet: false })
-
-  print('Running build...')
-  await buildSubsystem.build({ cwd: buildDir, verbose, quiet: false })
-
-  print('Build complete!')
-  Bare.exit(0)
 }
 
 function createTmpDir ({ key, type, id }) {
@@ -133,13 +151,13 @@ function checkApplingOpts (pkg) {
   }))
 
   if (missingFields.length > 0) {
-    throw new Error(`Missing required pear fields in package.json: ${missingFields.join(', ')}`)
+    throw new RequirementError(`Missing required pear fields in package.json: ${missingFields.join(', ')}`)
   }
 }
 
 function loadApplingOpts (buildDir) {
   const pkgPath = path.resolve(buildDir, 'package.json')
-  if (!checkFile(pkgPath)) throw new Error('No package.json found')
+  if (!checkFile(pkgPath)) throw new RequirementError('No package.json found')
 
   const pkg = loadJsonFile(pkgPath)
   checkApplingOpts(pkg)
