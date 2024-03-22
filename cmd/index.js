@@ -82,6 +82,5 @@ module.exports = async (channel) => {
     return run(ipc)(args)
   }
 
-
   return ipc
 }
