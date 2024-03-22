@@ -23,7 +23,7 @@ module.exports = (ipc) => async function (args) {
 
     const key = parse.runkey(passedKey)?.key?.z32
     if (!key) {
-      print(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided', false)
+      throw new InputError(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided')
       Bare.exit(1)
     }
 
