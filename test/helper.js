@@ -7,24 +7,29 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
-const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch,'bin',`pear-runtime${isWindows ? '.exe' : ''}`)
+const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
 class Helper extends IPC {
+  #expectSidecar = false
+
   constructor (opts = {}) {
     const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
     super({
-      socketPath: isWindows ? `\\\\.\\pipe\\pear` : `${platformDir}/pear.sock`,
+      socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
       connectTimeout: 20_000,
-      connect: () => {
-        const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-          detached: true,
-          stdio: 'inherit',
-          cwd: platformDir
-        })
-    
-        sc.unref()
-      }
+      connect: opts.expectSidecar
+        ? true
+        : () => {
+            console.log('runtime:', RUNTIME)
+            const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
+              detached: true,
+              stdio: 'inherit'
+            })
+
+            sc.unref()
+          }
     })
+    this.#expectSidecar = opts.expectSidecar
     this.opts = opts
   }
 
@@ -96,6 +101,7 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
+        if (output.tag === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
@@ -172,7 +178,6 @@ class Helper extends IPC {
     async _unwrap () {
       return new Promise((resolve, reject) => {
         const handler = ({ result, error }) => {
-
           if (error) reject(error)
           else resolve(result?.result)
 
