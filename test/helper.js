@@ -14,19 +14,82 @@ const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch, 'bin
 class Helper extends IPC {
   #expectSidecar = false
 
-  constructor (opts = {}) {
-    const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
-    super({
-      socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
-      connectTimeout: 20_000,
-      connect: opts.expectSidecar
-        ? true
-        : () => {
-            const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-              detached: true
-            })
-            sc.unref()
-          }
+    this.client = null
+
+    this.platformDir = this.opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    this.swap = this.opts.swap || path.resolve(os.cwd(), '..')
+
+    this.socketPath = isWindows ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
+    this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
+    this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
+  }
+
+  static IPC_ID = 'pear'
+  static CONNECT_TIMEOUT = 20_000
+
+  async bootstrap () {
+    this.client = await this.bootpipe()
+  }
+
+  connect () {
+    return new Pipe(this.socketPath)
+  }
+
+  async bootpipe () {
+    let trycount = 0
+    let pipe = null
+    let timedout = false
+    let next = null
+
+    const timeout = setTimeout(() => {
+      timedout = true
+      if (pipe) pipe.destroy()
+    }, Helper.CONNECT_TIMEOUT)
+
+    while (true) {
+      const promise = new Promise((resolve) => { next = resolve })
+
+      pipe = this.connect()
+      pipe.on('connect', onconnect)
+      pipe.on('error', onerror)
+
+      if (await promise) break
+      if (timedout) throw new Error('Could not connect in time')
+      if (trycount++ === 0) this.tryboot()
+
+      await new Promise((resolve) => setTimeout(resolve, trycount < 2 ? 5 : trycount < 10 ? 10 : 100))
+    }
+
+    clearTimeout(timeout)
+
+    const framed = new FramedStream(pipe)
+    const mux = new Protomux(framed)
+    const channel = new JSONRPC(mux)
+
+    channel.on('close', () => framed.end())
+
+    return channel
+
+    function onerror () {
+      pipe.removeListener('error', onerror)
+      pipe.removeListener('connect', onconnect)
+      next(false)
+    }
+
+    function onconnect () {
+      console.log('- Bootpipe connected to sidecar')
+      pipe.removeListener('error', onerror)
+      pipe.removeListener('connect', onconnect)
+      clearTimeout(timeout)
+      next(true)
+    }
+  }
+
+  tryboot () {
+    const sc = spawn(this.runtime, ['--sidecar'], {
+      detached: true,
+      stdio: 'inherit',
+      cwd: this.platformDir
     })
     this.#expectSidecar = opts.expectSidecar
     this.opts = opts
