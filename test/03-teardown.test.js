@@ -4,21 +4,23 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('teardown', async function ({ teardown, is, ok, plan, comment }) {
-  plan(4)
+test('teardown', async function ({ is, ok, plan, comment }) {
+  plan(5)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await seed.key
   const announced = await seed.announced
@@ -27,7 +29,7 @@ test('teardown', async function ({ teardown, is, ok, plan, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
   await inspector.evaluate(
     `(() => {
@@ -48,21 +50,23 @@ test('teardown', async function ({ teardown, is, ok, plan, comment }) {
   is(code, 130, 'exit code is 130')
 })
 
-test('teardown during teardown', async function ({ teardown, is, ok, plan, comment }) {
-  plan(4)
+test('teardown during teardown', async function ({ is, ok, plan, comment }) {
+  plan(5)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await seed.key
   const announced = await seed.announced
@@ -71,7 +75,7 @@ test('teardown during teardown', async function ({ teardown, is, ok, plan, comme
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
   await inspector.evaluate(
     `(() => {
@@ -94,18 +98,20 @@ test('teardown during teardown', async function ({ teardown, is, ok, plan, comme
   is(code, 130, 'exit code is 130')
 })
 
-test('exit code', async function ({ teardown, is, ok, plan, comment }) {
-  plan(3)
+test('exit code', async function ({ is, ok, plan, comment }) {
+  plan(4)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
   const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
@@ -117,7 +123,7 @@ test('exit code', async function ({ teardown, is, ok, plan, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const { inspector, pick, app } = await helper.open(key, { tags: ['teardown', 'exit'] })
+  const { inspector, pick, app } = await Helper.open(key, { tags: ['teardown', 'exit'] })
 
   await inspector.evaluate(
     `(() => {

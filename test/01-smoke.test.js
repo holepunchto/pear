@@ -4,21 +4,23 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('smoke', async function ({ teardown, ok, is, plan, comment }) {
-  plan(4)
+test('smoke', async function ({ ok, is, plan, comment }) {
+  plan(5)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
+  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
+  const final = await stage.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await seed.key
   const announced = await seed.announced
@@ -27,7 +29,7 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
+  const { inspector, pick } = await Helper.open(key, { tags: ['exit'] })
 
   const { value } = await inspector.evaluate(
     `(async () => {
@@ -39,7 +41,7 @@ test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   is(value?.app?.key, key, 'app version matches staged key')
 
   await inspector.close()
-  await helper.close()
+  await helper._close()
 
   const { code } = await pick.exit
   is(code, 0, 'exit code is 0')

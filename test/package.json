@@ -30,6 +30,7 @@
     "jsonrpc-mux": "^1.1.1",
     "localdrive": "^1.11.3",
     "pear-inspect": "^1.0.7",
+    "pear-ipc": "^1.0.0",
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7",
