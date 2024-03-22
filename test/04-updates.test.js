@@ -19,30 +19,30 @@ const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 const awaitUpdate = '(async () => new Promise(resolve => Pear.updates().once("data", resolve)))()'
 
 test('Pear.updates() should be called when restaging and releasing', async function (t) {
-  const { teardown, ok, is, plan, timeout, comment } = t
+  const { ok, is, plan, timeout, comment } = t
 
   plan(11)
   timeout(180000)
 
   const testId = Math.floor(Math.random() * 100000)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   comment('1. Stage, seed, and run app')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
+  await Helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   comment('\tseeding')
-  const seed = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
   const announced = seed.announced
   ok(key, `seeded platform key (${key})`)
   ok(announced, 'seeding announced')
 
   comment('\trunning')
-  const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
+  const { inspector, pick } = await Helper.open(key, { tags: ['exit'] })
 
   comment('2. Create new file, restage, and reseed')
 
@@ -52,12 +52,12 @@ test('Pear.updates() should be called when restaging and releasing', async funct
 
   comment('\tstaging')
   const update1Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
-  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
+  await Helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
 
   comment('\tseeding')
-  const seed2 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed2 = Helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
   const seed2Announced = seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
@@ -71,7 +71,7 @@ test('Pear.updates() should be called when restaging and releasing', async funct
 
   comment('releasing')
   const update2Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
-  await helper.pick(helper.release(releaseOpts(testId, key), { close: false }), { tag: 'released' })
+  await Helper.pick(helper.release(releaseOpts(testId, key), { close: false }), { tag: 'released' })
 
   comment('waiting for update')
   const update2 = await inspector.awaitPromise(update2Promise.objectId)
@@ -81,7 +81,7 @@ test('Pear.updates() should be called when restaging and releasing', async funct
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await inspector.close()
-  await helper.close()
+  await helper._close()
 
   const { code } = await pick.exit
   is(code, 0, 'exit code is 0')
@@ -96,24 +96,24 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   const testId = Math.floor(Math.random() * 100000)
 
   const helper = new Helper(teardown)
-  await helper.bootstrap()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   comment('1. Stage, seed, and run app')
 
   comment('\tstaging')
-  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
+  await Helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   comment('\tseeding')
-  const seed = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const key = await seed.key
   const announced = seed.announced
   ok(key, `seeded platform key (${key})`)
   ok(announced, 'seeding announced')
 
   comment('\trunning')
-  const { inspector, pick } = await helper.open(key, { tags: ['exit'] })
+  const { inspector, pick } = await Helper.open(key, { tags: ['exit'] })
 
   comment('2. Create new file, restage, and reseed')
 
@@ -123,12 +123,12 @@ test('Pear.updates() should be called twice when restaging twice', async functio
 
   comment('\tstaging')
   const update1Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
-  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
+  await Helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file1))
 
   comment('\tseeding')
-  const seed2 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed2 = Helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed2Key = await seed2.key
   const seed2Announced = seed2.announced
   ok(seed2Key, `reseeded platform key (${seed2Key})`)
@@ -148,12 +148,12 @@ test('Pear.updates() should be called twice when restaging twice', async functio
 
   comment('\trestaging')
   const update2Promise = await inspector.evaluate(awaitUpdate, { returnByValue: false })
-  await helper.sink(helper.stage(stageOpts(testId), { close: false }))
+  await Helper.sink(helper.stage(stageOpts(testId), { close: false }))
 
   unlinkSync(path.join(dir, file2))
 
   comment('\treseeding')
-  const seed3 = helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed3 = Helper.pickMany(helper.seed(seedOpts(testId), { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
   const seed3Key = await seed3.key
   const seed3Announced = seed3.announced
   ok(seed3Key, `reseeded platform key (${seed3Key})`)
@@ -167,7 +167,7 @@ test('Pear.updates() should be called twice when restaging twice', async functio
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await inspector.close()
-  await helper.close()
+  await helper._close()
 
   const { code } = await pick.exit
   is(code, 0, 'exit code is 0')
