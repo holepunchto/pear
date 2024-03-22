@@ -11,14 +11,15 @@ const parse = require('../lib/parse')
 
 /* global Bare */
 module.exports = (ipc) => async function (args) {
-  const { _: [key, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
+  const { _: [passedKey, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
 
+  const key = parse.runkey(passedKey)?.key?.z32
   if (!key) {
-    print('No key provided')
+    print(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided', false)
     Bare.exit(1)
   }
 
-  print(`Building for ${os.platform()}-${os.arch()}...`)
+  print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
 
   // TODO: Cleanup this workaround once pear-dev no longer relies on process
   global.process = require('bare-process')
