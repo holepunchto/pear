@@ -134,8 +134,8 @@ function checkApplingOpts (pkg) {
 
   const requiredFieldsByPlatform = {
     linux: ['build.linux.category'],
-    macos: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject'],
-    windows: ['build.windows.signingSubject', 'build.windows.signingThumbprint']
+    darwin: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject'],
+    win32: ['build.windows.signingSubject', 'build.windows.signingThumbprint']
   }
 
   missingFields.push(...requiredFieldsByPlatform[os.platform()].filter(field => {
