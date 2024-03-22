@@ -102,7 +102,6 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        console.log(output)
         if (output.tag === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
