@@ -129,7 +129,7 @@ function checkApplingOpts (pkg) {
 
   const requiredBaseFields = ['name']
   for (const baseField of requiredBaseFields) {
-    if (!pkg[baseField] && !pkg.pear[baseField]) missingFields.push(baseField)
+    if (!pkg[baseField] && !pkg?.pear?.[baseField] && !pkg?.pear?.build?.[baseField]) missingFields.push(baseField)
   }
 
   const requiredFieldsByPlatform = {
@@ -165,10 +165,10 @@ function loadApplingOpts (buildDir) {
   const { pear } = pkg
 
   return {
-    name: pear.name || pkg.name,
-    version: pear.version || pkg.version,
-    author: pear.author || pkg.author,
-    description: pear.description || pkg.description,
+    name: pear?.build?.name || pear?.name || pkg.name,
+    version: pear?.build?.version || pear?.version || pkg.version,
+    author: pear?.build?.author || pear?.author || pkg.author,
+    description: pear?.build?.description || pear?.description || pkg.description,
     linux: pear?.build?.linux || {},
     macos: {
       identifier: pear?.build?.macos?.identifier,
