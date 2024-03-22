@@ -22,7 +22,6 @@ class Helper extends IPC {
       connect: opts.expectSidecar
         ? true
         : () => {
-            console.log('runtime:', RUNTIME)
             const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
               detached: true,
               stdio: 'inherit'
@@ -103,7 +102,6 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        console.log(output)
         if (output.tag === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
