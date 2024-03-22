@@ -7,10 +7,11 @@ const path = require('bare-path')
 const { print, outputter } = require('./iface')
 const subsystem = require('../lib/subsystem')
 const { LOCALDEV, SWAP, CHECKOUT, PLATFORM_CORESTORE } = require('../lib/constants')
+const parse = require('../lib/parse')
 
 /* global Bare */
 module.exports = (ipc) => async function (args) {
-  const key = args[0]
+  const { _: [key, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
 
   if (!key) {
     print('No key provided')
@@ -25,7 +26,7 @@ module.exports = (ipc) => async function (args) {
   global.process.getgid = () => 1000
 
   const id = Math.random().toString(36).substring(7)
-  const buildDir = args[1] ? path.resolve(args[1]) : createTmpDir('build', id)
+  const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir('build', id)
 
   print(`Using build directory: ${buildDir}`)
 
@@ -33,13 +34,13 @@ module.exports = (ipc) => async function (args) {
   await createDump({ buildDir, key, ipc })
 
   print('Running init...')
-  await init({ key, buildDir })
+  await init({ key, buildDir, verbose })
 
   print('Running configure...')
-  await configure({ buildDir })
+  await configure({ buildDir, verbose })
 
   print('Running build...')
-  await build({ buildDir })
+  await build({ buildDir, verbose })
 
   print('Build complete!')
   Bare.exit(0)
@@ -56,13 +57,13 @@ function createTmpDir (type, id) {
 }
 
 async function createDump ({ buildDir, key, ipc }) {
-  const output = outputter('stage', {
+  const output = outputter('dump', {
     dumping: ({ key, dir }) => `  Dumping ${key} into ${dir}`,
     complete: '  Dumping complete!\n',
     error: ({ code, stack }) => `  Dumping Error (code: ${code || 'none'}) ${stack}`
   })
 
-  await output(undefined, ipc.dump({ id: Bare.pid, key, dir: buildDir }))
+  await output(false, ipc.dump({ id: Bare.pid, key, dir: buildDir }))
 }
 
 async function createPlatformDrive () {
@@ -107,7 +108,7 @@ function checkApplingOpts (pkg) {
 
   const requiredFieldsByPlatform = {
     linux: ['build.linux.category'],
-    macos: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject',],
+    macos: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject'],
     windows: ['build.windows.signingSubject', 'build.windows.signingThumbprint']
   }
 
@@ -159,7 +160,7 @@ function loadApplingOpts (buildDir) {
   }
 }
 
-async function init ({ key, buildDir }) {
+async function init ({ key, buildDir, verbose }) {
   if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
     print('  Using existing CMakeLists.txt')
     return
@@ -170,21 +171,21 @@ async function init ({ key, buildDir }) {
   const drive = await createPlatformDrive()
   const { init } = await subsystem(drive, '/subsystems/build.js')
 
-  await init.appling({ cwd: buildDir, key, ...loadApplingOpts(buildDir) })
+  await init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
 }
 
-async function configure ({ buildDir }) {
+async function configure ({ buildDir, verbose }) {
   const drive = await createPlatformDrive()
   const { configure } = await subsystem(drive, '/subsystems/build.js')
 
-  const opts = { source: buildDir, cwd: buildDir }
+  const opts = { source: buildDir, cwd: buildDir, verbose, quiet: false }
 
   await configure(opts)
 }
 
-async function build ({ buildDir }) {
+async function build ({ buildDir, verbose }) {
   const drive = await createPlatformDrive()
   const { build } = await subsystem(drive, '/subsystems/build.js')
 
-  await build({ cwd: buildDir })
+  await build({ cwd: buildDir, verbose, quiet: false })
 }
