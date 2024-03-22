@@ -2,6 +2,8 @@
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const os = require('bare-os')
+const fs = require('bare-fs')
+const fsext = require('fs-native-extensions')
 const ReadyResource = require('ready-resource')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
@@ -101,6 +103,7 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
+        console.log(output)
         if (output.tag === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
@@ -127,6 +130,22 @@ class Helper extends IPC {
     for await (const output of iter) {
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
+  }
+
+  async accessLock (platformDir) {
+    const pdir = platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve(fd)
+    }))
+
+    const granted = fsext.tryLock(fd)
+    if (granted) fsext.unlock(fd)
+
+    return granted
   }
 
   async _close () {
