@@ -1,7 +1,4 @@
 'use strict'
-const FramedStream = require('framed-stream')
-const Protomux = require('protomux')
-const JSONRPC = require('jsonrpc-mux')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const Corestore = require('corestore')
@@ -13,10 +10,10 @@ const os = require('bare-os')
 const fsext = require('fs-native-extensions')
 const { decode } = require('hypercore-id-encoding')
 const ReadyResource = require('ready-resource')
-const Pipe = require('bare-pipe')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
+const IPC = require('pear-ipc')
 
 class Helper {
   constructor (t, opts = {}) {
@@ -31,72 +28,23 @@ class Helper {
 
     this.socketPath = isWindows ? `\\\\.\\pipe\\${Helper.IPC_ID}` : `${this.platformDir}/${Helper.IPC_ID}.sock`
     this.bin = 'by-arch/' + platform + '-' + arch + '/bin/'
-    this.runtime = path.join(this.swap, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime')
+    this.runtime = path.join(this.swap, `by-arch/${platform + '-' + arch}/bin/pear-runtime${isWindows ? '.exe' : ''}`)
   }
 
   static IPC_ID = 'pear'
   static CONNECT_TIMEOUT = 20_000
 
   async bootstrap () {
-    this.client = await this.bootpipe()
-  }
-
-  connect () {
-    return new Pipe(this.socketPath)
-  }
-
-  async bootpipe () {
-    let trycount = 0
-    let pipe = null
-    let timedout = false
-    let next = null
-
-    const timeout = setTimeout(() => {
-      timedout = true
-      if (pipe) pipe.destroy()
-    }, Helper.CONNECT_TIMEOUT)
-
-    while (true) {
-      const promise = new Promise((resolve) => { next = resolve })
-
-      pipe = this.connect()
-      pipe.on('connect', onconnect)
-      pipe.on('error', onerror)
-
-      if (await promise) break
-      if (timedout) throw new Error('Could not connect in time')
-      if (trycount++ === 0) this.tryboot()
-
-      await new Promise((resolve) => setTimeout(resolve, trycount < 2 ? 5 : trycount < 10 ? 10 : 100))
-    }
-
-    clearTimeout(timeout)
-
-    const framed = new FramedStream(pipe)
-    const mux = new Protomux(framed)
-    const channel = new JSONRPC(mux)
-
-    channel.on('close', () => framed.end())
-
-    return channel
-
-    function onerror () {
-      pipe.removeListener('error', onerror)
-      pipe.removeListener('connect', onconnect)
-      next(false)
-    }
-
-    function onconnect () {
-      console.log('- Bootpipe connected to sidecar')
-      pipe.removeListener('error', onerror)
-      pipe.removeListener('connect', onconnect)
-      clearTimeout(timeout)
-      next(true)
-    }
+    this.client = new IPC({
+      socketPath: this.socketPath,
+      connectTimeout: Helper.CONNECT_TIMEOUT,
+      connect: this.tryboot
+    })
+    await this.client.ready()
   }
 
   tryboot () {
-    const sc = spawn(this.runtime, ['--sidecar'], {
+    const sc = spawn(this.runtime, ['--sidecar', '--verbose'], {
       detached: true,
       stdio: 'inherit',
       cwd: this.platformDir
