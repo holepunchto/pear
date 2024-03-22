@@ -152,13 +152,13 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const build = ansi.bold(cmd + ' build')
-  const buildArgs = ansi.bold('<channel|key> [dir]')
+  const buildArgs = ansi.bold('<key> [dir]')
   const buildBrief = 'Build project distributable.'
   const buildExplain = `${build} ${buildArgs}
 
     ${buildBrief}
 
-    Specify channel or key to build a distributable for the project.
+    Specify the key to build a distributable for the project.
 
     --verbose|-v  Additional output
   `
