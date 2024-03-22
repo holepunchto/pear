@@ -733,7 +733,7 @@
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
               decalDialog.trust = async () => {
-                // await this.ipc.trust(report.key)
+                await this.ipc.trust({ key })
                 this.ipc.app.quit(64)
               }
 
