@@ -7,18 +7,18 @@ const Helper = require('./helper')
 test('smoke', async function ({ teardown, ok, is, plan, comment }) {
   plan(4)
 
-  const helper = new Helper(teardown)
-  await helper.bootstrap()
+  const helper = new Helper()
+  await helper.ready()
 
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  await helper.sink(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
+  await Helper.sink(Helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }))
 
   comment('seeding')
-  const seed = helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await seed.key
   const announced = await seed.announced
