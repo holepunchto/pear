@@ -87,33 +87,90 @@ function checkFile (file) {
   }
 }
 
-async function init ({ key, buildDir }) {
-  if (!checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
-    print('  No CMakeLists.txt found, creating one...')
-
-    const drive = await createPlatformDrive()
-    const { init } = await subsystem(drive, '/subsystems/build.js')
-
-    // TODO: Read options from somewhere
-    await init.appling({
-      cwd: buildDir,
-      name: 'test',
-      key,
-      version: '0.0.1',
-      author: 'test',
-      description: 'test',
-      linux: { category: 'Network' },
-      macos: {
-        identifier: 'test',
-        category: 'test',
-        entitlements: ['test'],
-        signing: { identity: 'test', subject: 'test' }
-      },
-      windows: { signing: { subject: 'test', thumbprint: 'test' } }
-    })
-  } else {
-    print('  Using existing CMakeLists.txt')
+function loadJsonFile (file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch (e) {
+    throw new Error(`Failed to load ${file}: ${e.message}`)
   }
+}
+
+function checkApplingOpts (pkg) {
+  if (!pkg.pear) throw new Error('No pear field found in package.json')
+
+  const missingFields = []
+
+  const requiredBaseFields = ['name']
+  for (const baseField of requiredBaseFields) {
+    if (!pkg[baseField] && !pkg.pear[baseField]) missingFields.push(baseField)
+  }
+
+  const requiredFieldsByPlatform = {
+    linux: ['build.linux.category'],
+    macos: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject',],
+    windows: ['build.windows.signingSubject', 'build.windows.signingThumbprint']
+  }
+
+  missingFields.push(...requiredFieldsByPlatform[os.platform()].filter(field => {
+    const fieldPath = field.split('.')
+
+    let value = pkg.pear
+    for (const key of fieldPath) {
+      if (value[key] === undefined) return true
+      value = value[key]
+    }
+
+    return false
+  }))
+
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required pear fields in package.json: ${missingFields.join(', ')}`)
+  }
+}
+
+function loadApplingOpts (buildDir) {
+  const pkgPath = path.resolve(buildDir, 'package.json')
+  if (!checkFile(pkgPath)) throw new Error('No package.json found')
+
+  const pkg = loadJsonFile(pkgPath)
+  checkApplingOpts(pkg)
+
+  const { pear } = pkg
+
+  return {
+    name: pear.name || pkg.name,
+    version: pear.version || pkg.version,
+    author: pear.author || pkg.author,
+    description: pear.description || pkg.description,
+    linux: pear?.build?.linux || {},
+    macos: {
+      identifier: pear?.build?.macos?.identifier,
+      category: pear?.build?.macos?.category,
+      entitlements: pear?.build?.macos?.entitlements || ['undefined'],
+      signing: {
+        identity: pear?.build?.macos?.signingIdentity, subject: pear?.build?.macos?.signingSubject
+      }
+    },
+    windows: {
+      signing: {
+        subject: pear?.build?.windows?.signingSubject, thumbprint: pear?.build?.windows?.signingThumbprint
+      }
+    }
+  }
+}
+
+async function init ({ key, buildDir }) {
+  if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
+    print('  Using existing CMakeLists.txt')
+    return
+  }
+
+  print('  No CMakeLists.txt found, creating one...')
+
+  const drive = await createPlatformDrive()
+  const { init } = await subsystem(drive, '/subsystems/build.js')
+
+  await init.appling({ cwd: buildDir, key, ...loadApplingOpts(buildDir) })
 }
 
 async function configure ({ buildDir }) {
