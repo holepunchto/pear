@@ -270,6 +270,14 @@ class IPC {
     return stream
   }
 
+  reports () {
+    electron.ipcRenderer.send('reports')
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+
   ref () {}
   unref () {}
 }
