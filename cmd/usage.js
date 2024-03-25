@@ -152,7 +152,7 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const build = ansi.bold(cmd + ' build')
-  const buildArgs = ansi.bold('<key> [dir]')
+  const buildArgs = ansi.bold('<key> <dir>')
   const buildBrief = 'Build project distributable.'
   const buildExplain = `${build} ${buildArgs}
 
