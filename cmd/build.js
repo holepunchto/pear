@@ -22,9 +22,10 @@ module.exports = (ipc) => async function (args) {
     const { _: [passedKey, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
 
     const key = parse.runkey(passedKey)?.key?.z32
-    if (!key) {
-      throw new InputError(passedKey ? `Key "${passedKey}" is not valid` : 'No key provided')
-    }
+    if (!key) throw new InputError(passedKey ? `Key "${passedKey}" is not valid` : 'Key must be specified')
+    if (!buildDirArg) throw new InputError('Build directory must be specified')
+
+    const buildDir = path.resolve(buildDirArg)
 
     print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
 
@@ -35,9 +36,6 @@ module.exports = (ipc) => async function (args) {
 
     const drive = await createPlatformDrive()
     const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
-
-    const id = Math.random().toString(36).substring(7)
-    const buildDir = buildDirArg ? path.resolve(buildDirArg) : createTmpDir({ key, id, type: 'build' })
 
     print(`Using build directory: ${buildDir}`)
 
@@ -70,15 +68,6 @@ module.exports = (ipc) => async function (args) {
 
     Bare.exit(1)
   }
-}
-
-function createTmpDir ({ key, type, id }) {
-  const tmpdir = os.tmpdir()
-  const dir = path.join(tmpdir, `pear-${type}-${key}-${id}`)
-
-  fs.mkdirSync(dir)
-
-  return dir
 }
 
 async function createDump ({ buildDir, key, ipc }) {
