@@ -34,12 +34,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   const running = await Helper.open(key, { tags: ['exit'] })
 
-  const { value } = await running.inspector.evaluate(
-    `(async () => {
-        const { versions } = Pear;
-        return await versions();
-      })()`,
-    { awaitPromise: true })
+  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
   is(value?.app?.key, key, 'app version matches staged key')
 
