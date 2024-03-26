@@ -627,7 +627,7 @@
               decalDialog.setKey(report.key)
               decalDialog.trust = async () => {
                 await this.ipc.trust({ id: this.gid, key: report.key })
-                await this.ipc.restart()
+                await this.ipc.restart({ id: this.gid })
               }
 
               await this.ipc.setSize({ id: this.gid, width: 560, height: 450 })
