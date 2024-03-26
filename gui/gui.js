@@ -1362,8 +1362,8 @@ class PearGUI extends ReadyResource {
       reports.on('end', () => event.reply('reports', null))
     })
 
-    electron.ipcMain.on('messages', (event, ...args) => {
-      const messages = this.messages(...args)
+    electron.ipcMain.on('messages', (event, pattern) => {
+      const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => event.reply('messages', null))
     })
@@ -1375,7 +1375,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('ctrl', (evt, ...args) => this.ctrl(...args))
     electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
-    electron.ipcMain.handle('close', (evt, ...args) => this.close(...args))
+    electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize ', (evt, ...args) => this.minimize(...args))
@@ -1467,7 +1467,7 @@ class PearGUI extends ReadyResource {
     if (!instance) {
       return {
         ghost: true,
-        close () { return false },
+        guiClose () { return false },
         show () { return false },
         hide () { return false },
         focus () { return false },
@@ -1526,7 +1526,8 @@ class PearGUI extends ReadyResource {
 
   open ({ id, options }) { return this.get(id).open(options) }
 
-  close ({ id }) { return this.get(id).close() }
+  // guiClose because ReadyResource needs close (affects internal naming only)
+  guiClose ({ id }) { return this.get(id).close() }
 
   show ({ id }) { return this.get(id).show() }
 
