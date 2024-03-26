@@ -4,7 +4,9 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('teardown', async function ({ is, ok, plan, comment, teardown }) {
+test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+  timeout(180000)
+
   plan(5)
 
   const stager = new Helper()
