@@ -50,7 +50,7 @@ class Helper extends IPC {
     subprocess.stdout.on('data', (data) => {
       data = data.toString().trim()
       if (data.indexOf('teardown') > -1) {
-        iterable.push({ tag: 'teardown', data: data })
+        iterable.push({ tag: 'teardown', data })
         return
       }
       if (data.indexOf('"tag": "inspector"') > -1) {

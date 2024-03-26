@@ -53,7 +53,6 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   const stager2 = new Helper()
   await stager2.ready()
 
-
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
   unlinkSync(path.join(dir, file1))
@@ -79,7 +78,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
-  
+
   await running.inspector.close()
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
