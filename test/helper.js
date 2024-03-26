@@ -23,10 +23,8 @@ class Helper extends IPC {
         ? true
         : () => {
             const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-              detached: true,
-              stdio: 'inherit'
+              detached: true
             })
-
             sc.unref()
           }
     })
@@ -41,32 +39,32 @@ class Helper extends IPC {
 
     tags = ['inspector', ...tags].map(tag => ({ tag }))
 
-    const app = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
+    const subprocess = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
 
     const iterable = new Readable({ objectMode: true })
 
-    app.once('exit', (code, signal) => {
+    subprocess.once('exit', (code, signal) => {
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
 
-    app.stdout.on('data', (data) => {
+    subprocess.stdout.on('data', (data) => {
       if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString().trim() })
       iterable.push({ tag: 'inspector', data: data.toString().trim() })
     })
 
-    const pick = this.pickMany(iterable, tags)
+    const until = await this.pick(iterable, tags)
 
-    const ikey = await pick.inspector
+    const ikey = await until.inspector
     const inspector = new Helper.Inspector(ikey)
     await inspector.ready()
 
-    return { inspector, pick, app }
+    return { inspector, until, subprocess }
   }
 
   static async * run ({ args, key = null, silent = false }) {
-    if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
-
-    args = [...args, '--ua', 'pear/terminal']
+    if (key !== null) {
+      args = [...args.filter((arg) => arg !== key), 'run', key.startsWith('pear://') ? key : `pear://${key}`]
+    }
 
     const child = spawn(RUNTIME, args, {
       stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
@@ -75,7 +73,8 @@ class Helper extends IPC {
     yield { tag: 'child', data: child }
   }
 
-  static async pick (iter, ptn = {}) {
+  static async pick (iter, ptn = {}, by = 'tag') {
+    if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
     for await (const output of iter) {
       if (this.logging) console.log('output', output)
       if (this.matchesPattern(output, ptn)) {
@@ -86,15 +85,11 @@ class Helper extends IPC {
     return null
   }
 
-  static pickMany (iter, patterns = []) {
+  static #pickify (iter, patterns = [], by) {
     const picks = {}
     const resolvers = {}
 
-    patterns.forEach(({ tag }) => {
-      picks[tag] = new Promise(resolve => {
-        resolvers[tag] = resolve
-      })
-    })
+    for (const ptn of patterns) picks[ptn[by]] = new Promise((resolve) => { resolvers[ptn[by]] = resolve })
 
     const matchesPattern = (output, pattern) => {
       return Object.keys(pattern).every(key => pattern[key] === output[key])
@@ -102,23 +97,19 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        if (output.tag === 'error') throw new Error(output.data?.stack)
+        if (output[by] === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
-          // NOTE: Only the first result of matching a specific tag is recorded, succeeding matches are ignored
-          if (matchesPattern(output, ptn) && resolvers[ptn.tag]) {
-            resolvers[ptn.tag](output.data ? output.data : true)
-            delete resolvers[ptn.tag]
+          // NOTE: only resolves to first match, subsequent matches are ignored
+          if (matchesPattern(output, ptn) && resolvers[ptn[by]]) {
+            resolvers[ptn[by]](output.data ? output.data : true)
+            resolvers[ptn[by]] = null
           }
         }
 
         if (Object.keys(resolvers).length === 0) break
       }
 
-      patterns.forEach(({ tag }) => {
-        if (resolvers[tag]) {
-          resolvers[tag](null)
-        }
-      })
+      for (const ptn of patterns) if (resolvers[ptn[by]]) resolvers.resolve[ptn[by]](null)
     })()
 
     return picks
@@ -128,6 +119,7 @@ class Helper extends IPC {
     for await (const output of iter) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
+      console.log('.')
     }
   }
 
@@ -145,12 +137,6 @@ class Helper extends IPC {
     if (granted) fsext.unlock(fd)
 
     return granted
-  }
-
-  async _close () {
-    await this.closeClients()
-    await this.shutdown()
-    await super._close()
   }
 
   static matchesPattern (message, pattern) {

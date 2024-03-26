@@ -1351,15 +1351,14 @@ class PearGUI extends ReadyResource {
       warming.on('end', () => event.reply('warming', null))
     })
 
-
     electron.ipcMain.on('reports', (event) => {
       const reports = this.reports()
       reports.on('data', (data) => event.reply('reports', data))
       reports.on('end', () => event.reply('reports', null))
     })
 
-    electron.ipcMain.on('messages', (event, ...args) => {
-      const messages = this.messages(...args)
+    electron.ipcMain.on('messages', (event, pattern) => {
+      const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => event.reply('messages', null))
     })

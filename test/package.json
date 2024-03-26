@@ -24,7 +24,7 @@
     "corestore": "^6.16.2",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.2.7",
-    "hypercore-id-encoding": "^1.2.0",
+    "hypercore-id-encoding": "github:holepunchto/hypercore-id-encoding#support-pear-links",
     "hyperdrive": "^11.6.3",
     "hyperswarm": "^4.7.14",
     "jsonrpc-mux": "^1.1.1",
@@ -34,7 +34,6 @@
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7",
-    "which-runtime": "^1.2.0",
-    "z32": "^1.0.1"
+    "which-runtime": "^1.2.0"
   }
 }

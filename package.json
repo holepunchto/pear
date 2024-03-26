@@ -76,7 +76,7 @@
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.2.5",
     "hypercore-crypto": "^3.4.0",
-    "hypercore-id-encoding": "^1.2.0",
+    "hypercore-id-encoding": "github:holepunchto/hypercore-id-encoding#support-pear-links",
     "hyperdrive": "^11.7.0",
     "hyperswarm": "^4.7.13",
     "iambus": "^1.0.3",
