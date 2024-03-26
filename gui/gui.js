@@ -1392,6 +1392,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
     electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
     electron.ipcMain.handle('setSize', (evt, ...args) => this.setSize(...args))
+    electron.ipcMain.handle('trust', (evt, ...args) => this.trust(...args))
     electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
     electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
     electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
@@ -1604,6 +1605,8 @@ class PearGUI extends ReadyResource {
   warming () { return this.ipc.warming() }
 
   reports () { return this.ipc.reports() }
+
+  trust ({ id, key }) { return this.ipc.trust({ z32: key }) }
 }
 
 module.exports = PearGUI
