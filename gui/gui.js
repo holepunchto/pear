@@ -1397,6 +1397,20 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
+
+    // DEPRECATED - assess to remove from Sep 2024
+    electron.ipcMain.on('preferences', (event) => {
+      const preferences = this.preferences()
+      preferences.on('data', (data) => event.reply('preferences', data))
+      preferences.on('end', () => event.reply('preferences', null))
+    })
+    electron.ipcMain.handle('setPreference', (evt, ...args) => this.setPreference(...args))
+    electron.ipcMain.handle('getPreference', (evt, ...args) => this.getPreference(...args))
+    electron.ipcMain.on('iteratePreferences', (event) => {
+      const iteratePreferences = this.iteratePreferences()
+      iteratePreferences.on('data', (data) => event.reply('iteratePreferences', data))
+      iteratePreferences.on('end', () => event.reply('iteratePreferences', null))
+    })
   }
 
   async app () {
@@ -1597,6 +1611,12 @@ class PearGUI extends ReadyResource {
   warming () { return this.ipc.warming() }
 
   reports () { return this.ipc.reports() }
+
+  // DEPRECATED - assess to remove from Sep 2024
+  preferences () { return this.ipc.preferences() }
+  setPreference (key, value) { return this.ipc.setPreference(key, value) }
+  getPreference (key) { return this.ipc.getPreference(key) }
+  iteratePreference () { return this.ipc.iteratePreference() }
 }
 
 module.exports = PearGUI
