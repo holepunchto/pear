@@ -612,7 +612,7 @@
           this.ipc = ipc
           for await (const report of ipc.reports()) {
             this.status = report
-            this.gid = loader.gid
+            this.gid = Pear.Window.self.id
             loader.hide()
             const { type, headline, tagline, cta } = this.status
             if (type === 'update' && this.status.version?.force) {
@@ -626,12 +626,12 @@
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
               decalDialog.trust = async () => {
-                await this.ipc.trust({ key })
+                await this.ipc.trust({ key: report.key })
                 this.ipc.app.quit(64)
               }
 
-              await this.ipc.gui.setSize(this.gid, 560, 450)
-              await this.ipc.gui.detachMainView(this.gid)
+              await this.ipc.setSize({ id: this.gid, width: 560, height: 450 })
+              await this.ipc.detachMainView({ id: this.gid })
               continue
             }
 
@@ -639,7 +639,7 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
-            await this.ipc.detachMainView(this.gid)
+            await this.ipc.detachMainView({ id: this.gid })
             const winctrl = document.getElementById('windows-controls')
             if (!winctrl) {
               const div = document.createElement('div')
@@ -648,7 +648,7 @@
               document.body.prepend(div)
             }
             this.show(type)
-            await this.ipc.detachMainView(this.gid)
+            await this.ipc.detachMainView({ id: this.gid} )
           }
         }
         constructor () {
