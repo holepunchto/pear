@@ -11,7 +11,7 @@ const inspector = new Inspector({ inspector: bareInspector })
 const key = await inspector.enable()
 const inspectorKey = key.toString('hex')
 
-stdout.write(inspectorKey)
+stdout.write(`{ "tag": "inspector", "data": { "key": "${inspectorKey}" }}`)
 
 global.__PEAR_TEST__ = { inspector, inspectorKey }
 
