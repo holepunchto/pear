@@ -34,13 +34,12 @@ class Helper extends IPC {
 
   static logging = false
 
-  static async open (key, { tags = [] } = {}) {
+  static async open (key, { tags = [] } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
-    tags = ['inspector', ...tags].map(tag => ({ tag }))
-
-    const subprocess = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
+    const subprocess = spawn(RUNTIME, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+    tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
 
@@ -49,29 +48,25 @@ class Helper extends IPC {
     })
 
     subprocess.stdout.on('data', (data) => {
-      if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString().trim() })
-      iterable.push({ tag: 'inspector', data: data.toString().trim() })
+      data = data.toString().trim()
+      if (data.indexOf('teardown') > -1) {
+        iterable.push({ tag: 'teardown', data: data })
+        return
+      }
+      if (data.indexOf('"tag": "inspector"') > -1) {
+        iterable.push(JSON.parse(data))
+        return
+      }
+      console.error('Unrecognized subprocess STDOUT output:', data)
     })
 
     const until = await this.pick(iterable, tags)
 
-    const ikey = await until.inspector
-    const inspector = new Helper.Inspector(ikey)
+    const data = await until.inspector
+    const inspector = new Helper.Inspector(data.key)
     await inspector.ready()
 
     return { inspector, until, subprocess }
-  }
-
-  static async * run ({ args, key = null, silent = false }) {
-    if (key !== null) {
-      args = [...args.filter((arg) => arg !== key), 'run', key.startsWith('pear://') ? key : `pear://${key}`]
-    }
-
-    const child = spawn(RUNTIME, args, {
-      stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
-    })
-
-    yield { tag: 'child', data: child }
   }
 
   static async pick (iter, ptn = {}, by = 'tag') {
@@ -120,7 +115,6 @@ class Helper extends IPC {
     for await (const output of iter) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
-      console.log('.')
     }
   }
 

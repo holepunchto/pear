@@ -20,7 +20,10 @@ const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(9)
   timeout(180000)
-
+  teardown(async () => {
+    const shutdowner = new Helper()
+    await shutdowner.shutdown()
+  })
   const testId = Math.floor(Math.random() * 100000)
 
   const stager1 = new Helper()
@@ -36,6 +39,9 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('\trunning')
   const running = await Helper.open(key, { tags: ['exit'] })
+  const update1Promise = await running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false })
+  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
+  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false }))
 
   comment('2. Create new file, restage, and reseed')
 
@@ -47,19 +53,19 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   const stager2 = new Helper()
   await stager2.ready()
 
-  const update1Promise = await running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false })
+
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
   unlinkSync(path.join(dir, file1))
 
-  const update1 = await running.inspector.awaitPromise(update1Promise.objectId)
+  const update1 = await update1ActualPromise
   const update1Version = update1?.value?.version
   is(hie.encode(hie.decode(update1Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update1Version?.fork, 0, 'app version.fork is 0')
   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
   comment('releasing')
-  const update2Promise = await running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false })
+  const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releaser = new Helper()
   await releaser.ready()
@@ -73,9 +79,8 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
-
+  
   await running.inspector.close()
-
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
 })
