@@ -23,10 +23,8 @@ class Helper extends IPC {
         ? true
         : () => {
             const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-              detached: true,
-              stdio: 'inherit'
+              detached: true
             })
-
             sc.unref()
           }
     })
@@ -40,8 +38,9 @@ class Helper extends IPC {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
-    const subprocess = spawn(RUNTIME, args, { stdio: ['pipe', 'pipe', 'inherit'] })
-    tags = ['inspector', ...tags].map((tag) => ({ tag }))
+    tags = ['inspector', ...tags].map(tag => ({ tag }))
+
+    const subprocess = await this.pick(this.run({ args: [key], dev: true, key }), { tag: 'child' })
 
     const iterable = new Readable({ objectMode: true })
 
@@ -50,31 +49,23 @@ class Helper extends IPC {
     })
 
     subprocess.stdout.on('data', (data) => {
-      data = data.toString().trim()
-      if (data.indexOf('teardown') > -1) {
-        iterable.push({ tag: 'teardown', data })
-        return
-      }
-      if (data.indexOf('"tag": "inspector"') > -1) {
-        iterable.push(JSON.parse(data))
-        return
-      }
-      console.error('Unrecognized subprocess STDOUT output:', data)
+      if (data.toString().indexOf('teardown') > -1) return iterable.push({ tag: 'teardown', data: data.toString().trim() })
+      iterable.push({ tag: 'inspector', data: data.toString().trim() })
     })
 
     const until = await this.pick(iterable, tags)
 
-    const data = await until.inspector
-    const inspector = new Helper.Inspector(data.key)
+    const ikey = await until.inspector
+    const inspector = new Helper.Inspector(ikey)
     await inspector.ready()
 
     return { inspector, until, subprocess }
   }
 
   static async * run ({ args, key = null, silent = false }) {
-    if (key !== null) args = [...args.filter((arg) => arg !== key), 'run', `pear://${key}`]
-
-    args = [...args, '--ua', 'pear/terminal']
+    if (key !== null) {
+      args = [...args.filter((arg) => arg !== key), 'run', key.startsWith('pear://') ? key : `pear://${key}`]
+    }
 
     const child = spawn(RUNTIME, args, {
       stdio: silent ? 'ignore' : ['pipe', 'pipe', 'inherit']
@@ -83,7 +74,8 @@ class Helper extends IPC {
     yield { tag: 'child', data: child }
   }
 
-  static async pick (iter, ptn = {}) {
+  static async pick (iter, ptn = {}, by = 'tag') {
+    if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
     for await (const output of iter) {
       if (this.logging) console.log('output', output)
       if (this.matchesPattern(output, ptn)) {
@@ -94,7 +86,7 @@ class Helper extends IPC {
     return null
   }
 
-  static pickMany (iter, patterns = []) {
+  static #pickify (iter, patterns = [], by) {
     const picks = {}
     const resolvers = {}
 
@@ -106,7 +98,7 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        if (output.tag === 'error') throw new Error(output.data?.stack)
+        if (output[by] === 'error') throw new Error(output.data?.stack)
         for (const ptn of patterns) {
           // NOTE: only resolves to first match, subsequent matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn[by]]) {
@@ -128,6 +120,7 @@ class Helper extends IPC {
     for await (const output of iter) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
       if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
+      console.log('.')
     }
   }
 
@@ -145,12 +138,6 @@ class Helper extends IPC {
     if (granted) fsext.unlock(fd)
 
     return granted
-  }
-
-  async _close () {
-    await this.closeClients()
-    await this.shutdown()
-    await super._close()
   }
 
   static matchesPattern (message, pattern) {

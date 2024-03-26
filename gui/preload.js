@@ -2,6 +2,7 @@
 'use strict'
 const streamx = require('streamx')
 const { EventEmitter } = require('events')
+const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
 
@@ -256,10 +257,15 @@ class IPC {
   checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
-  messages () {
-    electron.ipcRenderer.send('messages')
-    const stream = new streamx.Readable()
-    electron.ipcRenderer.on('messages', (e, data) => { stream.push(data) })
+
+  messages (pattern) {
+    electron.ipcRenderer.send('messages', pattern)
+    const bus = new Iambus()
+    electron.ipcRenderer.on('messages', (e, msg) => {
+      if (msg === null) bus.end()
+      else bus.pub(msg)
+    })
+    const stream = bus.sub(pattern)
     return stream
   }
 
@@ -276,7 +282,6 @@ class IPC {
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
     return stream
   }
-
 
   ref () {}
   unref () {}

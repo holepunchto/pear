@@ -4,23 +4,25 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('smoke', async function ({ ok, is, plan, comment }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
-
-  const helper = new Helper()
-  await helper.ready()
-
+  const stager = new Helper()
+  await stager.ready()
   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = Helper.pickMany(helper.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true }, { close: false }), [{ tag: 'final' }])
-  const final = await stage.final
+  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
-  const seed = Helper.pickMany(helper.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir }, { close: false }), [{ tag: 'key' }, { tag: 'announced' }])
+  const seeder = new Helper()
+  teardown(async () => seeder.shutdown())
+  await seeder.ready()
+  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, key: null, clientArgv: [] })
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await until.key
   const announced = await until.announced
@@ -29,17 +31,19 @@ test('smoke', async function ({ ok, is, plan, comment }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const { inspector, pick } = await Helper.open(key, { tags: ['exit'] })
 
   const running = await Helper.open(key, { tags: ['exit'] })
 
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
+  const { value } = await running.inspector.evaluate(
+    `(async () => {
+        const { versions } = Pear;
+        return await versions();
+      })()`,
+    { awaitPromise: true })
 
   is(value?.app?.key, key, 'app version matches staged key')
 
-  await inspector.close()
-  await helper._close()
-
-  const { code } = await pick.exit
+  await running.inspector.close()
+  const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
 })
