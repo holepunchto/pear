@@ -325,6 +325,8 @@
        font-size: 16px;
        width: 48%;
        height: 55px;
+     }
+     #confirm.green-confirm, #cancel {
        cursor: pointer;
      }
      #cancel {
@@ -388,6 +390,7 @@
         this.root = this.attachShadow({mode: 'open'})
         this.root.appendChild(template.cloneNode(true))
         this.confirm = this.root.querySelector('#confirm')
+        this.cancel = this.root.querySelector('#cancel')
         this.input = this.root.querySelector('input')
         this.error = this.root.querySelector('#error')
         this.key = this.root.querySelector('#key')
@@ -409,7 +412,11 @@
         })
 
         this.confirm.addEventListener('click', async () => {
-          await this.trust()
+          if (this.input.value === 'TRUST') await this.trust()
+        })
+
+        this.cancel.addEventListener('click', async () => {
+          await Pear.Window.self.close()
         })
       }
       setKey (key) {
