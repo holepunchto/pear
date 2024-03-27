@@ -4,9 +4,9 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
+const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
-const { isMac, isLinux } = require('which-runtime')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -1328,9 +1328,7 @@ class PearGUI extends ReadyResource {
         reports (method) {
           return (params) => {
             const stream = method.createRequestStream()
-            stream.once('data', () => {
-              PearGUI.reportMode(ctx)
-            })
+            stream.once('data', () => { PearGUI.reportMode(ctx) })
             stream.write(params)
             return stream
           }
