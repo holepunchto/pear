@@ -246,8 +246,6 @@ class IPC {
   isMinimized (...args) { return electron.ipcRenderer.invoke('isMinimized', ...args) }
   isMaximized (...args) { return electron.ipcRenderer.invoke('isMaximized', ...args) }
   isFullscreen (...args) { return electron.ipcRenderer.invoke('isFullscreen', ...args) }
-  setSize (...args) { return electron.ipcRenderer.invoke('setSize', ...args) }
-  trust (...args) { return electron.ipcRenderer.invoke('trust', ...args) }
   unloading (...args) { return electron.ipcRenderer.invoke('unloading', ...args) }
   completeUnload (...args) { return electron.ipcRenderer.invoke('completeUnload', ...args) }
   attachMainView (...args) { return electron.ipcRenderer.invoke('attachMainView', ...args) }
