@@ -478,7 +478,7 @@ class App {
         this.appReady = true
       }
 
-      const { dev, trace, stage } = ctx
+      const { dev, devtools, trace, stage } = ctx
       const show = (!trace && (dev || !stage))
       const unfilteredGuiOptions = ctx.options.gui || ctx.options
       const guiOptions = {
@@ -554,10 +554,9 @@ class App {
           }
         },
         afterNativeWindowClose: () => this.close(),
-        afterNativeViewCreated: dev && ((app) => {
+        afterNativeViewCreated: devtools && ((app) => {
           if (trace) return
-          if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
-
+          app.view.webContents.openDevTools({ mode: 'detach' })
           if (app.ctx.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace
