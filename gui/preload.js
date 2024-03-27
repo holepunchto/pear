@@ -287,4 +287,27 @@ class IPC {
 
   ref () {}
   unref () {}
+
+  // DEPRECATED - assess to remove from Sep 2024
+  preferences () {
+    electron.ipcRenderer.send('preferences')
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('preferences', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+  setPreference (key, value) {
+    return electron.ipcRenderer.invoke('setPreference', key, value)
+  }
+
+  getPreference (key) {
+    return electron.ipcRenderer.invoke('getPreference', key)
+  }
+
+  list () {
+    electron.ipcRenderer.send('iteratePreferences')
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('iteratePreferences', (e, data) => { stream.push(data) })
+    return stream
+  }
 }
