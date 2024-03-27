@@ -266,6 +266,7 @@ if (process.isMainFrame) {
         </svg>
       </div>
     </div>
+    </div>
     `
     }
 
@@ -315,34 +316,41 @@ if (process.isMainFrame) {
             width: 1em;
             height: 1em;
          }
+         #titlebar{
+           -webkit-app-region: drag;
+           width: 100%;
+           height: 50px;
+         }
         </style>
-        <div id="ctrl">
-          <div id="min" class="ctrl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12.998H5V10.998H19V12.998Z" fill="white"/>
-            </svg>
-          </div>
-          <div id="max" class="ctrl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="6" y="6" width="12" height="12" stroke="white" stroke-width="2"/>
-            </svg>
-          </div>
-          <div id="restore" class="ctrl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g clip-path="url(#clip0_9105_112084)">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M8.11108 6H17.2222V15.1111H19.2222V5V4H18.2222H8.11108V6ZM6 10.3333H12.8889V17.2222H6V10.3333ZM4 8.33333H6H12.8889H14.8889V10.3333V17.2222V19.2222H12.8889H6H4V17.2222V10.3333V8.33333Z" fill="white"/>
-              </g>
-              <defs>
-                <clipPath id="clip0_9105_112084">
-                  <rect width="24" height="24" fill="white"/>
-                </clipPath>
-              </defs>
-            </svg>      
-          </div>
-          <div id="close" class="ctrl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="white"/>
-            </svg>
+        <div id="titlebar">
+          <div id="ctrl">
+            <div id="min" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12.998H5V10.998H19V12.998Z" fill="white"/>
+              </svg>
+            </div>
+            <div id="max" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="12" height="12" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
+            <div id="restore" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clip-path="url(#clip0_9105_112084)">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8.11108 6H17.2222V15.1111H19.2222V5V4H18.2222H8.11108V6ZM6 10.3333H12.8889V17.2222H6V10.3333ZM4 8.33333H6H12.8889H14.8889V10.3333V17.2222V19.2222H12.8889H6H4V17.2222V10.3333V8.33333Z" fill="white"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_9105_112084">
+                    <rect width="24" height="24" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </div>
+            <div id="close" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="white"/>
+              </svg>
+            </div>
           </div>
         </div>
       `
