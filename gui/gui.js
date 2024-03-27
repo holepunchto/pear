@@ -514,7 +514,7 @@ class App {
       decalSession.setUserAgent('Pear Platform')
 
       const entry = '/' + ctx.main
-      const identify = await this.ipc.identify()
+      const identify = await this.ipc.identify({ startId: ctx.startId })
       const { id, host } = identify
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })

@@ -10,13 +10,13 @@ const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
 configureElectron()
 crasher('electron-main', SWAP)
 electronMain().catch(console.error)
-
 async function electronMain () {
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
       ? process.argv.slice(1)
       : process.argv.slice(2)
   })
+  Context.storage(ctx)
   if (ctx.error) {
     console.error(ctx.error)
     electron.app.quit(1)
