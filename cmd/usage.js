@@ -75,7 +75,7 @@ module.exports = ({ fork, length, key }) => {
 
     ${infoBrief}
 
-    Supply a key or channel name to view application info
+    Supply a key or channel to view application info
 
     Without a key pear info shows Pear info
 
