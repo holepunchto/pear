@@ -629,7 +629,9 @@
 
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
-              document.body.appendChild(document.createElement('pear-ctrl'))
+              const ctrl = document.createElement('pear-ctrl')
+              if (process.platform === 'darwin') ctrl.style.marginTop = '18px'
+              document.body.appendChild(ctrl)
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
               decalDialog.trust = async () => {
@@ -869,11 +871,10 @@
         })
       }
 
+
       const updating = await loader.start(ipc, config)
 
       if (updating) return
-
-      config = await ipc.config()
 
       const tier = document.querySelector('decal-tier')
       tier.update(config)
