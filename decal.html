@@ -580,7 +580,7 @@
           this.ipc = ipc
           for await (const report of ipc.reports()) {
             this.status = report
-            this.gid = loader.gid
+            this.gid = Pear.Window.self.id
             loader.hide()
             const { type, headline, tagline, cta } = this.status
             if (type === 'update' && this.status.version?.force) {
@@ -591,7 +591,7 @@
             this.querySelector('[slot="tagline"]').innerHTML = tagline.content
             this.querySelector('[slot="cta"]').innerHTML = cta.content
             this.setAttribute("action", cta.action)
-            await this.ipc.detachMainView(this.gid)
+            await this.ipc.detachMainView({ id: this.gid })
             const winctrl = document.getElementById('windows-controls')
             if (!winctrl) {
               const div = document.createElement('div')
@@ -600,7 +600,7 @@
               document.body.prepend(div)
             }
             this.show(type)
-            await this.ipc.detachMainView(this.gid)
+            await this.ipc.detachMainView({ id: this.gid })
           }
         }
         constructor () {
@@ -728,7 +728,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.ipc.detachMainView(Pear.Window.self.id)
+          await this.ipc.detachMainView({ id: Pear.Window.self.id })
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 
