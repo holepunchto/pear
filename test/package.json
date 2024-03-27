@@ -24,16 +24,16 @@
     "corestore": "^6.16.2",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.2.7",
-    "hypercore-id-encoding": "^1.2.0",
+    "hypercore-id-encoding": "^1.3.0",
     "hyperdrive": "^11.6.3",
     "hyperswarm": "^4.7.14",
     "jsonrpc-mux": "^1.1.1",
     "localdrive": "^1.11.3",
     "pear-inspect": "^1.0.7",
+    "pear-ipc": "^1.0.0",
     "protomux": "^3.5.1",
     "ready-resource": "^1.0.3",
     "streamx": "^2.15.7",
-    "which-runtime": "^1.2.0",
-    "z32": "^1.0.1"
+    "which-runtime": "^1.2.0"
   }
 }

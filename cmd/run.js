@@ -55,7 +55,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
-    await output(json, ipc.run({ key, args, dev, dir, storage: store, detached }))
+    await output(json, await require('../lib/run')({ ipc, key, args, dev, dir, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
       if (askTrust === false) {
@@ -84,7 +84,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       }
     } else if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      if (err.showUsage) await ipc.usage.output('run')
+      if (err.showUsage) ipc.userData.usage.output('run')
     } else if (err.code === 'ENOENT') {
       print(err.message[0].toUpperCase() + err.message.slice(1) + ': "' + dir + '"', false)
     } else {

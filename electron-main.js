@@ -1,47 +1,49 @@
 'use strict'
+const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
-const IPC = require('./ipc/main')
 const Context = require('./ctx/shared')
-const { App } = require('./lib/gui')
-const { SWAP } = require('./lib/constants')
+const GUI = require('./gui')
 const crasher = require('./lib/crasher')
-const connect = require('./lib/connect.js')
+const tryboot = require('./lib/tryboot')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
 
 configureElectron()
 crasher('electron-main', SWAP)
 electronMain().catch(console.error)
-
 async function electronMain () {
-  const channel = await connect()
   const ctx = new Context({
     argv: (process.argv.length > 1 && process.argv[1][0] === '-')
       ? process.argv.slice(1)
       : process.argv.slice(2)
   })
+  Context.storage(ctx)
   if (ctx.error) {
     console.error(ctx.error)
-    require('electron').app.quit(1)
+    electron.app.quit(1)
     return
   }
-  const client = channel
-  const ipc = new IPC(ctx, client)
+  const gui = new GUI({
+    socketPath: SOCKET_PATH,
+    connectTimeout: CONNECT_TIMEOUT,
+    tryboot,
+    ctx
+  })
+  await gui.ready()
 
-  if (await ipc.wakeup()) { // note: would be unhandled rejection on failure, but should never fail
-    require('electron').app.quit(0)
+  // note: would be unhandled rejection on failure, but should never fail:
+  if (await gui.ipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
+    electron.app.quit(0)
     return
   }
-  const app = new App(ctx)
-  client.once('close', async () => { app.quit() })
-  app.start(ipc).catch(console.error)
-  await app.starting
-  ipc.unloading().then(() => {
-    app.close()
+
+  const app = await gui.app()
+
+  gui.unloading({ id: app.id }).then(async () => {
+    await app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
 
 function configureElectron () {
-  const electron = require('electron')
-
   const appName = applingName()
   if (appName) {
     process.title = appName

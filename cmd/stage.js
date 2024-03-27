@@ -43,7 +43,7 @@ module.exports = (ipc) => async function stage (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await ipc.usage.output('stage')
+      ipc.userData.usage.output('stage')
     } else {
       print('An error occured', false)
       console.error(err)

@@ -9,16 +9,6 @@ const parse = require('../lib/parse')
 module.exports = () => async function init (args) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
-  console.log(parse.args(args, {
-    string: ['type', 'with'],
-    boolean: ['yes', 'force'],
-    alias: {
-      yes: 'y',
-      from: 'f',
-      type: 't',
-      with: 'w'
-    }
-  }))
   const { _, yes, force, type = 'desktop', with: w } = parse.args(args, {
     string: ['type', 'with'],
     boolean: ['yes', 'force'],

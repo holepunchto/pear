@@ -15,9 +15,13 @@ const {
   WAKEUP
 } = require('./lib/constants.js')
 const registerUrlHandler = require('./lib/url-handler')
+const parse = require('./lib/parse')
+const { verbose } = parse.args(Bare.argv, { boolean: ['verbose'] })
 
 crasher('sidecar', SWAP)
-module.exports = bootSidecar().catch((err) => {
+module.exports = bootSidecar().then(() => {
+  if (verbose) console.log('- Sidecar booted')
+}).catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
 })
@@ -27,11 +31,11 @@ async function bootSidecar () {
   await corestore.ready()
 
   const drive = await createPlatformDrive()
-  const { SidecarIPC, Updater } = await subsystem(drive, '/subsystems/sidecar.js')
+  const Sidecar = await subsystem(drive, '/subsystems/sidecar.js')
 
   const updater = createUpdater()
-  const sidecar = new SidecarIPC({ updater, drive, corestore })
-  await sidecar.listen()
+  const sidecar = new Sidecar({ updater, drive, corestore })
+  await sidecar.ready()
 
   registerUrlHandler(WAKEUP)
 
@@ -43,7 +47,7 @@ async function bootSidecar () {
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
+    return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
   }
 
   async function createPlatformDrive () {

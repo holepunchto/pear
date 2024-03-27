@@ -151,7 +151,7 @@ module.exports = ({ fork, length, key }) => {
     and then becomes the sidecar.
 
     --mem              memory mode: RAM corestore
-    --attach-boot-io   include initial sidecar I/O (if applicable)
+    --verbose          Additional output
   `
 
   const versions = ansi.bold(cmd + ' versions')

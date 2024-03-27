@@ -1,5 +1,5 @@
 'use strict'
-const { PLATFORM_DIR, RUNTIME } = require('../lib/constants')
+const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
@@ -39,11 +39,20 @@ module.exports = class Context {
       ...(pkg?.bundledDependencies || [])
     ]
     if (pkg == null) return
+    try { this.storage(ctx) } catch (err) { ctx.error = err }
+  }
+
+  static storage (ctx) {
+    if (!ctx.key && !ctx.name) { // uninited local case
+      this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
+      return
+    }
     const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex')] : ['by-name', validateAppName(ctx.name)])
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
-    if (ctx.storage.startsWith(ctx.dir)) {
-      ctx.error = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
-      ctx.error.code = 'ERR_INVALID_APPLICATION_STORAGE'
+    if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
+      const err = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
+      err.code = 'ERR_INVALID_APPLICATION_STORAGE'
+      throw err
     }
   }
 
@@ -100,5 +109,7 @@ module.exports = class Context {
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.constructor.injestPackage(this, pkg)
+    if (ALIASES.keet.z32 === this.key?.z32) this.tbh = 0
+    else this.tbh = this.options.platform?.__legacyTitlebar ? 48 : 0
   }
 }

@@ -30,7 +30,7 @@ module.exports = (ipc) => async function release (args) {
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
-      await ipc.usage.output('release', false)
+      ipc.userData.usage.output('release', false)
     } else {
       print('An error occured', false)
       console.error(err)
