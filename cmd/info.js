@@ -58,7 +58,6 @@ module.exports = (ipc) => async function info (args) {
       changelog: changelog !== false ? type : false
     }
 
-    // const exclusive = changelog === true || full === true || metadata === true || key === true || keys === true
     const exclusive = changelog || full || metadata || key || keys
     if (exclusive) display = { key, keys, metadata, changelog: changelog || full ? type : false }
 
