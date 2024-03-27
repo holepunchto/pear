@@ -7,7 +7,6 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
   const GUI = require('./gui')
-  const constants = require('./lib/constants')
   const API = require('./lib/api')
   const gunk = require('./lib/gunk')
 
@@ -18,7 +17,7 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   ctx.config = config
-  const gui = new GUI({ socketPath: constants.SOCKET_PATH, connectTimeout: constants.CONNECT_TIMEOUT, API, ctx })
+  const gui = new GUI({ API, ctx })
   window.Pear = gui.api
 
   if (isDecal === false) {

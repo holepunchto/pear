@@ -648,7 +648,7 @@
               document.body.prepend(div)
             }
             this.show(type)
-            await this.ipc.detachMainView({ id: this.gid} )
+            await this.ipc.detachMainView({ id: this.gid })
           }
         }
         constructor () {
@@ -776,7 +776,7 @@
           this.querySelector('[slot="update-length"]').innerHTML = length
           this.shadowRoot.querySelector('#update').style.display = 'block'
           this.show()
-          await this.ipc.detachMainView(Pear.Window.self.id)
+          await this.ipc.detachMainView({ id: Pear.Window.self.id })
         }
         show () { 
           this.shadowRoot.querySelector('#loader').style.display = 'block' 

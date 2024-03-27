@@ -478,7 +478,7 @@ class App {
         this.appReady = true
       }
 
-      const { dev, trace, stage } = ctx
+      const { dev, devtools, trace, stage } = ctx
       const show = (!trace && (dev || !stage))
       const unfilteredGuiOptions = ctx.options.gui || ctx.options
       const guiOptions = {
@@ -514,7 +514,7 @@ class App {
       decalSession.setUserAgent('Pear Platform')
 
       const entry = '/' + ctx.main
-      const identify = await this.ipc.identify()
+      const identify = await this.ipc.identify({ startId: ctx.startId })
       const { id, host } = identify
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
@@ -554,10 +554,9 @@ class App {
           }
         },
         afterNativeWindowClose: () => this.close(),
-        afterNativeViewCreated: dev && ((app) => {
+        afterNativeViewCreated: devtools && ((app) => {
           if (trace) return
-          if (app.ctx.devtools) app.view.webContents.openDevTools({ mode: 'detach' })
-
+          app.view.webContents.openDevTools({ mode: 'detach' })
           if (app.ctx.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace

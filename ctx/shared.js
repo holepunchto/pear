@@ -39,11 +39,20 @@ module.exports = class Context {
       ...(pkg?.bundledDependencies || [])
     ]
     if (pkg == null) return
+    try { this.storage(ctx) } catch (err) { ctx.error = err }
+  }
+
+  static storage (ctx) {
+    if (!ctx.key && !ctx.name) { // uninited local case
+      this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
+      return
+    }
     const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex')] : ['by-name', validateAppName(ctx.name)])
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
-    if (ctx.storage.startsWith(ctx.dir)) {
-      ctx.error = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
-      ctx.error.code = 'ERR_INVALID_APPLICATION_STORAGE'
+    if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
+      const err = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
+      err.code = 'ERR_INVALID_APPLICATION_STORAGE'
+      throw err
     }
   }
 
