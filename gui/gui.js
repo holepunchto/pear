@@ -1613,8 +1613,8 @@ class PearGUI extends ReadyResource {
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
-  setPreference (key, value) { return this.ipc.setPreference(key, value) }
-  getPreference (key) { return this.ipc.getPreference(key) }
+  setPreference (key, value) { return this.ipc.setPreference({ key, value }) }
+  async getPreference (key) { return this.ipc.getPreference({ key }) }
   iteratePreference () { return this.ipc.iteratePreference() }
 }
 
