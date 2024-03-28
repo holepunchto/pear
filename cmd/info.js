@@ -1,6 +1,8 @@
 'use strict'
 const parse = require('../lib/parse')
 const { outputter, print } = require('./iface')
+const os = require('bare-os')
+const { isAbsolute, resolve } = require('bare-path')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -36,14 +38,30 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json']
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
     })
-    const { _, json } = flags
-    const [key] = _
-    const isKey = key ? parse.runkey(key).key !== null : false
-    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
-    const id = Bare.pid
-    await output(json, ipc.info({ id, key }))
+    const { _, json, changelog, 'full-changelog': full, metadata, key, keys } = flags
+    const [from] = _
+    let [, dir = ''] = _
+    const isKey = from ? parse.runkey(from).key !== null : false
+    const channel = isKey ? null : from
+    const runkey = isKey ? from : null
+    if (runkey && isKey === false) throw new Error('Key "' + runkey + '" is not valid')
+
+    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+    const type = full ? 'full' : 'latest'
+
+    let display = {
+      key: key !== false,
+      keys: keys !== false,
+      metadata: metadata !== false,
+      changelog: changelog !== false ? type : false
+    }
+
+    const exclusive = changelog || full || metadata || key || keys
+    if (exclusive) display = { key, keys, metadata, changelog: changelog || full ? type : false }
+
+    await output(json, ipc.info({ key: runkey, channel, dir, display }))
   } catch (err) {
     ipc.userData.usage.output('info', false)
     print(err.message, false)
