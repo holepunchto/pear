@@ -59,9 +59,11 @@ function indicator (value, type = 'success') {
   return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
-const outputter = (cmd, taggers = {}) => async (json, iterable, state = {}) => {
+const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
   try {
-    for await (const { tag, data = {} } of iterable) {
+    stream.on('end', () => iter.return())
+    const iter = stream[Symbol.asyncIterator]()
+    for await (const { tag, data = {} } of iter) {
       if (json) {
         print(JSON.stringify({ cmd, tag, data }))
         continue
