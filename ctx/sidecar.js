@@ -4,6 +4,7 @@ const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const preferences = require('../lib/preferences')
 const SharedContext = require('./shared')
+const { ALIASES } = require('../lib/constants')
 
 module.exports = class Context extends SharedContext {
   initialized = false
@@ -32,6 +33,15 @@ module.exports = class Context extends SharedContext {
     this.link = bundle.link
 
     if (this.key) {
+      const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
+      const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
+      if (trusted.has(this.key) === false) {
+        const err = new Error('Permission required to run key')
+        err.code = 'ERR_PERMISSION_REQUIRED'
+        err.key = this.key.z32.toString()
+        throw err
+      }
+
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
