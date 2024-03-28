@@ -34,8 +34,8 @@ module.exports = class Context extends SharedContext {
 
     if (this.key) {
       const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
-      const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
-      if (trusted.has(this.key) === false) {
+      const trusted = [...aliases, ...((await preferences.get('trusted')) || [])]
+      if (trusted.indexOf(this.key.z32) === -1) {
         const err = new Error('Permission required to run key')
         err.code = 'ERR_PERMISSION_REQUIRED'
         err.key = this.key.z32.toString()
