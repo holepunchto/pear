@@ -48,5 +48,7 @@ module.exports = (ipc) => async function info (args) {
     ipc.userData.usage.output('info', false)
     print(err.message, false)
     Bare.exit(1)
+  } finally {
+    await ipc.close()
   }
 }

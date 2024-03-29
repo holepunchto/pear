@@ -49,5 +49,7 @@ module.exports = (ipc) => async function stage (args) {
       console.error(err)
     }
     Bare.exit(1)
+  } finally {
+    await ipc.close()
   }
 }

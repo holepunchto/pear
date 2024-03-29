@@ -36,5 +36,7 @@ module.exports = (ipc) => async function release (args) {
       console.error(err)
     }
     Bare.exit(1)
+  } finally {
+    await ipc.close()
   }
 }
