@@ -6,7 +6,7 @@ const { ansi, print, interact } = require('./iface')
 const constants = require('../lib/constants')
 const parse = require('../lib/parse')
 
-module.exports = () => async function init (args) {
+module.exports = (ipc) => async function init (args) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
   const { _, yes, force, type = 'desktop', with: w } = parse.args(args, {
@@ -243,5 +243,7 @@ console.log(await versions())
     Bare.exit()
   } catch (err) {
     print(err.stack, false)
+  } finally {
+    await ipc.close()
   }
 }

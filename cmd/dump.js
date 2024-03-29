@@ -23,5 +23,7 @@ module.exports = (ipc) => async function dump (args) {
     } else {
       console.error(err)
     }
+  } finally {
+    await ipc.close()
   }
 }
