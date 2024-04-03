@@ -9,7 +9,6 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
-const Localdrive = require('localdrive')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
@@ -162,36 +161,6 @@ class Helper extends IPC {
 
   async sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  static Mirror = class extends ReadyResource {
-    constructor ({ src = null, dest = null } = {}) {
-      super()
-      this.srcDir = src
-      this.destDir = dest
-    }
-
-    async _open () {
-      this.srcDrive = new Localdrive(this.srcDir)
-      this.destDrive = new Localdrive(this.destDir)
-
-      const mirror = this.srcDrive.mirror(this.destDrive, {
-        filter: (key) => {
-          return !key.startsWith('.git')
-        }
-      })
-
-      await mirror.done()
-    }
-
-    async _close () {
-      await this.srcDrive.close()
-      await this.destDrive.close()
-    }
-
-    get drive () {
-      return this.destDrive
-    }
   }
 
   static Inspector = class extends ReadyResource {
