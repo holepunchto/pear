@@ -61,9 +61,7 @@ function indicator (value, type = 'success') {
 
 const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
   try {
-    stream.on('end', () => iter.return())
-    const iter = stream[Symbol.asyncIterator]()
-    for await (const { tag, data = {} } of iter) {
+    for await (const { tag, data = {} } of stream) {
       if (json) {
         print(JSON.stringify({ cmd, tag, data }))
         continue
