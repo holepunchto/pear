@@ -3,10 +3,12 @@ const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const HypercoreID = require('hypercore-id-encoding')
+const fs = require('bare-fs')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
 const {
   SWAP,
+  GC,
   PLATFORM_CORESTORE,
   CHECKOUT,
   LOCALDEV,
@@ -26,7 +28,14 @@ module.exports = bootSidecar().then(() => {
   Bare.exit(1)
 })
 
+async function gc () {
+  await fs.promises.mkdir(GC, { recursive: true })
+  await fs.promises.rm(GC, { recursive: true })
+  await fs.promises.mkdir(GC, { recursive: true })
+}
+
 async function bootSidecar () {
+  await gc()
   const corestore = new Corestore(PLATFORM_CORESTORE, { manifestVersion: 1, compat: false })
   await corestore.ready()
 
