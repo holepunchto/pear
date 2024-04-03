@@ -29,12 +29,13 @@ class Helper extends IPC {
             const sc = spawn(
               runtime, ['--sidecar', '--verbose'], {
                 detached: true,
-                inherit: true
+                stdio: opts.logging ? 'inherit' : 'ignore'
               })
             sc.unref()
           }
     })
     this.#expectSidecar = opts.expectSidecar
+    this.logging = opts.logging
     this.opts = opts
   }
 
