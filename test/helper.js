@@ -9,36 +9,44 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
-const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const Localdrive = require('localdrive')
+const HOST = platform + '-' + arch
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const RUNTIME = path.join(os.cwd(), '..', BY_ARCH)
 
 class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
     const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const runtime = path.join(platformDir, '..', BY_ARCH)
+
     super({
       socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
         ? true
         : () => {
-            const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-              detached: true
-            })
+            const sc = spawn(
+              runtime, ['--sidecar', '--verbose'], {
+                detached: true,
+                inherit: true
+              })
             sc.unref()
           }
     })
     this.#expectSidecar = opts.expectSidecar
+    this.runtime = runtime
     this.opts = opts
   }
 
   static logging = false
 
-  static async open (key, { tags = [] } = {}, opts = {}) {
+  static async open (key, { tags = [], runtime = RUNTIME } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
-    const subprocess = spawn(RUNTIME, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
@@ -155,6 +163,36 @@ class Helper extends IPC {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
+  static Mirror = class extends ReadyResource {
+    constructor ({ src = null, dest = null } = {}) {
+      super()
+      this.srcDir = src
+      this.destDir = dest
+    }
+
+    async _open () {
+      this.srcDrive = new Localdrive(this.srcDir)
+      this.destDrive = new Localdrive(this.destDir)
+
+      const mirror = this.srcDrive.mirror(this.destDrive, {
+        filter: (key) => {
+          return !key.startsWith('.git')
+        }
+      })
+
+      await mirror.done()
+    }
+
+    async _close () {
+      await this.srcDrive.close()
+      await this.destDrive.close()
+    }
+
+    get drive () {
+      return this.destDrive
+    }
+  }
+
   static Inspector = class extends ReadyResource {
     #session = null
 
@@ -168,7 +206,7 @@ class Helper extends IPC {
     }
 
     async _close () {
-      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => {})
+      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => { })
 
       this.#session.disconnect()
       await this.#session.destroy()
