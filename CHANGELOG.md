@@ -1,5 +1,18 @@
 # Pear Runtime Changelog
 
+## v1.1.3
+
+### Fixes
+
+* Windows - multiple platform instances fix, unique pipes 
+* Hypercore dependency update for updater fixes
+* 
+
+
+### Improvements
+
+* IPC Refactor from `jsonrpc-mux` to `pear-ipc` 
+
 ## v1.1.2
 
 ### Fixes
