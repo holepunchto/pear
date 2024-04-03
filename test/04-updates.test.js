@@ -5,8 +5,8 @@ const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
-const { writeFileSync, unlinkSync } = fs
 const hie = require('hypercore-id-encoding')
+const Localdrive = require('localdrive')
 
 const seedOpts = (id) => ({
   channel: `test-${id}`, name: `test-${id}`, key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
@@ -33,9 +33,16 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   teardown(() => gc(tmpLocaldev), { order: Infinity })
 
   comment('mirroring platform')
-  const mirror = new Helper.Mirror({ src: localdev, dest: tmpLocaldev })
-  teardown(async () => mirror.close())
-  await mirror.ready()
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(tmpLocaldev)
+  const mirror = srcDrive.mirror(destDrive, {
+    filter: (key) => {
+      return !key.startsWith('.git')
+    }
+  })
+  await mirror.done()
+  teardown(async () => srcDrive.close())
+  teardown(async () => destDrive.close())
 
   const platformDir = path.join(tmpLocaldev, 'pear')
   teardown(async () => {
@@ -57,7 +64,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(key, { tags: ['exit'], runtime: stager1.runtime })
+  const running = await Helper.open(key, { tags: ['exit'] }, { platformDir })
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
     new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
@@ -71,14 +78,14 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   const file = `${ts()}.txt`
   comment(`\tcreating test file (${file})`)
-  writeFileSync(path.join(dir, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   comment('\tstaging')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
 
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-  unlinkSync(path.join(dir, file))
+  fs.unlinkSync(path.join(dir, file))
 
   const update1 = await update1ActualPromise
   const update1Version = update1?.value?.version

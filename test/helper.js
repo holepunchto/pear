@@ -12,13 +12,13 @@ const IPC = require('pear-ipc')
 const Localdrive = require('localdrive')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const RUNTIME = path.join(os.cwd(), '..', BY_ARCH)
+const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
 
 class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
-    const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
 
     super({
@@ -36,16 +36,17 @@ class Helper extends IPC {
           }
     })
     this.#expectSidecar = opts.expectSidecar
-    this.runtime = runtime
+    this.platformDir = platformDir
     this.opts = opts
   }
 
   static logging = false
 
-  static async open (key, { tags = [], runtime = RUNTIME } = {}, opts = {}) {
+  static async open (key, { tags = [] } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
+    const runtime = path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
     const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
