@@ -35,7 +35,6 @@ class Helper extends IPC {
           }
     })
     this.#expectSidecar = opts.expectSidecar
-    this.platformDir = platformDir
     this.opts = opts
   }
 
