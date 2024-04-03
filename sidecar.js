@@ -29,8 +29,7 @@ module.exports = bootSidecar().then(() => {
 })
 
 async function gc () {
-  await fs.promises.mkdir(GC, { recursive: true })
-  await fs.promises.rm(GC, { recursive: true })
+  try { await fs.promises.rm(GC, { recursive: true }) } catch {}
   await fs.promises.mkdir(GC, { recursive: true })
 }
 
