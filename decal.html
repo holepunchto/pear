@@ -93,12 +93,12 @@
       display: none;
     }
 
-    #bar[data-platform=darwin] {
+    #bar.dialog.darwin {
       background: rgba(0, 0, 0, 0);
       display: block;
     }
 
-    #avatar[data-platform=darwin] {
+    #avatar.dialog.darwin {
       display: none;
     }
 
@@ -641,7 +641,11 @@
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
-              if (process.platform === 'darwin') ctrl.style.marginTop = '18px'
+              if (process.platform === 'darwin') {
+                ctrl.style.marginTop = '18px'
+                document.getElementById('bar').classList.add('dialog', 'darwin')
+                document.getElementById('avatar').classList.add('dialog', 'darwin')
+              }
               document.body.appendChild(ctrl)
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
