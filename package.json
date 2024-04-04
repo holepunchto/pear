@@ -67,7 +67,6 @@
     "bare-module": "^3.1.6",
     "bare-os": "^2.1.1",
     "bare-pipe": "^2.0.0",
-    "bare-process": "^1.3.2",
     "bare-signals": "^2.1.1",
     "bare-subprocess": "^2.0.2",
     "bare-tty": "^3.0.1",
