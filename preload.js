@@ -266,7 +266,6 @@ if (process.isMainFrame) {
         </svg>
       </div>
     </div>
-    </div>
     `
     }
 
