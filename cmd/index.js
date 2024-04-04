@@ -1,21 +1,15 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
-const { usage, print } = require('./iface')
-const { CHECKOUT } = require('../constants')
-const errors = require('../errors')
-const runners = {
-  init: require('./init'),
-  stage: require('./stage'),
-  seed: require('./seed'),
-  release: require('./release'),
-  info: require('./info'),
-  dump: require('./dump'),
-  shift: require('./shift'),
-  sidecar: require('./sidecar'),
-  gc: require('./gc'),
-  run: require('./run'),
-  versions: require('./versions')
-}
+const init = require('./init')
+const stage = require('./stage')
+const seed = require('./seed')
+const release = require('./release')
+const info = require('./info')
+const dump = require('./dump')
+const shift = require('./shift')
+const sidecar = require('./sidecar')
+const run = require('./run')
+const parse = require('../lib/parse')
+const { CHECKOUT } = require('../lib/constants')
 
 module.exports = async (ipc) => {
   Bare.prependListener('exit', () => { ipc.close() })
@@ -225,6 +219,33 @@ module.exports = async (ipc) => {
     print(reason, false)
     print('\n' + bail.command.usage())
   }
+
+  const cmd = new Cmd(usage.output, () => { ipc.close() })
+  cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
+  cmd.add('versions', (args) => {
+    usage.outputVersions(args.includes('--json'))
+    ipc.close()
+  })
+  cmd.add('init', init(ipc))
+  cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
+  cmd.add('stage', stage(ipc))
+  cmd.add('seed', seed(ipc))
+  cmd.add('release', release(ipc))
+  cmd.add('run', launch)
+  cmd.add('launch', launch) // launch is legacy alias for run
+  cmd.add('info', info(ipc))
+  cmd.add('dump', dump(ipc))
+  cmd.add('build', build)
+  cmd.add('shift', shift(ipc))
+  cmd.add('sidecar', (args) => sidecar(ipc)(args))
+
+  await cmd.run(argv)
+
+  function launch (args) {
+    return run(ipc)(args)
+  }
+
+  function build () { throw new Error('Not Implemented: build') }
 
   return ipc
 }

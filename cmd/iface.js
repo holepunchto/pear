@@ -60,7 +60,7 @@ function indicator (value, type = 'success') {
   return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
-const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
+const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
   let error = null
   try {
     for await (const { tag, data = {} } of stream) {
@@ -70,7 +70,7 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
       }
       let result = null
       try {
-        result = typeof taggers[tag] === 'function' ? taggers[tag](data, info) : (taggers[tag] || false)
+        result = typeof taggers[tag] === 'function' ? taggers[tag](data, state) : (taggers[tag] || false)
       } catch (err) {
         error = err
         break
@@ -86,6 +86,9 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
       if (tag === 'diff') diff(data)
       if (tag === 'byte-diff') byteDiff(data)
     }
+  } catch (err) {
+    if (err.sidecarCode === 'ERR_BARE_CORE') print(err.message, -1)
+    else if (err.code === 'E_MUX_REMOTE') throw (err.remote || err)
   } finally {
     if (error) throw error // eslint-disable-line no-unsafe-finally
   }
