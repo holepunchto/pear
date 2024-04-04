@@ -4,7 +4,7 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
-const { isMac, isLinux, isWindows } = require('which-runtime')
+const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
@@ -993,8 +993,8 @@ class Window extends GuiCtrl {
       height,
       width,
       frame: false,
-      ...(isMac && this.state.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
-      ...(isMac && this.state?.alias === 'keet' && this.state?.appling?.path ? { icon: path.join(path.dirname(this.state.appling.path), 'resources', 'app', 'icon.ico') } : {}),
+      ...(isMac && this.ctx.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
+      ...(isMac && this.ctx?.alias === 'keet' && this.ctx?.appling?.path ? { icon: path.join(path.dirname(this.ctx.appling.path), 'resources', 'app', 'icon.ico') } : {}),
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
@@ -1143,16 +1143,6 @@ class Window extends GuiCtrl {
     const maximized = once(this.win, 'maximize')
     const result = this.win.maximize()
     await maximized
-    return result
-  }
-
-  async setMinimizable (value) {
-    const result = this.win.setMinimizable(value)
-    return result
-  }
-
-  async setMaximizable (value) {
-    const result = this.win.setMaximizable(value)
     return result
   }
 
@@ -1663,9 +1653,13 @@ class PearGUI extends ReadyResource {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
-  unloading ({ id }) { return this.get(id).unloading() }
-
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
+
+  unloading ({ id }) {
+    if (this._unloading) return this._unloading
+    this._unloading = this.get(id).unloading()
+    return this._unloading
+  }
 
   async completeUnload ({ id, action }) {
     const instance = this.get(id)
@@ -1707,7 +1701,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  trust ({ z32 }) { return this.ipc.trust({ z32 }) }
+  trust ({ id, key }) { return this.ipc.trust({ z32: key }) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
