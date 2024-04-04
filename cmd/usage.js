@@ -140,6 +140,17 @@ module.exports = ({ fork, length, key }) => {
     --verbose|-v  Additional output
   `
 
+  const shift = ansi.bold(cmd + ' shift')
+  const shiftArgs = ansi.bold('<src-key> <dst-key> [--force]')
+  const shiftBrief = 'Advanced. Move storage between apps.'
+  const shiftExplain = `${shift} ${shiftArgs}
+
+    ${shiftBrief}
+
+    --force    Overwrite existing application storage if present
+    --json     Newline delimited JSON output
+  `
+
   const sidecar = ansi.bold(cmd + ' sidecar')
   const sidecarBrief = 'Advanced. Run sidecar in terminal.'
   const sidecarExplain = `${sidecar}
@@ -203,6 +214,7 @@ module.exports = ({ fork, length, key }) => {
     dump: dumpExplain,
     run: runExplain,
     seed: seedExplain,
+    shift: shiftExplain,
     sidecar: sidecarExplain,
     help: helpExplain,
     output,
@@ -216,6 +228,7 @@ module.exports = ({ fork, length, key }) => {
     ${release} ${ansi.sep} ${dedot(releaseBrief)}
     ${info} ${ansi.sep} ${dedot(infoBrief)}
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
+    ${shift} ${ansi.sep} ${dedot(shiftBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
 
@@ -229,6 +242,7 @@ ${footer}`,
     ${releaseExplain}
     ${infoExplain}
     ${dumpExplain}
+    ${shiftExplain}
     ${sidecarExplain}
     ${versionsExplain}
     ${helpExplain}
