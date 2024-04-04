@@ -79,13 +79,13 @@ module.exports = ({ fork, length, key }) => {
 
     Without a key pear info shows Pear info
 
-    --json            Newline delimited JSON output
     --changelog       Latest changes
     --no-changelog    Exclude changelog from info
     --full-changelog  Full record of changes
     --metadata        Additional data
     --no-metadata     Exclude additional data from info
     --key             Display the key of the channel
+    --json            Newline delimited JSON output
   `
 
   const dump = ansi.bold(cmd + ' dump')
