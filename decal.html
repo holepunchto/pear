@@ -83,12 +83,23 @@
     #bar > * {
       -webkit-app-region: no-drag;
     }
+
     #avatar {
       height: 28px;
       width: 28px;
       float: right;
       margin-right: 2px;
       border-radius: 8px;
+      display: none;
+    }
+
+    #bar[data-platform=darwin] {
+      background: rgba(0, 0, 0, 0);
+      display: block;
+    }
+
+    #avatar[data-platform=darwin] {
+      display: none;
     }
 
     #win-ctrl { 
