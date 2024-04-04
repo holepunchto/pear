@@ -4,8 +4,9 @@ const test = require('brittle')
 const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
-const { writeFileSync, unlinkSync } = require('bare-fs')
+const fs = require('bare-fs')
 const hie = require('hypercore-id-encoding')
+const Localdrive = require('localdrive')
 
 const seedOpts = (id) => ({
   channel: `test-${id}`, name: `test-${id}`, key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
@@ -20,6 +21,30 @@ const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
   timeout(180000)
+
+  const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(os.cwd(), '..')
+  const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
+
+  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  try { await gc(tmpLocaldev) } catch { }
+
+  await fs.promises.mkdir(tmpLocaldev, { recursive: true })
+  teardown(() => gc(tmpLocaldev), { order: Infinity })
+
+  comment('mirroring platform')
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(tmpLocaldev)
+  const mirror = srcDrive.mirror(destDrive, {
+    filter: (key) => {
+      return !key.startsWith('.git')
+    }
+  })
+  await mirror.done()
+  teardown(async () => srcDrive.close())
+  teardown(async () => destDrive.close())
+
+  const platformDir = path.join(tmpLocaldev, 'pear')
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
@@ -27,7 +52,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   })
   const testId = Math.floor(Math.random() * 100000)
 
-  const stager1 = new Helper()
+  const stager1 = new Helper({ platformDir })
   await stager1.ready()
 
   comment('1. Stage and run app')
@@ -39,7 +64,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(key, { tags: ['exit'] })
+  const running = await Helper.open(key, { tags: ['exit'] }, { platformDir })
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
     new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
@@ -53,14 +78,14 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   const file = `${ts()}.txt`
   comment(`\tcreating test file (${file})`)
-  writeFileSync(path.join(dir, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   comment('\tstaging')
-  const stager2 = new Helper()
+  const stager2 = new Helper({ platformDir })
   await stager2.ready()
 
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-  unlinkSync(path.join(dir, file))
+  fs.unlinkSync(path.join(dir, file))
 
   const update1 = await update1ActualPromise
   const update1Version = update1?.value?.version
@@ -71,10 +96,11 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   comment('releasing')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releaser = new Helper()
+  const releaser = new Helper({ platformDir })
   await releaser.ready()
-  const releasing = releaser.release(releaseOpts(testId, key))
+  teardown(async () => releaser.shutdown())
 
+  const releasing = releaser.release(releaseOpts(testId, key))
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for update')

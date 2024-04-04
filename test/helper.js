@@ -9,26 +9,33 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
-const RUNTIME = path.join(os.cwd(), '..', 'by-arch', platform + '-' + arch, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const HOST = platform + '-' + arch
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
 
 class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
-    const platformDir = opts.platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const platformDir = opts.platformDir || PLATFORM_DIR
+    const runtime = path.join(platformDir, '..', BY_ARCH)
+
     super({
       socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
         ? true
         : () => {
-            const sc = spawn(RUNTIME, ['--sidecar', '--verbose'], {
-              detached: true
-            })
+            const sc = spawn(
+              runtime, ['--sidecar', '--verbose'], {
+                detached: true,
+                stdio: opts.logging ? 'inherit' : 'ignore'
+              })
             sc.unref()
           }
     })
     this.#expectSidecar = opts.expectSidecar
+    this.logging = opts.logging
     this.opts = opts
   }
 
@@ -38,7 +45,8 @@ class Helper extends IPC {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
-    const subprocess = spawn(RUNTIME, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+    const runtime = path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
+    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
@@ -168,7 +176,7 @@ class Helper extends IPC {
     }
 
     async _close () {
-      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => {})
+      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => { })
 
       this.#session.disconnect()
       await this.#session.destroy()
