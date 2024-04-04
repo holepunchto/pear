@@ -4,7 +4,7 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
-const { isMac, isWindows, isLinux } = require('which-runtime')
+const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const constants = require('../lib/constants')
@@ -960,7 +960,7 @@ class Window extends GuiCtrl {
       ...(options.window || options),
       height,
       width,
-      frame: !(isMac || isWindows),
+      frame: false,
       ...(isMac && this.ctx.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
       ...(isMac && this.ctx?.alias === 'keet' && this.ctx?.appling?.path ? { icon: path.join(path.dirname(this.ctx.appling.path), 'resources', 'app', 'icon.ico') } : {}),
       show,
@@ -1113,6 +1113,10 @@ class Window extends GuiCtrl {
     const result = this.win.maximize()
     await maximized
     return result
+  }
+
+  async setSize (width, height) {
+    return this.win.setSize(width, height)
   }
 
   async fullscreen () {
@@ -1317,7 +1321,6 @@ class PearGUI extends ReadyResource {
   static Window = Window
   constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
     super()
-    const gui = this
     this.ctx = ctx
     this.ipc = new IPC({
       lock: constants.PLATFORM_LOCK,
@@ -1327,7 +1330,7 @@ class PearGUI extends ReadyResource {
         reports (method) {
           return (params) => {
             const stream = method.createRequestStream()
-            stream.once('data', () => { gui.reportMode(ctx) })
+            stream.once('data', () => { PearGUI.reportMode(ctx) })
             stream.write(params)
             return stream
           }
@@ -1387,6 +1390,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('isMinimized', (evt, ...args) => this.isMinimized(...args))
     electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
     electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
+    electron.ipcMain.handle('setSize', (evt, ...args) => this.setSize(...args))
+    electron.ipcMain.handle('trust', (evt, ...args) => this.trust(...args))
     electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
     electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
     electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
@@ -1567,6 +1572,8 @@ class PearGUI extends ReadyResource {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
+  setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
+
   unloading ({ id }) {
     if (this._unloading) return this._unloading
     this._unloading = this.get(id).unloading()
@@ -1612,6 +1619,8 @@ class PearGUI extends ReadyResource {
   warming () { return this.ipc.warming() }
 
   reports () { return this.ipc.reports() }
+
+  trust ({ id, key }) { return this.ipc.trust({ z32: key }) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
