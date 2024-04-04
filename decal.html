@@ -93,15 +93,6 @@
       display: none;
     }
 
-    #bar.dialog.darwin {
-      background: rgba(0, 0, 0, 0);
-      display: block;
-    }
-
-    #avatar.dialog.darwin {
-      display: none;
-    }
-
     #win-ctrl { 
       display: none;
     }
@@ -123,6 +114,20 @@
       margin-top: 24px;
       margin-left: 12px;
     }
+
+    .dialog pear-ctrl[data-platform=darwin] {
+      margin-top: -32px;
+    }
+    
+    .dialog.darwin #bar {
+      background: rgba(0, 0, 0, 0);
+      display: block;
+    }
+
+    .dialog.darwin #avatar {
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -641,11 +646,7 @@
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
-              if (process.platform === 'darwin') {
-                ctrl.style.marginTop = '18px'
-                document.getElementById('bar').classList.add('dialog', 'darwin')
-                document.getElementById('avatar').classList.add('dialog', 'darwin')
-              }
+              document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(decalDialog)
               decalDialog.setKey(report.key)
