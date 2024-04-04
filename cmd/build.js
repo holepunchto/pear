@@ -29,11 +29,6 @@ module.exports = (ipc) => async function (args) {
 
     print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
 
-    // TODO: Cleanup this workaround once pear-dev no longer relies on process
-    global.process = require('bare-process')
-    global.process.getuid = () => 1000
-    global.process.getgid = () => 1000
-
     const drive = await createPlatformDrive()
     const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
 
