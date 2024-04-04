@@ -50,18 +50,17 @@ module.exports = (ipc) => async function info (args) {
 
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const type = full ? 'full' : 'latest'
+    const someFlag = [changelog, full, metadata, key, keys].some(flag => flag === true)
 
-    let display = {
-      key: key !== false,
-      keys: keys !== false,
-      metadata: metadata !== false,
+    await output(json, ipc.info({
+      key: runkey,
+      channel,
+      dir,
+      outkey: someFlag ? !!key : key !== false,
+      keys: someFlag ? !!keys : keys !== false,
+      metadata: someFlag ? !!metadata : metadata !== false,
       changelog: changelog !== false ? type : false
-    }
-
-    const exclusive = changelog || full || metadata || key || keys
-    if (exclusive) display = { key, keys, metadata, changelog: changelog || full ? type : false }
-
-    await output(json, ipc.info({ key: runkey, channel, dir, display }))
+    }))
   } catch (err) {
     ipc.userData.usage.output('info', false)
     print(err.message, false)
