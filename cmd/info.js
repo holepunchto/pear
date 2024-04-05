@@ -38,8 +38,7 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key'],
-      default: { json: false, changelog: true, 'full-changelog': false, metadata: true, key: true, keys: true }
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key', 'keys']
     })
     const { _, json, changelog, 'full-changelog': full, metadata, key: showKey, keys } = flags
     const [from] = _
@@ -50,7 +49,6 @@ module.exports = (ipc) => async function info (args) {
     if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
 
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-    const type = full ? 'full' : 'latest'
 
     await output(json, ipc.info({
       key,
@@ -59,7 +57,8 @@ module.exports = (ipc) => async function info (args) {
       showKey,
       keys,
       metadata,
-      changelog: changelog || full ? type : false
+      changelog,
+      full
     }))
   } catch (err) {
     ipc.userData.usage.output('info', false)
