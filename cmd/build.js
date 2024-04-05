@@ -1,172 +1,38 @@
-const Localdrive = require('localdrive')
-const Hyperdrive = require('hyperdrive')
-const Corestore = require('corestore')
-const fs = require('bare-fs')
-const os = require('bare-os')
+'use strict'
 const path = require('bare-path')
-const { print, outputter, InputError } = require('./iface')
-const subsystem = require('../lib/subsystem')
-const { LOCALDEV, SWAP, CHECKOUT, PLATFORM_CORESTORE } = require('../lib/constants')
+const { outputter, print, InputError } = require('./iface')
 const parse = require('../lib/parse')
+const output = outputter('build', {
+  starting: ({ platform, arch, key, dir }) => `Starting build for pear://${key} on ${platform}-${arch} in ${dir}`,
+  dumping: ({ key, dir }) => `Dumping ${key} into ${dir}`,
+  initializing: () => 'Initializing...',
+  cmakeCreated: () => '  Creating CMakeLists.txt',
+  cmakeExists: () => '  Using existing CMakeLists.txt',
+  configuring: () => 'Configuring...',
+  building: () => 'Building...',
+  done: ({ key, dir }) => `Build complete for pear://${key} in ${dir}`,
+  error: ({ code, stack }) => `Build Error (code: ${code || 'none'}) ${stack}`
+})
 
-class RequirementError extends Error {
-  constructor (message) {
-    super(message)
-    this.name = 'RequirementError'
-  }
-}
-
-/* global Bare */
-module.exports = (ipc) => async function (args) {
+module.exports = (ipc) => async function build (args) {
   try {
-    const { _: [passedKey, buildDirArg], verbose } = parse.args(args, { boolean: ['verbose'], alias: { verbose: 'v' } })
+    const { _: [passedKey, buildDirArg], json, verbose } = parse.args(args, { boolean: ['json'] })
 
     const key = parse.runkey(passedKey)?.key?.z32
     if (!key) throw new InputError(passedKey ? `Key "${passedKey}" is not valid` : 'Key must be specified')
     if (!buildDirArg) throw new InputError('Build directory must be specified')
 
-    const buildDir = path.resolve(buildDirArg)
+    const dir = path.resolve(buildDirArg)
 
-    print(`Building application ${key} for ${os.platform()}-${os.arch()}...`)
-
-    const drive = await createPlatformDrive()
-    const buildSubsystem = await subsystem(drive, '/subsystems/build.js')
-
-    print(`Using build directory: ${buildDir}`)
-
-    print('Creating dump...')
-    await createDump({ buildDir, key, ipc })
-
-    print('Running init...')
-    if (checkFile(path.resolve(buildDir, 'CMakeLists.txt'))) {
-      print('  Using existing CMakeLists.txt')
-    } else {
-      print('  No CMakeLists.txt found, creating one...')
-      await buildSubsystem.init.appling({ cwd: buildDir, key, verbose, quiet: false, ...loadApplingOpts(buildDir) })
-    }
-
-    print('Running configure...')
-    await buildSubsystem.configure({ source: buildDir, cwd: buildDir, verbose, quiet: false })
-
-    print('Running build...')
-    await buildSubsystem.build({ cwd: buildDir, verbose, quiet: false })
-
-    print('Build complete!', true)
-    Bare.exit(0)
+    await output(json, ipc.build({ key, dir, verbose }))
   } catch (err) {
-    if (err instanceof RequirementError) {
+    if (err instanceof InputError) {
+      ipc.userData.usage.output('build')
       print(err.message, false)
-    } else if (err instanceof InputError) {
-      await ipc.usage.output('info', false)
-      print(err.message, false)
-    } else throw err
-
-    Bare.exit(1)
+    } else {
+      console.error(err)
+    }
   } finally {
     await ipc.close()
-  }
-}
-
-async function createDump ({ buildDir, key, ipc }) {
-  const output = outputter('dump', {
-    dumping: ({ key, dir }) => `  Dumping ${key} into ${dir}`,
-    complete: '  Dumping complete!\n',
-    error: ({ code, stack }) => `  Dumping Error (code: ${code || 'none'}) ${stack}`
-  })
-
-  await output(false, ipc.dump({ id: Bare.pid, key, dir: buildDir }))
-}
-
-async function createPlatformDrive () {
-  if (LOCALDEV) return new Localdrive(SWAP)
-
-  const corestore = new Corestore(PLATFORM_CORESTORE, { manifestVersion: 1, compat: false })
-
-  const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
-  const checkout = drive.checkout(CHECKOUT.length)
-  await checkout.ready()
-  checkout.on('close', () => drive.close())
-
-  return checkout
-}
-
-function checkFile (file) {
-  try {
-    fs.accessSync(file)
-    return true
-  } catch {
-    return false
-  }
-}
-
-function loadJsonFile (file) {
-  try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'))
-  } catch (e) {
-    throw new Error(`Failed to load ${file}: ${e.message}`)
-  }
-}
-
-function checkApplingOpts (pkg) {
-  if (!pkg.pear) throw new Error('No pear field found in package.json')
-
-  const missingFields = []
-
-  const requiredBaseFields = ['name']
-  for (const baseField of requiredBaseFields) {
-    if (!pkg[baseField] && !pkg?.pear?.[baseField] && !pkg?.pear?.build?.[baseField]) missingFields.push(baseField)
-  }
-
-  const requiredFieldsByPlatform = {
-    linux: ['build.linux.category'],
-    darwin: ['build.macos.identifier', 'build.macos.category', 'build.macos.entitlements', 'build.macos.signingIdentity', 'build.macos.signingSubject'],
-    win32: ['build.windows.signingSubject', 'build.windows.signingThumbprint']
-  }
-
-  missingFields.push(...requiredFieldsByPlatform[os.platform()].filter(field => {
-    const fieldPath = field.split('.')
-
-    let value = pkg.pear
-    for (const key of fieldPath) {
-      if (value[key] === undefined) return true
-      value = value[key]
-    }
-
-    return false
-  }))
-
-  if (missingFields.length > 0) {
-    throw new RequirementError(`Missing required pear fields in package.json: ${missingFields.join(', ')}`)
-  }
-}
-
-function loadApplingOpts (buildDir) {
-  const pkgPath = path.resolve(buildDir, 'package.json')
-  if (!checkFile(pkgPath)) throw new RequirementError('No package.json found')
-
-  const pkg = loadJsonFile(pkgPath)
-  checkApplingOpts(pkg)
-
-  const { pear } = pkg
-
-  return {
-    name: pear?.build?.name || pear?.name || pkg.name,
-    version: pear?.build?.version || pear?.version || pkg.version,
-    author: pear?.build?.author || pear?.author || pkg.author,
-    description: pear?.build?.description || pear?.description || pkg.description,
-    linux: pear?.build?.linux || {},
-    macos: {
-      identifier: pear?.build?.macos?.identifier,
-      category: pear?.build?.macos?.category,
-      entitlements: pear?.build?.macos?.entitlements || ['undefined'],
-      signing: {
-        identity: pear?.build?.macos?.signingIdentity, subject: pear?.build?.macos?.signingSubject
-      }
-    },
-    windows: {
-      signing: {
-        subject: pear?.build?.windows?.signingSubject, thumbprint: pear?.build?.windows?.signingThumbprint
-      }
-    }
   }
 }
