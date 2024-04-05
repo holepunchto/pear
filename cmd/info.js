@@ -38,28 +38,28 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key'],
+      default: { json: false, changelog: true, 'full-changelog': false, metadata: true, key: true, keys: true }
     })
-    const { _, json, changelog, 'full-changelog': full, metadata, key, keys } = flags
+    const { _, json, changelog, 'full-changelog': full, metadata, key: showKey, keys } = flags
     const [from] = _
     let [, dir = ''] = _
     const isKey = from ? parse.runkey(from).key !== null : false
     const channel = isKey ? null : from
-    const runkey = isKey ? from : null
-    if (runkey && isKey === false) throw new Error('Key "' + runkey + '" is not valid')
+    const key = isKey ? from : null
+    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
 
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const type = full ? 'full' : 'latest'
-    const someFlag = [changelog, full, metadata, key, keys].some(flag => flag === true)
 
     await output(json, ipc.info({
-      key: runkey,
+      key,
       channel,
       dir,
-      outkey: someFlag ? !!key : key !== false,
-      keys: someFlag ? !!keys : keys !== false,
-      metadata: someFlag ? !!metadata : metadata !== false,
-      changelog: changelog !== false ? type : false
+      showKey,
+      keys,
+      metadata,
+      changelog: changelog || full ? type : false
     }))
   } catch (err) {
     ipc.userData.usage.output('info', false)
