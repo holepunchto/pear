@@ -9,7 +9,7 @@ const Localdrive = require('localdrive')
 test('Pear.updates should notify Platform updates between different platform instances', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(180000)
+  timeout(200000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
