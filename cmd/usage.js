@@ -158,7 +158,7 @@ module.exports = ({ fork, length, key }) => {
 
     ${buildBrief}
 
-    Specify the key to build a distributable for the project.
+    Creates a build folder at dir and creates a build for application key.
 
     --verbose|-v  Additional output
   `
