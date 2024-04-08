@@ -1,7 +1,6 @@
 'use strict'
 
 const test = require('brittle')
-const { skip } = require('brittle')
 const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
@@ -19,7 +18,7 @@ const releaseOpts = (id, key) => ({
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
-skip('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
+test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
   timeout(180000)
 
