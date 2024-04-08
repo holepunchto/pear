@@ -98,7 +98,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releaser = new Helper({ platformDir })
   await releaser.ready()
-  teardown(async () => releaser.shutdown())
+  teardown(async () => await releaser.shutdown())
 
   const releasing = releaser.release(releaseOpts(testId, key))
   await Helper.pick(releasing, { tag: 'released' })
@@ -223,11 +223,11 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
 
+  teardown(async () => { await gc(tmpLocaldev) }, { order: Infinity })
+  teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
+
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
-
-  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
-  teardown(async () => { try { await gc(tmpPearDir) } catch (err) { console.error(err) } }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -238,12 +238,10 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
     }
   })
   await mirror.done()
-  teardown(async () => { srcDrive.close() })
-  teardown(async () => { destDrive.close() })
-
+  teardown(async () => { await srcDrive.close() })
+  teardown(async () => { await destDrive.close() })
   const appStager = new Helper({ platformDir })
   await appStager.ready()
-  teardown(async () => { appStager.shutdown() })
 
   const pid = Math.floor(Math.random() * 10000)
   const fid = 'fixture'
@@ -256,7 +254,7 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
-  teardown(async () => { appSeeder.shutdown() })
+
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -267,18 +265,15 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   ok(appKey, 'app key is ok')
   ok(appAnnounced, 'seeding is announced')
 
+  comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  teardown(async () => { stager.shutdown() })
-
-  comment('staging platform A')
   const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
-  teardown(async () => { seeder.shutdown() })
   await seeder.ready()
   const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -291,16 +286,11 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
 
   comment('bootstrapping platform B')
   await Helper.bootstrap(pearKey, tmpPearDir)
-  teardown(async () => {
-    const shutdowner = new Helper({ platformDir: tmpPearDir })
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  }, { order: 1 })
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(tmpPearDir, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => fs.unlinkSync(path.join(tmpPearDir, prefs)), { order: -Infinity })
+  teardown(() => { fs.unlinkSync(path.join(tmpPearDir, prefs)) }, { order: -Infinity })
 
   comment('running app from platform B')
   const currentDir = path.join(tmpPearDir, 'current')
@@ -322,12 +312,11 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   const file = `${ts()}.txt`
   comment(`creating platform test file (${file})`)
   fs.writeFileSync(path.join(tmpLocaldev, file), 'test')
-  teardown(() => fs.unlinkSync(path.join(tmpLocaldev, file)), { order: -Infinity })
+  teardown(() => { fs.unlinkSync(path.join(tmpLocaldev, file)) }, { order: -Infinity })
 
   comment('restaging platform A')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
-  teardown(async () => { stager2.shutdown() })
   const staging2 = stager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final2 = await Helper.pick(staging2, { tag: 'final' })
   ok(final2.success, 'stage succeeded')
@@ -342,7 +331,7 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releaser = new Helper({ platformDir })
   await releaser.ready()
-  teardown(async () => { releaser.shutdown() })
+  teardown(async () => { await releaser.shutdown() })
 
   const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, key: pearKey })
   await Helper.pick(releasing, { tag: 'released' })
@@ -386,8 +375,8 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
-  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
-  teardown(async () => { try { await gc(tmpPearDir) } catch (err) { console.error(err) } }, { order: Infinity })
+  teardown(async () => { await gc(tmpLocaldev) }, { order: Infinity })
+  teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -403,8 +392,6 @@ test('Pear.updates should notify App updates (different pear instances)', async 
 
   const appStager = new Helper({ platformDir })
   await appStager.ready()
-  teardown(async () => { appStager.shutdown() })
-
   const pid = Math.floor(Math.random() * 10000)
   const fid = 'fixture'
   const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
@@ -416,7 +403,6 @@ test('Pear.updates should notify App updates (different pear instances)', async 
 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
-  teardown(async () => { appSeeder.shutdown() })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -427,18 +413,15 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   ok(appKey, 'app key is ok')
   ok(appAnnounced, 'seeding is announced')
 
+  comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  teardown(async () => { stager.shutdown() })
-
-  comment('staging platform A')
   const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
-  teardown(async () => { seeder.shutdown() })
   await seeder.ready()
   const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -451,16 +434,11 @@ test('Pear.updates should notify App updates (different pear instances)', async 
 
   comment('bootstrapping platform B')
   await Helper.bootstrap(pearKey, tmpPearDir)
-  teardown(async () => {
-    const shutdowner = new Helper({ platformDir: tmpPearDir })
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  }, { order: 1 })
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(tmpPearDir, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => fs.unlinkSync(path.join(tmpPearDir, prefs)), { order: -Infinity })
+  teardown(() => { fs.unlinkSync(path.join(tmpPearDir, prefs)) }, { order: -Infinity })
 
   comment('running app from platform B')
   const currentDir = path.join(tmpPearDir, 'current')
@@ -482,12 +460,11 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   const file = `${ts()}.txt`
   comment(`creating app test file (${file})`)
   fs.writeFileSync(path.join(appDir, file), 'test')
-  teardown(() => fs.unlinkSync(path.join(appDir, file)), { order: -Infinity })
+  teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper({ platformDir, logging: true })
   await appStager2.ready()
-  teardown(async () => { appStager2.shutdown() })
   const appStaging2 = appStager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
@@ -502,7 +479,7 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releaser = new Helper({ platformDir })
   await releaser.ready()
-  teardown(async () => { releaser.shutdown() })
+  teardown(async () => { await releaser.shutdown() })
 
   const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
