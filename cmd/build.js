@@ -16,7 +16,7 @@ const output = outputter('build', {
 
 module.exports = (ipc) => async function build (args) {
   try {
-    const { _: [passedKey, buildDirArg], json, verbose } = parse.args(args, { boolean: ['json'] })
+    const { _: [passedKey, buildDirArg], json } = parse.args(args, { boolean: ['json'] })
 
     const key = parse.runkey(passedKey)?.key?.z32
     if (!key) throw new InputError(passedKey ? `Key "${passedKey}" is not valid` : 'Key must be specified')
@@ -24,7 +24,7 @@ module.exports = (ipc) => async function build (args) {
 
     const dir = path.resolve(buildDirArg)
 
-    await output(json, ipc.build({ key, dir, verbose }))
+    await output(json, ipc.build({ key, dir }))
   } catch (err) {
     if (err instanceof InputError) {
       ipc.userData.usage.output('build')
