@@ -30,7 +30,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   try { await gc(tmpLocaldev) } catch { }
 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
-  teardown(() => gc(tmpLocaldev), { order: Infinity })
+  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -226,8 +226,8 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
-  teardown(async () => { await gc(tmpLocaldev) }, { order: Infinity })
-  teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
+  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
+  teardown(async () => { try { await gc(tmpPearDir) } catch (err) { console.error(err) } }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -386,8 +386,8 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
-  teardown(async () => { await gc(tmpLocaldev) }, { order: Infinity })
-  teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
+  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
+  teardown(async () => { try { await gc(tmpPearDir) } catch (err) { console.error(err) } }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
