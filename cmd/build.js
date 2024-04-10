@@ -2,6 +2,7 @@
 const path = require('bare-path')
 const { outputter, print, InputError } = require('./iface')
 const parse = require('../lib/parse')
+
 const output = outputter('build', {
   starting: ({ platform, arch, key, dir }) => `Starting build for pear://${key} on ${platform}-${arch} in ${dir}`,
   dumping: ({ key, dir }) => `Dumping ${key} into ${dir}`,
