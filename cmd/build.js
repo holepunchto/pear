@@ -11,7 +11,9 @@ const output = outputter('build', {
   configuring: () => 'Configuring...',
   building: () => 'Building...',
   done: ({ key, dir }) => `Build complete for pear://${key} in ${dir}`,
-  error: ({ code, stack }) => `Build Error (code: ${code || 'none'}) ${stack}`
+  error: ({ code, stack }) => `Build Error (code: ${code || 'none'}) ${stack}`,
+  stdout: (data) => `  ${data?.trimEnd()?.split('\n')?.join('\n  ')}`,
+  stderr: (data) => `  ${data?.trimEnd()?.split('\n')?.join('\n  ')}`,
 })
 
 module.exports = (ipc) => async function build (args) {
