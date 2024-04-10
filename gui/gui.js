@@ -302,18 +302,44 @@ class ContextMenu {
   constructor (webContents, { devtools } = {}) {
     this.webContents = webContents
     this.devtools = devtools
-    this.x = 0
-    this.y = 0
     webContents.once('destroyed', () => this.destroy())
   }
 
-  async popup ({ x = 0, y = 0 } = {}) {
+  async popup (params) {
     const items = []
 
-    if (await this.webContents.executeJavaScript(`document.elementFromPoint(${x}, ${y})?.tagName === 'IMG'`)) {
+    const {
+      editFlags: { canPaste },
+      hasImageContents,
+      linkURL,
+      selectionText,
+      x = 0,
+      y = 0
+    } = params
+
+    if (hasImageContents) {
       items.push(new electron.MenuItem({
         label: 'Copy Image',
         click: () => this.webContents.copyImageAt(x, y)
+      }))
+    }
+
+    if (linkURL) {
+      items.push(new electron.MenuItem({
+        label: 'Copy Link',
+        click: () => electron.clipboard.writeText(linkURL)
+      }))
+    } else if (selectionText) { // plain text
+      items.push(new electron.MenuItem({
+        label: 'Copy',
+        click: () => this.webContents.copy()
+      }))
+    }
+
+    if (canPaste) {
+      items.push(new electron.MenuItem({
+        label: 'Paste',
+        click: () => this.webContents.paste()
       }))
     }
 
@@ -329,8 +355,10 @@ class ContextMenu {
       }))
     }
 
-    this.menu = electron.Menu.buildFromTemplate(items)
-    this.menu.popup()
+    if (items.length > 0) {
+      this.menu = electron.Menu.buildFromTemplate(items)
+      this.menu.popup()
+    }
   }
 
   close () {
@@ -394,12 +422,12 @@ class App {
         devtoolsBlurPolling = null
       })
 
-      wc.on('context-menu', (e, { x, y }) => {
+      wc.on('context-menu', (e, params) => {
         const ctrl = PearGUI.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
-          this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
-          this.contextMenu.popup({ x, y })
+          this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools })
+          this.contextMenu.popup(params)
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
