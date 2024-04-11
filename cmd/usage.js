@@ -69,17 +69,21 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const info = ansi.bold(cmd + ' info')
-  const infoArgs = ansi.bold('[key]')
+  const infoArgs = ansi.bold('[channel|key]')
   const infoBrief = 'Read project information.'
   const infoExplain = `${info} ${infoArgs}
 
     ${infoBrief}
 
-    Supply a key to view application info
+    Supply a key or channel to view application information.
 
-    Without a key pear info shows Pear info
+    Supply no argument to view platform information.
 
-    --json          Newline delimited JSON output
+    --changelog       View changelog only
+    --full-changelog  Full record of changes
+    --metadata        View metadata only
+    --key             View key only
+    --json            Newline delimited JSON output
   `
 
   const dump = ansi.bold(cmd + ' dump')
