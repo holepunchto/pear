@@ -416,7 +416,7 @@ class App {
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc)
-          this.contextMenu.popup({ params, devtools: this.state.devtools })
+          this.contextMenu.popup({ params, devtools: this.ctx.devtools })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
