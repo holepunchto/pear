@@ -6,6 +6,7 @@ const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
+const log = require('./debug-helper')
 
 configureElectron()
 crasher('electron-main', SWAP)
@@ -35,8 +36,9 @@ async function electronMain () {
     electron.app.quit(0)
     return
   }
-
   const app = await gui.app()
+
+  await log('electron app ready')
 
   gui.unloading({ id: app.id }).then(async () => {
     await app.close()

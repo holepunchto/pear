@@ -9,6 +9,7 @@ const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
+const log = require('../debug-helper')
 
 class Menu {
   static PEAR = 0
@@ -458,6 +459,8 @@ class App {
 
     const { ctx } = this
 
+    await log('ipc starts...')
+
     this.starting = this.ipc.start({
       argv: ctx.argv,
       env: ctx.env,
@@ -466,6 +469,7 @@ class App {
     })
 
     this.starting.catch(async (err) => {
+      await log(err.message)
       await this.report({ err })
       this.close()
     })
@@ -519,6 +523,14 @@ class App {
 
       ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
       this.ipc.id = id
+
+      await log(`ipc id: ${id}`)
+
+      try {
+        await log(this.ipc.clients)
+      } catch (err) {
+        await log(err.message)
+      }
 
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
@@ -575,6 +587,7 @@ class App {
             }
 
             const { bail } = await this.starting
+            await log(`start bail -> ${bail}`)
             if (bail) return false
             ctx.update({ config: await this.ipc.config() })
             applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
@@ -952,6 +965,7 @@ class Window extends GuiCtrl {
     const ua = `Pear ${this.ctx.id}`
     const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
     session.setUserAgent(ua)
+    await log(`set user agent ${ua}`)
 
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
@@ -1429,7 +1443,7 @@ class PearGUI extends ReadyResource {
   }
 
   async _close () {
-    await this.ipc.close()
+    // await this.ipc.close()
   }
 
   static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
