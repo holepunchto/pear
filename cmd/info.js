@@ -38,7 +38,7 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key', 'keys']
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
     })
     const { _, json, changelog, 'full-changelog': full, metadata, key: showKey, keys } = flags
     const [from] = _
