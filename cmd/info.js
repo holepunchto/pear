@@ -1,6 +1,8 @@
 'use strict'
 const parse = require('../lib/parse')
 const { outputter, print } = require('./iface')
+const os = require('bare-os')
+const { isAbsolute, resolve } = require('bare-path')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -36,14 +38,28 @@ const output = outputter('info', {
 module.exports = (ipc) => async function info (args) {
   try {
     const flags = parse.args(args, {
-      boolean: ['json']
+      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
     })
-    const { _, json } = flags
-    const [key] = _
-    const isKey = key ? parse.runkey(key).key !== null : false
+    const { _, json, changelog, 'full-changelog': full, metadata, key: showKey, keys } = flags
+    const [from] = _
+    let [, dir = ''] = _
+    const isKey = from ? parse.runkey(from).key !== null : false
+    const channel = isKey ? null : from
+    const key = isKey ? from : null
     if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
-    const id = Bare.pid
-    await output(json, ipc.info({ id, key }))
+
+    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+
+    await output(json, ipc.info({
+      key,
+      channel,
+      dir,
+      showKey,
+      keys,
+      metadata,
+      changelog,
+      full
+    }))
   } catch (err) {
     ipc.userData.usage.output('info', false)
     print(err.message, false)
