@@ -299,13 +299,12 @@ function refresh (webContents, ctx) {
 }
 
 class ContextMenu {
-  constructor (webContents, { devtools } = {}) {
+  constructor (webContents) {
     this.webContents = webContents
-    this.devtools = devtools
     webContents.once('destroyed', () => this.destroy())
   }
 
-  async popup (params) {
+  async popup ({ params, devtools = false }) {
     const items = []
 
     const {
@@ -330,7 +329,7 @@ class ContextMenu {
       }))
     }
 
-    if (this.devtools) {
+    if (devtools) {
       items.push(new electron.MenuItem({
         label: 'Inspect Element',
         click: () => {
@@ -413,8 +412,8 @@ class App {
         const ctrl = PearGUI.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
-          this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools })
-          this.contextMenu.popup(params)
+          this.contextMenu = this.contextMenu || new ContextMenu(wc)
+          this.contextMenu.popup({ params, devtools: this.ctx.devtools })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
