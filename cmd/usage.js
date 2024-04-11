@@ -241,8 +241,8 @@ module.exports = ({ fork, length, key }) => {
     ${release} ${ansi.sep} ${dedot(releaseBrief)}
     ${info} ${ansi.sep} ${dedot(infoBrief)}
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
-    ${shift} ${ansi.sep} ${dedot(shiftBrief)}
     ${build} ${ansi.sep} ${dedot(buildBrief)}
+    ${shift} ${ansi.sep} ${dedot(shiftBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
 
@@ -256,6 +256,7 @@ ${footer}`,
     ${releaseExplain}
     ${infoExplain}
     ${dumpExplain}
+    ${buildExplain}
     ${shiftExplain}
     ${sidecarExplain}
     ${versionsExplain}
