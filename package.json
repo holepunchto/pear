@@ -59,7 +59,7 @@
     "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
     "bare-bundle": "^1.0.0",
-    "bare-dev": "^0.9.6",
+    "bare-dev": "^0.10.1",
     "bare-env": "^2.1.0",
     "bare-events": "^2.2.0",
     "bare-fs": "^2.1.1",
