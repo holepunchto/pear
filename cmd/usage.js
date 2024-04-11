@@ -160,7 +160,7 @@ module.exports = ({ fork, length, key }) => {
 
     Creates a distributable per host OS at given dir from application key.
 
-    --verbose|-v  Additional output
+    --json     Newline delimited JSON output
   `
 
   const sidecar = ansi.bold(cmd + ' sidecar')
