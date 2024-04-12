@@ -299,25 +299,37 @@ function refresh (webContents, ctx) {
 }
 
 class ContextMenu {
-  constructor (webContents, { devtools } = {}) {
+  constructor (webContents) {
     this.webContents = webContents
-    this.devtools = devtools
-    this.x = 0
-    this.y = 0
     webContents.once('destroyed', () => this.destroy())
   }
 
-  async popup ({ x = 0, y = 0 } = {}) {
+  async popup ({ params, devtools = false }) {
     const items = []
 
-    if (await this.webContents.executeJavaScript(`document.elementFromPoint(${x}, ${y})?.tagName === 'IMG'`)) {
+    const {
+      editFlags: { canPaste },
+      isEditable,
+      selectionText,
+      x = 0,
+      y = 0
+    } = params
+
+    if (selectionText) {
       items.push(new electron.MenuItem({
-        label: 'Copy Image',
-        click: () => this.webContents.copyImageAt(x, y)
+        label: 'Copy',
+        click: () => this.webContents.copy()
       }))
     }
 
-    if (this.devtools) {
+    if (canPaste && isEditable) {
+      items.push(new electron.MenuItem({
+        label: 'Paste',
+        click: () => this.webContents.paste()
+      }))
+    }
+
+    if (devtools) {
       items.push(new electron.MenuItem({
         label: 'Inspect Element',
         click: () => {
@@ -329,8 +341,10 @@ class ContextMenu {
       }))
     }
 
-    this.menu = electron.Menu.buildFromTemplate(items)
-    this.menu.popup()
+    if (items.length > 0) {
+      this.menu = electron.Menu.buildFromTemplate(items)
+      this.menu.popup()
+    }
   }
 
   close () {
@@ -394,12 +408,12 @@ class App {
         devtoolsBlurPolling = null
       })
 
-      wc.on('context-menu', (e, { x, y }) => {
+      wc.on('context-menu', (e, params) => {
         const ctrl = PearGUI.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
-          this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
-          this.contextMenu.popup({ x, y })
+          this.contextMenu = this.contextMenu || new ContextMenu(wc)
+          this.contextMenu.popup({ params, devtools: this.ctx.devtools })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
@@ -1375,14 +1389,14 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
-    electron.ipcMain.handle('minimize ', (evt, ...args) => this.minimize(...args))
+    electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
     electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
     electron.ipcMain.handle('fullscreen ', (evt, ...args) => this.fullscreen(...args))
     electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
-    electron.ipcMain.handle('focus ', (evt, ...args) => this.focus(...args))
+    electron.ipcMain.handle('focus', (evt, ...args) => this.focus(...args))
     electron.ipcMain.handle('blur', (evt, ...args) => this.blur(...args))
     electron.ipcMain.handle('getMediaSourceId', (evt, ...args) => this.getMediaSourceId(...args))
-    electron.ipcMain.handle('dimensions ', (evt, ...args) => this.dimensions(...args))
+    electron.ipcMain.handle('dimensions', (evt, ...args) => this.dimensions(...args))
     electron.ipcMain.handle('isVisible', (evt, ...args) => this.isVisible(...args))
     electron.ipcMain.handle('isClosed', (evt, ...args) => this.isClosed(...args))
     electron.ipcMain.handle('isMinimized', (evt, ...args) => this.isMinimized(...args))
