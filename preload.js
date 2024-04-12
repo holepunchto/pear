@@ -1,4 +1,7 @@
 'use strict'
+
+const { XML_HTTP_REQUEST_ERROR } = require('./lib/errors')
+
 /* global Pear */
 /* eslint-env node, browser */
 if (process.isMainFrame) {
@@ -101,7 +104,7 @@ if (process.isMainFrame) {
       const url = `${dirname}/~${req}+resolve+${type}`
       xhr.open('GET', url, false)
       xhr.send(null)
-      if (xhr.status !== 200) throw new Error(`${xhr.status} ${xhr.responseText}`)
+      if (xhr.status !== 200) throw XML_HTTP_REQUEST_ERROR(`${xhr.status} ${xhr.responseText}`)
       return xhr.responseText
     }
   })
