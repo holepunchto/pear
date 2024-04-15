@@ -8,6 +8,7 @@ const dump = require('./dump')
 const shift = require('./shift')
 const sidecar = require('./sidecar')
 const run = require('./run')
+const build = require('./build')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
 
@@ -71,7 +72,7 @@ module.exports = async (ipc) => {
   cmd.add('launch', launch) // launch is legacy alias for run
   cmd.add('info', info(ipc))
   cmd.add('dump', dump(ipc))
-  cmd.add('build', build)
+  cmd.add('build', build(ipc))
   cmd.add('shift', shift(ipc))
   cmd.add('sidecar', (args) => sidecar(ipc)(args))
 
@@ -80,8 +81,6 @@ module.exports = async (ipc) => {
   function launch (args) {
     return run(ipc)(args)
   }
-
-  function build () { throw new Error('Not Implemented: build') }
 
   return ipc
 }

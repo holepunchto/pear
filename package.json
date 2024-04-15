@@ -41,7 +41,8 @@
     }
   },
   "subsystems": [
-    "./subsystems/sidecar.js"
+    "./subsystems/sidecar.js",
+    "./subsystems/build.js"
   ],
   "standard": {
     "globals": [
@@ -58,6 +59,7 @@
     "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
     "bare-bundle": "^1.0.0",
+    "bare-dev": "^0.10.1",
     "bare-env": "^2.1.0",
     "bare-events": "^2.2.0",
     "bare-fs": "^2.1.1",
@@ -68,6 +70,7 @@
     "bare-signals": "^2.1.1",
     "bare-subprocess": "^2.0.2",
     "bare-tty": "^3.0.1",
+    "bare-which": "^1.0.0",
     "compact-encoding": "^2.13.0",
     "corestore": "^6.17.0",
     "crc-universal": "^1.0.4",
@@ -86,7 +89,7 @@
     "mirror-drive": "^1.3.0",
     "mutexify": "^1.4.0",
     "pear-changelog": "^1.0.1",
-    "pear-ipc": "^1.0.8",
+    "pear-ipc": "^1.0.11",
     "pear-updater": "^3.0.0",
     "protomux": "^3.5.1",
     "quickbit-universal": "^2.2.0",

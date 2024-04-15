@@ -155,6 +155,18 @@ module.exports = ({ fork, length, key }) => {
     --json     Newline delimited JSON output
   `
 
+  const build = ansi.bold(cmd + ' build')
+  const buildArgs = ansi.bold('<key> <dir>')
+  const buildBrief = 'Build project distributable.'
+  const buildExplain = `${build} ${buildArgs}
+
+    ${buildBrief}
+
+    Creates a distributable per host OS at given dir from application key.
+
+    --json     Newline delimited JSON output
+  `
+
   const sidecar = ansi.bold(cmd + ' sidecar')
   const sidecarBrief = 'Advanced. Run sidecar in terminal.'
   const sidecarExplain = `${sidecar}
@@ -219,6 +231,7 @@ module.exports = ({ fork, length, key }) => {
     run: runExplain,
     seed: seedExplain,
     shift: shiftExplain,
+    build: buildExplain,
     sidecar: sidecarExplain,
     help: helpExplain,
     output,
@@ -232,6 +245,7 @@ module.exports = ({ fork, length, key }) => {
     ${release} ${ansi.sep} ${dedot(releaseBrief)}
     ${info} ${ansi.sep} ${dedot(infoBrief)}
     ${dump} ${ansi.sep} ${dedot(dumpBrief)}
+    ${build} ${ansi.sep} ${dedot(buildBrief)}
     ${shift} ${ansi.sep} ${dedot(shiftBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
@@ -246,6 +260,7 @@ ${footer}`,
     ${releaseExplain}
     ${infoExplain}
     ${dumpExplain}
+    ${buildExplain}
     ${shiftExplain}
     ${sidecarExplain}
     ${versionsExplain}
