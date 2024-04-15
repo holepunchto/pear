@@ -3,8 +3,9 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { fileURLToPath } = require('url-file-url')
-const { outputter, print, InputError, stdio, interact, ansi } = require('./iface')
+const { outputter, print, stdio, interact, ansi } = require('./iface')
 const parse = require('../lib/parse')
+const { INPUT_ERROR } = require('../lib/errors')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -30,15 +31,15 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         _[0] = '.'
         args.push(_[0])
       } else {
-        throw new InputError('Missing argument: pear run <key|dir|alias>')
+        throw INPUT_ERROR('Missing argument: pear run <key|dir|alias>')
       }
     }
     if (_[0].startsWith('pear:') && _[0].slice(5, 7) !== '//') {
-      throw new InputError('Key must start with pear://')
+      throw INPUT_ERROR('Key must start with pear://')
     }
     key = parse.runkey(_[0]).key
     if (key !== null && _[0].startsWith('pear://') === false) {
-      throw new InputError('Key must start with pear://')
+      throw INPUT_ERROR('Key must start with pear://')
     }
     const cwd = os.cwd()
     dir = key === null ? (_[0].startsWith('file:') ? fileURLToPath(_[0]) : _[0]) : cwd
@@ -52,7 +53,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
       try {
         JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
       } catch (err) {
-        throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+        throw INPUT_ERROR(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
     await output(json, await require('../lib/run')({ ipc, key, args, dev, dir, storage: store, detached }))
@@ -82,7 +83,7 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         print('')
         print(err.message + '\n', false)
       }
-    } else if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
+    } else if (err.code === 'ERR_INPUT' || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
       if (err.showUsage) ipc.userData.usage.output('run')
     } else if (err.code === 'ENOENT') {

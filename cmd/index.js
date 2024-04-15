@@ -10,6 +10,7 @@ const sidecar = require('./sidecar')
 const run = require('./run')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
+const { NOT_IMPLEMENTED } = require('../lib/errors')
 
 module.exports = async (ipc) => {
   Bare.prependListener('exit', () => { ipc.close() })
@@ -81,7 +82,7 @@ module.exports = async (ipc) => {
     return run(ipc)(args)
   }
 
-  function build () { throw new Error('Not Implemented: build') }
+  function build () { throw NOT_IMPLEMENTED('Not Implemented: build') }
 
   return ipc
 }

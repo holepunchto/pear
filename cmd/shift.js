@@ -1,6 +1,7 @@
 'use strict'
-const { outputter, print, InputError } = require('./iface')
+const { outputter, print } = require('./iface')
 const parse = require('../lib/parse')
+const { INPUT_ERROR } = require('../lib/errors')
 
 const output = outputter('shift', {
   moving: ({ src, dst, force }) => `Moving user application storage\n\nFrom: ${src}\nTo: ${dst}\n${force ? '\nForce flag used, overwriting existing application storage.' : ''}`,
@@ -19,16 +20,16 @@ module.exports = (ipc) => async function shift (args) {
     const [src, dst] = _
 
     if (!src || parse.runkey(src.toString()).key === null) {
-      throw new InputError('A source application key must be specified.')
+      throw INPUT_ERROR('A source application key must be specified.')
     }
 
     if (!dst || parse.runkey(dst.toString()).key === null) {
-      throw new InputError('A destination application key must be specified.')
+      throw INPUT_ERROR('A destination application key must be specified.')
     }
 
     await output(json, ipc.shift({ src, dst, force }))
   } catch (err) {
-    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG' || err.code === 'ERR_EXISTS' || err.code === 'ERR_NOENT') {
+    if (err.code === 'ERR_INPUT' || err.code === 'ERR_INVALID_FLAG' || err.code === 'ERR_EXISTS' || err.code === 'ERR_NOENT') {
       print(err.message, false)
       ipc.userData.usage.output('shift')
     } else {

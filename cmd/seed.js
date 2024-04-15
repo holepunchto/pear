@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parse = require('../lib/parse')
-const { outputter, print, ansi, InputError } = require('./iface')
+const { outputter, print, ansi } = require('./iface')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -36,7 +36,7 @@ module.exports = (ipc) => async function seed (args) {
     const id = Bare.pid
     await output(json, ipc.seed({ id, name, channel, key, verbose, seeders, dir, clientArgv: Bare.argv }))
   } catch (err) {
-    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
+    if (err.code === 'ERR_INPUT' || err.code === 'ERR_INVALID_FLAG') {
       if (json) {
         print(JSON.stringify({ cmd: 'seed', type: 'error', message: err.message, stack: err.stack, code: err.code }))
       } else {

@@ -204,14 +204,6 @@ const interact = (header, params, type) => {
   return new Interact(header, params, type)
 }
 
-class InputError extends Error {
-  code = 'ERR_INPUT'
-  constructor (message, { showUsage = true } = {}) {
-    super(message)
-    this.showUsage = showUsage
-  }
-}
-
 class Loading {
   y = 0
   i = 0
@@ -286,4 +278,4 @@ class Loading {
   }
 }
 
-module.exports = { stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, InputError, Loading }
+module.exports = { stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, Loading }
