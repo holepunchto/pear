@@ -12,6 +12,7 @@ const output = outputter('build', {
   installingBareDev: () => 'Installing bare-dev to build directory...',
   bareDevExistsInApp: () => '  bare-dev is already installed in build directory',
   bareDevExistsInPath: () => '  bare-dev is already installed globally',
+  bareDevInstalled: () => '  bare-dev installed to build directory',
   configuring: () => 'Configuring...',
   building: () => 'Building...',
   done: ({ key, dir }) => `Build complete for pear://${key} in ${dir}`,
