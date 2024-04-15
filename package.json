@@ -70,6 +70,7 @@
     "bare-signals": "^2.1.1",
     "bare-subprocess": "^2.0.2",
     "bare-tty": "^3.0.1",
+    "bare-which": "^1.0.0",
     "compact-encoding": "^2.13.0",
     "corestore": "^6.17.0",
     "crc-universal": "^1.0.4",
