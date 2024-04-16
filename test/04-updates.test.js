@@ -30,7 +30,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   try { await gc(tmpLocaldev) } catch { }
 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
-  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { console.error(err) } }, { order: Infinity })
+  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { comment(err) } }, { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -76,7 +76,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('2. Create new file, restage, and reseed')
 
-  const file = `${ts()}.txt`
+  const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
   fs.writeFileSync(path.join(dir, file), 'test')
   comment('\tstaging')
@@ -309,7 +309,7 @@ test('Pear.updates should notify Platform updates (different pear instances)', a
   `, { returnByValue: false }))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-  const file = `${ts()}.txt`
+  const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
   fs.writeFileSync(path.join(tmpLocaldev, file), 'test')
   teardown(() => { fs.unlinkSync(path.join(tmpLocaldev, file)) }, { order: -Infinity })
@@ -457,7 +457,7 @@ test('Pear.updates should notify App updates (different pear instances)', async 
   `, { returnByValue: false }))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-  const file = `${ts()}.txt`
+  const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
   fs.writeFileSync(path.join(appDir, file), 'test')
   teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
