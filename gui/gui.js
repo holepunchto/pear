@@ -10,8 +10,6 @@ const ReadyResource = require('ready-resource')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
-const { ERR_INSTANCE_CLOSED, ERR_PEAR_GUI_ERROR } = require('../lib/errors')
-
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -587,7 +585,7 @@ class App {
           try {
             if (app.closing) return false
             if (ctx.type === 'commonjs') {
-              throw ERR_PEAR_GUI_ERROR('"type": "commonjs" or no "type" in application package.json. Pear Desktop Applications are native EcmaScript Module (ESM) syntax only (CJS modules can be consumed, but applications must be ESM). To opt into ESM, set the package.json "type" field to "module".')
+              throw new Error('"type": "commonjs" or no "type" in application package.json. Pear Desktop Applications are native EcmaScript Module (ESM) syntax only (CJS modules can be consumed, but applications must be ESM). To opt into ESM, set the package.json "type" field to "module".')
             }
 
             const { bail } = await this.starting
@@ -772,7 +770,7 @@ class GuiCtrl {
   constructor (entry, options, { ctx, parentId, sessname, appkin }) {
     this.hidden = false
     this[kCtrl] = this.constructor[kCtrl]
-    if (!entry) throw ERR_PEAR_GUI_ERROR(`No path provided, cannot open ${this[kCtrl]}`)
+    if (!entry) throw new Error(`No path provided, cannot open ${this[kCtrl]}`)
     this.options = options
     this.ctx = ctx
     this.parentId = parentId
@@ -839,7 +837,7 @@ class GuiCtrl {
   }
 
   async send (...args) {
-    if (this.closed) throw ERR_INSTANCE_CLOSED(`Cannot send to closed ${this[kCtrl]}`)
+    if (this.closed) throw Error(`Cannot send to closed ${this[kCtrl]}`)
     const { webContents } = this.view || this.win
     return webContents.send(`message:${this.id}`, ...args)
   }
@@ -879,7 +877,7 @@ class GuiCtrl {
   }
 
   async getMediaSourceId () {
-    if (this.closed) throw ERR_INSTANCE_CLOSED(`Cannot get media source id if the ${this[kCtrl]} is closed`)
+    if (this.closed) throw Error(`Cannot get media source id if the ${this[kCtrl]} is closed`)
     return (this.win && this.win.getMediaSourceId())
   }
 
@@ -1537,7 +1535,7 @@ class PearGUI extends ReadyResource {
 
   async parent ({ id, act, args }) {
     const instance = this.get(id)
-    if (!instance) throw ERR_PEAR_GUI_ERROR(`Could not find parent with id "${id}" to perform action "${act}"!`)
+    if (!instance) throw new Error(`Could not find parent with id "${id}" to perform action "${act}"!`)
     if (act === 'focus') return instance.focus(...args)
     if (act === 'blur') return instance.blur()
     if (act === 'show') return instance.show()
