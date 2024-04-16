@@ -10,7 +10,7 @@ const ReadyResource = require('ready-resource')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
-const { ERR_PEAR_GUI_ERROR } = require('../lib/errors')
+const { ERR_INSTANCE_CLOSED, ERR_PEAR_GUI_ERROR } = require('../lib/errors')
 
 class Menu {
   static PEAR = 0
@@ -839,7 +839,7 @@ class GuiCtrl {
   }
 
   async send (...args) {
-    if (this.closed) throw ERR_PEAR_GUI_ERROR(`Cannot send to closed ${this[kCtrl]}`)
+    if (this.closed) throw ERR_INSTANCE_CLOSED(`Cannot send to closed ${this[kCtrl]}`)
     const { webContents } = this.view || this.win
     return webContents.send(`message:${this.id}`, ...args)
   }
@@ -879,7 +879,7 @@ class GuiCtrl {
   }
 
   async getMediaSourceId () {
-    if (this.closed) throw ERR_PEAR_GUI_ERROR(`Cannot get media source id if the ${this[kCtrl]} is closed`)
+    if (this.closed) throw ERR_INSTANCE_CLOSED(`Cannot get media source id if the ${this[kCtrl]} is closed`)
     return (this.win && this.win.getMediaSourceId())
   }
 
