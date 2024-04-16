@@ -19,10 +19,10 @@ module.exports = (ipc) => async function run (args, devrun = false) {
   let askTrust = false
   try {
     const { json, dev, detached, store, 'ask-trust': ask, _ } = parse.args(args, {
-      boolean: ['json', 'dev', 'tmp-store', 'detached', 'ask-trust'],
+      boolean: ['json', 'dev', 'tmp-store', 'detached', 'ask-trust', 'silent'],
       string: ['store', 'link', 'checkout'],
       alias: { store: 's', 'tmp-store': 't' },
-      default: { json: false, dev: false, detached: false, 'ask-trust': true }
+      default: { json: false, dev: false, detached: false, 'ask-trust': true, silent: false }
     })
     askTrust = ask
     if (!_[0]) {
