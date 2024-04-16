@@ -8,9 +8,10 @@ const { discoveryKey } = require('hypercore-crypto')
 const parse = require('../lib/parse')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
+const { ERR_INVALID_APP_NAME } = require('../lib/errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
-  throw new Error('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
+  throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
 }
 
 module.exports = class Context {

@@ -6,12 +6,7 @@ const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
 
-const {
-  NO_PATH_PROVIDED,
-  A_VIEW_CANNOT_BE_MINIMIZED,
-  A_VIEW_CANNOT_BE_MAXIMIZED,
-  A_VIEW_CANNOT_BE_FULLSCREENED
-} = require('../lib/errors')
+const { ERR_VIEW_APP_ERROR, ERR_PEAR_GUI_ERROR } = require('../lib/errors')
 
 module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, ctx }) {
@@ -123,7 +118,7 @@ module.exports = class PearGUI extends ReadyResource {
             if (options === at) {
               if (typeof at === 'string') options = { at }
             }
-            if (!entry) throw NO_PATH_PROVIDED(`No path provided, cannot open ${this.constructor[kGuiCtrl]}`)
+            if (!entry) throw ERR_PEAR_GUI_ERROR(`No path provided, cannot open ${this.constructor[kGuiCtrl]}`)
             this.entry = entry
             this.options = options
             this.id = null
@@ -172,17 +167,17 @@ module.exports = class PearGUI extends ReadyResource {
           getMediaSourceId () { return ipc.getMediaSourceId({ id: this.id }) }
           dimensions (options = null) { return ipc.dimensions({ id: this.id, options }) }
           minimize () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_MINIMIZED('A View cannot be minimized')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be minimized')
             return ipc.minimize({ id: this.id })
           }
 
           maximize () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_MAXIMIZED('A View cannot be maximized')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be maximized')
             return ipc.maximize({ id: this.id })
           }
 
           fullscreen () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_FULLSCREENED('A View cannot be fullscreened')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be fullscreened')
             return ipc.fullscreen({ id: this.id })
           }
 
@@ -191,17 +186,17 @@ module.exports = class PearGUI extends ReadyResource {
           isVisible () { return ipc.isVisible({ id: this.id }) }
 
           isMinimized () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_MINIMIZED('A View cannot be minimized')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be minimized')
             return ipc.isMinimized({ id: this.id })
           }
 
           isMaximized () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_MAXIMIZED('A View cannot be maximized')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be maximized')
             return ipc.isMaximized({ id: this.id })
           }
 
           isFullscreen () {
-            if (this.constructor[kGuiCtrl] === 'view') throw A_VIEW_CANNOT_BE_FULLSCREENED('A View cannot be maximized')
+            if (this.constructor[kGuiCtrl] === 'view') throw ERR_VIEW_APP_ERROR('A View cannot be maximized')
             return ipc.isFullscreen({ id: this.id })
           }
 

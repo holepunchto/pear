@@ -1,9 +1,8 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, print, ansi } = require('./iface')
+const { outputter, print, InputError, ansi } = require('./iface')
 const parse = require('../lib/parse')
-const { INPUT_ERROR } = require('../lib/errors')
 
 const output = outputter('release', {
   releasing: ({ name, channel }) => `\n${ansi.pear} Releasing ${name} [ ${channel} ]\n`,
@@ -20,16 +19,16 @@ module.exports = (ipc) => async function release (args) {
     const isKey = parse.runkey(from.toString()).key !== null
     const channel = isKey ? null : from
     const key = isKey ? from : null
-    if (!channel && !key) throw INPUT_ERROR('A key or the channel name must be specified.')
+    if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
 
     if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
     if (checkout !== undefined && Number.isInteger(+checkout) === false) {
-      throw INPUT_ERROR('--checkout flag must supply an integer if set')
+      throw new InputError('--checkout flag must supply an integer if set')
     }
     const id = Bare.pid
     await output(json, ipc.release({ id, name, channel, key, checkout, dir }))
   } catch (err) {
-    if (err.code === 'ERR_INPUT' || err.code === 'ERR_INVALID_FLAG') {
+    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
       ipc.userData.usage.output('release', false)
     } else {

@@ -1,9 +1,8 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi, print } = require('./iface')
+const { outputter, ansi, print, InputError } = require('./iface')
 const parse = require('../lib/parse')
-const { INPUT_ERROR } = require('../lib/errors')
 
 let blocks = 0
 let total = 0
@@ -37,12 +36,12 @@ module.exports = (ipc) => async function stage (args) {
     const isKey = from && parse.runkey(from.toString()).key !== null
     const channel = isKey ? null : from
     const key = isKey ? from : null
-    if (!channel && !key) throw INPUT_ERROR('A key or the channel name must be specified.')
+    if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const id = Bare.pid
     await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
   } catch (err) {
-    if (err.code === 'ERR_INPUT' || err.code === 'ERR_INVALID_FLAG') {
+    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
       ipc.userData.usage.output('stage')
     } else {
