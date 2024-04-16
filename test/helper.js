@@ -45,7 +45,7 @@ class Helper extends IPC {
     if (!key) throw new Error('Key is missing')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
 
-    const runtime = path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
+    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
     const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
@@ -161,6 +161,20 @@ class Helper extends IPC {
 
   async sleep (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  static async bootstrap (key, dir) {
+    const link = path.join(dir, 'current')
+    const bin = path.join(dir, 'bin')
+    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
+
+    await require('pear-updater-bootstrap')(key, dir)
+
+    if (isWindows) return
+    try {
+      fs.mkdirSync(bin, { recursive: true })
+      fs.symlinkSync(current, path.join(bin, 'pear'))
+    } catch { }
   }
 
   static Inspector = class extends ReadyResource {
