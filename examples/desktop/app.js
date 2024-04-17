@@ -23,3 +23,8 @@ document.getElementById('platformLength').innerText = platform.length
 document.getElementById('appKey').innerText = app.key
 document.getElementById('appFork').innerText = app.fork
 document.getElementById('appLength').innerText = app.length
+
+if (config.args.includes('--worker-demo')) {
+  global.pipe = Pear.worker.run('pear://adcnfhgyobk1iyhk7q4wjnka3s4ctit9mpekw3rk69j5i6mw4nsy')
+  console.info('Pipe Duplex Stream available as `pipe`')
+}

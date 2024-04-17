@@ -5,6 +5,7 @@ const { EventEmitter } = require('events')
 const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
+const Worker = require('../lib/worker')
 
 module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, ctx }) {
@@ -31,6 +32,7 @@ module.exports = class PearGUI extends ReadyResource {
       constructor (ipc, ctx, onteardown) {
         super(ipc, ctx, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
+        this.worker = new Worker()
         this.media = {
           status: {
             microphone: () => ipc.getMediaAccessStatus({ id, media: 'microphone' }),
