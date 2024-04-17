@@ -734,7 +734,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   await releaser.ready()
   teardown(async () => { await releaser.shutdown() })
 
-  const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, key: appKey })
+  const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for app update notification')
@@ -744,6 +744,192 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
   ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
+
+  await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
+  await running.inspector.close()
+  const { code } = await running.until.exit
+  is(code, 0, 'exit code is 0')
+})
+
+test('Pear.updates should notify App stage update, App release update, App stage NO UPDATE, App release update (different pear instances)', async function (t) {
+  const { ok, absent, is, plan, timeout, comment, teardown } = t
+  plan(17)
+  timeout(180000)
+  teardown(async () => {
+    const shutdowner = new Helper()
+    await shutdowner.ready()
+    await shutdowner.shutdown()
+  }, { order: Infinity })
+
+  const localdev = path.join(os.cwd(), '..')
+  const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
+  const platformDir = path.join(tmpLocaldev, 'pear')
+  const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
+
+  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+
+  try { await gc(tmpLocaldev) } catch { }
+  try { await gc(tmpPearDir) } catch { }
+
+  await fs.promises.mkdir(tmpLocaldev, { recursive: true })
+  await fs.promises.mkdir(tmpPearDir, { recursive: true })
+
+  teardown(async () => { await gc(tmpLocaldev) }, { order: Infinity })
+  teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
+
+  comment('mirroring platform')
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(tmpLocaldev)
+  const mirror = srcDrive.mirror(destDrive, {
+    filter: (key) => {
+      return !key.startsWith('.git')
+    }
+  })
+  await mirror.done()
+  teardown(async () => { srcDrive.close() })
+  teardown(async () => { destDrive.close() })
+
+  const appStager = new Helper({ platformDir })
+  await appStager.ready()
+  const pid = Math.floor(Math.random() * 10000)
+  const fid = 'fixture'
+  const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
+
+  comment('staging app')
+  const appStaging = appStager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appFinal = await Helper.pick(appStaging, { tag: 'final' })
+  ok(appFinal.success, 'stage succeeded')
+
+  comment('seeding app')
+  const appSeeder = new Helper({ platformDir })
+  await appSeeder.ready()
+  const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
+
+  const appKey = await untilApp.key
+  const appAnnounced = await untilApp.announced
+
+  ok(appKey, 'app key is ok')
+  ok(appAnnounced, 'seeding is announced')
+
+  comment('staging platform A')
+  const stager = new Helper({ platformDir })
+  await stager.ready()
+  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const final = await Helper.pick(staging, { tag: 'final' })
+  ok(final.success, 'stage succeeded')
+
+  comment('seeding platform A')
+  const seeder = new Helper({ platformDir })
+  await seeder.ready()
+  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+
+  const pearKey = await until.key
+  const announced = await until.announced
+
+  ok(pearKey, 'pear key is ok')
+  ok(announced, 'seeding is announced')
+
+  comment('bootstrapping platform B')
+  await Helper.bootstrap(pearKey, tmpPearDir)
+
+  comment('setting up trust preferences')
+  const prefs = 'preferences.json'
+  fs.writeFileSync(path.join(tmpPearDir, prefs), JSON.stringify({ trusted: [appKey] }))
+  teardown(() => { fs.unlinkSync(path.join(tmpPearDir, prefs)) }, { order: -Infinity })
+
+  comment('running app from platform B')
+  const currentDir = path.join(tmpPearDir, 'current')
+  const running = await Helper.open(appKey, { tags: ['exit'] }, { currentDir })
+  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
+  const { key: appVersionKey, length: appVersionLength } = value?.app || {}
+  is(appVersionKey, appKey, 'app version key matches staged key')
+
+  const update1Promise = await running.inspector.evaluate(`
+    __PEAR_TEST__.sub = Pear.updates()
+    new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false })
+  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
+  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
+    new Promise((resolve) =>  __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false }))
+
+  const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
+  const file = `${ts()}.tmp`
+  comment(`creating app test file (${file})`)
+  fs.writeFileSync(path.join(appDir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
+
+  comment('restaging app')
+  const appStager2 = new Helper({ platformDir })
+  await appStager2.ready()
+  const appStaging2 = appStager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
+  ok(appFinal2.success, 'stage succeeded')
+
+  const update1 = await update1ActualPromise
+  const update1Version = update1?.value?.version
+  const appUpdateLength = update1Version.length
+  ok(appUpdateLength > appVersionLength, `app version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
+
+  comment('releasing app')
+  const update2Promise = await update2LazyPromise
+  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
+  const releaser = new Helper({ platformDir })
+  await releaser.ready()
+  teardown(async () => { await releaser.shutdown() })
+
+  const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
+  await Helper.pick(releasing, { tag: 'released' })
+
+  comment('waiting for app update notification')
+  const update2 = await update2ActualPromise
+  const update2Version = update2?.value?.version
+  const appUpdate2Length = update2Version.length
+
+  is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
+  ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
+
+  const update3Promise = await running.inspector.evaluate(`
+    new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false })
+  const update3ActualPromise = running.inspector.awaitPromise(update3Promise.objectId)
+
+  comment('restaging app without changes')
+  const appStager3 = new Helper({ platformDir })
+  await appStager3.ready()
+  const appStaging3 = appStager3.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const untilStaged3 = await Helper.pick(appStaging3, [{ tag: 'addendum' }, { tag: 'final' }])
+  const appFinal3 = await untilStaged3.final
+  ok(appFinal3.success, 'stage succeeded')
+  const appAddendum3 = await untilStaged3.addendum
+  const staging3Version = appAddendum3.version
+
+  comment('listening updates')
+  const updateTimeout = new Promise(resolve => setTimeout(resolve, 5000))
+  const update3 = await Promise.race([update3ActualPromise, updateTimeout])
+  absent(update3, 'no update should be received')
+
+  is(appUpdate2Length, staging3Version, 'app version length has not increased')
+
+  comment('releasing app')
+  const update4Promise = await running.inspector.evaluate(`
+    new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false })
+  const update4ActualPromise = running.inspector.awaitPromise(update4Promise.objectId)
+
+  const releasing2 = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
+  await Helper.pick(releasing2, { tag: 'released' })
+
+  comment('waiting for app update notification')
+  const update4 = await update4ActualPromise
+  const update4Version = update4?.value?.version
+  const appUpdate4Length = update4Version.length
+
+  is(hie.encode(hie.decode(update4Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
+  ok(appUpdate4Length > appUpdate2Length, `app version length incremented (v${update4Version?.fork}.${update4Version?.length})`)
 
   await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
   await running.inspector.close()
