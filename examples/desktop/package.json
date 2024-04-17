@@ -9,8 +9,8 @@
   "type": "module",
   "pear": {
     "name": "deskex",
-    "keys": {
-      "worker": "pear://pedqq4rojmeq3khdtmgnspm7ad9wjad4fzcezhifk1hkdafmctbo"
+    "links": {
+      "worker": "pear://pp67er4g3rreirc6x8m6nosdiastemw3qrf69zcbw58yqk9tbwao"
     },
     "gui": {
       "width": 900,
