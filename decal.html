@@ -646,6 +646,8 @@
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
+              ctrl.setAttribute('no-maximizable', 'no-maximizable')
+              ctrl.setAttribute('no-minimizable', 'no-minimizable')
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(decalDialog)
@@ -656,6 +658,8 @@
               }
 
               await this.ipc.setSize({ id: this.gid, width: 560, height: 450 })
+              await this.ipc.setMinimizable({ id: this.gid, value: false })
+              await this.ipc.setMaximizable({ id: this.gid, value: false })
               await this.ipc.detachMainView({ id: this.gid })
               continue
             }

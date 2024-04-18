@@ -147,8 +147,19 @@ if (process.isMainFrame) {
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
       const close = this.root.querySelector('#close')
-      min.addEventListener('click', this.#min)
-      max.addEventListener('click', this.#max)
+
+      if (this.getAttribute('no-maximizable')) {
+        max.style.display = 'none'
+      } else {
+        max.addEventListener('click', this.#max)
+      }
+
+      if (this.getAttribute('no-minimizable')) {
+        min.style.display = 'none'
+      } else {
+        min.addEventListener('click', this.#min)
+      }
+
       if (restore) restore.addEventListener('click', this.#restore)
       close.addEventListener('click', this.#close)
       window.addEventListener('focus', this.#onfocus)
