@@ -9,7 +9,7 @@ const { discoveryKey } = require('hypercore-crypto')
 const parse = require('../lib/parse')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
-const { ERR_INVALID_APP_NAME, ERR_INVALID_APPLICATION_STORAGE } = require('../lib/errors')
+const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('../lib/errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
@@ -57,7 +57,7 @@ module.exports = class Context {
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
 
     if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
-      throw ERR_INVALID_APPLICATION_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
+      throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
     }
   }
 
