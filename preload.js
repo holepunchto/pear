@@ -148,17 +148,8 @@ if (process.isMainFrame) {
       const restore = this.root.querySelector('#restore')
       const close = this.root.querySelector('#close')
 
-      if (this.getAttribute('no-maximizable')) {
-        max.style.display = 'none'
-      } else {
-        max.addEventListener('click', this.#max)
-      }
-
-      if (this.getAttribute('no-minimizable')) {
-        min.style.display = 'none'
-      } else {
-        min.addEventListener('click', this.#min)
-      }
+      max.addEventListener('click', this.#max)
+      min.addEventListener('click', this.#min)
 
       if (restore) restore.addEventListener('click', this.#restore)
       close.addEventListener('click', this.#close)
@@ -169,6 +160,18 @@ if (process.isMainFrame) {
         const y = e.clientY
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
+    }
+
+    hideMaximize () {
+      const max = this.root.querySelector('#max')
+      max.style.display = 'none'
+      return gui.ipc.setMaximizable({ id: gui.id, value: false })
+    }
+
+    hideMinimize () {
+      const min = this.root.querySelector('#min')
+      min.style.display = 'none'
+      return gui.ipc.setMinimizable({ id: gui.id, value: false })
     }
 
     disconnectedCallback () {
