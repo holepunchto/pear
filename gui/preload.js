@@ -292,7 +292,7 @@ class IPC {
     electron.ipcRenderer.send('workerRun', link)
     const stream = new streamx.Duplex({
       write (data, cb) {
-        electron.ipcRenderer.send('workerPipe', id, data)
+        electron.ipcRenderer.send('workerPipeWrite', id, data)
         cb()
       }
     })
@@ -300,7 +300,7 @@ class IPC {
       stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
     })
 
-    electron.ipcRenderer.on('workerRun', (e, data) => { stream.push(data) })
+    electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
   }
 
