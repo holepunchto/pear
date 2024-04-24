@@ -163,16 +163,17 @@ if (process.isMainFrame) {
       })
     }
 
-    hideMaximize () {
-      const max = this.root.querySelector('#max')
-      max.style.display = 'none'
-      return gui.ipc.setMaximizable({ id: gui.id, value: false })
-    }
-
-    hideMinimize () {
-      const min = this.root.querySelector('#min')
-      min.style.display = 'none'
-      return gui.ipc.setMinimizable({ id: gui.id, value: false })
+    async setCtrl ({ maximize = true, minimize = true }) {
+      if (!maximize) {
+        const max = this.root.querySelector('#max')
+        max.style.display = 'none'
+        if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: false })
+      }
+      if (!minimize) {
+        const min = this.root.querySelector('#min')
+        min.style.display = 'none'
+        if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: false })
+      }
     }
 
     disconnectedCallback () {
