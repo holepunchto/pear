@@ -1,4 +1,5 @@
 'use strict'
+
 /* global Pear */
 /* eslint-env node, browser */
 if (process.isMainFrame) {

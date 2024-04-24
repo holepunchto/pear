@@ -21,6 +21,7 @@ class Helper extends IPC {
     const runtime = path.join(platformDir, '..', BY_ARCH)
 
     super({
+      lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
       socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
