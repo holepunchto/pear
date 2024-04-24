@@ -3,10 +3,9 @@ const { print, outputter, InputError } = require('./iface')
 const parse = require('../lib/parse')
 
 const output = outputter('gc', {
-  retrieving: ({ name, flag }) => `Retrieving ${name} ${flag} processes...`,
   kill: ({ pid }) => `Killed sidecar with pid: ${pid}`,
   complete: ({ killed }) => { return killed.length > 0 ? `Total killed sidecars: ${killed.length}` : 'No running sidecars' },
-  error: ({ code, stack }) => `GC Error (code: ${code || 'none'}) ${stack}`
+  error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
 module.exports = (ipc) => async function gc (args) {
