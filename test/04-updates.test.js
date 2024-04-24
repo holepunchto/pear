@@ -115,92 +115,108 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   is(code, 0, 'exit code is 0')
 })
 
-// test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
-//   const { teardown, ok, is, plan, timeout, comment } = t
+test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
+  const { teardown, ok, is, plan, timeout, comment } = t
 
-//   plan(13)
-//   timeout(180000)
+  plan(7)
+  timeout(180000)
 
-//   const testId = Math.floor(Math.random() * 100000)
+  const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(os.cwd(), '..')
+  const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
-//   const helper = new Helper(teardown)
-//   await helper.ready()
+  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  try { await gc(tmpLocaldev) } catch { }
 
-//   const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  await fs.promises.mkdir(tmpLocaldev, { recursive: true })
+  teardown(() => gc(tmpLocaldev), { order: Infinity })
 
-//   comment('1. Stage  and run app')
+  comment('mirroring platform')
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(tmpLocaldev)
+  const mirror = srcDrive.mirror(destDrive, { filter: (key) => !key.startsWith('.git') })
+  await mirror.done()
+  teardown(async () => srcDrive.close())
+  teardown(async () => destDrive.close())
 
-//   comment('\tstaging')
-//   await Helper.sink(helper.stage(stageOpts(testId)))
+  const platformDir = path.join(tmpLocaldev, 'pear')
+  teardown(async () => {
+    const shutdowner = new Helper()
+    await shutdowner.ready()
+    await shutdowner.shutdown()
+  })
+  const testId = Math.floor(Math.random() * 100000)
 
-//   comment('\tstaging')
-//   const stager = new Helper()
-//   await stager.ready()
-//   const staging = stager.stage(stageOpts(testId))
-//   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
-//   const { key } = await until.staging
-//   await until.final
+  comment('1. Stage and run app')
 
-//   comment('\trunning')
-//   const running = await Helper.open(key, { tags: ['exit'] })
+  comment('\tstaging')
+  const stager1 = new Helper({ platformDir })
+  await stager1.ready()
+  const staging = stager1.stage(stageOpts(testId))
+  const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
+  const { key } = await until.staging
+  await until.final
 
-//   comment('2. Create new file, restage, and reseed')
+  comment('\trunning')
+  const running = await Helper.open(key, { tags: ['exit'] }, { platformDir })
+  const update1Promise = await running.inspector.evaluate(`
+    __PEAR_TEST__.sub = Pear.updates()
+    new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false })
+  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
+  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
+    new Promise((resolve) =>  __PEAR_TEST__.sub.once("data", resolve))
+  `, { returnByValue: false }))
 
-//   const file = `${ts()}.txt`
-//   comment(`\tcreating test file (${file})`)
-//   writeFileSync(path.join(dir, file), 'test')
+  comment('2. Create new file, restage, and reseed')
 
-//   comment('\tstaging')
-//   const update1Promise = await running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false })
-//   await Helper.sink(helper.stage(stageOpts(testId)))
+  const file = `${ts()}.tmp`
+  comment(`\tcreating test file (${file})`)
+  fs.writeFileSync(path.join(dir, file), 'test')
 
-//   unlinkSync(path.join(dir, file))
+  comment('\trestaging')
+  const stager2 = new Helper({ platformDir })
+  await stager2.ready()
+  await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-//   comment('\tseeding')
-//   const seed2 = await Helper.pick(helper.seed(seedOpts(testId)), [{ tag: 'key' }, { tag: 'announced' }])
-//   const seed2Key = await seed2.key
-//   const seed2Announced = seed2.announced
-//   ok(seed2Key, `reseeded platform key (${seed2Key})`)
-//   ok(seed2Announced, 'reseed announced')
+  fs.unlinkSync(path.join(dir, file))
 
-//   const update1 = await running.inspector.awaitPromise(update1Promise.objectId)
-//   const update1Version = update1?.value?.version
-//   is(hie.encode(hie.decode(update1Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
-//   is(update1Version?.fork, 0, 'app version.fork is 0')
-//   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
+  comment('\twaiting for update')
+  const update1 = await update1ActualPromise
+  const update1Version = update1?.value?.version
+  is(hie.encode(hie.decode(update1Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
+  is(update1Version?.fork, 0, 'app version.fork is 0')
+  ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
-//   comment('3. Create another file, restage, and reseed')
+  comment('3. Create another file and restage')
 
-//   const file2 = `${ts()}.txt`
-//   comment(`\tcreating another test file (${file2})`)
-//   writeFileSync(path.join(dir, file2), 'test')
+  const file2 = `${ts()}.tmp`
+  comment(`\tcreating another test file (${file2})`)
+  fs.writeFileSync(path.join(dir, file2), 'test')
 
-//   comment('\trestaging')
-//   const update2Promise = await running.inspector.evaluate('new Promise((resolve) => Pear.updates().once("data", resolve))', { returnByValue: false })
-//   await Helper.sink(helper.stage(stageOpts(testId)))
+  comment('\trestaging')
+  const update2Promise = await update2LazyPromise
+  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
 
-//   unlinkSync(path.join(dir, file2))
+  const stager3 = new Helper({ platformDir })
+  await stager3.ready()
+  teardown(async () => stager3.shutdown())
+  await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
 
-//   comment('\treseeding')
-//   const seed3 = await Helper.pick(helper.seed(seedOpts(testId)), [{ tag: 'key' }, { tag: 'announced' }])
-//   const seed3Key = await seed3.key
-//   const seed3Announced = seed3.announced
-//   ok(seed3Key, `reseeded platform key (${seed3Key})`)
-//   ok(seed3Announced, 'reseed announced')
+  fs.unlinkSync(path.join(dir, file2))
 
-//   comment('waiting for update')
-//   const update2 = await running.inspector.awaitPromise(update2Promise.objectId)
-//   const update2Version = update2?.value?.version
-//   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
-//   is(update2Version?.fork, 0, 'app version.fork is 0')
-//   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
+  comment('\twaiting for update')
+  const update2 = await update2ActualPromise
+  const update2Version = update2?.value?.version
+  is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
+  is(update2Version?.fork, 0, 'app version.fork is 0')
+  ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
-//   await running.inspector.close()
-//   await helper._close()
-
-//   const { code } = await running.until.exit
-//   is(code, 0, 'exit code is 0')
-// })
+  await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
+  await running.inspector.close()
+  const { code } = await running.until.exit
+  is(code, 0, 'exit code is 0')
+})
 
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
