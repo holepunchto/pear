@@ -13,41 +13,30 @@ const output = outputter('run', {
   loaded: (data, { loading }) => loading && loading.clear(data.forceClear || false)
 })
 
-module.exports = (ipc) => async function run (args, devrun = false) {
+module.exports = (ipc) => async function run (cmd, devrun = false) {
   let dir = null
   let key = null
-  let askTrust = false
-  try {
-    const { json, dev, detached, store, 'ask-trust': ask, _ } = parse.args(args, {
-      boolean: ['json', 'dev', 'tmp-store', 'detached', 'ask-trust'],
-      string: ['store', 'link', 'checkout'],
-      alias: { store: 's', 'tmp-store': 't' },
-      default: { json: false, dev: false, detached: false, 'ask-trust': true }
-    })
-    askTrust = ask
-    if (!_[0]) {
-      if (devrun) {
-        _[0] = '.'
-        args.push(_[0])
-      } else {
-        throw new InputError('Missing argument: pear run <key|dir|alias>')
-      }
-    }
-    if (_[0].startsWith('pear:') && _[0].slice(5, 7) !== '//') {
-      throw new InputError('Key must start with pear://')
-    }
-    key = parse.runkey(_[0]).key
-    if (key !== null && _[0].startsWith('pear://') === false) {
-      throw new InputError('Key must start with pear://')
-    }
-    const cwd = os.cwd()
-    dir = key === null ? (_[0].startsWith('file:') ? fileURLToPath(_[0]) : _[0]) : cwd
+  let ask = false
 
-    if (path.isAbsolute(dir) === false) {
-      const resolved = path.resolve(cwd, dir)
-      dir = args[args.indexOf(dir)] = resolved
+  try {
+    const { json, dev, detached, store, askTrust } = cmd.flags
+    ask = askTrust
+
+    if (devrun) {
+      // todo inject . dir if no arg.link - check unparsed args for it
     }
+
+    key = parse.runkey(cmd.args.link).key
+
+    if (key !== null && cmd.args.link.startsWith('pear://') === false) {
+      throw new InputError('Key must start with pear://')
+    }
+
+    const cwd = os.cwd()
+    dir = key === null ? (cmd.args.link.startsWith('file:') ? fileURLToPath(cmd.args.link) : cmd.args.link) : cwd
+    if (path.isAbsolute(dir) === false) dir = path.resolve(cwd, dir)
     if (dir !== cwd) os.chdir(dir)
+
     if (key === null) {
       try {
         JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
@@ -55,10 +44,12 @@ module.exports = (ipc) => async function run (args, devrun = false) {
         throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
+
+    const args = Bare.argv.slice(1)
     await output(json, await require('../lib/run')({ ipc, key, args, dev, dir, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
-      if (askTrust === false) {
+      if (ask === false) {
         Bare.exit(1)
         return
       }

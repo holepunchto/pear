@@ -16,19 +16,14 @@ const output = outputter('seed', {
   'peer-remove': (info) => `-_- peer drop ${info}`
 })
 
-module.exports = (ipc) => async function seed (args) {
-  const parsed = parse.args(args, {
-    boolean: ['verbose', 'json'],
-    string: ['seeders', 'name'],
-    alias: { verbose: 'v' }
-  })
-  const { _, json, verbose, seeders } = parsed
+module.exports = (ipc) => async function seed (cmd) {
+  const { json, verbose, seeders } = cmd.flags
   try {
-    const [from, dir = os.cwd()] = _
-    const isKey = parse.runkey(from.toString()).key !== null
-    const channel = isKey ? null : from
-    const key = isKey ? from : null
-    let { name } = parsed
+    const [dir = os.cwd()] = cmd.args
+    const isKey = parse.runkey(cmd.args.channel).key !== null
+    const channel = isKey ? null : cmd.args.channel
+    const key = isKey ? cmd.args.channel : null
+    let { name } = cmd.flags
     if (!name && !key) {
       const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
       name = pkg.pear?.name || pkg.name

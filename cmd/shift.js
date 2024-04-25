@@ -11,18 +11,17 @@ const output = outputter('shift', {
   }
 })
 
-module.exports = (ipc) => async function shift (args) {
+module.exports = (ipc) => async function shift (cmd) {
   try {
-    const { _, force, json } = parse.args(args, {
-      boolean: ['force', 'json']
-    })
-    const [src, dst] = _
+    const { force, json } = cmd.flags
+    const src = cmd.args.source
+    const dst = cmd.args.destination
 
-    if (!src || parse.runkey(src.toString()).key === null) {
+    if (!src || parse.runkey(src).key === null) {
       throw new InputError('A source application key must be specified.')
     }
 
-    if (!dst || parse.runkey(dst.toString()).key === null) {
+    if (!dst || parse.runkey(dst).key === null) {
       throw new InputError('A destination application key must be specified.')
     }
 

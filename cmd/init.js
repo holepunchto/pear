@@ -4,21 +4,12 @@ const { access, writeFile, mkdir, readFile } = require('bare-fs/promises')
 const { extname, basename, resolve } = require('bare-path')
 const { ansi, print, interact } = require('./iface')
 const constants = require('../lib/constants')
-const parse = require('../lib/parse')
 
-module.exports = (ipc) => async function init (args) {
+module.exports = (ipc) => async function init (cmd) {
   const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
-  const { _, yes, force, type = 'desktop', with: w } = parse.args(args, {
-    string: ['type', 'with'],
-    boolean: ['yes', 'force'],
-    alias: {
-      yes: 'y',
-      from: 'f',
-      type: 't',
-      with: 'w'
-    }
-  })
+
+  const { yes, force, type = 'desktop', with: w } = cmd.flags
 
   const exists = async (path) => {
     try {
@@ -28,7 +19,7 @@ module.exports = (ipc) => async function init (args) {
       return false
     }
   }
-  const dir = _[0] || cwd
+  const dir = cmd.args.dir || cwd
   const pkgPath = resolve(dir, 'package.json')
   let pkg = null
   try { pkg = JSON.parse(await readFile(pkgPath)) } catch {}
