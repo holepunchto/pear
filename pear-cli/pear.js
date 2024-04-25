@@ -51,7 +51,7 @@ function makeBin () {
     fs.mkdirSync(BIN, { recursive: true })
 
     if (isWindows) {
-      fs.writeFileSync(path.join(BIN, 'pear.cmd'), `@echo off\n"${CURRENT_BIN}" %*`)
+      fs.writeFileSync(path.join(BIN, 'pear.cmd'), `@echo off\r\n"${CURRENT_BIN}" %*`)
       fs.writeFileSync(path.join(BIN, 'pear.ps1'), `& "${CURRENT_BIN}" @args`)
     } else {
       fs.symlinkSync(CURRENT_BIN, path.join(BIN, 'pear'))

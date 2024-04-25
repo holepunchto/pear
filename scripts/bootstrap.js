@@ -36,7 +36,7 @@ if (isWindows === false) {
   fs.writeFileSync(ps1tmp, `& "${runtime}" @args`)
   fs.renameSync(ps1tmp, path.join(SWAP, 'pear.ps1'))
   const cmdtmp = path.join(SWAP, Math.floor(Math.random() * 1000) + '.pear')
-  fs.writeFileSync(cmdtmp, `@echo off\n"${runtime}" %*`)
+  fs.writeFileSync(cmdtmp, `@echo off\r\n"${runtime}" %*`)
   fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
