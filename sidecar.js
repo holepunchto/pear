@@ -11,10 +11,8 @@ const {
   CHECKOUT,
   LOCALDEV,
   UPGRADE_LOCK,
-  PLATFORM_DIR,
-  WAKEUP
+  PLATFORM_DIR
 } = require('./lib/constants.js')
-const registerUrlHandler = require('./lib/url-handler')
 const parse = require('./lib/parse')
 const { verbose } = parse.args(Bare.argv, { boolean: ['verbose'] })
 
@@ -36,8 +34,6 @@ async function bootSidecar () {
   const updater = createUpdater()
   const sidecar = new Sidecar({ updater, drive, corestore })
   await sidecar.ready()
-
-  registerUrlHandler(WAKEUP)
 
   function createUpdater () {
     if (LOCALDEV) return null
