@@ -11,16 +11,14 @@ const output = outputter('release', {
   final: { output: 'print', message: 'Release complete\n', success: true }
 })
 
-module.exports = (ipc) => async function release (args) {
-  const { _, checkout, name, json } = parse.args(args, { boolean: ['json'], string: ['name', 'checkout'] })
+module.exports = (ipc) => async function release (cmd) {
+  const { checkout, name, json } = cmd.flags
   try {
-    const [from] = _
-    let [, dir = ''] = _
-    const isKey = parse.runkey(from.toString()).key !== null
-    const channel = isKey ? null : from
-    const key = isKey ? from : null
+    const isKey = parse.runkey(cmd.args.channel).key !== null
+    const channel = isKey ? null : cmd.args.channel
+    const key = isKey ? cmd.args.channel : null
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
-
+    let dir = cmd.args.dir || os.cwd()
     if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
     if (checkout !== undefined && Number.isInteger(+checkout) === false) {
       throw new InputError('--checkout flag must supply an integer if set')

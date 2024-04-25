@@ -23,20 +23,14 @@ const output = outputter('stage', {
   addendum: ({ version, release, channel, key }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(key)} ]\n`
 })
 
-module.exports = (ipc) => async function stage (args) {
+module.exports = (ipc) => async function stage (cmd) {
   try {
-    const { _, dryRun, bare, json, ignore, name, truncate } = parse.args(args, {
-      boolean: ['dryRun', 'bare', 'json'],
-      string: ['ignore', 'name', 'truncate'],
-      alias: { dryRun: ['d', 'dry-run'], verbose: 'v', bare: 'b' }
-    })
-    const [from] = _
-    let [, dir = ''] = _
-
-    const isKey = from && parse.runkey(from.toString()).key !== null
-    const channel = isKey ? null : from
-    const key = isKey ? from : null
+    const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
+    const isKey = cmd.args.channel && parse.runkey(cmd.args.channel).key !== null
+    const channel = isKey ? null : cmd.args.channel
+    const key = isKey ? cmd.args.channel : null
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
+    let [dir = os.cwd()] = cmd.args.dir
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const id = Bare.pid
     await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
