@@ -41,7 +41,7 @@ if (isInstalled()) {
       console.log()
       console.log('Or by adding the following to your path')
       console.log()
-      console.log('export PATH="' + BIN + ':$PATH"')
+      console.log(isWindows ? `set PATH="${BIN};%PATH%"` : `export PATH="${BIN}:$PATH"`)
     }
   })
 }
