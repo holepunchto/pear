@@ -213,12 +213,61 @@ module.exports = ({ fork, length, key }) => {
   ${url}
   `
 
+  const overviewFooter = `
+
+  ${helpExplain}
+
+  ${ansi.pear + ' '}${version}
+  ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
+  ${url}
+  `
+
+  const descriptions = {
+    release: `Set production release version.
+
+Set the release pointer against a version (default latest).
+
+Use this to indicate production release points.`,
+
+    stage: `Channel name must be specified on first stage,
+in order to generate the initial key.
+
+Outputs diff information and project key.`,
+
+    run: `${ansi.bold('key')}    pear://<key>
+${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
+${ansi.bold('alias')}  pear://<alias>
+`,
+
+    seed: `Specify channel or key to seed a project.
+
+Specify a remote key to reseed.
+`,
+
+    info: `Supply a key or channel to view application information.
+
+Supply no argument to view platform information.`,
+
+    sidecar: `The Pear Sidecar is a local-running HTTP and IPC server which
+provides access to corestores.
+
+This command instructs any existing sidecar process to shutdown
+and then becomes the sidecar.`,
+
+    dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}
+Use pear help run to see possible arguments and flags.
+`
+
+  }
+
   usage = {
+    descriptions,
     banner,
     header,
     miniHeader,
     v,
     url,
+    overviewFooter,
     versions: versionsExplain,
     init: initExplain,
     dev: devExplain,
