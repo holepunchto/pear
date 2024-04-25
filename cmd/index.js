@@ -1,89 +1,218 @@
 'use strict'
-const init = require('./init')
-const stage = require('./stage')
-const seed = require('./seed')
-const release = require('./release')
-const info = require('./info')
-const dump = require('./dump')
-const shift = require('./shift')
-const sidecar = require('./sidecar')
-const run = require('./run')
-const gc = require('./gc')
-const parse = require('../lib/parse')
-const { CHECKOUT } = require('../lib/constants')
+const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
+const { usage, print } = require('./iface')
+const errors = require('../lib/errors')
+const runners = {
+  init: require('./init'),
+  stage: require('./stage'),
+  seed: require('./seed'),
+  release: require('./release'),
+  info: require('./info'),
+  dump: require('./dump'),
+  shift: require('./shift'),
+  sidecar: require('./sidecar'),
+  gc: require('./gc'),
+  run: require('./run'),
+  versions: require('./versions')
+}
 
 module.exports = async (ipc) => {
   Bare.prependListener('exit', () => { ipc.close() })
-  const usage = require('./usage')(CHECKOUT)
-  ipc.userData = { usage }
-  const argv = Bare.argv.slice(1)
-  const { _, version } = parse.args(argv, {
-    boolean: ['help', 'version'],
-    alias: { version: 'v', help: 'h' }
+
+  const init = command(
+    'init',
+    summary('Create initial project files'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--yes|-y', 'Autoselect all defaults'),
+    flag('--type|-t <type>', 'Project type: desktop (default) or terminal'),
+    flag('--force|-f', 'Force overwrite existing files'),
+    flag('--with|-w [name]', 'Additional functionality. Available: node'),
+    runners.init(ipc)
+  )
+
+  const dev = command(
+    'dev',
+    summary('Run a project in development mode'),
+    description(usage.descriptions.dev),
+    arg('[link|dir]', 'Source to run app from (default: .)'),
+    rest('[...app-args]', 'Application arguments'),
+    flag('--no-devtools', 'Open devtools with application [Desktop]'),
+    flag('--no-updates-diff', 'Enable diff computation for Pear.updates'),
+    flag('--no-updates', 'Disable updates firing via Pear.updates'),
+    flag('--link <url>', 'Simulate deep-link click open'),
+    flag('--store|-s <path>', 'Set the Application Storage path'),
+    flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
+    flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
+    flag('--unsafe-clear-app-storage', 'Clear app storage'),
+    flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
+    flag('--appling <path>', 'Set application shell path'),
+    flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
+    flag('--detached', 'Wakeup existing app or run detached'),
+    hiddenFlag('--detach'),
+    hiddenFlag('--start-id'),
+    (cmd) => runners.run(ipc)(cmd, true)
+  )
+
+  const seed = command(
+    'seed',
+    summary('Seed or reseed a project'),
+    description(usage.descriptions.seed),
+    arg('<channel|link>', 'Channel name or Pear link to seed'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--verbose|-v', 'Additional output'),
+    flag('--seeders|-s ', 'Additional public keys to seed from'),
+    flag('--name', 'Advanced. Override app name'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.seed(ipc)
+  )
+
+  const stage = command(
+    'stage',
+    summary('Synchronize local changes to key'),
+    description(usage.descriptions.stage),
+    arg('<channel|link>', 'Channel name or Pear link to stage'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--dry-run|-d', 'Execute a stage without writing'),
+    flag('--bare|-b', 'File data only, no warmup optimization'),
+    flag('--ignore', 'Comma separated file path ignore list'),
+    flag('--truncate <n>', 'Advanced. Truncate to version length n'),
+    flag('--name', 'Advanced. Override app name'),
+    runners.stage(ipc)
+  )
+  const release = command(
+    'release',
+    summary('Set production release version'),
+    description(usage.descriptions.release),
+    arg('<channel|link>', 'Channel name or Pear link to release'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--checkout <n>', 'Set release checkout n is version length'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.release(ipc)
+  )
+
+  const run = command(
+    'run',
+    summary('Run an application from a key or dir'),
+    description(usage.descriptions.run),
+    arg('<link|dir>', 'Pear link, alias or directory to run app from'),
+    rest('[...app-args]', 'Application arguments'),
+    flag('--dev', 'Enable --devtools & --updates-diff'),
+    flag('--devtools', 'Open devtools with application [Desktop]'),
+    flag('--updates-diff', 'Enable diff computation for Pear.updates'),
+    flag('--no-updates', 'Disable updates firing via Pear.updates'),
+    flag('--link <url>', 'Simulate deep-link click open'),
+    flag('--store|-s <path>', 'Set the Application Storage path'),
+    flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
+    flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
+    flag('--unsafe-clear-app-storage', 'Clear app storage'),
+    flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
+    flag('--appling <path>', 'Set application shell path'),
+    flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
+    flag('--detached', 'Wakeup existing app or run detached'),
+    hiddenFlag('--detach'),
+    hiddenFlag('--start-id'),
+    runners.run(ipc)
+  )
+
+  const info = command(
+    'info',
+    summary('Read project information'),
+    arg('[link|channel]', 'Pear link or channel name to view info for'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    description(usage.descriptions.info),
+    flag('--changelog', 'View changelog only'),
+    flag('--full-changelog', 'Full record of changes'),
+    flag('--metadata', 'View metadata only'),
+    flag('--key', 'View key only'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.info(ipc)
+  )
+
+  const dump = command(
+    'dump',
+    summary('Synchronize files from key to dir'),
+    arg('<link>', 'Pear link to dump from'),
+    arg('<dir>', 'Directory path to dump to'),
+    flag('--checkout <n>', 'Dump from specified checkout n is version length'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.dump(ipc)
+  )
+
+  const shift = command(
+    'shift',
+    summary('Advanced. Move storage between apps'),
+    arg('<source>', 'Source application Pear link'),
+    arg('<destination>', 'Destination application Pear link'),
+    flag('--force', 'Overwrite existing application storage if present'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.shift(ipc)
+  )
+
+  const sidecar = command(
+    'sidecar',
+    summary('Advanced. Run sidecar in terminal'),
+    description(usage.descriptions.sidecar),
+    flag('--verbose|-v', 'Additional output'),
+    flag('--mem', 'memory mode: RAM corestore'),
+    flag('--key <key>', 'Advanced. Switch release lines'),
+    runners.sidecar(ipc)
+  )
+
+  const gc = command(
+    'gc',
+    flag('--json', 'Newline delimited JSON output'),
+    runners.gc(ipc)
+  )
+
+  const versions = command(
+    'versions',
+    summary('View version information'),
+    flag('--json', 'JSON output'),
+    runners.versions(ipc)
+  )
+
+  const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
+    if (h.args.command) console.log(cmd.help(h.args.command))
+    else console.log(cmd.overview({ full: true }))
   })
 
-  if (version) {
-    usage.outputVersionBreakdown(argv.includes('--json'))
-    Bare.exit(0)
-  }
+  const cmd = command('pear',
+    header(usage.header),
+    init,
+    dev,
+    stage,
+    seed,
+    run,
+    release,
+    info,
+    dump,
+    shift,
+    sidecar,
+    gc,
+    versions,
+    help,
+    footer(usage.footer),
+    bail(explain),
+    () => { console.log(cmd.overview()) }
+  )
 
-  if (_.length === 0) usage.output()
+  const program = cmd.parse(Bare.argv.slice(1))
+  program.running.finally(() => { ipc.close() })
 
-  class Cmd {
-    constructor (help, teardown) {
-      this.cmds = {}
-      this.help = help
-      this.teardown = teardown
-    }
-
-    add (cmd, fn) {
-      this.cmds[cmd] = fn
-    }
-
-    async run (argv = Bare.argv) {
-      const cmd = argv[0]
-      const sub = `${cmd} ${argv[1]}`
-      try {
-        if (this.cmds[sub]) {
-          if (argv.includes('--help') || argv.includes('-h')) return await this.help(sub)
-          return await this.cmds[sub](argv.slice(2))
-        }
-        if (this.cmds[cmd]) {
-          if (argv.includes('--help') || argv.includes('-h')) return await this.help(cmd)
-          return await this.cmds[cmd](argv.slice(1))
-        }
-        return await this.help(cmd)
-      } catch (err) {
-        await this.teardown()
-        throw err
+  function explain (bail) {
+    if (bail.err) {
+      const code = bail.err.code
+      const known = errors.known('ERR_INVALID_').includes(code)
+      if (known === false) {
+        print(bail.reason, false)
+        print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
+        Bare.exit(1)
       }
     }
+
+    print(bail.reason, false)
+    print('\n' + bail.command.usage())
   }
-
-  const cmd = new Cmd(usage.output, () => { ipc.close() })
-  cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
-  cmd.add('versions', (args) => usage.outputVersions(args.includes('--json')))
-  cmd.add('init', init(ipc))
-  cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
-  cmd.add('stage', stage(ipc))
-  cmd.add('seed', seed(ipc))
-  cmd.add('release', release(ipc))
-  cmd.add('run', launch)
-  cmd.add('launch', launch) // launch is legacy alias for run
-  cmd.add('info', info(ipc))
-  cmd.add('dump', dump(ipc))
-  cmd.add('build', build)
-  cmd.add('shift', shift(ipc))
-  cmd.add('sidecar', (args) => sidecar(ipc)(args))
-  cmd.add('gc', (args) => gc(ipc)(args))
-
-  await cmd.run(argv)
-
-  function launch (args) {
-    return run(ipc)(args)
-  }
-
-  function build () { throw new Error('Not Implemented: build') }
 
   return ipc
 }
