@@ -30,7 +30,7 @@ module.exports = ({ fork, length, key }) => {
     ${devBrief}
     Alias for: ${ansi.italic('pear run --dev <dir>')}
 
-    --link=url                 Simulate deep-link click open
+    --link=urls                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
   `
@@ -112,7 +112,7 @@ module.exports = ({ fork, length, key }) => {
     --devtools                 Open devtools with application [Desktop]
     --updates-diff             Enable diff computation for Pear.updates
     --no-updates               Disable updates firing via Pear.updates
-    --link=url                 Simulate deep-link click open
+    --link=urls                 Simulate deep-link click open
     --store|-s=path            Set the Application Storage path
     --tmp-store|-t             Automatic new tmp folder as store path
     --checkout=n               Run a checkout, n is version length
@@ -196,7 +196,7 @@ module.exports = ({ fork, length, key }) => {
     ${helpBrief}
   `
 
-  const url = ansi.link('https://holepunch.to')
+  const urls = ansi.link('https://pears.com', 'pears.com') + ' | ' + ansi.link('https://holepunch.to', 'holepunch.to') + ' | ' + ansi.link('https://keet.io', 'keet.io')
 
   const header = `
   ${banner}
@@ -210,17 +210,16 @@ module.exports = ({ fork, length, key }) => {
 
   const footer = `  ${ansi.pear + ' '}${version}
   ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
-  ${url}
+  ${urls}
   `
 
-  const overviewFooter = `
+  const overviewFooter = `> ${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n  Run ${ansi.bold('pear help')} to output full help for all commands\n
 
-  ${helpExplain}
-
-  ${ansi.pear + ' '}${version}
-  ${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
-  ${url}
-  `
+ 
+${ansi.pear + ' '}${version}
+${ansi.bold(ansi.dim(name))} ~ ${ansi.dim('Welcome to the IoP')}
+${urls}
+`
 
   const descriptions = {
     release: `Set production release version.
@@ -261,13 +260,14 @@ Use pear help run to see possible arguments and flags.
   }
 
   usage = {
+    footer,
+    overviewFooter,
     descriptions,
     banner,
     header,
     miniHeader,
     v,
-    url,
-    overviewFooter,
+    urls,
     versions: versionsExplain,
     init: initExplain,
     dev: devExplain,
