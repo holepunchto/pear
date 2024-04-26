@@ -41,17 +41,29 @@ if (isInstalled()) {
       console.log()
       console.log('Or by adding the following to your path')
       console.log()
-      console.log('export PATH="' + BIN + ':$PATH"')
+      if (isWindows) {
+        console.log(`cmd:        set PATH="${BIN};%PATH%"`)
+        console.log(`PowerShell: $env:PATH="${BIN};$env:PATH"`)
+      } else {
+        console.log(`export PATH="${BIN}:$PATH"`)
+      }
     }
   })
 }
 
 function makeBin () {
-  if (isWindows) return false
   try {
     fs.mkdirSync(BIN, { recursive: true })
-    fs.symlinkSync(CURRENT_BIN, path.join(BIN, 'pear'))
-  } catch {}
+
+    if (isWindows) {
+      fs.writeFileSync(path.join(BIN, 'pear.cmd'), `@echo off\r\n"${CURRENT_BIN}" %*`)
+      fs.writeFileSync(path.join(BIN, 'pear.ps1'), `& "${CURRENT_BIN}" @args`)
+    } else {
+      fs.symlinkSync(CURRENT_BIN, path.join(BIN, 'pear'))
+    }
+  } catch {
+    return false
+  }
   return true
 }
 
