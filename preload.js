@@ -131,7 +131,12 @@ if (process.isMainFrame) {
 
     attributeChangedCallback (name) {
       if (name.startsWith('data-') === false) return
-      this.#setCtrl({ maximize: strToBool(this.dataset.maximize), minimize: strToBool(this.dataset.minimize) })
+      if (name.startsWith('data-minimize')) {
+        this.#setCtrl({ minimize: strToBool(this.dataset.minimize) })
+      }
+      if (name.startsWith('data-maximize')) {
+        this.#setCtrl({ maximize: strToBool(this.dataset.maximize) })
+      }
     }
 
     connectedCallback () {
@@ -181,23 +186,23 @@ if (process.isMainFrame) {
       })
     }
 
-    async #setCtrl ({ maximize = true, minimize = true } = {}) {
-      if (maximize === true) {
+    async #setCtrl (opts = {}) {
+      if (opts.maximize === true) {
         const max = this.root.querySelector('#max')
         max.style.display = 'inline'
         if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: true })
       }
-      if (maximize === false) {
+      if (opts.maximize === false) {
         const max = this.root.querySelector('#max')
         max.style.display = 'none'
         if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: false })
       }
-      if (minimize === true) {
+      if (opts.minimize === true) {
         const min = this.root.querySelector('#min')
         min.style.display = 'inline'
         if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: true })
       }
-      if (minimize === false) {
+      if (opts.minimize === false) {
         const min = this.root.querySelector('#min')
         min.style.display = 'none'
         if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: false })
