@@ -19,17 +19,17 @@ const output = outputter('seed', {
 module.exports = (ipc) => async function seed (cmd) {
   const { json, verbose, seeders } = cmd.flags
   try {
-    const [dir = os.cwd()] = cmd.args
+    const { dir = os.cwd() } = cmd.args
     const isKey = parse.runkey(cmd.args.channel).key !== null
     const channel = isKey ? null : cmd.args.channel
-    const key = isKey ? cmd.args.channel : null
+    const link = isKey ? cmd.args.channel : null
     let { name } = cmd.flags
-    if (!name && !key) {
+    if (!name && !link) {
       const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
       name = pkg.pear?.name || pkg.name
     }
     const id = Bare.pid
-    await output(json, ipc.seed({ id, name, channel, key, verbose, seeders, dir, clientArgv: Bare.argv }))
+    await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, clientArgv: Bare.argv }))
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       if (json) {

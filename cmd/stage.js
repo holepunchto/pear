@@ -30,7 +30,7 @@ module.exports = (ipc) => async function stage (cmd) {
     const channel = isKey ? null : cmd.args.channel
     const key = isKey ? cmd.args.channel : null
     if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
-    let [dir = os.cwd()] = cmd.args.dir
+    let  { dir = os.cwd() } = cmd.args
     if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
     const id = Bare.pid
     await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))

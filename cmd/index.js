@@ -160,6 +160,9 @@ module.exports = async (ipc) => {
 
   const gc = command(
     'gc',
+    summary('Advanced. Clear dangling resources'),
+    description('Resource may be: sidecar'),
+    arg('<resource>', 'Resource type to garbage collect'),
     flag('--json', 'Newline delimited JSON output'),
     runners.gc(ipc)
   )

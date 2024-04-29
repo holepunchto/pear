@@ -1,12 +1,13 @@
 'use strict'
-const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
+const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
-const { discoveryKey } = require('hypercore-crypto')
-
+const unixPathResolve = require('unix-path-resolve')
+const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const parse = require('../lib/parse')
+const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
 const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('../lib/errors')
@@ -72,14 +73,28 @@ module.exports = class Context {
     this.#onupdate()
   }
 
-  constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, onupdate = () => {} } = {}) {
+  constructor (params = {}) {
+    const { sidecar, link, id = null, argv = null, env = ENV, dir = CWD, clientArgv, onupdate = () => {}, flags } = params
     const {
-      startId, store, appling, flags, channel, devtools,
-      checkout, run, stage, trace, key, link, updates,
-      alias, local, dir, appArgs, pkg, pkgPath, updatesDiff,
+      startId, appling, channel, devtools, checkout,
+      dev, run, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
-    } = parse.argv(argv, env, cwd)
+    } = flags
 
+    if (flags.stage || flags.run) {
+      const { NODE_ENV = 'production' } = env
+      env.NODE_ENV = NODE_ENV
+    }
+
+    const pkgPath = path.join(dir, 'package.json')
+    const { data: linkData = null, alias = null, key = null } = link ? parse.runkey(link) : {}
+    let pkg = null
+    if (key === null) {
+      try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }
+      if (pkg) pkg = JSON.parse(pkg) // we want to know if this throws, so no catch
+    }
+
+    const store = flags['tmp-store'] ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
     this.sidecar = sidecar
@@ -88,10 +103,10 @@ module.exports = class Context {
     this.appling = appling
     this.channel = channel || null
     this.checkout = checkout
-    this.cwd = cwd
+    this.dir = dir
     this.env = { ...env }
     this.flags = flags
-    this.dev = key === null
+    this.dev = dev
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff
@@ -99,14 +114,11 @@ module.exports = class Context {
     this.stage = stage
     this.trace = trace
     this.link = link
-    if (this.link && !this.link.startsWith('pear:')) this.link = 'pear://' + this.link
-    this.linkData = parse.runkey(this.link).data
+    this.linkData = linkData
     this.key = key
     this.alias = alias
-    this.local = local
     this.dir = dir
     this.manifest = pkg
-    this.args = appArgs
     this.clientArgv = clientArgv
     this.pkgPath = pkgPath
     this.id = id
