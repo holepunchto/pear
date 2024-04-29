@@ -16,15 +16,10 @@ const output = outputter('run', {
 module.exports = (ipc) => async function run (cmd, devrun = false) {
   let dir = null
   let key = null
-  let ask = false
-
   try {
-    const { json, dev, detached, store, askTrust } = cmd.flags
-    ask = askTrust
+    const { json, detached, store } = cmd.flags
 
-    if (devrun) {
-      // todo inject . dir if no arg.link - check unparsed args for it
-    }
+    if (devrun && !cmd.args.link) cmd.args.link = '.'
 
     key = parse.runkey(cmd.args.link).key
 
@@ -45,14 +40,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       }
     }
 
-    const args = Bare.argv.slice(1)
-    await output(json, await require('../lib/run')({ ipc, key, args, dev, dir, storage: store, detached }))
+    const args = Bare.argv.slice(2)
+    await output(json, await require('../lib/run')({ flags: cmd.flags, link: cmd.args.link, ipc, key, args, dir, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
-      if (ask === false) {
-        Bare.exit(1)
-        return
-      }
       const sure = ansi.cross + ' Key pear://' + key?.z32 + ' is not known\n\nBe sure that software is trusted before running it\n\nType "TRUST" to allow execution or anything else to exit\n\n'
       const prompt = interact(sure, [
         {
