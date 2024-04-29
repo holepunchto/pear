@@ -7,6 +7,7 @@ const path = require('path')
 const { isMac, isWindows, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
+const constants = require('../lib/constants')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -1319,6 +1320,7 @@ class PearGUI extends ReadyResource {
     const gui = this
     this.ctx = ctx
     this.ipc = new IPC({
+      lock: constants.PLATFORM_LOCK,
       socketPath,
       connectTimeout,
       api: {
