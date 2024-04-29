@@ -17,7 +17,8 @@ module.exports = (ipc) => async function gc (args) {
     const [cmd] = _
     if (!cmd) throw new InputError('A <cmd> must be specified.')
     if (cmd !== 'sidecar') throw new InputError(`Command '${cmd}' is not valid`)
-    await output(json, ipc.gc({ pid: Bare.pid, cmd }))
+    const stream = ipc.gc({ pid: Bare.pid, cmd }, ipc)
+    await output(json, stream)
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
       print(err.message, false)
