@@ -161,15 +161,33 @@ if (process.isMainFrame) {
         const y = e.clientY
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
+
+      Pear.messages({ type: 'pear/setMinimize' }, (message) => {
+        this.setCtrl({ minimize: message.data })
+      })
+
+      Pear.messages({ type: 'pear/setMaximize' }, (message) => {
+        this.setCtrl({ maximize: message.data })
+      })
     }
 
     async setCtrl ({ maximize = true, minimize = true }) {
-      if (!maximize) {
+      if (maximize === true) {
+        const max = this.root.querySelector('#max')
+        max.style.display = 'inline'
+        if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: true })
+      }
+      if (maximize === false) {
         const max = this.root.querySelector('#max')
         max.style.display = 'none'
         if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: false })
       }
-      if (!minimize) {
+      if (minimize === true) {
+        const min = this.root.querySelector('#min')
+        min.style.display = 'inline'
+        if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: true })
+      }
+      if (minimize === false) {
         const min = this.root.querySelector('#min')
         min.style.display = 'none'
         if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: false })
