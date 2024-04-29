@@ -646,7 +646,8 @@
             if (type === 'permissionRequired') {
               const decalDialog = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
-              await ctrl.setCtrl({ maximize: false, minimize: false })
+              ctrl.setAttribute('data-minimize', 'false')
+              ctrl.setAttribute('data-maximize', 'false')
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(decalDialog)

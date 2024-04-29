@@ -125,6 +125,15 @@ if (process.isMainFrame) {
     #onblur = null
     #demax = null
 
+    static get observedAttributes () {
+      return ['data-minimize', 'data-maximize']
+    }
+
+    attributeChangedCallback (name) {
+      if (name.startsWith('data-') === false) return
+      this.#setCtrl({ maximize: strToBool(this.dataset.maximize), minimize: strToBool(this.dataset.minimize) })
+    }
+
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
@@ -142,6 +151,7 @@ if (process.isMainFrame) {
         }, { threshold: 0 })
 
         this.intesections.observe(this)
+        this.#setCtrl({ maximize: strToBool(this.dataset.maximize), minimize: strToBool(this.dataset.minimize) })
         return
       }
       const min = this.root.querySelector('#min')
@@ -163,15 +173,15 @@ if (process.isMainFrame) {
       })
 
       Pear.messages({ type: 'pear/setMinimize' }, (message) => {
-        this.setCtrl({ minimize: message.data })
+        this.dataset.minimize = message.data
       })
 
       Pear.messages({ type: 'pear/setMaximize' }, (message) => {
-        this.setCtrl({ maximize: message.data })
+        this.dataset.maximize = message.data
       })
     }
 
-    async setCtrl ({ maximize = true, minimize = true }) {
+    async #setCtrl ({ maximize = true, minimize = true } = {}) {
       if (maximize === true) {
         const max = this.root.querySelector('#max')
         max.style.display = 'inline'
@@ -390,6 +400,8 @@ if (process.isMainFrame) {
     }
   })
 }
+
+function strToBool (str) { return str === 'true' }
 
 // support for native addons triggering uncaughtExceptions
 // process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
