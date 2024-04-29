@@ -29,6 +29,6 @@ module.exports = (ipc) => async function gc (args) {
     }
     Bare.exit(1)
   } finally {
-    await ipc.close()
+    await ipc.shutdown()
   }
 }
