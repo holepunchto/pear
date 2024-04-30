@@ -1596,15 +1596,9 @@ class PearGUI extends ReadyResource {
 
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
 
-  setMinimizable ({ id, value }) {
-    this.message({ type: 'pear/setMinimize', data: value })
-    return this.get(id).setMinimizable(value)
-  }
+  setMinimizable ({ id, value }) { return this.get(id).setMinimizable(value) }
 
-  setMaximizable ({ id, value }) {
-    this.message({ type: 'pear/setMaximize', data: value })
-    return this.get(id).setMaximizable(value)
-  }
+  setMaximizable ({ id, value }) { return this.get(id).setMaximizable(value) }
 
   unloading ({ id }) {
     if (this._unloading) return this._unloading

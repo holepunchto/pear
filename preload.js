@@ -131,11 +131,11 @@ if (process.isMainFrame) {
 
     attributeChangedCallback (name) {
       if (name.startsWith('data-') === false) return
-      if (name.startsWith('data-minimize')) {
-        this.#setCtrl({ minimize: strToBool(this.dataset.minimize) })
+      if (name === 'data-minimizable') {
+        this.#setMinimizable(strToBool(this.dataset.minimizable))
       }
-      if (name.startsWith('data-maximize')) {
-        this.#setCtrl({ maximize: strToBool(this.dataset.maximize) })
+      if (name === 'data-maximizable') {
+        this.#setMaximizable(strToBool(this.dataset.maximizable))
       }
     }
 
@@ -156,7 +156,6 @@ if (process.isMainFrame) {
         }, { threshold: 0 })
 
         this.intesections.observe(this)
-        this.#setCtrl({ maximize: strToBool(this.dataset.maximize), minimize: strToBool(this.dataset.minimize) })
         return
       }
       const min = this.root.querySelector('#min')
@@ -177,33 +176,27 @@ if (process.isMainFrame) {
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
 
-      Pear.messages({ type: 'pear/setMinimize' }, (message) => {
-        this.dataset.minimize = message.data
-      })
-
-      Pear.messages({ type: 'pear/setMaximize' }, (message) => {
-        this.dataset.maximize = message.data
-      })
+      this.#setMinimizable(strToBool(this.dataset.minimizable))
+      this.#setMaximizable(strToBool(this.dataset.maximizable))
     }
 
-    async #setCtrl (opts = {}) {
-      if (opts.maximize === true) {
-        const max = this.root.querySelector('#max')
+    async #setMaximizable (value) {
+      const max = this.root.querySelector('#max')
+      if (value) {
         max.style.display = 'inline'
         if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: true })
-      }
-      if (opts.maximize === false) {
-        const max = this.root.querySelector('#max')
+      } else {
         max.style.display = 'none'
         if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: false })
       }
-      if (opts.minimize === true) {
-        const min = this.root.querySelector('#min')
+    }
+
+    async #setMinimizable (value) {
+      const min = this.root.querySelector('#min')
+      if (value) {
         min.style.display = 'inline'
         if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: true })
-      }
-      if (opts.minimize === false) {
-        const min = this.root.querySelector('#min')
+      } else {
         min.style.display = 'none'
         if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: false })
       }
