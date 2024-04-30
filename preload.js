@@ -176,29 +176,23 @@ if (process.isMainFrame) {
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
 
-      this.#setMinimizable(strToBool(this.dataset.minimizable))
-      this.#setMaximizable(strToBool(this.dataset.maximizable))
+      if (this.dataset.minimizable !== undefined) this.#setMinimizable(strToBool(this.dataset.minimizable))
+      if (this.dataset.maximizable !== undefined) this.#setMaximizable(strToBool(this.dataset.maximizable))
     }
 
     async #setMaximizable (value) {
-      const max = this.root.querySelector('#max')
-      if (value) {
-        max.style.display = 'inline'
-        if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: true })
+      if (!isMac) {
+        this.root.querySelector('#max').style.display = value ? 'inline' : 'none'
       } else {
-        max.style.display = 'none'
-        if (isMac) await gui.ipc.setMaximizable({ id: gui.id, value: false })
+        await gui.ipc.setMaximizable({ id: gui.id, value: !!value })
       }
     }
 
     async #setMinimizable (value) {
-      const min = this.root.querySelector('#min')
-      if (value) {
-        min.style.display = 'inline'
-        if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: true })
+      if (!isMac) {
+        this.root.querySelector('#min').style.display = value ? 'inline' : 'none'
       } else {
-        min.style.display = 'none'
-        if (isMac) await gui.ipc.setMinimizable({ id: gui.id, value: false })
+        await gui.ipc.setMinimizable({ id: gui.id, value: !!value })
       }
     }
 
