@@ -96,7 +96,6 @@
     "script-linker": "^2.5.2",
     "sodium-native": "^4.0.6",
     "streamx": "^2.16.1",
-    "text-decoder": "^1.1.0",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.7.13",
     "unix-path-resolve": "^1.0.2",
