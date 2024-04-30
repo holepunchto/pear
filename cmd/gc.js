@@ -25,10 +25,9 @@ module.exports = (ipc) => async function gc (args) {
       ipc.userData.usage.output('gc')
     } else {
       print('An error occured', false)
-      console.error(err)
     }
     Bare.exit(1)
   } finally {
-    await ipc.shutdown()
+    ipc.close()
   }
 }
