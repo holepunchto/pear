@@ -7,6 +7,7 @@ const path = require('path')
 const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
+const constants = require('../lib/constants')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -1132,14 +1133,6 @@ class Window extends GuiCtrl {
     return this.win.setSize(width, height)
   }
 
-  async setMinimizable (value) {
-    return this.win.setMinimizable(value)
-  }
-
-  async setMaximizable (value) {
-    return this.win.setMaximizable(value)
-  }
-
   async fullscreen () {
     if (this.isFullscreen()) return true
     const fullscreen = once(this.win, 'enter-full-screen')
@@ -1344,6 +1337,7 @@ class PearGUI extends ReadyResource {
     super()
     this.ctx = ctx
     this.ipc = new IPC({
+      lock: constants.PLATFORM_LOCK,
       socketPath,
       connectTimeout,
       api: {
@@ -1411,8 +1405,6 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
     electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
     electron.ipcMain.handle('setSize', (evt, ...args) => this.setSize(...args))
-    electron.ipcMain.handle('setMinimizable', (evt, ...args) => this.setMinimizable(...args))
-    electron.ipcMain.handle('setMaximizable', (evt, ...args) => this.setMaximizable(...args))
     electron.ipcMain.handle('trust', (evt, ...args) => this.trust(...args))
     electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
     electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
@@ -1595,10 +1587,6 @@ class PearGUI extends ReadyResource {
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
-
-  setMinimizable ({ id, value }) { return this.get(id).setMinimizable(value) }
-
-  setMaximizable ({ id, value }) { return this.get(id).setMaximizable(value) }
 
   unloading ({ id }) {
     if (this._unloading) return this._unloading
