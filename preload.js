@@ -126,7 +126,7 @@ if (process.isMainFrame) {
     #demax = null
 
     static get observedAttributes () {
-      return ['data-minimize', 'data-maximize']
+      return ['data-minimizable', 'data-maximizable']
     }
 
     attributeChangedCallback (name) {
