@@ -8,7 +8,7 @@ const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
-const constants = require('../constants')
+const constants = require('../lib/constants')
 
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
