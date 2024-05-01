@@ -9,6 +9,8 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
+const sodium = require('sodium-native')
+const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
@@ -19,7 +21,7 @@ class Helper extends IPC {
   constructor (opts = {}) {
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
-    const pipeId = Buffer.from(platformDir).toString('hex').substring(0, 64)
+    const pipeId = isWindows ? hashToHex(platformDir) : null
     const ipcId = 'pear'
 
     super({
@@ -178,6 +180,12 @@ class Helper extends IPC {
       fs.mkdirSync(bin, { recursive: true })
       fs.symlinkSync(current, path.join(bin, 'pear'))
     } catch { }
+  }
+
+  hashToHex (s) {
+    const buf = b4a.allocUnsafe(32)
+    sodium.crypto_generichash(buf, b4a.from(s))
+    return b4a.toString(buf, 'hex')
   }
 
   static Inspector = class extends ReadyResource {

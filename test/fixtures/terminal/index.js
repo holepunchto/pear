@@ -1,8 +1,8 @@
 /* global Pear */
-const { teardown } = Pear
 import bareInspector from 'bare-inspector'
 import { Inspector } from 'pear-inspect'
 import Pipe from 'bare-pipe'
+const { teardown } = Pear
 
 const stdout = new Pipe(1)
 stdout.unref()
@@ -15,4 +15,4 @@ stdout.write(`{ "tag": "inspector", "data": { "key": "${inspectorKey}" }}`)
 
 global.__PEAR_TEST__ = { inspector, inspectorKey }
 
-teardown(async() => await inspector.disable())
+teardown(async () => await inspector.disable())
