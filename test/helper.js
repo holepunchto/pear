@@ -186,12 +186,6 @@ class Helper extends IPC {
     } catch { }
   }
 
-  hashToHex (s) {
-    const buf = b4a.allocUnsafe(32)
-    sodium.crypto_generichash(buf, b4a.from(s))
-    return b4a.toString(buf, 'hex')
-  }
-
   static Inspector = class extends ReadyResource {
     #session = null
 
