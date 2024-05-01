@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, print, InputError } = require('./iface')
+const { outputter, InputError } = require('./iface')
 const parse = require('../lib/parse')
 
 const output = outputter('shift', {
@@ -12,30 +12,17 @@ const output = outputter('shift', {
 })
 
 module.exports = (ipc) => async function shift (cmd) {
-  try {
-    const { force, json } = cmd.flags
-    const src = cmd.args.source
-    const dst = cmd.args.destination
+  const { force, json } = cmd.flags
+  const src = cmd.args.source
+  const dst = cmd.args.destination
 
-    if (!src || parse.runkey(src).key === null) {
-      throw new InputError('A source application key must be specified.')
-    }
-
-    if (!dst || parse.runkey(dst).key === null) {
-      throw new InputError('A destination application key must be specified.')
-    }
-
-    await output(json, ipc.shift({ src, dst, force }))
-  } catch (err) {
-    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG' || err.code === 'ERR_EXISTS' || err.code === 'ERR_NOENT') {
-      print(err.message, false)
-      ipc.userData.usage.output('shift')
-    } else {
-      print('An error occured', false)
-      console.error(err)
-    }
-    Bare.exit(1)
-  } finally {
-    await ipc.close()
+  if (!src || parse.runkey(src).key === null) {
+    throw new InputError('A source application key must be specified.')
   }
+
+  if (!dst || parse.runkey(dst).key === null) {
+    throw new InputError('A destination application key must be specified.')
+  }
+
+  await output(json, ipc.shift({ src, dst, force }))
 }
