@@ -1,6 +1,6 @@
 'use strict'
 const parse = require('../lib/parse')
-const { outputter, print } = require('./iface')
+const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 
@@ -36,30 +36,22 @@ const output = outputter('info', {
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  try {
-    const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
-    const isKey = parse.runkey(cmd.args.link).key !== null
-    const channel = isKey ? null : cmd.args.link
-    const key = isKey ? cmd.args.link : null
-    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
-    let dir = cmd.args.dir || os.cwd()
-    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
+  const isKey = parse.runkey(cmd.args.link).key !== null
+  const channel = isKey ? null : cmd.args.link
+  const key = isKey ? cmd.args.link : null
+  if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
+  let dir = cmd.args.dir || os.cwd()
+  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 
-    await output(json, ipc.info({
-      key,
-      channel,
-      dir,
-      showKey,
-      keys,
-      metadata,
-      changelog,
-      full
-    }))
-  } catch (err) {
-    ipc.userData.usage.output('info', false)
-    print(err.message, false)
-    Bare.exit(1)
-  } finally {
-    await ipc.close()
-  }
+  await output(json, ipc.info({
+    key,
+    channel,
+    dir,
+    showKey,
+    keys,
+    metadata,
+    changelog,
+    full
+  }))
 }

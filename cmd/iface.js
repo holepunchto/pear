@@ -3,6 +3,7 @@ const { once } = require('bare-events')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
+const { CHECKOUT } = require('../lib/constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
@@ -286,4 +287,81 @@ class Loading {
   }
 }
 
-module.exports = { stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, InputError, Loading }
+const banner = `${ansi.bold('Pear')} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
+const version = `${CHECKOUT.fork || 0}.${CHECKOUT.length || 'dev'}.${CHECKOUT.key}`
+const header = `  ${banner}
+  ${ansi.pear + ' '}${ansi.bold(ansi.gray('v' + version))}
+`
+const urls = ansi.link('https://pears.com', 'pears.com') + ' | ' + ansi.link('https://holepunch.to', 'holepunch.to') + ' | ' + ansi.link('https://keet.io', 'keet.io')
+
+const footer = {
+  overview: `  ${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n  Run ${ansi.bold('pear help')} to output full help for all commands\n  For command help: ${ansi.bold('pear help [cmd]')} or ${ansi.bold('pear [cmd] -h')}\n
+${ansi.pear + ' '}${version}\n${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}`,
+  help: `${ansi.pear + ' '}${version}
+${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}
+  `
+}
+
+const descriptions = {
+  release: `Set production release version.
+
+Set the release pointer against a version (default latest).
+
+Use this to indicate production release points.`,
+
+  stage: `Channel name must be specified on first stage,
+in order to generate the initial key.
+
+Outputs diff information and project key.`,
+
+  run: `${ansi.bold('link')}   pear://<key> | pear://<alias>
+${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>`,
+
+  seed: `Specify channel or key to seed a project.
+
+Specify a remote key to reseed.`,
+
+  info: `Supply a key or channel to view application information.
+
+Supply no argument to view platform information.`,
+
+  sidecar: `The Pear Sidecar is a local-running HTTP and IPC server which
+provides access to corestores.
+
+This command instructs any existing sidecar process to shutdown
+and then becomes the sidecar.`,
+
+  dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`
+
+}
+
+const usage = { header, version, banner, descriptions, footer }
+
+async function trust ({ ipc, key, message }) {
+  const sure = ansi.cross + ' Key pear://' + key?.z32 + ' is not known\n\nBe sure that software is trusted before running it\n\nType "TRUST" to allow execution or anything else to exit\n\n'
+  const prompt = interact(sure, [
+    {
+      name: 'trust',
+      default: '',
+      prompt: 'Trust application',
+      delim: '?',
+      validation: (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST'),
+      msg: ansi.cross + ' uppercase TRUST to confirm'
+    }
+  ])
+  const result = await prompt.run()
+  if (result.fields.trust === 'TRUST') {
+    await ipc.trust(key)
+    print('\n' + ansi.tick + ' pear://' + key?.z32 + ' is now trusted\n')
+    print('Use pear run again to execute trusted application\n')
+    await ipc.close()
+    Bare.exit()
+  } else {
+    print('')
+    print(message + '\n', false)
+    await ipc.close()
+    Bare.exit(1)
+  }
+}
+
+module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, InputError, Loading }

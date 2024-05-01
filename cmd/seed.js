@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parse = require('../lib/parse')
-const { outputter, print, ansi, InputError } = require('./iface')
+const { outputter, ansi } = require('./iface')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -18,30 +18,15 @@ const output = outputter('seed', {
 
 module.exports = (ipc) => async function seed (cmd) {
   const { json, verbose, seeders } = cmd.flags
-  try {
-    const { dir = os.cwd() } = cmd.args
-    const isKey = parse.runkey(cmd.args.channel).key !== null
-    const channel = isKey ? null : cmd.args.channel
-    const link = isKey ? cmd.args.channel : null
-    let { name } = cmd.flags
-    if (!name && !link) {
-      const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
-      name = pkg.pear?.name || pkg.name
-    }
-    const id = Bare.pid
-    await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, clientArgv: Bare.argv }))
-  } catch (err) {
-    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
-      if (json) {
-        print(JSON.stringify({ cmd: 'seed', type: 'error', message: err.message, stack: err.stack, code: err.code }))
-      } else {
-        print(err.message, false)
-        ipc.userData.usage.output('seed')
-      }
-    } else {
-      print('An error occured', false)
-      console.error(err)
-    }
-    Bare.exit(1)
+  const { dir = os.cwd() } = cmd.args
+  const isKey = parse.runkey(cmd.args.channel).key !== null
+  const channel = isKey ? null : cmd.args.channel
+  const link = isKey ? cmd.args.channel : null
+  let { name } = cmd.flags
+  if (!name && !link) {
+    const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
+    name = pkg.pear?.name || pkg.name
   }
+  const id = Bare.pid
+  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, clientArgv: Bare.argv }))
 }

@@ -1,7 +1,7 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi, print, InputError } = require('./iface')
+const { outputter, ansi, InputError } = require('./iface')
 const parse = require('../lib/parse')
 
 let blocks = 0
@@ -24,26 +24,13 @@ const output = outputter('stage', {
 })
 
 module.exports = (ipc) => async function stage (cmd) {
-  try {
-    const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
-    const isKey = cmd.args.channel && parse.runkey(cmd.args.channel).key !== null
-    const channel = isKey ? null : cmd.args.channel
-    const key = isKey ? cmd.args.channel : null
-    if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
-    let  { dir = os.cwd() } = cmd.args
-    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-    const id = Bare.pid
-    await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
-  } catch (err) {
-    if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {
-      print(err.message, false)
-      ipc.userData.usage.output('stage')
-    } else {
-      print('An error occured', false)
-      console.error(err)
-    }
-    Bare.exit(1)
-  } finally {
-    await ipc.close()
-  }
+  const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
+  const isKey = cmd.args.channel && parse.runkey(cmd.args.channel).key !== null
+  const channel = isKey ? null : cmd.args.channel
+  const key = isKey ? cmd.args.channel : null
+  if (!channel && !key) throw new InputError('A key or the channel name must be specified.')
+  let { dir = os.cwd() } = cmd.args
+  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+  const id = Bare.pid
+  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
 }

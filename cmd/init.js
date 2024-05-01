@@ -3,10 +3,8 @@ const os = require('bare-os')
 const { access, writeFile, mkdir, readFile } = require('bare-fs/promises')
 const { extname, basename, resolve } = require('bare-path')
 const { ansi, print, interact } = require('./iface')
-const constants = require('../lib/constants')
 
 module.exports = (ipc) => async function init (cmd) {
-  const { banner } = require('./usage')(constants.CHECKOUT)
   const cwd = os.cwd()
 
   const { yes, force, type = 'desktop', with: w } = cmd.flags
@@ -42,6 +40,7 @@ module.exports = (ipc) => async function init (cmd) {
 
   const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
   const extra = cfg.gui || null
+  const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
 
   let header = `\n${banner}${ansi.dim('›')}\n\n`
   if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
@@ -189,52 +188,46 @@ console.log(await versions())
     url: 'npm:bare-node-url'
   }
 
-  try {
-    const prompt = interact(header, params, type)
-    const { result, fields } = await prompt.run({ autosubmit: yes })
-    result.scripts = scripts
-    if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
-    if (type === 'terminal' && w === 'node') result.dependencies = nodeDependecies
-    const created = pkg === null ? [pkgPath] : []
-    const refusals = []
-    const entryPath = resolve(dir, fields.main)
-    const appPath = resolve(dir, 'app.js')
-    const testDir = resolve(dir, 'test')
-    const testPath = resolve(testDir, 'index.test.js')
-    const isDesktop = fields.type === 'desktop'
+  const prompt = interact(header, params, type)
+  const { result, fields } = await prompt.run({ autosubmit: yes })
+  result.scripts = scripts
+  if (fields.type === 'desktop' && extra !== null) result.pear.gui = { ...extra, ...result.pear.gui }
+  if (type === 'terminal' && w === 'node') result.dependencies = nodeDependecies
+  const created = pkg === null ? [pkgPath] : []
+  const refusals = []
+  const entryPath = resolve(dir, fields.main)
+  const appPath = resolve(dir, 'app.js')
+  const testDir = resolve(dir, 'test')
+  const testPath = resolve(testDir, 'index.test.js')
+  const isDesktop = fields.type === 'desktop'
 
-    if (force || await exists(entryPath) === false) {
-      await writeFile(entryPath, isDesktop ? desktopEntry : terminalEntry)
-      created.push(entryPath)
-    } else {
-      refusals.push(entryPath)
-    }
-    if (isDesktop) {
-      if (force || await exists(appPath) === false) {
-        await writeFile(appPath, appJs)
-        created.push(appPath)
-      } else {
-        refusals.push(appPath)
-      }
-      if (force || await exists(testPath) === false) {
-        await mkdir(testDir, { recursive: true })
-        await writeFile(testPath, test)
-        created.push(testPath)
-      } else {
-        refusals.push(testPath)
-      }
-    }
-
-    const final = JSON.stringify({ ...result, ...diff }, 0, 2)
-    await writeFile(pkgPath, final)
-    print(`\n ${final.split('\n').join('\n ')}\n`)
-    if (created.length > 0) print(`${ansi.bold('Created')}:-\n\n  * ${created.join('\n  * ')}\n`)
-    if (refusals.length) print(`${ansi.bold('Refusing to overwrite')}:-\n${ansi.dim('  Can be overriden with --force.\n')}\n  * ${refusals.join('\n  * ')}\n`)
-    if (pkg) print(`${ansi.bold('Updated')}: ${pkgPath}\n`)
-    Bare.exit()
-  } catch (err) {
-    print(err.stack, false)
-  } finally {
-    await ipc.close()
+  if (force || await exists(entryPath) === false) {
+    await writeFile(entryPath, isDesktop ? desktopEntry : terminalEntry)
+    created.push(entryPath)
+  } else {
+    refusals.push(entryPath)
   }
+  if (isDesktop) {
+    if (force || await exists(appPath) === false) {
+      await writeFile(appPath, appJs)
+      created.push(appPath)
+    } else {
+      refusals.push(appPath)
+    }
+    if (force || await exists(testPath) === false) {
+      await mkdir(testDir, { recursive: true })
+      await writeFile(testPath, test)
+      created.push(testPath)
+    } else {
+      refusals.push(testPath)
+    }
+  }
+
+  const final = JSON.stringify({ ...result, ...diff }, 0, 2)
+  await writeFile(pkgPath, final)
+  print(`\n ${final.split('\n').join('\n ')}\n`)
+  if (created.length > 0) print(`${ansi.bold('Created')}:-\n\n  * ${created.join('\n  * ')}\n`)
+  if (refusals.length) print(`${ansi.bold('Refusing to overwrite')}:-\n${ansi.dim('  Can be overriden with --force.\n')}\n  * ${refusals.join('\n  * ')}\n`)
+  if (pkg) print(`${ansi.bold('Updated')}: ${pkgPath}\n`)
+  Bare.exit()
 }
