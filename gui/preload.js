@@ -5,6 +5,7 @@ const { EventEmitter } = require('events')
 const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
+const Worker = require('../lib/worker')
 
 module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, ctx }) {
@@ -28,6 +29,7 @@ module.exports = class PearGUI extends ReadyResource {
       constructor (ipc, ctx, onteardown) {
         super(ipc, ctx, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
+        this.worker = new Worker({ ipc })
         this.media = {
           status: {
             microphone: () => ipc.getMediaAccessStatus({ id, media: 'microphone' }),
@@ -279,6 +281,27 @@ class IPC {
     electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+  workerRun (link) {
+    const id = electron.ipcRenderer.sendSync('workerPipeId')
+    electron.ipcRenderer.send('workerRun', link)
+    const stream = new streamx.Duplex({
+      write (data, cb) {
+        electron.ipcRenderer.send('workerPipeWrite', id, data)
+        cb()
+      }
+    })
+    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
+      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
+    })
+    electron.ipcRenderer.on('workerClose', () => { stream.destroy() })
+    stream.once('close', () => {
+      electron.ipcRenderer.send('workerPipeClose', id)
+    })
+
+    electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
   }
 
