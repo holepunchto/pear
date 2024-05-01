@@ -57,6 +57,7 @@
   "dependencies": {
     "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
+    "b4a": "^1.6.6",
     "bare-bundle": "^1.0.0",
     "bare-env": "^2.1.0",
     "bare-events": "^2.2.0",
