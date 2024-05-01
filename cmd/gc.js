@@ -14,10 +14,10 @@ module.exports = (ipc) => async function gc (args) {
       boolean: ['json']
     })
     const { _, json } = flags
-    const [cmd] = _
-    if (!cmd) throw new InputError('A <cmd> must be specified.')
-    if (cmd !== 'sidecar') throw new InputError(`Command '${cmd}' is not valid`)
-    const stream = ipc.gc({ pid: Bare.pid, cmd }, ipc)
+    const [resource] = _
+    if (!resource) throw new InputError('A <cmd> must be specified.')
+    if (resource !== 'sidecar') throw new InputError(`Resource '${resource}' is not valid`)
+    const stream = ipc.gc({ pid: Bare.pid, resource }, ipc)
     await output(json, stream)
   } catch (err) {
     if (err instanceof InputError || err.code === 'ERR_INVALID_FLAG') {

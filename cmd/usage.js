@@ -179,7 +179,7 @@ module.exports = ({ fork, length, key }) => {
   `
 
   const gc = ansi.bold(cmd + ' gc')
-  const gcArgs = ansi.bold('<sidecar>')
+  const gcArgs = ansi.bold('<resource>')
   const gcBrief = 'Garbage Collection. Remove unused resources.'
   const gcExplain = `${gc} ${gcArgs}
 
