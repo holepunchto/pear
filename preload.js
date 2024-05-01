@@ -156,6 +156,7 @@ if (process.isMainFrame) {
         }, { threshold: 0 })
 
         this.intesections.observe(this)
+        this.#setCtrl()
         return
       }
       const min = this.root.querySelector('#min')
@@ -176,6 +177,10 @@ if (process.isMainFrame) {
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
 
+      this.#setCtrl()
+    }
+
+    async #setCtrl () {
       if (this.dataset.minimizable !== undefined) this.#setMinimizable(strToBool(this.dataset.minimizable))
       if (this.dataset.maximizable !== undefined) this.#setMaximizable(strToBool(this.dataset.maximizable))
     }
