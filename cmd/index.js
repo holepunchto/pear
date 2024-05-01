@@ -8,6 +8,7 @@ const dump = require('./dump')
 const shift = require('./shift')
 const sidecar = require('./sidecar')
 const run = require('./run')
+const gc = require('./gc')
 const parse = require('../lib/parse')
 const { CHECKOUT } = require('../lib/constants')
 
@@ -238,6 +239,7 @@ module.exports = async (ipc) => {
   cmd.add('build', build)
   cmd.add('shift', shift(ipc))
   cmd.add('sidecar', (args) => sidecar(ipc)(args))
+  cmd.add('gc', (args) => gc(ipc)(args))
 
   await cmd.run(argv)
 
