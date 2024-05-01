@@ -4,7 +4,7 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
-const CHECKOUT = require('./checkout')
+const CHECKOUT = require('../checkout')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
@@ -12,8 +12,6 @@ const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 const url = module.url || electronModuleURL()
 const mount = new URL('.', url)
 
-const CHECKOUT = require('../checkout')
-const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 const LOCALDEV = CHECKOUT.length === null
 const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mount
 const swapPath = toPath(swapURL)
