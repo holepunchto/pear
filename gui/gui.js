@@ -1393,6 +1393,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
     electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
+    electron.ipcMain.handle('setMinimizable', (evt, ...args) => this.setMinimizable(...args))
+    electron.ipcMain.handle('setMaximizable', (evt, ...args) => this.setMaximizable(...args))
     electron.ipcMain.handle('fullscreen ', (evt, ...args) => this.fullscreen(...args))
     electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
     electron.ipcMain.handle('focus', (evt, ...args) => this.focus(...args))
@@ -1563,6 +1565,10 @@ class PearGUI extends ReadyResource {
   minimize ({ id }) { return this.get(id).minimize() }
 
   maximize ({ id }) { return this.get(id).maximize() }
+
+  setMinimizable ({ id, value }) { return this.get(id).setMinimizable(value) }
+
+  setMaximizable ({ id, value }) { return this.get(id).setMaximizable(value) }
 
   fullscreen ({ id }) { return this.get(id).fullscreen() }
 
