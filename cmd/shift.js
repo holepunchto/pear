@@ -1,6 +1,7 @@
 'use strict'
-const { outputter, InputError } = require('./iface')
+const { outputter } = require('./iface')
 const parse = require('../lib/parse')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const output = outputter('shift', {
   moving: ({ src, dst, force }) => `Moving user application storage\n\nFrom: ${src}\nTo: ${dst}\n${force ? '\nForce flag used, overwriting existing application storage.' : ''}`,
@@ -17,11 +18,11 @@ module.exports = (ipc) => async function shift (cmd) {
   const dst = cmd.args.destination
 
   if (!src || parse.runkey(src).key === null) {
-    throw new InputError('A source application key must be specified.')
+    throw new ERR_INVALID_INPUT('A source application key must be specified.')
   }
 
   if (!dst || parse.runkey(dst).key === null) {
-    throw new InputError('A destination application key must be specified.')
+    throw new ERR_INVALID_INPUT('A destination application key must be specified.')
   }
 
   await output(json, ipc.shift({ src, dst, force }))

@@ -4,7 +4,7 @@ const { access, writeFile, mkdir, readFile } = require('bare-fs/promises')
 const { extname, basename, resolve } = require('bare-path')
 const { ansi, print, interact } = require('./iface')
 
-module.exports = (ipc) => async function init (cmd) {
+module.exports = () => async function init (cmd) {
   const cwd = os.cwd()
 
   const { yes, force, type = 'desktop', with: w } = cmd.flags
