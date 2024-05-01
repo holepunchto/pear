@@ -7,7 +7,7 @@ const { outputter, ansi } = require('./iface')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
-  key: (info) => `-o-:-\n    pear://${info}\n...`,
+  key: (info) => `---:\n pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
   'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
