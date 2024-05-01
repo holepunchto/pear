@@ -3,6 +3,7 @@ const parse = require('../lib/parse')
 const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -40,7 +41,7 @@ module.exports = (ipc) => async function info (cmd) {
   const isKey = parse.runkey(cmd.args.link).key !== null
   const channel = isKey ? null : cmd.args.link
   const key = isKey ? cmd.args.link : null
-  if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
+  if (key && isKey === false) throw new ERR_INVALID_INPUT('Key "' + key + '" is not valid')
   let dir = cmd.args.dir || os.cwd()
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 

@@ -3,8 +3,9 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { fileURLToPath } = require('url-file-url')
-const { outputter, trust, InputError, stdio } = require('./iface')
+const { outputter, trust, stdio } = require('./iface')
 const parse = require('../lib/parse')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -24,7 +25,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     key = parse.runkey(cmd.args.link).key
 
     if (key !== null && cmd.args.link.startsWith('pear://') === false) {
-      throw new InputError('Key must start with pear://')
+      throw new ERR_INVALID_INPUT('Key must start with pear://')
     }
 
     const cwd = os.cwd()
@@ -36,7 +37,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       try {
         JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
       } catch (err) {
-        throw new InputError(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+        throw new ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
 

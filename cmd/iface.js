@@ -86,9 +86,6 @@ const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
       if (tag === 'diff') diff(data)
       if (tag === 'byte-diff') byteDiff(data)
     }
-  } catch (err) {
-    if (err.sidecarCode === 'ERR_BARE_CORE') print(err.message, -1)
-    else if (err.code === 'E_MUX_REMOTE') throw (err.remote || err)
   } finally {
     if (error) throw error // eslint-disable-line no-unsafe-finally
   }
@@ -203,14 +200,6 @@ class Interact {
 
 const interact = (header, params, type) => {
   return new Interact(header, params, type)
-}
-
-class InputError extends Error {
-  code = 'ERR_INPUT'
-  constructor (message, { showUsage = true } = {}) {
-    super(message)
-    this.showUsage = showUsage
-  }
 }
 
 class Loading {
@@ -364,4 +353,4 @@ async function trust ({ ipc, key, message }) {
   }
 }
 
-module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, InputError, Loading }
+module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, Loading }
