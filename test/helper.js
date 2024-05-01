@@ -21,12 +21,16 @@ class Helper extends IPC {
   constructor (opts = {}) {
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
-    const pipeId = isWindows ? hashToHex(platformDir) : null
     const ipcId = 'pear'
+    const pipeId = (s) => {
+      const buf = b4a.allocUnsafe(32)
+      sodium.crypto_generichash(buf, b4a.from(s))
+      return b4a.toString(buf, 'hex')
+    }
 
     super({
       lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
-      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId}` : `${platformDir}/${ipcId}.sock`,
+      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId(platformDir)}` : `${platformDir}/${ipcId}.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
         ? true
