@@ -19,12 +19,12 @@ class Helper extends IPC {
   constructor (opts = {}) {
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
-    const pipeId = platformDir.replace(/:/g, '').replace(/[/\\]/g, '-').toLowerCase()
+    const pipeId = Buffer.from(platformDir).toString('hex').substring(0, 64)
     const ipcId = 'pear'
 
     super({
       lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
-      socketPath: isWindows ? `\\\\.\\pipe\\${pipeId}-${ipcId}` : `${platformDir}/${ipcId}.sock`,
+      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId}` : `${platformDir}/${ipcId}.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
         ? true
