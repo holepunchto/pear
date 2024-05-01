@@ -7,7 +7,9 @@ const path = require('path')
 const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
+const Worker = require('../lib/worker')
 const constants = require('../lib/constants')
+
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -1352,6 +1354,8 @@ class PearGUI extends ReadyResource {
       },
       connect: tryboot
     })
+    this.worker = new Worker()
+    this.pipes = new Freelist()
     this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('id', async (event) => {
@@ -1418,18 +1422,50 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
 
+    electron.ipcMain.on('workerRun', (evt, link) => {
+      const pipe = this.worker.run(link)
+      const id = this.pipes.alloc(pipe)
+      pipe.on('close', () => {
+        this.pipes.free(id)
+        evt.reply('workerPipeClose')
+      })
+      pipe.on('data', (data) => { evt.reply('workerPipeData', data) })
+      pipe.on('end', () => { evt.reply('workerPipeData', null) })
+      pipe.on('error', (err) => { evt.reply('pipeError', err.stack) })
+    })
+
+    electron.ipcMain.on('workerPipeId', (evt) => {
+      evt.returnValue = this.pipes.nextId()
+      return evt.returnValue
+    })
+
+    electron.ipcMain.on('workerPipeClose', (evt, id) => {
+      const pipe = this.pipes.from(id)
+      if (!pipe) return
+      pipe.destroy()
+    })
+
+    electron.ipcMain.on('workerPipeWrite', (evt, id, data) => {
+      const pipe = this.pipes.from(id)
+      if (!pipe) {
+        console.error('Unexpected workerPipe error (unknown id)')
+        return
+      }
+      pipe.write(data)
+    })
+
     // DEPRECATED - assess to remove from Sep 2024
-    electron.ipcMain.on('preferences', (event) => {
+    electron.ipcMain.on('preferences', (evt) => {
       const preferences = this.preferences()
-      preferences.on('data', (data) => event.reply('preferences', data))
-      preferences.on('end', () => event.reply('preferences', null))
+      preferences.on('data', (data) => evt.reply('preferences', data))
+      preferences.on('end', () => evt.reply('preferences', null))
     })
     electron.ipcMain.handle('setPreference', (evt, ...args) => this.setPreference(...args))
     electron.ipcMain.handle('getPreference', (evt, ...args) => this.getPreference(...args))
-    electron.ipcMain.on('iteratePreferences', (event) => {
+    electron.ipcMain.on('iteratePreferences', (evt) => {
       const iteratePreferences = this.iteratePreferences()
-      iteratePreferences.on('data', (data) => event.reply('iteratePreferences', data))
-      iteratePreferences.on('end', () => event.reply('iteratePreferences', null))
+      iteratePreferences.on('data', (data) => evt.reply('iteratePreferences', data))
+      iteratePreferences.on('end', () => evt.reply('iteratePreferences', null))
     })
   }
 
@@ -1651,6 +1687,41 @@ class PearGUI extends ReadyResource {
   setPreference (key, value) { return this.ipc.setPreference({ key, value }) }
   async getPreference (key) { return this.ipc.getPreference({ key }) }
   iteratePreference () { return this.ipc.iteratePreference() }
+}
+
+class Freelist {
+  alloced = []
+  freed = []
+
+  nextId () {
+    return this.freed.length === 0 ? this.alloced.length : this.freed[this.freed.length - 1]
+  }
+
+  alloc (item) {
+    const id = this.freed.length === 0 ? this.alloced.push(null) - 1 : this.freed.pop()
+    this.alloced[id] = item
+    return id
+  }
+
+  free (id) {
+    this.freed.push(id)
+    this.alloced[id] = null
+  }
+
+  from (id) {
+    return id < this.alloced.length ? this.alloced[id] : null
+  }
+
+  emptied () {
+    return this.freed.length === this.alloced.length
+  }
+
+  * [Symbol.iterator] () {
+    for (const item of this.alloced) {
+      if (item === null) continue
+      yield item
+    }
+  }
 }
 
 module.exports = PearGUI

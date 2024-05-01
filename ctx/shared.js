@@ -32,6 +32,7 @@ module.exports = class Context {
     ctx.options = pkg?.pear || pkg?.holepunch || {}
     ctx.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
     ctx.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(ctx.main) ? 'terminal' : 'desktop')
+    ctx.links = pkg?.pear?.links || null
     ctx.dependencies = [
       ...(pkg?.dependencies ? Object.keys(pkg.dependencies) : []),
       ...(pkg?.devDependencies ? Object.keys(pkg.devDependencies) : []),
@@ -61,9 +62,9 @@ module.exports = class Context {
   }
 
   static configFrom (ctx) {
-    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
+    const { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {
