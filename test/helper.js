@@ -9,6 +9,8 @@ const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
+const sodium = require('sodium-native')
+const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
@@ -19,10 +21,16 @@ class Helper extends IPC {
   constructor (opts = {}) {
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
+    const ipcId = 'pear'
+    const pipeId = (s) => {
+      const buf = b4a.allocUnsafe(32)
+      sodium.crypto_generichash(buf, b4a.from(s))
+      return b4a.toString(buf, 'hex')
+    }
 
     super({
       lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
-      socketPath: isWindows ? '\\\\.\\pipe\\pear' : `${platformDir}/pear.sock`,
+      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId(platformDir)}` : `${platformDir}/${ipcId}.sock`,
       connectTimeout: 20_000,
       connect: opts.expectSidecar
         ? true

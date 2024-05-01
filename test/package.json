@@ -14,6 +14,7 @@
   "keywords": [],
   "author": "Holepunch",
   "dependencies": {
+    "b4a": "^1.6.6",
     "bare-fs": "^2.1.2",
     "bare-module": "^3.1.2",
     "bare-os": "^2.1.2",
