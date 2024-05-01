@@ -3,8 +3,10 @@ const { print, outputter, InputError } = require('./iface')
 const parse = require('../lib/parse')
 
 const output = outputter('gc', {
-  kill: ({ pid }) => `Killed sidecar with pid: ${pid}`,
-  complete: ({ killed }) => { return killed.length > 0 ? `Total killed sidecars: ${killed.length}` : 'No running sidecars' },
+  remove: ({ resource, id }) => `Removed ${resource} '${id}'`,
+  complete: ({ resource, count }) => {
+    return count > 0 ? `Total ${resource}s removed: ${count}` : `No ${resource}s removed`
+  },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
@@ -16,7 +18,7 @@ module.exports = (ipc) => async function gc (args) {
     const { _, json } = flags
     const [resource] = _
     if (!resource) throw new InputError('A <cmd> must be specified.')
-    if (resource !== 'sidecar') throw new InputError(`Resource '${resource}' is not valid`)
+    if (resource !== 'release' && resource !== 'sidecar') throw new InputError(`Resource '${resource}' is not valid`)
     const stream = ipc.gc({ pid: Bare.pid, resource }, ipc)
     await output(json, stream)
   } catch (err) {
