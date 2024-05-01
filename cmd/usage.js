@@ -178,6 +178,16 @@ module.exports = ({ fork, length, key }) => {
     --json        Single JSON object
   `
 
+  const gc = ansi.bold(cmd + ' gc')
+  const gcArgs = ansi.bold('<resource>')
+  const gcBrief = 'Garbage Collection. Remove unused resources.'
+  const gcExplain = `${gc} ${gcArgs}
+
+    ${gcBrief}
+
+    --json     Newline delimited JSON output
+  `
+
   const help = ansi.bold(cmd + ' help')
   const helpArgs = ansi.bold('[cmd]')
   const helpBrief = `${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n    Run ${ansi.bold('pear help')} to output full help for all commands`
@@ -220,6 +230,7 @@ module.exports = ({ fork, length, key }) => {
     seed: seedExplain,
     shift: shiftExplain,
     sidecar: sidecarExplain,
+    gc: gcExplain,
     help: helpExplain,
     output,
     outputVersions,
@@ -235,6 +246,7 @@ module.exports = ({ fork, length, key }) => {
     ${shift} ${ansi.sep} ${dedot(shiftBrief)}
     ${sidecar} ${ansi.sep} ${dedot(sidecarBrief)}
     ${versions} ${ansi.sep} ${dedot(versionsBrief)}
+    ${gc} ${ansi.sep} ${dedot(gcBrief)}
 
     ${helpExplain}
 ${footer}`,
@@ -249,6 +261,7 @@ ${footer}`,
     ${shiftExplain}
     ${sidecarExplain}
     ${versionsExplain}
+    ${gcExplain}
     ${helpExplain}
 ${footer}`
   }
