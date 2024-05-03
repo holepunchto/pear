@@ -145,16 +145,10 @@ module.exports = async (ipc) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    description(usage.descriptions.gc),
-    command('release',
-      summary('Clear inactive releases'),
-      flag('--json', 'Newline delimited JSON output'),
-      (cmd) => runners.gc.release({ ipc, cmd })),
-    command('sidecar',
-      summary('Clear running sidecars'),
-      flag('--json', 'Newline delimited JSON output'),
-      (cmd) => runners.gc.sidecar({ ipc, cmd })),
-    () => { console.log(gc.overview()) }
+    command('release', summary('Clear inactive releases'), (cmd) => runners.gc(ipc).release(cmd)),
+    command('sidecar', summary('Clear running sidecars'), (cmd) => runners.gc(ipc).sidecar(cmd)),
+    flag('--json', 'Newline delimited JSON output'),
+    () => { console.log(gc.help()) }
   )
 
   const versions = command(

@@ -7,16 +7,19 @@ const output = outputter('gc', {
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
-async function release ({ ipc, cmd }) {
-  const { json } = cmd.flags
-  const stream = ipc.gc({ pid: Bare.pid, resource: cmd.command.name }, ipc)
-  await output(json, stream)
+module.exports = (ipc) => {
+  return {
+    release: async (cmd) => {
+      const { command } = cmd
+      const { json } = command.parent.flags
+      const stream = ipc.gc({ pid: Bare.pid, resource: command.name }, ipc)
+      await output(json, stream)
+    },
+    sidecar: async (cmd) => {
+      const { command } = cmd
+      const { json } = command.parent.flags
+      const stream = ipc.gc({ pid: Bare.pid, resource: command.name }, ipc)
+      await output(json, stream)
+    }
+  }
 }
-
-async function sidecar ({ ipc, cmd }) {
-  const { json } = cmd.flags
-  const stream = ipc.gc({ pid: Bare.pid, resource: cmd.command.name }, ipc)
-  await output(json, stream)
-}
-
-module.exports = { release, sidecar }
