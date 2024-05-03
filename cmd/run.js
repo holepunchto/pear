@@ -40,9 +40,8 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
         throw new ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
       }
     }
-
     const args = Bare.argv.slice(2)
-    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, ipc, key, args, dir, storage: store, detached }))
+    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, appArgs: cmd.rest, ipc, key, args, dir, storage: store, detached }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
     await trust({ ipc, key, message: err.message })

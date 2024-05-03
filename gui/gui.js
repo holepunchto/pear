@@ -476,9 +476,6 @@ class App {
     const { ctx } = this
 
     this.starting = this.ipc.start({
-      argv: ctx.argv,
-      env: ctx.env,
-      cwd: ctx.cwd,
       startId: ctx.startId
     })
 
@@ -967,7 +964,7 @@ class Window extends GuiCtrl {
       this.appkin = null
     }
     const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
     session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
@@ -1233,7 +1230,7 @@ class View extends GuiCtrl {
       this.appkin = null
     }
     const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
     session.setUserAgent(ua)
 
     this.view = new BrowserView({

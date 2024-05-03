@@ -22,7 +22,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
 
   Bare.argv.push('--spindown-timeout=2147483647')
   Bare.argv.push('--runtime', RUNTIME)
-  if (cmd.args.versbose === false) Bare.argv.push('--verbose')
+  if (cmd.args.verbose === false) Bare.argv.push('--verbose')
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
@@ -30,7 +30,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print(ansi.gray('Version: ' + JSON.stringify(CHECKOUT, 0, 4).slice(0, -1) + '  }'), 0)
   if (restarts.length > 0) {
     print('Restart Commands:', 0)
-    for (const { id = null, cwd, argv, clientArgv = [] } of restarts) {
+    for (const { id = null, dir, argv, clientArgv = [] } of restarts) {
       if (id !== null) continue
       const cmdsig = clientArgv.length ? clientArgv.slice(2) : argv
       if (cmdsig === argv) {
@@ -44,7 +44,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
         } else if (devix > -1) {
           cmdsig[devix] = 'dev'
           if (cmdsig[devix + 1][0] !== '/' && cmdsig[devix + 1][0] !== '.') {
-            cmdsig.splice(devix + 1, 0, cwd)
+            cmdsig.splice(devix + 1, 0, dir)
           }
           const insix = cmdsig.indexOf('--inspector-port')
           cmdsig.splice(insix, 2)
@@ -53,7 +53,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
       const swapix = cmdsig.indexOf('--swap')
       if (swapix > -1) cmdsig.splice(swapix, 2)
       stdio.out.write('  ')
-      if (cmdsig[0] === 'seed' && cmdsig.some(([ch]) => ch === '/' || ch === '.') === false) cmdsig[cmdsig.length] = cwd
+      if (cmdsig[0] === 'seed' && cmdsig.some(([ch]) => ch === '/' || ch === '.') === false) cmdsig[cmdsig.length] = dir
       print(ansi.gray('pear ' + cmdsig.join(' ')), 0)
     }
   }
