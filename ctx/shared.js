@@ -6,7 +6,7 @@ const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
 const unixPathResolve = require('unix-path-resolve')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
@@ -86,7 +86,7 @@ module.exports = class Context {
     }
 
     const pkgPath = path.join(dir, 'package.json')
-    const { data: linkData = null, alias = null, key = null } = link ? parse.runkey(link) : {}
+    const { data: linkData = null, alias = null, key = null } = link ? parseLink(link) : {}
     let pkg = null
     if (key === null) {
       try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }

@@ -1,5 +1,5 @@
 'use strict'
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
@@ -38,7 +38,7 @@ const output = outputter('info', {
 
 module.exports = (ipc) => async function info (cmd) {
   const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
-  const isKey = parse.runkey(cmd.args.link).key !== null
+  const isKey = parseLink(cmd.args.link).key !== null
   const channel = isKey ? null : cmd.args.link
   const key = isKey ? cmd.args.link : null
   if (key && isKey === false) throw new ERR_INVALID_INPUT('Key "' + key + '" is not valid')
