@@ -320,6 +320,8 @@ provides access to corestores.
 This command instructs any existing sidecar process to shutdown
 and then becomes the sidecar.`,
 
+  gc: 'Specify a subcommand to clear any dangling resources.',
+
   dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`
 
 }
