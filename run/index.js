@@ -10,7 +10,7 @@ const Context = require('../ctx/shared')
 const { ERR_INVALID_APPLING, ERR_PERMISSION_REQUIRED } = require('../lib/errors')
 const API = isBare ? require('../lib/api') : null
 
-module.exports = async function run ({ ipc, args, link, key, storage, detached, dir, flags }) {
+module.exports = async function run ({ ipc, args, link, key, storage, detached, dir, flags, appArgs }) {
   const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, storage, appdev: key === null && dir })
@@ -50,7 +50,7 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
     return stream
   }
 
-  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link })
+  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs })
 
   if (bail && args.indexOf('--detach') === -1) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')

@@ -19,7 +19,7 @@ const validateAppName = (name) => {
 module.exports = class Context {
   env = null
   channel = null
-  argv = null
+  args = null
   checkpoint = null
   #onupdate = null
   runtime = RUNTIME
@@ -73,7 +73,7 @@ module.exports = class Context {
   }
 
   constructor (params = {}) {
-    const { sidecar, link, id = null, argv = null, env = ENV, dir = CWD, clientArgv, onupdate = () => {}, flags } = params
+    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, clientArgv, onupdate = () => {}, flags } = params
     const {
       startId, appling, channel, devtools, checkout,
       dev, run, stage, trace, updates, updatesDiff,
@@ -98,7 +98,7 @@ module.exports = class Context {
     this.startId = startId || null
     this.sidecar = sidecar
     this.store = store
-    this.argv = argv
+    this.args = args
     this.appling = appling
     this.channel = channel || null
     this.checkout = checkout
