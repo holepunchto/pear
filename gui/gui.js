@@ -495,6 +495,7 @@ class App {
       const { dev, devtools, trace, stage } = ctx
       const show = (!trace && (dev || !stage))
       const unfilteredGuiOptions = ctx.options.gui || ctx.options
+
       const guiOptions = {
         autoresize: unfilteredGuiOptions.autoresize,
         backgroundColor: unfilteredGuiOptions.backgroundColor,
@@ -1547,13 +1548,13 @@ class PearGUI extends ReadyResource {
     return instance
   }
 
-  getMediaAccessStatus ({ mediaType }) {
-    return electron.systemPreferences.getMediaAccessStatus(mediaType)
+  getMediaAccessStatus ({ media }) {
+    return electron.systemPreferences.getMediaAccessStatus(media)
   }
 
-  async askForMediaAccess (mediaType, client) {
-    if (mediaType === 'screen') return !!(await client.ctx.top.getMediaSourceId())
-    return electron.systemPreferences.askForMediaAccess(mediaType)
+  async askForMediaAccess ({ id, media }) {
+    if (media === 'screen') return !!(await this.get(id).getMediaSourceId())
+    return electron.systemPreferences.askForMediaAccess(media)
   }
 
   desktopSources (params) {
