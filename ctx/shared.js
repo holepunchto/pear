@@ -18,7 +18,6 @@ const validateAppName = (name) => {
 
 module.exports = class Context {
   env = null
-  cwd = null
   channel = null
   argv = null
   checkpoint = null
@@ -63,9 +62,9 @@ module.exports = class Context {
   }
 
   static configFrom (ctx) {
-    const { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {

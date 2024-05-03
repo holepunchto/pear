@@ -1,20 +1,25 @@
 'use strict'
 const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
+const { command } = require('paparam')
 const Context = require('./ctx/shared')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
+const runsig = require('./run/sig')
+
+const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 
 configureElectron()
 crasher('electron-main', SWAP)
-electronMain().catch(console.error)
-async function electronMain () {
+const run = command('run', ...runsig, electronMain)
+run.parse(argv)
+
+async function electronMain (cmd) {
   const ctx = new Context({
-    argv: (process.argv.length > 1 && process.argv[1][0] === '-')
-      ? process.argv.slice(1)
-      : process.argv.slice(2)
+    link: cmd.args.link,
+    flags: cmd.flags
   })
   Context.storage(ctx)
   if (ctx.error) {

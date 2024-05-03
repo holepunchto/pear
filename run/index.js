@@ -7,17 +7,11 @@ const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
 const { Readable } = require('streamx')
 const constants = require('../lib/constants')
 const Context = require('../ctx/shared')
-const { ERR_INVALID_APPLING, ERR_PERMISSION_REQUIRED } = require('./errors')
+const { ERR_INVALID_APPLING, ERR_PERMISSION_REQUIRED } = require('../lib/errors')
 const API = isBare ? require('../lib/api') : null
 
 module.exports = async function run ({ ipc, args, link, key, storage, detached, dir, flags }) {
-  const stream = new Readable({ 
-    objectMode: true,
-    _destroy (cb) { 
-      console.log('hi?')
-      cb(null)
-    }
-   })
+  const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, storage, appdev: key === null && dir })
 
@@ -108,7 +102,7 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
     })
     child.once('exit', (code) => {
       stream.push({ tag: 'exit', data: { code } })
-      stream.push(null)
+      stream.destroy()
       ipc.close()
     })
     if (!detach) {
@@ -127,7 +121,7 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
     }
   }
 
-  if (global.Pear) global.Pear.teardown(() => stream.push(null)))
+  if (global.Pear) global.Pear.teardown(() => stream.destroy())
 
   return stream
 }
