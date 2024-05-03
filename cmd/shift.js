@@ -1,6 +1,6 @@
 'use strict'
 const { outputter } = require('./iface')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const output = outputter('shift', {
@@ -17,11 +17,11 @@ module.exports = (ipc) => async function shift (cmd) {
   const src = cmd.args.source
   const dst = cmd.args.destination
 
-  if (!src || parse.runkey(src).key === null) {
+  if (!src || parseLink(src).key === null) {
     throw new ERR_INVALID_INPUT('A source application key must be specified.')
   }
 
-  if (!dst || parse.runkey(dst).key === null) {
+  if (!dst || parseLink(dst).key === null) {
     throw new ERR_INVALID_INPUT('A destination application key must be specified.')
   }
 

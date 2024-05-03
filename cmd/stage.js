@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { ERR_INPUT } = require('../lib/errors')
 
 let blocks = 0
@@ -26,7 +26,7 @@ const output = outputter('stage', {
 
 module.exports = (ipc) => async function stage (cmd) {
   const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
-  const isKey = cmd.args.channel && parse.runkey(cmd.args.channel).key !== null
+  const isKey = cmd.args.channel && parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
   if (!channel && !key) throw new ERR_INPUT('A key or the channel name must be specified.')

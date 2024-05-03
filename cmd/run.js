@@ -4,7 +4,7 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const { fileURLToPath } = require('url-file-url')
 const { outputter, trust, stdio } = require('./iface')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const output = outputter('run', {
@@ -22,7 +22,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
     if (devrun && !cmd.args.link) cmd.args.link = '.'
 
-    key = parse.runkey(cmd.args.link).key
+    key = parseLink(cmd.args.link).key
 
     if (key !== null && cmd.args.link.startsWith('pear://') === false) {
       throw new ERR_INVALID_INPUT('Key must start with pear://')

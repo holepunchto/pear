@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../lib/errors')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 
 const output = outputter('release', {
   releasing: ({ name, channel }) => `\n${ansi.pear} Releasing ${name} [ ${channel} ]\n`,
@@ -14,7 +14,7 @@ const output = outputter('release', {
 
 module.exports = (ipc) => async function release (cmd) {
   const { checkout, name, json } = cmd.flags
-  const isKey = parse.runkey(cmd.args.channel).key !== null
+  const isKey = parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
   if (!channel && !key) throw new ERR_INVALID_INPUT('A key or the channel name must be specified.')

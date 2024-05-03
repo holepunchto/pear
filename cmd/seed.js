@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
-const parse = require('../lib/parse')
+const parseLink = require('../run/parse-link')
 const { outputter, ansi } = require('./iface')
 
 const output = outputter('seed', {
@@ -19,7 +19,7 @@ const output = outputter('seed', {
 module.exports = (ipc) => async function seed (cmd) {
   const { json, verbose, seeders } = cmd.flags
   const { dir = os.cwd() } = cmd.args
-  const isKey = parse.runkey(cmd.args.channel).key !== null
+  const isKey = parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
   let { name } = cmd.flags
