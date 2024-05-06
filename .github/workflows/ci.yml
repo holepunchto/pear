@@ -38,7 +38,7 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Bootstrap
-      run: npm run bootstrap pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
+      run: npm run bootstrap
     - name: Run tests
       run: npm test
     - name: Lint
