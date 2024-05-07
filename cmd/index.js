@@ -184,7 +184,8 @@ module.exports = async (ipc) => {
   )
 
   const program = cmd.parse(Bare.argv.slice(1))
-  program.running.finally(() => { ipc.close() })
+  if (program) program.running.finally(() => { ipc.close() })
+  else ipc.close()
 
   function explain (bail) {
     if (bail.err) {
@@ -196,8 +197,11 @@ module.exports = async (ipc) => {
         Bare.exit(1)
       }
     }
+    const reason = bail.reason === 'UNKNOWN_FLAG'
+      ? 'Unrecognized Flag: --' + bail.flag.name
+      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument: index:' + bail.arg.index + ' value:' + bail.arg.value : bail.reason)
 
-    print(bail.reason, false)
+    print(reason, false)
     print('\n' + bail.command.usage())
   }
 

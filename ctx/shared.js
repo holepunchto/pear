@@ -15,6 +15,12 @@ const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
 }
+const readPkg = (pkgPath) => {
+  let pkg = null
+  try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }
+  if (pkg) pkg = JSON.parse(pkg) // we want to know if this throws, so no catch
+  return pkg
+}
 
 module.exports = class Context {
   env = null
@@ -47,7 +53,7 @@ module.exports = class Context {
 
   static storage (ctx) {
     if (!ctx.key && !ctx.name) { // uninited local case
-      this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
+      this.injestPackage(ctx, readPkg(path.join(ctx.dir, 'package.json')))
       return
     }
     const { previewFor } = ctx.options    
@@ -85,13 +91,9 @@ module.exports = class Context {
       env.NODE_ENV = NODE_ENV
     }
 
-    const pkgPath = path.join(dir, 'package.json')
     const { data: linkData = null, alias = null, key = null } = link ? parseLink(link) : {}
-    let pkg = null
-    if (key === null) {
-      try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }
-      if (pkg) pkg = JSON.parse(pkg) // we want to know if this throws, so no catch
-    }
+    const pkgPath = path.join(dir, 'package.json')
+    const pkg = key === null ? readPkg(pkgPath) : null
 
     const store = flags['tmp-store'] ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate

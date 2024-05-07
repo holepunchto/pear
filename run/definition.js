@@ -20,5 +20,6 @@ module.exports = [
   hiddenFlag('--detach'),
   hiddenFlag('--trace <n>'),
   hiddenFlag('--swap <path>'),
-  hiddenFlag('--start-id <id>')
+  hiddenFlag('--start-id <id>'),
+  hiddenFlag('--no-sandbox') // electron passthrough
 ]
