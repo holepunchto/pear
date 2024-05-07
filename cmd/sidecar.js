@@ -22,7 +22,8 @@ module.exports = (ipc) => async function sidecar (cmd) {
 
   Bare.argv.push('--spindown-timeout=2147483647')
   Bare.argv.push('--runtime', RUNTIME)
-  if (cmd.args.verbose === false) Bare.argv.push('--verbose')
+
+  if (!cmd.args.verbose) Bare.argv.push('--verbose')
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')

@@ -11,6 +11,9 @@ const runDefinition = require('./run/definition')
 
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 
+const runix = argv.indexOf('--run')
+if (runix > -1) argv.splice(runix, 1)
+
 configureElectron()
 crasher('electron-main', SWAP)
 const run = command('run', ...runDefinition, electronMain)
