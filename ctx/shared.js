@@ -3,6 +3,7 @@ const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
+const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey } = require('hypercore-crypto')
 
 const parse = require('../lib/parse')
@@ -47,8 +48,12 @@ module.exports = class Context {
       this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
       return
     }
-    const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex')] : ['by-name', validateAppName(ctx.name)])
+    const { previewFor } = ctx.options    
+    const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
+    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (ctx.key ? discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex') : null)
+    const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', dkey] : ['by-name', validateAppName(ctx.name)])
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
+
     if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
       const err = new Error('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
       err.code = 'ERR_INVALID_APPLICATION_STORAGE'
