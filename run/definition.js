@@ -19,5 +19,6 @@ module.exports = [
   flag('--detached', 'Wakeup existing app or run detached'),
   hiddenFlag('--detach'),
   hiddenFlag('--trace <n>'),
+  hiddenFlag('--swap <path>'),
   hiddenFlag('--start-id <id>')
 ]
