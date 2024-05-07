@@ -94,7 +94,7 @@ module.exports = async (ipc) => {
     'run',
     summary('Run an application from a key or dir'),
     description(usage.descriptions.run),
-    ...require('../run/sig'),
+    ...require('../run/definition'),
     runners.run(ipc)
   )
 

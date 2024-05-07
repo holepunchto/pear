@@ -18,5 +18,6 @@ module.exports = [
   flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
   flag('--detached', 'Wakeup existing app or run detached'),
   hiddenFlag('--detach'),
+  hiddenFlag('--trace <n>'),
   hiddenFlag('--start-id <id>')
 ]
