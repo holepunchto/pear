@@ -1,20 +1,55 @@
 'use strict'
-const { isBare, isMac } = require('which-runtime')
-const Module = isBare ? require('bare-module') : null
-const fsp = isBare ? require('bare-fs/promises') : require('fs/promises')
-const ENV = isBare ? require('bare-env') : process.env
-const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
+const Module = require('bare-module')
+const os = require('bare-os')
+const fs = require('bare-fs')
+const path = require('bare-path')
+const fsp = require('bare-fs/promises')
+const ENV = require('bare-env')
+const { spawn } = require('bare-subprocess')
 const { Readable } = require('streamx')
+const { fileURLToPath } = require('url-file-url')
+const { isMac } = require('which-runtime')
 const constants = require('../lib/constants')
 const Context = require('../ctx/shared')
-const { ERR_INVALID_APPLING, ERR_PERMISSION_REQUIRED } = require('../lib/errors')
-const API = isBare ? require('../lib/api') : null
+const API = require('../lib/api')
+const {
+  ERR_INVALID_APPLING,
+  ERR_PERMISSION_REQUIRED,
+  ERR_INVALID_INPUT
+} = require('../lib/errors')
+const parseLink = require('./parse-link')
 
-module.exports = async function run ({ ipc, args, link, key, storage, detached, dir, flags, appArgs }) {
+module.exports = async function run ({ ipc, args, link, storage, detached, flags, appArgs }) {
+  let dir = null
+  let rel = null
+  let key = null
+
+  key = parseLink(link).key
+
+  if (key !== null && link.startsWith('pear://') === false) {
+    throw new ERR_INVALID_INPUT('Key must start with pear://')
+  }
+
+  const cwd = os.cwd()
+  dir = key === null ? (link.startsWith('file:') ? fileURLToPath(link) : link) : cwd
+  if (path.isAbsolute(dir) === false) {
+    rel = dir
+    dir = path.resolve(cwd, dir)
+  }
+
+  if (dir !== cwd) os.chdir(dir)
+
+  if (key === null) {
+    try {
+      JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
+    } catch (err) {
+      throw new ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+    }
+  }
+
   const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, storage, appdev: key === null && dir })
-
     if (wokeup) {
       ipc.close().catch(console.error)
       return stream
@@ -25,6 +60,10 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
 
     if (!appling) {
       args.unshift('run', '--detach')
+      if (rel) {
+        const ix = args.indexOf(rel)
+        if (ix > -1) args[ix] = dir
+      }
       spawn(constants.RUNTIME, args, opts).unref()
       ipc.close().catch(console.error)
       return stream
@@ -39,7 +78,7 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
       throw ERR_INVALID_APPLING('Appling does not exist')
     }
 
-    if (args[0].startsWith('pear://runtime')) {
+    if (link.startsWith('pear://runtime')) {
       args = [constants.BOOT, '--appling', appling, '--run', ...args]
       spawn(constants.DESKTOP_RUNTIME, args).unref()
     } else {
@@ -102,7 +141,6 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
     })
     child.once('exit', (code) => {
       stream.push({ tag: 'exit', data: { code } })
-      stream.destroy()
       ipc.close()
     })
     if (!detach) {
@@ -121,7 +159,7 @@ module.exports = async function run ({ ipc, args, link, key, storage, detached, 
     }
   }
 
-  if (global.Pear) global.Pear.teardown(() => stream.destroy())
+  if (global.Pear) global.Pear.teardown(() => ipc.close())
 
   return stream
 }

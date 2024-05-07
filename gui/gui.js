@@ -476,7 +476,12 @@ class App {
     const { ctx } = this
 
     this.starting = this.ipc.start({
-      startId: ctx.startId
+      startId: ctx.startId,
+      args: ctx.args,
+      flags: ctx.flags,
+      env: ctx.env,
+      dir: ctx.dir,
+      link: ctx.link
     })
 
     this.starting.catch(async (err) => {
