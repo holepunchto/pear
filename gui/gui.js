@@ -476,12 +476,12 @@ class App {
     const { state } = this
 
     this.starting = this.ipc.start({
-      startId: state.startId,
-      args: state.args,
-      flags: state.flags,
-      env: state.env,
-      dir: state.dir,
-      link: state.link
+      startId: ctx.startId,
+      args: ctx.args,
+      flags: ctx.flags,
+      env: ctx.env,
+      dir: ctx.dir,
+      link: ctx.link
     })
 
     this.starting.catch(async (err) => {
@@ -499,7 +499,7 @@ class App {
 
       const { dev, devtools, trace, stage } = state
       const show = (!trace && (dev || !stage))
-      const unfilteredGuiOptions = state.options.gui || state.options
+      const unfilteredGuiOptions = ctx.options.gui || ctx.options
 
       const guiOptions = {
         autoresize: unfilteredGuiOptions.autoresize,
@@ -981,8 +981,8 @@ class Window extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.state.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
+    const ua = `Pear ${this.ctx.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
     session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
@@ -1246,8 +1246,8 @@ class View extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.state.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
+    const ua = `Pear ${this.ctx.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
     session.setUserAgent(ua)
 
     this.view = new BrowserView({

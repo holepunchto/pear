@@ -12,9 +12,9 @@ if (process.isMainFrame) {
   const API = require('./lib/api')
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
-  const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
-  const { parentWcId, env, id, decalled = false, isDecal = false, ...config } = state
-  const dir = config.dir
+  const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
+  const { parentWcId, env, dir, id, decalled = false, isDecal = false, ...config } = ctx
+
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   state.config = config

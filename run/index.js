@@ -9,14 +9,14 @@ const { spawn } = require('bare-subprocess')
 const { Readable } = require('streamx')
 const { fileURLToPath } = require('url-file-url')
 const { isMac } = require('which-runtime')
-const constants = require('../constants')
-const State = require('../state')
+const constants = require('../lib/constants')
+const Context = require('../ctx/shared')
 const API = require('../lib/api')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
-} = require('../errors')
+} = require('../lib/errors')
 const parseLink = require('./parse-link')
 
 module.exports = async function run ({ ipc, args, link, storage, detached, flags, appArgs }) {
@@ -27,7 +27,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   key = parseLink(link).key
 
   if (key !== null && link.startsWith('pear://') === false) {
-    throw ERR_INVALID_INPUT('Key must start with pear://')
+    throw new ERR_INVALID_INPUT('Key must start with pear://')
   }
 
   const cwd = os.cwd()
@@ -43,7 +43,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
     try {
       JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
     } catch (err) {
-      throw ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+      throw new ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
     }
   }
 
@@ -88,7 +88,9 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
     ipc.close().catch(console.error)
     return stream
   }
+
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs })
+
   if (bail && args.indexOf('--detach') === -1) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
     err.key = key
@@ -96,19 +98,19 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   }
 
   if (type === 'terminal') {
-    const state = new State({ flags, link, dir })
+    const ctx = new Context({ argv: args, flags, link })
 
-    state.update({ host, id })
+    ctx.update({ host, id })
 
-    if (state.error) {
-      console.error(state.error)
+    if (ctx.error) {
+      console.error(ctx.error)
       global.process?.exit(1) || global.Bare.exit(1)
     }
 
     await ipc.ready()
-    state.update({ config: await ipc.config() })
+    ctx.update({ config: await ipc.config() })
 
-    const pear = new API(ipc, state)
+    const pear = new API(ipc, ctx)
     global.Pear = pear
 
     const protocol = new Module.Protocol({

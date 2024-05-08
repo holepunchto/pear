@@ -12,7 +12,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
 
   print('Sidecar has shutdown', true)
 
-  const { CHECKOUT, RUNTIME } = require('../constants')
+  const { CHECKOUT, RUNTIME } = require('../lib/constants')
   const KEY = CHECKOUT.key
 
   print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)

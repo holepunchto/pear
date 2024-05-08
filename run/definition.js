@@ -4,7 +4,7 @@ const { flag, hiddenFlag, arg, rest } = require('paparam')
 module.exports = [
   arg('<link|dir>', 'Pear link, alias or directory to run app from'),
   rest('[...app-args]', 'Application arguments'),
-  flag('--dev|-d', 'Enable --devtools & --updates-diff'),
+  flag('--dev', 'Enable --devtools & --updates-diff'),
   flag('--devtools', 'Open devtools with application [Desktop]'),
   flag('--updates-diff', 'Enable diff computation for Pear.updates'),
   flag('--no-updates', 'Disable updates firing via Pear.updates'),

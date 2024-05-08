@@ -2,11 +2,11 @@
 const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const { command } = require('paparam')
-const State = require('./state')
+const Context = require('./ctx/shared')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
 const runDefinition = require('./run/definition')
 
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
@@ -20,7 +20,7 @@ const run = command('run', ...runDefinition, electronMain)
 run.parse(argv)
 
 async function electronMain (cmd) {
-  const state = new State({
+  const ctx = new Context({
     link: cmd.args.link,
     flags: cmd.flags
   })

@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
-const { ERR_INVALID_INPUT } = require('../errors')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 const parseLink = require('../run/parse-link')
 
 const output = outputter('release', {
@@ -17,13 +17,13 @@ module.exports = (ipc) => async function release (cmd) {
   const { checkout, name, json } = cmd.flags
   const isKey = parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
-  const link = isKey ? cmd.args.channel : null
-  if (!channel && !link) throw ERR_INVALID_INPUT('A valid pear link or the channel name must be specified.')
+  const key = isKey ? cmd.args.channel : null
+  if (!channel && !key) throw new ERR_INVALID_INPUT('A key or the channel name must be specified.')
   let dir = cmd.args.dir || os.cwd()
   if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
   if (checkout !== undefined && Number.isInteger(+checkout) === false) {
-    throw ERR_INVALID_INPUT('--checkout flag must supply an integer if set')
+    throw new ERR_INVALID_INPUT('--checkout flag must supply an integer if set')
   }
   const id = Bare.pid
-  await output(json, ipc.release({ id, name, channel, link, checkout, dir }))
+  await output(json, ipc.release({ id, name, channel, key, checkout, dir }))
 }

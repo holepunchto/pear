@@ -48,7 +48,5 @@ const run = (cmd, args, opts) => {
     }
   }
   const store = path.join(os.tmpdir(), 'pear-test')
-  const args = ['run', '--store', store, 'test']
-  if (verbose) args.push('--verbose')
-  await run(pear, args, { stdio: 'inherit', shell: isWindows })
+  await run(pear, ['run', '--store', store, 'test'], { stdio: 'inherit', shell: isWindows })
 })()
