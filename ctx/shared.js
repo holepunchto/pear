@@ -1,25 +1,31 @@
 'use strict'
-const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
+const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
-const { discoveryKey } = require('hypercore-crypto')
-
-const parse = require('../lib/parse')
+const unixPathResolve = require('unix-path-resolve')
+const { discoveryKey, randomBytes } = require('hypercore-crypto')
+const parseLink = require('../run/parse-link')
+const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
-const { ERR_INVALID_APP_NAME, ERR_INVALID_APPLICATION_STORAGE } = require('../lib/errors')
+const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('../lib/errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
 }
+const readPkg = (pkgPath) => {
+  let pkg = null
+  try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }
+  if (pkg) pkg = JSON.parse(pkg) // we want to know if this throws, so no catch
+  return pkg
+}
 
 module.exports = class Context {
   env = null
-  cwd = null
   channel = null
-  argv = null
+  args = null
   checkpoint = null
   #onupdate = null
   runtime = RUNTIME
@@ -47,7 +53,7 @@ module.exports = class Context {
 
   static storage (ctx) {
     if (!ctx.key && !ctx.name) { // uninited local case
-      this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
+      this.injestPackage(ctx, readPkg(path.join(ctx.dir, 'package.json')))
       return
     }
     const { previewFor } = ctx.options    
@@ -57,14 +63,14 @@ module.exports = class Context {
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
 
     if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
-      throw ERR_INVALID_APPLICATION_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
+      throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
     }
   }
 
   static configFrom (ctx) {
-    const { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {
@@ -72,26 +78,36 @@ module.exports = class Context {
     this.#onupdate()
   }
 
-  constructor ({ sidecar, id = null, argv = [], env = ENV, cwd = CWD, clientArgv, onupdate = () => {} } = {}) {
+  constructor (params = {}) {
+    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, clientArgv, onupdate = () => {}, flags } = params
     const {
-      startId, store, appling, flags, channel, devtools,
-      checkout, run, stage, trace, key, link, updates,
-      alias, local, dir, appArgs, pkg, pkgPath, updatesDiff,
+      startId, appling, channel, devtools, checkout,
+      dev, run, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
-    } = parse.argv(argv, env, cwd)
+    } = flags
 
+    if (flags.stage || flags.run) {
+      const { NODE_ENV = 'production' } = env
+      env.NODE_ENV = NODE_ENV
+    }
+
+    const { data: linkData = null, alias = null, key = null } = link ? parseLink(link) : {}
+    const pkgPath = path.join(dir, 'package.json')
+    const pkg = key === null ? readPkg(pkgPath) : null
+
+    const store = flags['tmp-store'] ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
     this.sidecar = sidecar
     this.store = store
-    this.argv = argv
+    this.args = args
     this.appling = appling
     this.channel = channel || null
     this.checkout = checkout
-    this.cwd = cwd
+    this.dir = dir
     this.env = { ...env }
     this.flags = flags
-    this.dev = key === null
+    this.dev = dev
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff
@@ -99,14 +115,11 @@ module.exports = class Context {
     this.stage = stage
     this.trace = trace
     this.link = link
-    if (this.link && !this.link.startsWith('pear:')) this.link = 'pear://' + this.link
-    this.linkData = parse.runkey(this.link).data
+    this.linkData = linkData
     this.key = key
     this.alias = alias
-    this.local = local
     this.dir = dir
     this.manifest = pkg
-    this.args = appArgs
     this.clientArgv = clientArgv
     this.pkgPath = pkgPath
     this.id = id
