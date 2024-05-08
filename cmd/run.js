@@ -12,14 +12,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   try {
     const { json, detached, store } = cmd.flags
 
-    if (devrun && !cmd.args.link) {
-      cmd.args.link = '.'
-      Bare.argv.push('.')
-    }
+    if (devrun && !cmd.args.link) cmd.args.link = '.'
 
     const args = Bare.argv.slice(2)
-    const appArgs = cmd.rest || []
-    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
+    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, appArgs: cmd.rest, ipc, args, storage: store, detached }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
     await trust({ ipc, key: err.key, message: err.message })

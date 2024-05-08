@@ -1,16 +1,20 @@
 'use strict'
-const init = require('./init')
-const stage = require('./stage')
-const seed = require('./seed')
-const release = require('./release')
-const info = require('./info')
-const dump = require('./dump')
-const shift = require('./shift')
-const sidecar = require('./sidecar')
-const run = require('./run')
-const gc = require('./gc')
-const parse = require('../lib/parse')
-const { CHECKOUT } = require('../lib/constants')
+const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
+const { usage, print } = require('./iface')
+const errors = require('../lib/errors')
+const runners = {
+  init: require('./init'),
+  stage: require('./stage'),
+  seed: require('./seed'),
+  release: require('./release'),
+  info: require('./info'),
+  dump: require('./dump'),
+  shift: require('./shift'),
+  sidecar: require('./sidecar'),
+  gc: require('./gc'),
+  run: require('./run'),
+  versions: require('./versions')
+}
 
 module.exports = async (ipc) => {
   Bare.prependListener('exit', () => { ipc.close() })
@@ -70,7 +74,7 @@ module.exports = async (ipc) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--bare|-b', 'File data only, no warmup optimization'),
-    flag('--ignore <list>', 'Comma separated file path ignore list'),
+    flag('--ignore', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name', 'Advanced. Override app name'),
     runners.stage(ipc)
@@ -141,15 +145,15 @@ module.exports = async (ipc) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('release', summary('Clear inactive releases'), (cmd) => runners.gc(ipc).release(cmd)),
-    command('sidecar', summary('Clear running sidecars'), (cmd) => runners.gc(ipc).sidecar(cmd)),
+    description('Resource may be: sidecar'),
+    arg('<resource>', 'Resource type to garbage collect'),
     flag('--json', 'Newline delimited JSON output'),
-    () => { console.log(gc.help()) }
+    runners.gc(ipc)
   )
 
   const versions = command(
     'versions',
-    summary('View dependency versions'),
+    summary('View version information'),
     flag('--json', 'JSON output'),
     runners.versions(ipc)
   )
@@ -160,7 +164,6 @@ module.exports = async (ipc) => {
   })
 
   const cmd = command('pear',
-    flag('-v', 'Output version'),
     header(usage.header),
     init,
     dev,
@@ -177,27 +180,8 @@ module.exports = async (ipc) => {
     help,
     footer(usage.footer),
     bail(explain),
-    pear
+    () => { console.log(cmd.overview()) }
   )
-
-  function pear ({ flags }) {
-    if (flags.v) {
-      if (flags.json) {
-        console.log(JSON.stringify(CHECKOUT))
-        return
-      }
-      let { key, fork, length } = CHECKOUT
-      key += ''
-      fork += ''
-      length += ''
-      let v = 'Key' + ' '.repeat(key.length) + 'Fork' + ' '.repeat(fork.length) + 'Length' + ' '.repeat(length.length) + '\n'
-      v += key + '   ' + fork + '    ' + length
-      console.log(v)
-
-      return
-    }
-    console.log(cmd.overview())
-  }
 
   const program = cmd.parse(Bare.argv.slice(1))
   if (program) program.running.finally(() => { ipc.close() })
@@ -220,34 +204,6 @@ module.exports = async (ipc) => {
     print(reason, false)
     print('\n' + bail.command.usage())
   }
-
-  const cmd = new Cmd(usage.output, () => { ipc.close() })
-  cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
-  cmd.add('versions', (args) => {
-    usage.outputVersions(args.includes('--json'))
-    ipc.close()
-  })
-  cmd.add('init', init(ipc))
-  cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
-  cmd.add('stage', stage(ipc))
-  cmd.add('seed', seed(ipc))
-  cmd.add('release', release(ipc))
-  cmd.add('run', launch)
-  cmd.add('launch', launch) // launch is legacy alias for run
-  cmd.add('info', info(ipc))
-  cmd.add('dump', dump(ipc))
-  cmd.add('build', build)
-  cmd.add('shift', shift(ipc))
-  cmd.add('sidecar', (args) => sidecar(ipc)(args))
-  cmd.add('gc', (args) => gc(ipc)(args))
-
-  await cmd.run(argv)
-
-  function launch (args) {
-    return run(ipc)(args)
-  }
-
-  function build () { throw new Error('Not Implemented: build') }
 
   return ipc
 }

@@ -3,7 +3,7 @@ const { once } = require('bare-events')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
-const { CHECKOUT } = require('../constants')
+const { CHECKOUT } = require('../lib/constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
@@ -86,9 +86,6 @@ const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
       if (tag === 'diff') diff(data)
       if (tag === 'byte-diff') byteDiff(data)
     }
-  } catch (err) {
-    if (err.sidecarCode === 'ERR_BARE_CORE') print(err.message, -1)
-    else if (err.code === 'E_MUX_REMOTE') throw (err.remote || err)
   } finally {
     if (error) throw error // eslint-disable-line no-unsafe-finally
   }
