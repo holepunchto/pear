@@ -13,7 +13,7 @@ if (process.isMainFrame) {
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
-  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = ctx
+  const { parentWcId, env, dir, id, decalled = false, isDecal = false, ...config } = ctx
 
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
@@ -23,7 +23,7 @@ if (process.isMainFrame) {
 
   if (isDecal === false) {
     Object.assign(process.env, env)
-    process.chdir(cwd)
+    process.chdir(dir)
   }
 
   {
