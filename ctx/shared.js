@@ -3,6 +3,7 @@ const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../lib/constants')
 const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const path = isBare ? require('bare-path') : require('path')
+const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey } = require('hypercore-crypto')
 
 const parse = require('../lib/parse')
@@ -31,6 +32,7 @@ module.exports = class Context {
     ctx.options = pkg?.pear || pkg?.holepunch || {}
     ctx.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
     ctx.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(ctx.main) ? 'terminal' : 'desktop')
+    ctx.links = pkg?.pear?.links || null
     ctx.dependencies = [
       ...(pkg?.dependencies ? Object.keys(pkg.dependencies) : []),
       ...(pkg?.devDependencies ? Object.keys(pkg.devDependencies) : []),
@@ -48,17 +50,21 @@ module.exports = class Context {
       this.injestPackage(ctx, require(path.join(ctx.dir, 'package.json')))
       return
     }
-    const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex')] : ['by-name', validateAppName(ctx.name)])
+    const { previewFor } = ctx.options    
+    const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
+    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (ctx.key ? discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex') : null)
+    const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', dkey] : ['by-name', validateAppName(ctx.name)])
     ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
+
     if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
       throw ERR_INVALID_APPLICATION_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
     }
   }
 
   static configFrom (ctx) {
-    const { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
+    const { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
     const pearDir = PLATFORM_DIR
-    return { id, key, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, cwd, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {
