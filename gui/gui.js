@@ -1131,6 +1131,16 @@ class Window extends GuiCtrl {
     return result
   }
 
+  async setMinimizable (value) {
+    const result = this.win.setMinimizable(value)
+    return result
+  }
+
+  async setMaximizable (value) {
+    const result = this.win.setMaximizable(value)
+    return result
+  }
+
   async setSize (width, height) {
     return this.win.setSize(width, height)
   }
