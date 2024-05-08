@@ -543,7 +543,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channl: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
