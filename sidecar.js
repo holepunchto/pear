@@ -21,7 +21,7 @@ const gunk = require('./gunk')
 const verbose = Bare.argv.includes('--verbose')
 crasher('sidecar', SWAP)
 module.exports = bootSidecar().then(() => {
-  if (verbose) console.log('- Sidecar booted')
+  if (Bare.argv.includes('--verbose')) console.log('- Sidecar booted')
 }).catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
