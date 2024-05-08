@@ -33,6 +33,7 @@
         "scripts",
         "sidecar.crash.log",
         "electron-main.crash.log",
+        "cli.crash.log",
         "node_modules/.package-lock.json"
       ]
     },

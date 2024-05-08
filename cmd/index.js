@@ -199,7 +199,7 @@ module.exports = async (ipc) => {
     }
     const reason = bail.reason === 'UNKNOWN_FLAG'
       ? 'Unrecognized Flag: --' + bail.flag.name
-      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument: index:' + bail.arg.index + ' value:' + bail.arg.value : bail.reason)
+      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value' + bail.arg.value : bail.reason)
 
     print(reason, false)
     print('\n' + bail.command.usage())
