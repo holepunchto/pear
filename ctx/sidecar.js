@@ -4,7 +4,7 @@ const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const preferences = require('../lib/preferences')
 const SharedContext = require('./shared')
-const { ERR_PACKAGE_JSON_NOT_FOUND, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../lib/errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../lib/errors')
 
 module.exports = class Context extends SharedContext {
   initialized = false
@@ -52,7 +52,7 @@ module.exports = class Context extends SharedContext {
     const tier = !this.key ? 'dev' : bundle.live ? 'production' : 'staging'
     if (app?.reported) return
 
-    if (this.stage && this.manifest === null) throw ERR_PACKAGE_JSON_NOT_FOUND(`"${this.pkgPath}" not found. Pear project must have a package.json`)
+    if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
 
     const { dependencies, type = 'commonjs' } = this.manifest
     const options = this.manifest.pear || this.manifest.holepunch || {}
