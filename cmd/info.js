@@ -1,8 +1,9 @@
 'use strict'
-const parse = require('../lib/parse')
-const { outputter, print } = require('./iface')
+const parseLink = require('../run/parse-link')
+const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -35,36 +36,23 @@ const output = outputter('info', {
   error: ({ code, stack }) => `Info Error (code: ${code || 'none'}) ${stack}`
 })
 
-module.exports = (ipc) => async function info (args) {
-  try {
-    const flags = parse.args(args, {
-      boolean: ['json', 'changelog', 'full-changelog', 'metadata', 'key']
-    })
-    const { _, json, changelog, 'full-changelog': full, metadata, key: showKey, keys } = flags
-    const [from] = _
-    let [, dir = ''] = _
-    const isKey = from ? parse.runkey(from).key !== null : false
-    const channel = isKey ? null : from
-    const key = isKey ? from : null
-    if (key && isKey === false) throw new Error('Key "' + key + '" is not valid')
+module.exports = (ipc) => async function info (cmd) {
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
+  const isKey = parseLink(cmd.args.link).key !== null
+  const channel = isKey ? null : cmd.args.link
+  const key = isKey ? cmd.args.link : null
+  if (key && isKey === false) throw new ERR_INVALID_INPUT('Key "' + key + '" is not valid')
+  let dir = cmd.args.dir || os.cwd()
+  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 
-    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-
-    await output(json, ipc.info({
-      key,
-      channel,
-      dir,
-      showKey,
-      keys,
-      metadata,
-      changelog,
-      full
-    }))
-  } catch (err) {
-    ipc.userData.usage.output('info', false)
-    print(err.message, false)
-    Bare.exit(1)
-  } finally {
-    await ipc.close()
-  }
+  await output(json, ipc.info({
+    key,
+    channel,
+    dir,
+    showKey,
+    keys,
+    metadata,
+    changelog,
+    full
+  }))
 }

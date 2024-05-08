@@ -1,4 +1,5 @@
 'use strict'
+const os = require('os')
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
@@ -44,6 +45,6 @@ const run = (cmd, args, opts) => {
       await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
     }
   }
-
-  await run(pear, ['run', 'test', '--verbose'], { stdio: 'inherit', shell: isWindows })
+  const store = path.join(os.tmpdir(), 'pear-test')
+  await run(pear, ['run', '--store', store, 'test'], { stdio: 'inherit', shell: isWindows })
 })()
