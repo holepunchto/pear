@@ -1696,7 +1696,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  trust ({ id, key }) { return this.ipc.trust({ z32: key }) }
+  trust ({ z32 }) { return this.ipc.trust({ z32 }) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
