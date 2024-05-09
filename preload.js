@@ -125,6 +125,20 @@ if (process.isMainFrame) {
     #onblur = null
     #demax = null
 
+    static get observedAttributes () {
+      return ['data-minimizable', 'data-maximizable']
+    }
+
+    attributeChangedCallback (name) {
+      if (name.startsWith('data-') === false) return
+      if (name === 'data-minimizable') {
+        this.#setMinimizable(strToBool(this.dataset.minimizable))
+      }
+      if (name === 'data-maximizable') {
+        this.#setMaximizable(strToBool(this.dataset.maximizable))
+      }
+    }
+
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
@@ -142,14 +156,17 @@ if (process.isMainFrame) {
         }, { threshold: 0 })
 
         this.intesections.observe(this)
+        this.#setCtrl()
         return
       }
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
       const close = this.root.querySelector('#close')
-      min.addEventListener('click', this.#min)
+
       max.addEventListener('click', this.#max)
+      min.addEventListener('click', this.#min)
+
       if (restore) restore.addEventListener('click', this.#restore)
       close.addEventListener('click', this.#close)
       window.addEventListener('focus', this.#onfocus)
@@ -159,6 +176,29 @@ if (process.isMainFrame) {
         const y = e.clientY
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
+
+      this.#setCtrl()
+    }
+
+    async #setCtrl () {
+      if (this.dataset.minimizable !== undefined) this.#setMinimizable(strToBool(this.dataset.minimizable))
+      if (this.dataset.maximizable !== undefined) this.#setMaximizable(strToBool(this.dataset.maximizable))
+    }
+
+    async #setMaximizable (value) {
+      if (!isMac) {
+        this.root.querySelector('#max').style.display = value ? 'inline' : 'none'
+      } else {
+        await gui.ipc.setMaximizable({ id: gui.id, value: !!value })
+      }
+    }
+
+    async #setMinimizable (value) {
+      if (!isMac) {
+        this.root.querySelector('#min').style.display = value ? 'inline' : 'none'
+      } else {
+        await gui.ipc.setMinimizable({ id: gui.id, value: !!value })
+      }
     }
 
     disconnectedCallback () {
@@ -357,6 +397,8 @@ if (process.isMainFrame) {
     }
   })
 }
+
+function strToBool (str) { return str === 'true' }
 
 // support for native addons triggering uncaughtExceptions
 // process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
