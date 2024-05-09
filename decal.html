@@ -646,6 +646,7 @@
             if (type === 'permissionRequired') {
               const trustConfirm = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
+              ctrl.dataset.maximizable = false
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(trustConfirm)
