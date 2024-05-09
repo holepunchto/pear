@@ -435,8 +435,8 @@
           await Pear.Window.self.close()
         })
       }
-      setKey (key) {
-        this.key.innerText = 'pear://' + key
+      setLink (link) {
+        this.key.innerText = link
       }
     })
   </script>
@@ -643,14 +643,14 @@
             }
 
             if (type === 'permissionRequired') {
-              const decalDialog = document.createElement('decal-dialog')
+              const trustConfirm = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
-              document.body.appendChild(decalDialog)
-              decalDialog.setKey(report.key)
-              decalDialog.trust = async () => {
-                await this.ipc.trust({ id: this.gid, key: report.key })
+              document.body.appendChild(trustConfirm)
+              trustConfirm.setLink(report.key.link)
+              trustConfirm.trust = async () => {
+                await this.ipc.trust({ z32: report.key.z32 })
                 await this.ipc.restart({ id: this.gid })
               }
 

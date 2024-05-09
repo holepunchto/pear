@@ -24,10 +24,10 @@ async function electronMain (cmd) {
     link: cmd.args.link,
     flags: cmd.flags
   })
-  State.storage(state)
+  Context.storage(ctx)
 
-  if (state.error) {
-    console.error(state.error)
+  if (ctx.error) {
+    console.error(ctx.error)
     electron.app.quit(1)
     return
   }
