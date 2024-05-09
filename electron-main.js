@@ -25,17 +25,20 @@ async function electronMain (cmd) {
     flags: cmd.flags
   })
   Context.storage(ctx)
+
   if (ctx.error) {
     console.error(ctx.error)
     electron.app.quit(1)
     return
   }
+
   const gui = new GUI({
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
     tryboot,
     ctx
   })
+
   await gui.ready()
 
   // note: would be unhandled rejection on failure, but should never fail:
