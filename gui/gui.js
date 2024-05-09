@@ -1024,9 +1024,10 @@ class Window extends GuiCtrl {
       }
     })
 
+    if (this.id === null) this.id = idify(this)
+    this.constructor[kMap].set(this.id, this)
+
     if (decal === false) {
-      if (this.id === null) this.id = idify(this)
-      this.constructor[kMap].set(this.id, this)
       await this.win.loadURL(this.entry)
       this.opening = false
       this.closed = false
@@ -1070,10 +1071,8 @@ class Window extends GuiCtrl {
     viewInitialized()
     this.view.webContents.once('did-finish-load', () => { viewLoaded() })
 
-    if (this.id === null) {
-      this.id = idify(this)
-      this.constructor[kMap].set(this.id, this)
-    }
+    this.id = idify(this)
+    this.constructor[kMap].set(this.id, this)
 
     await decalLoading
     if (this.closing) return false
@@ -1683,7 +1682,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  trust ({ id, key }) { return this.ipc.trust({ z32: key }) }
+  trust ({ z32 }) { return this.ipc.trust({ z32 }) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
