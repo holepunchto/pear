@@ -238,6 +238,8 @@ class IPC {
   hide (...args) { return electron.ipcRenderer.invoke('hide', ...args) }
   minimize (...args) { return electron.ipcRenderer.invoke('minimize', ...args) }
   maximize (...args) { return electron.ipcRenderer.invoke('maximize', ...args) }
+  setMaximizable (...args) { return electron.ipcRenderer.invoke('setMaximizable', ...args) }
+  setMinimizable (...args) { return electron.ipcRenderer.invoke('setMinimizable', ...args) }
   fullscreen (...args) { return electron.ipcRenderer.invoke('fullscreen', ...args) }
   restore (...args) { return electron.ipcRenderer.invoke('restore', ...args) }
   focus (...args) { return electron.ipcRenderer.invoke('focus', ...args) }
