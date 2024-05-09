@@ -11,6 +11,7 @@ module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, ctx }) {
     super()
     const id = this.id = electron.ipcRenderer.sendSync('id')
+
     this.ipc = new IPC()
     electron.ipcRenderer.on('ipc', (e, data) => {
       this.ipc.stream.push(Buffer.from(data))

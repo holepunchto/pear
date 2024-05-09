@@ -1,6 +1,7 @@
 'use strict'
 const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
 const { usage, print } = require('./iface')
+const { CHECKOUT } = require('../lib/constants')
 const errors = require('../lib/errors')
 const runners = {
   init: require('./init'),
@@ -145,15 +146,15 @@ module.exports = async (ipc) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    description('Resource may be: sidecar'),
-    arg('<resource>', 'Resource type to garbage collect'),
+    command('release', summary('Clear inactive releases'), (cmd) => runners.gc(ipc).release(cmd)),
+    command('sidecar', summary('Clear running sidecars'), (cmd) => runners.gc(ipc).sidecar(cmd)),
     flag('--json', 'Newline delimited JSON output'),
-    runners.gc(ipc)
+    () => { console.log(gc.help()) }
   )
 
   const versions = command(
     'versions',
-    summary('View version information'),
+    summary('View dependency versions'),
     flag('--json', 'JSON output'),
     runners.versions(ipc)
   )
@@ -164,6 +165,7 @@ module.exports = async (ipc) => {
   })
 
   const cmd = command('pear',
+    flag('-v', 'Output version'),
     header(usage.header),
     init,
     dev,
@@ -180,8 +182,27 @@ module.exports = async (ipc) => {
     help,
     footer(usage.footer),
     bail(explain),
-    () => { console.log(cmd.overview()) }
+    pear
   )
+
+  function pear ({ flags }) {
+    if (flags.v) {
+      if (flags.json) {
+        console.log(JSON.stringify(CHECKOUT))
+        return
+      }
+      let { key, fork, length } = CHECKOUT
+      key += ''
+      fork += ''
+      length += ''
+      let v = 'Key' + ' '.repeat(key.length) + 'Fork' + ' '.repeat(fork.length) + 'Length' + ' '.repeat(length.length) + '\n'
+      v += key + '   ' + fork + '    ' + length
+      console.log(v)
+
+      return
+    }
+    console.log(cmd.overview())
+  }
 
   const program = cmd.parse(Bare.argv.slice(1))
   if (program) program.running.finally(() => { ipc.close() })

@@ -56,7 +56,7 @@ module.exports = class Context {
       this.injestPackage(ctx, readPkg(path.join(ctx.dir, 'package.json')))
       return
     }
-    const { previewFor } = ctx.options    
+    const { previewFor } = ctx.options
     const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
     const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (ctx.key ? discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex') : null)
     const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', dkey] : ['by-name', validateAppName(ctx.name)])
