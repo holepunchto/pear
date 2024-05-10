@@ -17,12 +17,12 @@ module.exports = (ipc) => async function shift (cmd) {
   const src = cmd.args.source
   const dst = cmd.args.destination
 
-  if (!src || parseLink(src).key === null) {
-    throw new ERR_INVALID_INPUT('A source application key must be specified.')
+  if (parseLink(src).key === null) {
+    throw ERR_INVALID_INPUT('A valid source application link must be specified.')
   }
 
-  if (!dst || parseLink(dst).key === null) {
-    throw new ERR_INVALID_INPUT('A destination application key must be specified.')
+  if (parseLink(dst).key === null) {
+    throw ERR_INVALID_INPUT('A valid destination application link must be specified.')
   }
 
   await output(json, ipc.shift({ src, dst, force }))
