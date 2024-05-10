@@ -27,7 +27,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   key = parseLink(link).key
 
   if (key !== null && link.startsWith('pear://') === false) {
-    throw new ERR_INVALID_INPUT('Key must start with pear://')
+    throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
   const cwd = os.cwd()
@@ -43,7 +43,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
     try {
       JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
     } catch (err) {
-      throw new ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+      throw ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
     }
   }
 
@@ -88,9 +88,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
     ipc.close().catch(console.error)
     return stream
   }
-
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs })
-
   if (bail && args.indexOf('--detach') === -1) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
     err.key = key
