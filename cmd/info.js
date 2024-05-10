@@ -37,15 +37,15 @@ const output = outputter('info', {
 
 module.exports = (ipc) => async function info (cmd) {
   const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
-  const isKey = parseLink(cmd.args.link).key !== null
+  const isKey = cmd.args.link && parseLink(cmd.args.link).key !== null
   const channel = isKey ? null : cmd.args.link
-  const key = isKey ? cmd.args.link : null
-  if (key && isKey === false) throw new ERR_INVALID_INPUT('Key "' + key + '" is not valid')
+  const link = isKey ? cmd.args.link : null
+  if (link && isKey === false) throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
   let dir = cmd.args.dir || os.cwd()
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 
   await output(json, ipc.info({
-    key,
+    link,
     channel,
     dir,
     showKey,
