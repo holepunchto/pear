@@ -28,7 +28,7 @@ const changelog = ({ changelog, full }) => `
 `
 
 const output = outputter('info', {
-  retrieving: ({ z32 }) => `🔑 :-\n     pear://${z32}\n...`,
+  retrieving: ({ z32 }) => `---:\n pear://${z32}\n...`,
   keys,
   info,
   changelog,

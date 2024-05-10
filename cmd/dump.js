@@ -11,8 +11,8 @@ const output = outputter('stage', {
 
 module.exports = (ipc) => async function dump (cmd) {
   const { checkout, json } = cmd.flags
-  const { key, dir = os.cwd() } = cmd.args
+  const { link, dir = os.cwd() } = cmd.args
   if (!dir) throw ERR_INVALID_INPUT('Output dir must be specified.')
-  if (!key) throw ERR_INVALID_INPUT('The pear link must be specified.')
-  await output(json, ipc.dump({ id: Bare.pid, key, dir: isAbsolute(dir) ? dir : resolve(os.cwd(), dir), checkout }))
+  if (!link) throw ERR_INVALID_INPUT('The pear link must be specified.')
+  await output(json, ipc.dump({ id: Bare.pid, link, dir: isAbsolute(dir) ? dir : resolve(os.cwd(), dir), checkout }))
 }
