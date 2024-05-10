@@ -29,7 +29,7 @@ module.exports = (ipc) => async function stage (cmd) {
   const isKey = cmd.args.channel && parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
-  if (!channel && !key) throw new ERR_INPUT('A key or the channel name must be specified.')
+  if (!channel && !key) throw ERR_INPUT('A key or the channel name must be specified.')
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid

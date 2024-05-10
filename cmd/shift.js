@@ -18,11 +18,11 @@ module.exports = (ipc) => async function shift (cmd) {
   const dst = cmd.args.destination
 
   if (!src || parseLink(src).key === null) {
-    throw new ERR_INVALID_INPUT('A source application key must be specified.')
+    throw ERR_INVALID_INPUT('A source application key must be specified.')
   }
 
   if (!dst || parseLink(dst).key === null) {
-    throw new ERR_INVALID_INPUT('A destination application key must be specified.')
+    throw ERR_INVALID_INPUT('A destination application key must be specified.')
   }
 
   await output(json, ipc.shift({ src, dst, force }))
