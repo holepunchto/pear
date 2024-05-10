@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const parseLink = require('../run/parse-link')
-const { ERR_INPUT } = require('../lib/errors')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 
 let blocks = 0
 let total = 0
@@ -29,7 +29,7 @@ module.exports = (ipc) => async function stage (cmd) {
   const isKey = cmd.args.channel && parseLink(cmd.args.channel).key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
-  if (!channel && !key) throw ERR_INPUT('A key or the channel name must be specified.')
+  if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid

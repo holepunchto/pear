@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter } = require('./iface')
-const { ERR_INPUT } = require('../lib/errors')
+const { ERR_INVALID_INPUT } = require('../lib/errors')
 const output = outputter('stage', {
   dumping: ({ key, dir }) => `\n🍐 Dumping ${key} into ${dir}`,
   complete: '\nDumping complete!\n',
@@ -12,7 +12,7 @@ const output = outputter('stage', {
 module.exports = (ipc) => async function dump (cmd) {
   const { checkout, json } = cmd.flags
   const { key, dir = os.cwd() } = cmd.args
-  if (!dir) throw ERR_INPUT('Output dir must be specified.')
-  if (!key) throw ERR_INPUT('The pear link must be specified.')
+  if (!dir) throw ERR_INVALID_INPUT('Output dir must be specified.')
+  if (!key) throw ERR_INVALID_INPUT('The pear link must be specified.')
   await output(json, ipc.dump({ id: Bare.pid, key, dir: isAbsolute(dir) ? dir : resolve(os.cwd(), dir), checkout }))
 }
