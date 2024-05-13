@@ -12,7 +12,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   try {
     const { json, detached, store } = cmd.flags
 
-    if (devrun && !cmd.args.link) cmd.args.link = '.'
+    if (devrun && !cmd.args.link) {
+      cmd.args.link = '.'
+      Bare.argv.push('.')
+    }
 
     const args = Bare.argv.slice(2)
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, appArgs: cmd.rest, ipc, args, storage: store, detached }))
