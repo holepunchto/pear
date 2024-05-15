@@ -481,7 +481,8 @@ class App {
       flags: state.flags,
       env: state.env,
       dir: state.dir,
-      link: state.link
+      link: state.link,
+      clientArgv: ctx.clientArgv
     })
 
     this.starting.catch(async (err) => {
