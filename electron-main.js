@@ -23,7 +23,7 @@ async function electronMain (cmd) {
   const state = new State({
     link: cmd.args.link,
     flags: cmd.flags,
-    clientArgv: process.argv,
+    clientArgv: process.argv
   })
   State.storage(state)
 
