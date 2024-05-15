@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const parseLink = require('../run/parse-link')
-const { ERR_INVALID_INPUT } = require('../lib/errors')
+const { ERR_INVALID_INPUT } = require('../errors')
 
 let blocks = 0
 let total = 0

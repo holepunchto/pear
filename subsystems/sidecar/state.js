@@ -2,11 +2,11 @@
 const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
-const preferences = require('../lib/preferences')
-const SharedContext = require('./shared')
-const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../errors')
+const preferences = require('./lib/preferences')
+const SharedState = require('../../state')
+const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../../errors')
 
-module.exports = class Context extends SharedContext {
+module.exports = class State extends SharedState {
   initialized = false
   tier = null
   link = null

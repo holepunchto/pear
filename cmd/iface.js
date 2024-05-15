@@ -3,7 +3,7 @@ const { once } = require('bare-events')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
-const { CHECKOUT } = require('../lib/constants')
+const { CHECKOUT } = require('../constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
@@ -60,7 +60,7 @@ function indicator (value, type = 'success') {
   return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
-const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
+const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
   let error = null
   try {
     for await (const { tag, data = {} } of stream) {
@@ -70,7 +70,7 @@ const outputter = (cmd, taggers = {}) => async (json, stream, state = {}) => {
       }
       let result = null
       try {
-        result = typeof taggers[tag] === 'function' ? taggers[tag](data, state) : (taggers[tag] || false)
+        result = typeof taggers[tag] === 'function' ? taggers[tag](data, info) : (taggers[tag] || false)
       } catch (err) {
         error = err
         break

@@ -8,8 +8,8 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
   const GUI = require('./gui')
+  const gunk = require('./gunk')
   const API = require('./lib/api')
-  const gunk = require('./lib/gunk')
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
