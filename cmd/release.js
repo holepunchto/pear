@@ -8,7 +8,8 @@ const output = outputter('release', {
   releasing: ({ name, channel }) => `\n${ansi.pear} Releasing ${name} [ ${channel} ]\n`,
   'updating-to': ({ releaseLength, currentLength }) => `Current length is ${currentLength}\nSetting release to ${releaseLength}\n`,
   released: ({ name, channel, length }) => `The ${name} app (${channel} channel) was successfully released.\nLatest length: ${length}\n`,
-  final: { output: 'print', message: 'Release complete\n', success: true }
+  error: ({ code, stack }) => `Releasing Error (code: ${code || 'none'}) ${stack}`,
+  final: ({ reason = 'Release complete\n', success = true } = {}) => ({ output: 'print', message: `${reason}`, success })
 })
 
 module.exports = (ipc) => async function release (args) {
