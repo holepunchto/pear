@@ -532,7 +532,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, link, dir, args } = params
+    const { flags, env, link, dir, args, clientArgv } = params
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
@@ -542,7 +542,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args)
+    const running = this.#start(flags, client, session, env, link, dir, startId, args, clientArgv)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -564,10 +564,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args) {
+  async #start (flags, client, session, env, link, dir, startId, args, clientArgv = null) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args })
+    const state = new State({ id, env, link, dir, flags, args, clientArgv })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
