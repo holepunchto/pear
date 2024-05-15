@@ -8,7 +8,7 @@ const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
-const constants = require('../lib/constants')
+const constants = require('../constants')
 
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
@@ -1502,8 +1502,8 @@ class PearGUI extends ReadyResource {
     ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
     if (entry[0] !== '/') entry = `/~${entry}`
-    const state = { ctx, parentId, ua, sessname, appkin }
-    const instance = type === 'view' ? new View(entry, options, state) : new Window(entry, options, state)
+    const info = { ctx, parentId, ua, sessname, appkin }
+    const instance = type === 'view' ? new View(entry, options, info) : new Window(entry, options, info)
     if (typeof options.afterInstantiation === 'function') await options.afterInstantiation(instance)
 
     await instance.open(openOptions)

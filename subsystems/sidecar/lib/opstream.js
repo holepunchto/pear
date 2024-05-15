@@ -1,0 +1,27 @@
+'use strict'
+const streamx = require('streamx')
+const Session = require('./session')
+module.exports = class Opstream extends streamx.Readable {
+  constructor (op, params, client, sidecar) {
+    super({
+      read (cb) {
+        let success = true
+        const error = (err) => {
+          const { stack, code, message } = err
+          success = false
+          this.push({ tag: 'error', data: { stack, code, message, success } })
+        }
+        const close = () => {
+          this.push({ tag: 'final', data: { success } })
+          this.push(null)
+          cb(null)
+          return this.session.close()
+        }
+        op(params).catch(error).finally(close)
+      }
+    })
+    this.client = client
+    this.sidecar = sidecar
+    this.session = new Session(client)
+  }
+}

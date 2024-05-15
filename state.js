@@ -7,10 +7,10 @@ const hypercoreid = require('hypercore-id-encoding')
 const unixPathResolve = require('unix-path-resolve')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const parseLink = require('../run/parse-link')
-const { PLATFORM_DIR, RUNTIME, ALIASES } = require('../constants')
+const { PLATFORM_DIR, RUNTIME, ALIASES } = require('./constants')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
-const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('../errors')
+const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('./errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
@@ -22,7 +22,7 @@ const readPkg = (pkgPath) => {
   return pkg
 }
 
-module.exports = class Context {
+module.exports = class State {
   env = null
   channel = null
   args = null
@@ -107,7 +107,7 @@ module.exports = class Context {
     this.dir = dir
     this.env = { ...env }
     this.flags = flags
-    this.dev = dev || false
+    this.dev = dev
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff

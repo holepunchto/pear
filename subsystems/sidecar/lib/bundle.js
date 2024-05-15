@@ -7,9 +7,9 @@ const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
 const Tracer = require('./tracer')
 const Replicator = require('./replicator')
-const { SWAP } = require('./constants')
 const releaseWatcher = require('./release-watcher')
-const { ERR_TRACER_FAILED } = require('./errors')
+const { SWAP } = require('../../..//constants')
+const { ERR_TRACER_FAILED } = require('../../../errors')
 const noop = Function.prototype
 
 module.exports = class Bundle {
