@@ -6,8 +6,8 @@ const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
 const unixPathResolve = require('unix-path-resolve')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
-const parseLink = require('../run/parse-link')
 const { PLATFORM_DIR, RUNTIME, ALIASES } = require('./constants')
+const parseLink = require('./run/parse-link')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
 const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('./errors')
@@ -32,14 +32,14 @@ module.exports = class State {
   reloadingSince = 0
   type = null
   error = null
-  static injestPackage (ctx, pkg) {
-    ctx.manifest = pkg
-    ctx.main = pkg?.main || 'index.html'
-    ctx.options = pkg?.pear || pkg?.holepunch || {}
-    ctx.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
-    ctx.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(ctx.main) ? 'terminal' : 'desktop')
-    ctx.links = pkg?.pear?.links || null
-    ctx.dependencies = [
+  static injestPackage (state, pkg) {
+    state.manifest = pkg
+    state.main = pkg?.main || 'index.html'
+    state.options = pkg?.pear || pkg?.holepunch || {}
+    state.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
+    state.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(state.main) ? 'terminal' : 'desktop')
+    state.links = pkg?.pear?.links || null
+    state.dependencies = [
       ...(pkg?.dependencies ? Object.keys(pkg.dependencies) : []),
       ...(pkg?.devDependencies ? Object.keys(pkg.devDependencies) : []),
       ...(pkg?.peerDependencies ? Object.keys(pkg.peerDependencies) : []),
@@ -48,27 +48,27 @@ module.exports = class State {
       ...(pkg?.bundledDependencies || [])
     ]
     if (pkg == null) return
-    try { this.storage(ctx) } catch (err) { ctx.error = err }
+    try { this.storage(state) } catch (err) { state.error = err }
   }
 
-  static storage (ctx) {
-    if (!ctx.key && !ctx.name) { // uninited local case
-      this.injestPackage(ctx, readPkg(path.join(ctx.dir, 'package.json')))
+  static storage (state) {
+    if (!state.key && !state.name) { // uninited local case
+      this.injestPackage(state, readPkg(path.join(state.dir, 'package.json')))
       return
     }
-    const { previewFor } = ctx.options
+    const { previewFor } = state.options
     const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
-    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (ctx.key ? discoveryKey(Buffer.from(ctx.key.hex, 'hex')).toString('hex') : null)
-    const storeby = ctx.store ? null : (ctx.key ? ['by-dkey', dkey] : ['by-name', validateAppName(ctx.name)])
-    ctx.storage = ctx.store ? (path.isAbsolute(ctx.store) ? ctx.store : path.resolve(ctx.cwd, ctx.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
+    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(Buffer.from(state.key.hex, 'hex')).toString('hex') : null)
+    const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
+    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
 
-    if (ctx.key === null && ctx.storage.startsWith(ctx.dir)) {
-      throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + ctx.storage + '" is invalid')
+    if (state.key === null && state.storage.startsWith(state.dir)) {
+      throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
     }
   }
 
-  static configFrom (ctx) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = ctx
+  static configFrom (state) {
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = state
     const pearDir = PLATFORM_DIR
     return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }

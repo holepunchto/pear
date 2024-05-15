@@ -10,7 +10,7 @@ const { Readable } = require('streamx')
 const { fileURLToPath } = require('url-file-url')
 const { isMac } = require('which-runtime')
 const constants = require('../lib/constants')
-const Context = require('../ctx/shared')
+const State = require('../state')
 const API = require('../lib/api')
 const {
   ERR_INVALID_APPLING,
@@ -96,19 +96,19 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   }
 
   if (type === 'terminal') {
-    const ctx = new Context({ argv: args, flags, link })
+    const state = new State({ flags, link })
 
-    ctx.update({ host, id })
+    state.update({ host, id })
 
-    if (ctx.error) {
-      console.error(ctx.error)
+    if (state.error) {
+      console.error(state.error)
       global.process?.exit(1) || global.Bare.exit(1)
     }
 
     await ipc.ready()
-    ctx.update({ config: await ipc.config() })
+    state.update({ config: await ipc.config() })
 
-    const pear = new API(ipc, ctx)
+    const pear = new API(ipc, state)
     global.Pear = pear
 
     const protocol = new Module.Protocol({
