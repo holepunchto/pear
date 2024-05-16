@@ -105,7 +105,7 @@ class Sidecar extends ReadyResource {
 
     this.applings = new Applings(APPLINGS_PATH)
 
-    this.http = new Http(this.ipc)
+    this.http = new Http(this)
     this.running = new Map()
 
     const sidecar = this

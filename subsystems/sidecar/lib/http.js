@@ -9,8 +9,10 @@ const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {
-  constructor (ipc) {
+  constructor (sidecar) {
     super()
+    this.sidecar = sidecar
+    this.ipc = sidecar.ipc
     this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
@@ -19,20 +21,20 @@ module.exports = class Http extends ReadyResource {
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
         if (protocol === 'platform-resolve' || protocol === 'holepunch') {
-          return await this.#lookup(this, protocol === 'platform-resolve' ? 'resolve' : protocol, type, req, res)
+          return await this.#lookup(this.sidecar, protocol === 'platform-resolve' ? 'resolve' : protocol, type, req, res)
         }
         if (protocol !== 'app' && protocol !== 'resolve') {
           throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
         const id = ua.slice(5)
 
-        if (id === 'Platform') return await this.#lookup(this, 'holepunch', type, req, res)
+        if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
         const [clientId, startId] = id.split('@')
-        const ipcClient = ipc.client(clientId)
-        if (ipcClient === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
+        const client = this.ipc.client(clientId)
+        if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
+        const app = client.userData
 
-        const app = ipcClient.userData
         if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
         if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
         if (app.reported && app.state.options.minver) {

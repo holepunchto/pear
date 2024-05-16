@@ -13,12 +13,11 @@ const url = module.url || electronModuleURL()
 const mount = new URL('.', url)
 
 const LOCALDEV = CHECKOUT.length === null
-
 const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mount
 const swapPath = toPath(swapURL)
 
 const IPC_ID = 'pear'
-const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../../', swapURL)
+const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../', swapURL)
 
 const PLATFORM_DIR = toPath(PLATFORM_URL)
 const PLATFORM_LOCK = toPath(new URL('corestores/platform/primary-key', PLATFORM_URL))
@@ -76,7 +75,7 @@ function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)
   if (i === -1) throw ERR_COULD_NOT_INFER_MODULE_PATH('Could not infer the actual module path')
-  return new URL(u.href.slice(0, i) + 'lib/constants.js')
+  return new URL(u.href.slice(0, i) + 'constants.js')
 }
 
 function toPath (u) {

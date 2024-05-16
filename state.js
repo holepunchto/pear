@@ -60,8 +60,7 @@ module.exports = class State {
     const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
     const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(Buffer.from(state.key.hex, 'hex')).toString('hex') : null)
     const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
-    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(CWD, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
-
+    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.dir, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (state.key === null && state.storage.startsWith(state.dir)) {
       throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
     }
