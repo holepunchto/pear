@@ -11,6 +11,7 @@ const mime = new Mime()
 module.exports = class Http extends ReadyResource {
   constructor (ipc) {
     super()
+    this.connections = new Set()
     this.server = http.createServer(async (req, res) => {
       try {
         const ua = req.headers['user-agent']
