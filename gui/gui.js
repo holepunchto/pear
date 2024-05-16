@@ -482,7 +482,7 @@ class App {
       env: state.env,
       dir: state.dir,
       link: state.link,
-      clientArgv: Bare.argv
+      clientArgv: process.argv
     })
 
     this.starting.catch(async (err) => {
