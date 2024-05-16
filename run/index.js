@@ -9,14 +9,14 @@ const { spawn } = require('bare-subprocess')
 const { Readable } = require('streamx')
 const { fileURLToPath } = require('url-file-url')
 const { isMac } = require('which-runtime')
-const constants = require('../lib/constants')
+const constants = require('../constants')
 const State = require('../state')
 const API = require('../lib/api')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
-} = require('../lib/errors')
+} = require('../errors')
 const parseLink = require('./parse-link')
 
 module.exports = async function run ({ ipc, args, link, storage, detached, flags, appArgs }) {
@@ -96,7 +96,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   }
 
   if (type === 'terminal') {
-    const state = new State({ flags, link })
+    const state = new State({ flags, link, dir })
 
     state.update({ host, id })
 

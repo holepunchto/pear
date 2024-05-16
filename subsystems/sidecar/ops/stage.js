@@ -90,7 +90,7 @@ module.exports = class Stage extends Opstream {
     const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
     const dst = bundle.drive
     const opts = { filter: (key) => ignore.some((path) => key.startsWith(path)) === false, dryRun, batch: true }
-    const builtins = terminalBare ? sidecar.linkerConfig.bareBuiltins : sidecar.linkerConfig.builtins
+    const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
     const entrypoints = [main, ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
     const mods = await linker.warmup(entrypoints)
