@@ -448,8 +448,8 @@ class Sidecar extends ReadyResource {
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-      const { pid, clientArgv, dir, runtime, appling, argv, env } = app.state
-      metadata.push({ pid, clientArgv, dir, runtime, appling, argv, env })
+      const { pid, argv, dir, runtime, appling, env } = app.state
+      metadata.push({ pid, argv, dir, runtime, appling, env })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -532,7 +532,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, link, dir, args, clientArgv } = params
+    const { flags, env, link, dir, args, argv } = params
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
@@ -542,7 +542,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args, clientArgv)
+    const running = this.#start(flags, client, session, env, link, dir, startId, args, argv)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -564,10 +564,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args, clientArgv) {
+  async #start (flags, client, session, env, link, dir, startId, args, argv) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args, clientArgv })
+    const state = new State({ id, env, link, dir, flags, args, argv })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {

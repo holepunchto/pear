@@ -21,7 +21,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   const seeder = new Helper()
   teardown(async () => seeder.shutdown())
   await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, clientArgv: [] })
+  const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, argv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await until.key

@@ -22,7 +22,7 @@ run.parse(argv)
 async function electronMain (cmd) {
   const state = new State({
     link: cmd.args.link,
-    flags: cmd.flags,
+    flags: cmd.flags
   })
   State.storage(state)
 
