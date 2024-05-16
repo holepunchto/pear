@@ -107,7 +107,7 @@ module.exports = class Context {
     this.dir = dir
     this.env = { ...env }
     this.flags = flags
-    this.dev = dev || key == null
+    this.dev = dev || false
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff
