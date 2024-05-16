@@ -33,5 +33,5 @@ module.exports = (ipc) => async function stage (cmd) {
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv }))
+  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, clientArgv: Bare.argv.slice(1) }))
 }

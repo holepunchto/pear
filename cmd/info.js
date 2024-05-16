@@ -53,6 +53,6 @@ module.exports = (ipc) => async function info (cmd) {
     metadata,
     changelog,
     full,
-    clientArgv: Bare.argv
+    clientArgv: Bare.argv.slice(1)
   }))
 }

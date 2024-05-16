@@ -33,7 +33,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
     print('Restart Commands:', 0)
     for (const { id = null, dir, argv, clientArgv = [] } of restarts) {
       if (id !== null) continue
-      const cmdsig = clientArgv.length ? clientArgv.slice(2) : argv
+      const cmdsig = clientArgv.length ? clientArgv : argv
       if (cmdsig === argv) {
         let runix = cmdsig.indexOf('--run')
         if (runix === -1) runix = cmdsig.indexOf('--launch') // legacy alias
