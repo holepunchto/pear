@@ -1,15 +1,6 @@
 'use strict'
 const { isBare } = require('which-runtime')
 const defaults = require('script-linker/defaults')
-const link = require('script-linker/link')
-const unixPathResolve = require('unix-path-resolve')
-const platformRoot = unixPathResolve(__dirname, '..')
-
-const api = {
-  app: unixPathResolve(__dirname, '../api/app.js'),
-  gui: unixPathResolve(__dirname, '../api/gui.js'),
-  gizmos: unixPathResolve(__dirname, '../api/gizmos.js')
-}
 
 const bmap = isBare
   ? {
@@ -55,15 +46,7 @@ const bareBuiltins = {
   keys () { return [...defaults.builtins.keys(), 'electron'] }
 }
 
-const mapImport = function (id) {
-  if (id.includes(':') === false) return id
-  const { protocol, transform: ns } = link.parse(id)
-  // TODO: holepunch:// protocol is legacy, remove
-  if (protocol !== 'holepunch') return id
-  if (Object.hasOwn(api, ns) === false) return id
-  const path = (platformRoot === '/') ? api[ns] : api[ns].slice(platformRoot.length)
-  return `${path}+${protocol}+esm`
-}
+const mapImport = function (id) { return id }
 
 const platform = {
   symbol: `platform-${defaults.symbol}`,
@@ -88,7 +71,6 @@ const app = {
 }
 
 module.exports = {
-  api,
   overrides,
   builtins,
   bareBuiltins,
