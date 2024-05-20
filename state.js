@@ -81,7 +81,7 @@ module.exports = class State {
     const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout,
-      dev = false, stage, trace, updates, updatesDiff,
+      dev = false, run, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = flags
 
@@ -106,7 +106,7 @@ module.exports = class State {
     this.dir = key === null ? dir : '/'
     this.env = { ...env }
     this.flags = flags
-    this.dev = dev || false
+    this.dev = dev
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff

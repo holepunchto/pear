@@ -15,12 +15,13 @@ const {
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('./lib/constants.js')
-const registerUrlHandler = require('./lib/url-handler')
-
+} = require('./constants.js')
+const registerUrlHandler = require('./url-handler.js')
+const gunk = require('./gunk')
+const verbose = Bare.argv.includes('--verbose')
 crasher('sidecar', SWAP)
 module.exports = bootSidecar().then(() => {
-  if (Bare.argv.includes('--verbose')) console.log('- Sidecar booted')
+  if (verbose) console.log('- Sidecar booted')
 }).catch((err) => {
   console.error(err.stack)
   Bare.exit(1)

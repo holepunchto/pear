@@ -4,14 +4,14 @@ const { randomBytes } = require('hypercore-crypto')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
-const { ERR_UNSTAGED, ERR_INVALID_CONFIG } = require('../../../errors')
+const { ERR_RELEASE_ERROR } = require('../../../errors')
 
 module.exports = class Release extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ name, channel, checkout, link, dir, cmdArgs }) {
+  async #op ({ name, channel, checkout, link, dir }) {
     const key = link ? hypercoreid.decode(link) : null
 
     const { session } = this
@@ -19,8 +19,7 @@ module.exports = class Release extends Opstream {
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
       flags: { checkout, channel, link },
-      dir,
-      cmdArgs
+      dir
     })
 
     await this.sidecar.ready()
@@ -33,15 +32,9 @@ module.exports = class Release extends Opstream {
 
     const bundle = new Bundle({ corestore, channel, key })
     await session.add(bundle)
-    const manifest = await bundle.db.get('manifest')
 
-    if (manifest === null) {
-      throw ERR_UNSTAGED(`The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`)
-    }
-
-    const invalid = manifest.pear?.previewFor !== undefined && manifest.pear?.previewFor !== null
-    if (invalid) {
-      throw ERR_INVALID_CONFIG('The `pear.previewFor` package.json field is invalid for production releases. Remove or null the field in order to release.')
+    if (await bundle.db.get('manifest') === null) {
+      throw ERR_RELEASE_ERROR(`The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`)
     }
 
     const currentLength = bundle.db.feed.length

@@ -25,15 +25,13 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
-const { command } = require('paparam')
-const runDefinition = require('../../run/definition')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
 
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_PLATFORM_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 
 const State = require('./state')
 const ops = {
@@ -224,7 +222,7 @@ class Sidecar extends ReadyResource {
       messages (ptn) {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
-        streamx.pipeline(subscriber, pickData(), stream)
+        streamx.pipeline(subscriber, stream)
         return stream
       }
 
@@ -332,7 +330,7 @@ class Sidecar extends ReadyResource {
     if (!client.userData && params.startId) {
       const starting = this.running.get(params.startId)
       if (starting) client.userData = starting.client.userData
-      else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
+      else throw ERR_PLATFORM_ERROR('identify failure unrecognized startId (check crash logs)')
     }
     const id = client.userData.id
     const host = await this.address()
@@ -361,7 +359,7 @@ class Sidecar extends ReadyResource {
   warming (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.warming, pickData(), stream)
+    streamx.pipeline(client.userData.warming, stream)
     return stream
   }
 
@@ -372,8 +370,7 @@ class Sidecar extends ReadyResource {
   reports (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.reporter, pickData(), stream)
-    return stream
+    streamx.pipeline(client.userData.reporter, stream)
   }
 
   createReport (err, client) {
@@ -447,14 +444,11 @@ class Sidecar extends ReadyResource {
   closeClients () {
     if (this.hasClients === false) return []
     const metadata = []
-    const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-      if (seen.has(app.state.id)) continue
-      seen.add(app.state.id)
-      const { pid, cmdArgs, dir, runtime, appling, env, run } = app.state
-      metadata.push({ pid, cmdArgs, dir, runtime, appling, env, run })
+      const { pid, clientArgv, dir, runtime, appling, argv, env } = app.state
+      metadata.push({ pid, clientArgv, dir, runtime, appling, argv, env })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -464,9 +458,9 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
-      const { dir, cmdArgs, env } = client.userData.state
+      const { dir, argv, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
+      const opts = { dir, env, detached: true, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -480,60 +474,32 @@ class Sidecar extends ReadyResource {
         })
       }
       if (appling) {
-        const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
-        else spawn(applingPath, opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        else spawn(appling.path, opts).unref()
       } else {
-        const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice(1))
-
-        const linkIndex = cmd?.indices?.args?.link
-        const link = cmd?.args?.link
-        if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
-        } else {
-          cmdArgs.push(dir)
-        }
-
-        spawn(RUNTIME, cmdArgs, opts).unref()
+        argv[argv.indexOf('--run')] = 'run'
+        spawn(RUNTIME, argv, opts).unref()
       }
 
       return
     }
 
-    const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = (await this.#shutdown(client)).filter(({ run }) => run)
+    const restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
-
-    await sidecarClosed
-
-    for (const { dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
+    for (const { dir, appling, argv, env } of restarts) {
+      const opts = { dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
-        else spawn(applingPath, opts).unref()
+        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
+        else spawn(appling.path, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
-
-        const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice(1))
-
-        const linkIndex = cmd?.indices?.args?.link
-        const link = cmd?.args?.link
-        if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
-        } else {
-          cmdArgs.push(dir)
-        }
-
-        spawn(RUNTIME, cmdArgs, opts).unref()
+        spawn(RUNTIME, argv, opts).unref()
       }
     }
   }
@@ -562,20 +528,20 @@ class Sidecar extends ReadyResource {
     })
   }
 
-  unloading (params, client) { return client.userData.unloading() }
+  unloading (params, client) { client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, link, dir, args, cmdArgs } = params
+    const { flags, env, link, dir, args } = params
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
       client.userData = starting.client.userData
       return await starting.running
     }
-    if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
+    if (startId && !starting) throw ERR_PLATFORM_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
+    const running = this.#start(flags, client, session, env, link, dir, startId, args)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -597,10 +563,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
+  async #start (flags, client, session, env, link, dir, startId, args) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args, cmdArgs, run: true })
+    const state = new State({ id, env, link, dir, flags, args })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
@@ -808,14 +774,6 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
-}
-
-function pickData () {
-  return new streamx.Transform({
-    transform ({ data }, cb) {
-      cb(null, data)
-    }
-  })
 }
 
 module.exports = Sidecar

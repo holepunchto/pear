@@ -8,7 +8,7 @@ const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
-const constants = require('../lib/constants')
+const constants = require('../constants')
 
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
@@ -416,7 +416,7 @@ class App {
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc)
-          this.contextMenu.popup({ params, devtools: this.ctx.devtools })
+          this.contextMenu.popup({ params, devtools: this.state.devtools })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
@@ -476,12 +476,12 @@ class App {
     const { state } = this
 
     this.starting = this.ipc.start({
-      startId: ctx.startId,
-      args: ctx.args,
-      flags: ctx.flags,
-      env: ctx.env,
-      dir: ctx.dir,
-      link: ctx.link
+      startId: state.startId,
+      args: state.args,
+      flags: state.flags,
+      env: state.env,
+      dir: state.dir,
+      link: state.link
     })
 
     this.starting.catch(async (err) => {
@@ -499,7 +499,7 @@ class App {
 
       const { dev, devtools, trace, stage } = state
       const show = (!trace && (dev || !stage))
-      const unfilteredGuiOptions = ctx.options.gui || ctx.options
+      const unfilteredGuiOptions = state.options.gui || state.options
 
       const guiOptions = {
         autoresize: unfilteredGuiOptions.autoresize,
@@ -981,8 +981,8 @@ class Window extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
+    const ua = `Pear ${this.state.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
     session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
@@ -992,8 +992,8 @@ class Window extends GuiCtrl {
       height,
       width,
       frame: false,
-      ...(isMac && this.ctx.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
-      ...(isMac && this.ctx?.alias === 'keet' && this.ctx?.appling?.path ? { icon: path.join(path.dirname(this.ctx.appling.path), 'resources', 'app', 'icon.ico') } : {}),
+      ...(isMac && this.state.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
+      ...(isMac && this.state?.alias === 'keet' && this.state?.appling?.path ? { icon: path.join(path.dirname(this.state.appling.path), 'resources', 'app', 'icon.ico') } : {}),
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
@@ -1256,8 +1256,8 @@ class View extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.dir}`)
+    const ua = `Pear ${this.state.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
     session.setUserAgent(ua)
 
     this.view = new BrowserView({

@@ -1,7 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const constants = require('../lib/constants')
-const { ERR_INVALID_LINK } = require('../lib/errors')
+const constants = require('../constants')
+const { ERR_INVALID_LINK } = require('../errors')
 
 const parseLink = (link) => {
   if (!link) throw ERR_INVALID_LINK('No link specified')
