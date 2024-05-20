@@ -106,7 +106,7 @@ module.exports = class State {
     this.dir = key === null ? dir : '/'
     this.env = { ...env }
     this.flags = flags
-    this.dev = dev || false
+    this.dev = dev
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff

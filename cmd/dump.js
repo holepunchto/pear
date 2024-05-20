@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter } = require('./iface')
-const { ERR_INVALID_INPUT } = require('../lib/errors')
+const { ERR_INVALID_INPUT } = require('../errors')
 const output = outputter('stage', {
   dumping: ({ key, dir }) => `\n🍐 Dumping ${key} into ${dir}`,
   complete: '\nDumping complete!\n',

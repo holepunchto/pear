@@ -1,9 +1,9 @@
 'use strict'
+const { once } = require('bare-events')
 const http = require('bare-http1')
 const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
-const listen = require('listen-async')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
@@ -145,11 +145,9 @@ module.exports = class Http extends ReadyResource {
   }
 
   async _open () {
-    try {
-      await listen(this.server, 9342, '127.0.0.1')
-    } catch {
-      await listen(this.server, 0, '127.0.0.1')
-    }
+    const listening = once(this.server, 'listening')
+    this.server.listen(0, '127.0.0.1')
+    await listening
     this.port = this.server.address().port
     this.host = `http://127.0.0.1:${this.port}`
   }

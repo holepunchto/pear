@@ -31,7 +31,7 @@ const {
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
 
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_PLATFORM_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 
 const State = require('./state')
 const ops = {
@@ -222,7 +222,7 @@ class Sidecar extends ReadyResource {
       messages (ptn) {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
-        streamx.pipeline(subscriber, pickData(), stream)
+        streamx.pipeline(subscriber, stream)
         return stream
       }
 
@@ -330,7 +330,7 @@ class Sidecar extends ReadyResource {
     if (!client.userData && params.startId) {
       const starting = this.running.get(params.startId)
       if (starting) client.userData = starting.client.userData
-      else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
+      else throw ERR_PLATFORM_ERROR('identify failure unrecognized startId (check crash logs)')
     }
     const id = client.userData.id
     const host = await this.address()
@@ -359,7 +359,7 @@ class Sidecar extends ReadyResource {
   warming (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.warming, pickData(), stream)
+    streamx.pipeline(client.userData.warming, stream)
     return stream
   }
 
@@ -370,8 +370,7 @@ class Sidecar extends ReadyResource {
   reports (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.reporter, pickData(), stream)
-    return stream
+    streamx.pipeline(client.userData.reporter, stream)
   }
 
   createReport (err, client) {
@@ -529,7 +528,7 @@ class Sidecar extends ReadyResource {
     })
   }
 
-  unloading (params, client) { return client.userData.unloading() }
+  unloading (params, client) { client.userData.unloading() }
 
   async start (params, client) {
     const { flags, env, link, dir, args } = params
@@ -539,7 +538,7 @@ class Sidecar extends ReadyResource {
       client.userData = starting.client.userData
       return await starting.running
     }
-    if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
+    if (startId && !starting) throw ERR_PLATFORM_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
     const running = this.#start(flags, client, session, env, link, dir, startId, args)
@@ -775,14 +774,6 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
-}
-
-function pickData () {
-  return new streamx.Transform({
-    transform ({ data }, cb) {
-      cb(null, data)
-    }
-  })
 }
 
 module.exports = Sidecar
