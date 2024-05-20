@@ -17,8 +17,7 @@ const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mou
 const swapPath = toPath(swapURL)
 
 const IPC_ID = 'pear'
-const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../', swapURL)
-
+const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../..', swapURL)
 const PLATFORM_DIR = toPath(PLATFORM_URL)
 const PLATFORM_LOCK = toPath(new URL('corestores/platform/primary-key', PLATFORM_URL))
 
