@@ -1,17 +1,20 @@
 'use strict'
-const { isBare, isWindows } = require('which-runtime')
-const os = isBare ? require('bare-os') : require('os')
-const fs = isBare ? require('bare-fs') : require('fs')
-const path = isBare ? require('bare-path') : require('path')
-const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
-const { Readable } = require('streamx')
-const { PLATFORM_DIR } = require('./constants')
+const { isWindows } = require('which-runtime')
+const os = require('bare-os')
+const fs = require('bare-fs')
+const path = require('bare-path')
+const { spawn } = require('bare-subprocess')
+const streamx = require('streamx')
+const { PLATFORM_DIR } = require('../../../../constants')
+const { ERR_INVALID_GC_RESOURCE } = require('../../../errors')
 
-module.exports = class GarbageCollector extends Readable {
-  constructor (client, engine) {
+module.exports = class GC extends streamx.Readable {
+  constructor ({ pid, resource }, client) {
     super()
     this.client = client
-    this.engine = engine
+    if (resource === 'release') this.release({ resource })
+    else if (resource === 'sidecar') this.sidecar({ pid, resource })
+    else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
   _destroy (cb) {

@@ -8,7 +8,7 @@ const electron = require('electron')
 const Worker = require('../lib/worker')
 
 module.exports = class PearGUI extends ReadyResource {
-  constructor ({ API, ctx }) {
+  constructor ({ API, state }) {
     super()
     const id = this.id = electron.ipcRenderer.sendSync('id')
 
@@ -18,7 +18,7 @@ module.exports = class PearGUI extends ReadyResource {
     })
 
     const onteardown = async (fn) => {
-      if (!ctx.isDecal) return
+      if (!state.isDecal) return
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       fn(action) // resolve global promise and trigger user suspend functions
@@ -30,8 +30,8 @@ module.exports = class PearGUI extends ReadyResource {
       await this.ipc.completeUnload({ id, action })
     }
     API = class extends API {
-      constructor (ipc, ctx, onteardown) {
-        super(ipc, ctx, onteardown)
+      constructor (ipc, state, onteardown) {
+        super(ipc, state, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
         this.worker = new Worker({ ipc })
         this.media = {
@@ -145,7 +145,7 @@ module.exports = class PearGUI extends ReadyResource {
                 type: this.constructor[kGuiCtrl],
                 entry: this.entry,
                 options: this.options,
-                ctx: this.ctx,
+                state: this.state,
                 openOptions: opts
               })
               return true
@@ -221,7 +221,7 @@ module.exports = class PearGUI extends ReadyResource {
         electron.app.quit()
       }
     }
-    this.api = new API(this.ipc, ctx, onteardown)
+    this.api = new API(this.ipc, state, onteardown)
   }
 }
 

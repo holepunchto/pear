@@ -1,8 +1,8 @@
 'use strict'
 const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
 const { usage, print } = require('./iface')
-const { CHECKOUT } = require('../lib/constants')
-const errors = require('../lib/errors')
+const { CHECKOUT } = require('../constants')
+const errors = require('../errors')
 const runners = {
   init: require('./init'),
   stage: require('./stage'),
