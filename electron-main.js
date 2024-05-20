@@ -2,11 +2,11 @@
 const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const { command } = require('paparam')
-const Context = require('./ctx/shared')
+const State = require('./state')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./lib/constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
 const runDefinition = require('./run/definition')
 
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
@@ -20,14 +20,14 @@ const run = command('run', ...runDefinition, electronMain)
 run.parse(argv)
 
 async function electronMain (cmd) {
-  const ctx = new Context({
+  const state = new State({
     link: cmd.args.link,
     flags: cmd.flags
   })
-  Context.storage(ctx)
+  State.storage(state)
 
-  if (ctx.error) {
-    console.error(ctx.error)
+  if (state.error) {
+    console.error(state.error)
     electron.app.quit(1)
     return
   }
@@ -36,13 +36,13 @@ async function electronMain (cmd) {
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
     tryboot,
-    ctx
+    state
   })
 
   await gui.ready()
 
   // note: would be unhandled rejection on failure, but should never fail:
-  if (await gui.ipc.wakeup(ctx.link, ctx.storage, ctx.dir && ctx.link?.startsWith('pear://dev'))) {
+  if (await gui.ipc.wakeup(state.link, state.storage, state.dir && state.link?.startsWith('pear://dev'))) {
     electron.app.quit(0)
     return
   }

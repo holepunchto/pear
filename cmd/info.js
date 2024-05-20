@@ -3,7 +3,7 @@ const parseLink = require('../run/parse-link')
 const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { ERR_INVALID_INPUT } = require('../lib/errors')
+const { ERR_INVALID_INPUT } = require('../errors')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
