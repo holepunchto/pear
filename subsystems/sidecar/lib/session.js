@@ -1,6 +1,6 @@
 'use strict'
 const safetyCatch = require('safety-catch')
-const { ERR_PLATFORM_ERROR } = require('../../../errors')
+const { ERR_INTERNAL_ERROR } = require('../../../errors')
 module.exports = class Session {
   constructor (client) {
     this.client = client
@@ -21,7 +21,7 @@ module.exports = class Session {
 
     if (this.closed) {
       await resource.close()
-      throw ERR_PLATFORM_ERROR('Session is closed')
+      throw ERR_INTERNAL_ERROR('Session is closed')
     }
 
     this.resources.add(resource)
