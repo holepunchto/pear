@@ -42,7 +42,7 @@
     }
   },
   "subsystems": [
-    "./subsystems/sidecar.js"
+    "./subsystems/sidecar/index.js"
   ],
   "standard": {
     "globals": [

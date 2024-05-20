@@ -4,7 +4,7 @@ const { readFileSync } = require('bare-fs')
 const { writeFile, rename } = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')
 const Iambus = require('iambus')
-const { PLATFORM_DIR } = require('./constants')
+const { PLATFORM_DIR } = require('../../../constants')
 
 const preferences = join(PLATFORM_DIR, 'preferences.json')
 const next = join(PLATFORM_DIR, 'preferences.next.json')
