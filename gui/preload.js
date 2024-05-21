@@ -257,6 +257,7 @@ class IPC {
   afterViewLoaded (...args) { return electron.ipcRenderer.invoke('afterViewLoaded', ...args) }
   setWindowButtonPosition (...args) { return electron.ipcRenderer.invoke('setWindowButtonPosition', ...args) }
   setWindowButtonVisibility (...args) { return electron.ipcRenderer.invoke('setWindowButtonVisibility', ...args) }
+  shareIdentity (...args) { return electron.ipcRenderer.invoke('shareIdentity', ...args) }
   message (...args) { return electron.ipcRenderer.invoke('message', ...args) }
   checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }

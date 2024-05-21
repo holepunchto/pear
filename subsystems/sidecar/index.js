@@ -17,7 +17,7 @@ const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const reports = require('./lib/reports')
-const preferences = require('./lib/preferences')
+const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
@@ -32,8 +32,9 @@ const {
 } = require('../../constants')
 
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
-
+const identity = new Store('identity')
 const State = require('./state')
+const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
   Release: require('./ops/release'),
@@ -391,6 +392,16 @@ class Sidecar extends ReadyResource {
   async checkpoint (params, client) {
     if (!client.userData) return
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
+  }
+
+  async shareIdentity (params) {
+    const { signer, attester } = params
+    identity.set('signer', signer)
+    identity.set('attester', attester)
+  }
+
+  async clearIdentity () {
+    identity.clear()
   }
 
   async message (params, client) {
