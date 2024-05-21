@@ -8,7 +8,7 @@ const fs = require('bare-fs')
 const hie = require('hypercore-id-encoding')
 const Localdrive = require('localdrive')
 
-const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, argv: [] })
+const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, cmdArgs: [] })
 const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -268,7 +268,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const appSeeder = new Helper({ platformDir })
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, argv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -287,7 +287,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, argv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -395,7 +395,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const appSeeder = new Helper({ platformDir })
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, argv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -414,7 +414,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, argv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -543,7 +543,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, argv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -562,7 +562,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, argv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -669,7 +669,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, argv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -688,7 +688,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, argv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key

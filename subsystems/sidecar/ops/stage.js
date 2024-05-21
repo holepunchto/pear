@@ -44,13 +44,13 @@ module.exports = class Stage extends Opstream {
 
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, argv, ignore = '.git,.github,.DS_Store' }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store' }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
       flags: { channel, stage: true },
       dir,
-      argv
+      cmdArgs
     })
     await sidecar.ready()
     if (key) key = hypercoreid.decode(key)

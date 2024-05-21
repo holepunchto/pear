@@ -448,8 +448,8 @@ class Sidecar extends ReadyResource {
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-      const { pid, argv, dir, runtime, appling, env } = app.state
-      metadata.push({ pid, argv, dir, runtime, appling, env })
+      const { pid, cmdArgs, dir, runtime, appling, env } = app.state
+      metadata.push({ pid, cmdArgs, dir, runtime, appling, env })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -459,7 +459,7 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
-      const { dir, argv, env } = client.userData.state
+      const { dir, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { dir, env, detached: true, stdio: 'ignore' }
       if (!client.closed) {
@@ -478,8 +478,8 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
-        argv[argv.indexOf('--run')] = 'run'
-        spawn(RUNTIME, argv, opts).unref()
+        cmdArgs[cmdArgs.indexOf('--run')] = 'run'
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
       return
@@ -492,7 +492,7 @@ class Sidecar extends ReadyResource {
     this.deathClock()
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
-    for (const { dir, appling, argv, env } of restarts) {
+    for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
         if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
@@ -500,7 +500,7 @@ class Sidecar extends ReadyResource {
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
-        spawn(RUNTIME, argv, opts).unref()
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
     }
   }
@@ -532,7 +532,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, link, dir, args, argv } = params
+    const { flags, env, link, dir, args, cmdArgs } = params
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
@@ -542,7 +542,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args, argv)
+    const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -564,10 +564,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args, argv) {
+  async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args, argv })
+    const state = new State({ id, env, link, dir, flags, args, cmdArgs })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {

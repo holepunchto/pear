@@ -25,5 +25,5 @@ module.exports = (ipc) => async function release (cmd) {
     throw ERR_INVALID_INPUT('--checkout flag must supply an integer if set')
   }
   const id = Bare.pid
-  await output(json, ipc.release({ id, name, channel, link, checkout, dir, argv: Bare.argv.slice(1) }))
+  await output(json, ipc.release({ id, name, channel, link, checkout, dir, cmdArgs: Bare.argv.slice(1) }))
 }

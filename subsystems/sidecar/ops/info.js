@@ -11,7 +11,7 @@ module.exports = class Info extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link, channel, dir, showKey, metadata, changelog, full, argv } = {}) {
+  async #op ({ link, channel, dir, showKey, metadata, changelog, full, cmdArgs } = {}) {
     const { session } = this
     let bundle = null
     const anyFlag = [changelog, full, metadata, showKey].some(flag => flag === true)
@@ -26,7 +26,7 @@ module.exports = class Info extends Opstream {
       await bundle.ready()
       if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
     } else if (channel) {
-      const state = new State({ flags: { channel, link }, dir, argv })
+      const state = new State({ flags: { channel, link }, dir, cmdArgs })
       const corestore = this.sidecar._getCorestore(state.name, channel)
       bundle = new Bundle({ corestore, channel })
       await bundle.ready()
