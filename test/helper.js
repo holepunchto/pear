@@ -19,8 +19,11 @@ class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
+    const verbose = Bare.argv.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
+    const args = ['--sidecar']
+    if (verbose) args.push('--verbose')
     const ipcId = 'pear'
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -35,20 +38,16 @@ class Helper extends IPC {
       connect: opts.expectSidecar
         ? true
         : () => {
-            const sc = spawn(
-              runtime, ['--sidecar', '--verbose'], {
-                detached: true,
-                stdio: opts.logging ? 'inherit' : 'ignore'
-              })
+            const sc = spawn(runtime, args, {
+              detached: !verbose,
+              stdio: verbose ? 'inherit' : 'ignore'
+            })
             sc.unref()
           }
     })
     this.#expectSidecar = opts.expectSidecar
-    this.logging = opts.logging
     this.opts = opts
   }
-
-  static logging = false
 
   static async open (key, { tags = [] } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
@@ -89,11 +88,7 @@ class Helper extends IPC {
   static async pick (iter, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
     for await (const output of iter) {
-      if (this.logging) console.log('output', output)
-      if (this.matchesPattern(output, ptn)) {
-        if (this.logging) console.log('pick', output)
-        return output.data
-      }
+      if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
   }
@@ -131,7 +126,6 @@ class Helper extends IPC {
   static async sink (iter, ptn) {
     for await (const output of iter) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
-      if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
   }
 
