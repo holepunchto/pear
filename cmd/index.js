@@ -60,7 +60,10 @@ module.exports = async (ipc) => {
 
   const cmd = new Cmd(usage.output, () => { ipc.close() })
   cmd.add('help', ([cmd = 'full']) => usage.output(cmd[0] === '-' ? 'full' : cmd))
-  cmd.add('versions', (args) => usage.outputVersions(args.includes('--json')))
+  cmd.add('versions', (args) => {
+    usage.outputVersions(args.includes('--json'))
+    ipc.close()
+  })
   cmd.add('init', init(ipc))
   cmd.add('dev', (args) => run(ipc)(['--dev', ...args], true))
   cmd.add('stage', stage(ipc))
