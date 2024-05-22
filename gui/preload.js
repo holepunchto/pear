@@ -42,7 +42,7 @@ module.exports = class PearGUI extends ReadyResource {
             camera: () => ipc.askForMediaAccess({ id, media: 'camera' }),
             screen: () => ipc.askForMediaAccess({ id, media: 'screen' })
           },
-          desktopSources: (options = null) => ipc.desktopSources(options = null)
+          desktopSources: (options = {}) => ipc.desktopSources(options)
         }
 
         const kGuiCtrl = Symbol('gui:ctrl')
