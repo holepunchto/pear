@@ -1497,7 +1497,7 @@ class PearGUI extends ReadyResource {
 
   getMediaAccessStatus ({ mediaType }) {
     if (isLinux) {
-      return 'unknown'
+      return 'unsupported'
     } else {
       return electron.systemPreferences.getMediaAccessStatus(mediaType)
     }
