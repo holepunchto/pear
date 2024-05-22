@@ -75,7 +75,7 @@ module.exports = async (ipc) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--bare|-b', 'File data only, no warmup optimization'),
-    flag('--ignore', 'Comma separated file path ignore list'),
+    flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name', 'Advanced. Override app name'),
     runners.stage(ipc)
