@@ -84,7 +84,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   fs.unlinkSync(path.join(dir, file))
 
   const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1Version = update1?.value?.data?.version
   is(hie.encode(hie.decode(update1Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update1Version?.fork, 0, 'app version.fork is 0')
   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
@@ -101,7 +101,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('waiting for update')
   const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2Version = update2?.value?.data?.version
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
@@ -179,7 +179,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\twaiting for update')
   const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1Version = update1?.value?.data?.version
   is(hie.encode(hie.decode(update1Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update1Version?.fork, 0, 'app version.fork is 0')
   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
@@ -203,7 +203,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\twaiting for update')
   const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2Version = update2?.value?.data?.version
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(key)).toString('hex'), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
@@ -331,7 +331,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(final2.success, 'stage succeeded')
 
   const update = await updateActualPromise
-  const updateVersion = update?.value?.version
+  const updateVersion = update?.value?.data?.version
   const pearUpdateLength = updateVersion.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
@@ -461,7 +461,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   ok(final2.success, 'stage succeeded')
 
   const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1Version = update1?.value?.data?.version
   const pearUpdateLength = update1Version.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
 
@@ -477,7 +477,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('waiting for platform update notification')
   const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2Version = update2?.value?.data?.version
   const pearUpdate2Key = update2Version.key
   const pearUpdate2Length = update2Version.length
 
@@ -606,7 +606,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   ok(appFinal2.success, 'stage succeeded')
 
   const update = await updateActualPromise
-  const updateVersion = update?.value?.version
+  const updateVersion = update?.value?.data?.version
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
@@ -735,7 +735,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   ok(appFinal2.success, 'stage succeeded')
 
   const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1Version = update1?.value?.data?.version
   const appUpdateLength = update1Version.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
 
@@ -751,7 +751,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('waiting for app update notification')
   const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2Version = update2?.value?.data?.version
   const appUpdate2Length = update2Version.length
 
   is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
