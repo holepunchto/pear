@@ -75,7 +75,8 @@ class Helper extends IPC {
         iterable.push(JSON.parse(data))
         return
       }
-      console.error('Unrecognized subprocess STDOUT output:', data)
+      if (verbose) console.log(data)
+      else console.error('Unrecognized subprocess STDOUT output:', data)
     })
 
     const until = await this.pick(iterable, tags)
