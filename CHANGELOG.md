@@ -2,12 +2,16 @@
 
 ## v1.1.3
 
+### Features
+
+* package.json config `pear.previewFor` support
+
 ### Fixes
 
-* Windows - multiple platform instances fix, unique pipes 
+* Windows - multiple platform instances fix, unique pipes
 * Hypercore dependency update for updater fixes
-* 
-
+* libudx - app start-up hanging bug-fix
+* rm deprecated import pear for global Pear
 
 ### Improvements
 
