@@ -103,7 +103,7 @@ module.exports = class State {
     this.appling = appling
     this.channel = channel || null
     this.checkout = checkout
-    this.dir = dir
+    this.dir = key === null ? dir : '/'
     this.env = { ...env }
     this.flags = flags
     this.dev = dev
@@ -117,7 +117,6 @@ module.exports = class State {
     this.linkData = linkData
     this.key = key
     this.alias = alias
-    this.dir = dir
     this.manifest = pkg
     this.clientArgv = clientArgv
     this.pkgPath = pkgPath
