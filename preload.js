@@ -13,8 +13,8 @@ if (process.isMainFrame) {
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
-  const { parentWcId, env, dir, id, decalled = false, isDecal = false, ...config } = state
-
+  const { parentWcId, env, id, decalled = false, isDecal = false, ...config } = state
+  const dir = config.dir
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   state.config = config
