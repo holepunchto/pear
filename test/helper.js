@@ -51,10 +51,12 @@ class Helper extends IPC {
 
   static async open (key, { tags = [] } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
+    const verbose = Bare.argv.includes('--verbose')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
+    if (verbose) args.push('--verbose')
 
     const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
-    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
@@ -73,7 +75,8 @@ class Helper extends IPC {
         iterable.push(JSON.parse(data))
         return
       }
-      console.error('Unrecognized subprocess STDOUT output:', data)
+      if (verbose) console.log(data)
+      else console.error('Unrecognized subprocess STDOUT output:', data)
     })
 
     const until = await this.pick(iterable, tags)
