@@ -1,5 +1,25 @@
 # Pear Runtime Changelog
 
+## v1.1.3
+
+### Features
+
+* package.json config `pear.previewFor` support
+
+### Fixes
+
+* Windows - multiple platform instances fix, unique pipes
+* Hypercore dependency update for updater fixes
+* libudx - app start-up hanging bug-fix
+* rm deprecated import pear for global Pear
+* `pear versions` hanging fix
+* teardown sigterm exit code fix
+
+### Improvements
+
+* IPC Refactor from `jsonrpc-mux` to `pear-ipc` 
+* deprecated dead-code removal (import 'pear' -> global.Pear)
+
 ## v1.1.2
 
 ### Fixes
