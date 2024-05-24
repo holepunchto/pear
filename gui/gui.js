@@ -1327,7 +1327,7 @@ class PearGUI extends ReadyResource {
         reports (method) {
           return (params) => {
             const stream = method.createRequestStream()
-            stream.once('data', () => { gui.reportMode(ctx) })
+            stream.once('data', () => { PearGUI.reportMode(ctx) })
             stream.write(params)
             return stream
           }
