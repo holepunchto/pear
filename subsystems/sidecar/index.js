@@ -770,8 +770,8 @@ class Sidecar extends ReadyResource {
 
   #busTransformer () {
     return new streamx.Transform({
-      transform ({ data }) {
-        this.push(data)
+      transform ({ data }, cb) {
+        cb(null, data)
       }
     })
   }
