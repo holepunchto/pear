@@ -12,10 +12,13 @@
 * Hypercore dependency update for updater fixes
 * libudx - app start-up hanging bug-fix
 * rm deprecated import pear for global Pear
+* `pear versions` hanging fix
+* teardown sigterm exit code fix
 
 ### Improvements
 
 * IPC Refactor from `jsonrpc-mux` to `pear-ipc` 
+* deprecated dead-code removal (import 'pear' -> global.Pear)
 
 ## v1.1.2
 
