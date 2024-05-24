@@ -11,9 +11,8 @@
 * Windows - multiple platform instances fix, unique pipes
 * Hypercore dependency update for updater fixes
 * libudx - app start-up hanging bug-fix
-* rm deprecated import pear for global Pear
-* `pear versions` hanging fix
-* teardown sigterm exit code fix
+* CLI - `pear versions` hanging fix
+* teardown - sigterm exit code fix
 
 ### Improvements
 
