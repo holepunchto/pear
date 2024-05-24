@@ -371,6 +371,7 @@ class Sidecar extends ReadyResource {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
     streamx.pipeline(client.userData.reporter, stream)
+    return stream
   }
 
   createReport (err, client) {
