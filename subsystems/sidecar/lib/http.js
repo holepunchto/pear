@@ -146,9 +146,9 @@ module.exports = class Http extends ReadyResource {
 
   async _open () {
     try {
-      await listen(this.server, 9342)
+      await listen(this.server, 9342, '127.0.0.1')
     } catch {
-      await listen(this.server, 0)
+      await listen(this.server, 0, '127.0.0.1')
     }
     this.port = this.server.address().port
     this.host = `http://127.0.0.1:${this.port}`
