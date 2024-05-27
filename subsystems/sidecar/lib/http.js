@@ -1,5 +1,4 @@
 'use strict'
-const { once } = require('bare-events')
 const http = require('bare-http1')
 const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
@@ -145,9 +144,26 @@ module.exports = class Http extends ReadyResource {
   }
 
   async _open () {
-    const listening = once(this.server, 'listening')
-    this.server.listen(0, '127.0.0.1')
-    await listening
+    if (this.port === null) this.port = 9342
+    this.server.listen(this.port, '127.0.0.1')
+    await new Promise((resolve, reject) => {
+      const onlisten = () => {
+        resolve()
+        this.server.off('error', onerror)
+      }
+
+      const onerror = (err) => {
+        this.server.off('listening', onlisten)
+        if (this.port === 0) {
+          reject(err)
+          return
+        }
+        this._open().then(resolve, reject)
+      }
+
+      this.server.once('listening', onlisten)
+      this.server.once('error', onerror)
+    })
     this.port = this.server.address().port
     this.host = `http://127.0.0.1:${this.port}`
   }
