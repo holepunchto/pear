@@ -272,7 +272,7 @@ if (process.isMainFrame) {
             display: table-cell;
             vertical-align: middle;
             text-align: center;
-            margin-left: .9em;
+            margin-left: .7em;
           }
           #ctrl > .ctrl:hover {
             opacity: 1;
@@ -294,6 +294,7 @@ if (process.isMainFrame) {
            -webkit-app-region: drag;
            width: 100%;
            height: 50px;
+           transform: scale(1.25);
          }
         </style>
         <div id="titlebar">
