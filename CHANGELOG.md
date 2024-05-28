@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v1.2.1 
+
+### Fixes
+
+* `Pear.media.access` and `Pear.media.status API fixes
+* Hypercore - race condition upon block cancellation during validation fix 
+
 ## v1.2.0
 
 ### Features
