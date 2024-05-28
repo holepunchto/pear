@@ -1495,17 +1495,17 @@ class PearGUI extends ReadyResource {
     return instance
   }
 
-  getMediaAccessStatus ({ mediaType }) {
+  getMediaAccessStatus ({ media }) {
     if (isLinux) {
       return 'unsupported'
     } else {
-      return electron.systemPreferences.getMediaAccessStatus(mediaType)
+      return electron.systemPreferences.getMediaAccessStatus(media)
     }
   }
 
-  async askForMediaAccess (mediaType, client) {
+  async askForMediaAccess ({ media }) {
     if (isLinux || isWindows) return false
-    return electron.systemPreferences.askForMediaAccess(mediaType)
+    return electron.systemPreferences.askForMediaAccess(media)
   }
 
   desktopSources (params) {
