@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.2.2
+
+### Fixes
+
+* API - `Pear.media.access.screen()` fix
+
 ## v1.2.1 
 
 ### Fixes
