@@ -25,6 +25,8 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
+const { command } = require('paparam')
+const runDefinition = require('../../run/definition')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -478,7 +480,17 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
         else spawn(appling.path, opts).unref()
       } else {
-        cmdArgs[cmdArgs.indexOf('--run')] = 'run'
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.splice(1))
+
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined && !(link.startsWith('pear://') || link.startsWith('file://'))) {
+          cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.splice(1, 0, dir)
+        }
+
         spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
@@ -500,6 +512,18 @@ class Sidecar extends ReadyResource {
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
+
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.splice(1))
+
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined && !(link.startsWith('pear://') || link.startsWith('file://'))) {
+          cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.splice(1, 0, dir)
+        }
+
         spawn(RUNTIME, cmdArgs, opts).unref()
       }
     }
