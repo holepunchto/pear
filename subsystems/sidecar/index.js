@@ -395,11 +395,12 @@ class Sidecar extends ReadyResource {
   }
 
   async requestIdentity ({ publicKey }) {
-    const key = publicKey.toString('hex')
-    let keyPair = identity.get(key)
-    if (!keyPair) {
-      keyPair = crypto.keyPair(publicKey)
-      identity.set(key, { keyPair })
+    let keyPair = await identity.get('keyPair')
+    if (keyPair) {
+      keyPair.publicKey = Buffer.from(Object.values(keyPair.publicKey))
+    } else {
+      keyPair = await crypto.keyPair(publicKey.buffer)
+      identity.set('keyPair', keyPair)
     }
     return keyPair.publicKey
   }

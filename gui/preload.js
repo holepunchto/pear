@@ -257,6 +257,11 @@ class IPC {
   afterViewLoaded (...args) { return electron.ipcRenderer.invoke('afterViewLoaded', ...args) }
   setWindowButtonPosition (...args) { return electron.ipcRenderer.invoke('setWindowButtonPosition', ...args) }
   setWindowButtonVisibility (...args) { return electron.ipcRenderer.invoke('setWindowButtonVisibility', ...args) }
+  async requestIdentity (...args) {
+    const publicKey = await electron.ipcRenderer.invoke('requestIdentity', ...args)
+    return Buffer.from(publicKey)
+  }
+
   shareIdentity (...args) { return electron.ipcRenderer.invoke('shareIdentity', ...args) }
   clearIdentity (...args) { return electron.ipcRenderer.invoke('clearIdentity', ...args) }
   message (...args) { return electron.ipcRenderer.invoke('message', ...args) }
