@@ -1317,7 +1317,6 @@ class PearGUI extends ReadyResource {
   static Window = Window
   constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
     super()
-    const gui = this
     this.ctx = ctx
     this.ipc = new IPC({
       lock: constants.PLATFORM_LOCK,
@@ -1503,8 +1502,14 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  async askForMediaAccess ({ media }) {
+  async askForMediaAccess ({ id, media }) {
     if (isLinux || isWindows) return false
+    if (media === 'screen') { // NOTE: remove after electron upgrade
+      const ctrl = this.get(id)
+      const srcid = await ctrl.getMediaSourceId()
+      return srcid > -1
+    }
+
     return electron.systemPreferences.askForMediaAccess(media)
   }
 
