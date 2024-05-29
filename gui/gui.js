@@ -1443,6 +1443,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('afterViewLoaded', (evt, ...args) => this.afterViewLoaded(...args))
     electron.ipcMain.handle('setWindowButtonPosition', (evt, ...args) => this.setWindowButtonPosition(...args))
     electron.ipcMain.handle('setWindowButtonVisibility', (evt, ...args) => this.setWindowButtonVisibility(...args))
+    electron.ipcMain.handle('requestIdentity', (evt, ...args) => this.requestIdentity(...args))
     electron.ipcMain.handle('shareIdentity', (evt, ...args) => this.shareIdentity(...args))
     electron.ipcMain.handle('clearIdentity', (evt, ...args) => this.clearIdentity(...args))
     electron.ipcMain.handle('message', (evt, ...args) => this.message(...args))
@@ -1697,6 +1698,8 @@ class PearGUI extends ReadyResource {
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
+
+  requestIdentity (params) { return this.ipc.requestIdentity(params) }
 
   shareIdentity (identity) { return this.ipc.shareIdentity(identity) }
 

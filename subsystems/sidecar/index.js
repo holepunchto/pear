@@ -9,7 +9,7 @@ const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
-const { randomBytes, discoveryKey } = require('hypercore-crypto')
+const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
@@ -394,10 +394,20 @@ class Sidecar extends ReadyResource {
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
+  async requestIdentity ({ publicKey }) {
+    const key = publicKey.toString('hex')
+    let keyPair = identity.get(key)
+    if (!keyPair) {
+      keyPair = crypto.keyPair(publicKey)
+      identity.set(key, { keyPair })
+    }
+    return keyPair.publicKey
+  }
+
   async shareIdentity (params) {
-    const { signer, attester } = params
-    identity.set('signer', signer)
-    identity.set('attester', attester)
+    const { publicKey, attestation } = params
+    identity.set('publicKey', publicKey)
+    identity.set('attestation', attestation)
   }
 
   async clearIdentity () {
@@ -440,7 +450,7 @@ class Sidecar extends ReadyResource {
   async detached ({ key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
     }
 
     const wokeup = await this.wakeup({ args: [key.link, storage, appdev, false] })
@@ -552,7 +562,7 @@ class Sidecar extends ReadyResource {
     }
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
-    startId = client.userData?.startId || randomBytes(16).toString('hex')
+    startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
     const running = this.#start(flags, client, session, env, link, dir, startId, args)
     this.running.set(startId, { client, running })
     session.teardown(() => {
