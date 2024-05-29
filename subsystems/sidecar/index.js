@@ -481,7 +481,7 @@ class Sidecar extends ReadyResource {
         else spawn(appling.path, opts).unref()
       } else {
         const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice().splice(1))
+        cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
@@ -514,7 +514,7 @@ class Sidecar extends ReadyResource {
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
 
         const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice().splice(1))
+        cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
