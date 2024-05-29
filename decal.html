@@ -649,9 +649,9 @@
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(trustConfirm)
-              trustConfirm.setLink(report.key.link)
+              trustConfirm.setLink(key.link)
               trustConfirm.trust = async () => {
-                await this.ipc.trust({ z32: report.key.z32 })
+                await this.ipc.trust({ z32: key.z32 })
                 await this.ipc.restart({ id: this.gid })
               }
 
