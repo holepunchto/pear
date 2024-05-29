@@ -651,7 +651,7 @@
               document.body.appendChild(trustConfirm)
               trustConfirm.setLink(key.link)
               trustConfirm.trust = async () => {
-                await this.ipc.trust({ z32: report.key.z32 })
+                await this.ipc.trust({ z32: key.z32 })
                 await this.ipc.restart({ id: this.gid })
               }
 

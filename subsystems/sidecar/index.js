@@ -222,7 +222,7 @@ class Sidecar extends ReadyResource {
       messages (ptn) {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
-        streamx.pipeline(subscriber, this.sidecar.#busTransformer(), stream)
+        streamx.pipeline(subscriber, pickData(), stream)
         return stream
       }
 
@@ -359,7 +359,7 @@ class Sidecar extends ReadyResource {
   warming (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.warming, this.#busTransformer(), stream)
+    streamx.pipeline(client.userData.warming, pickData(), stream)
     return stream
   }
 
@@ -370,7 +370,7 @@ class Sidecar extends ReadyResource {
   reports (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.reporter, this.#busTransformer(), stream)
+    streamx.pipeline(client.userData.reporter, pickData(), stream)
     return stream
   }
 
@@ -768,14 +768,6 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  #busTransformer () {
-    return new streamx.Transform({
-      transform ({ data }, cb) {
-        cb(null, data)
-      }
-    })
-  }
-
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
@@ -783,6 +775,14 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
+}
+
+function pickData () {
+  return new streamx.Transform({
+    transform ({ data }, cb) {
+      cb(null, data)
+    }
+  })
 }
 
 module.exports = Sidecar
