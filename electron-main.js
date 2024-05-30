@@ -37,8 +37,7 @@ async function electronMain () {
   }
 
   const app = await gui.app()
-
-  gui.unloading({ id: app.id }).then(async () => {
+  app.unloading().then(async () => {
     await app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }
