@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.2.4
+
+### Fixes
+
+* Hypercore - bump for roundtrip request ids fix
+
 ## v1.2.3
 
 ### Fixes
