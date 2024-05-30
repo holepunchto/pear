@@ -603,6 +603,8 @@ class App {
     return { fork, length, key: key ? key.toString('hex') : null }
   }
 
+  unloading () { return this.ipc.unloading() }
+
   close (maxWait = 5500) {
     if (this.closing) return this.closing
     this.closing = this.#close(maxWait)
