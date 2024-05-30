@@ -93,6 +93,17 @@ module.exports = class Http extends ReadyResource {
     let isJS = false
     if (protocol !== 'resolve') {
       const ct = mime.type(link.filename)
+
+      // esm import of wasm returns the wasm file url
+
+      if (ct === 'application/wasm' && link.transform === 'esm') {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+        link.transform = 'wasm'
+        const out = await linker.transform(link)
+        res.end(out)
+        return
+      }
+
       res.setHeader('Content-Type', ct)
       if (link.transform === 'app') link.transform = 'esm'
       isJS = ct.slice(0, 22) === 'application/javascript'
