@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.2.3
+
+### Fixes
+
+* API - Pear.teardown and internal unloading IPC fix
+
 ## v1.2.2
 
 ### Fixes
