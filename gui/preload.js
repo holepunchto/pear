@@ -20,9 +20,9 @@ module.exports = class PearGUI extends ReadyResource {
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       await fn()
+      await this.ipc.completeUnload({ id, action })
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
-      await this.ipc.completeUnload({ id, action })
     }
     API = class extends API {
       constructor (ipc, ctx, onteardown) {
