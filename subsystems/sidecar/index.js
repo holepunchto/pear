@@ -529,7 +529,7 @@ class Sidecar extends ReadyResource {
     })
   }
 
-  unloading (params, client) { client.userData.unloading() }
+  unloading (params, client) { return client.userData.unloading() }
 
   async start (params, client) {
     const { flags, env, link, dir, args } = params
