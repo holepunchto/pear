@@ -618,7 +618,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
 test('Pear.updates should notify App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(11)
+  plan(12)
   timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper()
@@ -766,7 +766,8 @@ test('Pear.updates should notify App release updates (different pear instances)'
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
   const appUpdate2Length = update2Version.length
-
+  
+  is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
   ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
