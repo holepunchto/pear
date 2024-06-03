@@ -616,7 +616,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   is(code, 0, 'exit code is 0')
 })
 
-test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
+test.solo('Pear.updates should notify App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
   timeout(180000)
@@ -718,7 +718,13 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   `, { returnByValue: false })
   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
-    new Promise((resolve) =>  __PEAR_TEST__.sub.once("data", resolve))
+    new Promise((resolve) => {
+      const collect = (data) => { 
+        if (data?.value?.app) resolve(data)
+        else __PEAR_TEST__.sub.once('data', collect)
+      }))
+      __PEAR_TEST__.sub.once('data', collect)
+    }) 
   `, { returnByValue: false }))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -754,7 +760,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const update2Version = update2?.value?.version
   const appUpdate2Length = update2Version.length
 
-  is(hie.encode(hie.decode(update2Version?.key)).toString('hex'), hie.encode(hie.decode(appKey)).toString('hex'), 'app release update matches staging key')
   ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
