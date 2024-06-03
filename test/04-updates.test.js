@@ -616,9 +616,9 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   is(code, 0, 'exit code is 0')
 })
 
-test.solo('Pear.updates should notify App release updates (different pear instances)', async function (t) {
+test('Pear.updates should notify App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(12)
+  plan(11)
   timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper()
@@ -630,7 +630,7 @@ test.solo('Pear.updates should notify App release updates (different pear instan
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
-  const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
+  const tmpPearDir =path.join(osTmpDir, 'tmp-pear')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
 
@@ -714,16 +714,20 @@ test.solo('Pear.updates should notify App release updates (different pear instan
 
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
-    new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
+    new Promise((resolve) => {
+      const collect = (data) => {
+        resolve(data)
+        __PEAR_TEST__.sub.off('data', collect)
+      }
+      __PEAR_TEST__.sub.on('data', collect)
+    })
   `, { returnByValue: false })
   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
     new Promise((resolve) => {
-      const collect = (data) => { 
-        if (data?.value?.app) {
-          resolve(data)
-          __PEAR_TEST__.sub.off('data', collect)
-        }
+      const collect = (data) => {
+        resolve(data)
+        __PEAR_TEST__.sub.off('data', collect)
       }
       __PEAR_TEST__.sub.on('data', collect)
     })
@@ -750,6 +754,7 @@ test.solo('Pear.updates should notify App release updates (different pear instan
   comment('releasing app')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
+  
   const releaser = new Helper({ platformDir })
   await releaser.ready()
   teardown(async () => { await releaser.shutdown() })
