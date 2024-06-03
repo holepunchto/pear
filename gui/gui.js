@@ -482,7 +482,9 @@ class App {
       env: state.env,
       dir: state.dir,
       link: state.link,
-      cmdArgs: process.argv.slice(2)
+      cmdArgs: !['run', '--run'].includes(process.argv?.[1]) && process.argv?.[2]?.startsWith('--start-id')
+        ? process.argv.slice(2)
+        : process.argv.slice(1)
     })
 
     this.starting.catch(async (err) => {
