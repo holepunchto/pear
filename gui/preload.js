@@ -21,10 +21,13 @@ module.exports = class PearGUI extends ReadyResource {
       if (!state.isDecal) return
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
-      await fn()
-      await this.ipc.completeUnload({ id, action })
+      fn(action) // resolve global promise and trigger user suspend functions
+      const MAX_TEARDOWN_WAIT = 5000
+      const timeout = new Promise((resolve) => setTimeout(resolve, MAX_TEARDOWN_WAIT))
+      await Promise.race([window[Symbol.for('pear.unloading')], timeout])
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
+      await this.ipc.completeUnload({ id, action })
     }
     API = class extends API {
       constructor (ipc, state, onteardown) {

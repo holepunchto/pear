@@ -4,7 +4,7 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
-const { isMac, isLinux, isWindows } = require('which-runtime')
+const { isMac, isLinux } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
@@ -622,8 +622,6 @@ class App {
     return { fork, length, key: key ? key.toString('hex') : null }
   }
 
-  unloading () { return this.ipc.unloading() }
-
   close (maxWait = 5500) {
     if (this.closing) return this.closing
     this.closing = this.#close(maxWait)
@@ -769,7 +767,6 @@ class GuiCtrl {
   unload = null
   unloader = null
   unloaded = null
-  #unloading = null
   appkin = null
   static height = 540
   static width = 720
@@ -912,15 +909,6 @@ class GuiCtrl {
   isFullscreen () { return false }
   isVisible () { return !this.hidden }
   async unloading () {
-    if (!this.#unloading) this.#unloading = this._unloading()
-    try {
-      return await this.#unloading
-    } finally {
-      this.#unloading = null
-    }
-  }
-
-  async _unloading () {
     const { webContents } = (this.view || this.win)
     const until = new Promise((resolve) => { this.unload = resolve })
     webContents.once('will-navigate', (e, url) => {
@@ -1577,21 +1565,11 @@ class PearGUI extends ReadyResource {
   }
 
   getMediaAccessStatus ({ media }) {
-    if (isLinux) {
-      return 'unsupported'
-    } else {
-      return electron.systemPreferences.getMediaAccessStatus(media)
-    }
+    return electron.systemPreferences.getMediaAccessStatus(media)
   }
 
   async askForMediaAccess ({ id, media }) {
-    if (isLinux || isWindows) return false
-    if (media === 'screen') { // NOTE: remove after electron upgrade
-      const ctrl = this.get(id)
-      const srcid = await ctrl.getMediaSourceId()
-      return srcid > -1
-    }
-
+    if (media === 'screen') return !!(await this.get(id).getMediaSourceId())
     return electron.systemPreferences.askForMediaAccess(media)
   }
 
@@ -1662,9 +1640,13 @@ class PearGUI extends ReadyResource {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
-  unloading ({ id }) { return this.get(id).unloading() }
-
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
+
+  unloading ({ id }) {
+    if (this._unloading) return this._unloading
+    this._unloading = this.get(id).unloading()
+    return this._unloading
+  }
 
   async completeUnload ({ id, action }) {
     const instance = this.get(id)

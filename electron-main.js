@@ -48,7 +48,8 @@ async function electronMain (cmd) {
   }
 
   const app = await gui.app()
-  app.unloading().then(async () => {
+
+  gui.unloading({ id: app.id }).then(async () => {
     await app.close()
   }) // note: would be unhandled rejection on failure, but should never fail
 }

@@ -1,43 +1,5 @@
 # Pear Runtime Changelog
 
-## v1.2.3
-
-### Fixes
-
-* API - Pear.teardown and internal unloading IPC fix
-
-## v1.2.2
-
-### Fixes
-
-* API - `Pear.media.access.screen()` fix
-
-## v1.2.1 
-
-### Fixes
-
-* API - `Pear.media.access` and `Pear.media.status` API fixes
-* Hypercore - race condition upon block cancellation during validation fix 
-
-## v1.2.0
-
-### Features
-
-* package.json config `pear.previewFor` support
-
-### Fixes
-
-* Windows - multiple platform instances fix, unique pipes
-* Hypercore dependency update for updater fixes
-* libudx - app start-up hanging bug-fix
-* CLI - `pear versions` hanging fix
-* teardown - sigterm exit code fix
-
-### Improvements
-
-* IPC Refactor from `jsonrpc-mux` to `pear-ipc` 
-* deprecated dead-code removal (import 'pear' -> global.Pear)
-
 ## v1.1.2
 
 ### Fixes
