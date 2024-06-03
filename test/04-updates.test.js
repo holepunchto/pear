@@ -720,11 +720,13 @@ test.solo('Pear.updates should notify App release updates (different pear instan
   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
     new Promise((resolve) => {
       const collect = (data) => { 
-        if (data?.value?.app) resolve(data)
-        else __PEAR_TEST__.sub.once('data', collect)
-      }))
-      __PEAR_TEST__.sub.once('data', collect)
-    }) 
+        if (data?.value?.app) {
+          resolve(data)
+          __PEAR_TEST__.sub.destroy()
+        }
+      }
+      __PEAR_TEST__.sub.on('data', collect)
+    })
   `, { returnByValue: false }))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
