@@ -722,7 +722,7 @@ test.solo('Pear.updates should notify App release updates (different pear instan
       const collect = (data) => { 
         if (data?.value?.app) {
           resolve(data)
-          __PEAR_TEST__.sub.destroy()
+          __PEAR_TEST__.sub.off('data', collect)
         }
       }
       __PEAR_TEST__.sub.on('data', collect)
