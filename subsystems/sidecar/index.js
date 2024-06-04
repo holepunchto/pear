@@ -501,7 +501,7 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    const sidecarClosed = new Promise(resolve => this.corestore.on('close', resolve))
+    const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     const restarts = (await this.#shutdown(client))
       .filter(restart => restart?.cmdArgs?.[0] === 'run' || restart?.appling)
 
