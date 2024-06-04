@@ -481,8 +481,9 @@ class Sidecar extends ReadyResource {
         })
       }
       if (appling) {
-        if (isMac) spawn('open', [appling.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
         const cmd = command('run', ...runDefinition)
         cmd.parse(cmdArgs.slice(1))
@@ -520,8 +521,9 @@ class Sidecar extends ReadyResource {
     for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (isMac) spawn('open', [appling.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
