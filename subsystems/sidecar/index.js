@@ -27,6 +27,7 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
 const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
+const fsext = require('fs-native-extensions')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -501,6 +502,14 @@ class Sidecar extends ReadyResource {
     }
 
     const restarts = await this.#shutdown(client)
+
+    // Ensure that sidecar has shutdown by waiting for lock
+    const fd = await new Promise((resolve, reject) =>
+      fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd))
+    )
+    await fsext.waitForLock(fd)
+    await new Promise(resolve => fs.close(fd, err => err ? reject(err) : resolve()))
+
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
