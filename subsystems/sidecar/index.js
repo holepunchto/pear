@@ -447,9 +447,12 @@ class Sidecar extends ReadyResource {
   closeClients () {
     if (this.hasClients === false) return []
     const metadata = []
+    const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
+      if (seen.has(app.state.id)) continue
+      seen.add(app.state.id)
       const { pid, cmdArgs, dir, runtime, appling, env } = app.state
       metadata.push({ pid, cmdArgs, dir, runtime, appling, env })
       const tearingDown = app.teardown()
