@@ -489,8 +489,8 @@ class Sidecar extends ReadyResource {
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
-        if (linkIndex !== undefined && !(link.startsWith('pear://') || link.startsWith('file://'))) {
-          cmdArgs[linkIndex + 1] = dir
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
         } else {
           cmdArgs.push(dir)
         }
@@ -530,8 +530,8 @@ class Sidecar extends ReadyResource {
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
-        if (linkIndex !== undefined && !(link.startsWith('pear://') || link.startsWith('file://'))) {
-          cmdArgs[linkIndex + 1] = dir
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
         } else {
           cmdArgs.push(dir)
         }
