@@ -525,15 +525,17 @@ class Sidecar extends ReadyResource {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
 
-        const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice(1))
+        if (cmdArgs[0] === 'run') {
+          const cmd = command('run', ...runDefinition)
+          cmd.parse(cmdArgs.slice(1))
 
-        const linkIndex = cmd?.indices?.args?.link
-        const link = cmd?.args?.link
-        if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
-        } else {
-          cmdArgs.push(dir)
+          const linkIndex = cmd?.indices?.args?.link
+          const link = cmd?.args?.link
+          if (linkIndex !== undefined) {
+            if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+          } else {
+            cmdArgs.push(dir)
+          }
         }
 
         spawn(RUNTIME, cmdArgs, opts).unref()
