@@ -503,19 +503,19 @@ class Sidecar extends ReadyResource {
 
     const restarts = await this.#shutdown(client)
 
-    // Ensure that sidecar has shutdown by waiting for lock
-    const fd = await new Promise((resolve, reject) =>
-      fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd))
-    )
-    await fsext.waitForLock(fd)
-    await new Promise((resolve, reject) => fs.close(fd, err => err ? reject(err) : resolve()))
-
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
+
+    const fd = await new Promise((resolve, reject) =>
+      fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd))
+    )
+    await fsext.waitForLock(fd)
+    await new Promise((resolve, reject) => fs.close(fd, err => err ? reject(err) : resolve()))
+
     for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
