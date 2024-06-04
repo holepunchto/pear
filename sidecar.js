@@ -3,21 +3,22 @@ const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const HypercoreID = require('hypercore-id-encoding')
+const fs = require('bare-fs')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
 const {
   SWAP,
+  GC,
   PLATFORM_CORESTORE,
   CHECKOUT,
   LOCALDEV,
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('./lib/constants.js')
-const registerUrlHandler = require('./lib/url-handler')
-const parse = require('./lib/parse')
-const { verbose } = parse.args(Bare.argv, { boolean: ['verbose'] })
-
+} = require('./constants.js')
+const registerUrlHandler = require('./url-handler.js')
+const gunk = require('./gunk')
+const verbose = Bare.argv.includes('--verbose')
 crasher('sidecar', SWAP)
 module.exports = bootSidecar().then(() => {
   if (verbose) console.log('- Sidecar booted')
@@ -26,16 +27,22 @@ module.exports = bootSidecar().then(() => {
   Bare.exit(1)
 })
 
+async function gc () {
+  try { await fs.promises.rm(GC, { recursive: true }) } catch {}
+  await fs.promises.mkdir(GC, { recursive: true })
+}
+
 async function bootSidecar () {
+  await gc()
   const corestore = new Corestore(PLATFORM_CORESTORE, { manifestVersion: 1, compat: false })
   await corestore.ready()
 
   const drive = await createPlatformDrive()
-  const Sidecar = await subsystem(drive, '/subsystems/sidecar.js')
+  const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore })
-  await sidecar.ready()
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk, verbose })
+  await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
 

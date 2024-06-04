@@ -4,10 +4,12 @@ const { resolve } = require('path')
 const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
-const { isMac, isWindows, isLinux } = require('which-runtime')
+const { isMac, isLinux, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
-const constants = require('../lib/constants')
+const Worker = require('../lib/worker')
+const constants = require('../constants')
+
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -83,15 +85,15 @@ class Menu {
       {
         label: 'Dev Mode',
         type: 'checkbox',
-        checked: app.ctx?.devtools,
+        checked: app.state?.devtools,
         click: async () => {
-          if (app.ctx.devtools === true) {
-            await app.ctx.update({ devtools: false })
+          if (app.state.devtools === true) {
+            await app.state.update({ devtools: false })
             for (const { contentView } of PearGUI.ofSession(app.handle?.session)) {
               await contentView.webContents.closeDevTools()
             }
           } else {
-            await app.ctx.update({ devtools: true })
+            await app.state.update({ devtools: true })
           }
 
           this.render()
@@ -100,7 +102,7 @@ class Menu {
       { type: 'separator' },
       {
         get label () {
-          let name = app.ctx?.name
+          let name = app.state?.name
           name = name || 'app'
           name = name[0].toUpperCase() + name.slice(1)
           return `Quit ${name}`
@@ -148,8 +150,8 @@ class Menu {
 
     if (app.handle === null) return
     const setLabel = () => {
-      if (!app?.ctx?.name) return
-      item.label = app.ctx.name[0].toUpperCase(0) + app.ctx.name.slice(1)
+      if (!app?.state?.name) return
+      item.label = app.state.name[0].toUpperCase(0) + app.state.name.slice(1)
     }
     setLabel()
   }
@@ -159,9 +161,9 @@ class Menu {
     const item = this.template[DEV]
     const { app } = this
     if (!app.handle) return
-    const { ctx } = app
+    const { state } = app
     const { session } = app.handle
-    if (ctx.devtools === false) {
+    if (state.devtools === false) {
       item.visible = false
       return
     }
@@ -204,7 +206,7 @@ class Menu {
         click (_, win) {
           const view = win.getBrowserViews()[0]
           const { webContents } = view || win
-          refresh(webContents, app.ctx)
+          refresh(webContents, app.state)
         }
       },
       {
@@ -256,7 +258,7 @@ class Menu {
     if (this.devtoolsReloaderActive) return
 
     this.devtoolsReloaderActive = true
-    const listener = () => { refresh(wc, this.app.ctx) }
+    const listener = () => { refresh(wc, this.app.state) }
     // ignore electron docs about register: it DOES NOT accept an array of accelerators, just the one string
     electron.globalShortcut.register('CommandOrControl+R', listener)
     electron.globalShortcut.register('F5', listener)
@@ -277,15 +279,15 @@ class Menu {
   }
 }
 
-function refresh (webContents, ctx) {
-  if (ctx.reloadingSince === 0) {
-    webContents.once('did-stop-loading', () => { ctx.reloadingSince = 0 })
+function refresh (webContents, state) {
+  if (state.reloadingSince === 0) {
+    webContents.once('did-stop-loading', () => { state.reloadingSince = 0 })
     webContents.executeJavaScript('location.reload()', true) // ensures app teardown listeners are triggered
-    ctx.reloadingSince = Date.now()
+    state.reloadingSince = Date.now()
     return
   }
   const max = 5000
-  const timegap = Date.now() - ctx.reloadingSince
+  const timegap = Date.now() - state.reloadingSince
   if (timegap < max) {
     webContents.executeJavaScript(`console.info('Refresh in progress. Ignoring for another', ${max} - ${timegap}, 'ms')`)
     return
@@ -293,32 +295,44 @@ function refresh (webContents, ctx) {
 
   webContents.once('did-stop-loading', () => {
     webContents.executeJavaScript(`console.warn('Refresh attempt took longer than ${max}ms. This refresh was a force refresh, teardown logic will not have been executed on prior unload.')`)
-    ctx.reloadingSince = 0
+    state.reloadingSince = 0
   })
   webContents.reloadIgnoringCache() // force reload does not honor app teardown listeners
-  ctx.reloadingSince = Date.now()
+  state.reloadingSince = Date.now()
 }
 
 class ContextMenu {
-  constructor (webContents, { devtools } = {}) {
+  constructor (webContents) {
     this.webContents = webContents
-    this.devtools = devtools
-    this.x = 0
-    this.y = 0
     webContents.once('destroyed', () => this.destroy())
   }
 
-  async popup ({ x = 0, y = 0 } = {}) {
+  async popup ({ params, devtools = false }) {
     const items = []
 
-    if (await this.webContents.executeJavaScript(`document.elementFromPoint(${x}, ${y})?.tagName === 'IMG'`)) {
+    const {
+      editFlags: { canPaste },
+      isEditable,
+      selectionText,
+      x = 0,
+      y = 0
+    } = params
+
+    if (selectionText) {
       items.push(new electron.MenuItem({
-        label: 'Copy Image',
-        click: () => this.webContents.copyImageAt(x, y)
+        label: 'Copy',
+        click: () => this.webContents.copy()
       }))
     }
 
-    if (this.devtools) {
+    if (canPaste && isEditable) {
+      items.push(new electron.MenuItem({
+        label: 'Paste',
+        click: () => this.webContents.paste()
+      }))
+    }
+
+    if (devtools) {
       items.push(new electron.MenuItem({
         label: 'Inspect Element',
         click: () => {
@@ -330,8 +344,10 @@ class ContextMenu {
       }))
     }
 
-    this.menu = electron.Menu.buildFromTemplate(items)
-    this.menu.popup()
+    if (items.length > 0) {
+      this.menu = electron.Menu.buildFromTemplate(items)
+      this.menu.popup()
+    }
   }
 
   close () {
@@ -349,7 +365,7 @@ electron.app.userAgentFallback = 'Pear Platform'
 class App {
   menu = null
   sidecar = null
-  ctx = null
+  state = null
   ipc = null
   id = null
   handle = null
@@ -358,8 +374,8 @@ class App {
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
 
-  constructor (ctx, ipc) {
-    this.ctx = ctx
+  constructor (state, ipc) {
+    this.state = state
     this.ipc = ipc
     this.contextMenu = null
     electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
@@ -395,17 +411,17 @@ class App {
         devtoolsBlurPolling = null
       })
 
-      wc.on('context-menu', (e, { x, y }) => {
+      wc.on('context-menu', (e, params) => {
         const ctrl = PearGUI.fromWebContents(wc)
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
-          this.contextMenu = this.contextMenu || new ContextMenu(wc, { dev: this.ctx.devtools, x, y })
-          this.contextMenu.popup({ x, y })
+          this.contextMenu = this.contextMenu || new ContextMenu(wc)
+          this.contextMenu.popup({ params, devtools: this.state.devtools })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
         if (details?.reason === 'killed') return
-        if (this.ctx.dev) process._rawDebug('A Render Process has crashed', evt, details)
+        if (this.state.dev) process._rawDebug('A Render Process has crashed', evt, details)
         else electron.dialog.showErrorBox('A Render Process has crashed', JSON.stringify(details, 0, 2))
         const err = new Error('A Render Process has crashed')
         err.code = 'ERR_CRASH'
@@ -457,13 +473,15 @@ class App {
       }
     })
 
-    const { ctx } = this
+    const { state } = this
 
     this.starting = this.ipc.start({
-      argv: ctx.argv,
-      env: ctx.env,
-      cwd: ctx.cwd,
-      startId: ctx.startId
+      startId: state.startId,
+      args: state.args,
+      flags: state.flags,
+      env: state.env,
+      dir: state.dir,
+      link: state.link
     })
 
     this.starting.catch(async (err) => {
@@ -474,14 +492,15 @@ class App {
     try {
       if (this.appReady === false) {
         await electron.app.whenReady()
-        const name = ctx?.name || 'pear'
+        const name = state?.name || 'pear'
         this.name = name[0].toUpperCase() + name.slice(1)
         this.appReady = true
       }
 
-      const { dev, devtools, trace, stage } = ctx
+      const { dev, devtools, trace, stage } = state
       const show = (!trace && (dev || !stage))
-      const unfilteredGuiOptions = ctx.options.gui || ctx.options
+      const unfilteredGuiOptions = state.options.gui || state.options
+
       const guiOptions = {
         autoresize: unfilteredGuiOptions.autoresize,
         backgroundColor: unfilteredGuiOptions.backgroundColor,
@@ -514,17 +533,17 @@ class App {
 
       decalSession.setUserAgent('Pear Platform')
 
-      const entry = '/' + ctx.main
-      const identify = await this.ipc.identify({ startId: ctx.startId })
+      const entry = '/' + state.main
+      const identify = await this.ipc.identify({ startId: state.startId })
       const { id, host } = identify
 
-      ctx.update({ sidecar: host, id, config: ctx.constructor.configFrom(ctx) })
+      state.update({ sidecar: host, id, config: state.constructor.configFrom(state) })
       this.ipc.id = id
 
       if (this.sidecar === null) this.sidecar = host
       if (this.sidecar !== host) this.sidecar = host
 
-      const ctrl = await PearGUI.ctrl('window', entry, { ctx }, {
+      const ctrl = await PearGUI.ctrl('window', entry, { state }, {
         ...guiOptions,
         afterInstantiation: (app) => {
           this.handle = app
@@ -536,10 +555,10 @@ class App {
           show,
           backgroundColor: '#000',
           transparent: true,
-          title: (ctx.appling && ctx.appling.name) || undefined,
-          icon: (ctx.appling && ctx.appling.icon) || undefined,
+          title: (state.appling && state.appling.name) || undefined,
+          icon: (state.appling && state.appling.icon) || undefined,
           webPreferences: {
-            title: `Pear ${ctx.name} (decal)`,
+            title: `Pear ${state.name} (decal)`,
             devTools: true
           }
         },
@@ -547,10 +566,10 @@ class App {
           height: guiOptions.height,
           width: guiOptions.width,
           webPreferences: {
-            title: `Pear: ${ctx.name}`,
+            title: `Pear: ${state.name}`,
             devTools: true,
             get backgroundColor () {
-              return ctx.options.transparent ? '#00000000' : (ctx.options.backgroundColor || '#FFF')
+              return state.options.transparent ? '#00000000' : (state.options.backgroundColor || '#FFF')
             }
           }
         },
@@ -558,7 +577,7 @@ class App {
         afterNativeViewCreated: devtools && ((app) => {
           if (trace) return
           app.view.webContents.openDevTools({ mode: 'detach' })
-          if (app.ctx.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
+          if (app.state.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
         }),
         afterNativeViewLoaded: (trace
           ? async () => {
@@ -568,17 +587,17 @@ class App {
           }
           : (isLinux ? (app) => linuxViewSize(app, app.tbh) : null)),
         interload: async (app) => {
-          ctx.update({ top: app.win })
+          state.update({ top: app.win })
           try {
             if (app.closing) return false
-            if (ctx.type === 'commonjs') {
+            if (state.type === 'commonjs') {
               throw new Error('"type": "commonjs" or no "type" in application package.json. Pear Desktop Applications are native EcmaScript Module (ESM) syntax only (CJS modules can be consumed, but applications must be ESM). To opt into ESM, set the package.json "type" field to "module".')
             }
 
             const { bail } = await this.starting
             if (bail) return false
-            ctx.update({ config: await this.ipc.config() })
-            applyGuiOptions(app.win, ctx.config.options.gui || ctx.config.options, app.tbh)
+            state.update({ config: await this.ipc.config() })
+            applyGuiOptions(app.win, state.config.options.gui || state.config.options, app.tbh)
             if (app.closing) return false
             return true
           } catch (err) {
@@ -757,20 +776,20 @@ class GuiCtrl {
   static [kCtrl] = null
   static [kMap] = new Map()
 
-  constructor (entry, options, { ctx, parentId, sessname, appkin }) {
+  constructor (entry, options, { state, parentId, sessname, appkin }) {
     this.hidden = false
     this[kCtrl] = this.constructor[kCtrl]
     if (!entry) throw new Error(`No path provided, cannot open ${this[kCtrl]}`)
     this.options = options
-    this.ctx = ctx
+    this.state = state
     this.parentId = parentId
     this.closed = true
     this.id = null
-    this.sidecar = this.ctx.sidecar
+    this.sidecar = this.state.sidecar
     this.entry = `${this.sidecar}${entry}`
     this.sessname = sessname
     this.appkin = appkin
-    this.tbh = this.ctx.tbh
+    this.tbh = this.state.tbh
   }
 
   get session () {
@@ -959,11 +978,11 @@ class Window extends GuiCtrl {
     this.#viewInitialized = new Promise((resolve) => { viewInitialized = resolve })
     this.#viewLoaded = new Promise((resolve) => { viewLoaded = resolve })
     if (this.appkin) {
-      this.ctx = await this.appkin
+      this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
+    const ua = `Pear ${this.state.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
     session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
@@ -972,16 +991,16 @@ class Window extends GuiCtrl {
       ...(options.window || options),
       height,
       width,
-      frame: !(isMac || isWindows),
-      ...(isMac && this.ctx.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
-      ...(isMac && this.ctx?.alias === 'keet' && this.ctx?.appling?.path ? { icon: path.join(path.dirname(this.ctx.appling.path), 'resources', 'app', 'icon.ico') } : {}),
+      frame: false,
+      ...(isMac && this.state.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
+      ...(isMac && this.state?.alias === 'keet' && this.state?.appling?.path ? { icon: path.join(path.dirname(this.state.appling.path), 'resources', 'app', 'icon.ico') } : {}),
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
         preload: require.main.filename,
         ...(decal === false ? { session } : {}),
         partition: 'persist:pear',
-        additionalArguments: [JSON.stringify({ ...this.ctx.config, isDecal: true })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, isDecal: true })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1017,9 +1036,10 @@ class Window extends GuiCtrl {
       }
     })
 
+    if (this.id === null) this.id = idify(this)
+    this.constructor[kMap].set(this.id, this)
+
     if (decal === false) {
-      if (this.id === null) this.id = idify(this)
-      this.constructor[kMap].set(this.id, this)
       await this.win.loadURL(this.entry)
       this.opening = false
       this.closed = false
@@ -1044,7 +1064,7 @@ class Window extends GuiCtrl {
       webPreferences: {
         preload: require.main.filename,
         session,
-        additionalArguments: [JSON.stringify({ ...this.ctx.config, parentWcId: this.win.webContents.id, decalled: true })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1063,10 +1083,8 @@ class Window extends GuiCtrl {
     viewInitialized()
     this.view.webContents.once('did-finish-load', () => { viewLoaded() })
 
-    if (this.id === null) {
-      this.id = idify(this)
-      this.constructor[kMap].set(this.id, this)
-    }
+    this.id = idify(this)
+    this.constructor[kMap].set(this.id, this)
 
     await decalLoading
     if (this.closing) return false
@@ -1125,6 +1143,20 @@ class Window extends GuiCtrl {
     const result = this.win.maximize()
     await maximized
     return result
+  }
+
+  async setMinimizable (value) {
+    const result = this.win.setMinimizable(value)
+    return result
+  }
+
+  async setMaximizable (value) {
+    const result = this.win.setMaximizable(value)
+    return result
+  }
+
+  async setSize (width, height) {
+    return this.win.setSize(width, height)
   }
 
   async fullscreen () {
@@ -1221,11 +1253,11 @@ class View extends GuiCtrl {
       return this.open(opts)
     }
     if (this.appkin) {
-      this.ctx = await this.appkin
+      this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.ctx.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.ctx.key?.z32 || this.ctx.cwd}`)
+    const ua = `Pear ${this.state.id}`
+    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
     session.setUserAgent(ua)
 
     this.view = new BrowserView({
@@ -1234,7 +1266,7 @@ class View extends GuiCtrl {
       webPreferences: {
         preload: require.main.filename,
         session,
-        additionalArguments: [JSON.stringify({ ...this.ctx.config, ...(options?.view?.config || options.config || {}), parentWcId: this.win.webContents.id })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, ...(options?.view?.config || options.config || {}), parentWcId: this.win.webContents.id })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1327,9 +1359,9 @@ class View extends GuiCtrl {
 class PearGUI extends ReadyResource {
   static View = View
   static Window = Window
-  constructor ({ socketPath, connectTimeout, tryboot, ctx }) {
+  constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
-    this.ctx = ctx
+    this.state = state
     this.ipc = new IPC({
       lock: constants.PLATFORM_LOCK,
       socketPath,
@@ -1338,7 +1370,7 @@ class PearGUI extends ReadyResource {
         reports (method) {
           return (params) => {
             const stream = method.createRequestStream()
-            stream.once('data', () => { PearGUI.reportMode(ctx) })
+            stream.once('data', () => { PearGUI.reportMode(state) })
             stream.write(params)
             return stream
           }
@@ -1346,6 +1378,8 @@ class PearGUI extends ReadyResource {
       },
       connect: tryboot
     })
+    this.worker = new Worker()
+    this.pipes = new Freelist()
     this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('id', async (event) => {
@@ -1387,6 +1421,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
     electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
+    electron.ipcMain.handle('setMinimizable', (evt, ...args) => this.setMinimizable(...args))
+    electron.ipcMain.handle('setMaximizable', (evt, ...args) => this.setMaximizable(...args))
     electron.ipcMain.handle('fullscreen ', (evt, ...args) => this.fullscreen(...args))
     electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
     electron.ipcMain.handle('focus', (evt, ...args) => this.focus(...args))
@@ -1398,6 +1434,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('isMinimized', (evt, ...args) => this.isMinimized(...args))
     electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
     electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
+    electron.ipcMain.handle('setSize', (evt, ...args) => this.setSize(...args))
+    electron.ipcMain.handle('trust', (evt, ...args) => this.trust(...args))
     electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
     electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
     electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
@@ -1410,23 +1448,55 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
 
+    electron.ipcMain.on('workerRun', (evt, link) => {
+      const pipe = this.worker.run(link)
+      const id = this.pipes.alloc(pipe)
+      pipe.on('close', () => {
+        this.pipes.free(id)
+        evt.reply('workerPipeClose')
+      })
+      pipe.on('data', (data) => { evt.reply('workerPipeData', data) })
+      pipe.on('end', () => { evt.reply('workerPipeData', null) })
+      pipe.on('error', (err) => { evt.reply('pipeError', err.stack) })
+    })
+
+    electron.ipcMain.on('workerPipeId', (evt) => {
+      evt.returnValue = this.pipes.nextId()
+      return evt.returnValue
+    })
+
+    electron.ipcMain.on('workerPipeClose', (evt, id) => {
+      const pipe = this.pipes.from(id)
+      if (!pipe) return
+      pipe.destroy()
+    })
+
+    electron.ipcMain.on('workerPipeWrite', (evt, id, data) => {
+      const pipe = this.pipes.from(id)
+      if (!pipe) {
+        console.error('Unexpected workerPipe error (unknown id)')
+        return
+      }
+      pipe.write(data)
+    })
+
     // DEPRECATED - assess to remove from Sep 2024
-    electron.ipcMain.on('preferences', (event) => {
+    electron.ipcMain.on('preferences', (evt) => {
       const preferences = this.preferences()
-      preferences.on('data', (data) => event.reply('preferences', data))
-      preferences.on('end', () => event.reply('preferences', null))
+      preferences.on('data', (data) => evt.reply('preferences', data))
+      preferences.on('end', () => evt.reply('preferences', null))
     })
     electron.ipcMain.handle('setPreference', (evt, ...args) => this.setPreference(...args))
     electron.ipcMain.handle('getPreference', (evt, ...args) => this.getPreference(...args))
-    electron.ipcMain.on('iteratePreferences', (event) => {
+    electron.ipcMain.on('iteratePreferences', (evt) => {
       const iteratePreferences = this.iteratePreferences()
-      iteratePreferences.on('data', (data) => event.reply('iteratePreferences', data))
-      iteratePreferences.on('end', () => event.reply('iteratePreferences', null))
+      iteratePreferences.on('data', (data) => evt.reply('iteratePreferences', data))
+      iteratePreferences.on('end', () => evt.reply('iteratePreferences', null))
     })
   }
 
   async app () {
-    const app = new App(this.ctx, this.ipc)
+    const app = new App(this.state, this.ipc)
     this.once('close', async () => { app.quit() })
     await app.start()
     return app
@@ -1440,12 +1510,12 @@ class PearGUI extends ReadyResource {
     await this.ipc.close()
   }
 
-  static async ctrl (type, entry, { ctx, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
+  static async ctrl (type, entry, { state, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
     ;[entry] = entry.split('+')
     if (entry.slice(0, 2) === './') entry = entry.slice(1)
     if (entry[0] !== '/') entry = `/~${entry}`
-    const state = { ctx, parentId, ua, sessname, appkin }
-    const instance = type === 'view' ? new View(entry, options, state) : new Window(entry, options, state)
+    const info = { state, parentId, ua, sessname, appkin }
+    const instance = type === 'view' ? new View(entry, options, info) : new Window(entry, options, info)
     if (typeof options.afterInstantiation === 'function') await options.afterInstantiation(instance)
 
     await instance.open(openOptions)
@@ -1465,12 +1535,12 @@ class PearGUI extends ReadyResource {
     return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.session === session)
   }
 
-  static ofContext (ctx) {
-    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.ctx === ctx)
+  static ofContext (state) {
+    return Array.from(GuiCtrl[kMap].values()).filter((ctrl) => ctrl.state === state)
   }
 
-  static reportMode (ctx) {
-    const ctrls = this.ofContext(ctx)
+  static reportMode (state) {
+    const ctrls = this.ofContext(state)
     for (const ctrl of ctrls) if (ctrl.detachMainView) ctrl.detachMainView()
   }
 
@@ -1532,8 +1602,8 @@ class PearGUI extends ReadyResource {
   chrome ({ name }) { return this.constructor.chrome(name) }
 
   async ctrl (params) {
-    const { parentId, type, entry, options = {}, openOptions, ctx } = params
-    const instance = await this.constructor.ctrl(type, entry, { parentId, ctx }, options, openOptions)
+    const { parentId, type, entry, options = {}, openOptions, state } = params
+    const instance = await this.constructor.ctrl(type, entry, { parentId, state }, options, openOptions)
     return instance.id
   }
 
@@ -1566,6 +1636,10 @@ class PearGUI extends ReadyResource {
 
   maximize ({ id }) { return this.get(id).maximize() }
 
+  setMinimizable ({ id, value }) { return this.get(id).setMinimizable(value) }
+
+  setMaximizable ({ id, value }) { return this.get(id).setMaximizable(value) }
+
   fullscreen ({ id }) { return this.get(id).fullscreen() }
 
   restore ({ id }) { return this.get(id).restore() }
@@ -1589,6 +1663,8 @@ class PearGUI extends ReadyResource {
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
   unloading ({ id }) { return this.get(id).unloading() }
+
+  setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
 
   async completeUnload ({ id, action }) {
     const instance = this.get(id)
@@ -1630,11 +1706,48 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
+  trust ({ z32 }) { return this.ipc.trust({ z32 }) }
+
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
   setPreference (key, value) { return this.ipc.setPreference({ key, value }) }
   async getPreference (key) { return this.ipc.getPreference({ key }) }
   iteratePreference () { return this.ipc.iteratePreference() }
+}
+
+class Freelist {
+  alloced = []
+  freed = []
+
+  nextId () {
+    return this.freed.length === 0 ? this.alloced.length : this.freed[this.freed.length - 1]
+  }
+
+  alloc (item) {
+    const id = this.freed.length === 0 ? this.alloced.push(null) - 1 : this.freed.pop()
+    this.alloced[id] = item
+    return id
+  }
+
+  free (id) {
+    this.freed.push(id)
+    this.alloced[id] = null
+  }
+
+  from (id) {
+    return id < this.alloced.length ? this.alloced[id] : null
+  }
+
+  emptied () {
+    return this.freed.length === this.alloced.length
+  }
+
+  * [Symbol.iterator] () {
+    for (const item of this.alloced) {
+      if (item === null) continue
+      yield item
+    }
+  }
 }
 
 module.exports = PearGUI

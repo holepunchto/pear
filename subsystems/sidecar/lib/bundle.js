@@ -7,8 +7,9 @@ const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
 const Tracer = require('./tracer')
 const Replicator = require('./replicator')
-const { SWAP } = require('./constants')
 const releaseWatcher = require('./release-watcher')
+const { SWAP } = require('../../../constants')
+const { ERR_TRACER_FAILED } = require('../../../errors')
 const noop = Function.prototype
 
 module.exports = class Bundle {
@@ -112,8 +113,8 @@ module.exports = class Bundle {
   }
 
   async finalizeTracing () {
-    if (this.opened === false) throw new Error('Internal Platform Error: Bundle must be opened before warmup can commence')
-    if (!this.tracer) throw new Error('Internal Platform Error: Bundle critical called without a tracer present')
+    if (this.opened === false) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle must be opened before warmup can commence')
+    if (!this.tracer) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle critical called without a tracer present')
     const ranges = this.tracer.deflate()
     await this.drive.db.put('warmup', ranges)
   }

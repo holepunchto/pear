@@ -17,3 +17,17 @@ const out = `${grn}           ▅
        ▄▄▄▄▆▆▆▆
 `
 console.log('\n\x1b[s\x1b[J' + out)
+
+const pipe = Pear.worker.pipe()
+const isWorker = pipe !== null
+if (isWorker) {
+  pipe.on('data', (data) => {
+    const str = data.toString()
+    console.log('parent:', str)
+    if (str === 'hello') console.log('world')
+    if (str === 'exit') {
+      console.log('exiting')
+      Pear.exit()
+    }
+  })
+}

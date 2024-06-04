@@ -19,8 +19,11 @@ class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
+    const verbose = Bare.argv.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, '..', BY_ARCH)
+    const args = ['--sidecar']
+    if (verbose) args.push('--verbose')
     const ipcId = 'pear'
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -35,27 +38,25 @@ class Helper extends IPC {
       connect: opts.expectSidecar
         ? true
         : () => {
-            const sc = spawn(
-              runtime, ['--sidecar', '--verbose'], {
-                detached: true,
-                stdio: opts.logging ? 'inherit' : 'ignore'
-              })
+            const sc = spawn(runtime, args, {
+              detached: !verbose,
+              stdio: verbose ? 'inherit' : 'ignore'
+            })
             sc.unref()
           }
     })
     this.#expectSidecar = opts.expectSidecar
-    this.logging = opts.logging
     this.opts = opts
   }
 
-  static logging = false
-
   static async open (key, { tags = [] } = {}, opts = {}) {
     if (!key) throw new Error('Key is missing')
+    const verbose = Bare.argv.includes('--verbose')
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
+    if (verbose) args.push('--verbose')
 
     const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
-    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
@@ -74,7 +75,8 @@ class Helper extends IPC {
         iterable.push(JSON.parse(data))
         return
       }
-      console.error('Unrecognized subprocess STDOUT output:', data)
+      if (verbose) console.log(data)
+      else console.error('Unrecognized subprocess STDOUT output:', data)
     })
 
     const until = await this.pick(iterable, tags)
@@ -89,11 +91,7 @@ class Helper extends IPC {
   static async pick (iter, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
     for await (const output of iter) {
-      if (this.logging) console.log('output', output)
-      if (this.matchesPattern(output, ptn)) {
-        if (this.logging) console.log('pick', output)
-        return output.data
-      }
+      if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
   }
@@ -131,7 +129,6 @@ class Helper extends IPC {
   static async sink (iter, ptn) {
     for await (const output of iter) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
-      if (this.logging && this.matchesPattern(output, ptn)) console.log('sink', output)
     }
   }
 

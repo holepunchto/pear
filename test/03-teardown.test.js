@@ -17,7 +17,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const final = await Helper.pick(stage, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
@@ -25,7 +25,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   const seeder = new Helper()
   teardown(() => seeder.shutdown())
   await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
+  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced
@@ -63,7 +63,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const final = await Helper.pick(stage, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
@@ -71,7 +71,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   const seeder = new Helper()
   teardown(() => seeder.shutdown())
   await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
+  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced
@@ -111,7 +111,7 @@ test('exit code', async function ({ is, ok, plan, comment, teardown }) {
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const final = await Helper.pick(stage, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
@@ -119,7 +119,7 @@ test('exit code', async function ({ is, ok, plan, comment, teardown }) {
   const seeder = new Helper()
   teardown(() => seeder.shutdown())
   await seeder.ready()
-  const seed = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, dir })
+  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced

@@ -8,13 +8,9 @@ const fs = require('bare-fs')
 const hie = require('hypercore-id-encoding')
 const Localdrive = require('localdrive')
 
-const seedOpts = (id) => ({
-  channel: `test-${id}`, name: `test-${id}`, key: null, dir, clientArgv: [], id: Math.floor(Math.random() * 10000)
-})
+const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, clientArgv: [] })
 const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore: [] })
-const releaseOpts = (id, key) => ({
-  id: Math.floor(Math.random() * 10000), channel: `test-${id}`, name: `test-${id}`, key
-})
+const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
@@ -264,7 +260,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
 
   comment('staging app')
-  const appStaging = appStager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -272,7 +268,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const appSeeder = new Helper({ platformDir })
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -284,14 +280,14 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -330,7 +326,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('restaging platform A')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
-  const staging2 = stager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final2 = await Helper.pick(staging2, { tag: 'final' })
   ok(final2.success, 'stage succeeded')
 
@@ -391,7 +387,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
 
   comment('staging app')
-  const appStaging = appStager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -399,7 +395,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const appSeeder = new Helper({ platformDir })
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -411,14 +407,14 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -460,7 +456,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('restaging platform A')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
-  const staging2 = stager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final2 = await Helper.pick(staging2, { tag: 'final' })
   ok(final2.success, 'stage succeeded')
 
@@ -476,7 +472,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await releaser.ready()
   teardown(async () => { await releaser.shutdown() })
 
-  const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, key: pearKey })
+  const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key: pearKey })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for platform update notification')
@@ -540,14 +536,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
 
   comment('staging app')
-  const appStaging = appStager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -559,14 +555,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -605,7 +601,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('restaging app')
   const appStager2 = new Helper({ platformDir })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -666,14 +662,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appDir = path.join(tmpLocaldev, 'test', 'fixtures', 'terminal')
 
   comment('staging app')
-  const appStaging = appStager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
   const appSeeder = new Helper({ platformDir })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, clientArgv: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -685,14 +681,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('staging platform A')
   const stager = new Helper({ platformDir })
   await stager.ready()
-  const staging = stager.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
+  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding platform A')
   const seeder = new Helper({ platformDir })
   await seeder.ready()
-  const seeding = seeder.seed({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
+  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, clientArgv: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const pearKey = await until.key
@@ -734,7 +730,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('restaging app')
   const appStager2 = new Helper({ platformDir })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ id: Math.floor(Math.random() * 10000), channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -750,7 +746,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   await releaser.ready()
   teardown(async () => { await releaser.shutdown() })
 
-  const releasing = releaser.release({ id: Math.floor(Math.random() * 10000), channel: `test-${pid}`, name: `test-${pid}`, key: appKey })
+  const releasing = releaser.release({ channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for app update notification')

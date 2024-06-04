@@ -1,4 +1,5 @@
 'use strict'
+const os = require('os')
 const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
@@ -22,6 +23,8 @@ const exists = async (path) => {
   }
 }
 
+const verbose = (global.Bare || global.process).argv.includes('--verbose')
+
 const run = (cmd, args, opts) => {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, opts)
@@ -44,6 +47,8 @@ const run = (cmd, args, opts) => {
       await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
     }
   }
-
-  await run(pear, ['run', 'test', '--verbose'], { stdio: 'inherit', shell: isWindows })
+  const store = path.join(os.tmpdir(), 'pear-test')
+  const args = ['run', '--store', store, 'test']
+  if (verbose) args.push('--verbose')
+  await run(pear, args, { stdio: 'inherit', shell: isWindows })
 })()

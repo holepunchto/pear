@@ -2,10 +2,11 @@
 const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
-const preferences = require('../lib/preferences')
-const SharedContext = require('./shared')
+const preferences = require('./lib/preferences')
+const SharedState = require('../../state')
+const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../../errors')
 
-module.exports = class Context extends SharedContext {
+module.exports = class State extends SharedState {
   initialized = false
   tier = null
   link = null
@@ -35,9 +36,7 @@ module.exports = class Context extends SharedContext {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
-        const err = new Error(`unable to fetch manifest from app ${this.key?.z32}`)
-        err.code = 'ERR_CONNECTION'
-        throw err
+        throw ERR_UNABLE_TO_FETCH_MANIFEST(`unable to fetch manifest from app ${this.key?.z32}`)
       }
 
       this.constructor.injestPackage(this, result.value)
@@ -53,7 +52,7 @@ module.exports = class Context extends SharedContext {
     const tier = !this.key ? 'dev' : bundle.live ? 'production' : 'staging'
     if (app?.reported) return
 
-    if (this.stage && this.manifest === null) throw new Error(`"${this.pkgPath}" not found. Pear project must have a package.json`)
+    if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
 
     const { dependencies, type = 'commonjs' } = this.manifest
     const options = this.manifest.pear || this.manifest.holepunch || {}

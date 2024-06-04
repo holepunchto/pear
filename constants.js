@@ -4,15 +4,15 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
+const CHECKOUT = require('./checkout')
+const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 
 const url = module.url || electronModuleURL()
-const mount = new URL('..', url)
+const mount = new URL('.', url)
 
-const CHECKOUT = require('../checkout')
 const LOCALDEV = CHECKOUT.length === null
-
 const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mount
 const swapPath = toPath(swapURL)
 
@@ -54,6 +54,7 @@ exports.EOLS = EOLS
 exports.SWAP = swapPath
 exports.PLATFORM_DIR = PLATFORM_DIR
 exports.PLATFORM_LOCK = PLATFORM_LOCK
+exports.GC = toPath(new URL('gc', PLATFORM_URL))
 exports.PLATFORM_CORESTORE = toPath(new URL('corestores/platform', PLATFORM_URL))
 exports.UPGRADE_LOCK = toPath(new URL('lock', PLATFORM_URL))
 exports.APPLINGS_PATH = toPath(new URL('applings', PLATFORM_URL))
@@ -72,8 +73,8 @@ exports.DESKTOP_RUNTIME = toPath(new URL(BIN + DESKTOP_EXEC, swapURL))
 function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)
-  if (i === -1) throw new Error('Could not infer the actual module path')
-  return new URL(u.href.slice(0, i) + 'lib/constants.js')
+  if (i === -1) throw ERR_COULD_NOT_INFER_MODULE_PATH('Could not infer the actual module path')
+  return new URL(u.href.slice(0, i) + 'constants.js')
 }
 
 function toPath (u) {

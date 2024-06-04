@@ -5,18 +5,20 @@ const { EventEmitter } = require('events')
 const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
+const Worker = require('../lib/worker')
 
 module.exports = class PearGUI extends ReadyResource {
-  constructor ({ API, ctx }) {
+  constructor ({ API, state }) {
     super()
     const id = this.id = electron.ipcRenderer.sendSync('id')
+
     this.ipc = new IPC()
     electron.ipcRenderer.on('ipc', (e, data) => {
       this.ipc.stream.push(Buffer.from(data))
     })
 
     const onteardown = async (fn) => {
-      if (ctx.isDecal) return
+      if (!state.isDecal) return
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       await fn()
@@ -25,9 +27,10 @@ module.exports = class PearGUI extends ReadyResource {
       else if (action.type === 'nav') location.href = action.url
     }
     API = class extends API {
-      constructor (ipc, ctx, onteardown) {
-        super(ipc, ctx, onteardown)
+      constructor (ipc, state, onteardown) {
+        super(ipc, state, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
+        this.worker = new Worker({ ipc })
         this.media = {
           status: {
             microphone: () => ipc.getMediaAccessStatus({ id, media: 'microphone' }),
@@ -139,7 +142,7 @@ module.exports = class PearGUI extends ReadyResource {
                 type: this.constructor[kGuiCtrl],
                 entry: this.entry,
                 options: this.options,
-                ctx: this.ctx,
+                state: this.state,
                 openOptions: opts
               })
               return true
@@ -215,7 +218,7 @@ module.exports = class PearGUI extends ReadyResource {
         electron.app.quit()
       }
     }
-    this.api = new API(this.ipc, ctx, onteardown)
+    this.api = new API(this.ipc, state, onteardown)
   }
 }
 
@@ -232,6 +235,8 @@ class IPC {
   hide (...args) { return electron.ipcRenderer.invoke('hide', ...args) }
   minimize (...args) { return electron.ipcRenderer.invoke('minimize', ...args) }
   maximize (...args) { return electron.ipcRenderer.invoke('maximize', ...args) }
+  setMaximizable (...args) { return electron.ipcRenderer.invoke('setMaximizable', ...args) }
+  setMinimizable (...args) { return electron.ipcRenderer.invoke('setMinimizable', ...args) }
   fullscreen (...args) { return electron.ipcRenderer.invoke('fullscreen', ...args) }
   restore (...args) { return electron.ipcRenderer.invoke('restore', ...args) }
   focus (...args) { return electron.ipcRenderer.invoke('focus', ...args) }
@@ -243,6 +248,8 @@ class IPC {
   isMinimized (...args) { return electron.ipcRenderer.invoke('isMinimized', ...args) }
   isMaximized (...args) { return electron.ipcRenderer.invoke('isMaximized', ...args) }
   isFullscreen (...args) { return electron.ipcRenderer.invoke('isFullscreen', ...args) }
+  setSize (...args) { return electron.ipcRenderer.invoke('setSize', ...args) }
+  trust (...args) { return electron.ipcRenderer.invoke('trust', ...args) }
   unloading (...args) { return electron.ipcRenderer.invoke('unloading', ...args) }
   completeUnload (...args) { return electron.ipcRenderer.invoke('completeUnload', ...args) }
   attachMainView (...args) { return electron.ipcRenderer.invoke('attachMainView', ...args) }
@@ -277,6 +284,27 @@ class IPC {
     electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    return stream
+  }
+
+  workerRun (link) {
+    const id = electron.ipcRenderer.sendSync('workerPipeId')
+    electron.ipcRenderer.send('workerRun', link)
+    const stream = new streamx.Duplex({
+      write (data, cb) {
+        electron.ipcRenderer.send('workerPipeWrite', id, data)
+        cb()
+      }
+    })
+    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
+      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
+    })
+    electron.ipcRenderer.on('workerClose', () => { stream.destroy() })
+    stream.once('close', () => {
+      electron.ipcRenderer.send('workerPipeClose', id)
+    })
+
+    electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
   }
 

@@ -1,4 +1,5 @@
 'use strict'
+
 /* global Pear */
 /* eslint-env node, browser */
 if (process.isMainFrame) {
@@ -7,22 +8,22 @@ if (process.isMainFrame) {
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
   const GUI = require('./gui')
+  const gunk = require('./gunk')
   const API = require('./lib/api')
-  const gunk = require('./lib/gunk')
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
-  const ctx = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
-  const { parentWcId, env, cwd, id, decalled = false, isDecal = false, ...config } = ctx
-
+  const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
+  const { parentWcId, env, id, decalled = false, isDecal = false, ...config } = state
+  const dir = config.dir
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
-  ctx.config = config
-  const gui = new GUI({ API, ctx })
+  state.config = config
+  const gui = new GUI({ API, state })
   window.Pear = gui.api
 
   if (isDecal === false) {
     Object.assign(process.env, env)
-    process.chdir(cwd)
+    process.chdir(dir)
   }
 
   {
@@ -124,6 +125,20 @@ if (process.isMainFrame) {
     #onblur = null
     #demax = null
 
+    static get observedAttributes () {
+      return ['data-minimizable', 'data-maximizable']
+    }
+
+    attributeChangedCallback (name) {
+      if (name.startsWith('data-') === false) return
+      if (name === 'data-minimizable') {
+        this.#setMinimizable(strToBool(this.dataset.minimizable))
+      }
+      if (name === 'data-maximizable') {
+        this.#setMaximizable(strToBool(this.dataset.maximizable))
+      }
+    }
+
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
@@ -141,16 +156,17 @@ if (process.isMainFrame) {
         }, { threshold: 0 })
 
         this.intesections.observe(this)
+        this.#setCtrl()
         return
       }
-      if (!isWindows) return // linux uses frame
-
       const min = this.root.querySelector('#min')
       const max = this.root.querySelector('#max')
       const restore = this.root.querySelector('#restore')
       const close = this.root.querySelector('#close')
-      min.addEventListener('click', this.#min)
+
       max.addEventListener('click', this.#max)
+      min.addEventListener('click', this.#min)
+
       if (restore) restore.addEventListener('click', this.#restore)
       close.addEventListener('click', this.#close)
       window.addEventListener('focus', this.#onfocus)
@@ -160,6 +176,29 @@ if (process.isMainFrame) {
         const y = e.clientY
         if (document.elementFromPoint(x, y) === this) this.#onfocus()
       })
+
+      this.#setCtrl()
+    }
+
+    async #setCtrl () {
+      if (this.dataset.minimizable !== undefined) this.#setMinimizable(strToBool(this.dataset.minimizable))
+      if (this.dataset.maximizable !== undefined) this.#setMaximizable(strToBool(this.dataset.maximizable))
+    }
+
+    async #setMaximizable (value) {
+      if (!isMac) {
+        this.root.querySelector('#max').style.display = value ? 'inline' : 'none'
+      } else {
+        await gui.ipc.setMaximizable({ id: gui.id, value: !!value })
+      }
+    }
+
+    async #setMinimizable (value) {
+      if (!isMac) {
+        this.root.querySelector('#min').style.display = value ? 'inline' : 'none'
+      } else {
+        await gui.ipc.setMinimizable({ id: gui.id, value: !!value })
+      }
     }
 
     disconnectedCallback () {
@@ -279,10 +318,87 @@ if (process.isMainFrame) {
     }
 
     #gen () {
-      return '' // linux uses frame
+      // linux uses frame atm
+      return `
+        <style>
+          #ctrl {
+            user-select: none;
+            -webkit-app-region: no-drag;
+            display: flex;
+            float: right;
+            margin-left: .6em;
+            margin-top: 0.8em;
+            border-spacing: 0.3em 0;
+            margin-right: .9em;
+          }
+          #ctrl > .ctrl {
+            opacity: 0.8;
+            height: 24px;
+            width: 24px;
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            margin-left: .9em;
+          }
+          #ctrl > .ctrl:hover {
+            opacity: 1;
+          }
+          .max #max  {
+            display: none;
+          }
+          #restore.ctrl  {
+            display: none;
+          }
+          .max #restore.ctrl  {
+            display: table-cell;
+          }
+          svg {
+            width: 1em;
+            height: 1em;
+         }
+         #titlebar{
+           -webkit-app-region: drag;
+           width: 100%;
+           height: 50px;
+         }
+        </style>
+        <div id="titlebar">
+          <div id="ctrl">
+            <div id="min" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12.998H5V10.998H19V12.998Z" fill="white"/>
+              </svg>
+            </div>
+            <div id="max" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="6" width="12" height="12" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
+            <div id="restore" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clip-path="url(#clip0_9105_112084)">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M8.11108 6H17.2222V15.1111H19.2222V5V4H18.2222H8.11108V6ZM6 10.3333H12.8889V17.2222H6V10.3333ZM4 8.33333H6H12.8889H14.8889V10.3333V17.2222V19.2222H12.8889H6H4V17.2222V10.3333V8.33333Z" fill="white"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_9105_112084">
+                    <rect width="24" height="24" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </div>
+            <div id="close" class="ctrl">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="white"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      `
     }
   })
 }
+
+function strToBool (str) { return str === 'true' }
 
 // support for native addons triggering uncaughtExceptions
 // process.on('uncaughtException', (err) => { console.error('Uncaught exception detected', err) })
