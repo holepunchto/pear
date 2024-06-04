@@ -501,7 +501,8 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    const restarts = await this.#shutdown(client)
+    const restarts = (await this.#shutdown(client))
+      .filter(restart => restart?.cmdArgs?.[0] === 'run' || restart?.appling)
 
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
