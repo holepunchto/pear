@@ -508,7 +508,7 @@ class Sidecar extends ReadyResource {
       fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd))
     )
     await fsext.waitForLock(fd)
-    await new Promise(resolve => fs.close(fd, err => err ? reject(err) : resolve()))
+    await new Promise((resolve, reject) => fs.close(fd, err => err ? reject(err) : resolve()))
 
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
