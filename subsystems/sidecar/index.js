@@ -27,7 +27,6 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
 const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
-const fsext = require('fs-native-extensions')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -502,6 +501,7 @@ class Sidecar extends ReadyResource {
       return
     }
 
+    const sidecarClosed = new Promise(resolve => this.corestore.on('close', resolve))
     const restarts = (await this.#shutdown(client))
       .filter(restart => restart?.cmdArgs?.[0] === 'run' || restart?.appling)
 
@@ -512,11 +512,7 @@ class Sidecar extends ReadyResource {
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
 
-    const fd = await new Promise((resolve, reject) =>
-      fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd))
-    )
-    await fsext.waitForLock(fd)
-    await new Promise((resolve, reject) => fs.close(fd, err => err ? reject(err) : resolve()))
+    await sidecarClosed
 
     for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
