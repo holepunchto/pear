@@ -453,8 +453,8 @@ class Sidecar extends ReadyResource {
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
-      const { pid, cmdArgs, dir, runtime, appling, env } = app.state
-      metadata.push({ pid, cmdArgs, dir, runtime, appling, env })
+      const { pid, cmdArgs, dir, runtime, appling, env, run } = app.state
+      metadata.push({ pid, cmdArgs, dir, runtime, appling, env, run })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -502,9 +502,7 @@ class Sidecar extends ReadyResource {
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = (await this.#shutdown(client))
-      .filter(restart => restart?.cmdArgs?.[0] === 'run' || restart?.appling)
-
+    const restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
@@ -514,7 +512,8 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { dir, appling, cmdArgs, env } of restarts) {
+    for (const { dir, appling, cmdArgs, env, run } of restarts) {
+      if (!run) continue
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
