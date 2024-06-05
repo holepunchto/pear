@@ -25,6 +25,8 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
+const { command } = require('paparam')
+const runDefinition = require('../../run/definition')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -557,7 +559,6 @@ class Sidecar extends ReadyResource {
       }
     }
   }
-
 
   wakeup (params = {}) {
     const [link, storage, appdev = null, selfwake = true] = params.args
