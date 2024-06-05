@@ -470,8 +470,10 @@ class Sidecar extends ReadyResource {
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-      const { pid, clientArgv, dir, runtime, appling, argv, env } = app.state
-      metadata.push({ pid, clientArgv, dir, runtime, appling, argv, env })
+      if (seen.has(app.state.id)) continue
+      seen.add(app.state.id)
+      const { pid, cmdArgs, dir, runtime, appling, env, run } = app.state
+      metadata.push({ pid, cmdArgs, dir, runtime, appling, env, run })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -481,9 +483,9 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
-      const { dir, argv, env } = client.userData.state
+      const { dir, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { dir, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -497,35 +499,64 @@ class Sidecar extends ReadyResource {
         })
       }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
-        argv[argv.indexOf('--run')] = 'run'
-        spawn(RUNTIME, argv, opts).unref()
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.slice(1))
+
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.push(dir)
+        }
+
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
       return
     }
 
-    const restarts = await this.#shutdown(client)
+    const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
+    const restarts = (await this.#shutdown(client)).filter(({ run }) => run)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
-    for (const { dir, appling, argv, env } of restarts) {
-      const opts = { dir, env, detached: true, stdio: 'ignore' }
+
+    await sidecarClosed
+
+    for (const { dir, appling, cmdArgs, env } of restarts) {
+      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
-        spawn(RUNTIME, argv, opts).unref()
+
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.slice(1))
+
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.push(dir)
+        }
+
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
     }
   }
+
 
   wakeup (params = {}) {
     const [link, storage, appdev = null, selfwake = true] = params.args

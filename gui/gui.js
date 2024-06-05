@@ -481,7 +481,8 @@ class App {
       flags: state.flags,
       env: state.env,
       dir: state.dir,
-      link: state.link
+      link: state.link,
+      cmdArgs: process.argv.slice(1)
     })
 
     this.starting.catch(async (err) => {
@@ -1667,11 +1668,7 @@ class PearGUI extends ReadyResource {
 
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
 
-  unloading ({ id }) {
-    if (this._unloading) return this._unloading
-    this._unloading = this.get(id).unloading()
-    return this._unloading
-  }
+  unloading ({ id }) { return this.get(id).unloading() }
 
   async completeUnload ({ id, action }) {
     const instance = this.get(id)
