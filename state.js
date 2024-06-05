@@ -81,7 +81,7 @@ module.exports = class State {
     const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout,
-      dev = false, run, stage, trace, updates, updatesDiff,
+      dev = false, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = flags
 

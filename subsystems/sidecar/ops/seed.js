@@ -9,13 +9,13 @@ const { ERR_INTERNAL_ERROR } = require('../../../errors')
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ name, channel, link, verbose, seeders, dir, clientArgv } = {}) {
+  async #op ({ name, channel, link, verbose, seeders, dir, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
       flags: { channel, link },
       dir,
-      clientArgv
+      cmdArgs
     })
     client.userData = new this.sidecar.App({ state, session })
 
