@@ -594,7 +594,7 @@ class Sidecar extends ReadyResource {
     }
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
-    startId = client.userData?.startId || randomBytes(16).toString('hex')
+    startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
     const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
