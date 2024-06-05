@@ -11,7 +11,7 @@ module.exports = class Release extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ name, channel, checkout, link, dir }) {
+  async #op ({ name, channel, checkout, link, dir, cmdArgs }) {
     const key = link ? hypercoreid.decode(link) : null
 
     const { session } = this
@@ -19,7 +19,8 @@ module.exports = class Release extends Opstream {
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
       flags: { checkout, channel, link },
-      dir
+      dir,
+      cmdArgs
     })
 
     await this.sidecar.ready()

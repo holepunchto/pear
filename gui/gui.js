@@ -481,7 +481,8 @@ class App {
       flags: state.flags,
       env: state.env,
       dir: state.dir,
-      link: state.link
+      link: state.link,
+      cmdArgs: process.argv.slice(1)
     })
 
     this.starting.catch(async (err) => {

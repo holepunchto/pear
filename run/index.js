@@ -19,7 +19,7 @@ const {
 } = require('../errors')
 const parseLink = require('./parse-link')
 
-module.exports = async function run ({ ipc, args, link, storage, detached, flags, appArgs }) {
+module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   let dir = null
   let rel = null
   let key = null
@@ -88,7 +88,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
     ipc.close().catch(console.error)
     return stream
   }
-  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs })
+  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs, cmdArgs })
   if (bail && args.indexOf('--detach') === -1) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
     err.key = key
@@ -96,7 +96,7 @@ module.exports = async function run ({ ipc, args, link, storage, detached, flags
   }
 
   if (type === 'terminal') {
-    const state = new State({ flags, link, dir })
+    const state = new State({ flags, link, dir, cmdArgs })
 
     state.update({ host, id })
 

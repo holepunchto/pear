@@ -28,5 +28,5 @@ module.exports = (ipc) => async function seed (cmd) {
     name = pkg.pear?.name || pkg.name
   }
   const id = Bare.pid
-  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, clientArgv: Bare.argv }))
+  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, cmdArgs: Bare.argv.slice(1) }))
 }

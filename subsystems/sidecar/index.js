@@ -25,6 +25,8 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
+const { command } = require('paparam')
+const runDefinition = require('../../run/definition')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -445,11 +447,14 @@ class Sidecar extends ReadyResource {
   closeClients () {
     if (this.hasClients === false) return []
     const metadata = []
+    const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-      const { pid, clientArgv, dir, runtime, appling, argv, env } = app.state
-      metadata.push({ pid, clientArgv, dir, runtime, appling, argv, env })
+      if (seen.has(app.state.id)) continue
+      seen.add(app.state.id)
+      const { pid, cmdArgs, dir, runtime, appling, env, run } = app.state
+      metadata.push({ pid, cmdArgs, dir, runtime, appling, env, run })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -459,9 +464,9 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
-      const { dir, argv, env } = client.userData.state
+      const { dir, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { dir, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -475,16 +480,28 @@ class Sidecar extends ReadyResource {
         })
       }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
-        argv[argv.indexOf('--run')] = 'run'
-        spawn(RUNTIME, argv, opts).unref()
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.slice(1))
+
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.push(dir)
+        }
+
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
       return
     }
 
+    const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     const restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
@@ -492,15 +509,34 @@ class Sidecar extends ReadyResource {
     this.deathClock()
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
-    for (const { dir, appling, argv, env } of restarts) {
-      const opts = { dir, env, detached: true, stdio: 'ignore' }
+
+    await sidecarClosed
+
+    for (const { dir, appling, cmdArgs, env, run } of restarts) {
+      if (!run) continue
+      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
-        if (isMac) spawn('open', [appling.path.split('.app')[0] + '.app'], opts).unref()
-        else spawn(appling.path, opts).unref()
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawn(applingPath, opts).unref()
       } else {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
-        spawn(RUNTIME, argv, opts).unref()
+
+        if (cmdArgs[0] === 'run') {
+          const cmd = command('run', ...runDefinition)
+          cmd.parse(cmdArgs.slice(1))
+
+          const linkIndex = cmd?.indices?.args?.link
+          const link = cmd?.args?.link
+          if (linkIndex !== undefined) {
+            if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+          } else {
+            cmdArgs.push(dir)
+          }
+        }
+
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
     }
   }
@@ -532,7 +568,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { return client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, link, dir, args } = params
+    const { flags, env, link, dir, args, cmdArgs } = params
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
@@ -542,7 +578,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args)
+    const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -564,10 +600,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args) {
+  async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args })
+    const state = new State({ id, env, link, dir, flags, args, cmdArgs })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {

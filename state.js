@@ -78,7 +78,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, clientArgv, onupdate = () => {}, flags } = params
+    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags } = params
     const {
       startId, appling, channel, devtools, checkout,
       dev = false, run, stage, trace, updates, updatesDiff,
@@ -118,7 +118,7 @@ module.exports = class State {
     this.key = key
     this.alias = alias
     this.manifest = pkg
-    this.clientArgv = clientArgv
+    this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
     this.clearPreferences = clearPreferences
