@@ -502,7 +502,7 @@ class Sidecar extends ReadyResource {
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = await this.#shutdown(client)
+    const restarts = (await this.#shutdown(client)).filter(({ run }) => run)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
@@ -512,8 +512,7 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { dir, appling, cmdArgs, env, run } of restarts) {
-      if (!run) continue
+    for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
