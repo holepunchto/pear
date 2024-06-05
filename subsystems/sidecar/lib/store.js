@@ -6,23 +6,20 @@ const mutexify = require('mutexify/promise')
 const Iambus = require('iambus')
 const { PLATFORM_DIR } = require('../../../constants')
 
-const preferences = join(PLATFORM_DIR, 'preferences.json')
-const next = join(PLATFORM_DIR, 'preferences.next.json')
-
-let settings = {}
-try { settings = JSON.parse(readFileSync(preferences)) } catch {}
-
-// singleton:
-module.exports = new class Preferences {
+module.exports = class Store {
   #mutexify = null
   #writes = 0
   bus = new Iambus()
-  constructor () {
+  constructor (name) {
+    this.current = join(PLATFORM_DIR, name + '.json')
+    this.next = join(PLATFORM_DIR, name + '.next.json')
+    this.data = {}
+    try { this.data = JSON.parse(readFileSync(this.current)) } catch {}
     this.#mutexify = mutexify()
   }
 
   async set (key, value) {
-    settings[key] = value
+    this.data[key] = value
     this.#update(['set', key, value])
     await this.#flush()
     return true
@@ -41,8 +38,8 @@ module.exports = new class Preferences {
     try {
       const writes = this.#writes
 
-      await writeFile(next, JSON.stringify(settings))
-      await rename(next, preferences)
+      await writeFile(this.next, JSON.stringify(this.data))
+      await rename(this.next, this.current)
 
       this.#writes -= writes
     } catch (err) {
@@ -53,11 +50,11 @@ module.exports = new class Preferences {
   }
 
   async get (key) {
-    return settings[key]
+    return this.data[key]
   }
 
   async clear () {
-    settings = {}
+    this.data = {}
     this.#update(['clear'])
     await this.#flush()
     return true
@@ -67,5 +64,5 @@ module.exports = new class Preferences {
 
   updates () { return this.bus.sub({ topic: 'update' }) }
 
-  entries () { return Object.entries(settings) }
-}()
+  entries () { return Object.entries(this.data) }
+}

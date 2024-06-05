@@ -1444,6 +1444,9 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('afterViewLoaded', (evt, ...args) => this.afterViewLoaded(...args))
     electron.ipcMain.handle('setWindowButtonPosition', (evt, ...args) => this.setWindowButtonPosition(...args))
     electron.ipcMain.handle('setWindowButtonVisibility', (evt, ...args) => this.setWindowButtonVisibility(...args))
+    electron.ipcMain.handle('requestIdentity', (evt, ...args) => this.requestIdentity(...args))
+    electron.ipcMain.handle('shareIdentity', (evt, ...args) => this.shareIdentity(...args))
+    electron.ipcMain.handle('clearIdentity', (evt, ...args) => this.clearIdentity(...args))
     electron.ipcMain.handle('message', (evt, ...args) => this.message(...args))
     electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
@@ -1663,9 +1666,9 @@ class PearGUI extends ReadyResource {
 
   isFullscreen ({ id }) { return this.get(id).isFullscreen() }
 
-  unloading ({ id }) { return this.get(id).unloading() }
-
   setSize ({ id, width, height }) { return this.get(id).setSize(width, height) }
+
+  unloading ({ id }) { return this.get(id).unloading() }
 
   async completeUnload ({ id, action }) {
     const instance = this.get(id)
@@ -1692,6 +1695,12 @@ class PearGUI extends ReadyResource {
     if (!instance) return
     instance.setWindowButtonVisibility(visible)
   }
+
+  requestIdentity (params) { return this.ipc.requestIdentity(params) }
+
+  shareIdentity (identity) { return this.ipc.shareIdentity(identity) }
+
+  clearIdentity () { return this.ipc.clearIdentity() }
 
   message (msg) { return this.ipc.message(msg) }
 

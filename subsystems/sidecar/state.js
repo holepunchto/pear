@@ -2,9 +2,10 @@
 const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
-const preferences = require('./lib/preferences')
+const Store = require('./lib/store')
 const SharedState = require('../../state')
 const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../../errors')
+const preferences = new Store('preferences')
 
 module.exports = class State extends SharedState {
   initialized = false
@@ -12,6 +13,9 @@ module.exports = class State extends SharedState {
   link = null
   version = { key: null, length: 0, fork: 0 }
   checkpoint = null
+
+  static preferences = preferences
+
   constructor (opts) {
     super(opts)
     this.reconfigure()

@@ -9,7 +9,7 @@ const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
-const { randomBytes, discoveryKey } = require('hypercore-crypto')
+const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
@@ -17,7 +17,7 @@ const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const reports = require('./lib/reports')
-const preferences = require('./lib/preferences')
+const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
@@ -34,8 +34,9 @@ const {
 } = require('../../constants')
 
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
-
+const identity = new Store('identity')
 const State = require('./state')
+const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
   Release: require('./ops/release'),
@@ -395,6 +396,27 @@ class Sidecar extends ReadyResource {
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
+  async requestIdentity ({ publicKey }) {
+    let keyPair = await identity.get('keyPair')
+    if (keyPair) {
+      keyPair.publicKey = Buffer.from(Object.values(keyPair.publicKey))
+    } else {
+      keyPair = await crypto.keyPair(publicKey.buffer)
+      identity.set('keyPair', keyPair)
+    }
+    return keyPair.publicKey
+  }
+
+  async shareIdentity (params) {
+    const { publicKey, attestation } = params
+    identity.set('publicKey', publicKey)
+    identity.set('attestation', attestation)
+  }
+
+  async clearIdentity () {
+    identity.clear()
+  }
+
   async message (params, client) {
     if (!client.userData) return
     return client.userData.message(params)
@@ -431,7 +453,7 @@ class Sidecar extends ReadyResource {
   async detached ({ key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
     }
 
     const wokeup = await this.wakeup({ args: [key.link, storage, appdev, false] })
@@ -574,7 +596,7 @@ class Sidecar extends ReadyResource {
     }
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
-    startId = client.userData?.startId || randomBytes(16).toString('hex')
+    startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
     const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
