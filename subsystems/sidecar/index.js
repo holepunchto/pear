@@ -603,7 +603,7 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args, cmdArgs })
+    const state = new State({ id, env, link, dir, flags, args, cmdArgs, run: true })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
