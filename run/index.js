@@ -18,6 +18,7 @@ const {
   ERR_INVALID_INPUT
 } = require('../errors')
 const parseLink = require('./parse-link')
+const teardown = require('../lib/teardown')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   let dir = null
@@ -38,7 +39,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   if (dir !== cwd) {
-    Bare.on('exit', () => os.chdir(cwd))
+    teardown(() => os.chdir(cwd))
     os.chdir(dir)
   }
 
