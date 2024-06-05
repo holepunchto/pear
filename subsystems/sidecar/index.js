@@ -467,6 +467,7 @@ class Sidecar extends ReadyResource {
   closeClients () {
     if (this.hasClients === false) return []
     const metadata = []
+    const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
