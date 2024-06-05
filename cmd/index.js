@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
+const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, rest, bail } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -14,6 +14,7 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
+  encryptionKey: require('./encryption-key'),
   versions: require('./versions')
 }
 
@@ -80,6 +81,7 @@ module.exports = async (ipc) => {
     flag('--name', 'Advanced. Override app name'),
     runners.stage(ipc)
   )
+
   const release = command(
     'release',
     summary('Set production release version'),
@@ -164,6 +166,12 @@ module.exports = async (ipc) => {
     else console.log(cmd.overview({ full: true }))
   })
 
+  const encryptionKey = hiddenCommand(
+    'encryption-key',
+    command('add', arg('<name>'), arg('<secret>'), runners.encryptionKey.add(ipc)),
+    command('remove', arg('<name>'), runners.encryptionKey.remove(ipc))
+  )
+
   const cmd = command('pear',
     flag('-v', 'Output version'),
     header(usage.header),
@@ -178,6 +186,7 @@ module.exports = async (ipc) => {
     shift,
     sidecar,
     gc,
+    encryptionKey,
     versions,
     help,
     footer(usage.footer),

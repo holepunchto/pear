@@ -44,7 +44,8 @@ const ops = {
   Seed: require('./ops/seed'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
-  Shift: require('./ops/shift')
+  Shift: require('./ops/shift'),
+  EncryptionKey: require('./ops/encryption-key')
 }
 
 // ensure that we are registered as a link handler
@@ -353,6 +354,8 @@ class Sidecar extends ReadyResource {
   shift (params, client) { return new ops.Shift(params, client, this) }
 
   gc (params, client) { return new ops.GC(params, client) }
+
+  encryptionKey (params, client) { return new ops.EncryptionKey(params, client, this) }
 
   warmup (params, client) {
     if (!client.userData) return

@@ -9,9 +9,10 @@ const { PLATFORM_DIR } = require('../../../../constants')
 const { ERR_INVALID_GC_RESOURCE } = require('../../../errors')
 
 module.exports = class GC extends streamx.Readable {
-  constructor ({ pid, resource }, client) {
+  constructor ({ pid, resource }, client, sidecar) {
     super()
     this.client = client
+    this.sidecar = sidecar
     if (resource === 'release') this.release({ resource })
     else if (resource === 'sidecar') this.sidecar({ pid, resource })
     else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
