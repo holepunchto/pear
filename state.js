@@ -78,14 +78,14 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags } = params
+    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout,
-      dev = false, run, stage, trace, updates, updatesDiff,
+      dev = false, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = flags
 
-    if (flags.stage || flags.run) {
+    if (flags.stage || (run ?? flags.run)) {
       const { NODE_ENV = 'production' } = env
       env.NODE_ENV = NODE_ENV
     }
@@ -110,7 +110,7 @@ module.exports = class State {
     this.devtools = devtools
     this.updates = updates
     this.updatesDiff = updatesDiff
-    this.run = run
+    this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
     this.link = link
