@@ -502,7 +502,7 @@ class Sidecar extends ReadyResource {
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = await this.#shutdown(client)
+    const restarts = (await this.#shutdown(client)).filter(({ run }) => run)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
@@ -512,8 +512,7 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { dir, appling, cmdArgs, env, run } of restarts) {
-      if (!run) continue
+    for (const { dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
@@ -523,17 +522,15 @@ class Sidecar extends ReadyResource {
         // TODO: TERMINAL_RUNTIME restarts
         const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
 
-        if (cmdArgs[0] === 'run') {
-          const cmd = command('run', ...runDefinition)
-          cmd.parse(cmdArgs.slice(1))
+        const cmd = command('run', ...runDefinition)
+        cmd.parse(cmdArgs.slice(1))
 
-          const linkIndex = cmd?.indices?.args?.link
-          const link = cmd?.args?.link
-          if (linkIndex !== undefined) {
-            if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
-          } else {
-            cmdArgs.push(dir)
-          }
+        const linkIndex = cmd?.indices?.args?.link
+        const link = cmd?.args?.link
+        if (linkIndex !== undefined) {
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
+        } else {
+          cmdArgs.push(dir)
         }
 
         spawn(RUNTIME, cmdArgs, opts).unref()
@@ -603,7 +600,7 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, flags, args, cmdArgs })
+    const state = new State({ id, env, link, dir, flags, args, cmdArgs, run: true })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
