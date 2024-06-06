@@ -17,8 +17,8 @@ module.exports = class Bundle {
   warmup = { blocks: 0, total: 0 }
   #log = null
 
-  static async provisioned (corestore, key) {
-    const drive = new Hyperdrive(corestore.session(), key)
+  static async provisioned (corestore, key, opts) {
+    const drive = new Hyperdrive(corestore.session(), key, opts)
     await drive.ready()
     const res = drive.core.length > 0
     await drive.close()
@@ -29,7 +29,7 @@ module.exports = class Bundle {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
       key, channel, trace = null, stage = false, log = noop, failure,
-      updateNotify, updatesDiff = false, truncate
+      updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
     this.checkout = checkout
     this.appling = appling
@@ -42,7 +42,8 @@ module.exports = class Bundle {
     this.corestore = corestore
     this.trace = trace
     this.stage = stage
-    this.drive = drive || new Hyperdrive(this.corestore, this.key)
+    const driveOpts = encryptionKey === null ? {} : { encryptionKey: hypercoreid.decode(encryptionKey) }
+    this.drive = drive || new Hyperdrive(this.corestore, this.key, driveOpts)
     this.updatesDiff = updatesDiff
     this.tracer = null
     this.link = null

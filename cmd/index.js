@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, arg, summary, description, rest, bail } = require('paparam')
+const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, rest, bail } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -14,6 +14,7 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
+  encryptionKey: require('./encryption-key'),
   versions: require('./versions')
 }
 
@@ -49,8 +50,12 @@ module.exports = async (ipc) => {
     flag('--appling <path>', 'Set application shell path'),
     flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
     flag('--detached', 'Wakeup existing app or run detached'),
+    hiddenFlag('--encryption-key <name>'), // internal temporarily
     hiddenFlag('--detach'),
-    hiddenFlag('--start-id'),
+    hiddenFlag('--trace <n>'),
+    hiddenFlag('--swap <path>'),
+    hiddenFlag('--start-id <id>'),
+    hiddenFlag('--no-sandbox'), // electron passthrough
     (cmd) => runners.run(ipc)(cmd, true)
   )
 
@@ -78,8 +83,10 @@ module.exports = async (ipc) => {
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name', 'Advanced. Override app name'),
+    hiddenFlag('--encryption-key <name>'), // internal temporarily
     runners.stage(ipc)
   )
+
   const release = command(
     'release',
     summary('Set production release version'),
@@ -164,6 +171,13 @@ module.exports = async (ipc) => {
     else console.log(cmd.overview({ full: true }))
   })
 
+  const encryptionKey = hiddenCommand(
+    'encryption-key',
+    command('add', arg('<name>'), arg('<secret>'), (cmd) => runners.encryptionKey(ipc).add(cmd)),
+    command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd)),
+    command('generate', (cmd) => runners.encryptionKey(ipc).generate(cmd))
+  )
+
   const cmd = command('pear',
     flag('-v', 'Output version'),
     header(usage.header),
@@ -178,6 +192,7 @@ module.exports = async (ipc) => {
     shift,
     sidecar,
     gc,
+    encryptionKey,
     versions,
     help,
     footer(usage.footer),

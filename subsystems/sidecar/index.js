@@ -35,6 +35,7 @@ const {
 
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
+const encryptionKeys = new Store('encryption-keys')
 const State = require('./state')
 const { preferences } = State
 const ops = {
@@ -44,7 +45,8 @@ const ops = {
   Seed: require('./ops/seed'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
-  Shift: require('./ops/shift')
+  Shift: require('./ops/shift'),
+  EncryptionKey: require('./ops/encryption-key')
 }
 
 // ensure that we are registered as a link handler
@@ -354,6 +356,8 @@ class Sidecar extends ReadyResource {
 
   gc (params, client) { return new ops.GC(params, client) }
 
+  encryptionKey (params, client) { return new ops.EncryptionKey(params, client) }
+
   warmup (params, client) {
     if (!client.userData) return
     return client.userData.warmup(params)
@@ -597,7 +601,8 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-    const running = this.#start(flags, client, session, env, link, dir, startId, args, cmdArgs)
+    const encryptionKey = !flags.encryptionKey ? null : await encryptionKeys.get(flags.encryptionKey)
+    const running = this.#start(encryptionKey, flags, client, session, env, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -619,7 +624,7 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, link, dir, startId, args, cmdArgs) {
+  async #start (encryptionKey, flags, client, session, env, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData || new this.App({ id, startId, session })
     const state = new State({ id, env, link, dir, flags, args, cmdArgs, run: true })
@@ -682,6 +687,7 @@ class Sidecar extends ReadyResource {
       : null
 
     const appBundle = new Bundle({
+      encryptionKey,
       corestore: this._getCorestore(state.manifest?.name, state.channel),
       appling: state.appling,
       channel: state.channel,

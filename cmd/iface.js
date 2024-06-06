@@ -62,6 +62,7 @@ function indicator (value, type = 'success') {
 
 const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
   let error = null
+  if (Array.isArray(stream)) stream = asyncIterate(stream)
   try {
     for await (const { tag, data = {} } of stream) {
       if (json) {
@@ -90,6 +91,8 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
     if (error) throw error // eslint-disable-line no-unsafe-finally
   }
 }
+
+function asyncIterate (array) { return (async function * () { yield * array }()) }
 
 class Interact {
   constructor (header, params, type) {
