@@ -18,6 +18,7 @@ const {
   ERR_INVALID_INPUT
 } = require('../errors')
 const parseLink = require('./parse-link')
+const teardown = require('../lib/teardown')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   let dir = null
@@ -37,7 +38,11 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     dir = path.resolve(cwd, dir)
   }
 
-  if (dir !== cwd) os.chdir(dir)
+  if (dir !== cwd) {
+    Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
+    teardown(() => os.chdir(cwd))
+    os.chdir(dir)
+  }
 
   if (key === null) {
     try {

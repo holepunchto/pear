@@ -70,6 +70,8 @@ exports.WAKEUP = toPath(new URL(BIN + WAKEUP_EXEC, swapURL))
 exports.RUNTIME = toPath(new URL(BIN + RUNTIME_EXEC, swapURL))
 exports.DESKTOP_RUNTIME = toPath(new URL(BIN + DESKTOP_EXEC, swapURL))
 
+exports.BARE_RESTART_EXIT_CODE = 75
+
 function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)
