@@ -174,7 +174,8 @@ module.exports = async (ipc) => {
   const encryptionKey = hiddenCommand(
     'encryption-key',
     command('add', arg('<name>'), arg('<secret>'), (cmd) => runners.encryptionKey(ipc).add(cmd)),
-    command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd))
+    command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd)),
+    command('generate', (cmd) => runners.encryptionKey(ipc).generate(cmd))
   )
 
   const cmd = command('pear',
