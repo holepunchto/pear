@@ -17,14 +17,12 @@ module.exports = class EncryptionKey extends Opstream {
     try { hypercoreid.decode(secret) } catch { throw ERR_INVALID_INPUT('Invalid encryption key') }
     const result = await this.store.set(name, secret)
     this.push({ tag: 'added', data: { name } })
-    this.push({ tag: 'final', data: { success: true }})
     return result
   }
 
   async #remove ({ name }) {
     const result = await this.store.set(name, undefined)
     this.push({ tag: 'removed', data: { name } })
-    this.push({ tag: 'final', data: { success: true }})
     return result
   }
 }
