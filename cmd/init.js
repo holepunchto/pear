@@ -1,6 +1,6 @@
 'use strict'
 const os = require('bare-os')
-const { access, writeFile, mkdir, readFile } = require('bare-fs/promises')
+const { access, stat, writeFile, mkdir, readFile } = require('bare-fs/promises')
 const { extname, basename, resolve } = require('bare-path')
 const { ansi, print, interact } = require('./iface')
 
@@ -17,10 +17,16 @@ module.exports = () => async function init (cmd) {
       return false
     }
   }
-  const dir = cmd.args.dir || cwd
+
+  const dir = cmd.args.dir ? resolve(cwd, cmd.args.dir) : cwd
+  let dirStat = null
+  try { dirStat = await stat(dir) } catch {}
   const pkgPath = resolve(dir, 'package.json')
   let pkg = null
-  try { pkg = JSON.parse(await readFile(pkgPath)) } catch {}
+  const dirExists = dirStat !== null && dirStat.isDirectory()
+  if (dirExists) {
+    try { pkg = JSON.parse(await readFile(pkgPath)) } catch {}
+  }
 
   const cfg = pkg?.pear || pkg?.holepunch || {}
   const height = cfg.gui ? cfg.gui.height : 540
@@ -36,7 +42,7 @@ module.exports = () => async function init (cmd) {
 
   const diff = pkg ? Object.fromEntries(Object.entries(pkg).filter(([key]) => initKeys.has(key) === false)) : {}
 
-  const name = cfg?.name || pkg?.name || basename(cwd)
+  const name = cfg?.name || pkg?.name || basename(dir)
 
   const scripts = pkg?.scripts || { dev: 'pear dev', test: 'brittle test/*.test.js' }
   const extra = cfg.gui || null
@@ -195,6 +201,10 @@ console.log(await versions())
   if (type === 'terminal' && w === 'node') result.dependencies = nodeDependecies
   const created = pkg === null ? [pkgPath] : []
   const refusals = []
+  if (dirExists === false) {
+    await mkdir(dir, { recursive: true })
+    os.chdir(dir)
+  }
   const entryPath = resolve(dir, fields.main)
   const appPath = resolve(dir, 'app.js')
   const testDir = resolve(dir, 'test')
