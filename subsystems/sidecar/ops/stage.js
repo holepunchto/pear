@@ -65,7 +65,7 @@ module.exports = class Stage extends Opstream {
       channel,
       truncate,
       stage: true,
-      encryptionKey: encryptionKey,
+      encryptionKey,
       failure (err) { console.error(err) }
     })
     await session.add(bundle)

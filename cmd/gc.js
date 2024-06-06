@@ -13,13 +13,15 @@ class GC {
   constructor (ipc) {
     this.ipc = ipc
   }
+
   async release (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)
     await output(json, stream)
   }
-  async sidecar (cmd)  {
+
+  async sidecar (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)

@@ -13,13 +13,13 @@ module.exports = class EncryptionKey extends Opstream {
 
   async #add ({ name, secret }) {
     const result = await this.store.set(name, secret)
-    this.push({ tag: 'added', data: { name }})
+    this.push({ tag: 'added', data: { name } })
     return result
   }
 
   async #remove ({ name }) {
     const result = await this.store.set(name, undefined)
-    this.push({ tag: 'removed', data: { name }})
+    this.push({ tag: 'removed', data: { name } })
     return result
   }
 }

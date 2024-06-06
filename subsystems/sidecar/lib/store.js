@@ -13,7 +13,7 @@ module.exports = class Store {
   static stores = new Map()
   constructor (name) {
     if (this.constructor.stores.has(name)) return this.constructor.stores.get(name)
-      this.constructor.stores.set(name, this)
+    this.constructor.stores.set(name, this)
     this.current = join(PLATFORM_DIR, name + '.json')
     this.next = join(PLATFORM_DIR, name + '.next.json')
     this.data = {}
