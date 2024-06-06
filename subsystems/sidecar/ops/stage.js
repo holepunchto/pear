@@ -10,6 +10,7 @@ const { randomBytes } = require('hypercore-crypto')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
+const Store = require('../lib/store')
 const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
 const { ERR_TRACER_FAILED } = require('../../../errors')
 
@@ -44,7 +45,7 @@ module.exports = class Stage extends Opstream {
 
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store' }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -56,12 +57,15 @@ module.exports = class Stage extends Opstream {
     if (key) key = hypercoreid.decode(key)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
+    const encryptionKeys = new Store('encryption-keys')
+    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
     const bundle = new Bundle({
       key,
       corestore,
       channel,
       truncate,
       stage: true,
+      encryptionKey: encryptionKey,
       failure (err) { console.error(err) }
     })
     await session.add(bundle)

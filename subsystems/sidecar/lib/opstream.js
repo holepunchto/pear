@@ -2,7 +2,7 @@
 const streamx = require('streamx')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
-  constructor (op, params, client, sidecar) {
+  constructor (op, params, client, sidecar = null) {
     super({
       read (cb) {
         let success = true

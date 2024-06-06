@@ -6,17 +6,20 @@ const output = outputter('encryption-key', {
   added: ({ name }) => `Encryption key "${name}" added`
 })
 
-module.exports = (ipc) => {
-  return {
-    add: async (cmd) => {
-      const { name, secret } = cmd.args
-      const stream = ipc.encryptionKey({ pid: Bare.pid, action: 'add', name, secret }, ipc)
-      await output(json, stream)
-    },
-    remove: async (cmd) => {
-      const { name } = cmd.args
-      const stream = ipc.encryptionKey({ pid: Bare.pid, action: 'remove', name }, ipc)
-      await output(json, stream)
-    }
+module.exports = (ipc) => new EncryptionKey(ipc)
+
+class EncryptionKey {
+  constructor (ipc) {
+    this.ipc = ipc
+  }
+  async add (cmd) {
+    const { name, secret } = cmd.args
+    const stream = this.ipc.encryptionKey({ pid: Bare.pid, action: 'add', name, secret }, this.ipc)
+    await output(false, stream)
+  }
+  async remove (cmd) {
+    const { name } = cmd.args
+    const stream = this.ipc.encryptionKey({ pid: Bare.pid, action: 'remove', name }, this.ipc)
+    await output(false, stream)
   }
 }

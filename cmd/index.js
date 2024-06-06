@@ -50,8 +50,12 @@ module.exports = async (ipc) => {
     flag('--appling <path>', 'Set application shell path'),
     flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
     flag('--detached', 'Wakeup existing app or run detached'),
+    hiddenFlag('--encryption-key <name>'), // internal temporarily
     hiddenFlag('--detach'),
-    hiddenFlag('--start-id'),
+    hiddenFlag('--trace <n>'),
+    hiddenFlag('--swap <path>'),
+    hiddenFlag('--start-id <id>'),
+    hiddenFlag('--no-sandbox'), // electron passthrough
     (cmd) => runners.run(ipc)(cmd, true)
   )
 
@@ -79,6 +83,7 @@ module.exports = async (ipc) => {
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name', 'Advanced. Override app name'),
+    hiddenFlag('--encryption-key <name>'), // internal temporarily
     runners.stage(ipc)
   )
 
@@ -168,8 +173,8 @@ module.exports = async (ipc) => {
 
   const encryptionKey = hiddenCommand(
     'encryption-key',
-    command('add', arg('<name>'), arg('<secret>'), runners.encryptionKey.add(ipc)),
-    command('remove', arg('<name>'), runners.encryptionKey.remove(ipc))
+    command('add', arg('<name>'), arg('<secret>'), (cmd) => runners.encryptionKey(ipc).add(cmd)),
+    command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd))
   )
 
   const cmd = command('pear',

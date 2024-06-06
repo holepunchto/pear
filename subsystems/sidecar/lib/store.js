@@ -10,7 +10,10 @@ module.exports = class Store {
   #mutexify = null
   #writes = 0
   bus = new Iambus()
+  static stores = new Map()
   constructor (name) {
+    if (this.constructor.stores.has(name)) return this.constructor.stores.get(name)
+      this.constructor.stores.set(name, this)
     this.current = join(PLATFORM_DIR, name + '.json')
     this.next = join(PLATFORM_DIR, name + '.next.json')
     this.data = {}
