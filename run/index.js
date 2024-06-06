@@ -39,7 +39,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   if (dir !== cwd) {
-    Bare.on('exit', () => os.chdir(cwd)) // TODO: Remove this once teardown is fixed
+    Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
     teardown(() => os.chdir(cwd))
     os.chdir(dir)
   }
