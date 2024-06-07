@@ -1,5 +1,36 @@
 # Pear Runtime Changelog
 
+## v1.3.0
+
+### Features
+
+* CLI - `pear run` `-d` alias for `--dev` flag
+* CLI - `pear shift` - move application storage between apps
+* CLI - `pear gc releases` - clear inactive releases
+* CLI - `pear gc sidecars` - clear any inactive running sidecars
+* API - `Pear.worker.run(link)` - spawns a worker process from a pear link
+* API - `Pear.worker.pipe()` - opens a pipe when the process is a worker
+* CLI - `pear info <channel> [dir=cwd]` - if an app has been staged, its info can be retrieved by channel name, useful for getting project pear link (key) if needed
+* CLI - `pear info` `--key` flag, display key only
+* CLI - `pear info` `--full-changelog` show full changelog in info output
+* CLI - `pear info` `--changelog` show changelog only
+* CLI - `pear info` `--metadata` show metadata only
+* CLI - `pear info` `--json` flag for info in JSON format
+* CLI / Config - `pear.previewFor` package.json config field cannot be released with `pear release` (staging only feature)
+
+
+### Improvements
+
+* Desktop Apps - Consistent localstorage by binding to known port (9342)
+* CLI - pear-cli bootstrap command (`npx pear`) moved out to own repo
+* Sidecar Refactor - into subsystem folder
+* IPC Refactor - async generators handlers in sidecar to streamx streams
+* CLI Refactor - onto `paparam`, simplified CLI output, flag and argument validation
+* Windows - Localdev (development on pear) - ps1/cmd pear files for pear.dev equivalents on Windows
+* Linux - irrelevant log filtering
+* Errors Refactor - move from hard coded error codes to Errors class 
+* Desktop Apps - right click support for copy/paste, right click Inspect Element when in dev mode
+
 ## v1.2.4
 
 ### Fixes
