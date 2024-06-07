@@ -15,7 +15,7 @@ module.exports = class Info extends Opstream {
     const { session } = this
     let bundle = null
     const anyFlag = [changelog, full, metadata, showKey].some(flag => flag === true)
-    const isEnabled = (flag) => anyFlag ? !!flag : flag !== false
+    const isEnabled = (flag) => anyFlag ? !!flag : !flag
     if (link) {
       const parsed = parseLink(link)
       const key = parsed.key.buffer
@@ -58,10 +58,12 @@ module.exports = class Info extends Opstream {
       }
 
       const channel = (await drive.db.get('channel'))?.value
-      const release = (await drive.db.get('release'))?.value
+      const release = (await drive.db.get('release'))?.value || false
       const manifest = (await drive.db.get('manifest'))?.value
       const name = manifest?.pear?.name || manifest?.holepunch?.name || manifest.name
-      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel, release, name } })
+      const length = drive.core.length
+      const fork = drive.core.fork
+      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel, release, name, length, fork } })
     }
 
     const contents = await drive.get('/CHANGELOG.md')
