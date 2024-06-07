@@ -10,7 +10,8 @@
 * CLI - `pear gc sidecars` - clear any inactive running sidecars
 * API - `Pear.worker.run(link)` - spawns a worker process from a pear link
 * API - `Pear.worker.pipe()` - opens a pipe when the process is a worker
-* CLI - `pear info <channel> [dir=cwd]` - if an app has been staged, its info can be retrieved by channel name, useful for getting project pear link (key) if needed
+* CLI - `pear info <channel> [dir=cwd]` - if an app has been staged, its info can be retrieved by
+* Config - `pear.links` - define pear links to inherit trust from parent app, e.g. worker links
 * CLI - `pear info` `--key` flag, display key only
 * CLI - `pear info` `--full-changelog` show full changelog in info output
 * CLI - `pear info` `--changelog` show changelog only
