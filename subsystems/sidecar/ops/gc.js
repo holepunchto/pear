@@ -12,8 +12,8 @@ module.exports = class GC extends streamx.Readable {
   constructor ({ pid, resource }, client) {
     super()
     this.client = client
-    if (resource === 'release') this.release({ resource })
-    else if (resource === 'sidecar') this.sidecar({ pid, resource })
+    if (resource === 'releases') this.releases({ resource })
+    else if (resource === 'sidecars') this.sidecars({ pid, resource })
     else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
@@ -21,23 +21,28 @@ module.exports = class GC extends streamx.Readable {
     cb(null)
   }
 
-  async release ({ resource }) {
+  async releases ({ resource }) {
     try {
+      let count = 0
       const symlinkPath = path.join(PLATFORM_DIR, 'current')
       const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
 
-      await fs.promises.stat(dkeyDir)
+      try { await fs.promises.stat(dkeyDir) } catch {
+        this.push({ tag: 'complete', data: { resource, count } })
+        this.push({ tag: 'final', data: { success: true } })
+        this.push(null)
+      }
 
       const current = await fs.promises.readlink(symlinkPath)
       const currentDirPath = path.dirname(current)
       const currentDirName = path.basename(currentDirPath)
 
       const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
+
       const dirNames = dirs
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-      let count = 0
       for (const dirName of dirNames) {
         if (dirName !== currentDirName) {
           const dirPath = path.join(dkeyDir, dirName)
@@ -54,7 +59,7 @@ module.exports = class GC extends streamx.Readable {
     }
   }
 
-  sidecar ({ pid, resource }) {
+  sidecars ({ pid, resource }) {
     const name = 'pear-runtime'
     const flag = '--sidecar'
 

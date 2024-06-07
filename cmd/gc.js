@@ -2,8 +2,8 @@
 const { outputter } = require('./iface')
 
 const output = outputter('gc', {
-  remove: ({ resource, id }) => `Removed ${resource} '${id}'`,
-  complete: ({ resource, count }) => { return count > 0 ? `Total ${resource}s removed: ${count}` : `No ${resource}s removed` },
+  remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
+  complete: ({ resource, count }) => { return count > 0 ? `Total ${resource}s removed: ${count}` : `No ${resource} removed` },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
@@ -14,14 +14,14 @@ class GC {
     this.ipc = ipc
   }
 
-  async release (cmd) {
+  async releases (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)
     await output(json, stream)
   }
 
-  async sidecar (cmd) {
+  async sidecars (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)
