@@ -494,8 +494,8 @@ class Sidecar extends ReadyResource {
     for (const client of this.closeableClients) {
       const app = client.userData
 
-      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run })
+      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
+      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
