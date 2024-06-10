@@ -502,7 +502,7 @@ class Sidecar extends ReadyResource {
     return metadata
   }
 
-  async restart ({ platform = false } = {}, client) {
+  async restart ({ platform = false, hard = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
@@ -543,7 +543,8 @@ class Sidecar extends ReadyResource {
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = (await this.#shutdown(client)).filter(({ run }) => run)
+    const restarts = (await this.#shutdown(client))
+      .filter(({ run, options }) => run && (options?.type !== 'terminal' || hard))
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
@@ -553,15 +554,15 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
+    for (const { cwd, dir, appling, cmdArgs, env, options } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        // TODO: TERMINAL_RUNTIME restarts
-        const RUNTIME = this.updater === null ? DESKTOP_RUNTIME : this.updater.swap + DESKTOP_RUNTIME.slice(SWAP.length)
+        const baseRuntime = options?.type === 'terminal' ? RUNTIME: DESKTOP_RUNTIME
+        const RUNTIME = this.updater === null ? baseRuntime : this.updater.swap + baseRuntime.slice(SWAP.length)
 
         const cmd = command('run', ...runDefinition)
         cmd.parse(cmdArgs.slice(1))
