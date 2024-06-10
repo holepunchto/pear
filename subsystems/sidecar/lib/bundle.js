@@ -126,7 +126,7 @@ module.exports = class Bundle {
     if (Number.isInteger(this.truncate)) {
       await this.drive.truncate(this.truncate)
     }
-    const author = await this.drive.db.get('author')
+    const author = this.db ? await this.db.get('author') : null
     if (this.author?.publicKey && this.author?.attestation) {
       if (author !== null) {
         if (author.publicKey !== this.author.publicKey || author.attestation !== this.author.attestation) {
