@@ -13,12 +13,14 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ channel, release, name }) => `
+const info = ({ channel, release, name, length, fork }) => `
  info         value
 -----------  -----------------
  name         ${name}
  channel      ${channel}
  release      ${release}
+ length       ${length}
+ fork         ${fork}
 `
 
 const changelog = ({ changelog, full }) => `
@@ -36,7 +38,7 @@ const output = outputter('info', {
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey, keys } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
   const isKey = cmd.args.link && parseLink(cmd.args.link).key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
@@ -49,7 +51,6 @@ module.exports = (ipc) => async function info (cmd) {
     channel,
     dir,
     showKey,
-    keys,
     metadata,
     changelog,
     full,
