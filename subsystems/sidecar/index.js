@@ -572,8 +572,8 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        const baseRuntime = options?.type === 'terminal' ? RUNTIME: DESKTOP_RUNTIME
-        const RUNTIME = this.updater === null ? baseRuntime : this.updater.swap + baseRuntime.slice(SWAP.length)
+        const baseRuntime = options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME
+        const runtime = this.updater === null ? baseRuntime : this.updater.swap + baseRuntime.slice(SWAP.length)
 
         const cmd = command('run', ...runDefinition)
         cmd.parse(cmdArgs.slice(1))
@@ -586,7 +586,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        spawn(RUNTIME, cmdArgs, opts).unref()
+        spawn(runtime, cmdArgs, opts).unref()
       }
     }
   }
