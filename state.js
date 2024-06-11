@@ -32,6 +32,7 @@ module.exports = class State {
   reloadingSince = 0
   type = null
   error = null
+  entrypoints = null
   static injestPackage (state, pkg) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
@@ -47,6 +48,7 @@ module.exports = class State {
       ...(pkg?.bundleDependencies || []),
       ...(pkg?.bundledDependencies || [])
     ]
+    state.entrypoints = new Set(pkg?.pear?.stage?.entrypoints || [])
     if (pkg == null) return
     try { this.storage(state) } catch (err) { state.error = err }
   }
@@ -121,6 +123,7 @@ module.exports = class State {
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
+    this.entrypoint = flags.entrypoint || null
     this.clearPreferences = clearPreferences
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals

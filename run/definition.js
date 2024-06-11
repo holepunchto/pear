@@ -8,6 +8,7 @@ module.exports = [
   flag('--devtools', 'Open devtools with application [Desktop]'),
   flag('--updates-diff', 'Enable diff computation for Pear.updates'),
   flag('--no-updates', 'Disable updates firing via Pear.updates'),
+  flag('--entrypoint', 'Run from entrypoint instead of main'),
   flag('--link <url>', 'Simulate deep-link click open'),
   flag('--store|-s <path>', 'Set the Application Storage path'),
   flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
