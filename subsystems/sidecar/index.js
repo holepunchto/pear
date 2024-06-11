@@ -727,11 +727,10 @@ class Sidecar extends ReadyResource {
 
     if (trusted.apps.has(state.key.z32) === false) {
       const author = await appBundle.db.get('author')
-      let authorTrusted = author !== null && await trusted.identities.get(author.publicKey)
-      if (authorTrusted) {
-        const data = '' // TODO: need correct data to verify from hypercore/hypercore
-        authorTrusted = await crypto.verify(data, author.attestation, author.publicKey)
-      }
+      const authorTrusted = author !== null && 
+        await trusted.identities.get(author.publicKey) &&
+        await crypto.verify(drive.discoveryKey, author.attestation, author.publicKey)
+
       if (authorTrusted === false) {
         const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
         err.key = state.key
