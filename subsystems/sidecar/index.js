@@ -552,7 +552,6 @@ class Sidecar extends ReadyResource {
       await new Promise(resolve => setTimeout(resolve, 1500))
     }
 
-
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     const restarts = (await this.#shutdown(client))
       .filter(({ run, options }) => run && (options?.type !== 'terminal' || hard))
