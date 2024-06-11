@@ -96,7 +96,7 @@ module.exports = class Stage extends Opstream {
     const opts = { filter: (key) => ignore.some((path) => key.startsWith(path)) === false, dryRun, batch: true }
     const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
-    const entrypoints = [main, ...(state.manifest.pear?.entrypoints || state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+    const entrypoints = [main, ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     const mirror = new Mirror(src, dst, opts)
