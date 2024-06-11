@@ -221,11 +221,11 @@ module.exports = class Bundle {
     return !!(this.checkout === 'release' && this.release)
   }
 
-  async bundle (entrypoint = '.') {
+  async bundle (entrypoint) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
     const res = await DriveBundler.bundle(this.drive, {
-      entrypoint,
+      entrypoint: entrypoint || '.',
       cwd: SWAP,
       absolutePrebuilds: true,
       mount: 'pear://' + id
