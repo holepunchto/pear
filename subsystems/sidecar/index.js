@@ -472,10 +472,10 @@ class Sidecar extends ReadyResource {
 
   shutdown (params, client) { return this.#shutdown(client) }
 
-  get closeableClients () {
+  get uniqueClients () {
     if (this.hasClients === false) return []
 
-    const closeableClients = []
+    const uniqueClients = []
     const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
@@ -483,15 +483,15 @@ class Sidecar extends ReadyResource {
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
 
-      closeableClients.push(client)
+      uniqueClients.push(client)
     }
 
-    return closeableClients
+    return uniqueClients
   }
 
   closeClients () {
     const metadata = []
-    for (const client of this.closeableClients) {
+    for (const client of this.uniqueClients) {
       const app = client.userData
 
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
@@ -543,7 +543,7 @@ class Sidecar extends ReadyResource {
     }
 
     if (!hard) {
-      const clients = this.closeableClients.filter(c => c?.userData?.state?.options?.type === 'terminal')
+      const clients = this.uniqueClients.filter(c => c?.userData?.state?.options?.type === 'terminal')
       if (this.verbose) console.log(`Soft-restarting ${clients.length} terminal app(s)`)
       for (const client of clients) client.userData.message({ type: 'pear/restart' })
 
