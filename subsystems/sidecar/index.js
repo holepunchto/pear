@@ -543,9 +543,9 @@ class Sidecar extends ReadyResource {
     }
 
     if (!hard) {
-      for (const client of this.closeableClients.filter(c => c?.userData?.state?.options?.type === 'terminal')) {
-        client.userData.message({ type: 'pear/restart' })
-      }
+      const clients = this.closeableClients.filter(c => c?.userData?.state?.options?.type === 'terminal')
+      if (this.verbose) console.log(`Soft-restarting ${clients.length} terminal app(s)`)
+      for (const client of clients) client.userData.message({ type: 'pear/restart' })
 
       // Wait for 'pear/restart' messages to send and get handled by clients
       // TODO: Figure out how to cleanly flush this buffer
