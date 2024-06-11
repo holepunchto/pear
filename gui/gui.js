@@ -534,7 +534,7 @@ class App {
 
       decalSession.setUserAgent('Pear Platform')
 
-      const entry = '/' + state.main
+      const entry = '/' + (state.entrypoint || state.main)
       const identify = await this.ipc.identify({ startId: state.startId })
       const { id, host } = identify
 
