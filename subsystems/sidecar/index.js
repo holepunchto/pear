@@ -33,7 +33,7 @@ const {
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
 
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const State = require('./state')
