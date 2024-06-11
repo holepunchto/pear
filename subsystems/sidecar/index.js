@@ -564,6 +564,7 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
+    const TERMINAL_RUNTIME = RUNTIME
     for (const { cwd, dir, appling, cmdArgs, env, options } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
@@ -571,8 +572,9 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        const baseRuntime = options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME
-        const runtime = this.updater === null ? baseRuntime : this.updater.swap + baseRuntime.slice(SWAP.length)
+        const RUNTIME = this.updater === null
+          ? (options?.type === 'terminal' ? TERMINAL_RUNTIME : DESKTOP_RUNTIME)
+          : this.updater.swap + (options?.type === 'terminal' ? TERMINAL_RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
 
         const cmd = command('run', ...runDefinition)
         cmd.parse(cmdArgs.slice(1))
@@ -585,7 +587,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        spawn(runtime, cmdArgs, opts).unref()
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
     }
   }
