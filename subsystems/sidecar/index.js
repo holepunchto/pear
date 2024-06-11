@@ -542,6 +542,17 @@ class Sidecar extends ReadyResource {
       return
     }
 
+    if (!hard) {
+      for (const client of this.closeableClients.filter(c => c?.userData?.state?.options?.type === 'terminal')) {
+        client.userData.message({ type: 'pear/restart' })
+      }
+
+      // Wait for 'pear/restart' messages to send and get handled by clients
+      // TODO: Figure out how to cleanly flush this buffer
+      await new Promise(resolve => setTimeout(resolve, 1500))
+    }
+
+
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     const restarts = (await this.#shutdown(client))
       .filter(({ run, options }) => run && (options?.type !== 'terminal' || hard))
