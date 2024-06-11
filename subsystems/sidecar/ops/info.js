@@ -58,7 +58,7 @@ module.exports = class Info extends Opstream {
       }
 
       const channel = (await drive.db.get('channel'))?.value
-      const release = (await drive.db.get('release'))?.value || false
+      const release = (await drive.db.get('release'))?.value || "[ Unreleased ]"
       const manifest = (await drive.db.get('manifest'))?.value
       const name = manifest?.pear?.name || manifest?.holepunch?.name || manifest.name
       const length = drive.core.length
