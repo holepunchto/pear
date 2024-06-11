@@ -83,17 +83,17 @@ class Menu {
     const { app } = this
     item.submenu.unshift(...[
       {
-        label: 'Dev Mode',
+        label: 'Debug',
         type: 'checkbox',
-        checked: app.state?.devtools,
+        checked: app.state?.debug,
         click: async () => {
-          if (app.state.devtools === true) {
-            await app.state.update({ devtools: false })
+          if (app.state.debug === true) {
+            await app.state.update({ debug: false })
             for (const { contentView } of PearGUI.ofSession(app.handle?.session)) {
               await contentView.webContents.closeDevTools()
             }
           } else {
-            await app.state.update({ devtools: true })
+            await app.state.update({ debug: true })
           }
 
           this.render()
@@ -163,7 +163,7 @@ class Menu {
     if (!app.handle) return
     const { state } = app
     const { session } = app.handle
-    if (state.devtools === false) {
+    if (state.debug === false) {
       item.visible = false
       return
     }
@@ -416,7 +416,7 @@ class App {
         if (!ctrl) return
         if ((ctrl.view && ctrl.view.webContents === wc) || (ctrl.view === null && ctrl.win?.webContents === wc)) {
           this.contextMenu = this.contextMenu || new ContextMenu(wc)
-          this.contextMenu.popup({ params, devtools: this.state.devtools })
+          this.contextMenu.popup({ params, devtools: this.state.debug })
         }
       })
       wc.on('render-process-gone', async (evt, details) => {

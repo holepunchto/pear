@@ -69,9 +69,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, debug, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, debug, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
   }
 
   update (state) {
@@ -83,7 +83,7 @@ module.exports = class State {
     const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout,
-      dev = false, stage, trace, updates, updatesDiff,
+      dev = false, debug = false, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = flags
 
@@ -109,9 +109,10 @@ module.exports = class State {
     this.env = { ...env }
     this.flags = flags
     this.dev = dev
-    this.devtools = devtools
+    this.debug = debug || dev
+    this.devtools = devtools || dev
     this.updates = updates
-    this.updatesDiff = updatesDiff
+    this.updatesDiff = updatesDiff || dev
     this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
