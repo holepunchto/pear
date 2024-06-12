@@ -7,7 +7,6 @@ const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { Readable } = require('streamx')
-const { fileURLToPath } = require('url-file-url')
 const { isMac } = require('which-runtime')
 const constants = require('../constants')
 const State = require('../state')
@@ -24,14 +23,14 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   let dir = null
   let rel = null
   let key = null
-  const { drive } = parseLink(link)
+  const { drive, pathname } = parseLink(link)
   key = drive.key
   if (key !== null && link.startsWith('pear://') === false) {
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
   const cwd = os.cwd()
-  dir = key === null ? (link.startsWith('file:') ? fileURLToPath(link) : link) : cwd
+  dir = key === null ? pathname : cwd
   if (path.isAbsolute(dir) === false) {
     rel = dir
     dir = path.resolve(cwd, dir)
