@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
 const { isWindows, platform, arch } = require('which-runtime')
+const Localdrive = require('localdrive')
 
 const root = path.join(__dirname, '..')
 const host = platform + '-' + arch
@@ -47,8 +48,27 @@ const run = (cmd, args, opts) => {
       await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
     }
   }
+
+  const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(__dirname, '..')
+  const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
+
+  console.log('mirroring platform')
+  console.log('src', localdev)
+  console.log('dst', tmpLocaldev)
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(tmpLocaldev)
+  const mirror = srcDrive.mirror(destDrive, {
+    filter: (key) => {
+      return !key.startsWith('.git')
+    }
+  })
+  await mirror.done()
+  console.log('mirroring done')
+
   const store = path.join(os.tmpdir(), 'pear-test')
   const args = ['run', '--store', store, 'test']
   if (verbose) args.push('--verbose')
+
   await run(pear, args, { stdio: 'inherit', shell: isWindows })
 })()

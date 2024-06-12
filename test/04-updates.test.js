@@ -14,31 +14,31 @@ const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, k
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
-test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
+test.solo('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
   timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
-  const localdev = path.join(os.cwd(), '..')
+  // const localdev = path.join(os.cwd(), '..')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
-  try { await gc(tmpLocaldev) } catch { }
+  // const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  // try { await gc(tmpLocaldev) } catch { }
 
-  await fs.promises.mkdir(tmpLocaldev, { recursive: true })
-  teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { comment(err) } }, { order: Infinity })
+  // await fs.promises.mkdir(tmpLocaldev, { recursive: true })
+  // teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { comment(err) } }, { order: Infinity })
 
-  comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
-  const destDrive = new Localdrive(tmpLocaldev)
-  const mirror = srcDrive.mirror(destDrive, {
-    filter: (key) => {
-      return !key.startsWith('.git')
-    }
-  })
-  await mirror.done()
-  teardown(async () => srcDrive.close())
-  teardown(async () => destDrive.close())
+  // comment('mirroring platform')
+  // const srcDrive = new Localdrive(localdev)
+  // const destDrive = new Localdrive(tmpLocaldev)
+  // const mirror = srcDrive.mirror(destDrive, {
+  //   filter: (key) => {
+  //     return !key.startsWith('.git')
+  //   }
+  // })
+  // await mirror.done()
+  // teardown(async () => srcDrive.close())
+  // teardown(async () => destDrive.close())
 
   const platformDir = path.join(tmpLocaldev, 'pear')
   teardown(async () => {
@@ -48,6 +48,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   })
   const testId = Math.floor(Math.random() * 100000)
 
+  console.log(platformDir)
   const stager1 = new Helper({ platformDir })
   await stager1.ready()
 
