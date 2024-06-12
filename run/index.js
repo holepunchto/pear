@@ -24,9 +24,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   let dir = null
   let rel = null
   let key = null
-
-  key = parseLink(link).key
-
+  const { drive } = parseLink(link)
+  key = drive.key
   if (key !== null && link.startsWith('pear://') === false) {
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }

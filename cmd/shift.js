@@ -17,11 +17,11 @@ module.exports = (ipc) => async function shift (cmd) {
   const src = cmd.args.source
   const dst = cmd.args.destination
 
-  if (parseLink(src).key === null) {
+  if (parseLink(src).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid source application link must be specified.')
   }
 
-  if (parseLink(dst).key === null) {
+  if (parseLink(dst).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid destination application link must be specified.')
   }
 

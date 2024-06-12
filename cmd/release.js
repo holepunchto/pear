@@ -15,7 +15,7 @@ const output = outputter('release', {
 
 module.exports = (ipc) => async function release (cmd) {
   const { checkout, name, json } = cmd.flags
-  const isKey = parseLink(cmd.args.channel).key !== null
+  const isKey = parseLink(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
   if (!channel && !link) throw ERR_INVALID_INPUT('A valid pear link or the channel name must be specified.')

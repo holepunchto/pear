@@ -572,13 +572,13 @@ class Sidecar extends ReadyResource {
         return
       }
       const parsed = parseLink(link)
-      if (parsed.key === null && appdev === null) {
+      if (parsed.drive.key === null && appdev === null) {
         resolve(false)
         return
       }
       const matches = [...this.apps].filter((app) => {
         if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev ? app.state.dir === appdev : app.state.key?.z32 === parsed.key?.z32)
+        return app.state.storage === storage && (appdev ? app.state.dir === appdev : app.state.key?.z32 === parsed.drive.key?.z32)
       })
 
       for (const app of matches) app.message({ type: 'pear/wakeup', data: parsed.data, linkData: parsed.data, link })
