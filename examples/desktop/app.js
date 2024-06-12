@@ -1,6 +1,7 @@
 /* global Pear */
 const { versions, config, updates, wakeups, Window } = Pear
 console.log('link', config.link)
+console.log('linkData', config.linkData)
 console.log('key', config.key)
 
 updates(function (data) {
