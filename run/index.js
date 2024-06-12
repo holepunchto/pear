@@ -114,17 +114,17 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     const pear = new API(ipc, state)
 
-    pear.messages({ type: 'pear/restart' }, async () => {
+    global.Pear = pear
+
+    Pear.messages({ type: 'pear/restart' }, async () => {
       ipc.stream.destroy()
 
       const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
       await fsext.waitForLock(fd)
       await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
 
-      await pear.restart()
+      await Pear.restart()
     })
-
-    global.Pear = pear
 
     const protocol = new Module.Protocol({
       exists (url) {
