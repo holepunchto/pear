@@ -20,7 +20,8 @@ const {
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
-const { BARE_RESTART_EXIT_CODE } = require('../constants')
+const { PLATFORM_LOCK } = require('../constants')
+const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -114,11 +115,13 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     const pear = new API(ipc, state)
 
     pear.messages({ type: 'pear/restart' }, async () => {
-      // Wait for sidecar to shutdown
-      // TODO: Figure out how to properly detect sidecar shutdown from the client
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      ipc.stream.destroy()
 
-      global.Bare.exit(BARE_RESTART_EXIT_CODE)
+      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
+      await fsext.waitForLock(fd)
+      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
+
+      await Pear.restart()
     })
 
     global.Pear = pear
