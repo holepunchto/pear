@@ -546,10 +546,6 @@ class Sidecar extends ReadyResource {
       const clients = this.uniqueClients.filter(c => c?.userData?.state?.options?.type === 'terminal')
       if (this.verbose) console.log(`Soft-restarting ${clients.length} terminal app(s)`)
       for (const client of clients) client.userData.message({ type: 'pear/restart' })
-
-      // Wait for 'pear/restart' messages to send and get handled by clients
-      // TODO: Figure out how to cleanly flush this buffer
-      await new Promise(resolve => setTimeout(resolve, 1500))
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
