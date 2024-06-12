@@ -121,7 +121,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       await fsext.waitForLock(fd)
       await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
 
-      await Pear.restart()
+      await pear.restart()
     })
 
     global.Pear = pear
