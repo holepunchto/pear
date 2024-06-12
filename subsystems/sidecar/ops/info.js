@@ -18,9 +18,9 @@ module.exports = class Info extends Opstream {
     const isEnabled = (flag) => anyFlag ? !!flag : !flag
     if (link) {
       const parsed = parseLink(link)
-      const key = parsed.key.buffer
-      const hex = parsed.key.hex
-      const z32 = parsed.key.z32
+      const key = parsed.drive.key.buffer
+      const hex = parsed.drive.key.hex
+      const z32 = parsed.drive.key.z32
       const corestore = this.sidecar._getCorestore(null, null)
       bundle = new Bundle({ corestore, key })
       await bundle.ready()

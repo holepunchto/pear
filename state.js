@@ -68,9 +68,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, dir } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, dir, pearDir }
   }
 
   update (state) {
@@ -90,7 +90,8 @@ module.exports = class State {
       env.NODE_ENV = NODE_ENV
     }
 
-    const { data: linkData = null, alias = null, key = null } = link ? parseLink(link) : {}
+    const { drive: { alias = null, key = null }, pathname } = link ? parseLink(link) : {}
+    const entrypoint = pathname ? (pathname === '/' ? null : pathname) : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
 
@@ -114,14 +115,13 @@ module.exports = class State {
     this.stage = stage
     this.trace = trace
     this.link = link
-    this.linkData = linkData
     this.key = key
     this.alias = alias
     this.manifest = pkg
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
-    this.entrypoint = flags.entrypoint || null
+    this.entrypoint = entrypoint
     this.clearPreferences = clearPreferences
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
