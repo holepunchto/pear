@@ -19,35 +19,37 @@ const {
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
 
-module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
-  let dir = null
-  let rel = null
+module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   let key = null
   const { drive, pathname } = parseLink(link)
   key = drive.key
-  if (key !== null && link.startsWith('pear://') === false) {
+  const isPear = link.startsWith('pear://')
+  const isFile = link.startsWith('file://')
+  const isPath = isPear === false && isFile === false
+  if (key !== null && isPear === false) {
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
-  const cwd = os.cwd()
-  dir = key === null ? pathname : cwd
-  if (path.isAbsolute(dir) === false) {
-    rel = dir
-    dir = path.resolve(cwd, dir)
-  }
+  let cwd = os.cwd()
+  const rel = isPath && link.startsWith('/') === false
 
-  if (dir !== cwd) {
-    Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
-    teardown(() => os.chdir(cwd))
-    os.chdir(dir)
-  }
-
+  let dir = cwd
+  let base = null
   if (key === null) {
+    const origin = (rel ? path.join(cwd, pathname) : pathname)
     try {
-      JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
-    } catch (err) {
-      throw ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+      dir = fs.statSync(origin).isDirectory() ? origin : path.dirname(origin)
+    } catch { /* ignore */ }
+
+    base = project(dir, origin, cwd)
+    dir = base.dir
+    if (dir !== cwd) {
+      Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
+      teardown(() => os.chdir(cwd))
+      os.chdir(dir)
+      cwd = dir
     }
+    if (isPath) link = 'file://' + (base.entrypoint || '/')
   }
 
   const stream = new Readable({ objectMode: true })
@@ -134,10 +136,12 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   args.unshift('--start-id=' + startId)
   const detach = args.includes('--detach')
   if (type === 'desktop') {
+    if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
+      cwd,
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
     child.once('exit', (code) => {
@@ -163,4 +167,20 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (global.Pear) global.Pear.teardown(() => ipc.close())
 
   return stream
+}
+
+function project (dir, origin, cwd) {
+  try {
+    if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))).pear) {
+      return { dir, origin, entrypoint: origin.slice(dir.length) }
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
+  }
+  const parent = path.dirname(dir)
+  if (parent === cwd || parent === '/' || parent === '\\') {
+    const condition = origin === cwd ? `at "${cwd}"` : origin.includes(cwd) ? `from "${origin}" up to "${cwd}"` : `at "${origin}"`
+    throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
+  }
+  return project(parent, origin, cwd)
 }

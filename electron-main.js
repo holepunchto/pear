@@ -8,7 +8,6 @@ const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
 const runDefinition = require('./run/definition')
-
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 
 const runix = argv.indexOf('--run')
