@@ -12,7 +12,7 @@ const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null
 const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)

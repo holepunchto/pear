@@ -5,6 +5,7 @@ const unixPathResolve = require('unix-path-resolve')
 const { once } = require('events')
 const path = require('path')
 const { isMac, isLinux, isWindows } = require('which-runtime')
+const hypercoreid = require('hypercore-id-encoding')
 const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
@@ -982,7 +983,7 @@ class Window extends GuiCtrl {
       this.appkin = null
     }
     const ua = `Pear ${this.state.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
+    const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
     session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
@@ -1272,7 +1273,7 @@ class View extends GuiCtrl {
       this.appkin = null
     }
     const ua = `Pear ${this.state.id}`
-    const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
+    const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
     session.setUserAgent(ua)
 
     this.view = new BrowserView({
@@ -1730,7 +1731,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  trust ({ z32 }) { return this.ipc.trust({ z32 }) }
+  trust (key) { return this.ipc.trust(key) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }

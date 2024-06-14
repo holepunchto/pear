@@ -1,7 +1,6 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const os = require('bare-os')
 const Helper = require('./helper')
 
 test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
@@ -12,7 +11,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   const stager = new Helper()
   await stager.ready()
 
-  const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -58,7 +57,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   const stager = new Helper()
   await stager.ready()
 
-  const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -106,7 +105,7 @@ test('exit code', async function ({ is, ok, plan, comment, teardown }) {
   const stager = new Helper()
   await stager.ready()
 
-  const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 

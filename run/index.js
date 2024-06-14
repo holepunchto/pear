@@ -178,7 +178,7 @@ function project (dir, origin, cwd) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
-  if (parent === cwd || parent === '/' || parent === '\\') {
+  if (parent === '/' || parent === '\\' || path.relative(parent, cwd).startsWith('..')) {
     const condition = origin === cwd ? `at "${cwd}"` : origin.includes(cwd) ? `from "${origin}" up to "${cwd}"` : `at "${origin}"`
     throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
   }
