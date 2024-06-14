@@ -85,7 +85,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     if (link.startsWith('pear://runtime')) {
       args = [constants.BOOT, '--appling', appling, '--run', ...args]
-      spawn(constants.DESKTOP_RUNTIME, args).unref()
+      spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
     } else {
       if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
       else spawn(applingApp, args, opts).unref()
