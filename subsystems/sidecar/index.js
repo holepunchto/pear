@@ -430,8 +430,9 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
-  async trust ({ z32 } = {}, client) {
+  async trust (key, client) {
     const trusted = new Set((await preferences.get('trusted')) || [])
+    const z32 = hypercoreid.encode(key)
     trusted.add(z32)
     let pkg = null
     try {
@@ -578,7 +579,10 @@ class Sidecar extends ReadyResource {
       }
       const matches = [...this.apps].filter((app) => {
         if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev ? app.state.dir === appdev : app.state.key?.z32 === parsed.drive.key?.z32)
+        return app.state.storage === storage && (appdev
+          ? app.state.dir === appdev
+          : hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key)
+        )
       })
 
       for (const app of matches) {
@@ -633,7 +637,7 @@ class Sidecar extends ReadyResource {
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
-      const applingKey = state.key.hex
+      const applingKey = state.key.toString('hex')
       await this.applings.set(applingKey, applingPath)
     }
 
@@ -674,8 +678,8 @@ class Sidecar extends ReadyResource {
 
     const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
     const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
-
-    if (trusted.has(state.key.z32) === false) {
+    const z32 = hypercoreid.encode(state.key)
+    if (trusted.has(z32) === false) {
       const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
       err.key = state.key
       app.report({ err })
@@ -718,7 +722,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     // app is trusted, refresh trust for any updated configured link keys:
-    await this.trust({ z32: state.key.z32 }, client)
+    await this.trust(state.key, client)
 
     if (this.swarm) appBundle.join(this.swarm)
 

@@ -2,6 +2,7 @@
 const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
+const hypercoreid = require('hypercore-id-encoding')
 const Store = require('./lib/store')
 const SharedState = require('../../state')
 const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../../errors')
@@ -40,7 +41,7 @@ module.exports = class State extends SharedState {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
-        throw ERR_UNABLE_TO_FETCH_MANIFEST(`unable to fetch manifest from app ${this.key?.z32}`)
+        throw ERR_UNABLE_TO_FETCH_MANIFEST(`unable to fetch manifest from app ${hypercoreid.encode(this.key)}`)
       }
 
       this.constructor.injestPackage(this, result.value)
@@ -74,7 +75,7 @@ module.exports = class State extends SharedState {
     if (app?.reported) return
     if (this.key) {
       this.version = {
-        key: this.key?.z32,
+        key: hypercoreid.encode(this.key),
         fork: bundle.drive.db.feed.fork,
         length: release || bundle.drive.version
       }

@@ -3,14 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "./all.js",
-  "pear": {
-    "name": "test",
-    "type": "terminal",
-    "bin": "termex",
-    "builtinsMap": {
-      "path": "bare-path"
-    }
-  },
   "keywords": [],
   "author": "Holepunch",
   "dependencies": {

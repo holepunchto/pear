@@ -1,7 +1,6 @@
 'use strict'
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const os = require('bare-os')
 const fs = require('bare-fs')
 const fsext = require('fs-native-extensions')
 const ReadyResource = require('ready-resource')
@@ -13,15 +12,15 @@ const sodium = require('sodium-native')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
+const PLATFORM_DIR = global.Pear.config.pearDir
 
 class Helper extends IPC {
   #expectSidecar = false
 
   constructor (opts = {}) {
-    const verbose = Bare.argv.includes('--verbose')
+    const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, '..', BY_ARCH)
+    const runtime = path.join(platformDir, 'current', BY_ARCH)
     const args = ['--sidecar']
     if (verbose) args.push('--verbose')
     const ipcId = 'pear'
@@ -133,7 +132,7 @@ class Helper extends IPC {
   }
 
   async accessLock (platformDir) {
-    const pdir = platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const pdir = platformDir || PLATFORM_DIR
     const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
       if (err) {
         reject(err)
