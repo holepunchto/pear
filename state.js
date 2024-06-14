@@ -90,7 +90,7 @@ module.exports = class State {
       env.NODE_ENV = NODE_ENV
     }
 
-    const { drive: { alias = null, key = null }, pathname } = link ? parseLink(link) : {}
+    const { drive: { alias = null, key = null }, pathname } = link ? parseLink(link) : { drive: {} }
     const entrypoint = pathname ? (pathname === '/' ? null : pathname) : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
