@@ -640,7 +640,8 @@ class Sidecar extends ReadyResource {
     await this.ready()
 
     if (state.key === null) {
-      const drive = new LocalDrive(unixPathResolve(state.dir), { followLinks: true })
+      const root = isWindows ? state.dir : unixPathResolve(state.dir)
+      const drive = new LocalDrive(root, { followLinks: true })
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
