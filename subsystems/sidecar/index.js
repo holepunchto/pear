@@ -7,7 +7,6 @@ const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
-const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
@@ -640,7 +639,7 @@ class Sidecar extends ReadyResource {
     await this.ready()
 
     if (state.key === null) {
-      const drive = new LocalDrive(unixPathResolve(state.dir), { followLinks: true })
+      const drive = new LocalDrive(state.dir, { followLinks: true })
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
