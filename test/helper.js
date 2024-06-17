@@ -1,4 +1,6 @@
 'use strict'
+
+/* global Pear */
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const os = require('bare-os')
@@ -55,17 +57,29 @@ class Helper extends IPC {
     const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
     if (verbose) args.push('--verbose')
 
-    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
-    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+    let subprocess
+    let pipe
+
+    if (!opts.isWorker) {
+      const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
+      subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+      subprocess.once('exit', (code, signal) => {
+        iterable.push({ tag: 'exit', data: { code, signal } })
+      })
+      pipe = subprocess.stdout
+    } else {
+      const workerPipe = Pear.worker.run(`pear://${key}`)
+      workerPipe.on('close', (code) => {
+        iterable.push({ tag: 'exit', data: { code: code || 0 } })
+      })
+      pipe = workerPipe
+    }
+
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
 
-    subprocess.once('exit', (code, signal) => {
-      iterable.push({ tag: 'exit', data: { code, signal } })
-    })
-
-    subprocess.stdout.on('data', (data) => {
+    pipe.on('data', (data) => {
       data = data.toString().trim()
       if (data.indexOf('teardown') > -1) {
         iterable.push({ tag: 'teardown', data })

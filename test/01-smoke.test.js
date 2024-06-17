@@ -32,7 +32,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   comment('running')
 
-  const running = await Helper.open(key, { tags: ['exit'] })
+  const running = await Helper.open(key, { tags: ['exit'] }, { isWorker: true })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
