@@ -32,6 +32,12 @@
 * Errors Refactor - move from hard coded error codes to Errors class 
 * Desktop Apps - right click support for copy/paste, right click Inspect Element when in dev mode
 
+### Fixes
+
+* Windows - pear://runtime link --detached fix
+* Windows - cross-drive run/stage/dump fixes
+* Terminal Apps - hanging close when no ipc-calls bug fix
+
 ## v1.2.4
 
 ### Fixes
