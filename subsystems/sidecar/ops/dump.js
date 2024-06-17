@@ -1,7 +1,6 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const Mirror = require('mirror-drive')
-const unixPathResolve = require('unix-path-resolve')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -32,8 +31,7 @@ module.exports = class Dump extends Opstream {
       throw err
     }
 
-    const out = unixPathResolve(dir)
-    const dst = new LocalDrive(out)
+    const dst = new LocalDrive(dir)
     const src = bundle.drive
 
     const mirror = new Mirror(src, dst)
