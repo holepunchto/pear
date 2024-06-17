@@ -89,7 +89,7 @@ module.exports = class Stage extends Opstream {
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    const root = unixPathResolve(state.dir)
+    const root = state.dir
     const main = unixPathResolve('/', state.main)
     const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
     const dst = bundle.drive

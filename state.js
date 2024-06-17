@@ -4,7 +4,6 @@ const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
-const unixPathResolve = require('unix-path-resolve')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const { PLATFORM_DIR, RUNTIME, ALIASES } = require('./constants')
 const parseLink = require('./run/parse-link')
@@ -17,7 +16,7 @@ const validateAppName = (name) => {
 }
 const readPkg = (pkgPath) => {
   let pkg = null
-  try { pkg = fs.readFileSync(unixPathResolve(pkgPath)) } catch { /* ignore */ }
+  try { pkg = fs.readFileSync(path.resolve(pkgPath)) } catch { /* ignore */ }
   if (pkg) pkg = JSON.parse(pkg) // we want to know if this throws, so no catch
   return pkg
 }
