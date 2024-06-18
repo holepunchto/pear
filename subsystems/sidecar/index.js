@@ -472,28 +472,15 @@ class Sidecar extends ReadyResource {
 
   shutdown (params, client) { return this.#shutdown(client) }
 
-  get uniqueClients () {
+  closeClients () {
     if (this.hasClients === false) return []
-
-    const uniqueClients = []
+    const metadata = []
     const seen = new Set()
     for (const client of this.clients) {
       const app = client.userData
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
-
-      uniqueClients.push(client)
-    }
-
-    return uniqueClients
-  }
-
-  closeClients () {
-    const metadata = []
-    for (const client of this.uniqueClients) {
-      const app = client.userData
-
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
       metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
       const tearingDown = app.teardown()
@@ -542,10 +529,23 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    if (!hard) {
-      const clients = this.uniqueClients.filter(c => c?.userData?.state?.options?.type === 'terminal')
-      if (this.verbose) console.log(`Soft-restarting ${clients.length} terminal app(s)`)
-      for (const client of clients) client.userData.message({ type: 'pear/restart' })
+    if (!hard && this.hasClients) {
+      const terminalClients = []
+      const seen = new Set()
+      for (const client of this.clients) {
+        const app = client.userData
+        if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
+        if (app?.state?.options?.type !== 'terminal') continue
+        if (seen.has(app.state.id)) continue
+        seen.add(app.state.id)
+
+        terminalClients.push(client)
+      }
+
+      if (this.verbose && terminalClients.length > 0) {
+        console.log(`Soft-restarting ${terminalClients.length} terminal app(s)`)
+      }
+      for (const client of terminalClients) client.userData.message({ type: 'pear/restart' })
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
