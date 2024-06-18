@@ -116,6 +116,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     global.Pear = pear
 
+    /* global Pear */
     Pear.messages({ type: 'pear/restart' }, async () => {
       ipc.stream.destroy()
 
