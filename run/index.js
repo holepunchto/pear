@@ -98,7 +98,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (type === 'terminal') {
     const state = new State({ flags, link, dir, cmdArgs })
 
-    state.update({ host, id })
+    state.update({ host, id, type })
 
     if (state.error) {
       console.error(state.error)
