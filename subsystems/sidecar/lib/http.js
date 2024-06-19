@@ -117,7 +117,7 @@ module.exports = class Http extends ReadyResource {
 
     if (await bundle.has(link.filename) === false) {
       if (link.filename === '/index.html') {
-        const manifest = await bundle.db.get('manifest')
+        const manifest = await bundle.drive.get('/package.json')
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
           return this.#lookup(app, protocol, type, req, res)
