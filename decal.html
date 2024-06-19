@@ -444,8 +444,7 @@
     <script type="module">
       import hypercoreid from 'hypercore-id-encoding'
       import constants from './constants.js'
-      const z32 = hypercoreid.encode(Pear.config.key)
-      if (z32 !== constants.ALIASES.keet.z32) {
+      if (hypercoreid.encode(Pear.config.key) !== hypercoreid.encode(constants.ALIASES.keet)) {
         if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
           const winctrl = document.getElementById('window-controls')

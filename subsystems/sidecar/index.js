@@ -671,7 +671,7 @@ class Sidecar extends ReadyResource {
         if (err.code === 'ERR_CONNECTION') app.report({ err })
       }
       const updating = await app.minver()
-      const type = state.options.type
+      const type = state.type
       const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
@@ -734,23 +734,23 @@ class Sidecar extends ReadyResource {
     }
 
     const initializing = state.initialize({ bundle: appBundle, app })
-
-    if (appBundle.platformVersion !== null) {
-      app.report({ type: 'upgrade' })
-      const type = state.options.type
-      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
-    }
-
     try {
       await initializing
     } catch (err) {
       if (err.code === 'ERR_CONNECTION') app.report({ err })
     }
+    if (appBundle.platformVersion !== null) {
+      app.report({ type: 'upgrade' })
+      const type = state.type
+      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
+    }
+
     const updating = await app.minver()
 
     // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const type = state.options.type
+    const type = state.type
+
     const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
   }
