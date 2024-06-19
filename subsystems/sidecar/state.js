@@ -5,7 +5,7 @@ const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
 const Store = require('./lib/store')
 const SharedState = require('../../state')
-const { ERR_INVALID_PROJECT_DIR, ERR_UNABLE_TO_FETCH_MANIFEST } = require('../../errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
 const preferences = new Store('preferences')
 
 module.exports = class State extends SharedState {
@@ -41,15 +41,19 @@ module.exports = class State extends SharedState {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
-        throw ERR_UNABLE_TO_FETCH_MANIFEST(`unable to fetch manifest from app ${hypercoreid.encode(this.key)}`)
+        throw ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
       }
-
+      console.log('so there is a manifest property set but it is null?', result)
+      if (result.value === null) {
+        throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
+      }
       this.constructor.injestPackage(this, result.value)
     } else if (this.stage) {
       const result = await bundle.db.get('manifest')
-
       if (!result || !sameData(result.value, this.manifest)) {
-        if (dryRun === false) await bundle.db.put('manifest', this.manifest)
+        if (dryRun === false && this.manifest) {
+          await bundle.db.put('manifest', this.manifest)
+        }
       }
       if (app?.reported) return
     }
@@ -59,13 +63,13 @@ module.exports = class State extends SharedState {
 
     if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
 
-    const { dependencies, type = 'commonjs' } = this.manifest
+    const { dependencies } = this.manifest
     const options = this.manifest.pear || this.manifest.holepunch || {}
     const name = options.name || this.manifest.name
     const { channel, release } = bundle
     const { main = 'index.html' } = this.manifest
 
-    this.update({ tier, name, main, options, dependencies, type, channel, release })
+    this.update({ tier, name, main, options, dependencies, channel, release })
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
     if (this.clearPreferences) await preferences.clear()

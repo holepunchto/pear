@@ -102,8 +102,8 @@ class Applings extends ReadyResource {
 
   async set (hexKey, path) {
     if (!this.opened) await this.ready()
-    if (hexKey === constants.ALIASES.keet.hex) hexKey = 'keet'
-    if (hexKey === constants.ALIASES.runtime.hex) hexKey = 'runtime'
+    if (hexKey === constants.ALIASES.keet.toString('hex')) hexKey = 'keet'
+    if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
 
     let found = false
     for (const entry of this._applings) {
@@ -152,8 +152,8 @@ class Applings extends ReadyResource {
 
   async get (hexKey) {
     if (!this.opened) await this.ready()
-    if (hexKey === constants.ALIASES.keet.hex || hexKey === constants.EOLS.keet.hex) hexKey = 'keet'
-    if (hexKey === constants.ALIASES.runtime.hex) hexKey = 'runtime'
+    if (hexKey === constants.ALIASES.keet.toString('hex') || hexKey === constants.EOLS.keet.toString('hex')) hexKey = 'keet'
+    if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
     for (const { key, path } of this._applings) {
       if (key === hexKey) return path
     }
