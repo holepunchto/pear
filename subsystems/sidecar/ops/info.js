@@ -19,8 +19,8 @@ module.exports = class Info extends Opstream {
     if (link) {
       const parsed = parseLink(link)
       const key = parsed.drive.key
-      const hex = parsed.drive.key.toString('hex')
-      const z32 = hypercoreid.encode(parsed.drive.key)
+      const hex = key.toString('hex')
+      const z32 = hypercoreid.encode(key)
       const corestore = this.sidecar._getCorestore(null, null)
       bundle = new Bundle({ corestore, key })
       await bundle.ready()

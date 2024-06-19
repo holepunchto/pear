@@ -458,13 +458,13 @@ class Sidecar extends ReadyResource {
   async detached ({ key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(key).toString('hex'))
     }
 
     const wokeup = await this.wakeup({ args: [key.link, storage, appdev, false] })
 
     if (wokeup) return { wokeup, appling: null }
-    const appling = (await this.applings.get(key.hex)) || null
+    const appling = (await this.applings.get(key.toString('hex'))) || null
 
     return { wokeup, appling }
   }
@@ -698,7 +698,7 @@ class Sidecar extends ReadyResource {
       appling: state.appling,
       channel: state.channel,
       checkout: state.checkout,
-      key: state.key?.hex,
+      key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
