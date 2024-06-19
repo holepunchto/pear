@@ -545,7 +545,7 @@ class Sidecar extends ReadyResource {
       if (this.verbose && terminalClients.length > 0) {
         console.log(`Soft-restarting ${terminalClients.length} terminal app(s)`)
       }
-      for (const client of terminalClients) client.userData.message({ type: 'pear/restart' })
+      for (const client of terminalClients) client.userData.message({ type: '' })
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))

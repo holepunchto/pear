@@ -117,7 +117,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     global.Pear = pear
 
     /* global Pear */
-    Pear.messages({ type: 'pear/restart' }, async () => {
+    Pear.messages({ type: 'pear/reload' }, async () => {
       ipc.stream.destroy()
 
       const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
