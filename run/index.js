@@ -20,9 +20,8 @@ const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
-  let key = null
   const { drive, pathname } = parseLink(link)
-  key = drive.key
+  const { key } = drive
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = isPear === false && isFile === false

@@ -43,7 +43,6 @@ module.exports = class State extends SharedState {
       if (result === null) {
         throw ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
       }
-      console.log('so there is a manifest property set but it is null?', result)
       if (result.value === null) {
         throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
       }
