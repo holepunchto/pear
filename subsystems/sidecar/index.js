@@ -530,22 +530,12 @@ class Sidecar extends ReadyResource {
     }
 
     if (!hard && this.hasClients) {
-      const terminalClients = []
       const seen = new Set()
-      for (const client of this.clients) {
-        const app = client.userData
-        if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
-        if (app?.state?.options?.type !== 'terminal') continue
-        if (seen.has(app.state.id)) continue
+      this.clients.filter(({ userData: app }) => {
+        if (seen.has(app.state.id)) return false
         seen.add(app.state.id)
-
-        terminalClients.push(client)
-      }
-
-      if (this.verbose && terminalClients.length > 0) {
-        console.log(`Soft-restarting ${terminalClients.length} terminal app(s)`)
-      }
-      for (const client of terminalClients) client.userData.message({ type: '' })
+        return app.state && app?.state?.options?.type === 'terminal'
+      }).forEach(client => client.userData.message({ type: 'pear/reload' }))
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
