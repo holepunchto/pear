@@ -30,17 +30,14 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   let cwd = os.cwd()
-  const rel = isPath && link.startsWith('/') === false
 
   let dir = cwd
   let base = null
   if (key === null) {
-    const origin = (rel ? path.join(cwd, pathname) : pathname)
     try {
-      dir = fs.statSync(origin).isDirectory() ? origin : path.dirname(origin)
+      dir = fs.statSync(pathname).isDirectory() ? pathname : path.dirname(pathname)
     } catch { /* ignore */ }
-
-    base = project(dir, origin, cwd)
+    base = project(dir, pathname, cwd)
     dir = base.dir
     if (dir !== cwd) {
       Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
@@ -64,10 +61,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     if (!appling) {
       args.unshift('run', '--detach')
-      if (rel) {
-        const ix = args.indexOf(rel)
-        if (ix > -1) args[ix] = dir
-      }
       spawn(constants.RUNTIME, args, opts).unref()
       ipc.close().catch(console.error)
       return stream
