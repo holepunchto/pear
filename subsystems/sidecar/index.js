@@ -531,11 +531,11 @@ class Sidecar extends ReadyResource {
 
     if (!hard && this.hasClients) {
       const seen = new Set()
-      this.clients.filter(({ userData: app }) => {
-        if (seen.has(app.state.id)) return false
+      for (const { userData: app } of this.client) {
+        if (!app.state || seen.has(app.state.id)) return
         seen.add(app.state.id)
-        return app.state && app?.state?.options?.type === 'terminal'
-      }).forEach(client => client.userData.message({ type: 'pear/reload' }))
+        if (app?.state?.options?.type === 'terminal') app.message({ type: 'pear/reload' })
+      }
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
