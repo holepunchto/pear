@@ -32,6 +32,7 @@ module.exports = class State {
   type = null
   error = null
   entrypoints = null
+  applink = null
   static injestPackage (state, pkg) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
@@ -68,9 +69,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, entrypoint, dir } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, entrypoint, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, pearDir }
   }
 
   update (state) {
@@ -90,7 +91,8 @@ module.exports = class State {
       env.NODE_ENV = NODE_ENV
     }
 
-    const { drive: { alias = null, key = null }, pathname } = link ? parseLink(link) : { drive: {} }
+    const { drive: { alias = null, key = null }, pathname, hash } = link ? parseLink(link) : { drive: {} }
+    const fragment = hash.slice(1)
     const entrypoint = pathname ? (pathname === '/' ? null : pathname) : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
@@ -114,15 +116,17 @@ module.exports = class State {
     this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
+    this.fragment = fragment
+    this.entrypoint = entrypoint
+    this.linkData = entrypoint
     this.link = link
     this.key = key
+    this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
     this.alias = alias
     this.manifest = pkg
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
-    this.entrypoint = entrypoint
-    this.linkData = entrypoint
     this.clearPreferences = clearPreferences
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
