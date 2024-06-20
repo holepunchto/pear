@@ -40,6 +40,6 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
-      run: npm test
+      run: npm test -- --verbose
     - name: Lint
       run: npm run lint

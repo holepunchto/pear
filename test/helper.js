@@ -172,7 +172,7 @@ class Helper extends IPC {
   static async bootstrap (key, dir) {
     const link = path.join(dir, 'current')
     const bin = path.join(dir, 'bin')
-    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
+    const current = path.join(link, 'by-arch', HOST, 'bin', 'pear-runtime' + (isWindows ? '.exe' : ''))
 
     await require('pear-updater-bootstrap')(key, dir)
 
