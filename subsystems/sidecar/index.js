@@ -534,7 +534,7 @@ class Sidecar extends ReadyResource {
       for (const { userData: app } of this.client) {
         if (!app.state || seen.has(app.state.id)) return
         seen.add(app.state.id)
-        if (app?.state?.options?.type === 'terminal') app.message({ type: 'pear/reload' })
+        app.message({ type: 'pear/reload' })
       }
     }
 
