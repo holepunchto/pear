@@ -85,7 +85,6 @@ module.exports = class State {
       dev = false, stage, trace, updates, updatesDiff,
       clearAppStorage, clearPreferences, chromeWebrtcInternals
     } = flags
-
     if (flags.stage || (run ?? flags.run)) {
       const { NODE_ENV = 'production' } = env
       env.NODE_ENV = NODE_ENV
@@ -108,9 +107,9 @@ module.exports = class State {
     this.env = { ...env }
     this.flags = flags
     this.dev = dev
-    this.devtools = devtools
+    this.devtools = this.dev || devtools
+    this.updatesDiff = this.dev || updatesDiff
     this.updates = updates
-    this.updatesDiff = updatesDiff
     this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
