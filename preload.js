@@ -18,6 +18,9 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   state.config = config
+
+  if (config.fragment) history.replaceState(null, null, '#' + config.fragment)
+
   const gui = new GUI({ API, state })
   window.Pear = gui.api
 

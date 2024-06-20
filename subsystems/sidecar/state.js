@@ -11,7 +11,6 @@ const preferences = new Store('preferences')
 module.exports = class State extends SharedState {
   initialized = false
   tier = null
-  link = null
   version = { key: null, length: 0, fork: 0 }
   checkpoint = null
 
@@ -35,7 +34,7 @@ module.exports = class State extends SharedState {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
-    this.link = bundle.link
+    this.applink = bundle.link
 
     if (this.key) {
       const result = await bundle.db.get('manifest')

@@ -80,13 +80,7 @@ module.exports = class Http extends ReadyResource {
 
     let builtin = false
     if (link.filename === null) {
-      try {
-        link.filename = await linker.resolve(link.resolve, link.dirname, { isImport })
-      } catch (e) {
-        console.error('link err', e)
-        throw e
-      }
-
+      link.filename = await linker.resolve(link.resolve, link.dirname, { isImport })
       builtin = link.filename === link.resolve && linker.builtins.has(link.resolve)
     }
 
