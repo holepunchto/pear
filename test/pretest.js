@@ -4,8 +4,8 @@ const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const { isWindows } = require('which-runtime')
 
-const { protocol, pathname } = new URL(Pear.config.applink)
-const force = Pear.config.args.includes('--force-install')
+const { protocol, pathname } = new URL(global.Pear.config.applink)
+const force = global.Pear.config.args.includes('--force-install')
 
 async function install () {
   if (protocol !== 'file:') return
@@ -15,8 +15,8 @@ async function install () {
   ]
   for (const dir of dirs) {
     if (force === false && await exists(dir)) continue
-    console.log(force ? 'reinstalling node_modules in' : `node_modules not found in`, path.dirname(dir))
-    console.log(`Running npm install...`)
+    console.log(force ? 'reinstalling node_modules in' : 'node_modules not found in', path.dirname(dir))
+    console.log('Running npm install...')
     await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
   }
 }
