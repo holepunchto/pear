@@ -16,9 +16,6 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
-        - os: windows-latest
-          platform: win32
-          arch: x64
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:

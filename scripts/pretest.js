@@ -42,7 +42,12 @@ const run = (cmd, args, opts) => {
 }
 
 (async () => {
-
+  for (const dir of dirs) {
+    if (!await exists(dir)) {
+      console.log(`node_modules not found in ${path.dirname(dir)}\nRunning npm install...`)
+      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
+    }
+  }
 
   console.log('mirroring localdev platform...')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
@@ -58,19 +63,13 @@ const run = (cmd, args, opts) => {
   const destDrive = new Localdrive(localdevMirror)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
-      console.log(key)
       return !key.startsWith('.git')
     }
   })
+
   await mirror.done()
   console.log('mirror done')
 
-  for (const dir of dirs) {
-    if (!await exists(dir)) {
-      console.log(`node_modules not found in ${path.dirname(dir)}\nRunning npm install...`)
-      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
-    }
-  }
   const store = path.join(os.tmpdir(), 'pear-test')
   const args = ['run', '--store', store, 'test']
   if (verbose) args.push('--verbose')
