@@ -20,10 +20,13 @@ const info = ({ channel, release, name, length, byteLength, blobs, fork }) => `
  channel           ${channel}
  release           ${release}
  length            ${length}
- byteLength        ${byteLength}
- blobs.length      ${blobs?.length}
- blobs.byteLength  ${blobs?.byteLength}
  fork              ${fork}
+ byteLength        ${byteLength}
+ ${blobs
+  ? `blobs.length      ${blobs?.length}
+ blobs.fork        ${blobs?.fork}
+ blobs.byteLength  ${blobs?.byteLength}`
+  : ''}
 `
 
 const changelog = ({ changelog, full }) => `

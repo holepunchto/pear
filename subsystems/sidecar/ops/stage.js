@@ -121,6 +121,7 @@ module.exports = class Stage extends Opstream {
         blobs: mirror.dst.blobs
           ? {
               length: mirror.dst.blobs.core.length,
+              fork: mirror.dst.blobs.core.fork,
               byteLength: mirror.dst.blobs.core.byteLength
             }
           : null
