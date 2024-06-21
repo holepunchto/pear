@@ -12,7 +12,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  console.log({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
@@ -31,7 +30,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  console.log(key)
   const running = await Helper.open(key, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
