@@ -5,7 +5,7 @@ const { spawn } = require('bare-subprocess')
 const { isWindows } = require('which-runtime')
 
 const { protocol, pathname } = new URL(global.Pear.config.applink)
-const root = path.normalize(pathname)
+const root = isWindows ? path.normalize(pathname.slice(1)) : pathname
 const force = global.Pear.config.args.includes('--force-install')
 
 async function install () {
