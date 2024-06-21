@@ -172,10 +172,32 @@ class Helper extends IPC {
   static async bootstrap (key, dir) {
     const link = path.join(dir, 'current')
     const bin = path.join(dir, 'bin')
-    const current = path.join(link, 'by-arch', HOST, 'bin', 'pear-runtime' + (isWindows ? '.exe' : ''))
+    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
 
-    await require('pear-updater-bootstrap')(key, dir)
+    let n = 0
+    const max = 3
 
+    while (n < max) {
+      try {
+        n++
+        return await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => { reject(new Error('Bootstrap timed out')) }, 20000)
+
+          require('pear-updater-bootstrap')(key, dir)
+            .then(res => {
+              clearTimeout(timer)
+              resolve(res)
+            })
+            .catch(e => {
+              clearTimeout(timer)
+              reject(e)
+            })
+        })
+      } catch (e) {
+        if (n >= max) throw e
+        console.log(`${e}. Retrying... (${n}/${max})`)
+      }
+    }
     if (isWindows) return
     try {
       fs.mkdirSync(bin, { recursive: true })
