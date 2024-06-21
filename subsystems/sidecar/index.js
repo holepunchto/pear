@@ -531,7 +531,7 @@ class Sidecar extends ReadyResource {
 
     if (!hard && this.hasClients) {
       const seen = new Set()
-      for (const { userData: app } of this.client) {
+      for (const { userData: app } of this.clients) {
         if (!app.state || seen.has(app.state.id)) continue
         seen.add(app.state.id)
         app.message({ type: 'pear/reload' })
