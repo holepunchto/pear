@@ -5,6 +5,13 @@ on:
       - main
       - next
   pull_request:
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Run tests in verbose mode'
+        required: false
+        default: 'false'
+        type: boolean
 jobs:
   build:
     strategy:
@@ -41,11 +48,13 @@ jobs:
       run: npm run bootstrap
     - name: Run tests
       run: |
-        if [ "${{ secrets.ACTIONS_RUNNER_DEBUG }}" == "true" ]; then
+        if [ "$VERBOSE" == "true" ]; then
           npm test -- --verbose
         else
           npm test
         fi
+      env:
+        VERBOSE: ${{ inputs.verbose }}
       shell: bash
     - name: Lint
       run: npm run lint
