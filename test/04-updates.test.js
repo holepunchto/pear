@@ -5,6 +5,7 @@ const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
+const { isWindows } = require('which-runtime')
 const hie = require('hypercore-id-encoding')
 const Localdrive = require('localdrive')
 
@@ -14,7 +15,7 @@ const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, k
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 const { pathname } = new URL(global.Pear.config.applink)
-const localdev = path.normalize(pathname)
+const localdev = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
