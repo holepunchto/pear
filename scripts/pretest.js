@@ -4,10 +4,11 @@ const fs = require('fs')
 const path = require('path')
 const { spawn } = require('child_process')
 const { isWindows, platform, arch } = require('which-runtime')
+const Localdrive = require('localdrive')
 
 const root = path.join(__dirname, '..')
 const host = platform + '-' + arch
-const pear = `by-arch/${host}/bin/pear-runtime${isWindows ? '.exe' : ''}`
+const pear = path.join('by-arch', host, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
 const dirs = [
   path.join(root, 'test', 'node_modules'),
@@ -41,6 +42,29 @@ const run = (cmd, args, opts) => {
 }
 
 (async () => {
+
+
+  console.log('mirroring localdev platform...')
+  const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(__dirname, '..')
+  const localdevMirror = path.join(osTmpDir, 'tmp-localdev-mirror')
+
+  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  try { await gc(localdevMirror) } catch { }
+
+  await fs.promises.mkdir(localdevMirror, { recursive: true })
+
+  const srcDrive = new Localdrive(localdev)
+  const destDrive = new Localdrive(localdevMirror)
+  const mirror = srcDrive.mirror(destDrive, {
+    filter: (key) => {
+      console.log(key)
+      return !key.startsWith('.git')
+    }
+  })
+  await mirror.done()
+  console.log('mirror done')
+
   for (const dir of dirs) {
     if (!await exists(dir)) {
       console.log(`node_modules not found in ${path.dirname(dir)}\nRunning npm install...`)

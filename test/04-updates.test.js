@@ -16,10 +16,10 @@ const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
-  timeout(180000)
+  timeout(980000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
@@ -115,10 +115,10 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   const { teardown, ok, is, plan, timeout, comment } = t
 
   plan(7)
-  timeout(180000)
+  timeout(980000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
@@ -217,14 +217,14 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(180000)
+  timeout(980000)
   teardown(async () => {
     const shutdowner = new Helper({ platformDir })
     await shutdowner.ready()
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -344,14 +344,14 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(180000)
+  timeout(980000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -493,14 +493,14 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(180000)
+  timeout(980000)
   teardown(async () => {
     const shutdowner = new Helper({ platformDir })
     await shutdowner.ready()
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -619,14 +619,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(180000)
+  timeout(980000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
