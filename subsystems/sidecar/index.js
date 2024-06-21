@@ -539,12 +539,15 @@ class Sidecar extends ReadyResource {
     }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
-    const restarts = (await this.#shutdown(client))
-      .filter(({ run, options }) => run && (options?.type !== 'terminal' || hard))
+    let restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
+
+    if (!hard) return
+
+    restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
 
