@@ -986,6 +986,17 @@ class Window extends GuiCtrl {
     const session = electron.session.fromPartition(`persist:${this.sessname || this.state.key?.z32 || this.state.dir}`)
     session.setUserAgent(ua)
 
+    const allowedHosts = [new URL(this.entry).host, ...(this?.state?.manifest?.pear?.allowedHosts ?? [])]
+    const requestFilter = (request) => {
+      const requestUrl = new URL(request.url)
+      return allowedHosts.includes(requestUrl.host)
+        ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
+        : Object.assign(new Response(null, { status: 403 }))
+    }
+
+    session.protocol.handle('https', requestFilter)
+    session.protocol.handle('http', requestFilter)
+
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
     this.win = new BrowserWindow({
