@@ -13,13 +13,14 @@ const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore:
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
+const { pathname } = new URL(global.Pear.config.applink)
+const localdev = path.normalize(pathname)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
   timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
-  const localdev = path.join(os.cwd(), '..')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
@@ -118,7 +119,6 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
-  const localdev = path.join(os.cwd(), '..')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
@@ -224,7 +224,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -351,7 +350,6 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -500,7 +498,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
@@ -626,7 +623,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(os.cwd(), '..')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')

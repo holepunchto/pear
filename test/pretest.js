@@ -5,11 +5,11 @@ const { spawn } = require('bare-subprocess')
 const { isWindows } = require('which-runtime')
 
 const { protocol, pathname } = new URL(global.Pear.config.applink)
+const root = path.normalize(pathname)
 const force = global.Pear.config.args.includes('--force-install')
 
 async function install () {
   if (protocol !== 'file:') return
-  const root = path.normalize(pathname)
   const dirs = [
     path.join(root, 'test', 'fixtures', 'terminal', 'node_modules')
   ]
