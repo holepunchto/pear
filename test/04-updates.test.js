@@ -224,8 +224,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
@@ -351,8 +351,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
@@ -500,8 +500,8 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
@@ -626,8 +626,8 @@ test('Pear.updates should notify App stage, App release updates (different pear 
     await shutdowner.shutdown()
   }, { order: Infinity })
 
-  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
