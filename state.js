@@ -92,7 +92,7 @@ module.exports = class State {
     }
 
     const { drive: { alias = null, key = null }, pathname, hash } = link ? parseLink(link) : { drive: {} }
-    const fragment = hash.slice(1)
+    const fragment = hash ? hash.slice(1) : null
     const entrypoint = pathname ? (pathname === '/' ? null : pathname) : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
