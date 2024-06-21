@@ -13,14 +13,20 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ channel, release, name, length, fork }) => `
- info         value
------------  -----------------
- name         ${name}
- channel      ${channel}
- release      ${release}
- length       ${length}
- fork         ${fork}
+const info = ({ channel, release, name, length, byteLength, blobs, fork }) => `
+ info              value
+-----------------  -----------------
+ name              ${name}
+ channel           ${channel}
+ release           ${release}
+ length            ${length}
+ fork              ${fork}
+ byteLength        ${byteLength}
+ ${blobs
+  ? `blobs.length      ${blobs?.length}
+ blobs.fork        ${blobs?.fork}
+ blobs.byteLength  ${blobs?.byteLength}`
+  : ''}
 `
 
 const changelog = ({ changelog, full }) => `

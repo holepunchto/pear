@@ -62,8 +62,10 @@ module.exports = class Info extends Opstream {
       const manifest = (await drive.db.get('manifest'))?.value
       const name = manifest?.pear?.name || manifest?.holepunch?.name || manifest.name
       const length = drive.core.length
+      const byteLength = drive.core.byteLength
+      const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
       const fork = drive.core.fork
-      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel, release, name, length, fork } })
+      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel, release, name, length, byteLength, blobs, fork } })
     }
 
     const contents = await drive.get('/CHANGELOG.md')
