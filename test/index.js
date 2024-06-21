@@ -1,2 +1,2 @@
 'use strict'
-require('./all')
+require('./pretest').then(() => require('./all')).catch(console.error)
