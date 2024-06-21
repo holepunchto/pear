@@ -44,4 +44,4 @@ function run (cmd, args, opts) {
   })
 }
 
-install().catch(console.error)
+module.exports = install().catch(console.error)
