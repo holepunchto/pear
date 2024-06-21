@@ -83,6 +83,7 @@ module.exports = async (ipc) => {
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name', 'Advanced. Override app name'),
+    flag('--json', 'Newline delimited JSON output'),
     hiddenFlag('--encryption-key <name>'), // internal temporarily
     runners.stage(ipc)
   )
