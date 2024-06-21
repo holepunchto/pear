@@ -4,7 +4,8 @@
   "main": "./boot.js",
   "private": true,
   "scripts": {
-    "test": "./pear.dev run -s /tmp/pear-test-store ./test",
+    "pretest": "./pear.dev run  -s /tmp/pear-test-store scripts/pretest.js",
+    "test": "npm run pretest && ./pear.dev run -s /tmp/pear-test-store ./test",
     "test:gen": "brittle -r test/all.js test/*.test.js",
     "lint": "standard",
     "lint:fix": "standard --fix",
