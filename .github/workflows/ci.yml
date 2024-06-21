@@ -41,7 +41,7 @@ jobs:
       run: npm run bootstrap
     - name: Run tests
       run: |
-        if [ "${{ env.ACTIONS_RUNNER_DEBUG }}" == "true" ]; then
+        if [ "${{ secrets.ACTIONS_RUNNER_DEBUG }}" == "true" ]; then
           npm test -- --verbose
         else
           npm test
