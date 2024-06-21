@@ -13,6 +13,8 @@ const constants = require('../constants')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
+const HTTP_PREFIX_MATCHER = /https?:\/\//i
+
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -1057,13 +1059,13 @@ class Window extends GuiCtrl {
 
     if (interload && (await interload(this)) === false) return false
 
-    const allowedHosts = [new URL(this.entry).host, ...(this?.state?.config?.options?.allowedHosts ?? [])]
-    const requestFilter = (request) => {
-      const requestUrl = new URL(request.url)
-      return allowedHosts.includes(requestUrl.host)
+    const allowedLinks = Object.values(this?.state?.config?.options?.links || {})
+      .filter(link => HTTP_PREFIX_MATCHER.test(link)) ?? []
+    const sidecarHost = new URL(this.entry).host
+    const requestFilter = (request) =>
+      sidecarHost === new URL(request.url).host || allowedLinks.includes(request.url)
         ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
         : new Response(null, { status: 403 })
-    }
 
     session.protocol.handle('https', requestFilter)
     session.protocol.handle('http', requestFilter)
