@@ -5,6 +5,12 @@ on:
       - main
       - next
   pull_request:
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Run tests in verbose mode'
+        required: false
+        default: 'false'
 jobs:
   build:
     strategy:
@@ -40,6 +46,12 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
-      run: npm test -- --verbose
+      run: |
+        if [ "${{ github.event.inputs.verbose }}" == "true" ]; then
+          npm test -- --verbose
+        else
+          npm test
+        fi
+      shell: bash
     - name: Lint
       run: npm run lint
