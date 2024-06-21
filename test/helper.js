@@ -9,6 +9,7 @@ const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
+const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
@@ -173,7 +174,7 @@ class Helper extends IPC {
     const bin = path.join(dir, 'bin')
     const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
 
-    await require('pear-updater-bootstrap')(key, dir)
+    await updaterBootstrap(key, dir)
 
     if (isWindows) return
     try {
