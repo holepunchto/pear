@@ -110,6 +110,7 @@
     "which-runtime": "^1.2.0"
   },
   "devDependencies": {
+    "bare-inspector": "^2.3.0",
     "brittle": "^3.5.2",
     "graceful-goodbye": "^1.3.0",
     "hyperbee": "^2.0.1",
