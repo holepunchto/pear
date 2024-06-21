@@ -1062,7 +1062,7 @@ class Window extends GuiCtrl {
       const requestUrl = new URL(request.url)
       return allowedHosts.includes(requestUrl.host)
         ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
-        : Object.assign(new Response(null, { status: 403 }))
+        : new Response(null, { status: 403 })
     }
 
     session.protocol.handle('https', requestFilter)
