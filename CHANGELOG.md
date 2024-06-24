@@ -37,6 +37,7 @@
 * Windows - pear://runtime link --detached fix
 * Windows - cross-drive run/stage/dump fixes
 * Terminal Apps - hanging close when no ipc-calls bug fix
+* OS - link clicking when app is active, detached wake-up fix
 
 ## v1.2.4
 
