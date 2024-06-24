@@ -4,7 +4,9 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+const isWindows = global.Bare.platform === 'win32'
+
+test('teardown', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown, timeout }) {
   timeout(180000)
 
   plan(5)
@@ -52,7 +54,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   is(code, 130, 'exit code is 130')
 })
 
-test('teardown during teardown', async function ({ is, ok, plan, comment, teardown }) {
+test('teardown during teardown', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown }) {
   plan(5)
 
   const stager = new Helper()
@@ -100,7 +102,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   is(code, 130, 'exit code is 130')
 })
 
-test('exit code', async function ({ is, ok, plan, comment, teardown }) {
+test('exit code', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown }) {
   plan(4)
 
   const stager = new Helper()

@@ -121,11 +121,13 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
-  try { await gc(tmpLocaldev) } catch { }
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
+  await gc(tmpLocaldev)
 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
-  teardown(() => gc(tmpLocaldev), { order: Infinity })
+  teardown(async () => await gc(tmpLocaldev), { order: Infinity })
 
   comment('mirroring platform')
   const srcDrive = new Localdrive(localdev)
@@ -230,7 +232,9 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -357,7 +361,9 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -506,7 +512,9 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -632,7 +640,9 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
