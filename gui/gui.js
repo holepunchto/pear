@@ -1059,13 +1059,17 @@ class Window extends GuiCtrl {
 
     if (interload && (await interload(this)) === false) return false
 
-    const allowedLinks = Object.values(this?.state?.config?.options?.links || {})
-      .filter(link => HTTP_PREFIX_MATCHER.test(link)) ?? []
-    const sidecarHost = new URL(this.entry).host
-    const requestFilter = (request) =>
-      sidecarHost === new URL(request.url).host || allowedLinks.includes(request.url)
+    const allowedHosts = Object.values(this?.state?.config?.options?.links || {})
+      .filter(link => HTTP_PREFIX_MATCHER.test(link))
+      .map(link => new URL(link)) ?? []
+    allowedHosts.push(new URL(this.entry))
+
+    const requestFilter = (request) => {
+      const url = new URL(request.url)
+      return allowedHosts.find(link => link.host === url.host && link.protocol === url.protocol)
         ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
         : new Response(null, { status: 403 })
+    }
 
     session.protocol.handle('https', requestFilter)
     session.protocol.handle('http', requestFilter)
