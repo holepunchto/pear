@@ -4,9 +4,7 @@ const path = require('bare-path')
 const os = require('bare-os')
 const Helper = require('./helper')
 
-const isWindows = global.Bare.platform === 'win32'
-
-test('teardown', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown, timeout }) {
+test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   timeout(180000)
 
   plan(5)
@@ -44,17 +42,18 @@ test('teardown', { skip: isWindows }, async function ({ is, ok, plan, comment, t
         teardown(() => console.log('teardown'));
     })()`)
 
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const td = await running.until.teardown
   is(td, 'teardown', 'teardown has been triggered')
 
   const { code } = await running.until.exit
-  is(code, 130, 'exit code is 130')
+  is(code, 0, 'exit code is 0')
 })
 
-test('teardown during teardown', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown }) {
+test('teardown during teardown', async function ({ is, ok, plan, comment, teardown }) {
   plan(5)
 
   const stager = new Helper()
@@ -92,17 +91,18 @@ test('teardown during teardown', { skip: isWindows }, async function ({ is, ok, 
         teardown( () => a() )
     })()`)
 
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const td = await running.until.teardown
   is(td, 'teardown from b', 'teardown from b has been triggered')
 
   const { code } = await running.until.exit
-  is(code, 130, 'exit code is 130')
+  is(code, 0, 'exit code is 0')
 })
 
-test('exit code', { skip: isWindows }, async function ({ is, ok, plan, comment, teardown }) {
+test('exit code', async function ({ is, ok, plan, comment, teardown }) {
   plan(4)
 
   const stager = new Helper()
@@ -139,8 +139,9 @@ test('exit code', { skip: isWindows }, async function ({ is, ok, plan, comment, 
     })()`)
 
   await running.inspector.evaluate('(() => { return global.__PEAR_TEST__.running.inspector.disable() })()')
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const { code } = await running.until.exit
   is(code, 124, 'exit code is 124')
