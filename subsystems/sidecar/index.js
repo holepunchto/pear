@@ -571,6 +571,7 @@ class Sidecar extends ReadyResource {
         return
       }
       const parsed = parseLink(link)
+      console.log('parsed', parsed)
       if (parsed.key === null && appdev === null) {
         resolve(false)
         return
@@ -580,7 +581,7 @@ class Sidecar extends ReadyResource {
         return app.state.storage === storage && (appdev ? app.state.dir === appdev : app.state.key?.z32 === parsed.key?.z32)
       })
 
-      for (const app of matches) app.message({ type: 'pear/wakeup', data: parsed.data, link })
+      for (const app of matches) app.message({ type: 'pear/wakeup', data: parsed.data, linkData: parsed.data, link })
 
       const min = selfwake ? 1 : 0
       resolve(matches.length > min)
