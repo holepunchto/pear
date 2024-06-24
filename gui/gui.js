@@ -1062,15 +1062,15 @@ class Window extends GuiCtrl {
       .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
 
-    const requestFilter = (request) => {
-      const url = new URL(request.url)
-      return allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol)
-        ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
-        : new Response(null, { status: 403 })
+    const requestFilter = (details, callback) => {
+      const url = new URL(details.url)
+      const result = { cancel: !allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol) }
+      callback(result)
     }
 
-    session.protocol.handle('https', requestFilter)
-    session.protocol.handle('http', requestFilter)
+    const urls = ['http://*/*', 'https://*/*']
+    this.session.webRequest.onBeforeRequest({ urls }, requestFilter)
+    session.webRequest.onBeforeRequest({ urls }, requestFilter)
 
     if (this.closing) return false
 
