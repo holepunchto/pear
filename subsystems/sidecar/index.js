@@ -571,7 +571,6 @@ class Sidecar extends ReadyResource {
         return
       }
       const parsed = parseLink(link)
-      console.log('parsed', parsed)
       if (parsed.key === null && appdev === null) {
         resolve(false)
         return
