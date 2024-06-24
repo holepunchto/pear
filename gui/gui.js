@@ -1057,7 +1057,7 @@ class Window extends GuiCtrl {
 
     if (interload && (await interload(this)) === false) return false
 
-    const allowedHosts = Object.values(this?.state?.config?.options?.links || {})
+    const allowedHosts = Array.from(new Set(Object.values(this?.state?.config?.options?.links || {})))
       .map((link) => new URL(link))
       .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
