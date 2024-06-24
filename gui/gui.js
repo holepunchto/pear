@@ -1057,6 +1057,21 @@ class Window extends GuiCtrl {
 
     if (interload && (await interload(this)) === false) return false
 
+    const allowedHosts = Array.from(new Set(Object.values(this?.state?.config?.options?.links || {})))
+      .map((link) => new URL(link))
+      .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
+    allowedHosts.push(new URL(this.entry))
+
+    const requestFilter = (details, callback) => {
+      const url = new URL(details.url)
+      const result = { cancel: !allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol) }
+      callback(result)
+    }
+
+    const urls = ['http://*/*', 'https://*/*']
+    this.session.webRequest.onBeforeRequest({ urls }, requestFilter)
+    session.webRequest.onBeforeRequest({ urls }, requestFilter)
+
     if (this.closing) return false
 
     this.view = new BrowserView({

@@ -443,6 +443,7 @@ class Sidecar extends ReadyResource {
     }
     if (typeof pkg?.pear?.links === 'object' && pkg.pear.links !== null) {
       for (const link of Object.values(pkg.pear.links)) {
+        if (!parseLink(link).key) continue
         try {
           trusted.add(hypercoreid.encode(hypercoreid.decode(link)))
         } catch {
