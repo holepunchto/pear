@@ -13,8 +13,6 @@ const constants = require('../constants')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
-const HTTP_PREFIX_MATCHER = /https?:\/\//i
-
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -1060,8 +1058,8 @@ class Window extends GuiCtrl {
     if (interload && (await interload(this)) === false) return false
 
     const allowedHosts = Object.values(this?.state?.config?.options?.links || {})
-      .filter(link => HTTP_PREFIX_MATCHER.test(link))
-      .map(link => new URL(link)) ?? []
+      .map(link => new URL(link))
+      .filter(link => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
 
     const requestFilter = (request) => {
