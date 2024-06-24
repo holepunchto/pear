@@ -16,7 +16,7 @@ const dir = path.join(os.cwd(), 'fixtures', 'terminal')
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
-  timeout(360000)
+  timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
@@ -115,7 +115,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   const { teardown, ok, is, plan, timeout, comment } = t
 
   plan(7)
-  timeout(360000)
+  timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
   const localdev = path.join(osTmpDir, 'tmp-localdev-mirror')
@@ -219,7 +219,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(360000)
+  timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper({ platformDir })
     await shutdowner.ready()
@@ -348,7 +348,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(360000)
+  timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
@@ -499,7 +499,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(360000)
+  timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper({ platformDir })
     await shutdowner.ready()
@@ -627,7 +627,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(360000)
+  timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
