@@ -1058,13 +1058,13 @@ class Window extends GuiCtrl {
     if (interload && (await interload(this)) === false) return false
 
     const allowedHosts = Object.values(this?.state?.config?.options?.links || {})
-      .map(link => new URL(link))
-      .filter(link => link.protocol === 'http:' || link.protocol === 'https:') ?? []
+      .map((link) => new URL(link))
+      .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
 
     const requestFilter = (request) => {
       const url = new URL(request.url)
-      return allowedHosts.find(link => link.host === url.host && link.protocol === url.protocol)
+      return allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol)
         ? electron.net.fetch(request, { bypassCustomProtocolHandlers: true })
         : new Response(null, { status: 403 })
     }
