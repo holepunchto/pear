@@ -63,7 +63,7 @@ const run = (cmd, args, opts) => {
   const destDrive = new Localdrive(localdevMirror)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
-      return !key.startsWith('.git')
+      return !(key.includes('current')) && !key.startsWith('.git')
     }
   })
 
