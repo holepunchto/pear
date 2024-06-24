@@ -11,6 +11,7 @@ const { Readable } = require('streamx')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
+const pearUpdaterBootstrap = require('pear-updater-bootstrap')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
@@ -172,9 +173,9 @@ class Helper extends IPC {
   static async bootstrap (key, dir) {
     const link = path.join(dir, 'current')
     const bin = path.join(dir, 'bin')
-    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
+    const current = path.join(link, 'by-arch', HOST, 'bin', 'pear-runtime' + (isWindows ? '.exe' : ''))
 
-    await require('pear-updater-bootstrap')(key, dir)
+    await pearUpdaterBootstrap(key, dir)
 
     if (isWindows) return
     try {
