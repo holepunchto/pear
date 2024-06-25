@@ -32,7 +32,7 @@
     "localdrive": "^1.11.4",
     "pear-inspect": "^1.1.1",
     "pear-ipc": "^1.0.14",
-    "pear-updater-bootstrap": "^1.1.3",
+    "pear-updater-bootstrap": "github:holepunchto/pear-updater-bootstrap#bootstrap-debug",
     "protomux": "^3.6.0",
     "ready-resource": "^1.0.3",
     "streamx": "^2.16.1",
