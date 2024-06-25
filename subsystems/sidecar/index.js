@@ -454,6 +454,12 @@ class Sidecar extends ReadyResource {
     return await preferences.set('trusted', Array.from(trusted))
   }
 
+  async trustIdentity ({ publicKey } = {}) {
+    const trusted = new Set((await preferences.get('trusted-identities')) || [])
+    trusted.add(publicKey)
+    return await preferences.set('trusted-identities', Array.from(trusted))
+  }
+
   async detached ({ key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {
@@ -670,16 +676,6 @@ class Sidecar extends ReadyResource {
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
-    const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
-    const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
-
-    if (trusted.has(state.key.z32) === false) {
-      const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
-      err.key = state.key
-      app.report({ err })
-      return { startId, bail: true }
-    }
-
     // if app is being staged, stage command sends over its client id, so tracer
     // can get the bundle from that client for tracer data:
     const trace = typeof state.trace !== 'undefined'
@@ -715,9 +711,6 @@ class Sidecar extends ReadyResource {
     app.linker = linker
     app.bundle = appBundle
 
-    // app is trusted, refresh trust for any updated configured link keys:
-    await this.trust({ z32: state.key.z32 }, client)
-
     if (this.swarm) appBundle.join(this.swarm)
 
     try {
@@ -726,6 +719,29 @@ class Sidecar extends ReadyResource {
       await session.close()
       throw err
     }
+
+    const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
+    const trusted = {
+      apps: new Set([...aliases, ...((await preferences.get('trusted')) || [])]),
+      identities: new Set((await preferences.get('trusted-identities')) || [])
+    }
+
+    if (trusted.apps.has(state.key.z32) === false) {
+      const author = await appBundle.db.get('author')
+      const authorTrusted = author !== null && 
+        await trusted.identities.get(author.publicKey) &&
+        await crypto.verify(drive.discoveryKey, author.attestation, author.publicKey)
+
+      if (authorTrusted === false) {
+        const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
+        err.key = state.key
+        app.report({ err })
+        return { startId, bail: true }
+      }
+    }
+
+    // trust app if author is trusted + re-trust to refresh any new app trusted links
+    await this.trust({ z32: state.key.z32 }, client)
 
     const initializing = state.initialize({ bundle: appBundle, app })
 

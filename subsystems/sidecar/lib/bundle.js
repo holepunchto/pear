@@ -9,7 +9,7 @@ const Tracer = require('./tracer')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
 const { SWAP } = require('../../../constants')
-const { ERR_TRACER_FAILED } = require('../../../errors')
+const { ERR_TRACER_FAILED, ERR_INVALID_AUTHOR } = require('../../../errors')
 const noop = Function.prototype
 
 module.exports = class Bundle {
@@ -28,9 +28,10 @@ module.exports = class Bundle {
   constructor (opts = {}) {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
-      key, channel, trace = null, stage = false, log = noop, failure,
-      updateNotify, updatesDiff = false, truncate, encryptionKey = null
+      author = null, key, channel, trace = null, stage = false, log = noop,
+      failure, updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
+    this.author = author
     this.checkout = checkout
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
@@ -124,6 +125,15 @@ module.exports = class Bundle {
     await this.drive.ready()
     if (Number.isInteger(this.truncate)) {
       await this.drive.truncate(this.truncate)
+    }
+    const author = this.db ? await this.db.get('author') : null
+    if (this.author?.publicKey && this.author?.attestation) {
+      if (author !== null) {
+        if (author.publicKey !== this.author.publicKey || author.attestation !== this.author.attestation) {
+          throw ERR_INVALID_AUTHOR('Author Identity is already set and different to current author identity. Bailing.')
+        }
+        await this.drive.db.put('author', this.author)
+      }
     }
 
     this.link = this.drive.key ? 'pear://' + this.drive.core.id : pathToFileURL(this.drive.root).href

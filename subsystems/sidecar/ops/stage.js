@@ -57,15 +57,19 @@ module.exports = class Stage extends Opstream {
     if (key) key = hypercoreid.decode(key)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
+    const identity = new Store('identity')
     const encryptionKeys = new Store('encryption-keys')
-    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
     const bundle = new Bundle({
       key,
       corestore,
       channel,
       truncate,
       stage: true,
-      encryptionKey,
+      author: {
+        publicKey: await identity.get('publicKey'),
+        attestation: await identity.get('attestation')
+      },
+      encryptionKey: params.encryptionKey ? await encryptionKeys.get(params.encryptionKey) : null,
       failure (err) { console.error(err) }
     })
     await session.add(bundle)
