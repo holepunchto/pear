@@ -19,7 +19,6 @@ test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike
 
   const argv = ['stage', '--json', 'test-' + testId, path.join(pathname, 'test', 'fixtures', 'terminal')]
 
-  
   const running = await Helper.open(fixture, { tags: ['exit'] }, { lineout: true })
 
   await running.inspector.evaluate(`

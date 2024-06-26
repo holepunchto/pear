@@ -142,5 +142,5 @@ function isEntrypoint (pathname) {
 }
 
 function isKeetInvite (pathname) {
-  return (pathname.length < 100 || hypercoreid.isValid(pathname.slice(1)) === false)
+  return (pathname?.length > 100 || hypercoreid.isValid(pathname?.slice(1)))
 }
