@@ -3,6 +3,7 @@ const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, 
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
+const rundef = require('../run/definition')
 const runners = {
   init: require('./init'),
   stage: require('./stage'),
@@ -18,7 +19,8 @@ const runners = {
   versions: require('./versions')
 }
 
-module.exports = async (ipc) => {
+module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
+  await ipc.ready()
   Bare.prependListener('exit', () => { ipc.close() })
 
   const init = command(
@@ -103,7 +105,7 @@ module.exports = async (ipc) => {
     'run',
     summary('Run an application from a key or dir'),
     description(usage.descriptions.run),
-    ...require('../run/definition'),
+    ...rundef,
     runners.run(ipc)
   )
 
@@ -220,7 +222,7 @@ module.exports = async (ipc) => {
     console.log(cmd.overview())
   }
 
-  const program = cmd.parse(Bare.argv.slice(1))
+  const program = cmd.parse(argv)
   if (program) program.running.finally(() => { ipc.close() })
   else ipc.close()
 
@@ -242,5 +244,5 @@ module.exports = async (ipc) => {
     print('\n' + bail.command.usage())
   }
 
-  return ipc
+  return program
 }

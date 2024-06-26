@@ -18,6 +18,7 @@
     "bare-events": "^2.2.2",
     "bare-inspector": "^2.0.0",
     "bare-pipe": "^3.1.0",
+    "pear": "file:../../..",
     "pear-inspect": "^1.1.1"
   }
 }
