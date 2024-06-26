@@ -7,6 +7,7 @@ const ReadyResource = require('ready-resource')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
+const NewlineDecoder = require('newline-decoder')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
@@ -60,32 +61,34 @@ class Helper extends IPC {
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
-
+    const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
+    const onLine = (line) => {
+      if (line.indexOf('teardown') > -1) {
+        iterable.push({ tag: 'teardown', data: line })
+        return
+      }
+      if (line.indexOf('"tag": "inspector"') > -1) {
+        iterable.push(JSON.parse(line))
+        return
+      }
+      if (opts.lineout) lineout.push(line)
+      else console.error('Unrecognized output line:', line)
+    }
+    const decoder = new NewlineDecoder()
+    subprocess.stdout.on('data', (data) => {
+      for (const line of decoder.push(data)) onLine(line.toString().trim())
+    })
     subprocess.once('exit', (code, signal) => {
+      for (const line of decoder.end()) onLine(line.toString().trim())
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
-
-    subprocess.stdout.on('data', (data) => {
-      data = data.toString().trim()
-      if (data.indexOf('teardown') > -1) {
-        iterable.push({ tag: 'teardown', data })
-        return
-      }
-      if (data.indexOf('"tag": "inspector"') > -1) {
-        iterable.push(JSON.parse(data))
-        return
-      }
-      if (opts.ondata) opts.ondata(data)
-      else console.error('Unrecognized subprocess STDOUT output:', data)
-    })
-
     const until = await this.pick(iterable, tags)
 
     const data = await until.inspector
     const inspector = new Helper.Inspector(data.key)
     await inspector.ready()
 
-    return { inspector, until, subprocess }
+    return { inspector, until, subprocess, lineout }
   }
 
   static async pick (iter, ptn = {}, by = 'tag') {
