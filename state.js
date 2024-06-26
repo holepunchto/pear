@@ -93,7 +93,7 @@ module.exports = class State {
 
     const { drive: { alias = null, key = null }, pathname, hash } = link ? parseLink(link) : { drive: {} }
     const fragment = hash ? hash.slice(1) : null
-    const entrypoint = pathname ? (pathname === '/' ? null : pathname) : null
+    const entrypoint = isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
 
@@ -118,7 +118,7 @@ module.exports = class State {
     this.trace = trace
     this.fragment = fragment
     this.entrypoint = entrypoint
-    this.linkData = entrypoint
+    this.linkData = isKeetInvite(pathname) ? pathname.slice(1) : entrypoint
     this.link = link
     this.key = key
     this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
@@ -133,4 +133,14 @@ module.exports = class State {
     this.constructor.injestPackage(this, pkg)
     this.tbh = 0
   }
+}
+
+function isEntrypoint (pathname) {
+  if (pathname === null || pathname === '/') return false
+  // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
+  return isKeetInvite(pathname) === false
+}
+
+function isKeetInvite (pathname) {
+  return (pathname.length < 100 || hypercoreid.isValid(pathname.slice(1)) === false)
 }
