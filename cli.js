@@ -15,6 +15,5 @@ async function cli () {
     connectTimeout: CONNECT_TIMEOUT,
     connect: tryboot
   })
-  await ipc.ready()
   await cmd(ipc)
 }

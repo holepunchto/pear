@@ -24,38 +24,38 @@ class Helper extends IPC {
     const runtime = path.join(platformDir, 'current', BY_ARCH)
     const args = ['--sidecar']
     if (verbose) args.push('--verbose')
-    const ipcId = 'pear'
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
       sodium.crypto_generichash(buf, b4a.from(s))
       return b4a.toString(buf, 'hex')
     }
-
-    super({
-      lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
-      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId(platformDir)}` : `${platformDir}/${ipcId}.sock`,
-      connectTimeout: 20_000,
-      connect: opts.expectSidecar
-        ? true
-        : () => {
-            const sc = spawn(runtime, args, {
-              detached: !verbose,
-              stdio: verbose ? 'inherit' : 'ignore'
-            })
-            sc.unref()
-          }
-    })
+    const lock = path.join(platformDir, 'corestores', 'platform', 'primary-key')
+    const socketPath = isWindows ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}` : `${platformDir}/pear.sock`
+    const connectTimeout = 20_000
+    const connect = opts.expectSidecar
+      ? true
+      : () => {
+          const sc = spawn(runtime, args, {
+            detached: !verbose,
+            stdio: verbose ? 'inherit' : 'ignore'
+          })
+          sc.unref()
+        }
+    super({ lock, socketPath, connectTimeout, connect })
+    this.lock = lock
+    this.socketPath = socketPath
     this.#expectSidecar = opts.expectSidecar
     this.opts = opts
   }
 
-  static async open (key, { tags = [] } = {}, opts = {}) {
-    if (!key) throw new Error('Key is missing')
+  static async open (link, { tags = [] } = {}, opts = {}) {
+    if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
-    const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
+    const args = ['run', link]
     if (verbose) args.push('--verbose')
 
-    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
+    const platformDir = opts.platformDir || PLATFORM_DIR
+    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(platformDir, '..', BY_ARCH)
     const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
@@ -75,7 +75,7 @@ class Helper extends IPC {
         iterable.push(JSON.parse(data))
         return
       }
-      if (verbose) console.log(data)
+      if (opts.ondata) opts.ondata(data)
       else console.error('Unrecognized subprocess STDOUT output:', data)
     })
 
