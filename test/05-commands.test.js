@@ -29,15 +29,15 @@ test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike
   const seen = new Set()
   const tags = []
   for await (const line of running.lineout) {
-    let result = JSON.parse(line)
+    const result = JSON.parse(line)
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate(`__PEAR_TEST__.ipc.close()`, { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
   await running.inspector.close()
-  alike(tags, [ 'staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
+  alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
   const { code } = await running.until.exit
   is(code, 0)
 })
