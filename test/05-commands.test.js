@@ -2,17 +2,17 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const { pathname } = new URL(global.Pear.config.applink)
-const fixture = path.join(pathname, 'test', 'fixtures', 'terminal')
+const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
+const setup = new Helper()
 
-test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike, is, teardown, timeout, execution }) {
+test('commands setup', async ({ pass }) => {
+  await setup.ready()
+  pass('sidecar connected')
+})
+
+test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
   plan(2)
 
-  teardown(async () => {
-    const shutdowner = new Helper()
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  })
   const testId = Math.floor(Math.random() * 100000)
 
   const argv = ['stage', '--json', 'test-' + testId, fixture]
@@ -20,8 +20,7 @@ test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike
   const running = await Helper.open(fixture, { tags: ['exit'] }, { lineout: true })
 
   await running.inspector.evaluate(`
-    __PEAR_TEST__.ipc = new __PEAR_TEST__.Helper()
-    __PEAR_TEST__.cmd(__PEAR_TEST__.ipc, ${JSON.stringify(argv)})
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
 
   const seen = new Set()
@@ -38,4 +37,9 @@ test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
   const { code } = await running.until.exit
   is(code, 0)
+})
+
+test('commands teardown', async ({ pass }) => {
+  await setup.shutdown()
+  pass('sidecar stopped')
 })

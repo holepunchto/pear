@@ -8,8 +8,8 @@ const { ERR_INVALID_INPUT } = require('../errors')
 let blocks = 0
 let total = 0
 const output = outputter('stage', {
-  staging: ({ name, channel, key, current, release }) => {
-    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[ ${ansi.dim(key)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
+  staging: ({ name, channel, link, current, release }) => {
+    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[ ${ansi.dim(link)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
   },
   skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
@@ -21,7 +21,7 @@ const output = outputter('stage', {
     return { output: 'status', message }
   },
   error: ({ code, stack }) => `Staging Error (code: ${code || 'none'}) ${stack}`,
-  addendum: ({ version, release, channel, key }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(key)} ]\n`
+  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`
 })
 
 module.exports = (ipc) => async function stage (cmd) {

@@ -2,6 +2,7 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
+const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
 
 test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -11,7 +12,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   const stager = new Helper()
   await stager.ready()
 
-  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
+  const dir = fixture
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -33,7 +34,8 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const link = 'pear://' + key
+  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
 
   await running.inspector.evaluate(
     `(() => {
@@ -79,7 +81,8 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const link = 'pear://' + key
+  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
 
   await running.inspector.evaluate(
     `(() => {
@@ -127,7 +130,8 @@ test('exit code', async function ({ is, ok, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  const running = await Helper.open(key, { tags: ['teardown', 'exit'] })
+  const link = 'pear://' + key
+  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
 
   await running.inspector.evaluate(
     `(() => {
