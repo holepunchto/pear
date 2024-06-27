@@ -302,9 +302,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   teardown(() => { fs.unlinkSync(path.join(tmpPearDir, prefs)) }, { order: -Infinity })
 
   comment('running app from platform B')
-  const currentDir = path.join(tmpPearDir, 'current')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { currentDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: tmpPearDir })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
   is(pearVersionKey, key, 'platform version key matches staged key')
@@ -702,9 +701,8 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(() => { fs.unlinkSync(path.join(tmpPearDir, prefs)) }, { order: -Infinity })
 
   comment('running app from platform B')
-  const currentDir = path.join(tmpPearDir, 'current')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { currentDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: tmpPearDir })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: appVersionKey, length: appVersionLength } = value?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
