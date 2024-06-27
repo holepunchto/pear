@@ -5,17 +5,14 @@ const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
-const { isWindows } = require('which-runtime')
 const hie = require('hypercore-id-encoding')
 const Localdrive = require('localdrive')
 
-const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, cmdArgs: [] })
+const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
+const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: fixture, cmdArgs: [] })
 const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
-const { pathname } = new URL(global.Pear.config.applink)
-const localdev = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
@@ -31,7 +28,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { comment(err) } }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -58,11 +55,11 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   comment('\tstaging')
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
-  const { key } = await until.staging
+  const { key, link } = await until.staging
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(key, { tags: ['exit'] }, { platformDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
     new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
@@ -76,14 +73,14 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(dir, file), 'test')
+  fs.writeFileSync(path.join(fixture, file), 'test')
   comment('\tstaging')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
 
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-  fs.unlinkSync(path.join(dir, file))
+  fs.unlinkSync(path.join(fixture, file))
 
   const update1 = await update1ActualPromise
   const update1Version = update1?.value?.version
@@ -129,7 +126,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   teardown(() => gc(tmpLocaldev), { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, { filter: (key) => !key.startsWith('.git') })
   await mirror.done()
@@ -151,11 +148,11 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
-  const { key } = await until.staging
+  const { key, link } = await until.staging
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(key, { tags: ['exit'] }, { platformDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
     new Promise((resolve) => __PEAR_TEST__.sub.once("data", resolve))
@@ -169,14 +166,14 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(dir, file), 'test')
+  fs.writeFileSync(path.join(fixture, file), 'test')
 
   comment('\trestaging')
   const stager2 = new Helper({ platformDir })
   await stager2.ready()
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-  fs.unlinkSync(path.join(dir, file))
+  fs.unlinkSync(path.join(fixture, file))
 
   comment('\twaiting for update')
   const update1 = await update1ActualPromise
@@ -189,7 +186,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   const file2 = `${ts()}.tmp`
   comment(`\tcreating another test file (${file2})`)
-  fs.writeFileSync(path.join(dir, file2), 'test')
+  fs.writeFileSync(path.join(fixture, file2), 'test')
 
   comment('\trestaging')
   const update2Promise = await update2LazyPromise
@@ -200,7 +197,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   teardown(async () => stager3.shutdown())
   await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
 
-  fs.unlinkSync(path.join(dir, file2))
+  fs.unlinkSync(path.join(fixture, file2))
 
   comment('\twaiting for update')
   const update2 = await update2ActualPromise
@@ -242,7 +239,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -290,14 +287,14 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
-  const pearKey = await until.key
+  const key = await until.key
   const announced = await until.announced
 
-  ok(pearKey, 'pear key is ok')
+  ok(key, 'pear key is ok')
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping platform B')
-  await Helper.bootstrap(pearKey, tmpPearDir)
+  await Helper.bootstrap(key, tmpPearDir)
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'
@@ -309,7 +306,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const running = await Helper.open(appKey, { tags: ['exit'] }, { currentDir })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
-  is(pearVersionKey, pearKey, 'platform version key matches staged key')
+  is(pearVersionKey, key, 'platform version key matches staged key')
 
   const updatePromise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
@@ -368,7 +365,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -416,14 +413,14 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
-  const pearKey = await until.key
+  const key = await until.key
   const announced = await until.announced
 
-  ok(pearKey, 'pear key is ok')
+  ok(key, 'pear key is ok')
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping platform B')
-  await Helper.bootstrap(pearKey, tmpPearDir)
+  await Helper.bootstrap(key, tmpPearDir)
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'
@@ -435,7 +432,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const running = await Helper.open(appKey, { tags: ['exit'] }, { currentDir })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
-  is(pearVersionKey, pearKey, 'platform version key matches staged key')
+  is(pearVersionKey, key, 'platform version key matches staged key')
 
   const update1Promise = await running.inspector.evaluate(`
     __PEAR_TEST__.sub = Pear.updates()
@@ -471,7 +468,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await releaser.ready()
   teardown(async () => { await releaser.shutdown() })
 
-  const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key: pearKey })
+  const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for platform update notification')
@@ -480,7 +477,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const pearUpdate2Key = update2Version.key
   const pearUpdate2Length = update2Version.length
 
-  is(pearUpdate2Key, pearKey, 'platform release update matches staging key')
+  is(pearUpdate2Key, key, 'platform release update matches staging key')
   ok(pearUpdate2Length > pearUpdateLength, `platform version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await running.inspector.evaluate('__PEAR_TEST__.sub.destroy()')
@@ -516,7 +513,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -563,14 +560,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
-  const pearKey = await until.key
+  const key = await until.key
   const announced = await until.announced
 
-  ok(pearKey, 'pear key is ok')
+  ok(key, 'pear key is ok')
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping platform B')
-  await Helper.bootstrap(pearKey, tmpPearDir)
+  await Helper.bootstrap(key, tmpPearDir)
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'
@@ -641,7 +638,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(Helper.root)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -688,14 +685,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: tmpLocaldev, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
-  const pearKey = await until.key
+  const key = await until.key
   const announced = await until.announced
 
-  ok(pearKey, 'pear key is ok')
+  ok(key, 'pear key is ok')
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping platform B')
-  await Helper.bootstrap(pearKey, tmpPearDir)
+  await Helper.bootstrap(key, tmpPearDir)
 
   comment('setting up trust preferences')
   const prefs = 'preferences.json'

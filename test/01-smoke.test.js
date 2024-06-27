@@ -2,12 +2,16 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-
-const { pathname } = new URL(global.Pear.config.applink)
-const fixture = path.join(pathname, 'test', 'fixtures', 'terminal')
+const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
+  teardown(async () => {
+    const shutdowner = new Helper()
+    await shutdowner.ready()
+    await shutdowner.shutdown()
+  })
+
   const stager = new Helper()
   await stager.ready()
   const dir = fixture
@@ -21,7 +25,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(async () => seeder.shutdown())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -33,8 +36,8 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-  console.log('key', key)
-  const running = await Helper.open(key, { tags: ['exit'] })
+  const link = 'pear://' + key
+  const running = await Helper.open(link, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 

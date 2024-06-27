@@ -15,10 +15,11 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = global.Pear.config.pearDir
+const { pathname } = new URL(global.Pear.config.applink)
 
 class Helper extends IPC {
   #expectSidecar = false
-
+  static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
   constructor (opts = {}) {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
@@ -36,6 +37,7 @@ class Helper extends IPC {
     const connect = opts.expectSidecar
       ? true
       : () => {
+          console.log(runtime, args)
           const sc = spawn(runtime, args, {
             detached: !verbose,
             stdio: verbose ? 'inherit' : 'ignore'
@@ -173,17 +175,7 @@ class Helper extends IPC {
   }
 
   static async bootstrap (key, dir) {
-    const link = path.join(dir, 'current')
-    const bin = path.join(dir, 'bin')
-    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
-
     await updaterBootstrap(key, dir)
-
-    if (isWindows) return
-    try {
-      fs.mkdirSync(bin, { recursive: true })
-      fs.symlinkSync(current, path.join(bin, 'pear'))
-    } catch { }
   }
 
   static Inspector = class extends ReadyResource {
