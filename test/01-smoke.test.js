@@ -3,11 +3,14 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 
+const { pathname } = new URL(global.Pear.config.applink)
+const fixture = path.join(pathname, 'test', 'fixtures', 'terminal')
+
 test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
   const stager = new Helper()
   await stager.ready()
-  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
+  const dir = fixture
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -30,6 +33,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
+  console.log('key', key)
   const running = await Helper.open(key, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })

@@ -52,7 +52,7 @@ class Helper extends IPC {
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
-    const args = ['run', link]
+    const args = ['run', '-t', link]
     if (verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
