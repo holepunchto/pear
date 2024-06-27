@@ -1062,10 +1062,11 @@ class Window extends GuiCtrl {
       .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
 
-    const requestFilter = (details, callback) => {
+    const requestFilter = (details, respond) => {
       const url = new URL(details.url)
-      const result = { cancel: !allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol) }
-      callback(result)
+      const isAllowed = allowedHosts.some(({ protocol, hostname, port }) =>
+        protocol === url.protocol && hostname === url.hostname && (port === '' || port === url.port))
+      respond({ cancel: isAllowed === false })
     }
 
     const urls = ['http://*/*', 'https://*/*']
