@@ -58,7 +58,7 @@ class Helper extends IPC {
     if (verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(platformDir, '..', BY_ARCH)
+    const runtime = path.join(platformDir, 'current', BY_ARCH)
     const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
@@ -74,7 +74,7 @@ class Helper extends IPC {
         return
       }
       if (opts.lineout) lineout.push(line)
-      else console.error('Unrecognized output line:', line)
+      else console.log('# unexpected', line)
     }
     const decoder = new NewlineDecoder()
     subprocess.stdout.on('data', (data) => {

@@ -10,7 +10,6 @@ const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 const url = global.Pear?.config?.applink || module.url || electronModuleURL()
 const mount = new URL('.', url)
-
 const LOCALDEV = CHECKOUT.length === null
 const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mount
 
