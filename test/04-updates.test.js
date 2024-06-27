@@ -5,7 +5,6 @@ const Helper = require('./helper')
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
-const { isWindows } = require('which-runtime')
 const hie = require('hypercore-id-encoding')
 const Localdrive = require('localdrive')
 
@@ -14,14 +13,13 @@ const stageOpts = (id) => ({ ...seedOpts(id), dryRun: false, bare: true, ignore:
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
-const { pathname } = new URL(global.Pear.config.applink)
-const localdev = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
   timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
   const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
@@ -31,7 +29,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   teardown(async () => { try { await gc(tmpLocaldev) } catch (err) { comment(err) } }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -120,16 +118,19 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   timeout(180000)
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
-  try { await gc(tmpLocaldev) } catch { }
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
+  await gc(tmpLocaldev)
 
   await fs.promises.mkdir(tmpLocaldev, { recursive: true })
-  teardown(() => gc(tmpLocaldev), { order: Infinity })
+  teardown(async () => await gc(tmpLocaldev), { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, { filter: (key) => !key.startsWith('.git') })
   await mirror.done()
@@ -226,11 +227,14 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   }, { order: Infinity })
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -242,7 +246,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -352,11 +356,14 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   }, { order: Infinity })
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -368,7 +375,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await fs.promises.mkdir(tmpPearDir, { recursive: true })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -500,11 +507,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   }, { order: Infinity })
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -516,7 +526,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {
@@ -625,11 +635,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   }, { order: Infinity })
 
   const osTmpDir = await fs.promises.realpath(os.tmpdir())
+  const mirroredLocaldev = path.join(osTmpDir, 'tmp-localdev-mirror')
   const tmpLocaldev = path.join(osTmpDir, 'tmp-localdev')
   const platformDir = path.join(tmpLocaldev, 'pear')
   const tmpPearDir = path.join(osTmpDir, 'tmp-pear')
 
-  const gc = async (dir) => await fs.promises.rm(dir, { recursive: true })
+  const gc = async (dir) => {
+    try { await fs.promises.rm(dir, { recursive: true }) } catch { }
+  }
 
   try { await gc(tmpLocaldev) } catch { }
   try { await gc(tmpPearDir) } catch { }
@@ -641,7 +654,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(async () => { await gc(tmpPearDir) }, { order: Infinity })
 
   comment('mirroring platform')
-  const srcDrive = new Localdrive(localdev)
+  const srcDrive = new Localdrive(mirroredLocaldev)
   const destDrive = new Localdrive(tmpLocaldev)
   const mirror = srcDrive.mirror(destDrive, {
     filter: (key) => {

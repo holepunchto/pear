@@ -41,14 +41,15 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
         teardown(() => console.log('teardown'));
     })()`)
 
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const td = await running.until.teardown
   is(td, 'teardown', 'teardown has been triggered')
 
   const { code } = await running.until.exit
-  is(code, 130, 'exit code is 130')
+  is(code, 0, 'exit code is 0')
 })
 
 test('teardown during teardown', async function ({ is, ok, plan, comment, teardown }) {
@@ -89,14 +90,15 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
         teardown( () => a() )
     })()`)
 
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const td = await running.until.teardown
   is(td, 'teardown from b', 'teardown from b has been triggered')
 
   const { code } = await running.until.exit
-  is(code, 130, 'exit code is 130')
+  is(code, 0, 'exit code is 0')
 })
 
 test('exit code', async function ({ is, ok, plan, comment, teardown }) {
@@ -136,8 +138,9 @@ test('exit code', async function ({ is, ok, plan, comment, teardown }) {
     })()`)
 
   await running.inspector.evaluate('(() => { return global.__PEAR_TEST__.running.inspector.disable() })()')
+  await running.inspector.evaluate('Pear.teardown()')
+
   await running.inspector.close()
-  running.subprocess.kill('SIGINT')
 
   const { code } = await running.until.exit
   is(code, 124, 'exit code is 124')
