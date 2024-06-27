@@ -443,7 +443,8 @@
   <div id="bar">
     <script type="module">
       import constants from './constants.js'
-      if (Pear.config.key?.z32 !== constants.ALIASES.keet.z32) {
+      const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
+      if (hypercoreid.normalize(Pear.config.key) !== hypercoreid.normalize(constants.ALIASES.keet)) {
         if (Pear.config.options.platform?.__legacyTitlebar) {
           document.getElementById('bar').style.display = 'block'
           const winctrl = document.getElementById('window-controls')
@@ -651,7 +652,7 @@
               document.body.appendChild(trustConfirm)
               trustConfirm.setLink(key.link)
               trustConfirm.trust = async () => {
-                await this.ipc.trust({ z32: key.z32 })
+                await this.ipc.trust(key)
                 await this.ipc.restart({ id: this.gid })
               }
 

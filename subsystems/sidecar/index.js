@@ -430,8 +430,9 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
-  async trust ({ z32 } = {}, client) {
+  async trust (key, client) {
     const trusted = new Set((await preferences.get('trusted')) || [])
+    const z32 = hypercoreid.encode(key)
     trusted.add(z32)
     let pkg = null
     try {
@@ -454,16 +455,16 @@ class Sidecar extends ReadyResource {
     return await preferences.set('trusted', Array.from(trusted))
   }
 
-  async detached ({ key, storage, appdev }) {
+  async detached ({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(Buffer.from(key.hex, 'hex')).toString('hex'))
+      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(key).toString('hex'))
     }
 
-    const wokeup = await this.wakeup({ args: [key.link, storage, appdev, false] })
+    const wokeup = await this.wakeup({ args: [link, storage, appdev, false] })
 
     if (wokeup) return { wokeup, appling: null }
-    const appling = (await this.applings.get(key.hex)) || null
+    const appling = (await this.applings.get(key.toString('hex'))) || null
 
     return { wokeup, appling }
   }
@@ -572,16 +573,21 @@ class Sidecar extends ReadyResource {
         return
       }
       const parsed = parseLink(link)
-      if (parsed.key === null && appdev === null) {
+      if (parsed.drive.key === null && appdev === null) {
         resolve(false)
         return
       }
       const matches = [...this.apps].filter((app) => {
         if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev ? app.state.dir === appdev : app.state.key?.z32 === parsed.key?.z32)
+        return app.state.storage === storage && (appdev
+          ? app.state.dir === appdev
+          : hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key)
+        )
       })
 
-      for (const app of matches) app.message({ type: 'pear/wakeup', data: parsed.data, linkData: parsed.data, link })
+      for (const app of matches) {
+        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: parsed.pathname, linkData: parsed.pathname })
+      }
 
       const min = selfwake ? 1 : 0
       resolve(matches.length > min)
@@ -631,7 +637,7 @@ class Sidecar extends ReadyResource {
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
-      const applingKey = state.key.hex
+      const applingKey = state.key.toString('hex')
       await this.applings.set(applingKey, applingPath)
     }
 
@@ -665,15 +671,15 @@ class Sidecar extends ReadyResource {
         if (err.code === 'ERR_CONNECTION') app.report({ err })
       }
       const updating = await app.minver()
-      const type = state.options.type
+      const type = state.type
       const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
     const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
     const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
-
-    if (trusted.has(state.key.z32) === false) {
+    const z32 = hypercoreid.encode(state.key)
+    if (trusted.has(z32) === false) {
       const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
       err.key = state.key
       app.report({ err })
@@ -692,7 +698,7 @@ class Sidecar extends ReadyResource {
       appling: state.appling,
       channel: state.channel,
       checkout: state.checkout,
-      key: state.key?.hex,
+      key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
@@ -716,7 +722,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     // app is trusted, refresh trust for any updated configured link keys:
-    await this.trust({ z32: state.key.z32 }, client)
+    await this.trust(state.key, client)
 
     if (this.swarm) appBundle.join(this.swarm)
 
@@ -728,23 +734,23 @@ class Sidecar extends ReadyResource {
     }
 
     const initializing = state.initialize({ bundle: appBundle, app })
-
-    if (appBundle.platformVersion !== null) {
-      app.report({ type: 'upgrade' })
-      const type = state.options.type
-      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
-    }
-
     try {
       await initializing
     } catch (err) {
       if (err.code === 'ERR_CONNECTION') app.report({ err })
     }
+    if (appBundle.platformVersion !== null) {
+      app.report({ type: 'upgrade' })
+      const type = state.type
+      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
+    }
+
     const updating = await app.minver()
 
     // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const type = state.options.type
+    const type = state.type
+
     const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
   }

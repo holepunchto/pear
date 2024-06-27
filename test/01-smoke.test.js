@@ -1,14 +1,13 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const os = require('bare-os')
 const Helper = require('./helper')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
   const stager = new Helper()
   await stager.ready()
-  const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  const dir = path.join(global.Pear.config.pearDir, 'current', 'test', 'fixtures', 'terminal')
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -31,7 +30,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   ok(announced, 'seeding is announced')
 
   comment('running')
-
   const running = await Helper.open(key, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })

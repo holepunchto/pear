@@ -5,7 +5,7 @@ const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
-const { PLATFORM_DIR, RUNTIME, ALIASES } = require('./constants')
+const { PLATFORM_DIR, RUNTIME } = require('./constants')
 const parseLink = require('./run/parse-link')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
@@ -32,6 +32,7 @@ module.exports = class State {
   type = null
   error = null
   entrypoints = null
+  applink = null
   static injestPackage (state, pkg) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
@@ -59,7 +60,7 @@ module.exports = class State {
     }
     const { previewFor } = state.options
     const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
-    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(Buffer.from(state.key.hex, 'hex')).toString('hex') : null)
+    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(state.key).toString('hex') : null)
     const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
     state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.dir, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (state.key === null && state.storage.startsWith(state.dir)) {
@@ -68,9 +69,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, link, linkData, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, pearDir }
   }
 
   update (state) {
@@ -90,7 +91,9 @@ module.exports = class State {
       env.NODE_ENV = NODE_ENV
     }
 
-    const { data: linkData = null, alias = null, key = null } = link ? parseLink(link) : {}
+    const { drive: { alias = null, key = null }, pathname, hash } = link ? parseLink(link) : { drive: {} }
+    const fragment = hash ? hash.slice(1) : (isKeetInvite(pathname) ? pathname.slice(1) : null)
+    const entrypoint = isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
 
@@ -113,20 +116,31 @@ module.exports = class State {
     this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
+    this.fragment = fragment
+    this.entrypoint = entrypoint
+    this.linkData = isKeetInvite(pathname) ? pathname.slice(1) : entrypoint
     this.link = link
-    this.linkData = linkData
     this.key = key
+    this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
     this.alias = alias
     this.manifest = pkg
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
-    this.entrypoint = flags.entrypoint || null
     this.clearPreferences = clearPreferences
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.constructor.injestPackage(this, pkg)
-    if (ALIASES.keet.z32 === this.key?.z32) this.tbh = 0
-    else this.tbh = this.options.platform?.__legacyTitlebar ? 48 : 0
+    this.tbh = 0
   }
+}
+
+function isEntrypoint (pathname) {
+  if (pathname === null || pathname === '/') return false
+  // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
+  return isKeetInvite(pathname) === false
+}
+
+function isKeetInvite (pathname) {
+  return (pathname?.length > 100 || hypercoreid.isValid(pathname?.slice(1)))
 }

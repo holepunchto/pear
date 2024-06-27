@@ -1,5 +1,6 @@
 'use strict'
 const { once } = require('bare-events')
+const hypercoreid = require('hypercore-id-encoding')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
@@ -330,7 +331,12 @@ and then becomes the sidecar.`,
 const usage = { header, version, banner, descriptions, footer }
 
 async function trust ({ ipc, key, message }) {
-  const sure = ansi.cross + ' Key pear://' + key?.z32 + ' is not known\n\nBe sure that software is trusted before running it\n\nType "TRUST" to allow execution or anything else to exit\n\n'
+  const z32 = hypercoreid.encode(key)
+  const sure = ansi.cross +
+    ' Key pear://' + z32 + ' is not known\n' +
+    '\nBe sure that software is trusted before running it\n' +
+    '\nType "TRUST" to allow execution or anything else to exit\n\n'
+
   const prompt = interact(sure, [
     {
       name: 'trust',
@@ -344,7 +350,7 @@ async function trust ({ ipc, key, message }) {
   const result = await prompt.run()
   if (result.fields.trust === 'TRUST') {
     await ipc.trust(key)
-    print('\n' + ansi.tick + ' pear://' + key?.z32 + ' is now trusted\n')
+    print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print('Use pear run again to execute trusted application\n')
     await ipc.close()
     Bare.exit()

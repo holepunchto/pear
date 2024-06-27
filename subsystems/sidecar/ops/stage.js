@@ -73,8 +73,8 @@ module.exports = class Stage extends Opstream {
 
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun })
-    const z32 = hypercoreid.encode(bundle.drive.key)
-    await sidecar.trust({ z32 }, client)
+
+    await sidecar.trust(bundle.drive.key, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
     if (terminalBare) bare = true
@@ -83,7 +83,7 @@ module.exports = class Stage extends Opstream {
 
     ignore = ignore.map((file) => unixPathResolve('/', file))
     const release = (await bundle.db.get('release'))?.value || 0
-    const pearkey = 'pear://' + z32
+    const pearkey = 'pear://' + hypercoreid.encode(bundle.drive.key)
 
     this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: pearkey, current: currentVersion, release } })
 

@@ -2,7 +2,7 @@
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
-const HypercoreID = require('hypercore-id-encoding')
+const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const subsystem = require('./lib/subsystem.js')
 const crasher = require('./lib/crasher')
@@ -50,7 +50,7 @@ async function bootSidecar () {
     if (LOCALDEV) return null
 
     const { checkout, swap } = getUpgradeTarget()
-    const updateDrive = checkout === CHECKOUT || HypercoreID.normalize(checkout.key) === CHECKOUT.key
+    const updateDrive = checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
@@ -77,12 +77,12 @@ function getUpgradeTarget () {
     const arg = Bare.argv[i]
 
     if (arg.startsWith('--key=')) {
-      key = HypercoreID.normalize(arg.slice(6))
+      key = hypercoreid.normalize(arg.slice(6))
       break
     }
 
     if (arg === '--key' && Bare.argv.length > i + 1) {
-      key = HypercoreID.normalize(Bare.argv[i + 1])
+      key = hypercoreid.normalize(Bare.argv[i + 1])
       break
     }
   }

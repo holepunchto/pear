@@ -80,13 +80,7 @@ module.exports = class Http extends ReadyResource {
 
     let builtin = false
     if (link.filename === null) {
-      try {
-        link.filename = await linker.resolve(link.resolve, link.dirname, { isImport })
-      } catch (e) {
-        console.error('link err', e)
-        throw e
-      }
-
+      link.filename = await linker.resolve(link.resolve, link.dirname, { isImport })
       builtin = link.filename === link.resolve && linker.builtins.has(link.resolve)
     }
 
@@ -117,7 +111,7 @@ module.exports = class Http extends ReadyResource {
 
     if (await bundle.has(link.filename) === false) {
       if (link.filename === '/index.html') {
-        const manifest = await bundle.db.get('manifest')
+        const manifest = await bundle.drive.get('/package.json')
         if (typeof manifest?.value?.main === 'string') {
           req.url = `/${manifest?.value?.main}`
           return this.#lookup(app, protocol, type, req, res)

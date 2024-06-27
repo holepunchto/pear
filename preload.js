@@ -14,16 +14,22 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
   const { parentWcId, env, id, decalled = false, isDecal = false, ...config } = state
+  if (config.key?.type === 'Buffer') config.key = Buffer.from(config.key.data)
   const dir = config.dir
   window[Symbol.for('pear.config')] = config
   window[Symbol.for('pear.id')] = id
   state.config = config
+
+  if (config.fragment) history.replaceState(null, null, '#' + config.fragment)
+
   const gui = new GUI({ API, state })
   window.Pear = gui.api
 
   if (isDecal === false) {
     Object.assign(process.env, env)
     process.chdir(dir)
+  } else {
+    window[Symbol.for('hypercore-id-encoding')] = require('hypercore-id-encoding')
   }
 
   {
