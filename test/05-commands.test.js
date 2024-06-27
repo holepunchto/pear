@@ -15,9 +15,7 @@ test('pear stage --json <channel> <dir>', async function ({ plan, comment, alike
   })
   const testId = Math.floor(Math.random() * 100000)
 
-  const { pathname } = new URL(global.Pear.config.applink)
-
-  const argv = ['stage', '--json', 'test-' + testId, path.join(pathname, 'test', 'fixtures', 'terminal')]
+  const argv = ['stage', '--json', 'test-' + testId, fixture]
 
   const running = await Helper.open(fixture, { tags: ['exit'] }, { lineout: true })
 
