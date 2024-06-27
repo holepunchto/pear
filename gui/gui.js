@@ -1064,7 +1064,7 @@ class Window extends GuiCtrl {
 
     const requestFilter = (details, callback) => {
       const url = new URL(details.url)
-      const result = { cancel: !allowedHosts.find((link) => link.host === url.host && link.protocol === url.protocol) }
+      const result = { cancel: !allowedHosts.find((link) => link.hostname === url.hostname && link.protocol === url.protocol) }
       callback(result)
     }
 
