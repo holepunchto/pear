@@ -20,9 +20,8 @@ class Rig {
     comment('shutting down local sidecar')
     setTimeout(async () => {
       await this.helper.shutdown()
-      comment('local sidecar shut down')  
+      comment('local sidecar shut down')
     }, 5000)
-    
   }
 }
 
