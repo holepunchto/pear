@@ -304,7 +304,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   is(code, 0, 'exit code is 0')
 })
 
-test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
+test.solo('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
   timeout(180000)
