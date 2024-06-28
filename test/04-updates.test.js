@@ -5,7 +5,6 @@ const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
-const fixture = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const seedOpts = (id, dir = harness) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
@@ -175,7 +174,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   const file2 = `${ts()}.tmp`
   comment(`\tcreating another test file (${file2})`)
-  fs.writeFileSync(path.join(fixture, file2), 'test')
+  fs.writeFileSync(path.join(harness, file2), 'test')
 
   comment('\trestaging')
   const update2Promise = await update2LazyPromise
@@ -185,7 +184,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   await stager3.ready()
   await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
 
-  fs.unlinkSync(path.join(fixture, file2))
+  fs.unlinkSync(path.join(harness, file2))
 
   comment('\twaiting for update')
   const update2 = await update2ActualPromise
