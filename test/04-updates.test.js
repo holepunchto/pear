@@ -400,7 +400,7 @@ test.solo('Pear.updates should notify Platform stage, Platform release updates (
   await releaser.ready()
   const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
   await Helper.pick(releasing, { tag: 'released' })
-  await releaser.close()
+  teardown(() => releaser.close())
   comment('waiting for platform update notification')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
