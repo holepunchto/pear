@@ -17,7 +17,8 @@ class Harness extends ReadyResource {
     this.inspectorKey = this.key.toString('hex')
     console.log(`{ "tag": "inspector", "data": { "key": "${this.inspectorKey}" }}`)
   }
-  async close() {
+
+  async close () {
     await this.inspector.disable()
     await this.sub?.destroy()
     this.inspector = null
@@ -29,6 +30,7 @@ class Harness extends ReadyResource {
     this.API = null
     this.ipc = null
   }
+
   async client (opts) {
     if (this.Helper === null) {
       const { default: Helper } = await import('pear/test/helper')
@@ -51,12 +53,10 @@ class Harness extends ReadyResource {
   async command (argv) {
     if (this.closed) throw new Error('Harness closed')
     const ipc = await this.client()
-    return this.cmd(ipc, argv) 
+    return this.cmd(ipc, argv)
   }
 }
 const harness = new Harness()
 Pear.teardown(() => harness.close())
 await harness.ready()
 global.__PEAR_TEST__ = harness
-
-
