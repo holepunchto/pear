@@ -10,6 +10,9 @@ class Rig {
     this.helper = new Helper()
     comment('connecting local sidecar')
     await this.helper.ready()
+    await this.helper.shutdown()
+    this.helper = new Helper()
+    await this.helper.ready()
     comment('local sidecar connected')
   }
 
