@@ -619,4 +619,4 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   is(code, 0, 'exit code is 0')
 })
 
-test('updates cleanup', rig.cleanup)
+test.solo('updates cleanup', rig.cleanup)
