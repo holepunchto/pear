@@ -4,9 +4,9 @@
   "main": "./boot.js",
   "private": true,
   "scripts": {
-    "pretest": "./pear.dev run  -t test/pretest.js",
+    "test:gen": "brittle -r test/index.js test/*.test.js",
+    "pretest": "./pear.dev run  -t scripts/pretest.js",
     "test": "./pear.dev run -t ./test",
-    "test:gen": "brittle -r test/all.js test/*.test.js",
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
