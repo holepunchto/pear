@@ -45,7 +45,7 @@ npm install
 Bootstrap the runtime binaries with
 
 ```sh
-npm run bootstrap <KEY>
+npm run bootstrap
 ```
 
 First run will install runtimes in `by-arch`, create platform directory called `pear` and add a `pear.dev` symlink (Linux, Mac)or `pear.ps1` and `pear.cmd` files (Windows). These are system-specific and .gitignore'd.
