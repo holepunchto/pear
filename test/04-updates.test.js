@@ -59,7 +59,7 @@ class Rig {
 
 const rig = new Rig()
 
-test('updates setup', rig.setup)
+test.solo('updates setup', rig.setup)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
