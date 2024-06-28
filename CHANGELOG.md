@@ -5,20 +5,21 @@
 ### Features
 
 * CLI - `pear run` `-d` alias for `--dev` flag
+* CLI / Deep-Links -  support for `pear run pear://<key>/entrypoint/subpath`, `pear run file:///path/to/project/entrypoint/subpath`, `pear run ./relative/path/to/entrypoint`. Allows for deep-link paths in Pear Applications, eg a user link click of pear://<key>/some/entrypoint opens the application from that entrypoint.
 * CLI - `pear shift` - move application storage between apps
 * CLI - `pear gc releases` - clear inactive releases
 * CLI - `pear gc sidecars` - clear any inactive running sidecars
 * API - `Pear.worker.run(link)` - spawns a worker process from a pear link
 * API - `Pear.worker.pipe()` - opens a pipe when the process is a worker
 * CLI - `pear info <channel> [dir=cwd]` - if an app has been staged, its info can be retrieved by
-* Config - `pear.links` - define pear links to inherit trust from parent app, e.g. worker links
+* Config - `pear.links` - pear:// & http(s):// links application allowlist
 * CLI - `pear info` `--key` flag, display key only
 * CLI - `pear info` `--full-changelog` show full changelog in info output
 * CLI - `pear info` `--changelog` show changelog only
 * CLI - `pear info` `--metadata` show metadata only
 * CLI - `pear info` `--json` flag for info in JSON format
-* CLI / Config - `pear.previewFor` package.json config field cannot be released with `pear release` (staging only feature)
-
+* CLI / Config - `pear.previewFor` `package.json` config field cannot be released with `pear release` (staging only feature)
+* API - `Pear.key` & `Pear.config.key` as buffers
 
 ### Improvements
 
@@ -38,6 +39,7 @@
 * Windows - cross-drive run/stage/dump fixes
 * Terminal Apps - hanging close when no ipc-calls bug fix
 * OS - link clicking when app is active, detached wake-up fix
+* Sidecar & Run - update bails treated as trust bails fix
 
 ## v1.2.4
 
