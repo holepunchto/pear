@@ -61,7 +61,7 @@ const rig = new Rig()
 
 test.solo('updates setup', rig.setup)
 
-test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
+test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown }) {
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -111,7 +111,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   const releasing = releaser.release(releaseOpts(testId, key))
   await Helper.pick(releasing, { tag: 'released' })
-  await releaser.close() // TODO why is this needed
+  teardown(() => releaser.close()) // TODO why is this needed? 
   comment('waiting for update')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
@@ -304,7 +304,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   is(code, 0, 'exit code is 0')
 })
 
-test.solo('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
+test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
   timeout(180000)
@@ -400,7 +400,7 @@ test.solo('Pear.updates should notify Platform stage, Platform release updates (
   await releaser.ready()
   const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
   await Helper.pick(releasing, { tag: 'released' })
-  teardown(() => releaser.close())
+  teardown(() => releaser.close()) // TODO why is this needed? 
   comment('waiting for platform update notification')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
@@ -603,7 +603,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const releasing = releaser.release({ channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
-  await releaser.close()
+  teardown(() => releaser.close()) // TODO why is this needed? 
 
   comment('waiting for app update notification')
   const update2 = await update2ActualPromise
