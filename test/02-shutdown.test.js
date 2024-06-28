@@ -1,4 +1,3 @@
-'use strict'
 const test = require('brittle')
 const Helper = require('./helper')
 

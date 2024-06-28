@@ -86,9 +86,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs, cmdArgs })
-  if (bail && args.indexOf('--detach') === -1) {
+
+  if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
-    err.key = key
+    err.key = bail.key
     throw err
   }
 

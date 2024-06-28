@@ -11,7 +11,7 @@ const force = global.Pear.config.args.includes('--force-install')
 async function install () {
   if (protocol !== 'file:') return
   const dirs = [
-    path.join(root, 'test', 'fixtures', 'terminal', 'node_modules')
+    path.join(root, 'test', 'fixtures', 'harness', 'node_modules')
   ]
   for (const dir of dirs) {
     if (force === false && await exists(dir)) continue

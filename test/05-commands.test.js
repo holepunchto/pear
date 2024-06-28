@@ -1,23 +1,37 @@
-'use strict'
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
-const setup = new Helper()
 
-test('commands setup', async ({ pass }) => {
-  await setup.ready()
-  pass('sidecar connected')
-})
+const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
+const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
+
+class Rig {
+  setup = async ({ comment }) => {
+    this.helper = new Helper()
+    comment('connecting local sidecar')
+    await this.helper.ready()
+    comment('local sidecar connected')
+  }
+
+  cleanup = async ({ comment }) => {
+    comment('shutting down local sidecar')
+    await this.helper.shutdown()
+    comment('local sidecar shut down')
+  }
+}
+
+const rig = new Rig()
+
+test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
 
-  const argv = ['stage', '--json', 'test-' + testId, fixture]
+  const argv = ['stage', '--json', 'test-' + testId, minimal]
 
-  const running = await Helper.open(fixture, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
 
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -39,7 +53,4 @@ test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
   is(code, 0)
 })
 
-test('commands teardown', async ({ pass }) => {
-  await setup.shutdown()
-  pass('sidecar stopped')
-})
+test('commands cleanup', rig.cleanup)

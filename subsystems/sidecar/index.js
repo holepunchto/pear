@@ -676,14 +676,16 @@ class Sidecar extends ReadyResource {
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
-    const aliases = Object.values(ALIASES).map(({ z32 }) => z32)
+    const aliases = Object.values(ALIASES).map(hypercoreid.encode)
     const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
     const z32 = hypercoreid.encode(state.key)
     if (trusted.has(z32) === false) {
       const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
+      err.trusted = Array.from(trusted)
+      err.z32 = z32
       err.key = state.key
       app.report({ err })
-      return { startId, bail: true }
+      return { startId, bail: err }
     }
 
     // if app is being staged, stage command sends over its client id, so tracer

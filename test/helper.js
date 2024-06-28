@@ -37,7 +37,6 @@ class Helper extends IPC {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          console.log(runtime, args)
           const sc = spawn(runtime, args, {
             detached: !verbose,
             stdio: verbose ? 'inherit' : 'ignore'

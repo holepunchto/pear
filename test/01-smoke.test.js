@@ -1,8 +1,9 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const fixture = path.join(Helper.root, 'test', 'fixtures', 'terminal')
+const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
@@ -14,7 +15,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   const stager = new Helper()
   await stager.ready()
-  const dir = fixture
+  const dir = harness
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -32,7 +33,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   const key = await until.key
   const announced = await until.announced
 
-  ok(key, 'app key is ok')
+  ok(hypercoreid.isValid(key), 'app key is valid')
   ok(announced, 'seeding is announced')
 
   comment('running')
