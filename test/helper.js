@@ -1,91 +1,95 @@
 'use strict'
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const os = require('bare-os')
 const fs = require('bare-fs')
 const fsext = require('fs-native-extensions')
 const ReadyResource = require('ready-resource')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
 const { Readable } = require('streamx')
+const NewlineDecoder = require('newline-decoder')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
+const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const PLATFORM_DIR = path.join(os.cwd(), '..', 'pear')
+const PLATFORM_DIR = global.Pear.config.pearDir
+const { pathname } = new URL(global.Pear.config.applink)
 
 class Helper extends IPC {
   #expectSidecar = false
-
+  static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
   constructor (opts = {}) {
-    const verbose = Bare.argv.includes('--verbose')
+    const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, '..', BY_ARCH)
+    const runtime = path.join(platformDir, 'current', BY_ARCH)
     const args = ['--sidecar']
     if (verbose) args.push('--verbose')
-    const ipcId = 'pear'
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
       sodium.crypto_generichash(buf, b4a.from(s))
       return b4a.toString(buf, 'hex')
     }
-
-    super({
-      lock: path.join(platformDir, 'corestores', 'platform', 'primary-key'),
-      socketPath: isWindows ? `\\\\.\\pipe\\${ipcId}-${pipeId(platformDir)}` : `${platformDir}/${ipcId}.sock`,
-      connectTimeout: 20_000,
-      connect: opts.expectSidecar
-        ? true
-        : () => {
-            const sc = spawn(runtime, args, {
-              detached: !verbose,
-              stdio: verbose ? 'inherit' : 'ignore'
-            })
-            sc.unref()
-          }
-    })
+    const lock = path.join(platformDir, 'corestores', 'platform', 'primary-key')
+    const socketPath = isWindows ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}` : `${platformDir}/pear.sock`
+    const connectTimeout = 20_000
+    const connect = opts.expectSidecar
+      ? true
+      : () => {
+          const sc = spawn(runtime, args, {
+            detached: !verbose,
+            stdio: verbose ? 'inherit' : 'ignore'
+          })
+          sc.unref()
+        }
+    super({ lock, socketPath, connectTimeout, connect })
+    this.lock = lock
+    this.socketPath = socketPath
     this.#expectSidecar = opts.expectSidecar
     this.opts = opts
   }
 
-  static async open (key, { tags = [] } = {}, opts = {}) {
-    if (!key) throw new Error('Key is missing')
+  static async open (link, { tags = [] } = {}, opts = {}) {
+    if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
-    const args = ['run', key.startsWith('pear://') ? key : `pear://${key}`]
+    const args = ['run', '-t', link]
     if (verbose) args.push('--verbose')
 
-    const runtime = opts.currentDir ? path.join(opts.currentDir, BY_ARCH) : path.join(opts.platformDir || PLATFORM_DIR, '..', BY_ARCH)
+    const platformDir = opts.platformDir || PLATFORM_DIR
+    const runtime = path.join(platformDir, 'current', BY_ARCH)
     const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
-
+    const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
+    const onLine = (line) => {
+      if (line.indexOf('teardown') > -1) {
+        iterable.push({ tag: 'teardown', data: line })
+        return
+      }
+      if (line.indexOf('"tag": "inspector"') > -1) {
+        iterable.push(JSON.parse(line))
+        return
+      }
+      if (opts.lineout) lineout.push(line)
+      else console.log('# unexpected', line)
+    }
+    const decoder = new NewlineDecoder()
+    subprocess.stdout.on('data', (data) => {
+      for (const line of decoder.push(data)) onLine(line.toString().trim())
+    })
     subprocess.once('exit', (code, signal) => {
+      for (const line of decoder.end()) onLine(line.toString().trim())
       iterable.push({ tag: 'exit', data: { code, signal } })
     })
-
-    subprocess.stdout.on('data', (data) => {
-      data = data.toString().trim()
-      if (data.indexOf('teardown') > -1) {
-        iterable.push({ tag: 'teardown', data })
-        return
-      }
-      if (data.indexOf('"tag": "inspector"') > -1) {
-        iterable.push(JSON.parse(data))
-        return
-      }
-      if (verbose) console.log(data)
-      else console.error('Unrecognized subprocess STDOUT output:', data)
-    })
-
     const until = await this.pick(iterable, tags)
 
     const data = await until.inspector
     const inspector = new Helper.Inspector(data.key)
     await inspector.ready()
 
-    return { inspector, until, subprocess }
+    return { inspector, until, subprocess, lineout }
   }
 
   static async pick (iter, ptn = {}, by = 'tag') {
@@ -133,7 +137,7 @@ class Helper extends IPC {
   }
 
   async accessLock (platformDir) {
-    const pdir = platformDir || path.resolve(os.cwd(), '..', 'pear')
+    const pdir = platformDir || PLATFORM_DIR
     const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
       if (err) {
         reject(err)
@@ -170,17 +174,7 @@ class Helper extends IPC {
   }
 
   static async bootstrap (key, dir) {
-    const link = path.join(dir, 'current')
-    const bin = path.join(dir, 'bin')
-    const current = path.join(link, 'by-arch', HOST, 'bin/pear-runtime' + (isWindows ? '.exe' : ''))
-
-    await require('pear-updater-bootstrap')(key, dir)
-
-    if (isWindows) return
-    try {
-      fs.mkdirSync(bin, { recursive: true })
-      fs.symlinkSync(current, path.join(bin, 'pear'))
-    } catch { }
+    await updaterBootstrap(key, dir)
   }
 
   static Inspector = class extends ReadyResource {

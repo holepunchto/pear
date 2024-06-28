@@ -4,8 +4,9 @@
   "main": "./boot.js",
   "private": true,
   "scripts": {
-    "test": "node scripts/pretest.js",
-    "test:gen": "brittle -r test/all.js test/*.test.js",
+    "test:gen": "brittle -r test/index.js test/*.test.js",
+    "pretest": "./pear.dev run  -t scripts/pretest.js",
+    "test": "./pear.dev run -t test",
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
@@ -90,7 +91,9 @@
     "mutexify": "^1.4.0",
     "paparam": "^1.3.0",
     "pear-changelog": "^1.0.1",
+    "pear-inspect": "^1.1.3",
     "pear-ipc": "^1.0.17",
+    "pear-link": "^2.0.1",
     "pear-updater": "^3.1.0",
     "protomux": "^3.6.0",
     "quickbit-universal": "^2.2.0",
@@ -108,10 +111,13 @@
     "which-runtime": "^1.2.0"
   },
   "devDependencies": {
+    "bare-inspector": "^2.3.0",
     "brittle": "^3.5.2",
     "graceful-goodbye": "^1.3.0",
     "hyperbee": "^2.0.1",
     "hypercore": "^10.36.4",
+    "newline-decoder": "^1.0.2",
+    "pear-updater-bootstrap": "^1.1.3",
     "port-get": "^1.0.4",
     "standard": "^17.0.0"
   },

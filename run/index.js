@@ -7,7 +7,6 @@ const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { Readable } = require('streamx')
-const { fileURLToPath } = require('url-file-url')
 const { isMac } = require('which-runtime')
 const constants = require('../constants')
 const State = require('../state')
@@ -20,41 +19,38 @@ const {
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
 
-module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
-  let dir = null
-  let rel = null
-  let key = null
-
-  key = parseLink(link).key
-
-  if (key !== null && link.startsWith('pear://') === false) {
+module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
+  const { drive, pathname } = parseLink(link)
+  const { key } = drive
+  const isPear = link.startsWith('pear://')
+  const isFile = link.startsWith('file://')
+  const isPath = isPear === false && isFile === false
+  if (key !== null && isPear === false) {
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
-  const cwd = os.cwd()
-  dir = key === null ? (link.startsWith('file:') ? fileURLToPath(link) : link) : cwd
-  if (path.isAbsolute(dir) === false) {
-    rel = dir
-    dir = path.resolve(cwd, dir)
-  }
+  let cwd = os.cwd()
 
-  if (dir !== cwd) {
-    Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
-    teardown(() => os.chdir(cwd))
-    os.chdir(dir)
-  }
-
+  let dir = cwd
+  let base = null
   if (key === null) {
     try {
-      JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
-    } catch (err) {
-      throw ERR_INVALID_INPUT(`A valid package.json file must exist at: "${dir}"`, { showUsage: false })
+      dir = fs.statSync(pathname).isDirectory() ? pathname : path.dirname(pathname)
+    } catch { /* ignore */ }
+    base = project(dir, pathname, cwd)
+    dir = base.dir
+    if (dir !== cwd) {
+      Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
+      teardown(() => os.chdir(cwd))
+      os.chdir(dir)
+      cwd = dir
     }
+    if (isPath) link = 'file://' + (base.entrypoint || '/')
   }
 
   const stream = new Readable({ objectMode: true })
   if (detached) {
-    const { wokeup, appling } = await ipc.detached({ key, storage, appdev: key === null ? dir : null })
+    const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) {
       ipc.close().catch(console.error)
       return stream
@@ -65,10 +61,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     if (!appling) {
       args.unshift('run', '--detach')
-      if (rel) {
-        const ix = args.indexOf(rel)
-        if (ix > -1) args[ix] = dir
-      }
       spawn(constants.RUNTIME, args, opts).unref()
       ipc.close().catch(console.error)
       return stream
@@ -94,9 +86,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs, cmdArgs })
-  if (bail && args.indexOf('--detach') === -1) {
+
+  if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
-    err.key = key
+    err.key = bail.key
     throw err
   }
 
@@ -136,10 +129,12 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   args.unshift('--start-id=' + startId)
   const detach = args.includes('--detach')
   if (type === 'desktop') {
+    if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
+      cwd,
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
     child.once('exit', (code) => {
@@ -165,4 +160,20 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (global.Pear) global.Pear.teardown(() => ipc.close())
 
   return stream
+}
+
+function project (dir, origin, cwd) {
+  try {
+    if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))).pear) {
+      return { dir, origin, entrypoint: origin.slice(dir.length) }
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
+  }
+  const parent = path.dirname(dir)
+  if (parent === '/' || parent === '\\' || path.relative(parent, cwd).startsWith('..')) {
+    const condition = origin === cwd ? `at "${cwd}"` : origin.includes(cwd) ? `from "${origin}" up to "${cwd}"` : `at "${origin}"`
+    throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
+  }
+  return project(parent, origin, cwd)
 }

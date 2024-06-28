@@ -1,5 +1,5 @@
 'use strict'
-const HypercoreID = require('hypercore-id-encoding')
+const hypercoreid = require('hypercore-id-encoding')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
@@ -8,12 +8,11 @@ const CHECKOUT = require('./checkout')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
-
-const url = module.url || electronModuleURL()
+const url = global.Pear?.config?.applink || module.url || electronModuleURL()
 const mount = new URL('.', url)
-
 const LOCALDEV = CHECKOUT.length === null
 const swapURL = mount.pathname.endsWith('.bundle/') ? new URL('..', mount) : mount
+
 const swapPath = toPath(swapURL)
 
 const IPC_ID = 'pear'
@@ -38,12 +37,12 @@ const WAKEUP_EXEC = isWindows
     : 'Pear.app/Contents/MacOS/Pear'
 
 const ALIASES = {
-  keet: getKeys('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
-  runtime: getKeys('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro')
+  keet: hypercoreid.decode('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
+  runtime: hypercoreid.decode('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro')
 }
 
 const EOLS = {
-  keet: getKeys('jc38t9nr7fasay4nqfxwfaawywfd3y14krnsitj67ymoubiezqdy')
+  keet: hypercoreid.decode('jc38t9nr7fasay4nqfxwfaawywfd3y14krnsitj67ymoubiezqdy')
 }
 
 exports.LOCALDEV = LOCALDEV
@@ -81,13 +80,6 @@ function electronModuleURL () {
 
 function toPath (u) {
   return fileURLToPath(u).replace(/[/\\]$/, '') || '/'
-}
-
-function getKeys (z32) {
-  return {
-    z32,
-    hex: HypercoreID.decode(z32).toString('hex')
-  }
 }
 
 function pipeId (s) {

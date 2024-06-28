@@ -1,20 +1,27 @@
 'use strict'
-const os = require('os')
-const fs = require('fs')
-const path = require('path')
-const { spawn } = require('child_process')
-const { isWindows, platform, arch } = require('which-runtime')
+const fs = require('bare-fs')
+const path = require('bare-path')
+const { spawn } = require('bare-subprocess')
+const { isWindows } = require('which-runtime')
 
-const root = path.join(__dirname, '..')
-const host = platform + '-' + arch
-const pear = `by-arch/${host}/bin/pear-runtime${isWindows ? '.exe' : ''}`
+const { protocol, pathname } = new URL(global.Pear.config.applink)
+const root = isWindows ? path.normalize(pathname.slice(1)) : pathname
+const force = global.Pear.config.args.includes('--force-install')
 
-const dirs = [
-  path.join(root, 'test', 'node_modules'),
-  path.join(root, 'test', 'fixtures', 'terminal', 'node_modules')
-]
+async function install () {
+  if (protocol !== 'file:') return
+  const dirs = [
+    path.join(root, 'test', 'fixtures', 'harness', 'node_modules')
+  ]
+  for (const dir of dirs) {
+    if (force === false && await exists(dir)) continue
+    console.log(force ? 'reinstalling node_modules in' : 'node_modules not found in', path.dirname(dir))
+    console.log('Running npm install...')
+    await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
+  }
+}
 
-const exists = async (path) => {
+async function exists (path) {
   try {
     await fs.promises.access(path)
     return true
@@ -23,12 +30,9 @@ const exists = async (path) => {
   }
 }
 
-const verbose = (global.Bare || global.process).argv.includes('--verbose')
-
-const run = (cmd, args, opts) => {
+function run (cmd, args, opts) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, opts)
-
     child.on('close', (code, signal) => {
       if (!signal && (code === 0 || code === null)) {
         resolve()
@@ -40,15 +44,4 @@ const run = (cmd, args, opts) => {
   })
 }
 
-(async () => {
-  for (const dir of dirs) {
-    if (!await exists(dir)) {
-      console.log(`node_modules not found in ${path.dirname(dir)}\nRunning npm install...`)
-      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
-    }
-  }
-  const store = path.join(os.tmpdir(), 'pear-test')
-  const args = ['run', '--store', store, 'test']
-  if (verbose) args.push('--verbose')
-  await run(pear, args, { stdio: 'inherit', shell: isWindows })
-})()
+module.exports = install().catch(console.error)

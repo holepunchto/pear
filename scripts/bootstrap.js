@@ -8,20 +8,19 @@ const Corestore = require('corestore')
 const Localdrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
-const goodbye = require('graceful-goodbye')
+const goodbye = global.Pear?.teardown || require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 
-const argv = global.Bare?.argv || global.process.argv
-
+const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
+const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
-const PEAR = path.join(__dirname, '..', 'pear')
-const SWAP = path.join(__dirname, '..')
+const PEAR = path.join(ROOT, '..', 'pear')
+const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
-
 try { fs.symlinkSync(isWindows ? PEAR : '..', path.join(PEAR, 'current'), 'junction') } catch { /* ignore */ }
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')

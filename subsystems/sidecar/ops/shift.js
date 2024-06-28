@@ -19,8 +19,8 @@ module.exports = class Shift extends Opstream {
 
     if (!src) throw ERR_INVALID_INPUT('src must be specified')
     if (!dst) throw ERR_INVALID_INPUT('dst must be specified')
-    const srcKey = parseLink(src)?.key
-    const dstKey = parseLink(dst)?.key
+    const srcKey = parseLink(src).drive?.key
+    const dstKey = parseLink(dst).drive?.key
     if (!srcKey) throw ERR_INVALID_INPUT('Invalid source app key')
     if (!dstKey) throw ERR_INVALID_INPUT('Invalid destination app key')
     const byDkey = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey')

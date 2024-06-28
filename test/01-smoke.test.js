@@ -1,14 +1,21 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const os = require('bare-os')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
+const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   plan(5)
+  teardown(async () => {
+    const shutdowner = new Helper()
+    await shutdowner.ready()
+    await shutdowner.shutdown()
+  })
+
   const stager = new Helper()
   await stager.ready()
-  const dir = path.join(os.cwd(), 'fixtures', 'terminal')
+  const dir = harness
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -19,7 +26,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(async () => seeder.shutdown())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -27,12 +33,12 @@ test('smoke', async function ({ ok, is, plan, comment, teardown }) {
   const key = await until.key
   const announced = await until.announced
 
-  ok(key, 'app key is ok')
+  ok(hypercoreid.isValid(key), 'app key is valid')
   ok(announced, 'seeding is announced')
 
   comment('running')
-
-  const running = await Helper.open(key, { tags: ['exit'] })
+  const link = 'pear://' + key
+  const running = await Helper.open(link, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
