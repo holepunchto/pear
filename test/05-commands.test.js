@@ -18,8 +18,11 @@ class Rig {
 
   cleanup = async ({ comment }) => {
     comment('shutting down local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shut down')
+    setTimeout(async () => {
+      await this.helper.shutdown()
+      comment('local sidecar shut down')  
+    }, 5000)
+    
   }
 }
 
