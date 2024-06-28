@@ -59,7 +59,7 @@ class Rig {
 
 const rig = new Rig()
 
-test.solo('updates setup', rig.setup)
+test('updates setup', rig.setup)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, timeout, comment, teardown }) {
   plan(7)
@@ -400,10 +400,7 @@ test.solo('Pear.updates should notify Platform stage, Platform release updates (
   await releaser.ready()
   const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
   await Helper.pick(releasing, { tag: 'released' })
-  setTimeout(() => {  
-    releaser.close()
-  }, 2500)
-  // await releaser.close()
+  await releaser.close()
   comment('waiting for platform update notification')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
@@ -622,4 +619,4 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   is(code, 0, 'exit code is 0')
 })
 
-test.solo('updates cleanup', rig.cleanup)
+test('updates cleanup', rig.cleanup)
