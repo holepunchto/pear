@@ -29,8 +29,10 @@ const rig = new Rig()
 
 test('commands setup', rig.setup)
 
-test('pear stage --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
   plan(2)
+
+  console.log(minimal)
 
   const testId = Math.floor(Math.random() * 100000)
 
@@ -60,6 +62,7 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
 
 test.todo('pear stage <channel> <absolute-path>')
 test.todo('pear stage <channel> <relative-path>')
+test.todo('pear stage --json <channel> <relative-path>')
 test.todo('pear stage --dry-run <channel> <relative-path>')
 test.todo('pear stage --dry-run --json <channel> <relative-path>')
 test.todo('pear stage --bare <channel> <relative-path>')
