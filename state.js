@@ -3,6 +3,7 @@ const { isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
+const url = isBare ? require('bare-url') : require('url')
 const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
@@ -91,7 +92,8 @@ module.exports = class State {
       env.NODE_ENV = NODE_ENV
     }
 
-    const { drive: { alias = null, key = null }, pathname, hash } = link ? parseLink(link) : { drive: {} }
+    const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
+    const pathname = protocol === 'file:' ? route.slice(dir.length) : route
     const fragment = hash ? hash.slice(1) : (isKeetInvite(pathname) ? pathname.slice(1) : null)
     const entrypoint = isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
@@ -119,7 +121,7 @@ module.exports = class State {
     this.fragment = fragment
     this.entrypoint = entrypoint
     this.linkData = isKeetInvite(pathname) ? pathname.slice(1) : entrypoint
-    this.link = link
+    this.link = link ? (link.startsWith(protocol) ? link : url.pathToFileURL(link).toString()) : null
     this.key = key
     this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
     this.alias = alias

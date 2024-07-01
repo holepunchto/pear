@@ -6,6 +6,7 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
+const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
 const { isMac } = require('which-runtime')
 const constants = require('../constants')
@@ -30,7 +31,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   let cwd = os.cwd()
-
   let dir = cwd
   let base = null
   if (key === null) {
@@ -45,7 +45,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       os.chdir(dir)
       cwd = dir
     }
-    if (isPath) link = 'file://' + (base.entrypoint || '/')
+    if (isPath) {
+      link = pathToFileURL(path.join(dir, base.entrypoint || '/')).pathname
+    }
   }
 
   const stream = new Readable({ objectMode: true })
@@ -85,6 +87,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     ipc.close().catch(console.error)
     return stream
   }
+
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
