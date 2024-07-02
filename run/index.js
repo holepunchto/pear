@@ -34,6 +34,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   let cwd = os.cwd()
+  const originalCwd = cwd
   let dir = cwd
   let base = null
   if (key === null) {
@@ -43,8 +44,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     base = project(dir, pathname, cwd)
     dir = base.dir
     if (dir !== cwd) {
-      Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
-      teardown(() => os.chdir(cwd))
+      Bare.on('exit', () => os.chdir(originalCwd)) // TODO: remove this once Pear.shutdown is used to close
+      teardown(() => os.chdir(originalCwd))
       os.chdir(dir)
       cwd = dir
     }
