@@ -586,7 +586,8 @@ class Sidecar extends ReadyResource {
       })
 
       for (const app of matches) {
-        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: parsed.pathname, linkData: parsed.pathname })
+        const pathname = isWindows ? path.normalize(parsed.pathname.slice(1)) : parsed.pathname
+        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, linkData: pathname })
       }
 
       const min = selfwake ? 1 : 0
