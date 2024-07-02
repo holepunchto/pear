@@ -19,6 +19,8 @@ const {
 } = require('../errors')
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
+const { PLATFORM_LOCK } = require('../constants')
+const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -99,7 +101,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (type === 'terminal') {
     const state = new State({ flags, link, dir, cmdArgs })
 
-    state.update({ host, id })
+    state.update({ host, id, type })
 
     if (state.error) {
       console.error(state.error)
@@ -110,7 +112,19 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     state.update({ config: await ipc.config() })
 
     const pear = new API(ipc, state)
+
     global.Pear = pear
+
+    /* global Pear */
+    Pear.messages({ type: 'pear/reload' }, async () => {
+      ipc.stream.destroy()
+
+      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
+      await fsext.waitForLock(fd)
+      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
+
+      await Pear.restart()
+    })
 
     const protocol = new Module.Protocol({
       exists (url) {
