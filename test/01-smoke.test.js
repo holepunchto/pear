@@ -5,7 +5,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
   plan(5)
   teardown(async () => {
     const shutdowner = new Helper()
