@@ -60,6 +60,8 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
 
 test.todo('pear stage <channel> <absolute-path>')
 test.todo('pear stage <channel> <relative-path>')
+test.todo('pear stage <channel> <relative-path> (state.options.entrypoints <file-paths>)')
+test.todo('pear stage <channel> <relative-path> (state.options.ignore <file-paths>)')
 test.todo('pear stage --json <channel> <relative-path>')
 test.todo('pear stage --dry-run <channel> <relative-path>')
 test.todo('pear stage --dry-run --json <channel> <relative-path>')
@@ -121,6 +123,8 @@ test.todo('pear run pear://<key> --tmp-store')
 test.todo('pear run pear://<key> --unsafe-clear-app-storage')
 test.todo('pear run pear://<key> --unsafe-clear-preferences')
 
+test.todo('pear run <relative-path> (state.options.previewFor <key>)')
+test.todo('pear run <relative-path> (state.options.links <keys>)')
 test.todo('pear run <relative-path> --updates-diff')
 test.todo('pear run <relative-path> --no-updates')
 test.todo('pear run <relative-path> --link <url>')
