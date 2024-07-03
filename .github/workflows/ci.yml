@@ -47,6 +47,6 @@ jobs:
       run: npm test
     - name: Run Windows tests
       if: matrix.os == 'windows-latest'
-      run: npm test:win
+      run: npm run test:win
     - name: Lint
       run: npm run lint
