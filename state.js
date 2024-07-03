@@ -93,7 +93,7 @@ module.exports = class State {
     }
 
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
-    const pathname = protocol === 'file:' ? isWindows ? path.normalize(route.slice(1)).slice(dir.length) : route.slice(dir.length) : route
+    const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
     const fragment = hash ? hash.slice(1) : (isKeetInvite(pathname) ? pathname.slice(1) : null)
     const entrypoint = isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
