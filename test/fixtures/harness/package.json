@@ -13,7 +13,7 @@
     },
     "stage": {
       "ignore": [
-        "node_modules/pear"
+        "node_modules/pear/"
       ]
     }
   },
