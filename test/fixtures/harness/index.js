@@ -1,8 +1,9 @@
 /* global Pear */
+import os from 'bare-os'
+import inspector from 'bare-inspector'
 import ReadyResource from 'ready-resource'
-import bareInspector from 'bare-inspector'
 import { Inspector } from 'pear-inspect'
-
+const CWD = os.cwd()
 class Harness extends ReadyResource {
   inspector = null
   inspectorKey = null
@@ -12,7 +13,7 @@ class Harness extends ReadyResource {
   ipc = null
   sub = null
   async _open () {
-    this.inspector = new Inspector({ inspector: bareInspector })
+    this.inspector = new Inspector({ inspector })
     this.key = await this.inspector.enable()
     this.inspectorKey = this.key.toString('hex')
     console.log(`{ "tag": "inspector", "data": { "key": "${this.inspectorKey}" }}`)
@@ -50,10 +51,15 @@ class Harness extends ReadyResource {
     })
   }
 
-  async command (argv) {
+  async command (argv, cwd = os.cwd()) {
     if (this.closed) throw new Error('Harness closed')
     const ipc = await this.client()
-    return this.cmd(ipc, argv)
+    if (cwd !== os.cwd()) os.chdir(cwd)
+    try {
+      return await this.cmd(ipc, argv)
+    } finally {
+      os.chdir(CWD)
+    }
   }
 }
 const harness = new Harness()

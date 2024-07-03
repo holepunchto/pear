@@ -50,15 +50,18 @@ class Helper extends IPC {
     this.opts = opts
   }
 
-  static async open (link, { tags = [] } = {}, opts = {}) {
-    if (!link) throw new Error('Key is missing')
+  static run (link, opts = {}) {
+    if (!link) throw new Error('Link is missing')
     const verbose = Bare.argv.includes('--verbose')
     const args = ['run', '-t', link]
     if (verbose) args.push('--verbose')
-
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+    return spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+  }
+
+  static async open (link, { tags = [] } = {}, opts = {}) {
+    const subprocess = this.run(link, opts)
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
