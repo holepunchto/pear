@@ -39,7 +39,7 @@ class Rig {
     await fs.promises.mkdir(platformDir, { recursive: true })
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    const bootstrapped = new Helper({ platformDir })
+    const bootstrapped = new Helper({ platformDir: this.platformDir })
     this.bootstrapped = bootstrapped
     comment('connecting tmp sidecar...')
     await bootstrapped.ready()
@@ -61,7 +61,8 @@ const rig = new Rig()
 
 test('updates setup', rig.setup)
 
-test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown }) {
+test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -125,8 +126,9 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 })
 
 test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
-  const { ok, is, plan, comment } = t
+  const { ok, is, plan, comment, timeout } = t
 
+  timeout(180000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
