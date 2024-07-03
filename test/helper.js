@@ -23,7 +23,7 @@ class Helper extends IPC {
   constructor (opts = {}) {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = path.join(platformDir, '..', BY_ARCH)
     const args = ['--sidecar']
     if (verbose) args.push('--verbose')
     const pipeId = (s) => {
@@ -57,7 +57,7 @@ class Helper extends IPC {
     if (verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = path.join(platformDir, '..', BY_ARCH)
     const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 

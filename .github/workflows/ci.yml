@@ -40,6 +40,10 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
+      if: matrix.os != 'windows-latest'
       run: npm test
+    - name: Run Windows tests
+      if: matrix.os == 'windows-latest'
+      run: npm test:win
     - name: Lint
       run: npm run lint
