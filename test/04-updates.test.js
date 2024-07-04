@@ -48,12 +48,12 @@ class Rig {
   }
 
   cleanup = async ({ comment }) => {
-    comment('shutting down local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shutdown')
     comment('shutting down bootstrapped sidecar')
     await this.bootstrapped.shutdown()
     comment('bootstrapped sidecar shutdown')
+    comment('shutting down local sidecar')
+    await this.helper.shutdown()
+    comment('local sidecar shutdown')
   }
 }
 
