@@ -10,6 +10,11 @@
     "bin": "test-terminal-app",
     "builtinsMap": {
       "events": "bare-events"
+    },
+    "stage": {
+      "ignore": [
+        "node_modules/pear/"
+      ]
     }
   },
   "keywords": [],

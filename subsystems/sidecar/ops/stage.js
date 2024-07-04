@@ -80,8 +80,10 @@ module.exports = class Stage extends Opstream {
     if (terminalBare) bare = true
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
-
-    ignore = ignore.map((file) => unixPathResolve('/', file))
+    ignore = ignore.map((file) => {
+      const suffix = file.length > 0 && file[file.length - 1] === '/' ? '/' : ''
+      return unixPathResolve('/', file) + suffix
+    })
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32

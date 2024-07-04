@@ -19,6 +19,7 @@ const {
 } = require('../errors')
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
+const { isWindows } = require('which-runtime')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -168,7 +169,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 function project (dir, origin, cwd) {
   try {
     if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))).pear) {
-      return { dir, origin, entrypoint: origin.slice(dir.length) }
+      return { dir, origin, entrypoint: isWindows ? path.normalize(origin.slice(1)).slice(dir.length) : origin.slice(dir.length) }
     }
   } catch (err) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err

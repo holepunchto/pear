@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn } = require('bare-subprocess')
+const { spawn, spawnSync } = require('bare-subprocess')
 const { isWindows } = require('which-runtime')
 
 const { protocol, pathname } = new URL(global.Pear.config.applink)
@@ -17,7 +17,13 @@ async function install () {
     if (force === false && await exists(dir)) continue
     console.log(force ? 'reinstalling node_modules in' : 'node_modules not found in', path.dirname(dir))
     console.log('Running npm install...')
-    await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
+    if (isWindows) {
+      // to be updated when bare-subprocess spawn implements shell
+      const npm = (spawnSync('where', ['npm'])).stdout.toString().split('\r')[0]
+      spawn('node', [path.join(path.dirname(npm), 'node_modules', 'npm', 'bin', 'npm-cli.js'), 'install'], { cwd: path.dirname(dir), stdio: 'inherit' })
+    } else {
+      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
+    }
   }
 }
 

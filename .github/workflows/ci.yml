@@ -16,6 +16,9 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
@@ -40,6 +43,10 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
+      if: matrix.os != 'windows-latest'
       run: npm test
+    - name: Run Windows tests
+      if: matrix.os == 'windows-latest'
+      run: npm run test:win
     - name: Lint
       run: npm run lint
