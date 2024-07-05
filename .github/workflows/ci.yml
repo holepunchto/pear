@@ -36,14 +36,6 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Bootstrap
       run: npm run bootstrap
-    - name: Self-stage
-      run: ./pear.dev stage ci
-    - name: Install Pear
-      run:  npm i -g pear && pear
-    - name: Self-seed
-      run: nohup ./pear.dev seed ci & echo $! > seed-pid
-    - name: Switch to CI Pear
-      run:  pear sidecar --key=$(./pear.dev info --key --json dev | node -e "process.stdin.once('data', (b) => console.log(JSON.parse((b+'').split('\n')[0]).data.z32))")
     - name: Run tests
       if: matrix.os != 'windows-latest'
       run: npm test
@@ -52,5 +44,3 @@ jobs:
       run: npm run test:win
     - name: Lint
       run: npm run lint
-    - name: Switch back to Production Pear
-      run: pkill pear && npx pear
