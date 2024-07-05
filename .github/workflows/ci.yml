@@ -38,10 +38,12 @@ jobs:
       run: npm run bootstrap
     - name: Self-stage
       run: ./pear.dev stage ci
+    - name: Install Pear
+      run:  npm i -g pear
     - name: Self-seed
       run: nohup ./pear.dev seed ci & echo $! > seed-pid
-    - name: Switch Pear to CI Pear
-      run:  npm i -g pear && pear sidecar --key=$(./pear.dev info --key --json dev | node -e "process.stdin.once('data', (b) => console.log('pear://' + JSON.parse((b+'').split('\n')[0]).data.z32))")
+    - name: Switch to CI Pear
+      run:  pear sidecar --key=$(./pear.dev info --key --json dev | node -e "process.stdin.once('data', (b) => console.log('pear://' + JSON.parse((b+'').split('\n')[0]).data.z32))")
     - name: Stop Self-seed
       run: kill $(cat seed-pid) && rm seed-pid
     - name: Run tests
