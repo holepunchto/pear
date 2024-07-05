@@ -20,6 +20,7 @@ class Rig {
 
   cleanup = async ({ comment }) => {
     comment('shutting down local sidecar')
+    this.helper = new Helper()
     await this.helper.closeClients()
     await this.helper.shutdown()
     comment('local sidecar shut down')
