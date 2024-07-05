@@ -29,36 +29,36 @@ class Rig {
 const rig = new Rig()
 
 test('commands setup', rig.setup)
-//
-// test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
-//   plan(3)
-//   const testId = Math.floor(Math.random() * 100000)
-//   const argv = ['stage', '--json', 'test-' + testId, minimal]
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await running.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//   const seen = new Set()
-//   const tags = []
-//   let link = null
-//   for await (const line of running.lineout) {
-//     const result = JSON.parse(line)
-//     if (!link) link = result?.data?.link
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//     if (result.tag === 'final') break
-//   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
-//   await running.inspector.close()
-//   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
-//   const { code } = await running.until.exit
-//   is(code, 0)
-//   const check = await Helper.run(link)
-//   check.stdout.once('data', (line) => {
-//     is(line.toString().trim(), 'minimal')
-//   })
-// })
+
+test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
+  plan(3)
+  const testId = Math.floor(Math.random() * 100000)
+  const argv = ['stage', '--json', 'test-' + testId, minimal]
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await running.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+  const seen = new Set()
+  const tags = []
+  let link = null
+  for await (const line of running.lineout) {
+    const result = JSON.parse(line)
+    if (!link) link = result?.data?.link
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+    if (result.tag === 'final') break
+  }
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.close()
+  alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
+  const { code } = await running.until.exit
+  is(code, 0)
+  const check = await Helper.run(link)
+  check.stdout.once('data', (line) => {
+    is(line.toString().trim(), 'minimal')
+  })
+})
 
 // test.todo('pear stage <channel> <absolute-path>')
 // test.todo('pear stage <channel> <relative-path>')
