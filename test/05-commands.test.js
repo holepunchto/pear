@@ -29,7 +29,7 @@ class Rig {
 const rig = new Rig()
 
 test('commands setup', rig.setup)
-
+//
 // test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
 //   plan(3)
 //   const testId = Math.floor(Math.random() * 100000)
