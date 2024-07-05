@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.js test/*.test.js",
-    "pretest": "pear run scripts/pretest.js",
-    "test": "pear run test",
+    "pretest": "./pear.dev run scripts/pretest.js",
+    "test": "./pear.dev run test",
     "pretest:win": "pear.cmd run  -t scripts/pretest.js",
     "test:win": "pear.cmd run -t test",
     "lint": "standard",
