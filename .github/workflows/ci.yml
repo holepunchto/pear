@@ -36,6 +36,10 @@ jobs:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Bootstrap
       run: npm run bootstrap
+    - name: Install Pear
+      run:  npm i -g pear && pear
+    - name: Switch to CI Pear
+      run:  pear sidecar --key=o6soisipwe7dyir9xe1sy1j4esjk9abr6t4yco4npao38u4nj84o
     - name: Run tests
       if: matrix.os != 'windows-latest'
       run: npm test
@@ -44,3 +48,5 @@ jobs:
       run: npm run test:win
     - name: Lint
       run: npm run lint
+    - name: Switch back to Production Pear
+      run: pkill pear && npx pear
