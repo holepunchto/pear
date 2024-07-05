@@ -7,4 +7,7 @@ pipe.on('data', (data) => {
   if (str === 'ping') {
     setInterval(() => pipe.write((i++).toString()), 2000)
   }
+  if (str === 'exit') {
+    Pear.exit()
+  }
 })

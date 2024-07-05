@@ -5,7 +5,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const worker = path.join(Helper.root, 'test', 'fixtures', 'worker')
 
-test('woker pipe', async function ({ is, plan, comment, teardown }) {
+test('worker pipe', async function ({ is, plan, comment, teardown }) {
   plan(1)
   teardown(async () => {
     const shutdowner = new Helper()
@@ -39,5 +39,5 @@ test('woker pipe', async function ({ is, plan, comment, teardown }) {
   const workerResponse = await response
   is(workerResponse, '0123', 'worker pipe can send and receive data')
 
-  pipe.destroy()
+  pipe.write('exit')
 })
