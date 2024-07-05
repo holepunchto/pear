@@ -7,28 +7,28 @@ const Helper = require('./helper')
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
 
-class Rig {
-  setup = async ({ comment }) => {
-    this.helper = new Helper()
-    comment('connecting local sidecar')
-    await this.helper.ready()
-    await this.helper.shutdown()
-    this.helper = new Helper()
-    await this.helper.ready()
-    comment('local sidecar connected')
-  }
+// class Rig {
+//   setup = async ({ comment }) => {
+//     this.helper = new Helper()
+//     comment('connecting local sidecar')
+//     await this.helper.ready()
+//     await this.helper.shutdown()
+//     this.helper = new Helper()
+//     await this.helper.ready()
+//     comment('local sidecar connected')
+//   }
 
-  cleanup = async ({ comment }) => {
-    comment('shutting down local sidecar')
-    await this.helper.closeClients()
-    await this.helper.shutdown()
-    comment('local sidecar shut down')
-  }
-}
+//   cleanup = async ({ comment }) => {
+//     comment('shutting down local sidecar')
+//     await this.helper.closeClients()
+//     await this.helper.shutdown()
+//     comment('local sidecar shut down')
+//   }
+// }
 
-const rig = new Rig()
+// const rig = new Rig()
 
-test('commands setup', rig.setup)
+// test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
   // plan(3)
@@ -213,4 +213,4 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
 // test.todo('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key>')
 // test.todo('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key>')
 
-test('commands cleanup', rig.cleanup)
+// test('commands cleanup', rig.cleanup)
