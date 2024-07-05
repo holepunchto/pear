@@ -18,8 +18,6 @@ const out = `${grn}           ▅
 `
 console.log('\n\x1b[s\x1b[J' + out)
 
-const s = Pear.updates(console.log)
-
 const pipe = Pear.worker.pipe()
 const isWorker = pipe !== null
 if (isWorker) {

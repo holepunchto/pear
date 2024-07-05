@@ -1,5 +1,5 @@
 'use strict'
-const fs = require('bare-fs')
+// const fs = require('bare-fs')
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
@@ -29,7 +29,7 @@ const rig = new Rig()
 test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
-  plan(4)
+  plan(3)
   const testId = Math.floor(Math.random() * 100000)
   const argv = ['stage', '--json', 'test-' + testId, minimal]
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
