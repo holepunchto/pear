@@ -637,7 +637,7 @@
             this.status = report
             this.gid = Pear.Window.self.id
             loader.hide()
-            const { type, headline, tagline, cta, key } = this.status
+            const { type, headline, tagline, cta, key, z32 } = this.status
             if (type === 'update' && this.status.version?.force) {
               await loader.updating(this.status.version)
               continue
@@ -650,7 +650,7 @@
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
               document.body.appendChild(trustConfirm)
-              trustConfirm.setLink(key.link)
+              trustConfirm.setLink(`pear://${z32}`)
               trustConfirm.trust = async () => {
                 await this.ipc.trust(key)
                 await this.ipc.restart({ id: this.gid })

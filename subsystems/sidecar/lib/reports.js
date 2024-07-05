@@ -60,7 +60,8 @@ const update = (report) => {
 const permissionRequired = (report) => {
   return {
     type: 'permissionRequired',
-    key: report.err.key
+    key: report.err.key,
+    z32: report.err.z32
   }
 }
 
