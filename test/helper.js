@@ -14,8 +14,8 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const PLATFORM_DIR = global.Pear.config.pearDir
 const { pathname } = new URL(global.Pear.config.applink)
+const PLATFORM_DIR = path.join(pathname, 'pear')
 
 class Helper extends IPC {
   #expectSidecar = false
