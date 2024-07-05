@@ -32,7 +32,7 @@ class Harness extends ReadyResource {
     this.ipc = null
   }
 
-  async client (opts) {
+  async client (opts = {}) {
     if (this.Helper === null) {
       const { default: Helper } = await import('pear/test/helper')
       this.Helper = Helper
@@ -41,7 +41,7 @@ class Harness extends ReadyResource {
       const { default: cmd } = await import('pear/cmd')
       this.cmd = cmd
     }
-    return new this.Helper(opts)
+    return new this.Helper({ ...opts, platformDir: Pear.config.pearDir })
   }
 
   nextUpdate () {
