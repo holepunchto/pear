@@ -30,7 +30,7 @@ class Rig {
 
 const rig = new Rig()
 
-// test('commands setup', rig.setup)
+test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
   // plan(3)
