@@ -39,7 +39,7 @@ jobs:
     - name: Self-stage
       run: ./pear.dev stage ci
     - name: Install Pear
-      run:  npm i -g pear
+      run:  npm i -g pear && pear
     - name: Self-seed
       run: nohup ./pear.dev seed ci & echo $! > seed-pid
     - name: Switch to CI Pear
