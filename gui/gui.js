@@ -1057,8 +1057,18 @@ class Window extends GuiCtrl {
 
     if (interload && (await interload(this)) === false) return false
 
+    const toURL = (link) => {
+      try {
+        return new URL(link)
+      } catch (err) {
+        console.error('Invalid URL in Pear configuration links:', link)
+        return null
+      }
+    }
+
     const allowedHosts = Array.from(new Set(Object.values(this?.state?.config?.options?.links || {})))
-      .map((link) => new URL(link))
+      .map((link) => toURL(link))
+      .filter((link) => link !== null)
       .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
     allowedHosts.push(new URL(this.entry))
 
