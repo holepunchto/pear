@@ -1061,15 +1061,14 @@ class Window extends GuiCtrl {
       try {
         return new URL(link)
       } catch (err) {
-        console.error('Invalid URL in Pear configuration links:', link)
+        console.error('Invalid link in Pear configuration links:', link)
         return null
       }
     }
 
     const allowedHosts = Array.from(new Set(Object.values(this?.state?.config?.options?.links || {})))
       .map((link) => toURL(link))
-      .filter((link) => link !== null)
-      .filter((link) => link.protocol === 'http:' || link.protocol === 'https:') ?? []
+      .filter((link) => link !== null && (link.protocol === 'http:' || link.protocol === 'https:')) ?? []
     allowedHosts.push(new URL(this.entry))
 
     const requestFilter = (details, respond) => {
