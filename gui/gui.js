@@ -1064,8 +1064,9 @@ class Window extends GuiCtrl {
 
     const requestFilter = (details, respond) => {
       const url = new URL(details.url)
+      const isLocalhost = url.hostname === '127.0.0.1' || url.hostname === 'localhost'
       const isAllowed = allowedHosts.some(({ protocol, hostname, port }) =>
-        protocol === url.protocol && hostname === url.hostname && (port === '' || port === url.port))
+        (protocol === url.protocol && hostname === url.hostname && (port === '' || port === url.port)) || isLocalhost)
       respond({ cancel: isAllowed === false })
     }
 
