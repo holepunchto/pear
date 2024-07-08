@@ -63,7 +63,7 @@ module.exports = class State {
     const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
     const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(state.key).toString('hex') : null)
     const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
-    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.dir, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
+    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (state.key === null && state.storage.startsWith(state.dir)) {
       throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
     }
@@ -81,7 +81,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cmdArgs, onupdate = () => {}, flags, run } = params
+    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout,
       dev = false, stage, trace, updates, updatesDiff,
@@ -109,6 +109,7 @@ module.exports = class State {
     this.channel = channel || null
     this.checkout = checkout
     this.dir = key === null ? dir : '/'
+    this.cwd = cwd
     this.env = { ...env }
     this.flags = flags
     this.dev = dev

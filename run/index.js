@@ -60,7 +60,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
 
     args = args.filter((arg) => arg !== '--detached')
-    const opts = { detached: true, stdio: 'ignore' }
+    const opts = { detached: true, stdio: 'ignore', cwd }
 
     if (!appling) {
       args.unshift('run', '--detach')
@@ -89,7 +89,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
 
-  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, args: appArgs, cmdArgs })
+  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
@@ -98,7 +98,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   if (type === 'terminal') {
-    const state = new State({ flags, link, dir, cmdArgs })
+    const state = new State({ flags, link, dir, cmdArgs, cwd })
 
     state.update({ host, id })
 
