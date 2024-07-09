@@ -319,7 +319,12 @@ class ContextMenu {
       y = 0
     } = params
 
-    if (selectionText) {
+    if (await this.webContents.executeJavaScript(`document.elementFromPoint(${x}, ${y})?.tagName === 'IMG'`)) {
+      items.push(new electron.MenuItem({
+        label: 'Copy Image',
+        click: () => this.webContents.copyImageAt(x, y)
+      }))
+    } else if (selectionText) {
       items.push(new electron.MenuItem({
         label: 'Copy',
         click: () => this.webContents.copy()
