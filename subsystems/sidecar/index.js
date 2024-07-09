@@ -443,8 +443,8 @@ class Sidecar extends ReadyResource {
       return await preferences.set('trusted', Array.from(trusted))
     }
     if (typeof pkg?.pear?.links === 'object' && pkg.pear.links !== null) {
-      for (const link of Object.values(pkg.pear.links)) {
-        if (!(parseLink(link)?.drive?.key)) continue
+      for (const link of Object.values(pkg.pear.links).filter((link) => link.startsWith('pear:'))) {
+        if (parseLink(link).drive.key === null) continue
         try {
           trusted.add(hypercoreid.encode(hypercoreid.decode(link)))
         } catch {
