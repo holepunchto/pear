@@ -1,5 +1,9 @@
 # Pear Runtime Changelog
 
+## v1.3.2
+
+* Trust - fix to pear:// links
+
 ## v1.3.1
 
 * CLI - fix --storage flag
