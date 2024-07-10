@@ -1,5 +1,9 @@
 # Pear Runtime Changelog
 
+## v1.3.3
+
+* Restart - --storage flag in restart flow bug fix
+
 ## v1.3.2
 
 * Trust - fix to pear:// links
