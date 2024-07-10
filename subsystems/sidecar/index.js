@@ -436,6 +436,7 @@ class Sidecar extends ReadyResource {
     trusted.add(z32)
     let pkg = null
     try {
+      await client.userData.bundle.ready()
       pkg = JSON.parse(await client.userData.bundle.drive.get('/package.json'))
     } catch (err) {
       if (err instanceof SyntaxError) throw ERR_INVALID_PACKAGE_JSON('Package.json parsing error, invalid JSON')
@@ -480,8 +481,8 @@ class Sidecar extends ReadyResource {
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
-      const { pid, cmdArgs, dir, runtime, appling, env, run } = app.state
-      metadata.push({ pid, cmdArgs, dir, runtime, appling, env, run })
+      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run } = app.state
+      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -491,9 +492,9 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     if (this.verbose) console.log('Restarting ' + (platform ? 'platform' : 'client'))
     if (platform === false) {
-      const { dir, cmdArgs, env } = client.userData.state
+      const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -539,8 +540,8 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd: dir, env, detached: true, stdio: 'ignore' }
+    for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
+      const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()

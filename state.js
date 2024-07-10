@@ -108,7 +108,7 @@ module.exports = class State {
     this.appling = appling
     this.channel = channel || null
     this.checkout = checkout
-    this.dir = key === null ? dir : '/'
+    this.dir = dir
     this.cwd = cwd
     this.env = { ...env }
     this.flags = flags
