@@ -489,7 +489,7 @@ class Sidecar extends ReadyResource {
     return metadata
   }
 
-  async restart ({ platform = false, hard = false } = {}, client) {
+  async restart ({ platform = false, hard = true } = {}, client) {
     if (this.verbose) console.log(`${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
