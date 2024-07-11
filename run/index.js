@@ -151,10 +151,12 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
         const str = data.toString()
         const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
               str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
-              str.indexOf('devtools://devtools/bundled/panels/elements/elements.js') > -1 ||
+              str.indexOf('", source: devtools://devtools/') > -1 ||
               str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1') > -1 ||
+              str.indexOf('dev.i915.perf_stream_paranoid=0') > -1 ||
               str.indexOf('libva error: vaGetDriverNameByIndex() failed') > -1 ||
-              str.indexOf('GetVSyncParametersIfAvailable() failed') > -1
+              str.indexOf('GetVSyncParametersIfAvailable() failed') > -1 ||
+              (str.indexOf(':ERROR:') > -1 && /:ERROR:.+cache/.test(str))
         if (ignore) return
         stream.push({ tag: 'stderr', data })
       })
