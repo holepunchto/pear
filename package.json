@@ -110,7 +110,8 @@
     "unix-path-resolve": "^1.0.2",
     "url-file-url": "^1.0.2",
     "watch-drive": "^2.0.2",
-    "which-runtime": "^1.2.0"
+    "which-runtime": "^1.2.0",
+    "z32": "^1.1.0"
   },
   "devDependencies": {
     "bare-inspector": "^2.3.0",
