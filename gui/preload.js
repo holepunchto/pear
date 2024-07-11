@@ -18,7 +18,7 @@ module.exports = class PearGUI extends ReadyResource {
     })
 
     const onteardown = async (fn) => {
-      if (!state.isDecal) return
+      if (state.isDecal) return
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       await fn()
