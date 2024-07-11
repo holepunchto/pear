@@ -1,5 +1,10 @@
 # Pear Runtime Changelog
 
+## v1.3.4
+
+* Desktop - teardown fix
+* Wakeup & Config - linkData fix
+
 ## v1.3.3
 
 * Restart - --storage flag in restart flow bug fix
