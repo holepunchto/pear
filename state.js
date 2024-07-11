@@ -6,6 +6,7 @@ const path = isBare ? require('bare-path') : require('path')
 const url = isBare ? require('bare-url') : require('url')
 const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
+const z32 = require('z32')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
 const parseLink = require('./run/parse-link')
 const CWD = isBare ? os.cwd() : process.cwd()
@@ -94,7 +95,8 @@ module.exports = class State {
 
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
-    const fragment = hash ? hash.slice(1) : (isKeetInvite(pathname) ? pathname.slice(1) : null)
+    const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+    const fragment = hash ? hash.slice(1) : (isKeetInvite(segment) ? segment : null)
     const entrypoint = isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
@@ -121,7 +123,7 @@ module.exports = class State {
     this.trace = trace
     this.fragment = fragment
     this.entrypoint = entrypoint
-    this.linkData = isKeetInvite(pathname) ? pathname.slice(1) : entrypoint
+    this.linkData = segment
     this.link = link ? (link.startsWith(protocol) ? link : url.pathToFileURL(link).toString()) : null
     this.key = key
     this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
@@ -141,9 +143,12 @@ module.exports = class State {
 function isEntrypoint (pathname) {
   if (pathname === null || pathname === '/') return false
   // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
-  return isKeetInvite(pathname) === false
+  const segment = pathname = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+  return isKeetInvite(segment) === false
 }
 
-function isKeetInvite (pathname) {
-  return (pathname?.length > 100 || hypercoreid.isValid(pathname?.slice(1)))
+function isKeetInvite (segment) {
+  if (!segment || segment.length < 100) return false
+  try { z32.decode(segment) } catch { return false }
+  return true
 }
