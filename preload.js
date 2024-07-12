@@ -326,7 +326,6 @@ if (process.isMainFrame) {
         #ctrl {
            -webkit-app-region: drag;
            width: 100%;
-           height: 50px;
         }
       </style>
       <div id="ctrl"></div>
