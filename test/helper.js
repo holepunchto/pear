@@ -56,6 +56,7 @@ class Helper extends IPC {
     if (verbose) args.push('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
+    console.log('ARGS', args)
     return spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
   }
 
