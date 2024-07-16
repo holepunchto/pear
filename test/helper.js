@@ -15,17 +15,13 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const { pathname } = new URL(global.Pear.config.applink)
-const PLATFORM_DIR = global.Pear.config.applink.startsWith('pear:') ? global.Pear.config.pearDir : path.join(pathname, 'pear')
-console.log('global.Pear.config.applink', global.Pear.config.applink)
-console.log('global.Pear.config.pearDir', global.Pear.config.pearDir)
-console.log('PLATFORM_DIR', PLATFORM_DIR)
+const PLATFORM_DIR = global.Pear.config.applink.startsWith('pear:') ? global.Pear.config.pearDir : path.join(isWindows ? pathname.slice(1) : pathname, 'pear')
 class Helper extends IPC {
   #expectSidecar = false
   static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
   constructor (opts = {}) {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
-    console.log('platformDir', platformDir)
     const runtime = path.join(platformDir, 'current', BY_ARCH)
     const args = ['--sidecar']
     if (verbose) args.push('--verbose')
