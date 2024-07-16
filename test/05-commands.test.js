@@ -34,13 +34,18 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   plan(3)
   const testId = Math.floor(Math.random() * 100000)
   const argv = ['stage', '--json', 'test-' + testId, minimal]
+  console.log('preopen')
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  console.log('aftopen')
+  console.log('preeval')
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
+  console.log('afteval')
   const seen = new Set()
   const tags = []
   let link = null
+  console.log('pre for await')
   for await (const line of running.lineout) {
     const result = JSON.parse(line)
     if (!link) link = result?.data?.link
@@ -49,8 +54,13 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
+  console.log('aft for await')
+  console.log('preeval')
   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  console.log('afteval')
+  console.log('preclose')
   await running.inspector.close()
+  console.log('aftclose')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
   const { code } = await running.until.exit
   is(code, 0)
