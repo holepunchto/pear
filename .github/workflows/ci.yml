@@ -35,7 +35,7 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install Production Pear
-      run: npx pear
+      run: npm i -g pear && pear
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
