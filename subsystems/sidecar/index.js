@@ -15,6 +15,7 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
+const z32 = require('z32')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
 const Applings = require('./lib/applings')
@@ -585,11 +586,17 @@ class Sidecar extends ReadyResource {
           : hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key)
         )
       })
+      const isKeetInvite = (segment) => {
+        if (!segment || segment.length < 100) return false
+        try { z32.decode(segment) } catch { return false }
+        return true
+      }
 
       for (const app of matches) {
         const pathname = isWindows ? path.normalize(parsed.pathname.slice(1)) : parsed.pathname
-        const linkData = pathname.startsWith('/') ? pathname.slice(1) : pathname
-        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, linkData })
+        const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+        const fragment = parsed.hash ? parsed.hash.slice(1) : (isKeetInvite(segment) ? segment : null)
+        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
       }
 
       const min = selfwake ? 1 : 0
