@@ -34,13 +34,12 @@ jobs:
       run: npm install
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Production Pear
+      run: npx pear
     - name: Bootstrap
       run: npm run bootstrap
     - name: Run tests
       if: matrix.os != 'windows-latest'
       run: npm test
-    - name: Run Windows tests
-      if: matrix.os == 'windows-latest'
-      run: npm run test:win
     - name: Lint
       run: npm run lint
