@@ -66,6 +66,7 @@ class Helper extends IPC {
     const iterable = new Readable({ objectMode: true })
     const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
     const onLine = (line) => {
+      console.log('ON LINE', line)
       if (line.indexOf('teardown') > -1) {
         iterable.push({ tag: 'teardown', data: line })
         return
