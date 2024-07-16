@@ -3,6 +3,7 @@ import os from 'bare-os'
 import inspector from 'bare-inspector'
 import ReadyResource from 'ready-resource'
 import { Inspector } from 'pear-inspect'
+console.log('HARNESS')
 const CWD = os.cwd()
 class Harness extends ReadyResource {
   inspector = null

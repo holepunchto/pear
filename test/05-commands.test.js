@@ -34,7 +34,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   plan(3)
   const testId = Math.floor(Math.random() * 100000)
   const argv = ['stage', '--json', 'test-' + testId, minimal]
-  console.log('preopen')
+  console.log('preopen', harness)
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   console.log('aftopen')
   console.log('preeval')
