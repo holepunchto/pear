@@ -22,7 +22,9 @@ const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
-  const { drive, pathname } = parseLink(link)
+  const parsedLink = parseLink(link)
+  const drive = parsedLink.drive
+  const pathname = !isWindows || !parsedLink.pathname?.length ? parsedLink.pathname : path.normalize(parsedLink.pathname.slice(1))
   const { key } = drive
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
