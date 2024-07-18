@@ -14,9 +14,8 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const PLATFORM_DIR = global.Pear.config.pearDir
 const { pathname } = new URL(global.Pear.config.applink)
-
+const PLATFORM_DIR = global.Pear.config.applink.startsWith('pear:') ? global.Pear.config.pearDir : path.join(isWindows ? pathname.slice(1) : pathname, 'pear')
 class Helper extends IPC {
   #expectSidecar = false
   static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
@@ -50,20 +49,25 @@ class Helper extends IPC {
     this.opts = opts
   }
 
-  static async open (link, { tags = [] } = {}, opts = {}) {
-    if (!link) throw new Error('Key is missing')
+  static run (link, opts = {}) {
+    if (!link) throw new Error('Link is missing')
     const verbose = Bare.argv.includes('--verbose')
     const args = ['run', '-t', link]
     if (verbose) args.push('--verbose')
-
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+    console.log('ARGS', args)
+    return spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+  }
+
+  static async open (link, { tags = [] } = {}, opts = {}) {
+    const subprocess = this.run(link, opts)
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
     const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
     const onLine = (line) => {
+      console.log('ON LINE', line)
       if (line.indexOf('teardown') > -1) {
         iterable.push({ tag: 'teardown', data: line })
         return

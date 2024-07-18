@@ -21,6 +21,7 @@
   "author": "Holepunch",
   "dependencies": {
     "bare-inspector": "^2.0.0",
+    "bare-os": "^2.4.0",
     "pear": "file:../../..",
     "pear-inspect": "^1.1.1",
     "ready-resource": "^1.1.1"
