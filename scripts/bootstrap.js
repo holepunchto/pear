@@ -21,7 +21,7 @@ const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
-try { fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file') } catch (e) { console.error(e) }
+try { fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file') } catch (e) { if (e.code === 'EPERM') console.error(e) }
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
 if (isWindows === false) {
