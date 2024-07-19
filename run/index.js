@@ -22,9 +22,8 @@ const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
-  const parsedLink = parseLink(link)
-  const drive = parsedLink.drive
-  const pathname = !isWindows || !parsedLink.pathname?.length ? parsedLink.pathname : path.normalize(parsedLink.pathname.slice(1))
+  const { drive, pathname } = parseLink(link)
+  const entry = !isWindows || !pathname?.length ? pathname : path.normalize(pathname.slice(1))
   const { key } = drive
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
@@ -38,7 +37,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   let base = null
   if (key === null) {
     try {
-      dir = fs.statSync(pathname).isDirectory() ? pathname : path.dirname(pathname)
+      dir = fs.statSync(entry).isDirectory() ? entry : path.dirname(entry)
     } catch { /* ignore */ }
     base = project(dir, pathname, cwd)
     dir = base.dir
@@ -177,8 +176,10 @@ function project (dir, origin, cwd) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
-  if (parent === '/' || parent === '\\' || path.relative(parent, cwd).startsWith('..')) {
-    const condition = origin === cwd ? `at "${cwd}"` : origin.includes(cwd) ? `from "${origin}" up to "${cwd}"` : `at "${origin}"`
+  if (parent === dir || path.relative(parent, cwd).startsWith('..')) {
+    const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
+    const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
+    const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
     throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
   }
   return project(parent, origin, cwd)
