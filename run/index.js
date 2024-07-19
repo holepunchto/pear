@@ -20,6 +20,8 @@ const {
 const parseLink = require('./parse-link')
 const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
+const { PLATFORM_LOCK } = require('../constants')
+const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -33,6 +35,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   let cwd = os.cwd()
+  const originalCwd = cwd
   let dir = cwd
   let base = null
   if (key === null) {
@@ -42,8 +45,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     base = project(dir, pathname, cwd)
     dir = base.dir
     if (dir !== cwd) {
-      Bare.on('exit', () => os.chdir(cwd)) // TODO: remove this once Pear.shutdown is used to close
-      teardown(() => os.chdir(cwd))
+      Bare.on('exit', () => os.chdir(originalCwd)) // TODO: remove this once Pear.shutdown is used to close
+      teardown(() => os.chdir(originalCwd))
       os.chdir(dir)
       cwd = dir
     }
@@ -101,7 +104,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (type === 'terminal') {
     const state = new State({ flags, link, dir, cmdArgs, cwd })
 
-    state.update({ host, id })
+    state.update({ host, id, type })
 
     if (state.error) {
       console.error(state.error)
@@ -112,7 +115,19 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     state.update({ config: await ipc.config() })
 
     const pear = new API(ipc, state)
+
     global.Pear = pear
+
+    const reloadSubscriber = ipc.messages({ type: 'pear/reload' })
+    reloadSubscriber.on('data', async () => {
+      ipc.stream.destroy()
+
+      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
+      await fsext.waitForLock(fd)
+      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
+
+      await global.Pear.restart()
+    })
 
     const protocol = new Module.Protocol({
       exists (url) {
