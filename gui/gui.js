@@ -357,7 +357,7 @@ class ContextMenu {
   }
 
   close () {
-    this.menu.closePopup()
+    this.menu?.closePopup()
   }
 
   destroy () {
@@ -591,7 +591,7 @@ class App {
             this.close()
             this.quit()
           }
-          : (isLinux ? (app) => linuxViewSize(app, app.tbh) : null)),
+          : (isLinux ? (app) => linuxViewSize(app) : null)),
         interload: async (app) => {
           state.update({ top: app.win })
           try {
@@ -603,7 +603,7 @@ class App {
             const { bail } = await this.starting
             if (bail) return false
             state.update({ config: await this.ipc.config() })
-            applyGuiOptions(app.win, state.config.options.gui || state.config.options, app.tbh)
+            applyGuiOptions(app.win, state.config.options.gui || state.config.options)
             if (app.closing) return false
             return true
           } catch (err) {
@@ -667,22 +667,22 @@ class App {
   }
 }
 
-function linuxViewSize ({ win, view }, tbh = 0) {
+function linuxViewSize ({ win, view }) {
   const [width, height] = win.getSize()
-  view.setBounds({ x: 0, y: tbh, width, height: height - tbh })
+  view.setBounds({ x: 0, y: 0, width, height })
   view.setAutoResize({
     width: true,
     height: true
   })
 }
 
-function applyGuiOptions (win, opts, tbh = 0) {
+function applyGuiOptions (win, opts) {
   for (const [key, value] of groupings(win, opts)) {
-    applyGuiOption(win, key, value, tbh)
+    applyGuiOption(win, key, value)
   }
 }
 
-function applyGuiOption (win, key, value, tbh = 0) {
+function applyGuiOption (win, key, value) {
   switch (key) {
     case 'width:height': {
       const [currentWidth, currentHeight] = win.getSize()
@@ -711,7 +711,7 @@ function applyGuiOption (win, key, value, tbh = 0) {
       win.once('enter-full-screen', () => {
         const { width, height } = win.getBounds()
         const [view] = win.getBrowserViews()
-        view.setBounds({ x: 0, y: tbh, width, height: height - tbh })
+        view.setBounds({ x: 0, y: 0, width, height })
       })
       return
     }
@@ -795,7 +795,6 @@ class GuiCtrl {
     this.entry = `${this.sidecar}${entry}`
     this.sessname = sessname
     this.appkin = appkin
-    this.tbh = this.state.tbh
   }
 
   get session () {
@@ -1109,7 +1108,7 @@ class Window extends GuiCtrl {
     })
 
     if (options.afterNativeViewCreated) options.afterNativeViewCreated(this)
-    this.view.setBounds({ x: 0, y: this.tbh, width, height: height - this.tbh })
+    this.view.setBounds({ x: 0, y: 0, width, height })
     const viewLoading = this.view.webContents.loadURL(this.entry)
     viewInitialized()
     this.view.webContents.once('did-finish-load', () => { viewLoaded() })
@@ -1130,11 +1129,6 @@ class Window extends GuiCtrl {
 
     this.opening = false
 
-    this.win?.on('resize', (e) => {
-      e.preventDefault()
-      setImmediate(() => { this.view.setBounds(this.view.getBounds()) })
-    })
-
     super.open()
     return !this.closed
   }
@@ -1143,10 +1137,15 @@ class Window extends GuiCtrl {
     await this.#viewInitialized
     this.win.setBrowserView(this.view)
     const { width, height } = this.win.getBounds()
-    this.view.setBounds({ x: 0, y: this.tbh, width, height: height - this.tbh })
+    this.view.setBounds({ x: 0, y: 0, width, height })
     this.view.setAutoResize({
       width: true,
       height: true
+    })
+    this.win.on('resize', (e) => {
+      e.preventDefault()
+      const { width, height } = this.win.getContentBounds()
+      this.view.setBounds({ x: 0, y: 0, width, height })
     })
     this.win.focusOnWebView()
   }
@@ -1197,7 +1196,7 @@ class Window extends GuiCtrl {
     await fullscreen
     const { width, height } = this.win.getBounds()
     const [view] = this.win.getBrowserViews()
-    view.setBounds({ x: 0, y: this.tbh, width, height: height - this.tbh })
+    view.setBounds({ x: 0, y: 0, width, height })
     return result
   }
 
@@ -1328,9 +1327,9 @@ class View extends GuiCtrl {
 
   #bounds (options) {
     const bounds = this.win.getBounds()
-    const adjustedHeight = bounds.height - this.tbh
+    const adjustedHeight = bounds.height - 0
     const { width = bounds.width, height = adjustedHeight } = options
-    let { x = 0, y = this.tbh } = options
+    let { x = 0, y = 0 } = options
     if (x < 0 || Object.is(x, -0)) x = bounds.width + x // subtraction, x is negative
     if (y < 0 || Object.is(y, -0)) y = adjustedHeight + y // subtraction, y is negative
 
@@ -1620,10 +1619,8 @@ class PearGUI extends ReadyResource {
 
   async askForMediaAccess ({ id, media }) {
     if (isLinux || isWindows) return false
-    if (media === 'screen') { // NOTE: remove after electron upgrade
-      const ctrl = this.get(id)
-      const srcid = await ctrl.getMediaSourceId()
-      return srcid > -1
+    if (media === 'screen') {
+      return electron.systemPreferences.getMediaAccessStatus(media)
     }
 
     return electron.systemPreferences.askForMediaAccess(media)

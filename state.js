@@ -149,6 +149,5 @@ module.exports = class State {
     this.clearAppStorage = clearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.constructor.injestPackage(this, pkg)
-    this.tbh = 0
   }
 }
