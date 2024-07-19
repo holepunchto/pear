@@ -176,7 +176,7 @@ function project (dir, origin, cwd) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
-  if (parent === dir || path.relative(parent, cwd).startsWith('..')) {
+  if (parent === dir || parent.startsWith(cwd) === false) {
     const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
     const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
     const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
