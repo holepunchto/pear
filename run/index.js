@@ -23,7 +23,7 @@ const { isWindows } = require('which-runtime')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
-  const entry = !isWindows || !pathname?.length ? pathname : path.normalize(pathname.slice(1))
+  const entry = isWindows ? path.normalize(pathname.slice(1)) : pathname
   const { key } = drive
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
