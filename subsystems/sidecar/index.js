@@ -35,6 +35,7 @@ const {
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
+const SharedState = require('../../state')
 const State = require('./state')
 const { preferences } = State
 const ops = {
@@ -588,8 +589,9 @@ class Sidecar extends ReadyResource {
 
       for (const app of matches) {
         const pathname = isWindows ? path.normalize(parsed.pathname.slice(1)) : parsed.pathname
-        const linkData = pathname.startsWith('/') ? pathname.slice(1) : pathname
-        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, linkData })
+        const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+        const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
+        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
       }
 
       const min = selfwake ? 1 : 0

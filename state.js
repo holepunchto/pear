@@ -76,6 +76,19 @@ module.exports = class State {
     return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, pearDir }
   }
 
+  static isKeetInvite (segment) {
+    if (!segment || segment.length < 100) return false
+    try { z32.decode(segment) } catch { return false }
+    return true
+  }
+
+  static isEntrypoint (pathname) {
+    if (pathname === null || pathname === '/') return false
+    // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
+    const segment = pathname = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+    return this.isKeetInvite(segment) === false
+  }
+
   update (state) {
     Object.assign(this, state)
     this.#onupdate()
@@ -96,8 +109,8 @@ module.exports = class State {
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
     const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-    const fragment = hash ? hash.slice(1) : (isKeetInvite(segment) ? segment : null)
-    const entrypoint = isEntrypoint(pathname) ? pathname : null
+    const fragment = hash ? hash.slice(1) : (this.constructor.isKeetInvite(segment) ? segment : null)
+    const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
 
@@ -138,17 +151,4 @@ module.exports = class State {
     this.constructor.injestPackage(this, pkg)
     this.tbh = 0
   }
-}
-
-function isEntrypoint (pathname) {
-  if (pathname === null || pathname === '/') return false
-  // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
-  const segment = pathname = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-  return isKeetInvite(segment) === false
-}
-
-function isKeetInvite (segment) {
-  if (!segment || segment.length < 100) return false
-  try { z32.decode(segment) } catch { return false }
-  return true
 }
