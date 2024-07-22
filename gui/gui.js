@@ -1144,7 +1144,7 @@ class Window extends GuiCtrl {
     })
     this.win.on('resize', (e) => {
       e.preventDefault()
-      const { width, height } = this.win.getContentBounds()
+      const [width, height] = this.win.getSize()
       this.view.setBounds({ x: 0, y: 0, width, height })
     })
     this.win.focusOnWebView()
