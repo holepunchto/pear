@@ -53,49 +53,6 @@
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
-    a:visited, a:active, a { 
-      color: #95E6CB;
-      outline: none;
-    }
-    #bar {
-      background: rgba(55, 60, 72, 0.6);
-      backdrop-filter: blur(64px);
-      -webkit-app-region: drag;
-      height: 50px;
-      padding-top: 12px;
-      padding-right: 8px;
-      padding-left: 8px;
-      margin-left: auto;
-      margin-right: auto;
-      border-radius: none;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-      color: #FFF;
-      white-space: nowrap;
-      box-sizing: border-box;
-      position: relative;
-      z-index: 2;
-      width: calc(100vw + 2px);
-      left: -2px;
-      top: -2px;
-      display: none;
-    }
-    #bar > * {
-      -webkit-app-region: no-drag;
-    }
-
-    #avatar {
-      height: 28px;
-      width: 28px;
-      float: right;
-      margin-right: 2px;
-      border-radius: 8px;
-      display: none;
-    }
-
-    #win-ctrl { 
-      display: none;
-    }
 
     #window-controls {
       -webkit-app-region: drag;
@@ -110,175 +67,12 @@
       top: 0;
     }
 
-    pear-ctrl[data-platform=darwin] {
-      margin-top: 24px;
-      margin-left: 12px;
-    }
-
-    .dialog pear-ctrl[data-platform=darwin] {
+    .pear-ctrl[data-platform=darwin] {
       margin-top: -32px;
     }
-    
-    .dialog.darwin #bar {
-      background: rgba(0, 0, 0, 0);
-      display: block;
-    }
-
-    .dialog.darwin #avatar {
-      display: none;
-    }
-
   </style>
 </head>
 <body>
-  <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <style>
-    /* windows styles, every selector *MUST* be preceded by .win32 */
-    .win32 #win-ctrl { 
-      display: table-row;
-      float: right;
-      margin-left: .6em;
-      margin-top: 0.22em;
-      border-spacing: 0.3em 0;
-    }
-    .win32 #win-ctrl > .win-ctrl {
-      opacity: 0.8;
-      height: 24px;
-      width: 24px;
-      display: table-cell;
-      vertical-align: middle;
-      text-align: center;
-    }
-    .win32 #win-ctrl > .win-ctrl:hover {
-      opacity: 1;
-    }
-
-    .win32 #bar {
-      width: calc(100vw + 8px);
-      left: -4px;
-    }
-
-    #win-ctrl.max #win-max  {
-       display: none;
-    }
-    #win-ctrl.max #win-restore  {
-       display: table-cell;
-    }
-    #win-ctrl #win-restore  {
-       display: none;
-    }
-  </style>
-  <template id="decal-upgrade-to-beta-tmpl">
-    <style>
-      h1 {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 20px;
-      }
-
-      ul {
-        list-style-type: none;
-        padding: 0;
-        font-size: 14px;
-      }
-
-      ul > li {
-        margin-bottom: 12px;
-      }
-
-      p {
-        font-size: 14px;
-        margin-top: 1em;
-      }
-
-      ul > li::before {
-        content: '✨';
-        margin-right: 4px;
-      }
-      .advise {
-        line-height: 1.5em;
-      }
-    </style>
-    <div>
-      <h1>Upgrade Keet to try new features!</h2>
-      <p> Upgrade from ALPHA to BETA and access awesome new features such as:</p>
-      <ul>
-        <li>Create BIG ROOMS with thousands of peers</li>
-        <li>Message reactions! 🤘🚀😎</li>
-        <li>Improved performance for large rooms</li>
-        <li>New moderation features</li>
-        <li>... and much more!</li>
-      </ul>
-      <p class="advise">Note that Keet BETA is not compatible with Keet mobile <2.0<br>You can switch between BETA and ALPHA anytime. No data will be lost!</p>
-    </div>
-  </template>
-  <template id="decal-downgrade-to-alpha-tmpl">
-    <style>
-      h1 {
-        font-size: 24px;
-        font-weight: bold;
-        margin-bottom: 20px;
-      }
-      p {
-        font-size: 14px;
-        margin-top: 1em;
-      }
-    </style>
-    <div>
-      <h1>Switch Keet back to ALPHA</h1>
-      <p>Switch from BETA to ALPHA to see your old rooms.</p>
-      <p>You won't be able to use the new Keet features while you are on ALPHA.</p>
-      <p>You can switch back to BETA again anytime. No data will be lost!</p>
-    </div>
-  </template>
-  <template id="decal-upgrade-to-beta-button-tmpl">
-    <style>
-      #text {
-        background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-fill-color: transparent;
-      }
-      svg {
-        margin-top: 3px;
-        margin-bottom: -4px;
-        margin-left: -1px;
-        margin-right: 2px;
-      }
-    </style>
-    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11.9258 5.62891L11.4688 3.90625L9.74609 3.44922C9.60547 3.37891 9.5 3.23828 9.5 3.0625C9.5 2.92188 9.60547 2.78125 9.74609 2.71094L11.4688 2.21875L11.9258 0.53125C11.9961 0.390625 12.1367 0.25 12.3125 0.25C12.4531 0.25 12.5938 0.390625 12.6641 0.53125L13.1562 2.21875L14.8438 2.71094C14.9844 2.78125 15.125 2.92188 15.125 3.0625C15.125 3.23828 14.9844 3.37891 14.8438 3.44922L13.1562 3.90625L12.6641 5.62891C12.5938 5.76953 12.4531 5.875 12.3125 5.875C12.1367 5.875 11.9961 5.76953 11.9258 5.62891ZM4.54297 12.4492C4.96484 12.8359 5.14062 13.3633 5.03516 13.9258L4.71875 15.8594L6.44141 14.9453C6.93359 14.6992 7.53125 14.6992 8.02344 14.9453L9.74609 15.8594L9.42969 13.9258C9.32422 13.3984 9.5 12.8359 9.92188 12.4492L11.3281 11.043L9.35938 10.7617C8.83203 10.6914 8.33984 10.3398 8.09375 9.84766L7.21484 8.08984L6.37109 9.84766C6.125 10.3398 5.63281 10.6914 5.10547 10.7617L3.13672 11.043L4.54297 12.4492ZM6.47656 5.80469C6.79297 5.17188 7.67188 5.17188 7.98828 5.80469L9.60547 9.10938L13.2617 9.63672C13.9297 9.74219 14.2109 10.5859 13.7188 11.0781L11.082 13.6445L11.7148 17.2656C11.8203 17.9688 11.1172 18.4961 10.4844 18.1797L7.21484 16.457L3.98047 18.1797C3.34766 18.4961 2.64453 17.9688 2.75 17.2656L3.38281 13.6445L0.746094 11.0781C0.253906 10.5859 0.5 9.74219 1.20312 9.63672L4.85938 9.10938L6.47656 5.80469ZM15.5469 8.82812L14.2109 8.44141C14.0703 8.40625 14 8.26562 14 8.125C14 8.01953 14.0703 7.87891 14.2109 7.84375L15.5469 7.45703L15.9336 6.12109C15.9688 5.98047 16.1094 5.875 16.25 5.875C16.3555 5.875 16.4961 5.98047 16.5312 6.12109L16.918 7.45703L18.2539 7.84375C18.3945 7.87891 18.5 8.01953 18.5 8.125C18.5 8.26562 18.3945 8.40625 18.2539 8.44141L16.918 8.82812L16.5312 10.1641C16.4961 10.3047 16.3555 10.375 16.25 10.375C16.1094 10.375 15.9688 10.3047 15.9336 10.1641L15.5469 8.82812Z" fill="url(#paint0_linear_6964_93237)"/>
-        <defs>
-        <linearGradient id="paint0_linear_6964_93237" x1="9.5" y1="1" x2="9.5" y2="17" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#00FFCF"/>
-        <stop offset="1" stop-color="#4AA6FF"/>
-        </linearGradient>
-        </defs>
-    </svg>
-    <span id="text">Upgrade to Beta</span>
-  </template>
-  <template id="decal-downgrade-to-alpha-button-tmpl">
-    <style>
-      #text {
-        background: linear-gradient(180deg, #00FFCF 0%, #4AA6FF 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-fill-color: transparent;
-      }
-      svg {
-        margin-top: 3px;
-        margin-bottom: -4px;
-        margin-left: -1px;
-        margin-right: 2px;
-      }
-    </style>
-    <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 9.21484V8.93359C1.17578 6.12109 3.53125 3.90625 6.34375 3.90625H13.8672L11.9336 1.97266C11.582 1.65625 11.582 1.12891 11.9336 0.777344C12.25 0.460938 12.7773 0.460938 13.1289 0.777344L16.5039 4.15234C16.8203 4.50391 16.8203 5.03125 16.5039 5.34766L13.1289 8.72266C12.7773 9.07422 12.25 9.07422 11.9336 8.72266C11.582 8.40625 11.582 7.87891 11.9336 7.52734L13.8672 5.59375H6.34375C4.41016 5.59375 2.79297 7.10547 2.6875 9.03906V9.32031C2.65234 9.77734 2.23047 10.1289 1.77344 10.0938C1.31641 10.0938 0.964844 9.67188 1 9.21484ZM18.9648 9.32031H19L18.9648 9.60156C18.7891 12.4141 16.4688 14.5938 13.6211 14.5938H6.09766L8.03125 16.5273C8.38281 16.8789 8.38281 17.4062 8.03125 17.7227C7.71484 18.0742 7.1875 18.0742 6.87109 17.7227L3.49609 14.3477C3.14453 14.0312 3.14453 13.5039 3.49609 13.1523L6.87109 9.8125C7.1875 9.46094 7.71484 9.46094 8.03125 9.8125C8.38281 10.1289 8.38281 10.6562 8.03125 10.9727L6.09766 12.9062H13.6211C15.5547 12.9062 17.1719 11.4297 17.2773 9.49609L17.3125 9.21484C17.3125 8.75781 17.7344 8.40625 18.1914 8.40625C18.6484 8.44141 19 8.86328 18.9648 9.32031Z" fill="#26D2E8"/>
-    </svg>
-    <span id="text">Switch to Alpha</span>
-  </template>
   <template id="decal-dialog-tmpl">
     <style>
      #dialog {
@@ -440,119 +234,6 @@
       }
     })
   </script>
-  <div id="bar">
-    <script type="module">
-      import constants from './constants.js'
-      const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
-      if (hypercoreid.normalize(Pear.config.key) !== hypercoreid.normalize(constants.ALIASES.keet)) {
-        if (Pear.config.options.platform?.__legacyTitlebar) {
-          document.getElementById('bar').style.display = 'block'
-          const winctrl = document.getElementById('window-controls')
-          const clone = winctrl.cloneNode()
-          global.winctrl = clone
-        }
-      }
-    </script>
-    <div id="win-ctrl">
-      <div id="win-min" class="win-ctrl">
-        <svg width="18" height="2" viewBox="0 0 18 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0.5625C0 0.28125 0.246094 0 0.5625 0H17.4375C17.7188 0 18 0.28125 18 0.5625C18 0.878906 17.7188 1.125 17.4375 1.125H0.5625C0.246094 1.125 0 0.878906 0 0.5625Z" fill="white"/>
-        </svg>
-      </div>
-      <div id="win-max" class="win-ctrl">
-        <svg width="18" height="17" viewBox="0 0 18 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 2.625C0 1.39453 0.984375 0.375 2.25 0.375H15.75C16.9805 0.375 18 1.39453 18 2.625V13.875C18 15.1406 16.9805 16.125 15.75 16.125H2.25C0.984375 16.125 0 15.1406 0 13.875V2.625ZM1.125 2.625V6H16.875V2.625C16.875 2.02734 16.3477 1.5 15.75 1.5H2.25C1.61719 1.5 1.125 2.02734 1.125 2.625ZM1.125 7.125V13.875C1.125 14.5078 1.61719 15 2.25 15H15.75C16.3477 15 16.875 14.5078 16.875 13.875V7.125H1.125Z" fill="white"/>
-        </svg>
-      </div>
-      <div id="win-restore" class="win-ctrl">
-        <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15.1875 1.375H7.3125C6.36328 1.375 5.625 2.14844 5.625 3.0625V3.625H4.5V3.0625C4.5 1.51562 5.73047 0.25 7.3125 0.25H15.1875C16.7344 0.25 18 1.51562 18 3.0625V10.9375C18 12.5195 16.7344 13.75 15.1875 13.75H14.625V12.625H15.1875C16.1016 12.625 16.875 11.8867 16.875 10.9375V3.0625C16.875 2.14844 16.1016 1.375 15.1875 1.375ZM11.25 4.75C12.4805 4.75 13.5 5.76953 13.5 7V16C13.5 17.2656 12.4805 18.25 11.25 18.25H2.25C0.984375 18.25 0 17.2656 0 16V7C0 5.76953 0.984375 4.75 2.25 4.75H11.25ZM11.25 5.875H2.25C1.61719 5.875 1.125 6.40234 1.125 7V9.25H12.375V7C12.375 6.40234 11.8477 5.875 11.25 5.875ZM2.25 17.125H11.25C11.8477 17.125 12.375 16.6328 12.375 16V10.375H1.125V16C1.125 16.6328 1.61719 17.125 2.25 17.125Z" fill="white"/>
-        </svg>          
-      </div>
-      <div id="win-close" class="win-ctrl">
-        <svg id="win-close" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14.8906 0.550781C15.1016 0.339844 15.4883 0.339844 15.6992 0.550781C15.9102 0.761719 15.9102 1.14844 15.6992 1.35938L8.77344 8.25L15.6992 15.1758C15.9102 15.3867 15.9102 15.7734 15.6992 15.9844C15.4883 16.1953 15.1016 16.1953 14.8906 15.9844L8 9.05859L1.07422 15.9844C0.863281 16.1953 0.476562 16.1953 0.265625 15.9844C0.0546875 15.7734 0.0546875 15.3867 0.265625 15.1758L7.19141 8.25L0.265625 1.35938C0.0546875 1.14844 0.0546875 0.761719 0.265625 0.550781C0.476562 0.339844 0.863281 0.339844 1.07422 0.550781L8 7.47656L14.8906 0.550781Z" fill="white"/>
-        </svg>
-      </div>
-    </div>
-    <script type="module">
-      document.querySelector('#bar').addEventListener('dblclick', async (evt) => {
-        if (evt.target !== evt.currentTarget) return
-        if (await Pear.Window.self.isMaximized()) await Pear.Window.self.restore()
-        else await Pear.Window.self.maximize()
-      })
-      if (process.platform === 'win32') {
-        document.querySelector('#win-min').addEventListener('click', async () => { await Pear.Window.self.minimize() })
-        document.querySelector('#win-max').addEventListener('click', async () => { 
-          await Pear.Window.self.maximize() 
-          document.querySelector('#win-ctrl').classList.add('max')
-        })
-        document.querySelector('#win-restore').addEventListener('click', async () => { 
-          await Pear.Window.self.restore()
-          document.querySelector('#win-ctrl').classList.remove('max')
-        })
-      }
-    </script>
-    <svg id="avatar" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0 12.8C0 8.31958 0 6.07937 0.871948 4.36808C1.63893 2.86278 2.86278 1.63893 4.36808 0.871948C6.07937 0 8.31958 0 12.8 0H15.2C19.6804 0 21.9206 0 23.6319 0.871948C25.1372 1.63893 26.3611 2.86278 27.1281 4.36808C28 6.07937 28 8.31958 28 12.8V15.2C28 19.6804 28 21.9206 27.1281 23.6319C26.3611 25.1372 25.1372 26.3611 23.6319 27.1281C21.9206 28 19.6804 28 15.2 28H12.8C8.31958 28 6.07937 28 4.36808 27.1281C2.86278 26.3611 1.63893 25.1372 0.871948 23.6319C0 21.9206 0 19.6804 0 15.2V12.8Z" fill="none"/>
-      <mask id="mask0_661:753" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
-      <rect width="28" height="28" rx="8" fill="#F27983"/>
-      </mask>
-      <g mask="url(#mask0_661:753)">
-      <path d="M14 14C16.1875 14 18 12.2188 18 10C18 7.8125 16.1875 6 14 6C11.7812 6 10 7.8125 10 10C10 12.2188 11.7812 14 14 14ZM16.7812 15H16.25C15.5625 15.3438 14.8125 15.5 14 15.5C13.1875 15.5 12.4062 15.3438 11.7188 15H11.1875C8.875 15 7 16.9062 7 19.2188V20.5C7 21.3438 7.65625 22 8.5 22H19.5C20.3125 22 21 21.3438 21 20.5V19.2188C21 16.9062 19.0938 15 16.7812 15Z" fill="white" fill-opacity="0.24"/>
-      </g>
-      <path d="M4.36808 27.1281L3.91409 28.0191L4.36808 27.1281ZM27.1281 23.6319L26.237 23.1779L27.1281 23.6319ZM23.6319 27.1281L23.1779 26.237L23.6319 27.1281ZM23.6319 0.871948L23.1779 1.76295L23.6319 0.871948ZM27.1281 4.36808L28.0191 3.91409L27.1281 4.36808ZM4.36808 0.871948L3.91409 -0.0190586L4.36808 0.871948ZM0.871948 4.36808L-0.0190586 3.91409L0.871948 4.36808ZM12.8 1H15.2V-1H12.8V1ZM27 12.8V15.2H29V12.8H27ZM15.2 27H12.8V29H15.2V27ZM1 15.2V12.8H-1V15.2H1ZM12.8 27C10.5433 27 8.9109 26.9992 7.62705 26.8943C6.35487 26.7904 5.51325 26.5892 4.82207 26.237L3.91409 28.0191C4.9342 28.5388 6.06833 28.7736 7.46418 28.8877C8.84837 29.0008 10.5763 29 12.8 29V27ZM-1 15.2C-1 17.4237 -1.00078 19.1516 -0.887685 20.5358C-0.773639 21.9317 -0.538833 23.0658 -0.0190586 24.0859L1.76295 23.1779C1.41078 22.4868 1.20961 21.6451 1.10567 20.373C1.00078 19.0891 1 17.4567 1 15.2H-1ZM4.82207 26.237C3.50493 25.5659 2.43407 24.4951 1.76295 23.1779L-0.0190586 24.0859C0.843802 25.7794 2.22063 27.1562 3.91409 28.0191L4.82207 26.237ZM27 15.2C27 17.4567 26.9992 19.0891 26.8943 20.373C26.7904 21.6451 26.5892 22.4868 26.237 23.1779L28.0191 24.0859C28.5388 23.0658 28.7736 21.9317 28.8877 20.5358C29.0008 19.1516 29 17.4237 29 15.2H27ZM15.2 29C17.4237 29 19.1516 29.0008 20.5358 28.8877C21.9317 28.7736 23.0658 28.5388 24.0859 28.0191L23.1779 26.237C22.4868 26.5892 21.6451 26.7904 20.373 26.8943C19.0891 26.9992 17.4567 27 15.2 27V29ZM26.237 23.1779C25.5659 24.4951 24.4951 25.5659 23.1779 26.237L24.0859 28.0191C25.7794 27.1562 27.1562 25.7794 28.0191 24.0859L26.237 23.1779ZM15.2 1C17.4567 1 19.0891 1.00078 20.373 1.10567C21.6451 1.20961 22.4868 1.41078 23.1779 1.76295L24.0859 -0.0190586C23.0658 -0.538833 21.9317 -0.773639 20.5358 -0.887685C19.1516 -1.00078 17.4237 -1 15.2 -1V1ZM29 12.8C29 10.5763 29.0008 8.84837 28.8877 7.46418C28.7736 6.06833 28.5388 4.9342 28.0191 3.91409L26.237 4.82207C26.5892 5.51325 26.7904 6.35487 26.8943 7.62705C26.9992 8.9109 27 10.5433 27 12.8H29ZM23.1779 1.76295C24.4951 2.43407 25.5659 3.50493 26.237 4.82207L28.0191 3.91409C27.1562 2.22063 25.7794 0.843802 24.0859 -0.0190586L23.1779 1.76295ZM12.8 -1C10.5763 -1 8.84837 -1.00078 7.46418 -0.887685C6.06833 -0.773639 4.9342 -0.538833 3.91409 -0.0190586L4.82207 1.76295C5.51325 1.41078 6.35487 1.20961 7.62705 1.10567C8.9109 1.00078 10.5433 1 12.8 1V-1ZM1 12.8C1 10.5433 1.00078 8.9109 1.10567 7.62705C1.20961 6.35487 1.41078 5.51325 1.76295 4.82207L-0.0190586 3.91409C-0.538833 4.9342 -0.773639 6.06833 -0.887685 7.46418C-1.00078 8.84837 -1 10.5763 -1 12.8H1ZM3.91409 -0.0190586C2.22063 0.843802 0.843802 2.22063 -0.0190586 3.91409L1.76295 4.82207C2.43407 3.50493 3.50493 2.43407 4.82207 1.76295L3.91409 -0.0190586Z" fill="white" fill-opacity="0.24"/>
-    </svg>
-
-    <decal-tier>
-      <span slot="tier"></span>
-      <template id="decal-tier-tmpl">
-        <style>
-          #tier {
-            float: right;
-            color: #F5DDF3;
-            font-size: 12px;
-            background: rgba(135, 71, 125, 0.5);
-            border-radius: 8px;
-            padding: 1.25em;
-            padding-top: 0;
-            padding-bottom: 0;
-            font-weight: 600;
-            letter-spacing: .0125rem;
-            margin-right: .75em;
-            height: 28px;
-            box-sizing: border-box;
-            line-height: 28px;
-          }
-        </style>
-        <span id="tier"><slot name="tier">TIER</slot></span>
-      </template>
-      <script type="module">
-        customElements.define('decal-tier', class extends HTMLElement {
-          tier = null
-          connected = false
-          async update (config = {}) {
-            this.tier = config.tier === 'production' ? null : (config.tier || '')
-            if (this.tier === null) {
-              const tier = this.root.querySelector('#tier')
-              if (tier && tier.isConnected) tier.remove()
-              return
-            }
-            if (this.connected === false) {
-              this.root.appendChild(this.template.cloneNode(true))
-              this.connected = true
-            }
-            this.querySelector('[slot="tier"]').innerHTML = this.tier.toUpperCase()
-          }
-          constructor() {
-            super()
-            this.template = document.querySelector('#decal-tier-tmpl').content
-            this.root = this.attachShadow({mode: 'open'})
-          }
-        })
-      </script>
-    </decal-tier>
-  </div>
   <decal-report>
     <span slot="headline"></span>
     <span slot="tagline"></span>
@@ -824,7 +505,6 @@
           this.show()
           this.ipc = ipc
           await ipc.afterViewLoaded({ id: Pear.Window.self.id })
-          document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
           await ipc.attachMainView({ id: Pear.Window.self.id })
@@ -841,30 +521,6 @@
     const { message, messages } = Pear
     const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
-
-    let avatar = document.querySelector('#avatar')
-
-    messages({ type: 'pear/handover' }, () => {
-      // legacy, ignore
-    })
-
-    const avaClick = async () => {
-      await message({ type: 'pear/click', name: 'avatar' })
-    }
-
-    const updateAvatar = (src) => {
-      if (!src) return
-      if (!(avatar instanceof Image)) {
-        const img = document.createElement('img')
-        img.id = 'avatar'
-        img.draggable = false
-        avatar.replaceWith(img)
-        avatar = img
-        avatar.addEventListener('click', avaClick)
-      }
-      avatar.src = src
-    }
-
     const report = document.querySelector('decal-report')  
     report.subscribe(ipc, loader)
 
@@ -875,27 +531,8 @@
     })
 
     async function start () {
-
-      const win32CloseListener = process.platform === 'win32' ? () => ipc.quit(0) : null
-      if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
-      let config = Pear.config
-
-      if (process.platform === 'win32') {
-        const close = document.querySelector('#win-close')
-        close.removeEventListener('click', win32CloseListener)
-        close.addEventListener('click', async () => {
-          await Pear.Window.self.close()
-        })
-      }
-
-
-      const updating = await loader.start(ipc, config)
-
-      if (updating) return
-
-      const tier = document.querySelector('decal-tier')
-      tier.update(config)
-
+      const config = Pear.config
+      await loader.start(ipc, config)
     }
 
     start().catch(console.error)
