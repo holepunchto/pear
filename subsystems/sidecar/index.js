@@ -371,7 +371,7 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
-    return { platform: this.version, app: client.userData?.state?.version }
+    return { platform: this.version, app: client.userData?.state?.version, bare: Bare.versions }
   }
 
   reports (params, client) {
