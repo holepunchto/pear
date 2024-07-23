@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn } = require('bare-subprocess')
+const { spawn, spawnSync } = require('bare-subprocess')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
@@ -26,6 +26,7 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
 const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
+const { version } = require('../../package.json')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -64,6 +65,7 @@ class Sidecar extends ReadyResource {
   swarm = null
   keyPair = null
   discovery = null
+  electronVersion = null
 
   teardown () { global.Bare.exit() }
 
@@ -371,7 +373,15 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
-    return { platform: this.version, app: client.userData?.state?.version }
+    if (!this.electronVersion) {
+      const args = ['-p', 'global.process.versions.electron']
+      const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
+      if (subprocess.error) throw ERR_INTERNAL_ERROR('Failed to retrieve Electron version')
+      this.electronVersion = subprocess.stdout.toString().trim()
+    }
+
+    const runtimes = { bare: Bare.version, pear: version, electron: this.electronVersion }
+    return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
   reports (params, client) {
