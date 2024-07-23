@@ -1,9 +1,9 @@
 'use strict'
-const { once } = require('bare-events')
 const hypercoreid = require('hypercore-id-encoding')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
+const Interact = require('../lib/interact')
 const { CHECKOUT } = require('../constants')
 const ADD = 1
 const REMOVE = -1
@@ -94,117 +94,6 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
 }
 
 function asyncIterate (array) { return (async function * () { yield * array }()) }
-
-class Interact {
-  constructor (header, params, type) {
-    this._header = header
-    this._params = params
-    this._type = type
-    stdio.out.write(this._header)
-  }
-
-  async run (opts = {}) {
-    const fields = {}
-    if (opts.autosubmit) return this._autosubmit()
-    while (this._params.length) {
-      const param = this._params.shift()
-      if (await this._evaluate(param, fields, this._params)) {
-        while (true) {
-          let answer = await this._input(`${param.prompt}${param.delim || ':'}${param.default && ' (' + param.default + ')'} `)
-          if (answer.length === 0) answer = param.default
-          if (!param.validation || await param.validation(answer)) {
-            if (typeof answer === 'string') answer = answer.replace(rx, '')
-            fields[param.name] = answer
-            break
-          } else {
-            stdio.out.write(param.msg + '\n')
-          }
-        }
-      } else {
-        continue
-      }
-    }
-
-    return { fields, result: this._getResult(fields) }
-  }
-
-  _autosubmit () {
-    const fields = {}
-    if (this._type) { // skip type
-      this._params.shift()
-      fields.type = this._type
-    }
-    while (this._params.length) {
-      const param = this._params.shift()
-      if (!param.type || param.type === this._type) fields[param.name] = param.default
-    }
-    return { fields, result: this._getResult(fields) }
-  }
-
-  async _input (prompt) {
-    stdio.out.write(prompt)
-    const answer = (await once(stdio.in, 'data')).toString()
-    return answer.trim() // remove return char
-  }
-
-  _evaluate (param, fields) {
-    if (this._type && param.name === 'type') { // skip type if given by arg
-      fields.type = this._type
-      return false
-    }
-    if (param.name === 'type') return true
-    return !param.type || param.type === fields.type
-  }
-
-  _getResult (fields) {
-    if (fields.type === 'desktop') {
-      return this._getDesktopResult(fields)
-    } else {
-      return this._getTerminalResult(fields)
-    }
-  }
-
-  _getDesktopResult (fields) {
-    return {
-      name: fields.name,
-      main: fields.main,
-      type: 'module',
-      pear: {
-        name: fields.name,
-        type: fields.type,
-        gui: {
-          backgroundColor: '#1F2430',
-          height: fields.height,
-          width: fields.width
-        }
-      },
-      license: fields.license,
-      devDependencies: {
-        brittle: '^3.0.0'
-      }
-    }
-  }
-
-  _getTerminalResult (fields) {
-    return {
-      name: fields.name,
-      main: fields.main,
-      type: 'module',
-      pear: {
-        name: fields.name,
-        type: fields.type
-      },
-      license: fields.license,
-      devDependencies: {
-        brittle: '^3.0.0'
-      }
-    }
-  }
-}
-
-const interact = (header, params, type) => {
-  return new Interact(header, params, type)
-}
 
 class Loading {
   y = 0
@@ -337,7 +226,7 @@ async function trust ({ ipc, key, message }) {
     '\nBe sure that software is trusted before running it\n' +
     '\nType "TRUST" to allow execution or anything else to exit\n\n'
 
-  const prompt = interact(sure, [
+  const prompt = new Interact(sure, [
     {
       name: 'trust',
       default: '',
@@ -348,7 +237,7 @@ async function trust ({ ipc, key, message }) {
     }
   ])
   const result = await prompt.run()
-  if (result.fields.trust === 'TRUST') {
+  if (result.trust === 'TRUST') {
     await ipc.trust(key)
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print('Use pear run again to execute trusted application\n')
