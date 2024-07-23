@@ -129,7 +129,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<link>', 'Pear link to dump from, supports pathname'),
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
-    flag('--list <depth>', 'Output files to depth, overrides <dir> to -'),
     flag('--json', 'Newline delimited JSON output'),
     runners.dump(ipc)
   )
