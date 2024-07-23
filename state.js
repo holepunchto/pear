@@ -99,7 +99,7 @@ module.exports = class State {
     const {
       startId, appling, channel, devtools, checkout,
       dev = false, stage, trace, updates, updatesDiff,
-      clearAppStorage, clearPreferences, chromeWebrtcInternals
+      unsafeClearAppStorage, unsafeClearPreferences, chromeWebrtcInternals
     } = flags
     if (flags.stage || (run ?? flags.run)) {
       const { NODE_ENV = 'production' } = env
@@ -145,8 +145,8 @@ module.exports = class State {
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
-    this.clearPreferences = clearPreferences
-    this.clearAppStorage = clearAppStorage
+    this.clearPreferences = unsafeClearPreferences
+    this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.constructor.injestPackage(this, pkg)
   }
