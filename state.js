@@ -109,11 +109,6 @@ module.exports = class State {
       dev = false, stage, trace, updates, updatesDiff,
       unsafeClearAppStorage, unsafeClearPreferences, chromeWebrtcInternals
     } = flags
-    if (flags.stage || (run ?? flags.run)) {
-      const { NODE_ENV = 'production' } = env
-      env.NODE_ENV = NODE_ENV
-    }
-
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
     const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
@@ -133,13 +128,12 @@ module.exports = class State {
     this.checkout = checkout
     this.dir = dir
     this.cwd = cwd
-    this.env = { ...env }
+    this.run = run ?? flags.run
     this.flags = flags
     this.dev = dev
     this.devtools = this.dev || devtools
     this.updatesDiff = this.dev || updatesDiff
     this.updates = updates
-    this.run = run ?? flags.run
     this.stage = stage
     this.trace = trace
     this.fragment = fragment
@@ -156,6 +150,10 @@ module.exports = class State {
     this.clearPreferences = unsafeClearPreferences
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
+    this.env = { ...env }
+    if (this.stage || (this.run && this.dev === false)) {
+      this.env.NODE_ENV = this.env.NODE_ENV || 'production'
+    }
     this.constructor.injestPackage(this, pkg, { links })
   }
 }
