@@ -358,7 +358,7 @@ async function trust ({ ipc, key, message }) {
     print('')
     print(message + '\n', false)
     await ipc.close()
-    Bare.exit(1)
+    Bare.exit(77)
   }
 }
 

@@ -35,13 +35,21 @@ module.exports = class State {
   error = null
   entrypoints = null
   applink = null
-  static injestPackage (state, pkg) {
+  static injestPackage (state, pkg, overrides = {}) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
     state.options = pkg?.pear || pkg?.holepunch || {}
     state.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
     state.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(state.main) ? 'terminal' : 'desktop')
     state.links = pkg?.pear?.links || null
+    if (overrides.links) {
+      const links = overrides.links.split(',').reduce((links, kv) => {
+        const [key, value] = kv.split('=')
+        links[key] = value
+        return links
+      }, {})
+      state.links = { ...(state.links || {}), ...links }
+    }
     state.dependencies = [
       ...(pkg?.dependencies ? Object.keys(pkg.dependencies) : []),
       ...(pkg?.devDependencies ? Object.keys(pkg.devDependencies) : []),
@@ -97,7 +105,7 @@ module.exports = class State {
   constructor (params = {}) {
     const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
-      startId, appling, channel, devtools, checkout,
+      startId, appling, channel, devtools, checkout, links,
       dev = false, stage, trace, updates, updatesDiff,
       unsafeClearAppStorage, unsafeClearPreferences, chromeWebrtcInternals
     } = flags
@@ -148,6 +156,6 @@ module.exports = class State {
     this.clearPreferences = unsafeClearPreferences
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
-    this.constructor.injestPackage(this, pkg)
+    this.constructor.injestPackage(this, pkg, { links })
   }
 }

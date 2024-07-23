@@ -433,8 +433,10 @@ class Sidecar extends ReadyResource {
 
   async trust (key, client) {
     const trusted = new Set((await preferences.get('trusted')) || [])
-    const z32 = hypercoreid.encode(key)
-    trusted.add(z32)
+    if (key !== null) {
+      const z32 = hypercoreid.encode(key)
+      trusted.add(z32)
+    }
     let pkg = null
     try {
       await client.userData.bundle.ready()
@@ -684,6 +686,10 @@ class Sidecar extends ReadyResource {
 
       app.linker = linker
       app.bundle = appBundle
+
+      // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
+      await this.trust(state.key, client)
+
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
       } catch (err) {
