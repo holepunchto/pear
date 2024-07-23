@@ -1,7 +1,7 @@
 'use strict'
 const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, rest, bail } = require('paparam')
 const { usage, print } = require('./iface')
-const { CHECKOUT } = require('../constants')
+const { CHECKOUT, PACKAGE } = require('../constants')
 const errors = require('../errors')
 const rundef = require('../run/definition')
 const runners = {
@@ -205,18 +205,19 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   function pear ({ flags }) {
     if (flags.v) {
+      const semver = PACKAGE.version
       if (flags.json) {
-        console.log(JSON.stringify(CHECKOUT))
+        const checkout = JSON.stringify(CHECKOUT)
+        console.log({ ...checkout, semver })
         return
       }
-      let { key, fork, length } = CHECKOUT
-      key += ''
-      fork += ''
-      length += ''
-      let v = 'Key' + ' '.repeat(key.length) + 'Fork' + ' '.repeat(fork.length) + 'Length' + ' '.repeat(length.length) + '\n'
-      v += key + '   ' + fork + '    ' + length
-      console.log(v)
+      const { key, fork, length } = CHECKOUT
 
+      console.log('v' + ~~(fork) + '.' + (length || 'dev') + '.' + key + ' / v' + semver)
+      console.log('Key=' + key)
+      console.log('Fork=' + fork)
+      console.log('Length=' + length)
+      console.log('Semver=' + semver)
       return
     }
     console.log(cmd.overview())

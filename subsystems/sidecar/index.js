@@ -26,13 +26,12 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
 const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
-const { version } = require('../../package.json')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
+  PACKAGE, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
-
+const { version } = PACKAGE
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')

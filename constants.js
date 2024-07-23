@@ -5,6 +5,7 @@ const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
 const CHECKOUT = require('./checkout')
+const PACKAGE = require('./package.json')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
@@ -47,6 +48,7 @@ const EOLS = {
 
 exports.LOCALDEV = LOCALDEV
 exports.CHECKOUT = CHECKOUT
+exports.PACKAGE = PACKAGE
 exports.ALIASES = ALIASES
 exports.EOLS = EOLS
 
