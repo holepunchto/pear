@@ -1063,7 +1063,7 @@ class Window extends GuiCtrl {
 
     const toURL = (link) => {
       try {
-        return new URL(link)
+        return new URL(link, this.state.config.applink)
       } catch (err) {
         console.error('Invalid link in Pear configuration links:', link)
         return null
@@ -1072,7 +1072,7 @@ class Window extends GuiCtrl {
 
     const allowedHosts = Array.from(new Set(Object.values(this?.state?.config?.options?.links || {})))
       .map((link) => toURL(link))
-      .filter((link) => link !== null && (link.protocol === 'http:' || link.protocol === 'https:')) ?? []
+      .filter((link) => link !== null && (link.protocol === 'http:' || link.protocol === 'https:'))
     allowedHosts.push(new URL(this.entry))
 
     const requestFilter = (details, respond) => {

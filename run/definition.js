@@ -11,6 +11,7 @@ module.exports = [
   flag('--link <url>', 'Simulate deep-link click open'),
   flag('--store|-s <path>', 'Set the Application Storage path'),
   flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
+  flag('--links <kvs>', 'Override configured links with comma-separated key-values'),
   flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
   flag('--unsafe-clear-app-storage', 'Clear app storage'),
   flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
