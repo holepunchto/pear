@@ -379,7 +379,8 @@ class Sidecar extends ReadyResource {
       if (!subprocess.error) this.electronVersion = subprocess.stdout.toString().trim()
     }
 
-    const runtimes = { bare: Bare.version, pear: version, electron: this.electronVersion }
+    const bareVersion = Bare.version.startsWith('v') ? Bare.version.slice(1) : Bare.version
+    const runtimes = { bare: bareVersion, pear: version, electron: this.electronVersion }
     return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
