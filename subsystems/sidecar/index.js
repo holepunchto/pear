@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn } = require('bare-subprocess')
+const { spawn, spawnSync } = require('bare-subprocess')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
@@ -26,6 +26,7 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
 const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
+const { version } = require('../../package.json')
 
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -371,7 +372,12 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
-    return { platform: this.version, app: client.userData?.state?.version, bare: Bare.versions }
+    const args = ['-p', 'global.process.versions.electron']
+    const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
+    const electron = subprocess.error ? null : subprocess.stdout.toString().trim()
+
+    const runtimes = { bare: Bare.version, pear: version, electron }
+    return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
   reports (params, client) {
