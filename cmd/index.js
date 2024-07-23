@@ -213,7 +213,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       }
       const { key, fork, length } = CHECKOUT
 
-      console.log('v' + ~~(fork) + '.' + (length || 'dev') + '.' + key + ' / v' + semver)
+      console.log('v' + ~~(fork) + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
       console.log('Key=' + key)
       console.log('Fork=' + fork)
       console.log('Length=' + length)
