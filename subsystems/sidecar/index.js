@@ -15,6 +15,7 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
+const { command } = require('paparam')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
 const Applings = require('./lib/applings')
@@ -24,14 +25,12 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../run/parse-link')
-const { command } = require('paparam')
 const runDefinition = require('../../run/definition')
-
+const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  PACKAGE, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
-const { version } = PACKAGE
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')

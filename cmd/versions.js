@@ -1,7 +1,6 @@
 'use strict'
 const { outputter, ansi } = require('./iface')
-const { PACKAGE } = require('../constants')
-const { dependencies } = PACKAGE
+const { dependencies } = require('../package.json')
 
 const output = outputter('versions', {
   header (str) { return `${str}\n` },
