@@ -376,8 +376,7 @@ class Sidecar extends ReadyResource {
     if (!this.electronVersion) {
       const args = ['-p', 'global.process.versions.electron']
       const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
-      if (subprocess.error) throw ERR_INTERNAL_ERROR('Failed to retrieve Electron version')
-      this.electronVersion = subprocess.stdout.toString().trim()
+      if (!subprocess.error) this.electronVersion = subprocess.stdout.toString().trim()
     }
 
     const runtimes = { bare: Bare.version, pear: version, electron: this.electronVersion }
