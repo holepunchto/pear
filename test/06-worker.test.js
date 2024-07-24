@@ -24,6 +24,7 @@ test('worker pipe', async function ({ is, plan, comment, teardown }) {
   const addendum = await Helper.pick(staging, { tag: 'addendum' })
 
   comment('run worker')
+
   const pipe = Pear.worker.run(addendum.link)
 
   const messages = []
