@@ -16,6 +16,7 @@ configureElectron()
 crasher('electron-main', SWAP)
 const run = command('run', ...runDefinition, electronMain)
 run.parse(argv)
+run.running?.catch(console.error)
 
 async function electronMain (cmd) {
   const state = new State({
