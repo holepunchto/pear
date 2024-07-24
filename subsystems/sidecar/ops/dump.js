@@ -1,9 +1,8 @@
 'use strict'
-const hypercoreid = require('hypercore-id-encoding')
-const Mirror = require('mirror-drive')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
+const parseLink = require('../../../run/parse-link')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -11,31 +10,52 @@ module.exports = class Dump extends Opstream {
   async #op ({ link, dir, checkout }) {
     const { session, sidecar } = this
     await sidecar.ready()
-    const key = link ? hypercoreid.decode(link) : null
+    const parsed = parseLink(link)
+    const isFileLink = parsed.protocol === 'file:'
+    const key = parsed.drive.key
     checkout = Number(checkout)
-    const corestore = sidecar._getCorestore(null, null)
-    const bundle = new Bundle({ corestore, key, checkout })
+    const bundle = new Bundle({
+      corestore: isFileLink ? null : sidecar._getCorestore(null, null),
+      drive: isFileLink ? new LocalDrive(parsed.pathname, { followLinks: true }) : null,
+      key,
+      checkout
+    })
 
     await session.add(bundle)
 
-    if (sidecar.swarm) bundle.join(sidecar.swarm)
+    if (sidecar.swarm && !isFileLink) bundle.join(sidecar.swarm)
 
-    const pearkey = 'pear://' + hypercoreid.encode(bundle.drive.key)
+    this.push({ tag: 'dumping', data: { link, dir } })
 
-    this.push({ tag: 'dumping', data: { key: pearkey, dir } })
+    if (!isFileLink) {
+      try {
+        await bundle.calibrate()
+      } catch (err) {
+        await session.close()
+        throw err
+      }
+    }
 
-    try {
-      await bundle.calibrate()
-    } catch (err) {
-      await session.close()
-      throw err
+    const src = bundle.drive
+    await src.ready()
+
+    const prefix = isFileLink ? '/' : parsed.pathname
+
+    if (dir === '-') {
+      const pathname = prefix === '/' ? '' : prefix
+      const entry = pathname === '' ? null : await src.entry(pathname)
+      if (entry === null) {
+        for await (const file of src.readdir(pathname)) {
+          const subpath = pathname + '/' + file
+          const value = await src.get(subpath)
+          this.push({ tag: 'file', data: { key: subpath, value } })
+        }
+      }
+      return
     }
 
     const dst = new LocalDrive(dir)
-    const src = bundle.drive
-
-    const mirror = new Mirror(src, dst)
-
+    const mirror = src.mirror(dst, { prefix })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
