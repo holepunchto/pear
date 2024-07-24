@@ -606,7 +606,7 @@ class Sidecar extends ReadyResource {
         if (!app || !app.state) return false
         return app.state.storage === storage && (appdev
           ? app.state.dir === appdev
-          : hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key)
+          : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
         )
       })
 
