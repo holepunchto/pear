@@ -8,11 +8,11 @@ async function init (link, dir, { ipc, header, autosubmit, defaults } = {})  {
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
-  const isName = !isPear && !isFile && !isPath
-  if (isName) {
+  const isType = !isPear && !isFile && !isPath
+  if (isType) {
     const { platform } = await ipc.versions()
     if (platform.key === null) link = path.join(__dirname, 'templates')
-    else link = 'pear://' + (platform.key || 'dev') + '/subsystems/init/templates/' + link
+    else link = 'pear://' + (platform.key || 'dev') + '/init/templates/' + link
   }
 
   let params = null
@@ -28,12 +28,10 @@ async function init (link, dir, { ipc, header, autosubmit, defaults } = {})  {
 
   // TODO read package.json from dst if it's there, 
   // create defaults from the package.json pear field + defaults option
-  // figure a way to preserve the other files etc 
 
   const prompt = new Interact(header, params, defaults)
   const locals = await prompt.run({ autosubmit })
 
-  
 
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
     if (tag !== 'file') continue

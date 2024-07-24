@@ -251,4 +251,4 @@ async function trust ({ ipc, key, message }) {
   }
 }
 
-module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, Loading }
+module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, Loading }

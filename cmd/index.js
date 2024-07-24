@@ -26,9 +26,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const init = command(
     'init',
     summary('Create initial project files'),
+    description('Template Types: desktop, terminal, terminal-node'),
+    arg('[link|type]', 'Template link or type to init from. Default: desktop'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--type|-t <type>', 'Project type: desktop (default) or terminal'),
+    flag('--type|-t <type>', 'Project type: desktop (default) or terminal. Overrides: [link|type]'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--with|-w [name]', 'Additional functionality. Available: node'),
     runners.init(ipc)
