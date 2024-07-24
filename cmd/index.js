@@ -205,7 +205,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   function pear ({ flags }) {
     if (flags.v) {
-      const semver = require('../package.json')
+      const semver = require('../package.json').version
       if (flags.json) {
         const checkout = JSON.stringify(CHECKOUT)
         console.log({ ...checkout, semver })
