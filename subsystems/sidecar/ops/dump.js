@@ -44,12 +44,14 @@ module.exports = class Dump extends Opstream {
     if (dir === '-') {
       const pathname = prefix === '/' ? '' : prefix
       const entry = pathname === '' ? null : await src.entry(pathname)
+      console.log(parsed.pathname, prefix, entry)
       if (entry === null) {
-        for await (const file of src.readdir(pathname)) {
-          const subpath = pathname + '/' + file
-          const value = await src.get(subpath)
-          this.push({ tag: 'file', data: { key: subpath, value } })
+        for await (const entry of src.list(pathname)) {
+          const value = await src.get(entry)
+          this.push({ tag: 'file', data: { key: entry.key, value } })
         }
+      } else {
+        console.log('ah yeah', entry)
       }
       return
     }
