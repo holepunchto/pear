@@ -1,4 +1,5 @@
 'use strict'
+const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
 const { ansi } = require('./iface')
@@ -8,6 +9,14 @@ module.exports = (ipc) => async function init (cmd) {
 
   const { yes, force, type, with: w } = cmd.flags
   const dir = cmd.args.dir ? resolve(cwd, cmd.args.dir) : cwd
+  let dirStat = null
+  try { dirStat = await fsp.stat(dir) } catch {}
+  const pkgPath = resolve(dir, 'package.json')
+  let pkg = null
+  const dirExists = dirStat !== null && dirStat.isDirectory()
+  if (dirExists) {
+    try { pkg = JSON.parse(await fsp.readFile(pkgPath)) } catch {}
+  }
 
   const cfg = pkg?.pear || pkg?.holepunch || {}
   const height = cfg.gui ? cfg.gui.height : 540
@@ -22,7 +31,11 @@ module.exports = (ipc) => async function init (cmd) {
   if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
   if (force) header += ansi.bold('FORCE MODE\n\n')
 
-  await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header })
+  try {
+    await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header })
+  } finally {
+    await ipc.close()
+  }
 }
 
 function wither (type, w) {

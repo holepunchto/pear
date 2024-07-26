@@ -52,6 +52,7 @@
     "ignore": [
       "__snapshots__",
       "test/fixtures",
+      "init/templates",
       "pear",
       "by-arch"
     ]
@@ -70,7 +71,7 @@
     "bare-pipe": "^3.1.0",
     "bare-signals": "^2.1.2",
     "bare-subprocess": "^3.0.0",
-    "bare-tty": "^3.3.1",
+    "bare-tty": "^3.4.0",
     "bare-url": "^1.1.2",
     "compact-encoding": "^2.15.0",
     "corestore": "^6.18.2",

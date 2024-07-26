@@ -1,1 +1,1 @@
-document.querySelector('h1').addEventListener('click', (e) => { e.target.innerHTML = '🍐'})
+document.querySelector('h1').addEventListener('click', (e) => { e.target.innerHTML = '🍐' })

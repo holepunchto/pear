@@ -232,8 +232,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   function explain (bail) {
     if (bail.err) {
       const code = bail.err.code
-      const known = errors.known('ERR_INVALID_').includes(code)
-      if (known === false) {
+      const known = errors.known('ERR_INVALID_', 'ERR_OPERATION_FAILED', 'ERR_DIR_NONEMPTY')
+      if (known.includes(code) === false) {
         print(bail.reason, false)
         print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
         Bare.exit(1)

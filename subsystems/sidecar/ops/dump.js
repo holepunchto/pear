@@ -1,4 +1,6 @@
 'use strict'
+const fsp = require('bare-fs/promises')
+const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -12,11 +14,17 @@ module.exports = class Dump extends Opstream {
     await sidecar.ready()
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
+    const localFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+      ? path.basename(parsed.pathname)
+      : null
     const key = parsed.drive.key
     checkout = Number(checkout)
+
     const bundle = new Bundle({
       corestore: isFileLink ? null : sidecar._getCorestore(null, null),
-      drive: isFileLink ? new LocalDrive(parsed.pathname, { followLinks: true }) : null,
+      drive: isFileLink
+        ? new LocalDrive(localFile ? path.dirname(parsed.pathname) : parsed.pathname, { followLinks: true })
+        : null,
       key,
       checkout
     })
@@ -40,20 +48,23 @@ module.exports = class Dump extends Opstream {
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname
-
     if (dir === '-') {
-      const pathname = prefix === '/' ? '' : prefix
-      const entry = pathname === '' ? null : await src.entry(pathname)
-      if (entry === null) {
-        for await (const entry of src.list(pathname)) {
-          const value = await src.get(entry)
-          this.push({ tag: 'file', data: { key: entry.key, value } })
-        }
+      const pathname = !isFileLink && parsed.pathname === '/' ? '' : prefix
+      const entry = pathname === '' ? null : await src.entry(localFile || pathname)
+      if (entry !== null) {
+        const value = await src.get(entry)
+        this.push({ tag: 'file', data: { key: entry.key, value } })
+        return
+      }
+      for await (const entry of src.list(pathname)) {
+        const value = await src.get(entry)
+        this.push({ tag: 'file', data: { key: entry.key, value } })
       }
       return
     }
 
     const dst = new LocalDrive(dir)
+
     const mirror = src.mirror(dst, { prefix })
     for await (const diff of mirror) {
       if (diff.op === 'add') {

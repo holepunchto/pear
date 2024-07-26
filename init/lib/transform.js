@@ -1,21 +1,25 @@
 'use strict'
 const { Readable } = require('streamx')
 
-module.exports = function transform (template, locals) {
+function parse (template, locals) {
   const args = []
   const strings = []
-  template += ''
   let last = 0
+  template += ''
   for (const result of template.matchAll(/__([a-zA-Z/\\.:]*?)__/g)) {
     const [match, def] = result
+    const [name] = def.split(':').map((s) => s.trim())
     const { index } = result
-    const [key, ...meta] = def.split(':').map((s) => s.trim())
-    const local = typeof locals[key] === 'function' ? locals[key](key, meta) : locals[key]
-    args.push(local)
+    args.push(locals[name])
     strings.push(template.slice(last, index))
     last = index + match.length
   }
   strings.push(template.slice(last))
+  return { strings, args }
+}
+
+function stream (template, locals) {
+  const { strings, args } = parse(template, locals)
   return new Readable({
     objectMode: true,
     async read (cb) {
@@ -27,7 +31,6 @@ module.exports = function transform (template, locals) {
         this.push(null)
         cb(null)
       } catch (err) {
-        this.destroy(err)
         cb(err)
       }
     }
@@ -60,3 +63,10 @@ function interlope (arg) {
     }
   })
 }
+
+function sync (template, locals) {
+  const { strings, args } = parse(template, locals)
+  return String.raw({ raw: strings }, ...args)
+}
+
+module.exports = { stream, sync }

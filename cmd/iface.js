@@ -32,7 +32,6 @@ ansi.tick = isWindows ? '^' : ansi.green('✔')
 ansi.cross = isWindows ? 'x' : ansi.red('✖')
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
-const rx = /[\x1B\x9B][[\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\d/#&.:=?%@~_]+)*|[a-zA-Z\d]+(?:;[-a-zA-Z\d/#&.:=?%@~_]*)*)?\x07)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g // eslint-disable-line no-control-regex
 
 function status (msg, success) {
   msg = msg || ''
@@ -94,80 +93,6 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
 }
 
 function asyncIterate (array) { return (async function * () { yield * array }()) }
-
-class Loading {
-  y = 0
-  i = 0
-  interval = null
-  cleared = false
-  started = Date.now()
-  shape (opts) {
-    return `\x1b[s\x1b[J\x1b[32m
-           ▅
-           ▀
-        ▂▂▄▟▙▃
-       ▄▄▄▄▆▆▆▆
-      ▄▄▄▄▄▆▆▆▆▆
-      ▄▄▄▄▄▆▆▆▆▆
-     ▄▄▄▄▄▄▆▆▆▆▆▆${opts?.msg ? '         ' + opts.msg : ''}
-    ▃▄▄▄▄▄▄▆▆▆▆▆▆▄
-   ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆
-   ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆
-     ▄▄▄▄▄▄▆▆▆▆▆▆
-       ▄▄▄▄▆▆▆▆\n       \x1b[2mLᴏᴀᴅɪɴɢ…\x1b[u`
-  }
-
-  constructor (opts) {
-    const shape = this.shape(opts)
-    this.frames = ['░', shape, '▒', '░', shape, shape, shape, shape]
-    this.ms = 1100 / this.frames.length
-    stdio.raw(true)
-    stdio.in.resume()
-    stdio.in.once('data', (data) => {
-      const match = data.toString().match(/\[(\d+);(\d+)R/)
-      if (!match) return
-      this.y = parseInt(match[1], 10)
-      const { frames } = this
-      const { height } = stdio.size()
-      const lines = shape.split('\n')
-      const available = height - this.y
-      if (available < lines.length) {
-        const offset = lines.length - available
-        stdio.out.write(`\x1b[${offset}S`)
-        stdio.out.write(`\x1b[${offset}F`)
-      }
-      stdio.out.write(shape)
-      this.interval = setInterval(() => {
-        stdio.out.write(frames[this.i] === shape ? shape : shape.replace(/[▂▃▄▅▆▀░▒▓▙▟]/g, frames[this.i]))
-        this.i = (this.i + 1) % frames.length
-      }, this.ms)
-      stdio.raw(false)
-      stdio.in.pause()
-    })
-    stdio.out.write('\x1b[6n')
-
-    this.clearing = new Promise((resolve) => {
-      this._cleared = resolve
-    })
-  }
-
-  clear (force = false) {
-    const timespan = Date.now() - this.started
-    const fulltime = (this.ms * this.frames.length) * 3
-    if (force === false && timespan < fulltime) {
-      setTimeout(() => this.clear(), fulltime - timespan)
-      return this.clearing
-    } else {
-      this.cleared = true
-      clearInterval(this.interval)
-      stdio.raw(false)
-      stdio.in.pause()
-      stdio.out.write('\x1b[u\x1b[J\x1b[0m')
-      this._cleared()
-      return this.clearing
-    }
-  }
-}
 
 const banner = `${ansi.bold('Pear')} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
 const version = `${CHECKOUT.fork || 0}.${CHECKOUT.length || 'dev'}.${CHECKOUT.key}`
@@ -251,4 +176,4 @@ async function trust ({ ipc, key, message }) {
   }
 }
 
-module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, Loading }
+module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
