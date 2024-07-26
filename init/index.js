@@ -17,11 +17,12 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
 
   let params = null
-  const definition = ipc.dump({ link: link + '/_prompts.json', dir: '-' })
-  for await (const { tag, data } of definition) {
+
+  for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag !== 'file') continue
     try {
-      params = JSON.parse(data.value)
+      const definition = JSON.parse(data.value)
+      params = definition.params
       for (const prompt of params) {
         if (typeof prompt.validation !== 'string') continue
         prompt.validation = new Function('value', 'return (' + prompt.validation + ')(value)') // eslint-disable-line
@@ -53,7 +54,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
       }
       if (tag !== 'file') continue
       const { key, value = null } = data
-      if (key === '/_prompts.json') continue
+      if (key === '/_template.json') continue
       if (value === null) continue // dir
 
       const writeStream = dst.createWriteStream(transform.sync(key, locals))
