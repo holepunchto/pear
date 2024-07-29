@@ -11,6 +11,7 @@ const Hyperswarm = require('hyperswarm')
 const goodbye = global.Pear?.teardown || require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
+const safetyCatch = require('safety-catch')
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
@@ -21,7 +22,12 @@ const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
-try { fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file') } catch { /* ignore */ }
+try {
+  fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file')
+} catch (err) {
+  if (err.code === 'EPERM') throw err
+  safetyCatch(err)
+}
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
 if (isWindows === false) {
