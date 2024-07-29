@@ -17,6 +17,8 @@ module.exports = class PearGUI extends ReadyResource {
       this.ipc.stream.push(Buffer.from(data))
     })
 
+    electron.ipcRenderer.on('reload', () => location.reload())
+
     const onteardown = async (fn) => {
       if (state.isDecal) return
       await this.ready()
@@ -219,6 +221,12 @@ module.exports = class PearGUI extends ReadyResource {
       }
     }
     this.api = new API(this.ipc, state, onteardown)
+
+    const reloadSubscriber = this.api.messages({ type: 'pear/reload' })
+    reloadSubscriber.once('data', async () => {
+      console.log('Got pear/reload message, sending resetIpc...')
+      electron.ipcRenderer.invoke('resetIpc')
+    })
   }
 }
 

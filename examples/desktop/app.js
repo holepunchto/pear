@@ -27,3 +27,23 @@ if (config.args.includes('--worker-demo')) {
   global.pipe = Pear.worker.run(config.links.worker)
   console.info('Pipe Duplex Stream available as `pipe`')
 }
+
+document.getElementById('reload').addEventListener('click', async () => {
+  console.log('RELOAD!')
+  await Pear.reload()
+})
+
+document.getElementById('platform-reload').addEventListener('click', async () => {
+  console.log('PLATFORM RELOAD!')
+  await Pear.reload({ platform: true })
+})
+
+document.getElementById('restart').addEventListener('click', async () => {
+  console.log('RESTART!')
+  await Pear.restart()
+})
+
+document.getElementById('platform-restart').addEventListener('click', async () => {
+  console.log('PLATFORM RESTART!')
+  await Pear.restart({ platform: true })
+})

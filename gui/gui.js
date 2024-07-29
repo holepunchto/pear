@@ -10,6 +10,8 @@ const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
 const constants = require('../constants')
+const fs = require('fs')
+const fsext = require('fs-native-extensions')
 
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
@@ -950,8 +952,8 @@ class GuiCtrl {
   }
 
   completeUnload (action) {
-    this.unloaded()
-    if (action.type === 'close') this.close()
+    // this.unloaded()
+    // if (action.type === 'close') this.close()
   }
 
   setWindowButtonPosition (point) {
@@ -1412,6 +1414,44 @@ class PearGUI extends ReadyResource {
     this.pipes = new Freelist()
     this.ipc.once('close', () => this.close())
 
+    this.resetting = false
+    electron.ipcMain.handle('resetIpc', async () => {
+      if (this.resetting) return
+      this.resetting = true
+
+      console.log('Resetting IPC')
+      this.ipc.stream.destroy()
+
+      console.log('Waiting for lock')
+      const fd = await new Promise((resolve, reject) => fs.open(constants.PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
+      await fsext.waitForLock(fd)
+      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
+
+      console.log('Recreating IPC')
+      this.ipc = new IPC({
+        lock: constants.PLATFORM_LOCK,
+        socketPath,
+        connectTimeout,
+        api: {
+          reports (method) {
+            return (params) => {
+              const stream = method.createRequestStream()
+              stream.once('data', () => { PearGUI.reportMode(state) })
+              stream.write(params)
+              return stream
+            }
+          }
+        },
+        connect: tryboot
+      })
+
+      await this.ipc.ready()
+
+      console.log('Reloading browser')
+      electron.ipcMain.emit('reload')
+      this.resetting = false
+    })
+
     electron.ipcMain.on('id', async (event) => {
       return (event.returnValue = event.sender.id)
     })
@@ -1698,6 +1738,11 @@ class PearGUI extends ReadyResource {
   unloading ({ id }) { return this.get(id).unloading() }
 
   async completeUnload ({ id, action }) {
+    if (this.resetting) {
+      console.log('Currently resetting, skipping unload')
+      return
+    }
+
     const instance = this.get(id)
     if (!instance) return
     instance.completeUnload(action)

@@ -7,18 +7,22 @@ const BOOT_ELECTRON = 3
 const BOOT_ELECTRON_PRELOAD = 4
 switch (getBootType()) {
   case BOOT_SIDECAR: {
+    console.log('BOOT sidecar')
     require('./sidecar.js')
     break
   }
   case BOOT_CLI: {
+    console.log('BOOT cli')
     require('./cli.js')
     break
   }
   case BOOT_ELECTRON: {
+    console.log('BOOT electron-main')
     require('./electron-main.js')
     break
   }
   case BOOT_ELECTRON_PRELOAD: {
+    console.log('BOOT electron-preload')
     require('./preload.js')
     break
   }

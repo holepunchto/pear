@@ -506,8 +506,8 @@ class Sidecar extends ReadyResource {
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
       metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
-      const tearingDown = app.teardown()
-      if (tearingDown === false) client.close()
+      // const tearingDown = app.teardown()
+      client.close()
     }
     return metadata
   }
@@ -555,7 +555,8 @@ class Sidecar extends ReadyResource {
     if (!hard && this.hasClients) {
       const seen = new Set()
       for (const { userData: app } of this.clients) {
-        if (!app.state || seen.has(app.state.id)) continue
+        console.log('reloading client', app?.state?.id)
+        if (!app?.state || seen.has(app.state.id)) continue
         seen.add(app.state.id)
         app.message({ type: 'pear/reload' })
       }
@@ -840,8 +841,8 @@ class Sidecar extends ReadyResource {
   async #shutdown (client) {
     if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
-    const tearingDown = !!app && app.teardown()
-    if (tearingDown === false) client.close()
+    // const tearingDown = !!app && app.teardown()
+    client.close()
 
     this.spindownms = 0
     const restarts = this.closeClients()
