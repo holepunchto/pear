@@ -44,6 +44,7 @@ class Helper extends IPC {
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
+    this.noTmpGc = global.Pear.config.args.includes('--no-tmp-gc')
     this.lock = lock
     this.socketPath = socketPath
     this.#expectSidecar = opts.expectSidecar
@@ -174,7 +175,17 @@ class Helper extends IPC {
   }
 
   static async bootstrap (key, dir) {
+    await Helper.gc(dir)
+    await fs.promises.mkdir(dir, { recursive: true })
+    global.Pear.teardown(async () => Helper.gc(dir))
+
     await updaterBootstrap(key, dir)
+  }
+
+  static async gc (dir) {
+    if (global.Pear.config.args.includes('--no-tmp-gc')) return
+
+    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
 
   static Inspector = class extends ReadyResource {
