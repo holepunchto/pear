@@ -1,5 +1,5 @@
 'use strict'
-const parseLink = require('../run/parse-link')
+const parseLink = require('../lib/parse-link')
 const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')

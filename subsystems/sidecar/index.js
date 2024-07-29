@@ -24,7 +24,7 @@ const Replicator = require('./lib/replicator')
 const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
-const parseLink = require('../../run/parse-link')
+const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../run/definition')
 const { version } = require('../../package.json')
 const {
@@ -440,18 +440,31 @@ class Sidecar extends ReadyResource {
 
   async trust (key, client) {
     const trusted = new Set((await preferences.get('trusted')) || [])
+    const session = client.userData ? null : new Session(client)
+    if (session) {
+      client.userData = {
+        bundle: new Bundle({
+          corestore: this._getCorestore(null, null)
+        })
+      }
+      session.add(client.userData.bundle)
+      if (this.swarm) await client.userData.bundle.join(this.swarm)
+    }
     if (key !== null) {
       const z32 = hypercoreid.encode(key)
       trusted.add(z32)
     }
     let pkg = null
     try {
-      await client.userData.bundle.ready()
-      pkg = JSON.parse(await client.userData.bundle.drive.get('/package.json'))
+      const bundle = client.userData.bundle
+      await bundle.ready()
+      pkg = JSON.parse(await bundle.drive.get('/package.json'))
     } catch (err) {
       if (err instanceof SyntaxError) throw ERR_INVALID_PACKAGE_JSON('Package.json parsing error, invalid JSON')
       console.error('Unexpected error while attempting trust', err)
       return await preferences.set('trusted', Array.from(trusted))
+    } finally {
+      await session?.close()
     }
     if (typeof pkg?.pear?.links === 'object' && pkg.pear.links !== null) {
       for (const link of Object.values(pkg.pear.links).filter((link) => link.startsWith('pear:'))) {
@@ -660,7 +673,7 @@ class Sidecar extends ReadyResource {
 
   async #start (encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
-    const app = client.userData = client.userData || new this.App({ id, startId, session })
+    const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     const applingPath = state.appling?.path
@@ -712,10 +725,7 @@ class Sidecar extends ReadyResource {
     const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
     const z32 = hypercoreid.encode(state.key)
     if (trusted.has(z32) === false) {
-      const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
-      err.trusted = Array.from(trusted)
-      err.z32 = z32
-      err.key = state.key
+      const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
       app.report({ err })
       return { startId, bail: err }
     }

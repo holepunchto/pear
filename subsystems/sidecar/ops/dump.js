@@ -4,7 +4,7 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const parseLink = require('../../../run/parse-link')
+const parseLink = require('../../../lib/parse-link')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }

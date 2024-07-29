@@ -2,7 +2,7 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi } = require('./iface')
+const { ansi, permit } = require('./iface')
 
 module.exports = (ipc) => async function init (cmd) {
   const cwd = os.cwd()
@@ -33,6 +33,13 @@ module.exports = (ipc) => async function init (cmd) {
 
   try {
     await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header })
+  } catch (err) {
+    if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
+    const explain = 'Be sure that software is trusted before using it\n' +
+    '\nType "TRUST" to allow template initialization or anything else to exit\n\n'
+    const ask = 'Trust template'
+    const act = 'Use pear init again to initalize from trusted template'
+    await permit({ ipc, key: err.info.key, message: err.message, explain, ask, act })
   } finally {
     await ipc.close()
   }

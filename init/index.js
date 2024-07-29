@@ -1,10 +1,13 @@
 'use strict'
 const { pipelinePromise } = require('streamx')
 const path = require('bare-path')
+const hypercoreid = require('hypercore-id-encoding')
 const transform = require('./lib/transform')
 const Localdrive = require('localdrive')
 const Interact = require('../lib/interact')
-const { ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('../errors')
+const parseLink = require('../lib/parse-link')
+const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('../errors')
+
 async function init (link, dir, { ipc, header, autosubmit, defaults, force = false } = {}) {
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
@@ -13,11 +16,18 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   if (isType) {
     const { platform } = await ipc.versions()
     if (platform.key.startsWith('/')) link = path.join(__dirname, 'templates', link)
-    else link = 'pear://' + (platform.key || 'dev') + '/init/templates/' + link
+    else link = 'pear://' + platform.key + '/init/templates/' + link
   }
 
   let params = null
-
+  if (isPear) {
+    const { drive } = parseLink(link)
+    const trusted = new Set(await ipc.getPreference({ key: 'trusted' }) || [])
+    hypercoreid.encode(drive.key, hypercoreid.encode(drive.key), trusted)
+    if (trusted.has(hypercoreid.encode(drive.key)) === false) {
+      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
+    }
+  }
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag !== 'file') continue
     try {

@@ -17,7 +17,7 @@ const {
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
 } = require('../errors')
-const parseLink = require('./parse-link')
+const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
 const { PLATFORM_LOCK } = require('../constants')
@@ -96,8 +96,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
-    const err = ERR_PERMISSION_REQUIRED('Permission required to run key')
-    err.key = bail.key
+    const err = ERR_PERMISSION_REQUIRED('Permission required to run key', bail.key)
     throw err
   }
 

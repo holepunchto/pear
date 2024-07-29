@@ -144,18 +144,19 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function trust ({ ipc, key, message }) {
+async function permit ({ ipc, key, message, explain, ask, act }) {
   const z32 = hypercoreid.encode(key)
-  const sure = ansi.cross +
-    ' Key pear://' + z32 + ' is not known\n' +
-    '\nBe sure that software is trusted before running it\n' +
+  explain = explain ?? 'Be sure that software is trusted before running it\n' +
     '\nType "TRUST" to allow execution or anything else to exit\n\n'
+  ask = ask ?? 'Trust application'
+  act = act ?? 'Use pear run again to execute trusted application'
+  const sure = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
 
   const prompt = new Interact(sure, [
     {
       name: 'trust',
       default: '',
-      prompt: 'Trust application',
+      prompt: ask,
       delim: '?',
       validation: (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST'),
       msg: ansi.cross + ' uppercase TRUST to confirm'
@@ -165,7 +166,7 @@ async function trust ({ ipc, key, message }) {
   if (result.trust === 'TRUST') {
     await ipc.trust(key)
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
-    print('Use pear run again to execute trusted application\n')
+    print(act + '\n')
     await ipc.close()
     Bare.exit()
   } else {
@@ -176,4 +177,4 @@ async function trust ({ ipc, key, message }) {
   }
 }
 
-module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

@@ -1,7 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
-const parseLink = require('../../../run/parse-link')
+const parseLink = require('../../../lib/parse-link')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Opstream = require('../lib/opstream')

@@ -24,9 +24,10 @@ class PearError extends Error {
   static ERR_ASSERTION = ERR_ASSERTION
   static ERR_UNKNOWN = ERR_UNKNOWN
   static known = known
-  constructor (msg, code, fn = PearError) {
+  constructor (msg, code, fn = PearError, info = null) {
     super(msg)
     this.code = code
+    if (this.info !== null) this.info = info
     if (Error.captureStackTrace) Error.captureStackTrace(this, fn)
   }
 }
@@ -75,8 +76,8 @@ function ERR_INVALID_TEMPLATE (msg) {
   return new PearError(msg, 'ERR_INVALID_TEMPLATE', ERR_INVALID_TEMPLATE)
 }
 
-function ERR_PERMISSION_REQUIRED (msg) {
-  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED)
+function ERR_PERMISSION_REQUIRED (msg, key) {
+  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, { key })
 }
 
 function ERR_HTTP_GONE () {
