@@ -16,6 +16,7 @@ const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const PLATFORM_DIR = global.Pear.config.pearDir
 const { pathname } = new URL(global.Pear.config.applink)
+const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 
 class Helper extends IPC {
   #expectSidecar = false
@@ -174,7 +175,16 @@ class Helper extends IPC {
   }
 
   static async bootstrap (key, dir) {
+    await Helper.gc(dir)
+    await fs.promises.mkdir(dir, { recursive: true })
+
     await updaterBootstrap(key, dir)
+  }
+
+  static async gc (dir) {
+    if (NO_GC) return
+
+    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
 
   static Inspector = class extends ReadyResource {

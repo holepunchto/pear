@@ -10,7 +10,6 @@ const seedOpts = (id, dir = harness) => ({ channel: `test-${id}`, name: `test-${
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-const gc = async (dir) => { try { await fs.promises.rm(dir, { recursive: true }) } catch { /* ignore */ } }
 const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
@@ -35,8 +34,6 @@ class Rig {
     comment('bootstrapping tmp platform...')
     const platformDir = path.join(tmp, 'tmp-pear')
     this.platformDir = platformDir
-    await gc(platformDir)
-    await fs.promises.mkdir(platformDir, { recursive: true })
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
     const bootstrapped = new Helper({ platformDir: this.platformDir })
@@ -44,7 +41,7 @@ class Rig {
     comment('connecting tmp sidecar...')
     await bootstrapped.ready()
     comment('tmp sidecar connected')
-    global.Pear.teardown(async () => gc(platformDir))
+    global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
@@ -253,8 +250,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   t.comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
-  await gc(platformDirRcv)
-  await fs.promises.mkdir(platformDirRcv, { recursive: true })
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -269,7 +264,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
     comment('rcv sidecar shutting down..')
     await rcv.shutdown()
     comment('rcv sidecar shutdown')
-    await gc(platformDirRcv)
   })
 
   comment('running app from rcv platform')
@@ -358,8 +352,6 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
-  await gc(platformDirRcv)
-  await fs.promises.mkdir(platformDirRcv, { recursive: true })
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -467,8 +459,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
-  await gc(platformDirRcv)
-  await fs.promises.mkdir(platformDirRcv, { recursive: true })
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -559,8 +549,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
-  await gc(platformDirRcv)
-  await fs.promises.mkdir(platformDirRcv, { recursive: true })
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
