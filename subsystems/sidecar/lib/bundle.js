@@ -16,15 +16,6 @@ module.exports = class Bundle {
   platformVersion = null
   warmup = { blocks: 0, total: 0 }
   #log = null
-
-  static async provisioned (corestore, key, opts) {
-    const drive = new Hyperdrive(corestore.session(), key, opts)
-    await drive.ready()
-    const res = drive.core.length > 0
-    await drive.close()
-    return res
-  }
-
   constructor (opts = {}) {
     const {
       corestore = false, drive = false, checkout = 'release', appling,

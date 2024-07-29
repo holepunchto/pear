@@ -13,7 +13,8 @@ const output = outputter('seed', {
   'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
   announced: '^_^ announced',
   'peer-add': (info) => `o-o peer join ${info}`,
-  'peer-remove': (info) => `-_- peer drop ${info}`
+  'peer-remove': (info) => `-_- peer drop ${info}`,
+  error: ({ code, message, stack }) => code === 'ERR_INVALID_INPUT' ? message : `Seed Error (code: ${code || 'none'}) ${stack}`
 })
 
 module.exports = (ipc) => async function seed (cmd) {

@@ -2,7 +2,6 @@
 class PearError extends Error {
   static ERR_INVALID_INPUT = ERR_INVALID_INPUT
   static ERR_INVALID_LINK = ERR_INVALID_LINK
-  static ERR_INVALID_FLAG = ERR_INVALID_FLAG
   static ERR_INVALID_APPLING = ERR_INVALID_APPLING
   static ERR_INVALID_APP_NAME = ERR_INVALID_APP_NAME
   static ERR_INVALID_APP_STORAGE = ERR_INVALID_APP_STORAGE
@@ -42,10 +41,6 @@ function ERR_INVALID_INPUT (msg) {
 
 function ERR_INVALID_LINK (msg) {
   return new PearError(msg, 'ERR_INVALID_LINK', ERR_INVALID_LINK)
-}
-
-function ERR_INVALID_FLAG (msg) {
-  return new PearError(msg, 'ERR_INVALID_FLAG', ERR_INVALID_FLAG)
 }
 
 function ERR_INVALID_APPLING (msg) {

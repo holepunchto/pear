@@ -4,7 +4,7 @@ const State = require('../state')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INTERNAL_ERROR } = require('../../../errors')
+const { ERR_INVALID_INPUT } = require('../../../errors')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -24,14 +24,16 @@ module.exports = class Seed extends Opstream {
 
     const corestore = this.sidecar._getCorestore(name, channel)
     const key = link ? hypercoreid.decode(link) : null
-    if (key !== null && await Bundle.provisioned(corestore, key) === false) {
-      throw ERR_INTERNAL_ERROR('Pear Platform: Nothing to seed')
-    }
 
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
     const bundle = new Bundle({ corestore, key, channel, log })
     await session.add(bundle)
+
+    await bundle.ready()
+    if (key === null && bundle.drive.core.length === 0) {
+      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+    }
 
     if (verbose) {
       this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
