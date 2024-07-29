@@ -306,7 +306,7 @@ if (process.isMainFrame) {
               <rect width="24" height="24" fill="white"/>
             </clipPath>
           </defs>
-        </svg>      
+        </svg>
       </div>
       <div id="close" class="ctrl">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -366,7 +366,8 @@ if (process.isMainFrame) {
          #titlebar{
            -webkit-app-region: drag;
            width: 100%;
-           height: 50px;
+           height: 48px;
+           background: #0D0F16;
          }
         </style>
         <div id="titlebar">

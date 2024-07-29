@@ -777,8 +777,8 @@ class GuiCtrl {
   unloaded = null
   #unloading = null
   appkin = null
-  static height = 540
-  static width = 720
+  static height = 810
+  static width = 1224
   static [kCtrl] = null
   static [kMap] = new Map()
 

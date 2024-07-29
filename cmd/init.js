@@ -29,8 +29,8 @@ module.exports = () => async function init (cmd) {
   }
 
   const cfg = pkg?.pear || pkg?.holepunch || {}
-  const height = cfg.gui ? cfg.gui.height : 540
-  const width = cfg.gui ? cfg.gui.width : 720
+  const height = cfg.gui ? cfg.gui.height : 810
+  const width = cfg.gui ? cfg.gui.width : 1224
 
   if (cfg.gui) {
     delete cfg.gui.backgroundColor
