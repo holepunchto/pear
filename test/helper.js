@@ -45,7 +45,6 @@ class Helper extends IPC {
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
-    this.noTmpGc = global.Pear.config.args.includes('--no-tmp-gc')
     this.lock = lock
     this.socketPath = socketPath
     this.#expectSidecar = opts.expectSidecar
