@@ -20,7 +20,7 @@ const {
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
-const { PLATFORM_LOCK, BARE_RESTART_EXIT_CODE } = require('../constants')
+const { PLATFORM_LOCK } = require('../constants')
 const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
@@ -156,19 +156,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       cwd,
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
-
-    const reloadSubscriber = ipc.messages({ type: 'pear/reload' })
-    reloadSubscriber.on('data', async () => {
-      ipc.stream.destroy()
-
-      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
-      await fsext.waitForLock(fd)
-      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
-
-      Bare.exit(BARE_RESTART_EXIT_CODE)
-    })
-
-    child.once('exit', async (code) => {
+    child.once('exit', (code) => {
       stream.push({ tag: 'exit', data: { code } })
       ipc.close()
     })
