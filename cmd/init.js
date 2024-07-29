@@ -2,7 +2,14 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi, permit } = require('./iface')
+const { ansi, permit, outputter } = require('./iface')
+
+const output = outputter('init', {
+  writing: () => '',
+  error: ({ code, stack }) => `Init Error (code: ${code || 'none'}) ${stack}`,
+  wrote: ({ path }) => `* ${path}`,
+  written: () => ''
+})
 
 module.exports = (ipc) => async function init (cmd) {
   const cwd = os.cwd()
@@ -28,11 +35,10 @@ module.exports = (ipc) => async function init (cmd) {
 
   const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
   let header = `\n${banner}${ansi.dim('›')}\n\n`
-  if (pkg) header += ansi.bold('Existing package.json detected, will merge\n\n')
   if (force) header += ansi.bold('FORCE MODE\n\n')
 
   try {
-    await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header })
+    await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
     const explain = 'Be sure that software is trusted before using it\n' +

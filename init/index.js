@@ -1,5 +1,5 @@
 'use strict'
-const { pipelinePromise } = require('streamx')
+const { pipelinePromise, Readable } = require('streamx')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const transform = require('./lib/transform')
@@ -7,7 +7,6 @@ const Localdrive = require('localdrive')
 const Interact = require('../lib/interact')
 const parseLink = require('../lib/parse-link')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('../errors')
-
 async function init (link, dir, { ipc, header, autosubmit, defaults, force = false } = {}) {
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
@@ -54,9 +53,11 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     }
     if (empty === false) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
-
+  const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, defaults)
   const locals = await prompt.run({ autosubmit })
+  output.push({ tag: 'writing' })
+  const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
     if (tag === 'error') {
       throw new ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
@@ -66,9 +67,21 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (key === '/_template.json') continue
     if (value === null) continue // dir
 
-    const writeStream = dst.createWriteStream(transform.sync(key, locals))
-    await pipelinePromise(transform.stream(value, locals), writeStream)
+    const file = transform.sync(key, locals)
+    const writeStream = dst.createWriteStream(file)
+    const promise = pipelinePromise(transform.stream(value, locals), writeStream)
+    promise.catch((err) => { output.push({ tag: 'error', data: err }) })
+    promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
+    promises.push(promise)
   }
+
+  Promise.allSettled(promises).then((results) => {
+    const success = results.every(({ status }) => status === 'fulfilled')
+    output.push({ tag: 'written' })
+    output.push({ tag: 'final', data: { success } })
+    output.push(null)
+  })
+  return output
 }
 
 module.exports = init
