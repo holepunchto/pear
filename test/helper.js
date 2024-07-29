@@ -17,6 +17,8 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 const PLATFORM_DIR = global.Pear.config.pearDir
 const { pathname } = new URL(global.Pear.config.applink)
 
+const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
+
 class Helper extends IPC {
   #expectSidecar = false
   static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
@@ -182,7 +184,7 @@ class Helper extends IPC {
   }
 
   static async gc (dir) {
-    if (global.Pear.config.args.includes('--no-tmp-gc')) return
+    if (NO_GC) return
 
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
