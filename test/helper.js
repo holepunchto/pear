@@ -177,7 +177,6 @@ class Helper extends IPC {
   static async bootstrap (key, dir) {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
-    global.Pear.teardown(async () => Helper.gc(dir))
 
     await updaterBootstrap(key, dir)
   }

@@ -41,6 +41,7 @@ class Rig {
     comment('connecting tmp sidecar...')
     await bootstrapped.ready()
     comment('tmp sidecar connected')
+    global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
