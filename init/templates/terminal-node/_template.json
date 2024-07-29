@@ -8,7 +8,6 @@
       "name": "main",
       "default": "index.js",
       "prompt": "main",
-      "type": "terminal",
       "validation": "(value) => value.endsWith('.js')",
       "msg": "must have a .js file extension"
     },

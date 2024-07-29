@@ -18,7 +18,6 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (platform.key.startsWith('/')) link = path.join(__dirname, 'templates', link)
     else link = 'pear://' + platform.key + '/init/templates/' + link
   }
-
   let params = null
   if (isPear) {
     const { drive } = parseLink(link)
@@ -28,6 +27,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
     }
   }
+
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag !== 'file') continue
     try {
@@ -56,22 +56,18 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
 
   const prompt = new Interact(header, params, defaults)
-  try {
-    const locals = await prompt.run({ autosubmit })
-    for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
-      if (tag === 'error') {
-        throw new ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
-      }
-      if (tag !== 'file') continue
-      const { key, value = null } = data
-      if (key === '/_template.json') continue
-      if (value === null) continue // dir
-
-      const writeStream = dst.createWriteStream(transform.sync(key, locals))
-      await pipelinePromise(transform.stream(value, locals), writeStream)
+  const locals = await prompt.run({ autosubmit })
+  for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
+    if (tag === 'error') {
+      throw new ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
     }
-  } finally {
-    await dst.close()
+    if (tag !== 'file') continue
+    const { key, value = null } = data
+    if (key === '/_template.json') continue
+    if (value === null) continue // dir
+
+    const writeStream = dst.createWriteStream(transform.sync(key, locals))
+    await pipelinePromise(transform.stream(value, locals), writeStream)
   }
 }
 

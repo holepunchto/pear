@@ -10,7 +10,7 @@ function parse (template, locals) {
     const [match, def] = result
     const [name] = def.split(':').map((s) => s.trim())
     const { index } = result
-    args.push(locals[name])
+    args.push(locals[name] + '')
     strings.push(template.slice(last, index))
     last = index + match.length
   }

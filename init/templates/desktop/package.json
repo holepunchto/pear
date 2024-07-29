@@ -1,7 +1,6 @@
 {
   "name": "__name__",
   "main": "__main__",
-  "type": "module",
   "pear": {
     "name": "__name__",
     "type": "desktop",
@@ -11,6 +10,7 @@
       "width": __width__
     }
   },
+  "type": "module",
   "license": "__license__",
   "scripts": {
     "dev": "pear run -d .",

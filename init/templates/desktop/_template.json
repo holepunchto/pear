@@ -6,25 +6,22 @@
     },
     {
       "name": "main",
-      "default": "index.js",
+      "default": "index.html",
       "prompt": "main",
-      "type": "terminal",
-      "validation": "(value) => value.endsWith('.js')",
-      "msg": "must have a .js file extension"
+      "validation": "(value) => value.endsWith('.html')",
+      "msg": "must have an .html file extension"
     },
     {
       "name": "height",
       "validation": "(value) => Number.isInteger(+value)",
       "prompt": "height",
-      "msg": "must be an integer",
-      "type": "desktop"
+      "msg": "must be an integer"
     },
     {
       "name": "width",
       "validation": "(value) => Number.isInteger(+value)",
       "prompt": "width",
-      "msg": "must be an integer",
-      "type": "desktop"
+      "msg": "must be an integer"
     },
     {
       "name": "license",
