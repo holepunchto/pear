@@ -4,7 +4,7 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
-const subsystem = require('./lib/subsystem.js')
+const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
 const {
   SWAP,

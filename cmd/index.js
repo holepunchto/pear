@@ -26,9 +26,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const init = command(
     'init',
     summary('Create initial project files'),
+    description('Template Types: desktop, terminal, terminal-node'),
+    arg('[link|type]', 'Template link or type to init from. Default: desktop'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--type|-t <type>', 'Project type: desktop (default) or terminal'),
+    flag('--type|-t <type>', 'Project type: desktop (default) or terminal. Overrides: [link|type]'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--with|-w [name]', 'Additional functionality. Available: node'),
     runners.init(ipc)
@@ -230,8 +232,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   function explain (bail) {
     if (bail.err) {
       const code = bail.err.code
-      const known = errors.known('ERR_INVALID_').includes(code)
-      if (known === false) {
+      const known = errors.known('ERR_INVALID_', 'ERR_OPERATION_FAILED', 'ERR_DIR_NONEMPTY')
+      if (known.includes(code) === false) {
         print(bail.reason, false)
         print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
         Bare.exit(1)

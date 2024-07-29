@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
-const parseLink = require('../run/parse-link')
+const parseLink = require('../lib/parse-link')
 const { outputter, ansi } = require('./iface')
 
 const output = outputter('seed', {

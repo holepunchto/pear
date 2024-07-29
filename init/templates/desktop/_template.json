@@ -1,0 +1,35 @@
+{
+  "params": [
+    {
+      "name": "name",
+      "prompt": "name"
+    },
+    {
+      "name": "main",
+      "default": "index.js",
+      "prompt": "main",
+      "type": "terminal",
+      "validation": "(value) => value.endsWith('.js')",
+      "msg": "must have a .js file extension"
+    },
+    {
+      "name": "height",
+      "validation": "(value) => Number.isInteger(+value)",
+      "prompt": "height",
+      "msg": "must be an integer",
+      "type": "desktop"
+    },
+    {
+      "name": "width",
+      "validation": "(value) => Number.isInteger(+value)",
+      "prompt": "width",
+      "msg": "must be an integer",
+      "type": "desktop"
+    },
+    {
+      "name": "license",
+      "default": "Apache-2.0",
+      "prompt": "license"
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 'use strict'
-const { once } = require('bare-events')
 const hypercoreid = require('hypercore-id-encoding')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
+const Interact = require('../lib/interact')
 const { CHECKOUT } = require('../constants')
 const ADD = 1
 const REMOVE = -1
@@ -32,7 +32,6 @@ ansi.tick = isWindows ? '^' : ansi.green('✔')
 ansi.cross = isWindows ? 'x' : ansi.red('✖')
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
-const rx = /[\x1B\x9B][[\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\d/#&.:=?%@~_]+)*|[a-zA-Z\d]+(?:;[-a-zA-Z\d/#&.:=?%@~_]*)*)?\x07)|(?:(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g // eslint-disable-line no-control-regex
 
 function status (msg, success) {
   msg = msg || ''
@@ -95,191 +94,6 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
 
 function asyncIterate (array) { return (async function * () { yield * array }()) }
 
-class Interact {
-  constructor (header, params, type) {
-    this._header = header
-    this._params = params
-    this._type = type
-    stdio.out.write(this._header)
-  }
-
-  async run (opts = {}) {
-    const fields = {}
-    if (opts.autosubmit) return this._autosubmit()
-    while (this._params.length) {
-      const param = this._params.shift()
-      if (await this._evaluate(param, fields, this._params)) {
-        while (true) {
-          let answer = await this._input(`${param.prompt}${param.delim || ':'}${param.default && ' (' + param.default + ')'} `)
-          if (answer.length === 0) answer = param.default
-          if (!param.validation || await param.validation(answer)) {
-            if (typeof answer === 'string') answer = answer.replace(rx, '')
-            fields[param.name] = answer
-            break
-          } else {
-            stdio.out.write(param.msg + '\n')
-          }
-        }
-      } else {
-        continue
-      }
-    }
-
-    return { fields, result: this._getResult(fields) }
-  }
-
-  _autosubmit () {
-    const fields = {}
-    if (this._type) { // skip type
-      this._params.shift()
-      fields.type = this._type
-    }
-    while (this._params.length) {
-      const param = this._params.shift()
-      if (!param.type || param.type === this._type) fields[param.name] = param.default
-    }
-    return { fields, result: this._getResult(fields) }
-  }
-
-  async _input (prompt) {
-    stdio.out.write(prompt)
-    const answer = (await once(stdio.in, 'data')).toString()
-    return answer.trim() // remove return char
-  }
-
-  _evaluate (param, fields) {
-    if (this._type && param.name === 'type') { // skip type if given by arg
-      fields.type = this._type
-      return false
-    }
-    if (param.name === 'type') return true
-    return !param.type || param.type === fields.type
-  }
-
-  _getResult (fields) {
-    if (fields.type === 'desktop') {
-      return this._getDesktopResult(fields)
-    } else {
-      return this._getTerminalResult(fields)
-    }
-  }
-
-  _getDesktopResult (fields) {
-    return {
-      name: fields.name,
-      main: fields.main,
-      type: 'module',
-      pear: {
-        name: fields.name,
-        type: fields.type,
-        gui: {
-          backgroundColor: '#1F2430',
-          height: fields.height,
-          width: fields.width
-        }
-      },
-      license: fields.license,
-      devDependencies: {
-        brittle: '^3.0.0'
-      }
-    }
-  }
-
-  _getTerminalResult (fields) {
-    return {
-      name: fields.name,
-      main: fields.main,
-      type: 'module',
-      pear: {
-        name: fields.name,
-        type: fields.type
-      },
-      license: fields.license,
-      devDependencies: {
-        brittle: '^3.0.0'
-      }
-    }
-  }
-}
-
-const interact = (header, params, type) => {
-  return new Interact(header, params, type)
-}
-
-class Loading {
-  y = 0
-  i = 0
-  interval = null
-  cleared = false
-  started = Date.now()
-  shape (opts) {
-    return `\x1b[s\x1b[J\x1b[32m
-           ▅
-           ▀
-        ▂▂▄▟▙▃
-       ▄▄▄▄▆▆▆▆
-      ▄▄▄▄▄▆▆▆▆▆
-      ▄▄▄▄▄▆▆▆▆▆
-     ▄▄▄▄▄▄▆▆▆▆▆▆${opts?.msg ? '         ' + opts.msg : ''}
-    ▃▄▄▄▄▄▄▆▆▆▆▆▆▄
-   ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆
-   ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆
-     ▄▄▄▄▄▄▆▆▆▆▆▆
-       ▄▄▄▄▆▆▆▆\n       \x1b[2mLᴏᴀᴅɪɴɢ…\x1b[u`
-  }
-
-  constructor (opts) {
-    const shape = this.shape(opts)
-    this.frames = ['░', shape, '▒', '░', shape, shape, shape, shape]
-    this.ms = 1100 / this.frames.length
-    stdio.raw(true)
-    stdio.in.resume()
-    stdio.in.once('data', (data) => {
-      const match = data.toString().match(/\[(\d+);(\d+)R/)
-      if (!match) return
-      this.y = parseInt(match[1], 10)
-      const { frames } = this
-      const { height } = stdio.size()
-      const lines = shape.split('\n')
-      const available = height - this.y
-      if (available < lines.length) {
-        const offset = lines.length - available
-        stdio.out.write(`\x1b[${offset}S`)
-        stdio.out.write(`\x1b[${offset}F`)
-      }
-      stdio.out.write(shape)
-      this.interval = setInterval(() => {
-        stdio.out.write(frames[this.i] === shape ? shape : shape.replace(/[▂▃▄▅▆▀░▒▓▙▟]/g, frames[this.i]))
-        this.i = (this.i + 1) % frames.length
-      }, this.ms)
-      stdio.raw(false)
-      stdio.in.pause()
-    })
-    stdio.out.write('\x1b[6n')
-
-    this.clearing = new Promise((resolve) => {
-      this._cleared = resolve
-    })
-  }
-
-  clear (force = false) {
-    const timespan = Date.now() - this.started
-    const fulltime = (this.ms * this.frames.length) * 3
-    if (force === false && timespan < fulltime) {
-      setTimeout(() => this.clear(), fulltime - timespan)
-      return this.clearing
-    } else {
-      this.cleared = true
-      clearInterval(this.interval)
-      stdio.raw(false)
-      stdio.in.pause()
-      stdio.out.write('\x1b[u\x1b[J\x1b[0m')
-      this._cleared()
-      return this.clearing
-    }
-  }
-}
-
 const banner = `${ansi.bold('Pear')} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
 const version = `${CHECKOUT.fork || 0}.${CHECKOUT.length || 'dev'}.${CHECKOUT.key}`
 const header = `  ${banner}
@@ -330,28 +144,29 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function trust ({ ipc, key, message }) {
+async function permit ({ ipc, key, message, explain, ask, act }) {
   const z32 = hypercoreid.encode(key)
-  const sure = ansi.cross +
-    ' Key pear://' + z32 + ' is not known\n' +
-    '\nBe sure that software is trusted before running it\n' +
+  explain = explain ?? 'Be sure that software is trusted before running it\n' +
     '\nType "TRUST" to allow execution or anything else to exit\n\n'
+  ask = ask ?? 'Trust application'
+  act = act ?? 'Use pear run again to execute trusted application'
+  const sure = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
 
-  const prompt = interact(sure, [
+  const prompt = new Interact(sure, [
     {
       name: 'trust',
       default: '',
-      prompt: 'Trust application',
+      prompt: ask,
       delim: '?',
       validation: (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST'),
       msg: ansi.cross + ' uppercase TRUST to confirm'
     }
   ])
   const result = await prompt.run()
-  if (result.fields.trust === 'TRUST') {
+  if (result.trust === 'TRUST') {
     await ipc.trust(key)
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
-    print('Use pear run again to execute trusted application\n')
+    print(act + '\n')
     await ipc.close()
     Bare.exit()
   } else {
@@ -362,4 +177,4 @@ async function trust ({ ipc, key, message }) {
   }
 }
 
-module.exports = { usage, trust, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, interact, Loading }
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

@@ -9,9 +9,12 @@ class PearError extends Error {
   static ERR_INVALID_PROJECT_DIR = ERR_INVALID_PROJECT_DIR
   static ERR_INVALID_GC_RESOURCE = ERR_INVALID_GC_RESOURCE
   static ERR_INVALID_CONFIG = ERR_INVALID_CONFIG
+  static ERR_INVALID_TEMPLATE = ERR_INVALID_TEMPLATE
   static ERR_PERMISSION_REQUIRED = ERR_PERMISSION_REQUIRED
   static ERR_INTERNAL_ERROR = ERR_INTERNAL_ERROR
   static ERR_UNSTAGED = ERR_UNSTAGED
+  static ERR_DIR_NONEMPTY = ERR_DIR_NONEMPTY
+  static ERR_OPERATION_FAILED = ERR_OPERATION_FAILED
   static ERR_TRACER_FAILED = ERR_TRACER_FAILED
   static ERR_HTTP_GONE = ERR_HTTP_GONE
   static ERR_HTTP_BAD_REQUEST = ERR_HTTP_BAD_REQUEST
@@ -21,15 +24,16 @@ class PearError extends Error {
   static ERR_ASSERTION = ERR_ASSERTION
   static ERR_UNKNOWN = ERR_UNKNOWN
   static known = known
-  constructor (msg, code, fn = PearError) {
+  constructor (msg, code, fn = PearError, info = null) {
     super(msg)
     this.code = code
+    if (this.info !== null) this.info = info
     if (Error.captureStackTrace) Error.captureStackTrace(this, fn)
   }
 }
 
-function known (prefix = 'ERR_') {
-  return Object.getOwnPropertyNames(PearError).filter((name) => name.startsWith(prefix))
+function known (prefix = 'ERR_', ...prefixes) {
+  return [...Object.getOwnPropertyNames(PearError).filter((name) => name.startsWith(prefix)), ...prefixes.flatMap((prefix) => known(prefix))]
 }
 
 function ERR_INVALID_INPUT (msg) {
@@ -68,8 +72,12 @@ function ERR_INVALID_CONFIG (msg) {
   return new PearError(msg, 'ERR_INVALID_CONFIG', ERR_INVALID_CONFIG)
 }
 
-function ERR_PERMISSION_REQUIRED (msg) {
-  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED)
+function ERR_INVALID_TEMPLATE (msg) {
+  return new PearError(msg, 'ERR_INVALID_TEMPLATE', ERR_INVALID_TEMPLATE)
+}
+
+function ERR_PERMISSION_REQUIRED (msg, key) {
+  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, { key })
 }
 
 function ERR_HTTP_GONE () {
@@ -104,6 +112,14 @@ function ERR_INTERNAL_ERROR (msg) {
 
 function ERR_UNSTAGED (msg) {
   return new PearError(msg, 'ERR_UNSTAGED', ERR_UNSTAGED)
+}
+
+function ERR_DIR_NONEMPTY (msg) {
+  return new PearError(msg, 'ERR_DIR_NONEMPTY', ERR_DIR_NONEMPTY)
+}
+
+function ERR_OPERATION_FAILED (msg) {
+  return new PearError(msg, 'ERR_OPERATION_FAILED', ERR_OPERATION_FAILED)
 }
 
 function ERR_TRACER_FAILED (msg) {

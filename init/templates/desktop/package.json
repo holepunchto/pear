@@ -1,0 +1,22 @@
+{
+  "name": "__name__",
+  "main": "__main__",
+  "type": "module",
+  "pear": {
+    "name": "__name__",
+    "type": "desktop",
+    "gui": {
+      "backgroundColor": "#1F2430",
+      "height": __height__,
+      "width": __width__
+    }
+  },
+  "license": "__license__",
+  "scripts": {
+    "dev": "pear run -d .",
+    "test": "brittle test/*.test.js"
+  },
+  "devDependencies": {
+    "brittle": "^3.0.0"
+  }
+}

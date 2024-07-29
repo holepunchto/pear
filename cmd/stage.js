@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
-const parseLink = require('../run/parse-link')
+const parseLink = require('../lib/parse-link')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 let blocks = 0

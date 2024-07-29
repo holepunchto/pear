@@ -1,6 +1,6 @@
 'use strict'
 const { outputter } = require('./iface')
-const parseLink = require('../run/parse-link')
+const parseLink = require('../lib/parse-link')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const output = outputter('shift', {
