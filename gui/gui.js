@@ -438,7 +438,7 @@ class App {
     this.menu = new Menu(this)
   }
 
-  async report ({ err, upgrade }) {
+  async report ({ err }) {
     err = err?.remote || err || new Error(`Unknown error: "${err}"`)
     const x = '\x1B[31m✖ \x1B[39m'
     const pregui = this.handle === null || this.open === false
@@ -453,9 +453,7 @@ class App {
       process.exit(1)
     }
     try {
-      return await this.ipc.createReport({
-        args: [{ message: err.message, stack: err.stack, code: err.code, upgrade }]
-      })
+      return await this.ipc.createReport({ message: err.message, stack: err.stack, code: err.code })
     } catch (ipcErr) {
       const timedout = ipcErr.name === 'TimeoutError' && ipcErr.code === ipcErr.TIMEOUT_ERR
       if (err?.code === 'ERR_FAILED') {
