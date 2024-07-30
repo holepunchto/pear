@@ -690,7 +690,7 @@ function applyGuiOption (win, key, value) {
       let y = Math.round(curY - ((height - currentHeight) / 2))
       x = x < 0 ? 0 : x
       y = y < 0 ? 0 : y
-      win.setPosition(x, y, true)
+      try { win.setPosition(x, y, true) } catch { /* ignore */ }
       return win.setSize(width, height, true)
     }
     case 'x:y': return win.setPosition(value[0], value[1], true)
