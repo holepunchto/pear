@@ -624,7 +624,7 @@ class Sidecar extends ReadyResource {
       })
 
       for (const app of matches) {
-        const pathname = isWindows ? path.normalize(parsed.pathname.slice(1)) : parsed.pathname
+        const pathname = isWindows && parsed.protocol === 'file:' ? path.normalize(parsed.pathname.slice(1)) : parsed.pathname
         const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
         const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
         app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
