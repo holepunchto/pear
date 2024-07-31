@@ -45,6 +45,12 @@ module.exports = class PearGUI extends ReadyResource {
           desktopSources: (options = {}) => ipc.desktopSources(options)
         }
 
+        ipc.messages({ type: 'pear/reload' }).once('data', async ({ hard }) => {
+          await ipc.close()
+          if (hard === true) await ipc.waitForLock()
+          location.reload()
+        })
+
         const kGuiCtrl = Symbol('gui:ctrl')
 
         class Parent extends EventEmitter {
@@ -211,6 +217,11 @@ module.exports = class PearGUI extends ReadyResource {
 
         this.Window = Window
         this.View = View
+      }
+
+      reload = (opts) => {
+        if (opts?.platform) return super.reload()
+        location.reload()
       }
 
       exit = (code) => {
