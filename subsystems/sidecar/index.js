@@ -515,7 +515,7 @@ class Sidecar extends ReadyResource {
 
   async restart ({ platform = false, hard = true } = {}, client) {
     if (this.verbose) console.log(`${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
-    if (platform === false) {
+    if (hard === true && platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
@@ -553,23 +553,18 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    if (!hard && this.hasClients) {
-      const seen = new Set()
-      for (const { userData: app } of this.clients) {
-        if (!app.state || seen.has(app.state.id)) continue
-        seen.add(app.state.id)
-        app.message({ type: 'pear/reload' })
-      }
-    }
+    for (const { userData: app } of this.clients) app.message({ type: 'pear/reload', hard })
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
+
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    if (hard === false) return
+
     // shutdown successful, reset death clock
     this.deathClock()
-
-    if (!hard) return
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return

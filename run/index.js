@@ -20,8 +20,6 @@ const {
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
 const { isWindows } = require('which-runtime')
-const { PLATFORM_LOCK } = require('../constants')
-const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -117,15 +115,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     global.Pear = pear
 
-    const reloadSubscriber = ipc.messages({ type: 'pear/reload' })
-    reloadSubscriber.on('data', async () => {
-      ipc.stream.destroy()
-
-      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
-      await fsext.waitForLock(fd)
-      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
-
-      await global.Pear.restart()
+    ipc.messages({ type: 'pear/reload' }).once('data', async ({ hard }) => {
+      await ipc.close()
+      if (hard === true) await ipc.waitForLock()
+      await global.Pear.reload()
     })
 
     const protocol = new Module.Protocol({
