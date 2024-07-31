@@ -44,7 +44,7 @@
     body {
       user-select: none;
       background: #151517;
-      margin:0; 
+      margin:0;
       padding: 0;
       border: 0.5px solid rgba(0, 0, 0, 0);
       box-sizing: border-box;
@@ -53,7 +53,7 @@
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
-    a:visited, a:active, a { 
+    a:visited, a:active, a {
       color: #95E6CB;
       outline: none;
     }
@@ -93,7 +93,7 @@
       display: none;
     }
 
-    #win-ctrl { 
+    #win-ctrl {
       display: none;
     }
 
@@ -118,7 +118,7 @@
     .dialog pear-ctrl[data-platform=darwin] {
       margin-top: -32px;
     }
-    
+
     .dialog.darwin #bar {
       background: rgba(0, 0, 0, 0);
       display: block;
@@ -131,10 +131,10 @@
   </style>
 </head>
 <body>
-  <div style="display:none" id="window-controls"><pear-ctrl></pear-ctrl></div>
+  <div id="window-controls"><pear-ctrl></pear-ctrl></div>
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
-    .win32 #win-ctrl { 
+    .win32 #win-ctrl {
       display: table-row;
       float: right;
       margin-left: .6em;
@@ -467,7 +467,7 @@
       <div id="win-restore" class="win-ctrl">
         <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M15.1875 1.375H7.3125C6.36328 1.375 5.625 2.14844 5.625 3.0625V3.625H4.5V3.0625C4.5 1.51562 5.73047 0.25 7.3125 0.25H15.1875C16.7344 0.25 18 1.51562 18 3.0625V10.9375C18 12.5195 16.7344 13.75 15.1875 13.75H14.625V12.625H15.1875C16.1016 12.625 16.875 11.8867 16.875 10.9375V3.0625C16.875 2.14844 16.1016 1.375 15.1875 1.375ZM11.25 4.75C12.4805 4.75 13.5 5.76953 13.5 7V16C13.5 17.2656 12.4805 18.25 11.25 18.25H2.25C0.984375 18.25 0 17.2656 0 16V7C0 5.76953 0.984375 4.75 2.25 4.75H11.25ZM11.25 5.875H2.25C1.61719 5.875 1.125 6.40234 1.125 7V9.25H12.375V7C12.375 6.40234 11.8477 5.875 11.25 5.875ZM2.25 17.125H11.25C11.8477 17.125 12.375 16.6328 12.375 16V10.375H1.125V16C1.125 16.6328 1.61719 17.125 2.25 17.125Z" fill="white"/>
-        </svg>          
+        </svg>
       </div>
       <div id="win-close" class="win-ctrl">
         <svg id="win-close" width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -483,11 +483,11 @@
       })
       if (process.platform === 'win32') {
         document.querySelector('#win-min').addEventListener('click', async () => { await Pear.Window.self.minimize() })
-        document.querySelector('#win-max').addEventListener('click', async () => { 
-          await Pear.Window.self.maximize() 
+        document.querySelector('#win-max').addEventListener('click', async () => {
+          await Pear.Window.self.maximize()
           document.querySelector('#win-ctrl').classList.add('max')
         })
-        document.querySelector('#win-restore').addEventListener('click', async () => { 
+        document.querySelector('#win-restore').addEventListener('click', async () => {
           await Pear.Window.self.restore()
           document.querySelector('#win-ctrl').classList.remove('max')
         })
@@ -602,11 +602,11 @@
         <div id="headline">
           <slot name="headline">HEADLINE</slot>
         </div>
-    
+
         <div id="tagline">
           <slot name="tagline">TAGLINE</slot>
         </div>
-    
+
         <button id="cta"><slot name="cta">CTA</slot></button>
       </div>
     </template>
@@ -696,7 +696,7 @@
         #loader {
           display: none;
         }
-        
+
         #loader {
           position: absolute;
           left: 0;
@@ -730,7 +730,7 @@
           67% {
             transform: scale(1.0);
           }
-        }	
+        }
 
         #update {
           display: none;
@@ -806,11 +806,11 @@
           this.show()
           await this.ipc.detachMainView({ id: Pear.Window.self.id })
         }
-        show () { 
-          this.shadowRoot.querySelector('#loader').style.display = 'block' 
+        show () {
+          this.shadowRoot.querySelector('#loader').style.display = 'block'
         }
         hide () {
-          this.shadowRoot.querySelector('#loader').style.display = 'none' 
+          this.shadowRoot.querySelector('#loader').style.display = 'none'
         }
         async restart () {
           let countdown = 3000
@@ -867,7 +867,7 @@
       avatar.src = src
     }
 
-    const report = document.querySelector('decal-report')  
+    const report = document.querySelector('decal-report')
     report.subscribe(ipc, loader)
 
     process.on('exit', (code) => {
