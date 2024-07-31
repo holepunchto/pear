@@ -75,7 +75,7 @@ async function * downloader (key, all) {
 
   const store = path.join(PEAR, 'corestores', 'platform')
 
-  const maxCacheSize = 65536 // TODO: expose as parameter
+  const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
 
   const corestore = new Corestore(store, { globalCache })

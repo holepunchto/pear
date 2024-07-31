@@ -36,7 +36,7 @@ async function gc () {
 async function bootSidecar () {
   await gc()
 
-  const maxCacheSize = 65536 // TODO: expose as parameter
+  const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
   const corestore = new Corestore(PLATFORM_CORESTORE, { globalCache, manifestVersion: 1, compat: false })
   await corestore.ready()
