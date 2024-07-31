@@ -4,6 +4,7 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
+const Rache = require('rache')
 const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
 const {
@@ -34,7 +35,10 @@ async function gc () {
 
 async function bootSidecar () {
   await gc()
-  const corestore = new Corestore(PLATFORM_CORESTORE, { manifestVersion: 1, compat: false })
+
+  const maxCacheSize = 65536
+  const globalCache = new Rache({ maxSize: maxCacheSize })
+  const corestore = new Corestore(PLATFORM_CORESTORE, { globalCache, manifestVersion: 1, compat: false })
   await corestore.ready()
 
   const drive = await createPlatformDrive()
