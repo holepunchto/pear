@@ -12,6 +12,7 @@ const goodbye = global.Pear?.teardown || require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
+const Rache = require('rache')
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
@@ -73,7 +74,11 @@ async function * downloader (key, all) {
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
 
   const store = path.join(PEAR, 'corestores', 'platform')
-  const corestore = new Corestore(store)
+
+  const maxCacheSize = 65536 // TODO: expose as parameter
+  const globalCache = new Rache({ maxSize: maxCacheSize })
+
+  const corestore = new Corestore(store, { globalCache })
   let runtimes = new Hyperdrive(corestore, decode(key))
 
   const swarm = new Hyperswarm()
