@@ -53,12 +53,15 @@ module.exports = class Dump extends Opstream {
       const entry = pathname === '' ? null : await src.entry(localFile || pathname)
       if (entry !== null) {
         const value = await src.get(entry)
-        this.push({ tag: 'file', data: { key: entry.key, value } })
+        const key = entry.key.split('/').pop()
+        this.push({ tag: 'file', data: { key, value } })
         return
       }
+
       for await (const entry of src.list(pathname)) {
         const value = await src.get(entry)
-        this.push({ tag: 'file', data: { key: entry.key, value } })
+        const key = isFileLink ? entry.key : entry.key.slice(prefix.length)
+        this.push({ tag: 'file', data: { key, value } })
       }
       return
     }

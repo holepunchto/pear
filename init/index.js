@@ -66,7 +66,6 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-
     const file = transform.sync(key, locals)
     const writeStream = dst.createWriteStream(file)
     const promise = pipelinePromise(transform.stream(value, locals), writeStream)
