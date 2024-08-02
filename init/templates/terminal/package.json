@@ -12,6 +12,7 @@
     "test": "brittle test/*.test.js"
   },
   "devDependencies": {
-    "brittle": "^3.0.0"
+    "brittle": "^3.0.0",
+    "pear-interface": "^1.0.0"
   }
 }

@@ -1,4 +1,4 @@
-/* global Pear */
+/** @typedef {import('pear-interface')} */ /* global Pear */
 const { versions, config, updates, wakeups, Window } = Pear
 console.log('link', config.link)
 console.log('linkData', config.linkData)

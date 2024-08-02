@@ -19,7 +19,8 @@
       "backgroundColor": "#1F2430"
     }
   },
-  "keywords": [],
-  "author": "",
-  "license": ""
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "pear-interface": "^1.0.0"
+  }
 }

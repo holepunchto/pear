@@ -2,6 +2,7 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
+const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
@@ -797,6 +798,25 @@ class Sidecar extends ReadyResource {
 
     const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
+  }
+
+  async #updatePearInterface (drive) {
+    try {
+      const pearInterfacePkgEntry = await drive.entry('/node_modules/pear-interface/package.json')
+      if (pearInterfacePkgEntry === null) return
+      const projPkg = JSON.parse(await drive.get(pearInterfacePkgEntry))
+      const platPkg = JSON.parse(await this.drive.get('/node_modules/pear-interface/package.json'))
+      if (projPkg.version === platPkg.version) return
+      const tmp = path.join(drive.root, 'node_modules', '.pear-interface.next')
+      const mirror = this.drive.mirror(new LocalDrive(tmp), { prefix: '/node_modules/pear-interface' })
+      await mirror.done()
+      const next = path.join(tmp, 'node_modules', 'pear-interface')
+      const current = path.join(drive.root, 'node_modules', 'pear-interface')
+      await fsx.swap(next, current)
+      await fs.promises.rmdir(tmp) // gc
+    } catch (err) {
+      console.error('Unexpected error while attempting to update pear-interface in project', drive.root, err)
+    }
   }
 
   async #ensureSwarm () {
