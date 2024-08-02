@@ -689,6 +689,7 @@ class Sidecar extends ReadyResource {
 
     if (state.key === null) {
       const drive = new LocalDrive(state.dir, { followLinks: true })
+      this.#updatePearInterface(drive)
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
@@ -802,6 +803,11 @@ class Sidecar extends ReadyResource {
 
   async #updatePearInterface (drive) {
     try {
+      const pkgEntry = await drive.entry('/package.json')
+      if (pkgEntry === null) return
+      const pkg = JSON.parse(await drive.get(pkgEntry))
+      const isDevDep = !!pkg.devDependencies?.['pear-interface']
+      if (isDevDep === false) return
       const pearInterfacePkgEntry = await drive.entry('/node_modules/pear-interface/package.json')
       if (pearInterfacePkgEntry === null) return
       const projPkg = JSON.parse(await drive.get(pearInterfacePkgEntry))
@@ -813,7 +819,7 @@ class Sidecar extends ReadyResource {
       const next = path.join(tmp, 'node_modules', 'pear-interface')
       const current = path.join(drive.root, 'node_modules', 'pear-interface')
       await fsx.swap(next, current)
-      await fs.promises.rmdir(tmp) // gc
+      await fs.promises.rm(tmp, { recursive: true })
     } catch (err) {
       console.error('Unexpected error while attempting to update pear-interface in project', drive.root, err)
     }

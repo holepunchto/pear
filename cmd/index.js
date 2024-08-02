@@ -219,7 +219,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       console.log('Key=' + key)
       console.log('Fork=' + fork)
       console.log('Length=' + length)
-      console.log('Semver=' + semver)
+      console.log('SemVer=' + semver)
       return
     }
     console.log(cmd.overview())
