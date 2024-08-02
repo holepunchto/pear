@@ -13,6 +13,7 @@
 * CLI - `pear dump` dump to stdout
 * CLI - `pear dump` dump from entrypoint
 * CLI - `pear run --links <kvs>` - key-value overrides of `package.json` `pear.links`
+* IDE / Types - `pear-interface` dev-dep autosyncing to current platform Pear API for synchronized IDE autocomplete support
 * Diagnostics - pear://doctor alias
 
 ### Fixes
@@ -29,7 +30,6 @@
 
 * Electron - upgrade to 31.2.0
 * Performance - memory usage optimization with global corestore cache
-* IDE / Types - `pear-interface` dev-dep autosyncing to current platform Pear API for synchronized IDE autocomplete support
 * API - `Pear.worker` - Worker now inherits flags passed to `pear` which creates equivalent `Pear.config` state in Worker
 * CLI - `pear -v` improved output
 * CLI - electron and pear SemVers added to `pear versions`
