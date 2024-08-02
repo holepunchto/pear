@@ -1,19 +1,61 @@
 # Pear Runtime Changelog
 
+## v1.4.0
+
+### Features
+
+* API - `Pear.worker(link, args)` - pass app args to worker with second `args` parameter, sets `Pear.config.args`
+* API - `Pear.wakeups()` includes `fragment` of `pear://link#fragment` (location hash without the `#` prefix)
+* API - `Pear.wakeups()` includes `entrypoint` of `pear://link/some/entry/point` (URL pathname)
+* API - `Pear.reload()` soft-restart terminal apps (keeps I/O), refresh app in desktop apps
+* API - `Pear.versions() -> { platform, app, runtimes }` `runtimes.bare`, `runtimes.pear` and `runtimes.electron` SemVers
+* CLI - `pear init [flags] <link|type=desktop> [dir]` initialize from templates at pear:// links
+* CLI - `pear dump` dump to stdout
+* CLI - `pear dump` dump from entrypoint
+* CLI - `pear run --links <kvs>` - key-value overrides of `package.json` `pear.links`
+* Diagnostics - pear://doctor alias
+
+### Fixes
+
+* CLI - `pear seed <link>`, reseeding fix 
+* CLI - `pear run --unsafe-clear-app-storage` fix
+* CLI - `pear run  --unsafe-clear-preferences` fix
+* CLI - `pear run` - only set NODE_ENV production when not dev mode
+* Desktop - setPosition edge-case guard
+* Desktop - re-enable decal loader titlebar and window controls
+* Reporting - client-side reporting-to-sidecar state-fix 
+
+### Improvements
+
+* Electron - upgrade to 31.2.0
+* Performance - memory usage optimization with global corestore cache
+* IDE / Types - `pear-interface` dev-dep autosyncing to current platform Pear API for synchronized IDE autocomplete support
+* API - `Pear.worker` - Worker now inherits flags passed to `pear` which creates equivalent `Pear.config` state in Worker
+* CLI - `pear -v` improved output
+* CLI - electron and pear SemVers added to `pear versions`
+
 ## v1.3.4
+
+### Fixes
 
 * Desktop - teardown fix
 * Wakeup & Config - linkData fix
 
 ## v1.3.3
 
+### Fixes
+
 * Restart - --storage flag in restart flow bug fix
 
 ## v1.3.2
 
+### Fixes
+
 * Trust - fix to pear:// links
 
 ## v1.3.1
+
+### Fixes
 
 * CLI - fix --storage flag
 
@@ -92,7 +134,7 @@
 ### Fixes
 
 * Windows - multiple platform instances fix, unique pipes
-* Hypercore dependency update for updater fixes
+* Hypercore - dependency update for updater fixes
 * libudx - app start-up hanging bug-fix
 * CLI - `pear versions` hanging fix
 * teardown - sigterm exit code fix
