@@ -6,6 +6,8 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
+const render = require('./render')
+
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {
@@ -47,11 +49,20 @@ module.exports = class Http extends ReadyResource {
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
+        } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
+          err.status = 404
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
           console.error('Unknown Server Error', err)
           err.status = 500
+        }
+
+        if (err.code === 'ERR_HTTP_NOT_FOUND') {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8')
+          res.statusCode = err.status
+          res.end(render({ headline: 'Error - Not found', message: `The URL "${req.url}" was not found`, instruction: 'Check the URL and try again' }))
+          return
         }
         res.setHeader('Content-Type', 'text/plain')
         res.statusCode = err.status

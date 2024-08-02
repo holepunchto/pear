@@ -58,8 +58,7 @@
       outline: none;
     }
     #bar {
-      background: rgba(55, 60, 72, 0.6);
-      backdrop-filter: blur(64px);
+      background: #0D0F16;
       -webkit-app-region: drag;
       height: 50px;
       padding-top: 12px;
@@ -78,7 +77,6 @@
       width: calc(100vw + 2px);
       left: -2px;
       top: -2px;
-      display: none;
     }
     #bar > * {
       -webkit-app-region: no-drag;
@@ -523,6 +521,7 @@
             height: 28px;
             box-sizing: border-box;
             line-height: 28px;
+            display: none;
           }
         </style>
         <span id="tier"><slot name="tier">TIER</slot></span>
