@@ -1,3 +1,4 @@
+/** @typedef {import('pear-interface')} */
 'use strict'
 const { isElectron, isElectronRenderer, isElectronWorker } = require('which-runtime')
 

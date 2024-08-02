@@ -12,7 +12,8 @@
   "keywords": [],
   "author": "",
   "license": "",
-  "dependencies": {
-    "brittle": "^3.4.0"
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "pear-interface": "^1.0.0"
   }
 }
