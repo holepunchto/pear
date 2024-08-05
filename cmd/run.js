@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, permit, stdio } = require('./iface')
+const { outputter, permit, stdio, encryptionKeyDialog } = require('./iface')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -21,7 +21,12 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     const appArgs = cmd.rest || []
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
-    if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
-    await permit({ ipc, key: err.info.key, message: err.message })
+    if (err.code === 'ERR_PERMISSION_REQUIRED') {
+      await permit({ ipc, key: err.info.key, message: err.message })
+    } else if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
+      await encryptionKeyDialog({ ipc, key: err.info.key })
+    } else {
+      throw err
+    }
   }
 }

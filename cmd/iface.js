@@ -177,4 +177,27 @@ async function permit ({ ipc, key, message, explain, ask, act }) {
   }
 }
 
-module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+async function encryptionKeyDialog ({ ipc, key }) {
+  const z32 = hypercoreid.encode(key)
+  const explain = z32 + ' is an encrypted application. \n' +
+    '\nInput the encryption key to run the app.\n\n'
+  const ask = 'Encryption key'
+  const sure = ansi.cross + explain
+  const prompt = new Interact(sure, [
+    {
+      name: 'key',
+      default: '',
+      prompt: ask,
+      delim: ':',
+      msg: '',
+      validation: () => true
+    }
+  ])
+  const result = await prompt.run()
+  await ipc.setPreference({ key: 'encryption-key:' + key.toString('hex'), value: result.key })
+  print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
+  await ipc.close()
+  Bare.exit(77)
+}
+
+module.exports = { usage, permit, encryptionKeyDialog, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

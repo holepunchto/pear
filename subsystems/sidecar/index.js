@@ -32,7 +32,7 @@ const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
@@ -738,8 +738,10 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
+    const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
+
     const appBundle = new Bundle({
-      encryptionKey,
+      encryptionKey: encryptionKey || storedEncryptionKey,
       corestore: this._getCorestore(state.manifest?.name, state.channel),
       appling: state.appling,
       channel: state.channel,
@@ -753,7 +755,16 @@ class Sidecar extends ReadyResource {
       async failure (err) { app.report({ err }) }
     })
 
-    await session.add(appBundle)
+    try {
+      await appBundle.ready()
+      if (!appBundle.drive.opened) throw new Error('Cannot open Hyperdrive')
+      await session.add(appBundle)
+    } catch (err) {
+      if (!encryptionKey) {
+        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+        return { startId, bail: err }
+      }
+    }
 
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
