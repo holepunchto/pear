@@ -226,8 +226,15 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 
   const program = cmd.parse(argv)
-  if (program) program.running.finally(() => { ipc.close() })
-  else ipc.close()
+
+  if (program === null) {
+    ipc.close()
+    return null
+  }
+
+  if (program.running) program.running.finally(() => { ipc.close() })
+
+  return program
 
   function explain (bail) {
     if (bail.err) {
@@ -246,6 +253,4 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     print(reason, false)
     print('\n' + bail.command.usage())
   }
-
-  return program
 }
