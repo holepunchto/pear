@@ -1,7 +1,6 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 const { isElectron, isElectronRenderer, isElectronWorker } = require('which-runtime')
-
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 const BOOT_ELECTRON = 3

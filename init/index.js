@@ -1,5 +1,6 @@
 'use strict'
 const { pipelinePromise, Readable } = require('streamx')
+const { pathToFileURL } = require('bare-url')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const transform = require('./lib/transform')
@@ -12,6 +13,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
   const isType = !isPear && !isFile && !isPath
+
   if (isType) {
     const { platform } = await ipc.versions()
     if (platform.key.startsWith('/')) link = path.join(__dirname, 'templates', link)
@@ -25,6 +27,12 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (trusted.has(hypercoreid.encode(drive.key)) === false) {
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
     }
+  }
+
+  if (isPath) {
+    let url = pathToFileURL(dir).toString()
+    if (url.slice(1) !== '/') url += '/'
+    link = new URL(link, url).toString()
   }
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {

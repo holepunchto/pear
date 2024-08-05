@@ -36,7 +36,6 @@ module.exports = (ipc) => async function init (cmd) {
   const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
   let header = `\n${banner}${ansi.dim('›')}\n\n`
   if (force) header += ansi.bold('FORCE MODE\n\n')
-
   try {
     await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header }))
   } catch (err) {

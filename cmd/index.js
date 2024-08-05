@@ -32,7 +32,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--yes|-y', 'Autoselect all defaults'),
     flag('--type|-t <type>', 'Template type. Overrides <link|type>'),
     flag('--force|-f', 'Force overwrite existing files'),
-    flag('--with|-w [name]', 'Additional functionality. Available: node'),
+    flag('--with|-w <name>', 'Additional functionality. Available: node'),
     runners.init(ipc)
   )
 
