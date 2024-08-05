@@ -1,14 +1,26 @@
 'use strict'
 const http = require('bare-http1')
+const fs = require('bare-fs')
+const path = require('bare-path')
 const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
+const safetyCatch = require('safety-catch')
 const Mime = require('./mime')
+const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
-const render = require('./render')
 
 const mime = new Mime()
+
+const readTemplate = (filePath) => {
+  let template = Buffer.from('<html><body>__default__</body></html>', 'utf8')
+  try { template = fs.readFileSync(path.resolve(filePath)) } catch (err) {
+    if (err !== 'ENOENT') throw err
+    safetyCatch(err)
+  }
+  return template
+}
 
 module.exports = class Http extends ReadyResource {
   constructor (sidecar) {
@@ -16,6 +28,7 @@ module.exports = class Http extends ReadyResource {
     this.sidecar = sidecar
     this.ipc = sidecar.ipc
     this.connections = new Set()
+    this.templates = new Map().set('not-found', readTemplate(path.join('..', '..', '..', 'not-found.html')))
     this.server = http.createServer(async (req, res) => {
       try {
         const ua = req.headers['user-agent']
@@ -59,9 +72,18 @@ module.exports = class Http extends ReadyResource {
         }
 
         if (err.code === 'ERR_HTTP_NOT_FOUND') {
+          const locals = {
+            default: 'Not Found',
+            headline: `Entrypoint "${req.url}" not found`,
+            message: `Application does not contain ${req.url}`,
+            info: 'appName, appVersion'
+          }
+          const html = transform.sync(this.templates.get('not-found'), locals)
+          console.log('html:', html)
+
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
           res.statusCode = err.status
-          res.end(render({ headline: 'Error - Not found', message: `The URL "${req.url}" was not found`, instruction: 'Check the URL and try again' }))
+          res.end('<html><body>todo, not found</body></html>')
           return
         }
         res.setHeader('Content-Type', 'text/plain')

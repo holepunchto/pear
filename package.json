@@ -58,6 +58,7 @@
     ]
   },
   "dependencies": {
+    "@fontsource/inter": "^5.0.20",
     "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
     "b4a": "^1.6.6",
