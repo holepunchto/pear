@@ -22,6 +22,6 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
-    await permit({ ipc, key: err.key, message: err.message })
+    await permit({ ipc, key: err.info.key, message: err.message })
   }
 }
