@@ -71,7 +71,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
-    flag('--name', 'Advanced. Override app name'),
+    flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
   )
@@ -86,7 +86,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--bare|-b', 'File data only, no warmup optimization'),
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--name', 'Advanced. Override app name'),
+    flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     hiddenFlag('--encryption-key <name>'), // internal temporarily
     runners.stage(ipc)

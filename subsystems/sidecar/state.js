@@ -30,7 +30,7 @@ module.exports = class State extends SharedState {
     this.reconfigure()
   }
 
-  async initialize ({ bundle, app, dryRun = false } = {}) {
+  async initialize ({ bundle, app, name, dryRun = false } = {}) {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
@@ -63,7 +63,7 @@ module.exports = class State extends SharedState {
 
     const { dependencies } = this.manifest
     const options = this.manifest.pear || this.manifest.holepunch || {}
-    const name = options.name || this.manifest.name
+    if (!name) name = options.name || this.manifest.name
     const { channel, release } = bundle
     const { main = 'index.html' } = this.manifest
 
