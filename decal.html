@@ -624,7 +624,7 @@
             const cta = this.shadowRoot.querySelector('#cta')
             const code = (value === 'reload') ? 64 : 0
             const handler = (value === 'quit' || value === 'reload') ?
-              () => this.ipc.quit(code) :
+              () => Pear.exit(code) :
               () => {}
             cta.addEventListener('click', handler)
           }
@@ -873,12 +873,12 @@
     process.on('exit', (code) => {
       const actuallyARefresh = code === undefined
       if (actuallyARefresh) return
-      ipc.quit(code)
+      Pear.exit(code)
     })
 
     async function start () {
 
-      const win32CloseListener = process.platform === 'win32' ? () => ipc.quit(0) : null
+      const win32CloseListener = process.platform === 'win32' ? () => Pear.exit(0) : null
       if (process.platform === 'win32') document.querySelector('#win-close').addEventListener('click', win32CloseListener)
       let config = Pear.config
 

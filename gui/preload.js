@@ -57,7 +57,7 @@ module.exports = class PearGUI extends ReadyResource {
             })
           }
 
-          send (...args) { return electron.ipcRenderer.sendTo(this.#id, ...args) }
+          send (...args) { return electron.ipcRenderer.send('send-to', this.#id, ...args) }
           focus (options = null) { return ipc.parent({ act: 'focus', id: this.#id, options }) }
           blur () { return ipc.parent({ act: 'blur', id: this.#id }) }
           show () { return ipc.parent({ act: 'show', id: this.#id }) }
@@ -200,7 +200,7 @@ module.exports = class PearGUI extends ReadyResource {
 
           isClosed () { return ipc.isClosed({ id: this.id }) }
 
-          send (...args) { return electron.ipcRenderer.sendTo(this.id, ...args) }
+          send (...args) { return electron.ipcRenderer.send('send-to', this.id, ...args) }
         }
 
         class Window extends GuiCtrl {
@@ -213,9 +213,9 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      exit (code) {
+      exit = (code) => {
         process.exitCode = code
-        electron.app.quit()
+        electron.ipcRenderer.sendSync('exit', code)
       }
     }
     this.api = new API(this.ipc, state, onteardown)

@@ -426,10 +426,10 @@ class App {
         }
       })
       wc.on('render-process-gone', async (evt, details) => {
-        if (details?.reason === 'killed') return
-        if (this.state.dev) process._rawDebug('A Render Process has crashed', evt, details)
-        else electron.dialog.showErrorBox('A Render Process has crashed', JSON.stringify(details, 0, 2))
-        const err = new Error('A Render Process has crashed')
+        if (details?.reason === 'killed' || details?.reason === 'clean-exit') return
+        if (this.state.dev) process._rawDebug('A Render Process has gone', evt, details)
+        else electron.dialog.showErrorBox('A Render Process has gone', JSON.stringify(details, 0, 2))
+        const err = new Error('A Render Process has gone')
         err.code = 'ERR_CRASH'
         err.info = details
         await this.report({ err })
@@ -1409,6 +1409,8 @@ class PearGUI extends ReadyResource {
     this.worker = new Worker()
     this.pipes = new Freelist()
     this.ipc.once('close', () => this.close())
+
+    electron.ipcMain.on('exit', (e, code) => { process.exit(code) })
 
     electron.ipcMain.on('id', async (event) => {
       return (event.returnValue = event.sender.id)

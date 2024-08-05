@@ -13,7 +13,7 @@ if (process.isMainFrame) {
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
-  const { parentWcId, env, id, decalled = false, ...config } = state
+  const { parentWcId, env, id, ...config } = state
   const isDecal = state.isDecal || false
   if (config.key?.type === 'Buffer') config.key = Buffer.from(config.key.data)
   const dir = config.dir
@@ -43,15 +43,13 @@ if (process.isMainFrame) {
     global.clearInterval = clearInterval
   }
 
-  if (decalled) {
+  if (isDecal) {
+    electron.ipcRenderer.once('exit', (e, code) => { Pear.exit(code) })
+  } else {
     process.once('exit', (code) => {
       const actuallyARefresh = code === undefined
       if (actuallyARefresh) return
-      electron.ipcRenderer.sendTo(parentWcId, 'exit', code)
-    })
-  } else {
-    electron.ipcRenderer.once('exit', (e, code) => {
-      process.exit(code)
+      electron.ipcRenderer.send('send-to', parentWcId, 'exit', code)
     })
   }
 
