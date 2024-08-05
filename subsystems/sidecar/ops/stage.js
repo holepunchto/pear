@@ -12,7 +12,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
 const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED, ERR_MISSING_ENCRYPTION_KEY } = require('../../../errors')
+const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   static async * trace (bundle, client) {
@@ -64,7 +64,7 @@ module.exports = class Stage extends Opstream {
     const encrypted = state.options.encrypted
 
     if (encrypted === true && !encryptionKey) {
-      const err = ERR_MISSING_ENCRYPTION_KEY('Missing encryption-key flag')
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('Missing encryption-key flag')
       throw err
     }
 

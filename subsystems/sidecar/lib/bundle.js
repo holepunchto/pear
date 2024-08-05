@@ -33,8 +33,7 @@ module.exports = class Bundle {
     this.corestore = corestore
     this.trace = trace
     this.stage = stage
-    const driveOpts = encryptionKey === null ? {} : { encryptionKey: hypercoreid.decode(encryptionKey) }
-    this.drive = drive || new Hyperdrive(this.corestore, this.key, driveOpts)
+    this.drive = drive || new Hyperdrive(this.corestore, this.key, driveOpts(encryptionKey))
     this.updatesDiff = updatesDiff
     this.tracer = null
     this.link = null
@@ -112,7 +111,7 @@ module.exports = class Bundle {
   }
 
   async #init () {
-    await this.drive.ready()
+    try { await this.drive.ready() } catch {}
     if (Number.isInteger(this.truncate)) {
       await this.drive.truncate(this.truncate)
     }
@@ -313,5 +312,13 @@ module.exports = class Bundle {
     if (this.tracer) this.tracer.destroy()
     await this.drain()
     await this.drive.close()
+  }
+}
+
+function driveOpts (encryptionKey) {
+  try {
+    return { encryptionKey: hypercoreid.decode(encryptionKey) }
+  } catch (err) {
+    return {}
   }
 }
