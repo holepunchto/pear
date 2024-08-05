@@ -15,7 +15,8 @@ const API = require('../lib/api')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
-  ERR_INVALID_INPUT
+  ERR_INVALID_INPUT,
+  ERR_ENCRYPTION_KEY_REQUIRED
 } = require('../errors')
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
@@ -96,6 +97,11 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     const err = ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info.key)
+    throw err
+  }
+
+  if (bail?.code === 'ERR_ENCRYPTION_KEY_REQUIRED' && !flags.detach) {
+    const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required to run key', bail.info.key)
     throw err
   }
 
