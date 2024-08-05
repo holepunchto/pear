@@ -71,7 +71,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
-    hiddenFlag('--encryption-key <name>'), // internal temporarily
+    flag('--encryption-key <name>', 'Application encryption key'),
     runners.stage(ipc)
   )
 

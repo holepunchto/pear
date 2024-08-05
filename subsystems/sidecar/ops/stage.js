@@ -12,7 +12,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
 const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED } = require('../../../errors')
+const { ERR_TRACER_FAILED, ERR_MISSING_ENCRYPTION_KEY } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   static async * trace (bundle, client) {
@@ -53,12 +53,21 @@ module.exports = class Stage extends Opstream {
       dir,
       cmdArgs
     })
+
     await sidecar.ready()
     if (key) key = hypercoreid.decode(key)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
     const encryptionKeys = new Store('encryption-keys')
     const encryptionKey = await encryptionKeys.get(params.encryptionKey)
+
+    const encrypted = state.options.encrypted
+
+    if (encrypted === true && !encryptionKey) {
+      const err = ERR_MISSING_ENCRYPTION_KEY('Missing encryption-key flag')
+      throw err
+    }
+
     const bundle = new Bundle({
       key,
       corestore,
