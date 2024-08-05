@@ -1,26 +1,14 @@
 'use strict'
 const http = require('bare-http1')
-const fs = require('bare-fs')
-const path = require('bare-path')
 const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
-const safetyCatch = require('safety-catch')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 
 const mime = new Mime()
-
-const readTemplate = (filePath) => {
-  let template = Buffer.from('<html><body>__default__</body></html>', 'utf8')
-  try { template = fs.readFileSync(path.resolve(filePath)) } catch (err) {
-    if (err !== 'ENOENT') throw err
-    safetyCatch(err)
-  }
-  return template
-}
 
 module.exports = class Http extends ReadyResource {
   constructor (sidecar) {
@@ -28,7 +16,6 @@ module.exports = class Http extends ReadyResource {
     this.sidecar = sidecar
     this.ipc = sidecar.ipc
     this.connections = new Set()
-    this.templates = new Map().set('not-found', readTemplate(path.join('..', '..', '..', 'not-found.html')))
     this.server = http.createServer(async (req, res) => {
       try {
         const ua = req.headers['user-agent']
@@ -49,6 +36,8 @@ module.exports = class Http extends ReadyResource {
         const client = this.ipc.client(clientId)
         if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
+        const { name, version } = app.state
+        req.context = Object.assign(req.context || {}, { name, version })
 
         if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
         if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
@@ -60,6 +49,8 @@ module.exports = class Http extends ReadyResource {
         await app.bundle.ready()
         await this.#lookup(app, protocol, type, req, res)
       } catch (err) {
+        const { name, version } = req.context || {}
+
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
         } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
@@ -73,17 +64,16 @@ module.exports = class Http extends ReadyResource {
 
         if (err.code === 'ERR_HTTP_NOT_FOUND') {
           const locals = {
-            default: 'Not Found',
-            headline: `Entrypoint "${req.url}" not found`,
-            message: `Application does not contain ${req.url}`,
-            info: 'appName, appVersion'
+            headline: `Entrypoint '${req.url}' not found`,
+            message: `Application does not contain '${req.url}'`,
+            info: `${name}: v.${version?.fork}.${version?.length}.${version?.key}`
           }
-          const html = transform.sync(this.templates.get('not-found'), locals)
-          console.log('html:', html)
+          const template = await this.sidecar.drive.get('not-found.html') || '<html><body>__headline__</body></html>'
+          const response = transform.sync(template, locals)
 
           res.setHeader('Content-Type', 'text/html; charset=utf-8')
           res.statusCode = err.status
-          res.end('<html><body>todo, not found</body></html>')
+          res.end(response)
           return
         }
         res.setHeader('Content-Type', 'text/plain')

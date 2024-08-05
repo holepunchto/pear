@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Not Found</title>
-  <link  rel="stylesheet" href="~@fontsource/inter/400.css">
-  <link  rel="stylesheet" href="~@fontsource/inter/600.css">
+  <!--<link  rel="stylesheet" href="~@fontsource/inter/400.css">-->
+  <!--<link  rel="stylesheet" href="~@fontsource/inter/600.css">-->
 </head>
 <body>
   <template id="svg-pattern-template">
@@ -24,25 +24,13 @@
           <path d="M26.4474 28.9625H18.5526V29.525H10.6579V30.875H26.4474V28.9625Z" fill="#1E1E1E"/>
           <path d="M23.2895 31.25H18.5526V31.8125H13.8158V32.75H23.2895V31.25Z" fill="#1E1E1E"/>
         </symbol>
-        <pattern id="myapp-pattern" width="150" height="190" patternUnits="userSpaceOnUse">
+        <pattern id="logo-pattern" width="150" height="190" patternUnits="userSpaceOnUse">
           <use href="#complex-shape" x="55" y="5" width="150" height="100"/>
           <use href="#complex-shape" x="-20" y="95" width="150" height="100"/>
         </pattern>
       </defs>
-      <rect width="150" height="190" fill="url(#myapp-pattern)"/>
+      <rect width="150" height="190" fill="url(#logo-pattern)"/>
     </svg>
-  </template>
-
-  <template id="background-view">
-    <style>
-      :host {
-        display: block;
-        width: 100%;
-        height: 100%;
-        background-repeat: repeat;
-        background-size: 150px 190px;
-      }
-    </style>
   </template>
 
   <template id="main-view">
@@ -56,6 +44,8 @@
         width: 100%;
         box-sizing: border-box;
         font-size: 16px;
+        background-repeat: repeat;
+        background-size: 150px 190px;
       }
       #panel {
         flex-direction: column;
@@ -120,30 +110,19 @@
     </div>
   </template>
 
-  <background-view></background-view>
   <main-view headline="__headline__" message="__message__" info="__info__"></main-view>
 
   <script type="module">
-    customElements.define('background-view', class extends HTMLElement {
-      constructor() {
-        super()
-        const template = document.getElementById('background-view').content
-        this.attachShadow({ mode: 'open' }).appendChild(template.cloneNode(true))
-
-        const svgTemplate = document.getElementById('svg-pattern-template').content
-        this.shadowRoot.appendChild(svgTemplate.cloneNode(true))
-
-        const svg = this.shadowRoot.querySelector('#svg-pattern')
-        const url = 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(svg))
-        this.shadowRoot.querySelector(':host').style.backgroundImage = `url('${url}')`
-      }
-    });
-
     customElements.define('main-view', class extends HTMLElement {
       constructor() {
         super()
         const template = document.getElementById('main-view').content
         this.attachShadow({ mode: 'open' }).appendChild(template.cloneNode(true))
+
+        const svgTemplate = document.getElementById('svg-pattern-template').content
+        const svg = svgTemplate.querySelector('#svg-pattern')
+        const url = 'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(svg))
+        this.shadowRoot.querySelector('#view').style.backgroundImage = `url('${url}')`
       }
 
       connectedCallback() {
