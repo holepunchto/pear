@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>Not Found</title>
-  <!--<link  rel="stylesheet" href="~@fontsource/inter/400.css">-->
-  <!--<link  rel="stylesheet" href="~@fontsource/inter/600.css">-->
 </head>
 <body>
   <template id="svg-pattern-template">
@@ -96,6 +94,25 @@
         border: none;
         outline: none;
       }
+      #window-controls {
+        -webkit-app-region: drag;
+        padding: 0;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        white-space: nowrap;
+        position: fixed;
+        z-index: 100;
+        width: 100%;
+        left: 0;
+        top: 0;
+    }
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 24px;
+      margin-left: 12px;
+    }
+    .dialog pear-ctrl[data-platform=darwin] {
+      margin-top: -32px;
+    }
     </style>
     <div id="view">
       <div id="panel">
@@ -110,6 +127,7 @@
     </div>
   </template>
 
+  <div id="window-controls"><pear-ctrl></pear-ctrl></div>
   <main-view headline="__headline__" message="__message__" info="__info__"></main-view>
 
   <script type="module">
@@ -132,7 +150,7 @@
         shadowRoot.querySelector('#info').textContent = this.getAttribute('info')
 
         shadowRoot.querySelector('#back').onclick = () => window.history.back()
-        shadowRoot.querySelector('#quit').onclick = () => window.close()
+        shadowRoot.querySelector('#quit').onclick = () => Pear.Window.self.close()
 
         document.addEventListener('DOMContentLoaded', () => {
           if (window.history.length > 1) {

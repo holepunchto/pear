@@ -68,13 +68,8 @@ module.exports = class Http extends ReadyResource {
             message: `Application does not contain '${req.url}'`,
             info: `${name}: v.${version?.fork}.${version?.length}.${version?.key}`
           }
-          const template = await this.sidecar.drive.get('not-found.html') || '<html><body>__headline__</body></html>'
-          const response = transform.sync(template, locals)
-
-          res.setHeader('Content-Type', 'text/html; charset=utf-8')
-          res.statusCode = err.status
-          res.end(response)
-          return
+          req.url = '/not-found.html'
+          return await this.#lookup(this.sidecar, 'holepunch', 'app', req, res, { locals })
         }
         res.setHeader('Content-Type', 'text/plain')
         res.statusCode = err.status
@@ -92,7 +87,7 @@ module.exports = class Http extends ReadyResource {
     this.host = null
   }
 
-  async #lookup (app, protocol, type, req, res) {
+  async #lookup (app, protocol, type, req, res, opts = {}) {
     if (app.closed) throw ERR_HTTP_GONE()
     const { bundle, linker } = app
     const url = `${protocol}://${type}${req.url}`
@@ -167,7 +162,10 @@ module.exports = class Http extends ReadyResource {
         }
         app.warmup({ protocol, batch })
       }
-      const stream = await bundle.streamFrom(link.filename)
+      const stream = opts.locals
+        ? transform.stream(await bundle.get(link.filename), opts.locals)
+        : await bundle.streamFrom(link.filename)
+
       await streamx.pipelinePromise(stream, res)
     }
   }
