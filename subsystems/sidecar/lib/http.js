@@ -64,7 +64,7 @@ module.exports = class Http extends ReadyResource {
 
         if (err.code === 'ERR_HTTP_NOT_FOUND') {
           const locals = {
-            headline: `Entrypoint '${req.url}' not found`,
+            headline: 'Entrypoint Not Found',
             message: `Application does not contain '${req.url}'`,
             info: `${name}: v.${version?.fork}.${version?.length}.${version?.key}`
           }
