@@ -4,6 +4,24 @@
   <title>Not Found</title>
 </head>
 <body>
+  <style>
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 24px;
+      margin-left: 12px;
+    }
+      #window-controls {
+        -webkit-app-region: drag;
+        padding: 0;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        white-space: nowrap;
+        position: fixed;
+        z-index: 100;
+        width: 100%;
+        left: 0;
+        top: 0;
+    }
+  </style>
   <template id="svg-pattern-template">
     <svg id="svg-pattern" xmlns="http://www.w3.org/2000/svg" width="150" height="190" viewBox="0 0 150 190">
       <defs>
@@ -43,6 +61,7 @@
         font-size: 16px;
         background-repeat: repeat;
         background-size: 150px 190px;
+        margin-top: 50px;
       }
       #panel {
         flex-direction: column;
@@ -93,25 +112,6 @@
         border: none;
         outline: none;
       }
-      #window-controls {
-        -webkit-app-region: drag;
-        padding: 0;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-        white-space: nowrap;
-        position: fixed;
-        z-index: 100;
-        width: 100%;
-        left: 0;
-        top: 0;
-    }
-    pear-ctrl[data-platform=darwin] {
-      margin-top: 24px;
-      margin-left: 12px;
-    }
-    .dialog pear-ctrl[data-platform=darwin] {
-      margin-top: -32px;
-    }
     </style>
     <div id="view">
       <div id="panel">
