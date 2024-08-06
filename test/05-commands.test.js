@@ -48,7 +48,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
@@ -72,7 +72,7 @@ test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
     if (line === 'Staging complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -97,7 +97,7 @@ test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
     if (line === 'Staging complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -132,7 +132,7 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
     if (line === 'Staging complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -169,7 +169,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
     if (line.includes('/ignoreinner.txt')) addedIgnored = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -199,7 +199,7 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
@@ -224,7 +224,7 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, i
     if (line === 'Staging dry run complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -256,7 +256,7 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
     if (result.tag === 'complete') completeTag = result
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completeTag?.data?.dryRun, true)
@@ -284,7 +284,7 @@ test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }
     if (line.endsWith('Skipping warmup (bare)')) skippedWarmup = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -317,7 +317,7 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
     if (result.tag === 'skipping') skipTag = result
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
@@ -351,7 +351,7 @@ test('pear stage --ignore <list> <channel> <relative-path>', async function ({ p
     if (line.includes('/index.js')) addedIndex = true
     if (line.endsWith('Success')) break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -389,7 +389,7 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
 
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
@@ -414,7 +414,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
     if (line.endsWith('Success')) break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -432,7 +432,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
     if (line.includes('/index.js')) readdedFile = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -456,7 +456,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
     if (line.endsWith('Success')) break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -479,7 +479,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(files.includes('/index.js'), true, 'should readd index.js')
@@ -511,7 +511,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //
 //     if (line.endsWith('Success')) break
 //   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await running.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -544,7 +544,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await running.inspector.close()
 //
 //   is(stagedName, 'test-name-' + testId, 'should use --name flag')
@@ -584,7 +584,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //
 //     if (line.endsWith('Success')) break
 //   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await running.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -626,7 +626,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await running.inspector.close()
 //
 //   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
@@ -652,7 +652,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (line.endsWith('Success')) break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -685,7 +685,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (line.endsWith('Success')) break
 //   }
 //
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -712,7 +712,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (line.endsWith('Success')) break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -741,7 +741,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
@@ -771,7 +771,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -787,7 +787,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
     if (line === 'Staging complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -813,7 +813,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -834,7 +834,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
@@ -860,7 +860,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -876,7 +876,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
     if (line === 'Staging dry run complete!') completedStaging = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -902,7 +902,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -925,7 +925,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
     if (result.tag === 'complete') completeTag = result
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   alike(tags, ['staging', 'dry', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
@@ -952,7 +952,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -970,7 +970,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
     if (line.endsWith('Skipping warmup (bare)')) skippedWarmup = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -997,7 +997,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1020,7 +1020,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
     if (result.tag === 'skipping') skipTag = result
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
@@ -1047,7 +1047,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1068,7 +1068,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
     if (line.includes('/ignored.txt')) addedIgnored = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -1095,7 +1095,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1121,7 +1121,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
 
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
@@ -1147,7 +1147,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1165,7 +1165,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
     if (line.includes('/package.json')) readdedFile = true
     if (line.endsWith('Success')) break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
@@ -1192,7 +1192,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
     if (result.tag === 'final') break
   }
 
-  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1215,7 +1215,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 
     if (result.tag === 'final') break
   }
-  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager2.inspector.close()
 
   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
@@ -1242,7 +1242,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1264,7 +1264,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //     if (line.endsWith('Success')) break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -1291,7 +1291,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1314,7 +1314,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(stagedName, 'test-name-' + testId, 'should use --name flag')
@@ -1341,7 +1341,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1368,7 +1368,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (line.includes('/ignored.txt')) addedIgnored = true
 //     if (line.endsWith('Success')) break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -1396,7 +1396,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1424,7 +1424,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
@@ -1452,7 +1452,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1480,7 +1480,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //     if (line.endsWith('Success')) break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(completedStaging, true, 'should complete staging')
@@ -1510,7 +1510,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'final') break
 //   }
 //
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager1.inspector.close()
 //   const { code: code1 } = await stager1.until.exit
 //   is(code1, 0, 'should have exit code 0 for initial stage')
@@ -1535,7 +1535,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //     if (result.tag === 'staging') stagedName = result.data.name
 //     if (result.tag === 'final') break
 //   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
 //   await stager2.inspector.close()
 //
 //   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
