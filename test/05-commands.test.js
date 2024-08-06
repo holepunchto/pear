@@ -42,7 +42,8 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   const seen = new Set()
   const tags = []
   for await (const line of running.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -193,7 +194,8 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
   const seen = new Set()
   const tags = []
   for await (const line of running.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -248,7 +250,8 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
   const tags = []
   let completeTag
   for await (const line of running.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -309,7 +312,8 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
   const tags = []
   let skipTag
   for await (const line of running.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -381,7 +385,8 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
   const tags = []
   const files = []
   for await (const line of running.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'byte-diff') files.push(result.data.message)
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
@@ -471,7 +476,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   const tags = []
   const files = []
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'byte-diff') files.push(result.data.message)
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
@@ -536,7 +542,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //   const tags = []
 //   let stagedName
 //   for await (const line of running.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
 //     tags.push(result.tag)
@@ -617,7 +624,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //   const files = []
 //   let stagedName
 //   for await (const line of running.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'byte-diff') files.push(result.data.message)
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
@@ -732,7 +740,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 //   const files = []
 //   let stagedName
 //   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'byte-diff') files.push(result.data.message)
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
@@ -766,7 +775,8 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -808,7 +818,8 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -827,7 +838,8 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
   const seen = new Set()
   const tags = []
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -855,7 +867,8 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -897,7 +910,8 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -917,7 +931,8 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
   const tags = []
   let completeTag
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -947,7 +962,8 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -992,7 +1008,8 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -1012,7 +1029,8 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
   const tags = []
   let skipTag
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
     tags.push(result.tag)
@@ -1042,7 +1060,8 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -1090,7 +1109,8 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -1113,7 +1133,8 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   const tags = []
   const files = []
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'byte-diff') files.push(result.data.message)
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
@@ -1142,7 +1163,8 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -1187,7 +1209,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 
   let link
   for await (const line of stager1.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'addendum') link = result.data.link
     if (result.tag === 'final') break
   }
@@ -1207,7 +1230,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   const tags = []
   const files = []
   for await (const line of stager2.lineout) {
-    const result = JSON.parse(line)
+    let result
+    try { result = JSON.parse(line) } catch (e) { continue }
     if (result.tag === 'byte-diff') files.push(result.data.message)
     if (seen.has(result.tag)) continue
     seen.add(result.tag)
@@ -1237,7 +1261,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1286,7 +1311,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1306,7 +1332,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //   const tags = []
 //   let stagedName
 //   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
 //     tags.push(result.tag)
@@ -1336,7 +1363,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1391,7 +1419,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1415,7 +1444,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //   const files = []
 //   let stagedName
 //   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'byte-diff') files.push(result.data.message)
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
@@ -1447,7 +1477,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1505,7 +1536,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //
 //   let link
 //   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'addendum') link = result.data.link
 //     if (result.tag === 'final') break
 //   }
@@ -1526,7 +1558,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 //   const files = []
 //   let stagedName
 //   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
+//     let result
+//     try { result = JSON.parse(line) } catch (e) { continue }
 //     if (result.tag === 'byte-diff') files.push(result.data.message)
 //     if (seen.has(result.tag)) continue
 //     seen.add(result.tag)
