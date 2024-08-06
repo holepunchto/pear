@@ -147,7 +147,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   const relativePath = path.relative(harness, minimal)
   const argv = ['stage', 'test-' + testId, relativePath]
 
-  const originalPackageJson = fs.readFileSync(path.join(harness, 'package.json'), 'utf8')
+  const originalPackageJson = fs.readFileSync(path.join(minimal, 'package.json'), 'utf8')
   const packageJson = JSON.parse(originalPackageJson)
   packageJson.pear.stage = { ignore: ['/ignoreinner.txt'] }
   fs.writeFileSync(path.join(minimal, 'ignoreinner.txt'), 'this file should be ignored')
