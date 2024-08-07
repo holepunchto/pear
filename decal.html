@@ -756,7 +756,7 @@
           document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
-           await ipc.attachMainView({ id: Pear.Window.self.id })
+          await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
           super()

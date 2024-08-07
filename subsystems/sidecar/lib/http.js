@@ -74,8 +74,7 @@ module.exports = class Http extends ReadyResource {
   async #lookup (app, protocol, type, req, res) {
     if (app.closed) throw ERR_HTTP_GONE()
     const { bundle, linker, state } = app
-    const { name, version } = state || {}
-    const locals = { url: req.url, name, version: `v.${version?.fork}.${version?.length}.${version?.key}` }
+    const locals = { url: req.url, name: state?.name, version: `v.${state?.version?.fork}.${state?.version?.length}.${state?.version?.key}` }
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
