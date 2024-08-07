@@ -180,7 +180,7 @@ async function permit ({ ipc, key, message, explain, ask, act }) {
 async function encryptionKeyDialog ({ ipc, key }) {
   const z32 = hypercoreid.encode(key)
   const explain = z32 + ' is an encrypted application. \n' +
-    '\nInput the encryption key to run the app.\n\n'
+    '\nEnter the encryption key to run the app.\n\n'
   const ask = 'Encryption key'
   const sure = ansi.cross + explain
   const prompt = new Interact(sure, [
@@ -189,8 +189,15 @@ async function encryptionKeyDialog ({ ipc, key }) {
       default: '',
       prompt: ask,
       delim: ':',
-      msg: '',
-      validation: () => true
+      msg: '\nPlease, enter a valid encryption key. See ' + ansi.green('pear encryption-key --help') + ' for more information.\n',
+      validation: (key) => {
+        try {
+          hypercoreid.decode(key)
+          return true
+        } catch {
+          return false
+        }
+      }
     }
   ])
   const result = await prompt.run()
