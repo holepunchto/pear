@@ -12,7 +12,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
 const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../errors')
+const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED, ERR_ENCRYPTED_FIELD_REQUIRED, ERR_NOT_FOUND_ENCRYPTION_KEY } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   static async * trace (bundle, client) {
@@ -58,13 +58,24 @@ module.exports = class Stage extends Opstream {
     if (key) key = hypercoreid.decode(key)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
-    const encryptionKeys = new Store('encryption-keys')
-    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
 
     const encrypted = state.options.encrypted
 
+    if (!encrypted && params.encryptionKey) {
+      const err = ERR_ENCRYPTED_FIELD_REQUIRED('pear.encrypted field is required in package.json')
+      throw err
+    }
+
+    if (encrypted === true && !params.encryptionKey) {
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('--encryption-key flag is required')
+      throw err
+    }
+
+    const encryptionKeys = new Store('encryption-keys')
+    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
+
     if (encrypted === true && !encryptionKey) {
-      const err = ERR_ENCRYPTION_KEY_REQUIRED('Missing encryption-key flag')
+      const err = ERR_NOT_FOUND_ENCRYPTION_KEY('Not found encryption key: ' + params.encryptionKey)
       throw err
     }
 
