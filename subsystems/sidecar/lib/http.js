@@ -119,6 +119,7 @@ module.exports = class Http extends ReadyResource {
           return this.#lookup(app, protocol, type, req, res)
         }
       }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.statusCode = 404
       const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
       return await streamx.pipelinePromise(stream, res)
@@ -127,6 +128,7 @@ module.exports = class Http extends ReadyResource {
     if (protocol === 'resolve') {
       res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
       if (!link.resolve && !link.dirname && !link.filename) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
         res.statusCode = 404
         const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
         return await streamx.pipelinePromise(stream, res)
