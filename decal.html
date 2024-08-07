@@ -59,7 +59,6 @@
     }
     #bar {
       background: #0D0F16;
-      /* -webkit-app-region: drag; */
       height: 50px;
       padding-top: 12px;
       padding-right: 8px;
@@ -735,7 +734,6 @@
         show () {
           this.shadowRoot.querySelector('#loader').style.display = 'block'
           document.getElementById('bar').style.display = 'none'
-          // document.getElementById('window-controls').remove()
         }
         hide () {
           this.shadowRoot.querySelector('#loader').style.display = 'none'

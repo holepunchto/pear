@@ -7,7 +7,6 @@ const listen = require('listen-async')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
-
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {
@@ -49,8 +48,6 @@ module.exports = class Http extends ReadyResource {
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
-        } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
-          err.status = 404
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
@@ -74,11 +71,11 @@ module.exports = class Http extends ReadyResource {
     this.host = null
   }
 
-  async #lookup (app, protocol, type, req, res, opts = {}) {
+  async #lookup (app, protocol, type, req, res) {
     if (app.closed) throw ERR_HTTP_GONE()
     const { bundle, linker, state } = app
     const { name, version } = state || {}
-    const locals = opts.locals || { url: req.url, name, version: `v.${version?.fork}.${version?.length}.${version?.key}` }
+    const locals = { url: req.url, name, version: `v.${version?.fork}.${version?.length}.${version?.key}` }
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
@@ -124,6 +121,7 @@ module.exports = class Http extends ReadyResource {
           return this.#lookup(app, protocol, type, req, res)
         }
       }
+      res.statusCode = 404
       const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
       return await streamx.pipelinePromise(stream, res)
     }
@@ -131,6 +129,7 @@ module.exports = class Http extends ReadyResource {
     if (protocol === 'resolve') {
       res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
       if (!link.resolve && !link.dirname && !link.filename) {
+        res.statusCode = 404
         const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
         return await streamx.pipelinePromise(stream, res)
       }
@@ -154,7 +153,6 @@ module.exports = class Http extends ReadyResource {
         }
         app.warmup({ protocol, batch })
       }
-
       const stream = await bundle.streamFrom(link.filename)
       await streamx.pipelinePromise(stream, res)
     }
