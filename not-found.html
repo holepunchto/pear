@@ -115,9 +115,9 @@
     </style>
     <div id="view">
       <div id="panel">
-        <div id="headline"></div>
-        <div id="message"></div>
-        <div id="info"></div>
+        <div id="headline">Entrypoint Not Found</div>
+        <div id="message">Application does not contain __url__</div>
+        <div id="info">__name__ __version__</div>
         <div class="cta-container">
           <button id="back" class="cta" style="display: none;">Back</button>
           <button id="quit" class="cta">Quit</button>
@@ -127,7 +127,7 @@
   </template>
 
   <div id="window-controls"><pear-ctrl></pear-ctrl></div>
-  <main-view headline="__headline__" message="__message__" info="__info__"></main-view>
+  <main-view></main-view>
 
   <script type="module">
     customElements.define('main-view', class extends HTMLElement {
@@ -144,9 +144,6 @@
 
       connectedCallback() {
         const shadowRoot = this.shadowRoot;
-        shadowRoot.querySelector('#headline').textContent = this.getAttribute('headline')
-        shadowRoot.querySelector('#message').textContent = this.getAttribute('message')
-        shadowRoot.querySelector('#info').textContent = this.getAttribute('info')
 
         shadowRoot.querySelector('#back').onclick = () => window.history.back()
         shadowRoot.querySelector('#quit').onclick = () => Pear.Window.self.close()

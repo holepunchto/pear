@@ -754,13 +754,10 @@
         async start (ipc, config) {
           this.show()
           this.ipc = ipc
-          console.log('ipc:', ipc)
-          console.log('config:', config)
           await ipc.afterViewLoaded({ id: Pear.Window.self.id })
           document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
-          console.log('attachMainView')
            await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {

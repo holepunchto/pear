@@ -36,8 +36,6 @@ module.exports = class Http extends ReadyResource {
         const client = this.ipc.client(clientId)
         if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
-        const { name, version } = app.state
-        req.context = Object.assign(req.context || {}, { name, version })
 
         if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
         if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
@@ -49,8 +47,6 @@ module.exports = class Http extends ReadyResource {
         await app.bundle.ready()
         await this.#lookup(app, protocol, type, req, res)
       } catch (err) {
-        const { name, version } = req.context || {}
-
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
         } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
@@ -62,15 +58,6 @@ module.exports = class Http extends ReadyResource {
           err.status = 500
         }
 
-        if (err.code === 'ERR_HTTP_NOT_FOUND') {
-          const locals = {
-            headline: 'Entrypoint Not Found',
-            message: `Application does not contain '${req.url}'`,
-            info: `${name}: v.${version?.fork}.${version?.length}.${version?.key}`
-          }
-          req.url = '/not-found.html'
-          return await this.#lookup(this.sidecar, 'holepunch', 'app', req, res, { locals })
-        }
         res.setHeader('Content-Type', 'text/plain')
         res.statusCode = err.status
         res.end(err.message)
@@ -89,7 +76,9 @@ module.exports = class Http extends ReadyResource {
 
   async #lookup (app, protocol, type, req, res, opts = {}) {
     if (app.closed) throw ERR_HTTP_GONE()
-    const { bundle, linker } = app
+    const { bundle, linker, state } = app
+    const { name, version } = state || {}
+    const locals = opts.locals || { url: req.url, name, version: `v.${version?.fork}.${version?.length}.${version?.key}` }
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
@@ -135,13 +124,16 @@ module.exports = class Http extends ReadyResource {
           return this.#lookup(app, protocol, type, req, res)
         }
       }
-
-      throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
+      const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+      return await streamx.pipelinePromise(stream, res)
     }
 
     if (protocol === 'resolve') {
       res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-      if (!link.resolve && !link.dirname && !link.filename) throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
+      if (!link.resolve && !link.dirname && !link.filename) {
+        const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+        return await streamx.pipelinePromise(stream, res)
+      }
       res.end(link.filename)
       return
     }
@@ -162,10 +154,8 @@ module.exports = class Http extends ReadyResource {
         }
         app.warmup({ protocol, batch })
       }
-      const stream = opts.locals
-        ? transform.stream(await bundle.get(link.filename), opts.locals)
-        : await bundle.streamFrom(link.filename)
 
+      const stream = await bundle.streamFrom(link.filename)
       await streamx.pipelinePromise(stream, res)
     }
   }
