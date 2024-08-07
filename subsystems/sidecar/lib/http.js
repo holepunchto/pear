@@ -6,7 +6,7 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
-const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
+const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE } = require('../../../errors')
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {
@@ -31,13 +31,11 @@ module.exports = class Http extends ReadyResource {
 
         if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
-        const [clientId, startId] = id.split('@')
+        const [clientId] = id.split('@')
         const client = this.ipc.client(clientId)
         if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
 
-        if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
-        if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
         if (app.reported && app.state.options.minver) {
           res.setHeader('X-Minver', `key=${app.state.options.minver.key}&length=${app.state.options.minver.length}&fork=${app.state.options.minver.fork}`)
           res.end()
@@ -74,6 +72,15 @@ module.exports = class Http extends ReadyResource {
     if (app.closed) throw ERR_HTTP_GONE()
     const { bundle, linker, state } = app
     const locals = { url: req.url, name: state?.name, version: `v.${state?.version?.fork}.${state?.version?.length}.${state?.version?.key}` }
+
+    const startId = req.headers['user-agent']?.slice(5).split('@')[1]
+    if (app.startId !== startId || app.reported?.err) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
+      res.statusCode = app.reported?.err.code || 404
+      const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+      return await streamx.pipelinePromise(stream, res)
+    }
+
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
