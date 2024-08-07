@@ -54,7 +54,6 @@ module.exports = class Http extends ReadyResource {
           console.error('Unknown Server Error', err)
           err.status = 500
         }
-
         res.setHeader('Content-Type', 'text/plain')
         res.statusCode = err.status
         res.end(err.message)
