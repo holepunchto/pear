@@ -58,9 +58,7 @@
       outline: none;
     }
     #bar {
-      background: rgba(55, 60, 72, 0.6);
-      backdrop-filter: blur(64px);
-      -webkit-app-region: drag;
+      background: #0D0F16;
       height: 50px;
       padding-top: 12px;
       padding-right: 8px;
@@ -78,19 +76,9 @@
       width: calc(100vw + 2px);
       left: -2px;
       top: -2px;
-      display: none;
     }
     #bar > * {
       -webkit-app-region: no-drag;
-    }
-
-    #avatar {
-      height: 28px;
-      width: 28px;
-      float: right;
-      margin-right: 2px;
-      border-radius: 8px;
-      display: none;
     }
 
     #win-ctrl {
@@ -124,10 +112,6 @@
       display: block;
     }
 
-    .dialog.darwin #avatar {
-      display: none;
-    }
-
   </style>
 </head>
 <body>
@@ -135,7 +119,6 @@
   <style>
     /* windows styles, every selector *MUST* be preceded by .win32 */
     .win32 #win-ctrl {
-      display: table-row;
       float: right;
       margin-left: .6em;
       margin-top: 0.22em;
@@ -493,65 +476,6 @@
         })
       }
     </script>
-    <svg id="avatar" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0 12.8C0 8.31958 0 6.07937 0.871948 4.36808C1.63893 2.86278 2.86278 1.63893 4.36808 0.871948C6.07937 0 8.31958 0 12.8 0H15.2C19.6804 0 21.9206 0 23.6319 0.871948C25.1372 1.63893 26.3611 2.86278 27.1281 4.36808C28 6.07937 28 8.31958 28 12.8V15.2C28 19.6804 28 21.9206 27.1281 23.6319C26.3611 25.1372 25.1372 26.3611 23.6319 27.1281C21.9206 28 19.6804 28 15.2 28H12.8C8.31958 28 6.07937 28 4.36808 27.1281C2.86278 26.3611 1.63893 25.1372 0.871948 23.6319C0 21.9206 0 19.6804 0 15.2V12.8Z" fill="none"/>
-      <mask id="mask0_661:753" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="28">
-      <rect width="28" height="28" rx="8" fill="#F27983"/>
-      </mask>
-      <g mask="url(#mask0_661:753)">
-      <path d="M14 14C16.1875 14 18 12.2188 18 10C18 7.8125 16.1875 6 14 6C11.7812 6 10 7.8125 10 10C10 12.2188 11.7812 14 14 14ZM16.7812 15H16.25C15.5625 15.3438 14.8125 15.5 14 15.5C13.1875 15.5 12.4062 15.3438 11.7188 15H11.1875C8.875 15 7 16.9062 7 19.2188V20.5C7 21.3438 7.65625 22 8.5 22H19.5C20.3125 22 21 21.3438 21 20.5V19.2188C21 16.9062 19.0938 15 16.7812 15Z" fill="white" fill-opacity="0.24"/>
-      </g>
-      <path d="M4.36808 27.1281L3.91409 28.0191L4.36808 27.1281ZM27.1281 23.6319L26.237 23.1779L27.1281 23.6319ZM23.6319 27.1281L23.1779 26.237L23.6319 27.1281ZM23.6319 0.871948L23.1779 1.76295L23.6319 0.871948ZM27.1281 4.36808L28.0191 3.91409L27.1281 4.36808ZM4.36808 0.871948L3.91409 -0.0190586L4.36808 0.871948ZM0.871948 4.36808L-0.0190586 3.91409L0.871948 4.36808ZM12.8 1H15.2V-1H12.8V1ZM27 12.8V15.2H29V12.8H27ZM15.2 27H12.8V29H15.2V27ZM1 15.2V12.8H-1V15.2H1ZM12.8 27C10.5433 27 8.9109 26.9992 7.62705 26.8943C6.35487 26.7904 5.51325 26.5892 4.82207 26.237L3.91409 28.0191C4.9342 28.5388 6.06833 28.7736 7.46418 28.8877C8.84837 29.0008 10.5763 29 12.8 29V27ZM-1 15.2C-1 17.4237 -1.00078 19.1516 -0.887685 20.5358C-0.773639 21.9317 -0.538833 23.0658 -0.0190586 24.0859L1.76295 23.1779C1.41078 22.4868 1.20961 21.6451 1.10567 20.373C1.00078 19.0891 1 17.4567 1 15.2H-1ZM4.82207 26.237C3.50493 25.5659 2.43407 24.4951 1.76295 23.1779L-0.0190586 24.0859C0.843802 25.7794 2.22063 27.1562 3.91409 28.0191L4.82207 26.237ZM27 15.2C27 17.4567 26.9992 19.0891 26.8943 20.373C26.7904 21.6451 26.5892 22.4868 26.237 23.1779L28.0191 24.0859C28.5388 23.0658 28.7736 21.9317 28.8877 20.5358C29.0008 19.1516 29 17.4237 29 15.2H27ZM15.2 29C17.4237 29 19.1516 29.0008 20.5358 28.8877C21.9317 28.7736 23.0658 28.5388 24.0859 28.0191L23.1779 26.237C22.4868 26.5892 21.6451 26.7904 20.373 26.8943C19.0891 26.9992 17.4567 27 15.2 27V29ZM26.237 23.1779C25.5659 24.4951 24.4951 25.5659 23.1779 26.237L24.0859 28.0191C25.7794 27.1562 27.1562 25.7794 28.0191 24.0859L26.237 23.1779ZM15.2 1C17.4567 1 19.0891 1.00078 20.373 1.10567C21.6451 1.20961 22.4868 1.41078 23.1779 1.76295L24.0859 -0.0190586C23.0658 -0.538833 21.9317 -0.773639 20.5358 -0.887685C19.1516 -1.00078 17.4237 -1 15.2 -1V1ZM29 12.8C29 10.5763 29.0008 8.84837 28.8877 7.46418C28.7736 6.06833 28.5388 4.9342 28.0191 3.91409L26.237 4.82207C26.5892 5.51325 26.7904 6.35487 26.8943 7.62705C26.9992 8.9109 27 10.5433 27 12.8H29ZM23.1779 1.76295C24.4951 2.43407 25.5659 3.50493 26.237 4.82207L28.0191 3.91409C27.1562 2.22063 25.7794 0.843802 24.0859 -0.0190586L23.1779 1.76295ZM12.8 -1C10.5763 -1 8.84837 -1.00078 7.46418 -0.887685C6.06833 -0.773639 4.9342 -0.538833 3.91409 -0.0190586L4.82207 1.76295C5.51325 1.41078 6.35487 1.20961 7.62705 1.10567C8.9109 1.00078 10.5433 1 12.8 1V-1ZM1 12.8C1 10.5433 1.00078 8.9109 1.10567 7.62705C1.20961 6.35487 1.41078 5.51325 1.76295 4.82207L-0.0190586 3.91409C-0.538833 4.9342 -0.773639 6.06833 -0.887685 7.46418C-1.00078 8.84837 -1 10.5763 -1 12.8H1ZM3.91409 -0.0190586C2.22063 0.843802 0.843802 2.22063 -0.0190586 3.91409L1.76295 4.82207C2.43407 3.50493 3.50493 2.43407 4.82207 1.76295L3.91409 -0.0190586Z" fill="white" fill-opacity="0.24"/>
-    </svg>
-
-    <decal-tier>
-      <span slot="tier"></span>
-      <template id="decal-tier-tmpl">
-        <style>
-          #tier {
-            float: right;
-            color: #F5DDF3;
-            font-size: 12px;
-            background: rgba(135, 71, 125, 0.5);
-            border-radius: 8px;
-            padding: 1.25em;
-            padding-top: 0;
-            padding-bottom: 0;
-            font-weight: 600;
-            letter-spacing: .0125rem;
-            margin-right: .75em;
-            height: 28px;
-            box-sizing: border-box;
-            line-height: 28px;
-          }
-        </style>
-        <span id="tier"><slot name="tier">TIER</slot></span>
-      </template>
-      <script type="module">
-        customElements.define('decal-tier', class extends HTMLElement {
-          tier = null
-          connected = false
-          async update (config = {}) {
-            this.tier = config.tier === 'production' ? null : (config.tier || '')
-            if (this.tier === null) {
-              const tier = this.root.querySelector('#tier')
-              if (tier && tier.isConnected) tier.remove()
-              return
-            }
-            if (this.connected === false) {
-              this.root.appendChild(this.template.cloneNode(true))
-              this.connected = true
-            }
-            this.querySelector('[slot="tier"]').innerHTML = this.tier.toUpperCase()
-          }
-          constructor() {
-            super()
-            this.template = document.querySelector('#decal-tier-tmpl').content
-            this.root = this.attachShadow({mode: 'open'})
-          }
-        })
-      </script>
-    </decal-tier>
   </div>
   <decal-report>
     <span slot="headline"></span>
@@ -808,9 +732,11 @@
         }
         show () {
           this.shadowRoot.querySelector('#loader').style.display = 'block'
+          document.getElementById('bar').style.display = 'none'
         }
         hide () {
           this.shadowRoot.querySelector('#loader').style.display = 'none'
+          document.getElementById('bar').style.display = 'block'
         }
         async restart () {
           let countdown = 3000
@@ -844,28 +770,9 @@
     const ipc = Pear[Symbol.for('pear.ipc')]
     const loader = document.querySelector('decal-loader')
 
-    let avatar = document.querySelector('#avatar')
-
     messages({ type: 'pear/handover' }, () => {
       // legacy, ignore
     })
-
-    const avaClick = async () => {
-      await message({ type: 'pear/click', name: 'avatar' })
-    }
-
-    const updateAvatar = (src) => {
-      if (!src) return
-      if (!(avatar instanceof Image)) {
-        const img = document.createElement('img')
-        img.id = 'avatar'
-        img.draggable = false
-        avatar.replaceWith(img)
-        avatar = img
-        avatar.addEventListener('click', avaClick)
-      }
-      avatar.src = src
-    }
 
     const report = document.querySelector('decal-report')
     report.subscribe(ipc, loader)
@@ -894,9 +801,6 @@
       const updating = await loader.start(ipc, config)
 
       if (updating) return
-
-      const tier = document.querySelector('decal-tier')
-      tier.update(config)
 
     }
 

@@ -5,6 +5,7 @@ const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
+const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
 
@@ -35,15 +36,13 @@ module.exports = class Http extends ReadyResource {
         if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
 
-        if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
-        if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
         if (app.reported && app.state.options.minver) {
           res.setHeader('X-Minver', `key=${app.state.options.minver.key}&length=${app.state.options.minver.length}&fork=${app.state.options.minver.fork}`)
           res.end()
           return
         }
         await app.bundle.ready()
-        await this.#lookup(app, protocol, type, req, res)
+        await this.lookup(app, protocol, type, req, res, startId)
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
@@ -67,6 +66,27 @@ module.exports = class Http extends ReadyResource {
     this.server.unref()
     this.port = null
     this.host = null
+  }
+
+  async #notFound (app, req, res) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.statusCode = 404
+
+    const { name, version } = app.state
+    const locals = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
+    const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+    return await streamx.pipelinePromise(stream, res)
+  }
+
+  async lookup (app, protocol, type, req, res, startId) {
+    try {
+      if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
+      if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
+      return await this.#lookup(app, protocol, type, req, res)
+    } catch (err) {
+      if (err.code === 'ERR_HTTP_NOT_FOUND') return await this.#notFound(app, req, res)
+      throw err
+    }
   }
 
   async #lookup (app, protocol, type, req, res) {
