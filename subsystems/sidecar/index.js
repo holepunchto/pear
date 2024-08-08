@@ -9,6 +9,7 @@ const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
+const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
@@ -740,9 +741,22 @@ class Sidecar extends ReadyResource {
 
     const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
 
+    // check if hyperdrive is encrypted
+    const corestore = this._getCorestore(state.manifest?.name, state.channel)
+    let drive
+    try {
+      drive = new Hyperdrive(corestore, state.key, driveOpts(encryptionKey || storedEncryptionKey))
+      await drive.ready()
+    } catch (err) {
+      if (!encryptionKey) {
+        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+        return { startId, bail: err }
+      }
+    }
+
     const appBundle = new Bundle({
       encryptionKey: encryptionKey || storedEncryptionKey,
-      corestore: this._getCorestore(state.manifest?.name, state.channel),
+      corestore,
       appling: state.appling,
       channel: state.channel,
       checkout: state.checkout,
@@ -751,20 +765,12 @@ class Sidecar extends ReadyResource {
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       trace,
+      drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) { app.report({ err }) }
     })
 
-    try {
-      await appBundle.ready()
-      if (!appBundle.drive.opened) throw new Error('Cannot open Hyperdrive')
-      await session.add(appBundle)
-    } catch (err) {
-      if (!encryptionKey) {
-        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
-        return { startId, bail: err }
-      }
-    }
+    await session.add(appBundle)
 
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
@@ -931,6 +937,14 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+function driveOpts (encryptionKey) {
+  try {
+    return { encryptionKey: hypercoreid.decode(encryptionKey) }
+  } catch (err) {
+    return {}
+  }
 }
 
 module.exports = Sidecar

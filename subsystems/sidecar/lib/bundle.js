@@ -111,7 +111,7 @@ module.exports = class Bundle {
   }
 
   async #init () {
-    try { await this.drive.ready() } catch {}
+    await this.drive.ready()
     if (Number.isInteger(this.truncate)) {
       await this.drive.truncate(this.truncate)
     }
