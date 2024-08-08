@@ -29,7 +29,7 @@ module.exports = class Seed extends Opstream {
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const encryptionKey = await preferences.get('encryption-key:' + key?.toString('hex') || name + '-' + channel)
+    const encryptionKey = await preferences.get('encryption-key:' + (key ? key.toString('hex') : name + '-' + channel))
     const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
 
     try {
