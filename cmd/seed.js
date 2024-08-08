@@ -4,6 +4,7 @@ const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('../lib/parse-link')
 const { outputter, ansi, encryptionKeyDialog } = require('./iface')
+const hypercoreid = require('hypercore-id-encoding')
 const { ERR_ENCRYPTION_KEY_REQUIRED } = require('../errors')
 
 const output = outputter('seed', {
@@ -41,7 +42,8 @@ module.exports = (ipc) => async function seed (cmd) {
     await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
   } catch (err) {
     if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      await encryptionKeyDialog({ ipc })
+      const key = isKey ? hypercoreid.decode(link) : null
+      await encryptionKeyDialog({ ipc, key })
     } else {
       throw err
     }
