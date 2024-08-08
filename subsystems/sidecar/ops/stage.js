@@ -80,10 +80,6 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    if (encryptionKey) {
-      await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey)
-    }
-
     const bundle = new Bundle({
       key,
       corestore,
@@ -115,6 +111,11 @@ module.exports = class Stage extends Opstream {
     this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release } })
 
     if (dryRun) this.push({ tag: 'dry' })
+
+    if (encryptionKey) {
+      await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey)
+      await preferences.set('encryption-key:' + bundle.drive.key.toString('hex'), encryptionKey)
+    }
 
     const root = state.dir
     const main = unixPathResolve('/', state.main)
