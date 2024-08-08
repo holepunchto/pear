@@ -140,9 +140,10 @@ module.exports = class Http extends ReadyResource {
     }
 
     if (protocol === 'resolve') {
-      if (!link.resolve && !link.dirname && !link.filename) {
-        throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
-      }
+      res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
+      if (!link.resolve && !link.dirname && !link.filename) throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
+      res.end(link.filename)
+      return
     }
 
     const isSourceMap = link.transform === 'map'
