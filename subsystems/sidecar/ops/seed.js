@@ -29,7 +29,7 @@ module.exports = class Seed extends Opstream {
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const encryptionKey = await preferences.get('encryption-key:' + name + '-' + channel)
+    const encryptionKey = await preferences.get('encryption-key:' + key?.toString('hex') || name + '-' + channel)
     const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
 
     try {
@@ -37,7 +37,7 @@ module.exports = class Seed extends Opstream {
       await bundle.ready()
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch {
-      throw ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      throw ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required')
     }
 
     if (key === null && bundle.drive.core.length === 0) {
