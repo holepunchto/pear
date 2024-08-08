@@ -6,7 +6,7 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
-const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE } = require('../../../errors')
+const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {
@@ -31,7 +31,7 @@ module.exports = class Http extends ReadyResource {
 
         if (id === 'Platform') return await this.#lookup(this.sidecar, 'holepunch', type, req, res)
 
-        const [clientId] = id.split('@')
+        const [clientId, startId] = id.split('@')
         const client = this.ipc.client(clientId)
         if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
@@ -42,7 +42,7 @@ module.exports = class Http extends ReadyResource {
           return
         }
         await app.bundle.ready()
-        await this.#lookup(app, protocol, type, req, res)
+        await this.lookup(app, protocol, type, req, res, startId)
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
@@ -68,19 +68,28 @@ module.exports = class Http extends ReadyResource {
     this.host = null
   }
 
+  async lookup (app, protocol, type, req, res, startId) {
+    try {
+      if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
+      return await this.#lookup(app, protocol, type, req, res)
+    } catch (err) {
+      if (err.code === 'ERR_HTTP_NOT_FOUND') {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+        res.statusCode = err.status
+
+        const { state: { name, version: { fork, length, key } = {} } = {} } = app
+        const locals = { url: req.url, name, version: `v.${fork}.${length}.${key}` }
+        const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+        return await streamx.pipelinePromise(stream, res)
+      }
+      throw err
+    }
+  }
+
   async #lookup (app, protocol, type, req, res) {
     if (app.closed) throw ERR_HTTP_GONE()
-    const { bundle, linker, state } = app
-    const locals = { url: req.url, name: state?.name, version: `v.${state?.version?.fork}.${state?.version?.length}.${state?.version?.key}` }
-
-    const startId = req.headers['user-agent']?.slice(5).split('@')[1]
-    if (app.startId !== startId || app.reported?.err) {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8')
-      res.statusCode = app.reported?.err.code || 404
-      const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
-      return await streamx.pipelinePromise(stream, res)
-    }
-
+    if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
+    const { bundle, linker } = app
     const url = `${protocol}://${type}${req.url}`
     let link = null
     try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
@@ -126,22 +135,14 @@ module.exports = class Http extends ReadyResource {
           return this.#lookup(app, protocol, type, req, res)
         }
       }
-      res.setHeader('Content-Type', 'text/html; charset=utf-8')
-      res.statusCode = 404
-      const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
-      return await streamx.pipelinePromise(stream, res)
+
+      throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
 
     if (protocol === 'resolve') {
-      res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
       if (!link.resolve && !link.dirname && !link.filename) {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8')
-        res.statusCode = 404
-        const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
-        return await streamx.pipelinePromise(stream, res)
+        throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
       }
-      res.end(link.filename)
-      return
     }
 
     const isSourceMap = link.transform === 'map'
