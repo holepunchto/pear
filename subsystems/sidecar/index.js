@@ -741,7 +741,9 @@ class Sidecar extends ReadyResource {
 
     const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
 
-    // check if hyperdrive is encrypted
+    // first check for drive encryption, before first replication it doesnt throw,
+    // so we need to check drive.get('/package.json') after appBundle.join
+    // after the first replication drive.ready will throw in drive is encrypted
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
@@ -772,6 +774,17 @@ class Sidecar extends ReadyResource {
 
     await session.add(appBundle)
 
+    if (this.swarm) appBundle.join(this.swarm)
+
+    try {
+      await drive.get('/package.json')
+    } catch (err) {
+      if (!encryptionKey) {
+        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+        return { startId, bail: err }
+      }
+    }
+
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
       map: this.gunk.app.map,
@@ -786,8 +799,6 @@ class Sidecar extends ReadyResource {
 
     // app is trusted, refresh trust for any updated configured link keys:
     await this.trust(state.key, client)
-
-    if (this.swarm) appBundle.join(this.swarm)
 
     try {
       await appBundle.calibrate()
