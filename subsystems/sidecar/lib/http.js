@@ -68,21 +68,23 @@ module.exports = class Http extends ReadyResource {
     this.host = null
   }
 
+  async #notFound (app, req, res) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.statusCode = 404
+
+    const { name, version } = app.state
+    const locals = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
+    const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+    return await streamx.pipelinePromise(stream, res)
+  }
+
   async lookup (app, protocol, type, req, res, startId) {
     try {
       if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
       if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
       return await this.#lookup(app, protocol, type, req, res)
     } catch (err) {
-      if (err.code === 'ERR_HTTP_NOT_FOUND') {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8')
-        res.statusCode = err.status
-
-        const { state: { name, version: { fork, length, key } = {} } = {} } = app
-        const locals = { url: req.url, name, version: `v.${fork}.${length}.${key}` }
-        const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
-        return await streamx.pipelinePromise(stream, res)
-      }
+      if (err.code === 'ERR_HTTP_NOT_FOUND') return await this.#notFound(app, req, res)
       throw err
     }
   }
