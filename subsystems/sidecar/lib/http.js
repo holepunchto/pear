@@ -71,6 +71,7 @@ module.exports = class Http extends ReadyResource {
   async lookup (app, protocol, type, req, res, startId) {
     try {
       if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
+      if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
       return await this.#lookup(app, protocol, type, req, res)
     } catch (err) {
       if (err.code === 'ERR_HTTP_NOT_FOUND') {
@@ -88,7 +89,6 @@ module.exports = class Http extends ReadyResource {
 
   async #lookup (app, protocol, type, req, res) {
     if (app.closed) throw ERR_HTTP_GONE()
-    if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
     const { bundle, linker } = app
     const url = `${protocol}://${type}${req.url}`
     let link = null
