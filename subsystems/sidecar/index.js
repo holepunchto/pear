@@ -9,6 +9,7 @@ const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
+const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
@@ -32,7 +33,7 @@ const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
@@ -649,7 +650,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-    const encryptionKey = !flags.encryptionKey ? null : await encryptionKeys.get(flags.encryptionKey)
+    const encryptionKey = !flags.encryptionKey ? null : (await encryptionKeys.get(flags.encryptionKey)) || flags.encryptionKey
     const running = this.#start(encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
@@ -738,9 +739,24 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
+    const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
+
+    // first check for drive encryption, before first replication it doesnt throw,
+    // so we need to check drive.get('/package.json') after appBundle.join.
+    // After the first replication drive.ready will throw in drive is encrypted
+    const corestore = this._getCorestore(state.manifest?.name, state.channel)
+    let drive
+    try {
+      drive = new Hyperdrive(corestore, state.key, driveOpts(encryptionKey || storedEncryptionKey))
+      await drive.ready()
+    } catch {
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      return { startId, bail: err }
+    }
+
     const appBundle = new Bundle({
-      encryptionKey,
-      corestore: this._getCorestore(state.manifest?.name, state.channel),
+      encryptionKey: encryptionKey || storedEncryptionKey,
+      corestore,
       appling: state.appling,
       channel: state.channel,
       checkout: state.checkout,
@@ -749,11 +765,26 @@ class Sidecar extends ReadyResource {
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       trace,
+      drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) { app.report({ err }) }
     })
 
     await session.add(appBundle)
+
+    if (this.swarm) appBundle.join(this.swarm)
+
+    try {
+      await drive.get('/package.json')
+    } catch {
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      return { startId, bail: err }
+    }
+
+    // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
+    if (encryptionKey && state.key) {
+      await preferences.set('encryption-key:' + state.key.toString('hex'), encryptionKey || storedEncryptionKey)
+    }
 
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
@@ -769,8 +800,6 @@ class Sidecar extends ReadyResource {
 
     // app is trusted, refresh trust for any updated configured link keys:
     await this.trust(state.key, client)
-
-    if (this.swarm) appBundle.join(this.swarm)
 
     try {
       await appBundle.calibrate()
@@ -920,6 +949,14 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+function driveOpts (encryptionKey) {
+  try {
+    return { encryptionKey: hypercoreid.decode(encryptionKey) }
+  } catch (err) {
+    return {}
+  }
 }
 
 module.exports = Sidecar

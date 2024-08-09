@@ -11,7 +11,8 @@ const force = global.Pear.config.args.includes('--force-install')
 async function install () {
   if (protocol !== 'file:') return
   const dirs = [
-    path.join(root, 'test', 'fixtures', 'harness', 'node_modules')
+    path.join(root, 'test', 'fixtures', 'harness', 'node_modules'),
+    path.join(root, 'test', 'fixtures', 'encrypted', 'node_modules')
   ]
   for (const dir of dirs) {
     if (force === false && await exists(dir)) continue
@@ -22,7 +23,7 @@ async function install () {
       const npm = (spawnSync('where', ['npm'])).stdout.toString().split('\r')[0]
       spawn('node', [path.join(path.dirname(npm), 'node_modules', 'npm', 'bin', 'npm-cli.js'), 'install'], { cwd: path.dirname(dir), stdio: 'inherit' })
     } else {
-      await run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
+      run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir), shell: isWindows })
     }
   }
 }
