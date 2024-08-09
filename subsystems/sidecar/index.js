@@ -134,6 +134,7 @@ class Sidecar extends ReadyResource {
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
         if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permissionRequired(report)
+        if (report.err?.code === 'ERR_ENCRYPTION_KEY_REQUIRED') return reports.encryptionKeyRequired(report)
         if (report.err?.code === 'ERR_INVALID_LENGTH') return reports.minver(report)
         if (report.err?.code === 'ERR_CONNECTION') return reports.connection()
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
@@ -751,6 +752,7 @@ class Sidecar extends ReadyResource {
       await drive.ready()
     } catch {
       const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      app.report({ err })
       return { startId, bail: err }
     }
 
@@ -778,6 +780,7 @@ class Sidecar extends ReadyResource {
       await drive.get('/package.json')
     } catch {
       const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      app.report({ err })
       return { startId, bail: err }
     }
 

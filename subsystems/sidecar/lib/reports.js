@@ -64,4 +64,11 @@ const permissionRequired = (report) => {
   }
 }
 
-module.exports = { generic, crash, dev, connection, upgrade, minver, update, permissionRequired }
+const encryptionKeyRequired = (report) => {
+  return {
+    type: 'encryptionKeyRequired',
+    key: report.err.info.key
+  }
+}
+
+module.exports = { generic, crash, dev, connection, upgrade, minver, update, permissionRequired, encryptionKeyRequired }

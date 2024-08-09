@@ -87,8 +87,8 @@ function ERR_ENCRYPTION_KEY_REQUIRED (msg, key) {
   return new PearError(msg, 'ERR_ENCRYPTION_KEY_REQUIRED', ERR_ENCRYPTION_KEY_REQUIRED, { key })
 }
 
-function ERR_INVALID_ENCRYPTION_KEY (msg, key) {
-  return new PearError(msg, 'ERR_INVALID_ENCRYPTION_KEY ', ERR_INVALID_ENCRYPTION_KEY, { key })
+function ERR_INVALID_ENCRYPTION_KEY (msg) {
+  return new PearError(msg, 'ERR_INVALID_ENCRYPTION_KEY ', ERR_INVALID_ENCRYPTION_KEY)
 }
 
 function ERR_NOT_FOUND_ENCRYPTION_KEY (msg) {
