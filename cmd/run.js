@@ -1,4 +1,5 @@
 'use strict'
+const { ERR_INVALID_ENCRYPTION_KEY } = require('../errors')
 const { outputter, trust, stdio, password } = require('./iface')
 
 const output = outputter('run', {
@@ -28,7 +29,11 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       const ask = 'Trust application'
       await trust({ ipc, key: err.info.key, message: err.message, explain, act, ask })
     } else if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      await password({ ipc, key: err.info.key })
+      if (!cmd.flags.encryptionKey) {
+        await password({ ipc, key: err.info.key })
+      } else {
+        throw ERR_INVALID_ENCRYPTION_KEY('Invalid encyption key')
+      }
     } else {
       throw err
     }
