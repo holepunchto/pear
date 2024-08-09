@@ -12,6 +12,17 @@
     "links": {
       "worker": "pear://456cup6hg5pwpekmygzhbxyxgtpknk66mbccohcuo795dj6biueo"
     },
+    "transforms": {
+      "/not-found.html": {
+        "pipeline": [
+          "pear-template"
+        ],
+        "locals": "__info__"
+      }
+    },
+    "errorScreens": {
+      "notFound": "/screens/not-found.html"
+    },
     "gui": {
       "width": 900,
       "height": 500,

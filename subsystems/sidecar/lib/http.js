@@ -72,9 +72,24 @@ module.exports = class Http extends ReadyResource {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.statusCode = 404
 
-    const { name, version } = app.state
-    const locals = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
-    const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
+    const { name, version, errorScreens, transforms } = app.state
+    const info = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
+
+    const path = errorScreens?.notFound ? errorScreens.notFound : '/not-found.html'
+    const hasFile = await app.bundle.has(path)
+    const file = hasFile ? await app.bundle.get(path) : await this.sidecar.bundle.get('/not-found.html')
+
+    const localsConfig = transforms['/not-found.html'].locals
+    const localsString = typeof localsConfig === 'object' && localsConfig !== null
+      ? JSON.stringify(localsConfig)
+      : (typeof localsConfig === 'string' ? localsConfig : '')
+
+    let locals = info
+    try {
+      locals = JSON.parse(transform.sync(localsString, { info: JSON.stringify(info) }))
+    } catch { /* ignore */ }
+
+    const stream = transform.stream(file, hasFile ? locals : info)
     return await streamx.pipelinePromise(stream, res)
   }
 
