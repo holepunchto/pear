@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, permit, stdio, encryptionKeyDialog } = require('./iface')
+const { outputter, permit, stdio, decrypt } = require('./iface')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -24,7 +24,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
       await permit({ ipc, key: err.info.key, message: err.message })
     } else if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      await encryptionKeyDialog({ ipc, key: err.info.key })
+      await decrypt({ ipc, key: err.info.key })
     } else {
       throw err
     }

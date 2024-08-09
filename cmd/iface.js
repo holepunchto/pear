@@ -177,7 +177,7 @@ async function permit ({ ipc, key, message, explain, ask, act }) {
   }
 }
 
-async function encryptionKeyDialog ({ ipc, key }) {
+async function decrypt ({ ipc, key }) {
   const z32 = key ? hypercoreid.encode(key) : ''
   const explain = z32 + ' is an encrypted application. \n' +
     '\nEnter the encryption key to run the app.\n\n'
@@ -209,4 +209,4 @@ async function encryptionKeyDialog ({ ipc, key }) {
   Bare.exit(77)
 }
 
-module.exports = { usage, permit, encryptionKeyDialog, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+module.exports = { usage, permit, decrypt, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
