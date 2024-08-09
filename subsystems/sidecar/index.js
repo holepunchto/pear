@@ -742,18 +742,16 @@ class Sidecar extends ReadyResource {
     const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
 
     // first check for drive encryption, before first replication it doesnt throw,
-    // so we need to check drive.get('/package.json') after appBundle.join
-    // after the first replication drive.ready will throw in drive is encrypted
+    // so we need to check drive.get('/package.json') after appBundle.join.
+    // After the first replication drive.ready will throw in drive is encrypted
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
       drive = new Hyperdrive(corestore, state.key, driveOpts(encryptionKey || storedEncryptionKey))
       await drive.ready()
-    } catch (err) {
-      if (!encryptionKey) {
-        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
-        return { startId, bail: err }
-      }
+    } catch {
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      return { startId, bail: err }
     }
 
     const appBundle = new Bundle({
@@ -778,11 +776,14 @@ class Sidecar extends ReadyResource {
 
     try {
       await drive.get('/package.json')
-    } catch (err) {
-      if (!encryptionKey) {
-        const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
-        return { startId, bail: err }
-      }
+    } catch {
+      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      return { startId, bail: err }
+    }
+
+    // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
+    if (encryptionKey && state.key) {
+      await preferences.set('encryption-key:' + state.key.toString('hex'), encryptionKey || storedEncryptionKey)
     }
 
     const linker = new ScriptLinker(appBundle, {
