@@ -185,7 +185,7 @@ async function password ({ ipc, key }) {
   await ipc.setPreference({ key: 'encryption-key:' + key.toString('hex'), value: result.value })
   print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
   await ipc.close()
-  Bare.exit(77)
+  Bare.exit()
 }
 
 async function permit ({ dialog, ask, delim, validation, msg }) {
