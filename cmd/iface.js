@@ -144,69 +144,62 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function permit ({ ipc, key, message, explain, ask, act }) {
+async function trust ({ ipc, key, explain, act, ask, message }) {
   const z32 = hypercoreid.encode(key)
-  explain = explain ?? 'Be sure that software is trusted before running it\n' +
-    '\nType "TRUST" to allow execution or anything else to exit\n\n'
-  ask = ask ?? 'Trust application'
-  act = act ?? 'Use pear run again to execute trusted application'
-  const sure = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
+  const dialog = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
+  const delim = '?'
+  const validation = (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST')
+  const msg = ansi.cross + ' uppercase TRUST to confirm'
 
-  const prompt = new Interact(sure, [
-    {
-      name: 'trust',
-      default: '',
-      prompt: ask,
-      delim: '?',
-      validation: (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST'),
-      msg: ansi.cross + ' uppercase TRUST to confirm'
-    }
-  ])
-  const result = await prompt.run()
-  if (result.trust === 'TRUST') {
+  const result = await permit({ dialog, ask, delim, validation, msg })
+  if (result.value === 'TRUST') {
     await ipc.trust(key)
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print(act + '\n')
     await ipc.close()
     Bare.exit()
   } else {
-    print('')
-    print(message + '\n', false)
+    print(message, false)
     await ipc.close()
     Bare.exit(77)
   }
 }
 
-async function decrypt ({ ipc, key }) {
+async function password ({ ipc, key }) {
   const z32 = key ? hypercoreid.encode(key) : ''
   const explain = z32 + ' is an encrypted application. \n' +
     '\nEnter the encryption key to run the app.\n\n'
+  const dialog = ansi.cross + explain
   const ask = 'Encryption key'
-  const sure = ansi.cross + explain
-  const prompt = new Interact(sure, [
-    {
-      name: 'key',
-      default: '',
-      prompt: ask,
-      delim: ':',
-      msg: '\nPlease, enter a valid encryption key. See ' + ansi.green('pear encryption-key --help') + ' for more information.\n',
-      validation: (key) => {
-        try {
-          hypercoreid.decode(key)
-          return true
-        } catch {
-          return false
-        }
-      }
+  const delim = ':'
+  const validation = (key) => {
+    try {
+      hypercoreid.decode(key)
+      return true
+    } catch {
+      return false
     }
-  ])
-  const result = await prompt.run()
-  if (key) {
-    await ipc.setPreference({ key: 'encryption-key:' + key.toString('hex'), value: result.key })
-    print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
   }
+  const msg = '\nPlease, enter a valid encryption key. See ' + ansi.green('pear encryption-key --help') + ' for more information.\n'
+  const result = await permit({ dialog, ask, delim, validation, msg })
+  await ipc.setPreference({ key: 'encryption-key:' + key.toString('hex'), value: result.value })
+  print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
   await ipc.close()
   Bare.exit(77)
 }
 
-module.exports = { usage, permit, decrypt, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+async function permit ({ dialog, ask, delim, validation, msg }) {
+  const interact = new Interact(dialog, [
+    {
+      name: 'value',
+      default: '',
+      prompt: ask,
+      delim,
+      validation,
+      msg
+    }
+  ])
+  return interact.run()
+}
+
+module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

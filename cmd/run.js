@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, permit, stdio, decrypt } = require('./iface')
+const { outputter, trust, stdio, password } = require('./iface')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -22,9 +22,13 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED') {
-      await permit({ ipc, key: err.info.key, message: err.message })
+      const explain = 'Be sure that software is trusted before running it\n' +
+        '\nType "TRUST" to allow execution or anything else to exit\n\n'
+      const act = 'Use pear run again to execute trusted application\n'
+      const ask = 'Trust application'
+      await trust({ ipc, key: err.info.key, message: err.message, explain, act, ask })
     } else if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      await decrypt({ ipc, key: err.info.key })
+      await password({ ipc, key: err.info.key })
     } else {
       throw err
     }
