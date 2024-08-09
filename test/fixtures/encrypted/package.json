@@ -1,14 +1,18 @@
 {
-  "name": "minimal",
+  "name": "encrypted",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "pear": {
-    "name": "minimal",
+    "name": "encrypted",
     "type": "terminal",
     "encrypted": true
   },
   "keywords": [],
-  "author": "Holepunch"
+  "author": "Holepunch",
+  "dependencies": {
+    "bare-inspector": "^2.3.0",
+    "pear-inspect": "^1.1.3"
+  }
 }
