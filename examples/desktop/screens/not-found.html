@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Not Found</title>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #6c9368;
+      color: #f2f2f2;
+      font-size: 20px;
+      padding-left: 1em;
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+      margin: 0;
+    }
+
+    #bar {
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #FFF;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    .info {
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 20px - var(--title-bar-height));
+    }
+
+    h1, p {
+      margin: 10px 0;
+    }
+
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 18px;
+      margin-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
+    <div class="info">
+      <h1>Ooops! Not Found</h1>
+      <p> Application does not contain __url__ </p>
+      <p> __name__ __version__</p>
+    </div>
+</body>
+</html>
