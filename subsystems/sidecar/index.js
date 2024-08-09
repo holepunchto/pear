@@ -650,7 +650,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-    const encryptionKey = !flags.encryptionKey ? null : await encryptionKeys.get(flags.encryptionKey)
+    const encryptionKey = !flags.encryptionKey ? null : (await encryptionKeys.get(flags.encryptionKey)) || flags.encryptionKey
     const running = this.#start(encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {

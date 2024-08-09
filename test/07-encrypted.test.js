@@ -7,7 +7,7 @@ const Helper = require('./helper')
 const os = require('bare-os')
 const fs = require('bare-fs')
 const tmp = fs.realpathSync(os.tmpdir())
-const encrypted = path.join(Helper.root, 'test', 'fixtures', 'minimal-encrypted')
+const encrypted = path.join(Helper.root, 'test', 'fixtures', 'encrypted')
 
 class Rig {
   setup = async ({ comment, timeout }) => {
@@ -58,7 +58,7 @@ test('updates setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(4)
+  plan(6)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
@@ -92,10 +92,30 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   comment('seeding encrypted app')
   const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const appKey = await until.key
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
-  // TODO: run encrypted app with another platform instance
+  comment('bootstrapping rcv platform...')
+  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
+  await Helper.bootstrap(rig.key, platformDirRcv)
+  const prefs = 'preferences.json'
+  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
+  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
+  comment('rcv platform bootstrapped')
+
+  comment('run encrypted pear application')
+  const link = 'pear://' + appKey
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv, encryptionKey: secret })
+
+  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
+
+  is(value?.app?.key, appKey, 'app version matches staged key')
+
+  await running.inspector.evaluate('disableInspector()')
+  await running.inspector.close()
+  const { code } = await running.until.exit
+  is(code, 0, 'exit code is 0')
 })
 
 test('updates cleanup', rig.cleanup)
