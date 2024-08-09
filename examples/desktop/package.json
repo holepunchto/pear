@@ -17,6 +17,17 @@
       "height": 500,
       "minWidth": 500,
       "backgroundColor": "#1F2430"
+    },
+    "transforms": {
+      "/not-found.html": {
+        "pipeline": [
+          "pear-template"
+        ],
+        "locals": "__info__"
+      }
+    },
+    "errorScreens": {
+      "notFound": "/screens/not-found.html"
     }
   },
   "devDependencies": {
