@@ -54,7 +54,7 @@ class Rig {
 
 const rig = new Rig()
 
-test('updates setup', rig.setup)
+test('encrypted test setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -118,4 +118,4 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   is(code, 0, 'exit code is 0')
 })
 
-test('updates cleanup', rig.cleanup)
+test('encrypted test cleanup', rig.cleanup)
