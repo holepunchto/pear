@@ -33,6 +33,7 @@
 * API - `Pear.worker` - Worker now inherits flags passed to `pear` which creates equivalent `Pear.config` state in Worker
 * CLI - `pear -v` improved output
 * CLI - electron and pear SemVers added to `pear versions`
+* Desktop - Not Found default screen
 
 ## v1.3.4
 
