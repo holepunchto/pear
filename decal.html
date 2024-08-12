@@ -371,11 +371,11 @@
         <path d="M19.5 24.7143L27.75 20L36 24.7143V25.5627C36 30.6414 32.6333 35.1048 27.75 36.5C22.8667 35.1048 19.5 30.6414 19.5 25.5627V24.7143Z" fill="#E44B44"/>
         <path d="M27.75 25.1562V29.5562M27.75 32.3062V32.3172" stroke="#391C20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <h1 id="header">Unknown app</h1>
-      <p id="p1">You have not run this application before:</p>
-      <p id="key">pear://o4wws3t5ot68pctkowpcznwh9s589hs4565kmz4peooxfabqoyfy</p>
-      <p id="p2">Type <span>TRUST</span> to continue if you know it's safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span></p>
-      <input type="text" placeholder="Type to confirm"></input>
+      <h1 id="header"></h1>
+      <p id="p1"></p>
+      <p id="key"></p>
+      <p id="p2"></p>
+      <input type="text"></input>
       <p id="error">Please, enter TRUST (uppercase) </p>
       <button id="cancel">Cancel</button>
       <button id="confirm">Confirm</button>
@@ -393,27 +393,12 @@
         this.input = this.root.querySelector('input')
         this.error = this.root.querySelector('#error')
         this.key = this.root.querySelector('#key')
-        this.trust = null
+        this.header = this.root.querySelector('#header')
+        this.p1 = this.root.querySelector('#p1')
+        this.p2 = this.root.querySelector('#p2')
+        this.permit = null
       }
       async connectedCallback() {
-        this.input.addEventListener('keyup', (event) => {
-          const value = event.target.value
-          if (value === 'TRUST') {
-            this.confirm.classList.add('green-confirm')
-          } else {
-            this.confirm.classList.remove('green-confirm')
-          }
-          if (value === 'trust') {
-            this.error.classList.add('show')
-          } else {
-            this.error.classList.remove('show')
-          }
-        })
-
-        this.confirm.addEventListener('click', async () => {
-          if (this.input.value === 'TRUST') await this.trust()
-        })
-
         this.cancel.addEventListener('click', async () => {
           await Pear.Window.self.close()
         })
@@ -567,19 +552,24 @@
               continue
             }
 
-            if (type === 'permissionRequired') {
-              const trustConfirm = document.createElement('decal-dialog')
+            if (type === 'permissionRequired' || type === 'encryptionKeyRequired') {
+              const permitDialog = document.createElement('decal-dialog')
               const ctrl = document.createElement('pear-ctrl')
               ctrl.dataset.maximizable = false
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
-              document.body.appendChild(trustConfirm)
+              document.body.appendChild(permitDialog)
+
               const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
               const z32 = hypercoreid.encode(key)
-              trustConfirm.setLink(`pear://${z32}`)
-              trustConfirm.trust = async () => {
-                await this.ipc.trust(key)
-                await this.ipc.restart({ id: this.gid })
+              permitDialog.setLink(`pear://${z32}`)
+
+              if (type === 'permissionRequired') {
+                this.setupTrustDialog(permitDialog, key)
+              }
+
+              if (type === 'encryptionKeyRequired') {
+                this.setupPasswordDialog(permitDialog, key)
               }
 
               await this.ipc.setSize({ id: this.gid, width: 560, height: 450 })
@@ -602,6 +592,63 @@
             this.show(type)
             await this.ipc.detachMainView({ id: this.gid })
           }
+        }
+
+        setupTrustDialog (permitDialog, key) {
+          permitDialog.header = 'Unknown app'
+          permitDialog.p1.innerText = 'You have not run this application before:'
+          permitDialog.p2.innerHTML = 'Type <span>TRUST</span> to continue if you know it is safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span>'
+          permitDialog.input.placeholder = 'Type TRUST to confirm'
+          permitDialog.permit = async () => {
+            await this.ipc.trust(key)
+            await this.ipc.restart({ id: this.gid })
+          }
+
+          permitDialog.input.addEventListener('keyup', (event) => {
+            const value = event.target.value
+            if (value === 'TRUST') {
+              permitDialog.confirm.classList.add('green-confirm')
+            } else {
+              permitDialog.confirm.classList.remove('green-confirm')
+            }
+            if (value === 'trust') {
+              permitDialog.error.classList.add('show')
+            } else {
+              permitDialog.error.classList.remove('show')
+            }
+          })
+
+          permitDialog.confirm.addEventListener('click', async () => {
+            if (permitDialog.input.value === 'TRUST') await permitDialog.permit()
+          })
+        }
+
+        setupPasswordDialog (permitDialog, key) {
+          permitDialog.header = 'Encrypted app'
+          permitDialog.p1.innerText = 'This application requires an encryption key:'
+          permitDialog.p2.innerHTML = 'Type the encryption key password.</span>'
+          permitDialog.input.type = 'password'
+          permitDialog.input.placeholder = 'Password'
+          permitDialog.permit = async () => {
+            const password = permitDialog.input.value
+            const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
+            const t = await this.ipc.setPreference('encryption-key:' + hypercoreid.normalize(key), password)
+            await this.ipc.restart({ id: this.gid })
+          }
+
+          permitDialog.input.addEventListener('keyup', (event) => {
+            const value = event.target.value
+            if (value.length > 0) {
+              permitDialog.confirm.classList.add('green-confirm')
+            } else {
+              permitDialog.confirm.classList.remove('green-confirm')
+            }
+          })
+
+          permitDialog.confirm.addEventListener('click', async () => {
+            if (permitDialog.input.value.length > 0) await permitDialog.permit()
+          })
+
         }
         constructor () {
           super()

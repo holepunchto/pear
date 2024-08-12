@@ -114,7 +114,7 @@ module.exports = class Stage extends Opstream {
 
     if (encryptionKey) {
       await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey)
-      await preferences.set('encryption-key:' + bundle.drive.key.toString('hex'), encryptionKey)
+      await preferences.set('encryption-key:' + hypercoreid.normalize(bundle.drive.key), encryptionKey)
     }
 
     const root = state.dir
