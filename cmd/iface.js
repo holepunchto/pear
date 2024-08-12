@@ -182,7 +182,7 @@ async function password ({ ipc, key }) {
   }
   const msg = '\nPlease, enter a valid encryption key. See ' + ansi.green('pear encryption-key --help') + ' for more information.\n'
   const result = await permit({ dialog, ask, delim, validation, msg })
-  await ipc.setPreference({ key: 'encryption-key:' + key.toString('hex'), value: result.value })
+  await ipc.setPreference({ key: 'encryption-key:' + hypercoreid.normalize(key), value: result.value })
   print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
   await ipc.close()
   Bare.exit()

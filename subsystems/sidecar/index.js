@@ -740,7 +740,7 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    const storedEncryptionKey = await preferences.get('encryption-key:' + state.key.toString('hex'))
+    const storedEncryptionKey = await preferences.get('encryption-key:' + hypercoreid.normalize(state.key))
 
     // first check for drive encryption, before first replication it doesnt throw,
     // so we need to check drive.get('/package.json') after appBundle.join.
@@ -786,7 +786,7 @@ class Sidecar extends ReadyResource {
 
     // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
     if (encryptionKey && state.key) {
-      await preferences.set('encryption-key:' + state.key.toString('hex'), encryptionKey || storedEncryptionKey)
+      await preferences.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey || storedEncryptionKey)
     }
 
     const linker = new ScriptLinker(appBundle, {
@@ -883,6 +883,7 @@ class Sidecar extends ReadyResource {
   }
 
   async setPreference ({ key, value }) {
+    console.log('setting', key, value)
     const result = await preferences.set(key, value)
     return result
   }
