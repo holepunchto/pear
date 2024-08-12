@@ -115,9 +115,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     global.Pear = pear
 
-    ipc.messages({ type: 'pear/reload' }).once('data', async ({ hard }) => {
+    ipc.messages({ type: 'pear/reload' }).once('data', async () => {
       await ipc.close()
-      if (hard === true) await ipc.waitForLock()
+      await ipc.waitForLock()
       await global.Pear.reload()
     })
 
@@ -137,6 +137,14 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     return stream
   }
+  
+
+  ipc.messages({ type: 'pear/reload' }).once('data', async () => {
+    await ipc.close()
+    await ipc.waitForLock()
+    console.log('create a new ipc client? what for we do not need it')
+  })
+  
 
   args.unshift('--start-id=' + startId)
   const detach = args.includes('--detach')

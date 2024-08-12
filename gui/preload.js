@@ -18,14 +18,19 @@ module.exports = class PearGUI extends ReadyResource {
     })
 
     const onteardown = async (fn) => {
-      if (state.isDecal) return
       await this.ready()
       const action = await this.ipc.unloading({ id }) // only resolves when unloading occurs
       await fn()
       await this.ipc.completeUnload({ id, action })
+      if (action.type === 'teardown') {
+        console.log('onteardown ipc close')
+        await this.ipc.closeIPC()
+        console.log('onteardown ipc closed')
+      }
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
     }
+    const gui = this
     API = class extends API {
       constructor (ipc, state, onteardown) {
         super(ipc, state, onteardown)
@@ -45,11 +50,17 @@ module.exports = class PearGUI extends ReadyResource {
           desktopSources: (options = {}) => ipc.desktopSources(options)
         }
 
-        ipc.messages({ type: 'pear/reload' }).once('data', async ({ hard }) => {
-          await ipc.close()
-          if (hard === true) await ipc.waitForLock()
-          location.reload()
-        })
+        // if (state.isDecal === false) ipc.messages({ type: 'pear/reload' }).once('data', async () => {
+        //   const lockWait = ipc.waitForLock()
+        //   await gui.close()
+        //   console.log('ipc closed')
+        //   console.log('waiting for lock')
+        //   await lockWait
+        //   console.log('sidecar closed')
+        //   console.log('now wait trigger app start and update electron with new startid')
+        //   console.log('ok so call location.reload')
+        //   //location.reload()
+        // })
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
@@ -219,8 +230,8 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      reload = (opts) => {
-        if (opts?.platform) return super.reload()
+      reload = async function (opts) {
+        if (opts?.platform) return this._reload(opts)
         location.reload()
       }
 
@@ -230,6 +241,14 @@ module.exports = class PearGUI extends ReadyResource {
       }
     }
     this.api = new API(this.ipc, state, onteardown)
+  }
+
+  _close () { 
+
+    // NEED TO TELL PARENT PROCESS TO CLOSE ITS IPC AS WELL SOMEHOW
+
+    console.trace('PRELOAD _close') 
+    return this.ipc.closeIPC() 
   }
 }
 
@@ -241,7 +260,7 @@ class IPC {
   ctrl (...args) { return electron.ipcRenderer.invoke('ctrl', ...args) }
   parent (...args) { return electron.ipcRenderer.invoke('parent', ...args) }
   open (...args) { return electron.ipcRenderer.invoke('open', ...args) }
-  close (...args) { return electron.ipcRenderer.invoke('close', ...args) }
+  close (...args) { return electron.ipcRenderer.invoke('guiClose', ...args) }
   show (...args) { return electron.ipcRenderer.invoke('show', ...args) }
   hide (...args) { return electron.ipcRenderer.invoke('hide', ...args) }
   minimize (...args) { return electron.ipcRenderer.invoke('minimize', ...args) }
@@ -318,14 +337,14 @@ class IPC {
       stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
     })
     electron.ipcRenderer.on('workerClose', () => { stream.destroy() })
-    stream.once('close', () => {
-      electron.ipcRenderer.send('workerPipeClose', id)
-    })
+    stream.once('close', () => { electron.ipcRenderer.send('workerPipeClose', id) })
 
     electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
   }
 
+  waitForLock () { return electron.ipcRenderer.invoke('waitForLock') }
+  closeIPC () { return electron.ipcRenderer.invoke('close') }
   ref () {}
   unref () {}
 
@@ -351,4 +370,5 @@ class IPC {
     electron.ipcRenderer.on('iteratePreferences', (e, data) => { stream.push(data) })
     return stream
   }
+
 }

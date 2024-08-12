@@ -72,7 +72,6 @@ class Sidecar extends ReadyResource {
     super()
     this.bus = new Iambus()
     this.version = CHECKOUT
-
     this.updater = updater
     if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
 
@@ -234,7 +233,8 @@ class Sidecar extends ReadyResource {
 
       teardown () {
         if (this.unload) {
-          this.unload()
+          console.log('UNLOAD TYPE teardown')
+          this.unload({ type: 'teardown' })
           return true
         }
         return false
@@ -286,7 +286,9 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
+      console.log('timeout complete', this.hasClients)
       if (this.hasClients) return
+      console.log('spindownt calling close')
       this.close().catch(console.error)
     }, this.spindownms)
   }
@@ -513,9 +515,9 @@ class Sidecar extends ReadyResource {
     return metadata
   }
 
-  async restart ({ platform = false, hard = true } = {}, client) {
-    if (this.verbose) console.log(`${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
-    if (hard === true && platform === false) {
+  async restart ({ platform = false, reload = false } = {}, client) {
+    if (this.verbose) console.log(`${reload ? 'Reloading' : 'Restarting'} ${platform ? 'platform' : 'client'}`)
+    if (reload === false && platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
@@ -553,7 +555,7 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    for (const { userData: app } of this.clients) app.message({ type: 'pear/reload', hard })
+    if (reload) for (const { userData: app } of this.clients) app.message({ type: 'pear/reload' })
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
@@ -561,7 +563,7 @@ class Sidecar extends ReadyResource {
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    if (hard === false) return
+    if (reload) return
 
     // shutdown successful, reset death clock
     this.deathClock()
@@ -866,7 +868,6 @@ class Sidecar extends ReadyResource {
 
     this.spindownms = 0
     const restarts = this.closeClients()
-
     this.spindownms = 0
     this.#spindownCountdown()
     await this.closing
@@ -874,26 +875,44 @@ class Sidecar extends ReadyResource {
   }
 
   async #close () {
+    console.log('#close')
+    console.log('pre appling close')
     await this.applings.close()
+    console.log('post appling close')
     clearTimeout(this.lazySwarmTimeout)
+    console.log('pre replicator leave')
     if (this.replicator) await this.replicator.leave(this.swarm)
+    console.log('post replicator leave')
+    console.log('pre http close')
     if (this.http) await this.http.close()
+    console.log('post http close')
+    console.log('pre http destroy')
     if (this.swarm) await this.swarm.destroy()
+    console.log('posthttp destroy')
+    console.log('pre corestore close')
     if (this.corestore) await this.corestore.close()
+    console.log('post corestore close')
     if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed')
   }
 
   async _close () {
+    console.log('_close')
     if (this.decomissioned) return
     this.decomissioned = true
     // point of no return, death-march ensues
+
     this.deathClock()
     const closing = this.#close()
     this.closeClients()
+    console.log('awaiting closing')
     await closing
+    console.log('closing resolved')
+    console.log('awaiting ipc close')
     await this.ipc.close()
+    console.log('resolved ipc close')
 
     if (this.updater) {
+      console.log('awaiting update')
       if (await this.updater.applyUpdate() !== null) {
         if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Applied update')
       }
