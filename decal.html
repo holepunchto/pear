@@ -600,7 +600,7 @@
           permitDialog.p2.innerHTML = 'Type <span>TRUST</span> to continue if you know it is safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span>'
           permitDialog.input.placeholder = 'Type TRUST to confirm'
           permitDialog.permit = async () => {
-            await this.ipc.trust(key)
+            await this.ipc.trust({ key })
             await this.ipc.restart({ id: this.gid })
           }
 

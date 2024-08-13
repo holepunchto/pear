@@ -441,7 +441,7 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
-  async trust (key, client) {
+  async trust (params, client) {
     const trusted = new Set((await preferences.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
     if (session) {
@@ -453,8 +453,8 @@ class Sidecar extends ReadyResource {
       session.add(client.userData.bundle)
       if (this.swarm) await client.userData.bundle.join(this.swarm)
     }
-    if (key !== null) {
-      const z32 = hypercoreid.encode(key)
+    if (params.key !== null) {
+      const z32 = hypercoreid.encode(params.key)
       trusted.add(z32)
     }
     let pkg = null
@@ -712,7 +712,7 @@ class Sidecar extends ReadyResource {
       app.bundle = appBundle
 
       // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
-      await this.trust(state.key, client)
+      await this.trust({ key: state.key }, client)
 
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
@@ -802,7 +802,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     // app is trusted, refresh trust for any updated configured link keys:
-    await this.trust(state.key, client)
+    await this.trust({ key: state.key }, client)
 
     try {
       await appBundle.calibrate()
