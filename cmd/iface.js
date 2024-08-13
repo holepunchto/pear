@@ -153,7 +153,7 @@ async function trust ({ ipc, key, explain, act, ask, message }) {
 
   const result = await permit({ dialog, ask, delim, validation, msg })
   if (result.value === 'TRUST') {
-    await ipc.trust(key)
+    await ipc.trust({ key })
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print(act + '\n')
     await ipc.close()

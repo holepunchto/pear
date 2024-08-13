@@ -1743,7 +1743,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  trust (key) { return this.ipc.trust(key) }
+  trust (params) { return this.ipc.trust(params) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
