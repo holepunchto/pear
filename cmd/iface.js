@@ -168,19 +168,12 @@ async function trust ({ ipc, key, explain, act, ask, message }) {
 async function password ({ ipc, key }) {
   const z32 = key ? hypercoreid.encode(key) : ''
   const explain = z32 + ' is an encrypted application. \n' +
-    '\nEnter the encryption key to run the app.\n\n'
+    '\nEnter the password to run the app.\n\n'
   const dialog = ansi.cross + explain
-  const ask = 'Encryption key'
+  const ask = 'Password'
   const delim = ':'
-  const validation = (key) => {
-    try {
-      hypercoreid.decode(key)
-      return true
-    } catch {
-      return false
-    }
-  }
-  const msg = '\nPlease, enter a valid encryption key. See ' + ansi.green('pear encryption-key --help') + ' for more information.\n'
+  const validation = (key) => key.length > 0
+  const msg = '\nPlease, enter a valid password.\n'
   const result = await permit({ dialog, ask, delim, validation, msg })
   await ipc.trust({ key, password: result.value })
   print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
