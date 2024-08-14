@@ -632,7 +632,7 @@
           permitDialog.permit = async () => {
             const password = permitDialog.input.value
             const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
-            const t = await this.ipc.setPreference('encryption-key:' + hypercoreid.normalize(key), password)
+            const t = await this.ipc.trust({ key, password })
             await this.ipc.restart({ id: this.gid })
           }
 

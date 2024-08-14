@@ -93,6 +93,7 @@
     "mutexify": "^1.4.0",
     "paparam": "^1.4.0",
     "pear-changelog": "^1.0.1",
+    "pear-ek-generator": "^1.0.0",
     "pear-interface": "^1.0.0",
     "pear-ipc": "^1.0.17",
     "pear-link": "^2.0.1",
