@@ -29,10 +29,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       const ask = 'Trust application'
       await trust({ ipc, key: err.info.key, message: err.message, explain, act, ask })
     } else if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      if (!cmd.flags.encryptionKey) {
-        await password({ ipc, key: err.info.key })
-      } else {
+      if (!cmd.flags.askEncryptionKey) {
         throw ERR_INVALID_ENCRYPTION_KEY('Invalid encyption key')
+      } else {
+        await password({ ipc, key: err.info.key })
       }
     } else {
       throw err

@@ -54,7 +54,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--appling <path>', 'Set application shell path'),
     flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
     flag('--detached', 'Wakeup existing app or run detached'),
-    hiddenFlag('--encryption-key <name>'), // internal temporarily
+    flag('--encryption-key <name>', 'Application encryption key'),
+    flag('--no-ask-encryption-key', 'Supress encryption key dialog for encrypted apps'),
     hiddenFlag('--detach'),
     hiddenFlag('--trace <n>'),
     hiddenFlag('--swap <path>'),
@@ -72,6 +73,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
     flag('--name', 'Advanced. Override app name'),
+    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
   )
