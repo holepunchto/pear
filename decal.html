@@ -412,7 +412,7 @@
       constructor () {
         super()
         this.header = 'Unknown app'
-        this.p1.innerText = 'You have not run this application before:'
+        this.p1.innerText = 'This application has not been run before:'
         this.p2.innerHTML = 'Type <span>TRUST</span> to continue if you know it is safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span>'
         this.input.placeholder = 'Type TRUST to confirm'
         this.input.addEventListener('keyup', this.#onKeyup.bind(this))
@@ -447,8 +447,8 @@
       constructor () {
         super()
         this.header = 'Encrypted app'
-        this.p1.innerText = 'This application requires an encryption key:'
-        this.p2.innerHTML = 'Type the encryption key password.</span>'
+        this.p1.innerText = 'This application is encrypted:'
+        this.p2.innerHTML = 'Type the password.</span>'
         this.input.type = 'password'
         this.input.placeholder = 'Password'
         this.input.addEventListener('keyup', this.#onKeyup.bind(this))
