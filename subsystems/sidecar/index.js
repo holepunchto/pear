@@ -29,9 +29,10 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../run/definition')
 const { version } = require('../../package.json')
+const deriveEncryptionKey = require('pear-ek-generator')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, PEAR_SALT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
@@ -442,6 +443,10 @@ class Sidecar extends ReadyResource {
   }
 
   async trust (params, client) {
+    if (params.password) {
+      const encryptionKey = await deriveEncryptionKey(params.password, PEAR_SALT)
+      return preferences.set('encryption-key:' + hypercoreid.normalize(params.key), encryptionKey.toString('hex'))
+    }
     const trusted = new Set((await preferences.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
     if (session) {
@@ -651,7 +656,17 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-    const encryptionKey = !flags.encryptionKey ? null : (await encryptionKeys.get(flags.encryptionKey)) || flags.encryptionKey
+
+    let encryptionKey
+    if (flags.encryptionKey) {
+      const password = (await encryptionKeys.get(flags.encryptionKey))
+      encryptionKey = password ? await deriveEncryptionKey(password, PEAR_SALT) : await deriveEncryptionKey(flags.encryptionKey, PEAR_SALT)
+    } else {
+      const { drive } = parseLink(link)
+      const storedEncryptedKey = await preferences.get('encryption-key:' + hypercoreid.normalize(drive.key))
+      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
+    }
+
     const running = this.#start(encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
@@ -740,15 +755,13 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    const storedEncryptionKey = await preferences.get('encryption-key:' + hypercoreid.normalize(state.key))
-
     // first check for drive encryption, before first replication it doesnt throw,
     // so we need to check drive.get('/package.json') after appBundle.join.
     // After the first replication drive.ready will throw in drive is encrypted
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
-      drive = new Hyperdrive(corestore, state.key, driveOpts(encryptionKey || storedEncryptionKey))
+      drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
     } catch {
       const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
@@ -757,7 +770,7 @@ class Sidecar extends ReadyResource {
     }
 
     const appBundle = new Bundle({
-      encryptionKey: encryptionKey || storedEncryptionKey,
+      encryptionKey,
       corestore,
       appling: state.appling,
       channel: state.channel,
@@ -786,7 +799,7 @@ class Sidecar extends ReadyResource {
 
     // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
     if (encryptionKey && state.key) {
-      await preferences.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey || storedEncryptionKey)
+      await preferences.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
     }
 
     const linker = new ScriptLinker(appBundle, {
@@ -953,14 +966,6 @@ function pickData () {
       cb(null, data)
     }
   })
-}
-
-function driveOpts (encryptionKey) {
-  try {
-    return { encryptionKey: hypercoreid.decode(encryptionKey) }
-  } catch (err) {
-    return {}
-  }
 }
 
 module.exports = Sidecar

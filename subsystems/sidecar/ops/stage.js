@@ -6,13 +6,14 @@ const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
+const deriveEncryptionKey = require('pear-ek-generator')
 const { randomBytes } = require('hypercore-crypto')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const { preferences } = State
 const Store = require('../lib/store')
-const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
+const { BOOT, SWAP, DESKTOP_RUNTIME, PEAR_SALT } = require('../../../constants')
 const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED, ERR_ENCRYPTED_FIELD_REQUIRED, ERR_NOT_FOUND_ENCRYPTION_KEY } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
@@ -73,12 +74,14 @@ module.exports = class Stage extends Opstream {
     }
 
     const encryptionKeys = new Store('encryption-keys')
-    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
+    const password = await encryptionKeys.get(params.encryptionKey)
 
-    if (encrypted === true && !encryptionKey) {
+    if (encrypted === true && !password) {
       const err = ERR_NOT_FOUND_ENCRYPTION_KEY('Not found encryption key: ' + params.encryptionKey)
       throw err
     }
+
+    const encryptionKey = encrypted && password ? (await deriveEncryptionKey(password, PEAR_SALT)) : null
 
     const bundle = new Bundle({
       key,
@@ -111,11 +114,6 @@ module.exports = class Stage extends Opstream {
     this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release } })
 
     if (dryRun) this.push({ tag: 'dry' })
-
-    if (encryptionKey) {
-      await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey)
-      await preferences.set('encryption-key:' + hypercoreid.normalize(bundle.drive.key), encryptionKey)
-    }
 
     const root = state.dir
     const main = unixPathResolve('/', state.main)
@@ -173,5 +171,10 @@ module.exports = class Stage extends Opstream {
     if (dryRun) return
 
     this.push({ tag: 'addendum', data: { version: bundle.version, release, channel, key: z32, link } })
+
+    if (encryptionKey) {
+      await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey.toString('hex'))
+      await preferences.set('encryption-key:' + hypercoreid.normalize(bundle.drive.key), encryptionKey.toString('hex'))
+    }
   }
 }

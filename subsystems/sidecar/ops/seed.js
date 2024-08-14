@@ -30,7 +30,7 @@ module.exports = class Seed extends Opstream {
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
     const encryptionKey = await preferences.get('encryption-key:' + (key ? hypercoreid.normalize(key) : name + '-' + channel))
-    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
+    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
 
     try {
       await session.add(bundle)
