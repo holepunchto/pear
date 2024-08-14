@@ -55,6 +55,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
     flag('--name <name>', 'Advanced. Override app name'),
+    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
   )

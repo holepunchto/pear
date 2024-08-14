@@ -6,11 +6,15 @@ const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../errors')
+const Store = require('../lib/store')
+const deriveEncryptionKey = require('pear-ek-generator')
+const encryptionKeys = new Store('encryption-keys')
+const { PEAR_SALT } = require('../../../constants.js')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ name, channel, link, verbose, seeders, dir, cmdArgs } = {}) {
+  async #op ({ name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
@@ -29,8 +33,22 @@ module.exports = class Seed extends Opstream {
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const encryptionKey = await preferences.get('encryption-key:' + (key ? hypercoreid.normalize(key) : name + '-' + channel))
-    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+    if (key) {
+      const storedEncryptedKey = await preferences.get('encryption-key:' + hypercoreid.normalize(key))
+      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
+    } else {
+      const storedEncryptedKey = await preferences.get('encryption-key:' + (key ? hypercoreid.normalize(key) : name + '-' + channel))
+      if (storedEncryptedKey) {
+        encryptionKey = Buffer.from(storedEncryptedKey, 'hex')
+      } else {
+        const password = (await encryptionKeys.get(encryptionKey))
+        encryptionKey = password
+          ? await deriveEncryptionKey(password, PEAR_SALT)
+          : encryptionKey ? await deriveEncryptionKey(encryptionKey, PEAR_SALT) : null
+      }
+    }
+
+    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
 
     try {
       await session.add(bundle)

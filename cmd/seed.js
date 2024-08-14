@@ -43,9 +43,7 @@ module.exports = (ipc) => async function seed (cmd) {
   } catch (err) {
     if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
       const key = isKey ? hypercoreid.decode(link) : null
-      if (!encryptionKey) {
-        await password({ ipc, key })
-      }
+      await password({ ipc, key })
     } else {
       throw err
     }
