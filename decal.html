@@ -397,12 +397,27 @@
         this.p2 = this.root.querySelector('#p2')
         this.key = null
         this.ipc = null
-      }
-      async connectedCallback() {
+
         this.cancel.addEventListener('click', async () => {
           await Pear.Window.self.close()
         })
       }
+
+      update () {
+        this.header.innerText = this.dataset.header
+        this.p1.innerText = this.dataset.p1
+        this.p2.innerHTML = this.dataset.p2
+        this.input.placeholder = this.dataset.placeholder
+      }
+
+      get options () {
+        return this.dataset
+      }
+
+      set options (opts) {
+        Object.assign(this.dataset, opts)
+      }
+
       setLink (link) {
         this.root.querySelector('#key').innerText = link
       }
@@ -411,10 +426,6 @@
     class TrustDialog extends DecalDialog {
       constructor () {
         super()
-        this.header = 'Unknown app'
-        this.p1.innerText = 'This application has not been run before:'
-        this.p2.innerHTML = 'Type <span>TRUST</span> to continue if you know it is safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span>'
-        this.input.placeholder = 'Type TRUST to confirm'
         this.input.addEventListener('keyup', this.#onKeyup.bind(this))
         this.confirm.addEventListener('click', this.#onClick.bind(this))
       }
@@ -446,11 +457,7 @@
     class PasswordDialog extends DecalDialog {
       constructor () {
         super()
-        this.header = 'Encrypted app'
-        this.p1.innerText = 'This application is encrypted:'
-        this.p2.innerHTML = 'Type the password.</span>'
         this.input.type = 'password'
-        this.input.placeholder = 'Password'
         this.input.addEventListener('keyup', this.#onKeyup.bind(this))
         this.confirm.addEventListener('click', this.#onClick.bind(this))
       }
@@ -472,9 +479,7 @@
       }
 
       async #onClick () {
-        this.confirm.addEventListener('click', async () => {
-          if (this.input.value.length > 0) await this.#permit()
-        })
+        if (this.input.value.length > 0) await this.#permit()
       }
     }
 
@@ -632,6 +637,23 @@
               ctrl.dataset.maximizable = false
               document.documentElement.classList.add('dialog')
               document.body.appendChild(ctrl)
+
+              const trustOpts =  {
+                header: 'Unknown app',
+                p1: 'This application has not been run before:',
+                p2: 'Type <span>TRUST</span> to continue if you know it is safe to open and to prevent showing this dialog again. <span> Only open trusted sources.</span>',
+                placeholder: 'Type TRUST to confirm'
+              }
+
+              const passwordOpts =  {
+                header: 'Encrypted app',
+                p1: 'This application is encrypted:',
+                p2: 'Type the password',
+                placeholder: 'Password'
+              }
+
+              permitDialog.options = type === 'permissionRequired' ? trustOpts : passwordOpts
+              permitDialog.update()
               document.body.appendChild(permitDialog)
 
               const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
