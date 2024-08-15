@@ -50,7 +50,7 @@ module.exports = class Bundle {
         this.log({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
       })
     } else {
-      this.replicator = 0
+      this.replicator = null
     }
 
     this.release = null
