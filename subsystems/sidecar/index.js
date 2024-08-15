@@ -664,7 +664,7 @@ class Sidecar extends ReadyResource {
       encryptionKey = password ? await deriveEncryptionKey(password, SALT) : await deriveEncryptionKey(flags.encryptionKey, SALT)
     } else {
       const { drive } = parseLink(link)
-      const storedEncryptedKey = await preferences.get('encryption-key:' + hypercoreid.normalize(drive.key))
+      const storedEncryptedKey = drive.key ? await preferences.get('encryption-key:' + hypercoreid.normalize(drive.key)) : null
       encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
     }
 
