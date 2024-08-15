@@ -34,13 +34,14 @@ module.exports = class Bundle {
     this.trace = trace
     this.stage = stage
     const driveOpts = encryptionKey === null ? {} : { encryptionKey: hypercoreid.decode(encryptionKey) }
+    console.log('corestore', this.corestore)
     this.drive = drive || new Hyperdrive(this.corestore, this.key, driveOpts)
     this.updatesDiff = updatesDiff
     this.tracer = null
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    if (this.corestore) {
+    if (this.drive.corestore) {
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.log({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
