@@ -251,7 +251,7 @@ module.exports = class Bundle {
   }
 
   async leave () {
-    if (!this.swarm) return
+    if (!this.swarm || !this.replicator) return
     if (this.leaving) return this.leaving
     this.leaving = this.replicator.leave(this.swarm)
     this.leaving.then(() => { this.announcing = null })
