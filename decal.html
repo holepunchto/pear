@@ -99,7 +99,7 @@
     }
 
     pear-ctrl[data-platform=darwin] {
-      margin-top: 24px;
+      margin-top: 22px;
       margin-left: 12px;
     }
 
@@ -832,9 +832,10 @@
           this.show()
           this.ipc = ipc
           await ipc.afterViewLoaded({ id: Pear.Window.self.id })
-          document.getElementById('window-controls').remove()
           if (this.#updating) return true
           this.hide()
+          document.querySelector('#window-controls pear-ctrl').remove()
+          document.getElementById('window-controls').remove()
           await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
