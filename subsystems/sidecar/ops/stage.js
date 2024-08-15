@@ -98,7 +98,7 @@ module.exports = class Stage extends Opstream {
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun })
 
-    await sidecar.trust({ key: bundle.drive.key }, client)
+    await sidecar.trust({ key: bundle.drive.key, password }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
     if (terminalBare) bare = true
@@ -174,7 +174,6 @@ module.exports = class Stage extends Opstream {
 
     if (encryptionKey) {
       await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey.toString('hex'))
-      await preferences.set('encryption-key:' + hypercoreid.normalize(bundle.drive.key), encryptionKey.toString('hex'))
     }
   }
 }
