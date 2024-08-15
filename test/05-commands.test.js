@@ -201,6 +201,7 @@ test('pear seed --json <channel> <relative-path>', async function ({ plan, is, a
   is(code, 130, 'should have exit code 130')
 })
 
+// TODO: implement when --seeders flag works
 test.todo('pear seed --seeders <key> <channel> <relative-path>')
 test.todo('pear seed --seeders <key> --json <channel> <relative-path>')
 
@@ -263,6 +264,8 @@ test('pear seed --json pear://<key>', async function ({ plan, is, alike }) {
   const { code } = await seeder.until.exit
   is(code, 130, 'should have exit code 130')
 })
+
+// TODO: implement when --seeders flag works
 test.todo('pear seed --seeders <key> pear://<key>')
 test.todo('pear seed --seeders <key> --json pear://<key>')
 
