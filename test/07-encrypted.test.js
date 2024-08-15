@@ -96,18 +96,9 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
-  comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
-  await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
-  comment('rcv platform bootstrapped')
-
   comment('run encrypted pear application')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv, encryptionKey: secret })
-
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir, encryptionKey: secret })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
   is(value?.app?.key, appKey, 'app version matches staged key')
