@@ -9,7 +9,7 @@ const { ERR_INVALID_INPUT, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../err
 const Store = require('../lib/store')
 const deriveEncryptionKey = require('pear-ek-generator')
 const encryptionKeys = new Store('encryption-keys')
-const { PEAR_SALT } = require('../../../constants.js')
+const { SALT } = require('../../../constants.js')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -43,8 +43,8 @@ module.exports = class Seed extends Opstream {
       } else {
         const password = (await encryptionKeys.get(encryptionKey))
         encryptionKey = password
-          ? await deriveEncryptionKey(password, PEAR_SALT)
-          : encryptionKey ? await deriveEncryptionKey(encryptionKey, PEAR_SALT) : null
+          ? await deriveEncryptionKey(password, SALT)
+          : encryptionKey ? await deriveEncryptionKey(encryptionKey, SALT) : null
       }
     }
 

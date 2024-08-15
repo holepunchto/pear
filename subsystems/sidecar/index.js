@@ -32,7 +32,7 @@ const { version } = require('../../package.json')
 const deriveEncryptionKey = require('pear-ek-generator')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, PEAR_SALT
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
@@ -444,7 +444,7 @@ class Sidecar extends ReadyResource {
 
   async trust (params, client) {
     if (params.password) {
-      const encryptionKey = await deriveEncryptionKey(params.password, PEAR_SALT)
+      const encryptionKey = await deriveEncryptionKey(params.password, SALT)
       await preferences.set('encryption-key:' + hypercoreid.normalize(params.key), encryptionKey.toString('hex'))
     }
     const trusted = new Set((await preferences.get('trusted')) || [])
@@ -660,7 +660,7 @@ class Sidecar extends ReadyResource {
     let encryptionKey
     if (flags.encryptionKey) {
       const password = (await encryptionKeys.get(flags.encryptionKey))
-      encryptionKey = password ? await deriveEncryptionKey(password, PEAR_SALT) : await deriveEncryptionKey(flags.encryptionKey, PEAR_SALT)
+      encryptionKey = password ? await deriveEncryptionKey(password, SALT) : await deriveEncryptionKey(flags.encryptionKey, SALT)
     } else {
       const { drive } = parseLink(link)
       const storedEncryptedKey = await preferences.get('encryption-key:' + hypercoreid.normalize(drive.key))
