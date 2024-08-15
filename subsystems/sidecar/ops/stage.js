@@ -13,7 +13,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const { preferences } = State
 const Store = require('../lib/store')
-const { BOOT, SWAP, DESKTOP_RUNTIME, PEAR_SALT } = require('../../../constants')
+const { BOOT, SWAP, DESKTOP_RUNTIME, SALT } = require('../../../constants')
 const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED, ERR_ENCRYPTED_FIELD_REQUIRED, ERR_NOT_FOUND_ENCRYPTION_KEY } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
@@ -81,7 +81,7 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    const encryptionKey = encrypted && password ? (await deriveEncryptionKey(password, PEAR_SALT)) : null
+    const encryptionKey = encrypted && password ? (await deriveEncryptionKey(password, SALT)) : null
 
     const bundle = new Bundle({
       key,
