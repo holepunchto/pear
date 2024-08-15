@@ -59,14 +59,9 @@ test('encrypted test setup', rig.setup)
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
-  teardown(async () => {
-    const shutdowner = new Helper()
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  })
 
   const { platformDir } = rig
-  const helper = new Helper({ platformDir })
+  const helper = rig.bootstrapped
   await helper.ready()
   const dir = encrypted
 
