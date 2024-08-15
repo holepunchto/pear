@@ -445,7 +445,7 @@ class Sidecar extends ReadyResource {
   async trust (params, client) {
     if (params.password) {
       const encryptionKey = await deriveEncryptionKey(params.password, PEAR_SALT)
-      return preferences.set('encryption-key:' + hypercoreid.normalize(params.key), encryptionKey.toString('hex'))
+      await preferences.set('encryption-key:' + hypercoreid.normalize(params.key), encryptionKey.toString('hex'))
     }
     const trusted = new Set((await preferences.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
