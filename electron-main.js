@@ -20,7 +20,7 @@ run.running?.catch(console.error)
 
 async function electronMain (cmd) {
   const state = new State({
-    link: cmd.args.link.slice(1, -1), // for Windows
+    link: cmd.args.link.replace(/\^:/g, ':'), // for Windows
     flags: cmd.flags,
     args: cmd.rest
   })
