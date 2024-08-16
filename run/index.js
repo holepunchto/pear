@@ -19,7 +19,6 @@ const {
 } = require('../errors')
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
-const { isWindows } = require('which-runtime')
 const { PLATFORM_LOCK } = require('../constants')
 const fsext = require('fs-native-extensions')
 
