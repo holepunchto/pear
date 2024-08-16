@@ -148,7 +148,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const detach = args.includes('--detach')
   if (type === 'desktop') {
     if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
-    args[indices.args.link] = args[indices.args.link].replace(/:/g, '^:') // for Windows
+    args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
