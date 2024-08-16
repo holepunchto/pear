@@ -164,7 +164,9 @@ module.exports = class Http extends ReadyResource {
         }
         app.warmup({ protocol, batch })
       }
-      const stream = await bundle.streamFrom(link.filename)
+
+      const meta = await bundle.getMeta(link.filename)
+      const stream = meta === null ? null : bundle.streamFrom(meta)
       await streamx.pipelinePromise(stream, res)
     }
   }

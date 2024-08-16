@@ -186,11 +186,16 @@ module.exports = class Bundle {
     return await this.drive.del(key)
   }
 
-  async streamFrom (key) {
+  async getMeta (key) {
     const meta = await this.entry(key)
     if (meta === null) return null
-    const stream = this.drive.createReadStream(meta)
     if (this.trace && meta.value.blob) await this.trace.capture([meta.value.blob.blockLength, meta.value.blob.blockOffset])
+    return meta
+  }
+
+  // call getMeta first if you have a key
+  streamFrom (meta) {
+    const stream = this.drive.createReadStream(meta)
     return stream
   }
 
