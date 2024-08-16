@@ -24,7 +24,8 @@
 * CLI - `pear run` - only set NODE_ENV production when not dev mode
 * Desktop - setPosition edge-case guard
 * Desktop - re-enable decal loader titlebar and window controls
-* Reporting - client-side reporting-to-sidecar state-fix 
+* Reporting - client-side reporting-to-sidecar state-fix
+* CLI - `pear run [flags] <link|dir> [...app-args]` - fix for `link [...app-args]` on Windows
 
 ### Improvements
 
