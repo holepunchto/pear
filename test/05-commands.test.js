@@ -2,9 +2,11 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 const fs = require('bare-fs')
+const LocalDrive = require('localdrive')
 
-const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
-const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
+const fixtures = path.join(Helper.root, 'test', 'fixtures')
+const harness = path.join(fixtures, 'harness')
+const minimal = path.join(fixtures, 'minimal')
 
 class Rig {
   setup = async ({ comment }) => {
@@ -109,18 +111,24 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
-  const relativePath = path.relative(harness, minimal)
-  const argv = ['stage', 'test-' + testId, relativePath]
 
-  const originalPackageJson = fs.readFileSync(path.join(minimal, 'package.json'), 'utf8')
+  const tmp = path.join(fixtures, '.tmp')
+  const targetDir = path.join(tmp, `pear-test-${testId}`)
+  const sourceDrive = new LocalDrive(minimal)
+  const targetDrive = new LocalDrive(targetDir)
+  const mirror = sourceDrive.mirror(targetDrive, { prune: false })
+  // eslint-disable-next-line no-unused-vars
+  for await (const val of mirror) { /* ignore */ }
+
+  const originalPackageJson = fs.readFileSync(path.join(targetDir, 'package.json'), 'utf8')
   const packageJson = JSON.parse(originalPackageJson)
   packageJson.pear.stage = { entrypoints: ['index.js'] }
-  fs.writeFileSync(path.join(minimal, 'run.js'), 'console.log("run")')
-  fs.writeFileSync(path.join(minimal, 'package.json'), JSON.stringify(packageJson, null, 2))
-  teardown(() => {
-    fs.writeFileSync(path.join(minimal, 'package.json'), originalPackageJson)
-    fs.unlinkSync(path.join(minimal, 'run.js'))
-  })
+  fs.writeFileSync(path.join(targetDir, 'run.js'), 'console.log("run")')
+  fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
+  teardown(async () => { await fs.promises.rm(targetDir, { recursive: true }) })
+
+  const relativePath = path.relative(harness, targetDir)
+  const argv = ['stage', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
@@ -144,18 +152,25 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
-  const relativePath = path.relative(harness, minimal)
-  const argv = ['stage', 'test-' + testId, relativePath]
 
-  const originalPackageJson = fs.readFileSync(path.join(minimal, 'package.json'), 'utf8')
+  const tmp = path.join(fixtures, '.tmp')
+  const targetDir = path.join(tmp, `pear-test-${testId}`)
+  fs.mkdirSync(targetDir, { recursive: true })
+  const sourceDrive = new LocalDrive(minimal)
+  const targetDrive = new LocalDrive(targetDir)
+  const mirror = sourceDrive.mirror(targetDrive, { prune: false })
+  // eslint-disable-next-line no-unused-vars
+  for await (const val of mirror) { /* ignore */ }
+
+  const originalPackageJson = fs.readFileSync(path.join(targetDir, 'package.json'), 'utf8')
   const packageJson = JSON.parse(originalPackageJson)
   packageJson.pear.stage = { ignore: ['/ignoreinner.txt'] }
-  fs.writeFileSync(path.join(minimal, 'ignoreinner.txt'), 'this file should be ignored')
-  fs.writeFileSync(path.join(minimal, 'package.json'), JSON.stringify(packageJson, null, 2))
-  teardown(() => {
-    fs.writeFileSync(path.join(minimal, 'package.json'), originalPackageJson)
-    fs.unlinkSync(path.join(minimal, 'ignoreinner.txt'))
-  })
+  fs.writeFileSync(path.join(targetDir, 'ignoreinner.txt'), 'this file should be ignored')
+  fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
+  teardown(async () => { await fs.promises.rm(targetDir, { recursive: true }) })
+
+  const relativePath = path.relative(harness, targetDir)
+  const argv = ['stage', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
