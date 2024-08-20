@@ -51,6 +51,14 @@ const ops = {
   EncryptionKey: require('./ops/encryption-key')
 }
 
+class PermitStore extends Store {
+  async get (key) {
+    return await super.get(key) || await preferences.get(key)
+  }
+}
+
+const permits = new PermitStore('permits')
+
 // ensure that we are registered as a link handler
 registerUrlHandler(WAKEUP)
 
@@ -443,11 +451,11 @@ class Sidecar extends ReadyResource {
   }
 
   async trust (params, client) {
-    if (params.password) {
-      const encryptionKey = await deriveEncryptionKey(params.password, SALT)
-      await preferences.set('encryption-key:' + hypercoreid.normalize(params.key), encryptionKey.toString('hex'))
+    if (params.password || params.encryptionKey) {
+      const encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
+      await setEncryptionKey(params.key, encryptionKey)
     }
-    const trusted = new Set((await preferences.get('trusted')) || [])
+    const trusted = new Set((await permits.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
     if (session) {
       client.userData = {
@@ -470,7 +478,7 @@ class Sidecar extends ReadyResource {
     } catch (err) {
       if (err instanceof SyntaxError) throw ERR_INVALID_PACKAGE_JSON('Package.json parsing error, invalid JSON')
       console.error('Unexpected error while attempting trust', err)
-      return await preferences.set('trusted', Array.from(trusted))
+      return await permits.set('trusted', Array.from(trusted))
     } finally {
       await session?.close()
     }
@@ -484,7 +492,7 @@ class Sidecar extends ReadyResource {
         }
       }
     }
-    return await preferences.set('trusted', Array.from(trusted))
+    return await permits.set('trusted', Array.from(trusted))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -659,11 +667,10 @@ class Sidecar extends ReadyResource {
 
     let encryptionKey
     if (flags.encryptionKey) {
-      const password = (await encryptionKeys.get(flags.encryptionKey))
-      encryptionKey = password ? await deriveEncryptionKey(password, SALT) : await deriveEncryptionKey(flags.encryptionKey, SALT)
+      encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
     } else {
       const { drive } = parseLink(link)
-      const storedEncryptedKey = drive.key ? await preferences.get('encryption-key:' + hypercoreid.normalize(drive.key)) : null
+      const storedEncryptedKey = drive.key ? await getEncryptionKey(drive.key) : null
       encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
     }
 
@@ -741,7 +748,7 @@ class Sidecar extends ReadyResource {
     }
 
     const aliases = Object.values(ALIASES).map(hypercoreid.encode)
-    const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
+    const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
     const z32 = hypercoreid.encode(state.key)
     if (trusted.has(z32) === false) {
       const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
@@ -799,7 +806,7 @@ class Sidecar extends ReadyResource {
 
     // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
     if (encryptionKey && state.key) {
-      await preferences.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
+      await permits.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
     }
 
     const linker = new ScriptLinker(appBundle, {
@@ -966,6 +973,19 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+async function setEncryptionKey (key, encryptionKey) {
+  const encryptionKeys = await permits.get('encryption-keys')
+  const encryptionKeysMap = encryptionKeys ? new Map(Object.entries(encryptionKeys)) : new Map()
+  encryptionKeysMap.set(hypercoreid.normalize(key), encryptionKey.toString('hex'))
+  return permits.set('encryption-keys', Object.fromEntries(encryptionKeysMap))
+}
+
+async function getEncryptionKey (key) {
+  const encryptionKeys = await permits.get('encryption-keys')
+  const encryptionKeysMap = encryptionKeys ? new Map(Object.entries(encryptionKeys)) : new Map()
+  return encryptionKeysMap.get(hypercoreid.normalize(key))
 }
 
 module.exports = Sidecar

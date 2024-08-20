@@ -403,7 +403,7 @@
         })
       }
 
-      update () {
+      #update () {
         this.header.innerText = this.dataset.header
         this.p1.innerText = this.dataset.p1
         this.p2.innerHTML = this.dataset.p2
@@ -416,6 +416,7 @@
 
       set options (opts) {
         Object.assign(this.dataset, opts)
+        this.#update()
       }
 
       setLink (link) {
@@ -653,7 +654,6 @@
               }
 
               permitDialog.options = type === 'permissionRequired' ? trustOpts : passwordOpts
-              permitDialog.update()
               document.body.appendChild(permitDialog)
 
               const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
