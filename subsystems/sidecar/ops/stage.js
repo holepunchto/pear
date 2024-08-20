@@ -6,14 +6,12 @@ const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
-const deriveEncryptionKey = require('pear-ek-generator')
 const { randomBytes } = require('hypercore-crypto')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const { preferences } = State
 const Store = require('../lib/store')
-const { BOOT, SWAP, DESKTOP_RUNTIME, SALT } = require('../../../constants')
+const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
 const { ERR_TRACER_FAILED, ERR_ENCRYPTION_KEY_REQUIRED, ERR_ENCRYPTED_FIELD_REQUIRED, ERR_NOT_FOUND_ENCRYPTION_KEY } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
@@ -74,14 +72,12 @@ module.exports = class Stage extends Opstream {
     }
 
     const encryptionKeys = new Store('encryption-keys')
-    const password = await encryptionKeys.get(params.encryptionKey)
+    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
 
-    if (encrypted === true && !password) {
+    if (encrypted === true && !encryptionKey) {
       const err = ERR_NOT_FOUND_ENCRYPTION_KEY('Not found encryption key: ' + params.encryptionKey)
       throw err
     }
-
-    const encryptionKey = encrypted && password ? (await deriveEncryptionKey(password, SALT)) : null
 
     const bundle = new Bundle({
       key,
@@ -89,7 +85,7 @@ module.exports = class Stage extends Opstream {
       channel,
       truncate,
       stage: true,
-      encryptionKey,
+      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null,
       failure (err) { console.error(err) }
     })
     await session.add(bundle)
@@ -98,7 +94,7 @@ module.exports = class Stage extends Opstream {
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun, name })
 
-    await sidecar.trust({ key: bundle.drive.key, password }, client)
+    await sidecar.trust({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
     if (terminalBare) bare = true
@@ -171,9 +167,5 @@ module.exports = class Stage extends Opstream {
     if (dryRun) return
 
     this.push({ tag: 'addendum', data: { version: bundle.version, release, channel, key: z32, link } })
-
-    if (encryptionKey) {
-      await preferences.set('encryption-key:' + (name || state.name) + '-' + channel, encryptionKey.toString('hex'))
-    }
   }
 }

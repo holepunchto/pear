@@ -1,15 +1,12 @@
 'use strict'
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const { preferences } = State
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../errors')
 const Store = require('../lib/store')
-const deriveEncryptionKey = require('pear-ek-generator')
 const encryptionKeys = new Store('encryption-keys')
-const { SALT } = require('../../../constants.js')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -33,20 +30,8 @@ module.exports = class Seed extends Opstream {
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    if (key) {
-      const storedEncryptedKey = await preferences.get('encryption-key:' + hypercoreid.normalize(key))
-      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
-    } else {
-      const storedEncryptedKey = await preferences.get('encryption-key:' + (key ? hypercoreid.normalize(key) : name + '-' + channel))
-      if (storedEncryptedKey) {
-        encryptionKey = Buffer.from(storedEncryptedKey, 'hex')
-      } else {
-        const password = (await encryptionKeys.get(encryptionKey))
-        encryptionKey = password
-          ? await deriveEncryptionKey(password, SALT)
-          : encryptionKey ? await deriveEncryptionKey(encryptionKey, SALT) : null
-      }
-    }
+    const storedEncryptionKey = await encryptionKeys.get(encryptionKey)
+    encryptionKey = storedEncryptionKey ? Buffer.from(storedEncryptionKey, 'hex') : null
 
     const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
 
