@@ -55,7 +55,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
     flag('--detached', 'Wakeup existing app or run detached'),
     flag('--encryption-key <name>', 'Application encryption key'),
-    flag('--no-ask-encryption-key', 'Supress encryption key dialog for encrypted apps'),
+    flag('--no-ask', 'Supress permissions dialog'),
     hiddenFlag('--detach'),
     hiddenFlag('--trace <n>'),
     hiddenFlag('--swap <path>'),

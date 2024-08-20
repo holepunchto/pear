@@ -34,7 +34,7 @@ const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
 } = require('../../constants')
-const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
@@ -143,7 +143,6 @@ class Sidecar extends ReadyResource {
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
         if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permissionRequired(report)
-        if (report.err?.code === 'ERR_ENCRYPTION_KEY_REQUIRED') return reports.encryptionKeyRequired(report)
         if (report.err?.code === 'ERR_INVALID_LENGTH') return reports.minver(report)
         if (report.err?.code === 'ERR_CONNECTION') return reports.connection()
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
@@ -771,7 +770,7 @@ class Sidecar extends ReadyResource {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
     } catch {
-      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      const err = ERR_PERMISSION_REQUIRED('Encryption key required', state.key, true)
       app.report({ err })
       return { startId, bail: err }
     }
@@ -799,7 +798,7 @@ class Sidecar extends ReadyResource {
     try {
       await drive.get('/package.json')
     } catch {
-      const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', state.key)
+      const err = ERR_PERMISSION_REQUIRED('Encryption key required', state.key, true)
       app.report({ err })
       return { startId, bail: err }
     }
