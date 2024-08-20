@@ -374,16 +374,35 @@ class App {
   state = null
   ipc = null
   id = null
+  session = null
   handle = null
   closing = null
   closed = false
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
 
-  constructor (state, ipc) {
+  constructor (state, ipc, gui) {
     this.state = state
     this.ipc = ipc
+    this.gui = gui
     this.contextMenu = null
+
+    this.ipc.messages({ type: 'pear/reload' }).once('data', async () => {
+      const lockWait = ipc.waitForLock()
+      await this.ipc.close()
+      console.log('ipc closed')
+      console.log('waiting for lock')
+      await lockWait
+      console.log('sidecar closed')
+      const id = 'todo'
+      this.state.id = id
+      this.session.setUserAgent(`Pear ${id}`)
+      console.log('now trigger app start and update electron + useragent with new startid')
+      console.log('then tell views to location.reload')
+      //location.reload()
+    })
+
+
     electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
 
     electron.app.on('child-process-gone', (e, details) => {
@@ -436,6 +455,7 @@ class App {
       })
     })
     this.menu = new Menu(this)
+    
   }
 
   async report ({ err }) {
@@ -577,7 +597,7 @@ class App {
             }
           }
         },
-        afterNativeWindowClose: () => this.close(),
+        afterClose: () => this.close(),
         afterNativeViewCreated: devtools && ((app) => {
           if (trace) return
           app.view.webContents.openDevTools({ mode: 'detach' })
@@ -612,7 +632,9 @@ class App {
         }
       })
       this.id = ctrl.id
+      this.session = ctrl.session
       await this.starting
+      this.unloading() // note: would be unhandled rejection on failure, but should never fail
     } catch (err) {
       await this.report({ err })
       this.close()
@@ -626,7 +648,12 @@ class App {
     return { fork, length, key: key ? key.toString('hex') : null }
   }
 
-  unloading () { return this.ipc.unloading() }
+  async unloading () { 
+    const action = await this.ipc.unloading()
+    for (const ctrl of PearGUI.ctrls()) ctrl.unload(action)
+    if (action.type === 'teardown') await this.ipc.close()
+    return action
+  }
 
   close (maxWait = 5500) {
     if (this.closing) return this.closing
@@ -862,16 +889,17 @@ class GuiCtrl {
 
   async close () {
     if (this.closed) return true
+    console.log('this.unload', this.unload)
     if (this.unload) {
       this.unload({ type: 'close' })
       await this.unloader
     }
-    let closer = null
-    if (this.win) {
-      closer = once(this.win, 'closed')
-      this.win.close()
-    }
-    await closer
+    // let closer = null
+    // if (this.win) {
+    //   closer = once(this.win, 'closed')
+    //   this.win.close()
+    // }
+    // await closer
     this.constructor[kMap].delete(this.id)
     this.id = null
     this.win = null
@@ -917,8 +945,11 @@ class GuiCtrl {
   async unloading () {
     if (!this.#unloading) this.#unloading = this._unloading()
     try {
-      return await this.#unloading
+      const xxx = await this.#unloading
+      console.log('???', xxx)
+      return xxx
     } finally {
+      console.log('UNLDD')
       this.#unloading = null
     }
   }
@@ -926,12 +957,13 @@ class GuiCtrl {
   async _unloading () {
     const { webContents } = (this.view || this.win)
     const until = new Promise((resolve) => { this.unload = resolve })
-    webContents.once('will-navigate', (e, url) => {
+    const willNavListener = (e, url) => {
       if (!url.startsWith(this.sidecar)) return // handled by the other will-navigate handler
       e.preventDefault()
       const type = (!e.frame || e.frame.url === url) ? 'reload' : 'nav'
       this.unload({ type, url })
-    })
+    }
+    webContents.once('will-navigate', willNavListener)
 
     const closeListener = (e) => {
       e.preventDefault()
@@ -940,16 +972,20 @@ class GuiCtrl {
       }
     }
     if (this.win) this.win.once('close', closeListener)
+    webContents.removeListener('will-navigate', willNavListener)
     this.unloader = new Promise((resolve) => { this.unloaded = resolve })
     const action = await until
+    console.log('ACTION', action)
     if (this.win) this.win.removeListener('close', closeListener)
     this.unload = null
     return action
   }
 
-  completeUnload (action) {
+  async completeUnload (action) {
     this.unloaded()
-    if (action.type === 'close') this.close()
+    console.log('complete unload', action)
+    // await this.close() 
+    // if (action.type === 'close') this.close()
   }
 
   setWindowButtonPosition (point) {
@@ -1025,11 +1061,8 @@ class Window extends GuiCtrl {
     this.win.on('close', () => {
       this.closing = true
     })
-
     this.win.on('closed', () => {
-      if (typeof options.afterNativeWindowClose === 'function') {
-        options.afterNativeWindowClose(this)
-      }
+      if (typeof options.afterClose === 'function') options.afterClose(this)
       if (this.win) {
         if (this.opening) this.opening = false
         this.win.closed = true
@@ -1408,7 +1441,10 @@ class PearGUI extends ReadyResource {
     })
     this.worker = new Worker()
     this.pipes = new Freelist()
-    this.ipc.once('close', () => this.close())
+    this.ipc.once('close', () => {
+      console.log('IPC CLOSED')
+      // this.close()
+    })
 
     electron.ipcMain.on('exit', (e, code) => { process.exit(code) })
 
@@ -1439,6 +1475,9 @@ class PearGUI extends ReadyResource {
       messages.on('end', () => event.reply('messages', null))
     })
 
+    electron.ipcMain.handle('waitForLock', () => this.ipc.waitForLock())
+    electron.ipcMain.handle('close', () => this._close())
+
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
     electron.ipcMain.handle('askForMediaAccess', (evt, ...args) => this.askForMediaAccess(...args))
     electron.ipcMain.handle('desktopSources', (evt, ...args) => this.desktopSources(...args))
@@ -1446,7 +1485,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('ctrl', (evt, ...args) => this.ctrl(...args))
     electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
-    electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
+    electron.ipcMain.handle('guiClose', (evt, ...args) => this.guiClose(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
@@ -1529,8 +1568,8 @@ class PearGUI extends ReadyResource {
   }
 
   async app () {
-    const app = new App(this.state, this.ipc)
-    this.once('close', async () => { app.quit() })
+    const app = new App(this.state, this.ipc, this)
+    // this.once('close', async () => { app.quit() })
     await app.start()
     return app
   }
@@ -1540,7 +1579,9 @@ class PearGUI extends ReadyResource {
   }
 
   async _close () {
+    console.log('calling ipc close')
     await this.ipc.close()
+    console.log('ipc close done')
   }
 
   static async ctrl (type, entry, { state, parentId = 0, ua, sessname = null, appkin }, options = {}, openOptions = {}) {
@@ -1617,7 +1658,7 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  async askForMediaAccess ({ id, media }) {
+  async askForMediaAccess ({ media }) {
     if (isLinux || isWindows) return false
     if (media === 'screen') {
       return electron.systemPreferences.getMediaAccessStatus(media)

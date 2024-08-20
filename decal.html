@@ -546,8 +546,7 @@
           }
           if (name === 'action') {
             const cta = this.shadowRoot.querySelector('#cta')
-            const code = (value === 'reload') ? 64 : 0
-            const handler = (value === 'quit' || value === 'reload') ?
+            const handler = (value === 'quit') ?
               () => Pear.exit(code) :
               () => {}
             cta.addEventListener('click', handler)
