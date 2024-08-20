@@ -810,7 +810,7 @@ class GuiCtrl {
   nav = (event, url) => {
     if (url.startsWith(this.sidecar)) return
     event.preventDefault()
-    electron.shell.openExternal(url)
+    electron.shell.openExternal(url).catch(console.error)
   }
 
   open () {

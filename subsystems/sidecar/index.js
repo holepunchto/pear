@@ -464,8 +464,8 @@ class Sidecar extends ReadyResource {
         })
       }
       session.add(client.userData.bundle)
-      if (this.swarm) await client.userData.bundle.join(this.swarm)
     }
+    if (this.swarm && client.userData.bundle.corestore) await client.userData.bundle.join(this.swarm)
     if (params.key !== null) {
       const z32 = hypercoreid.encode(params.key)
       trusted.add(z32)

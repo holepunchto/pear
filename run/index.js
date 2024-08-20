@@ -8,7 +8,7 @@ const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
-const { isMac } = require('which-runtime')
+const { isMac, isWindows } = require('which-runtime')
 const constants = require('../constants')
 const State = require('../state')
 const API = require('../lib/api')
@@ -20,7 +20,6 @@ const {
 } = require('../errors')
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
-const { isWindows } = require('which-runtime')
 const { PLATFORM_LOCK } = require('../constants')
 const fsext = require('fs-native-extensions')
 
@@ -155,6 +154,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const detach = args.includes('--detach')
   if (type === 'desktop') {
     if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
+    args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
