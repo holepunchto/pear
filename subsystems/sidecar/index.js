@@ -29,7 +29,7 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../run/definition')
 const { version } = require('../../package.json')
-const deriveEncryptionKey = require('pear-ek-generator')
+const deriveEncryptionKey = require('pw-to-ek')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT

@@ -4,7 +4,7 @@ const { ERR_INVALID_INPUT } = require('../../../errors')
 const Opstream = require('../lib/opstream')
 const Store = require('../lib/store')
 const { SALT } = require('../../../constants')
-const deriveEncryptionKey = require('pear-ek-generator')
+const deriveEncryptionKey = require('pw-to-ek')
 
 module.exports = class EncryptionKey extends Opstream {
   constructor (params, client) {
