@@ -172,7 +172,7 @@ module.exports = class Bundle {
     const entry = await this.entry(key)
     const result = await this.drive.get(entry)
     if (this.trace && result !== null) {
-      if (entry.value.blob) await this.trace.capture([entry.value.blob.blockLength, entry.value.blob.blockOffset])
+      if (entry.value.blob) this.trace.capture([entry.value.blob.blockLength, entry.value.blob.blockOffset])
     }
     return result
   }
@@ -186,11 +186,9 @@ module.exports = class Bundle {
     return await this.drive.del(key)
   }
 
-  async streamFrom (key) {
-    const meta = await this.entry(key)
-    if (meta === null) return null
+  streamFrom (meta) {
+    if (this.trace && meta.value.blob) this.trace.capture([meta.value.blob.blockLength, meta.value.blob.blockOffset])
     const stream = this.drive.createReadStream(meta)
-    if (this.trace && meta.value.blob) await this.trace.capture([meta.value.blob.blockLength, meta.value.blob.blockOffset])
     return stream
   }
 

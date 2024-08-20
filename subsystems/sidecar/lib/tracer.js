@@ -48,7 +48,7 @@ module.exports = class Tracer extends Readable {
     return (seq) => this.capture(seq, this.constructor.META)
   }
 
-  async capture (seq, core = this.constructor.DATA) {
+  capture (seq, core = this.constructor.DATA) {
     if (Array.isArray(seq)) {
       const [blockLength, blockOffset] = seq
       for (let i = 0; i < blockLength; i++) this.capture(i + blockOffset)
