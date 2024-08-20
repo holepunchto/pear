@@ -15,8 +15,7 @@ const API = require('../lib/api')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
-  ERR_INVALID_INPUT,
-  ERR_ENCRYPTION_KEY_REQUIRED
+  ERR_INVALID_INPUT
 } = require('../errors')
 const parseLink = require('../lib/parse-link')
 const teardown = require('../lib/teardown')
@@ -96,12 +95,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
-    const err = ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info.key)
-    throw err
-  }
-
-  if (bail?.code === 'ERR_ENCRYPTION_KEY_REQUIRED' && !flags.detach) {
-    const err = ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required to run key', bail.info.key)
+    const err = ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info.key, bail.info.isEncrypted)
     throw err
   }
 

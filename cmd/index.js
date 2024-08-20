@@ -40,7 +40,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'dev',
     summary('pear dev has been deprecated, use pear run --dev instead.'),
     sloppy({ args: true, flags: true }),
-    (cmd) => {
+    () => {
       print('pear dev has been deprecated, use pear run --dev instead.', false)
       ipc.close()
     }
