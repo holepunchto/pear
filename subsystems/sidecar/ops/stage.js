@@ -92,7 +92,7 @@ module.exports = class Stage extends Opstream {
     client.userData = new sidecar.App({ state, bundle })
 
     const currentVersion = bundle.version
-    await state.initialize({ bundle, dryRun })
+    await state.initialize({ bundle, dryRun, name })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'

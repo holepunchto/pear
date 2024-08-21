@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, rest, bail } = require('paparam')
+const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -38,30 +38,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const dev = command(
     'dev',
-    summary('Run a project in development mode'),
-    description(usage.descriptions.dev),
-    arg('[link|dir]', 'Source to run app from (default: .)'),
-    rest('[...app-args]', 'Application arguments'),
-    flag('--no-devtools', 'Open devtools with application [Desktop]'),
-    flag('--no-updates-diff', 'Enable diff computation for Pear.updates'),
-    flag('--no-updates', 'Disable updates firing via Pear.updates'),
-    flag('--link <url>', 'Simulate deep-link click open'),
-    flag('--store|-s <path>', 'Set the Application Storage path'),
-    flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
-    flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
-    flag('--unsafe-clear-app-storage', 'Clear app storage'),
-    flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
-    flag('--appling <path>', 'Set application shell path'),
-    flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
-    flag('--detached', 'Wakeup existing app or run detached'),
-    flag('--encryption-key <name>', 'Application encryption key'),
-    flag('--no-ask', 'Suppress permissions dialog'),
-    hiddenFlag('--detach'),
-    hiddenFlag('--trace <n>'),
-    hiddenFlag('--swap <path>'),
-    hiddenFlag('--start-id <id>'),
-    hiddenFlag('--no-sandbox'), // electron passthrough
-    (cmd) => runners.run(ipc)(cmd, true)
+    summary('pear dev has been deprecated, use pear run --dev instead.'),
+    sloppy({ args: true, flags: true }),
+    () => {
+      print('pear dev has been deprecated, use pear run --dev instead.', false)
+      ipc.close()
+    }
   )
 
   const seed = command(
@@ -72,7 +54,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
-    flag('--name', 'Advanced. Override app name'),
+    flag('--name <name>', 'Advanced. Override app name'),
     flag('--encryption-key <name>', 'Application encryption key'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
@@ -88,7 +70,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--bare|-b', 'File data only, no warmup optimization'),
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--name', 'Advanced. Override app name'),
+    flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--encryption-key <name>', 'Application encryption key'),
     runners.stage(ipc)
