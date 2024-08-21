@@ -762,9 +762,7 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    // first check for drive encryption, before first replication it doesnt throw,
-    // so we need to check drive.get('/package.json') after appBundle.join.
-    // After the first replication drive.ready will throw in drive is encrypted
+    // check for drive encryption, only throws if the drive has been previously replicated
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
@@ -796,6 +794,7 @@ class Sidecar extends ReadyResource {
 
     if (this.swarm) appBundle.join(this.swarm)
 
+    // needed for drive encryption check, in case the drive hasnt been replicated before
     try {
       await drive.get('/package.json')
     } catch {
@@ -804,7 +803,6 @@ class Sidecar extends ReadyResource {
       return { startId, bail: err }
     }
 
-    // if there is and ecnryption key and a state.key, the encryption key is correct, so update it
     if (encryptionKey && state.key) {
       await permits.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
     }
