@@ -1,6 +1,6 @@
 {
   "name": "pear",
-  "version": "1.4.1-rc.0",
+  "version": "1.4.1-rc.1",
   "main": "./boot.js",
   "private": true,
   "scripts": {
