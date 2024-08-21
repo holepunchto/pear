@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, rest, bail } = require('paparam')
+const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -38,29 +38,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const dev = command(
     'dev',
-    summary('Run a project in development mode'),
-    description(usage.descriptions.dev),
-    arg('[link|dir]', 'Source to run app from (default: .)'),
-    rest('[...app-args]', 'Application arguments'),
-    flag('--no-devtools', 'Open devtools with application [Desktop]'),
-    flag('--no-updates-diff', 'Enable diff computation for Pear.updates'),
-    flag('--no-updates', 'Disable updates firing via Pear.updates'),
-    flag('--link <url>', 'Simulate deep-link click open'),
-    flag('--store|-s <path>', 'Set the Application Storage path'),
-    flag('--tmp-store|-t', 'Automatic new tmp folder as store path'),
-    flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
-    flag('--unsafe-clear-app-storage', 'Clear app storage'),
-    flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
-    flag('--appling <path>', 'Set application shell path'),
-    flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
-    flag('--detached', 'Wakeup existing app or run detached'),
-    hiddenFlag('--encryption-key <name>'), // internal temporarily
-    hiddenFlag('--detach'),
-    hiddenFlag('--trace <n>'),
-    hiddenFlag('--swap <path>'),
-    hiddenFlag('--start-id <id>'),
-    hiddenFlag('--no-sandbox'), // electron passthrough
-    (cmd) => runners.run(ipc)(cmd, true)
+    summary('pear dev has been deprecated, use pear run --dev instead.'),
+    sloppy({ args: true, flags: true }),
+    (cmd) => {
+      print('pear dev has been deprecated, use pear run --dev instead.', false)
+      ipc.close()
+    }
   )
 
   const seed = command(
