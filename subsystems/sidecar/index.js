@@ -452,7 +452,9 @@ class Sidecar extends ReadyResource {
   async permit (params, client) {
     if (params.password || params.encryptionKey) {
       const encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
-      await setEncryptionKey(params.key, encryptionKey)
+      const encryptionKeys = await permits.get('encryption-keys') || {}
+      encryptionKeys[hypercoreid.normalize(params.key)] = encryptionKey.toString('hex')
+      permits.set('encryption-keys', encryptionKeys)
     }
     const trusted = new Set((await permits.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
@@ -670,7 +672,13 @@ class Sidecar extends ReadyResource {
       encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
     } else {
       const { drive } = parseLink(link)
-      const storedEncryptedKey = drive.key ? await getEncryptionKey(drive.key) : null
+      let storedEncryptedKey
+      if (drive.key) {
+        const encryptionKeys = await permits.get('encryption-keys') || {}
+        storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
+      } else {
+        storedEncryptedKey = null
+      }
       encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
     }
 
@@ -970,19 +978,6 @@ function pickData () {
       cb(null, data)
     }
   })
-}
-
-async function setEncryptionKey (key, encryptionKey) {
-  const encryptionKeys = await permits.get('encryption-keys')
-  const encryptionKeysMap = encryptionKeys ? new Map(Object.entries(encryptionKeys)) : new Map()
-  encryptionKeysMap.set(hypercoreid.normalize(key), encryptionKey.toString('hex'))
-  return permits.set('encryption-keys', Object.fromEntries(encryptionKeysMap))
-}
-
-async function getEncryptionKey (key) {
-  const encryptionKeys = await permits.get('encryption-keys')
-  const encryptionKeysMap = encryptionKeys ? new Map(Object.entries(encryptionKeys)) : new Map()
-  return encryptionKeysMap.get(hypercoreid.normalize(key))
 }
 
 module.exports = Sidecar
