@@ -77,7 +77,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   comment('staging throws without encryption key')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const error = await Helper.pick(stagingA, { tag: 'error' })
-  is(error.code, 'ERR_ENCRYPTION_KEY_REQUIRED')
+  is(error.code, 'ERR_INVALID_INPUT')
 
   comment('staging with encryption key')
   const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: name, bare: true })
