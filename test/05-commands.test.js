@@ -380,7 +380,7 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
   await running.inspector.close()
 
-  alike(tags, ['moving', 'stdout', 'complete', 'final'], 'should output correct tags')
+  alike(tags, ['moving', 'complete', 'final'], 'should output correct tags')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
   const { code } = await running.until.exit
   is(code, 0, 'should have exit code 0')
@@ -539,7 +539,7 @@ test('pear shift --force --json <source> <destination>', async function ({ plan,
   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
   await running.inspector.close()
 
-  alike(tags, ['moving', 'stdout', 'complete', 'final'], 'should output correct tags')
+  alike(tags, ['moving', 'complete', 'final'], 'should output correct tags')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
   is(fs.existsSync(path.join(appStorage2, 'testold.txt')), false, 'should delete existing app storage file at destination')
   const { code } = await running.until.exit
