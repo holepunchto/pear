@@ -98,7 +98,7 @@
     "pear-link": "^2.0.1",
     "pear-updater": "^3.1.0",
     "protomux": "^3.6.0",
-    "pw-to-ek": "git+https://github.com/holepunchto/pw-to-ek.git",
+    "pw-to-ek": "^1.0.0",
     "quickbit-universal": "^2.2.0",
     "rache": "^1.0.0",
     "ready-resource": "^1.0.3",
