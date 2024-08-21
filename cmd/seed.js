@@ -4,7 +4,6 @@ const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('../lib/parse-link')
 const { outputter, ansi } = require('./iface')
-const { ERR_ENCRYPTION_KEY_REQUIRED } = require('../errors')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -15,13 +14,7 @@ const output = outputter('seed', {
   announced: '^_^ announced',
   'peer-add': (info) => `o-o peer join ${info}`,
   'peer-remove': (info) => `-_- peer drop ${info}`,
-  error: ({ code, message, stack }) => {
-    if (code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      throw ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required', '')
-    } else {
-      return code === 'ERR_INVALID_INPUT' ? message : `Seed Error (code: ${code || 'none'}) ${stack}`
-    }
-  }
+  error: ({ code, message, stack }) => code === 'ERR_INVALID_INPUT' ? message : `Seed Error (code: ${code || 'none'}) ${stack}`
 })
 
 module.exports = (ipc) => async function seed (cmd) {

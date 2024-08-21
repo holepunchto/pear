@@ -4,7 +4,7 @@ const State = require('../state')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INVALID_INPUT, ERR_ENCRYPTION_KEY_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_INPUT } = require('../../../errors')
 const Store = require('../lib/store')
 const encryptionKeys = new Store('encryption-keys')
 
@@ -40,7 +40,7 @@ module.exports = class Seed extends Opstream {
       await bundle.ready()
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch {
-      throw ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required')
+      throw ERR_INVALID_INPUT('Encryption key required')
     }
 
     if (key === null && bundle.drive.core.length === 0) {
@@ -60,7 +60,7 @@ module.exports = class Seed extends Opstream {
     try {
       await bundle.drive.get('/package.json')
     } catch {
-      throw ERR_ENCRYPTION_KEY_REQUIRED('Encryption key required')
+      throw ERR_INVALID_INPUT('Encryption key required')
     }
 
     for await (const { msg } of notices) this.push(msg)
