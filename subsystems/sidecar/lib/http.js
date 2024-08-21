@@ -164,7 +164,11 @@ module.exports = class Http extends ReadyResource {
         }
         app.warmup({ protocol, batch })
       }
-      const stream = await bundle.streamFrom(link.filename)
+
+      const meta = await bundle.entry(link.filename)
+      if (meta === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
+
+      const stream = bundle.streamFrom(meta)
       await streamx.pipelinePromise(stream, res)
     }
   }
