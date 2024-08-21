@@ -22,7 +22,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask) {
-      if (!err.info.isEncrypted) {
+      if (!err.info.encrypted) {
         const explain = 'Be sure that software is trusted before running it\n' +
           '\nType "TRUST" to allow execution or anything else to exit\n\n'
         const act = 'Use pear run again to execute trusted application\n'

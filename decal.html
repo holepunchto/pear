@@ -432,7 +432,7 @@
       }
 
       async #permit () {
-        await this.ipc.trust({ key: this.key })
+        await this.ipc.permit({ key: this.key })
         await this.ipc.restart({ id: this.gid })
       }
 
@@ -466,7 +466,7 @@
       async #permit () {
         const password = this.input.value
         const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
-        const t = await this.ipc.trust({ key: this.key, password })
+        const t = await this.ipc.permit({ key: this.key, password })
         await this.ipc.restart({ id: this.gid })
       }
 
@@ -626,14 +626,14 @@
             this.status = report
             this.gid = Pear.Window.self.id
             loader.hide()
-            const { type, headline, tagline, cta, key } = this.status
+            const { type, headline, tagline, cta, key, encrypted } = this.status
             if (type === 'update' && this.status.version?.force) {
               await loader.updating(this.status.version)
               continue
             }
 
-            if (type === 'permissionRequired' || type === 'encryptionKeyRequired') {
-              const permitDialog = type === 'permissionRequired' ? document.createElement('trust-dialog') : document.createElement('password-dialog')
+            if (type === 'permissionRequired') {
+              const permitDialog = encrypted ? document.createElement('password-dialog') : document.createElement('trust-dialog')
               const ctrl = document.createElement('pear-ctrl')
               ctrl.dataset.maximizable = false
               document.documentElement.classList.add('dialog')
@@ -653,7 +653,7 @@
                 placeholder: 'Password'
               }
 
-              permitDialog.options = type === 'permissionRequired' ? trustOpts : passwordOpts
+              permitDialog.options = encrypted ? passwordOpts : trustOpts
               document.body.appendChild(permitDialog)
 
               const hypercoreid = window[Symbol.for('hypercore-id-encoding')]

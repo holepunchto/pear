@@ -153,7 +153,7 @@ async function trust ({ ipc, key, explain, act, ask, message }) {
 
   const result = await permit({ dialog, ask, delim, validation, msg })
   if (result.value === 'TRUST') {
-    await ipc.trust({ key })
+    await ipc.permit({ key })
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print(act + '\n')
     await ipc.close()
@@ -175,7 +175,7 @@ async function password ({ ipc, key }) {
   const validation = (key) => key.length > 0
   const msg = '\nPlease, enter a valid password.\n'
   const result = await permit({ dialog, ask, delim, validation, msg })
-  await ipc.trust({ key, password: result.value })
+  await ipc.permit({ key, password: result.value })
   print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
   await ipc.close()
   Bare.exit()

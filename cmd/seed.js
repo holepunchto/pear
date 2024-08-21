@@ -41,11 +41,6 @@ module.exports = (ipc) => async function seed (cmd) {
   try {
     await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
   } catch (err) {
-    if (err.code === 'ERR_ENCRYPTION_KEY_REQUIRED') {
-      const key = isKey ? hypercoreid.decode(link) : null
-      await password({ ipc, key })
-    } else {
-      throw err
-    }
+    throw err
   }
 }
