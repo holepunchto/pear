@@ -24,8 +24,8 @@ module.exports = class Shift extends Opstream {
     if (!srcKey) throw ERR_INVALID_INPUT('Invalid source app key')
     if (!dstKey) throw ERR_INVALID_INPUT('Invalid destination app key')
     const byDkey = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey')
-    from = path.join(byDkey, discoveryKey(srcKey.buffer).toString('hex'))
-    to = path.join(byDkey, discoveryKey(dstKey.buffer).toString('hex'))
+    from = path.join(byDkey, discoveryKey(srcKey).toString('hex'))
+    to = path.join(byDkey, discoveryKey(dstKey).toString('hex'))
     const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
     let gc = null
     try {
