@@ -96,6 +96,7 @@
     "pear-interface": "^1.0.0",
     "pear-ipc": "^1.0.17",
     "pear-link": "^2.0.1",
+    "pear-template": "file:../pear-template/pear-template-1.0.0.tgz",
     "pear-updater": "^3.1.0",
     "protomux": "^3.6.0",
     "quickbit-universal": "^2.2.0",

@@ -2,10 +2,10 @@
 const http = require('bare-http1')
 const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
+const Template = require('pear-template')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
-const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
 
@@ -74,8 +74,8 @@ module.exports = class Http extends ReadyResource {
 
     const { name, version } = app.state
     const locals = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
-    const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)
-    return await streamx.pipelinePromise(stream, res)
+    const stream = new Template(locals)
+    return await streamx.pipelinePromise(await this.sidecar.bundle.streamFrom('/not-found.html'), stream, res)
   }
 
   async lookup (app, protocol, type, req, res, startId) {

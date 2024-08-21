@@ -3,7 +3,7 @@ const { pipelinePromise, Readable } = require('streamx')
 const { pathToFileURL } = require('bare-url')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
-const transform = require('../lib/transform')
+const Template = require('pear-template')
 const Localdrive = require('localdrive')
 const Interact = require('../lib/interact')
 const parseLink = require('../lib/parse-link')
@@ -74,9 +74,11 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-    const file = transform.sync(key, locals)
+    const file = Template.sync(key, locals)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, locals), writeStream)
+    const stream = new Template(locals)
+    const promise = pipelinePromise(stream, writeStream)
+    stream.end(value)
     promise.catch((err) => { output.push({ tag: 'error', data: err }) })
     promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
     promises.push(promise)
