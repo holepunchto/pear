@@ -902,7 +902,6 @@ class Sidecar extends ReadyResource {
   }
 
   async setPreference ({ key, value }) {
-    console.log('setting', key, value)
     const result = await preferences.set(key, value)
     return result
   }

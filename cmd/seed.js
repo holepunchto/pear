@@ -3,8 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('../lib/parse-link')
-const { outputter, ansi, password } = require('./iface')
-const hypercoreid = require('hypercore-id-encoding')
+const { outputter, ansi } = require('./iface')
 const { ERR_ENCRYPTION_KEY_REQUIRED } = require('../errors')
 
 const output = outputter('seed', {
@@ -38,9 +37,5 @@ module.exports = (ipc) => async function seed (cmd) {
   }
   const id = Bare.pid
 
-  try {
-    await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
-  } catch (err) {
-    throw err
-  }
+  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
 }
