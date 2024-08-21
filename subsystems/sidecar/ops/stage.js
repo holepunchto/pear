@@ -94,7 +94,7 @@ module.exports = class Stage extends Opstream {
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun, name })
 
-    await sidecar.trust({ key: bundle.drive.key, encryptionKey }, client)
+    await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
     if (terminalBare) bare = true

@@ -60,15 +60,9 @@ const update = (report) => {
 const permissionRequired = (report) => {
   return {
     type: 'permissionRequired',
-    key: report.err.info.key
+    key: report.err.info.key,
+    encrypted: report.err.info.encrypted
   }
 }
 
-const encryptionKeyRequired = (report) => {
-  return {
-    type: 'encryptionKeyRequired',
-    key: report.err.info.key
-  }
-}
-
-module.exports = { generic, crash, dev, connection, upgrade, minver, update, permissionRequired, encryptionKeyRequired }
+module.exports = { generic, crash, dev, connection, upgrade, minver, update, permissionRequired }
