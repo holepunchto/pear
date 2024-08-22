@@ -18,7 +18,7 @@ module.exports = class Dump extends Opstream {
       ? path.basename(parsed.pathname)
       : null
     const key = parsed.drive.key
-    checkout = Number(checkout)
+    if (checkout !== 'release') checkout = Number(checkout)
 
     const bundle = new Bundle({
       corestore: isFileLink ? null : sidecar._getCorestore(null, null),
