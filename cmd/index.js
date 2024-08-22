@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenFlag, hiddenCommand, arg, summary, description, bail, sloppy } = require('paparam')
+const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -40,7 +40,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'dev',
     summary('pear dev has been deprecated, use pear run --dev instead.'),
     sloppy({ args: true, flags: true }),
-    (cmd) => {
+    () => {
       print('pear dev has been deprecated, use pear run --dev instead.', false)
       ipc.close()
     }
@@ -55,6 +55,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
     flag('--name <name>', 'Advanced. Override app name'),
+    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
   )
@@ -71,7 +72,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
-    hiddenFlag('--encryption-key <name>'), // internal temporarily
+    flag('--encryption-key <name>', 'Application encryption key'),
     runners.stage(ipc)
   )
 

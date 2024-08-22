@@ -54,7 +54,7 @@ class Helper extends IPC {
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
-    const args = ['run', '-t', link]
+    const args = !opts.encryptionKey ? ['run', '-t', link] : ['run', '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
     if (verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
