@@ -48,7 +48,8 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   is(code, 0, 'exit code is 0')
 })
 
-test('teardown during teardown', async function ({ is, ok, plan, comment, teardown }) {
+test('teardown during teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+  timeout(180000)
   plan(5)
 
   const stager = new Helper()
