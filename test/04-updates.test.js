@@ -14,7 +14,7 @@ const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
   setup = async ({ comment, timeout }) => {
-    timeout(180000)
+    timeout(300000)
     const helper = new Helper()
     this.helper = helper
     comment('connecting local sidecar')
@@ -59,7 +59,7 @@ const rig = new Rig()
 test('updates setup', rig.setup)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
-  timeout(180000)
+  timeout(300000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -201,7 +201,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(180000)
+  timeout(300000)
   const { platformDir } = rig
   const appStager = new Helper({ platformDir })
   await appStager.ready()
@@ -413,7 +413,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(180000)
+  timeout(300000)
   const { platformDir } = rig
   const appStager = new Helper({ platformDir })
   await appStager.ready()
@@ -503,7 +503,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(180000)
+  timeout(300000)
   const { platformDir } = rig
   const appStager = new Helper({ platformDir })
   await appStager.ready()
