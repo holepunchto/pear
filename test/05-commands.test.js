@@ -503,270 +503,270 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   is(code, 0, 'should have exit code 0')
 })
 
-// test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is }) {
-//   plan(3)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argv = ['stage', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
-//
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await running.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   let completedStaging = false
-//   let stagedName
-//   const stagingRegex = /Staging (.*) into/
-//   for await (const line of running.lineout) {
-//     if (line === 'Staging complete!') completedStaging = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.endsWith('Success')) break
-//   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await running.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   const { code } = await running.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is }) {
+  plan(3)
 
-// test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-//   plan(3)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argv = ['stage', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
-//
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await running.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   let stagedName
-//   for await (const line of running.lineout) {
-//     const result = JSON.parse(line)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await running.inspector.close()
-//
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-//   const { code } = await running.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argv = ['stage', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
 
-// test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-//   plan(5)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//
-//   const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
-//
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await running.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   let completedStaging = false
-//   let addedIgnored = false
-//   let addedIndex = false
-//   let stagedName
-//   const stagingRegex = /Staging (.*) into/
-//   for await (const line of running.lineout) {
-//     if (line === 'Staging complete!') completedStaging = true
-//     if (line.includes('/index.js')) addedIndex = true
-//     if (line.includes('/ignored.txt')) addedIgnored = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.endsWith('Success')) break
-//   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await running.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(addedIgnored, false, 'should not add ignored.txt')
-//   is(addedIndex, true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//
-//   const { code } = await running.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await running.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
 
-// test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-//   plan(5)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//
-//   const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
-//
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await running.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   const files = []
-//   let stagedName
-//   for await (const line of running.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'byte-diff') files.push(result.data.message)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await running.inspector.close()
-//
-//   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
-//   is(files.includes('/index.js'), true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-//   const { code } = await running.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  let completedStaging = false
+  let stagedName
+  const stagingRegex = /Staging (.*) into/
+  for await (const line of running.lineout) {
+    if (line === 'Staging complete!') completedStaging = true
 
-// test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-//   plan(7)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   for await (const line of stager1.lineout) {
-//     if (line.endsWith('Success')) break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, 'test-' + testId, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const stagingRegex = /Staging (.*) into/
-//   let completedStaging = false
-//   let readdedFile = false
-//   let addedIndex = false
-//   let addedIgnored = false
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     if (line === 'Staging dry run complete!') completedStaging = true
-//     if (line.includes('/package.json')) readdedFile = true
-//     if (line.includes('/index.js')) addedIndex = true
-//     if (line.includes('/ignored.txt')) addedIgnored = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.endsWith('Success')) break
-//   }
-//
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(readdedFile, true, 'should readd package.json after truncate')
-//   is(addedIgnored, false, 'should not add ignored.txt')
-//   is(addedIndex, true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
 
-// test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-//   plan(7)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   for await (const line of stager1.lineout) {
-//     if (line.endsWith('Success')) break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', 'test-' + testId, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   const files = []
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'byte-diff') files.push(result.data.message)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
-//   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
-//   is(files.includes('/index.js'), true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+    if (line.endsWith('Success')) break
+  }
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await running.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+  plan(3)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argv = ['stage', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
+
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await running.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  let stagedName
+  for await (const line of running.lineout) {
+    const result = JSON.parse(line)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await running.inspector.close()
+
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
+  plan(5)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+
+  const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
+
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await running.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  let completedStaging = false
+  let addedIgnored = false
+  let addedIndex = false
+  let stagedName
+  const stagingRegex = /Staging (.*) into/
+  for await (const line of running.lineout) {
+    if (line === 'Staging complete!') completedStaging = true
+    if (line.includes('/index.js')) addedIndex = true
+    if (line.includes('/ignored.txt')) addedIgnored = true
+
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
+
+    if (line.endsWith('Success')) break
+  }
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await running.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(addedIgnored, false, 'should not add ignored.txt')
+  is(addedIndex, true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
+  plan(5)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+
+  const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
+
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await running.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  const files = []
+  let stagedName
+  for await (const line of running.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'byte-diff') files.push(result.data.message)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await running.inspector.close()
+
+  is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
+  is(files.includes('/index.js'), true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
+  plan(7)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  for await (const line of stager1.lineout) {
+    if (line.endsWith('Success')) break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, 'test-' + testId, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const stagingRegex = /Staging (.*) into/
+  let completedStaging = false
+  let readdedFile = false
+  let addedIndex = false
+  let addedIgnored = false
+  let stagedName
+  for await (const line of stager2.lineout) {
+    if (line === 'Staging dry run complete!') completedStaging = true
+    if (line.includes('/package.json')) readdedFile = true
+    if (line.includes('/index.js')) addedIndex = true
+    if (line.includes('/ignored.txt')) addedIgnored = true
+
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
+
+    if (line.endsWith('Success')) break
+  }
+
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(readdedFile, true, 'should readd package.json after truncate')
+  is(addedIgnored, false, 'should not add ignored.txt')
+  is(addedIndex, true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
+  plan(7)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  for await (const line of stager1.lineout) {
+    if (line.endsWith('Success')) break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', 'test-' + testId, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  const files = []
+  let stagedName
+  for await (const line of stager2.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'byte-diff') files.push(result.data.message)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(files.includes('/package.json'), true, 'should readd package.json after truncate')
+  is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
+  is(files.includes('/index.js'), true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
 
 test('pear stage pear://<key> <path>', async function ({ plan, is }) {
   plan(3)
@@ -1239,328 +1239,328 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   is(code, 0, 'should have exit code 0')
 })
 
-// test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
-//   plan(4)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--name', `test-name-${testId}`, link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   let completedStaging = false
-//   const stagingRegex = /Staging (.*) into/
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     if (line === 'Staging complete!') completedStaging = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.endsWith('Success')) break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
+  plan(4)
 
-// test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-//   plan(4)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--name', `test-name-${testId}`, '--json', link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
 
-// test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
-//   plan(5)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//   const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   let completedStaging = false
-//   let addedIgnored = false
-//   const stagingRegex = /Staging (.*) into/
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     if (line === 'Staging complete!') completedStaging = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.includes('/ignored.txt')) addedIgnored = true
-//     if (line.endsWith('Success')) break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(addedIgnored, false, 'should not add ignored.txt')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
 
-// test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
-//   plan(5)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const ignoredFile = path.join(harness, 'ignored.txt')
-//   fs.writeFileSync(ignoredFile, 'this file should be ignored')
-//   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
-//   const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, '--json', link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   const files = []
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'byte-diff') files.push(result.data.message)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
-// test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
-//   plan(7)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const stagingRegex = /Staging (.*) into/
-//   let completedStaging = false
-//   let readdedFile = false
-//   let addedIndex = false
-//   let addedIgnored = false
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     if (line === 'Staging dry run complete!') completedStaging = true
-//     if (line.includes('/package.json')) readdedFile = true
-//     if (line.includes('/index.js')) addedIndex = true
-//     if (line.includes('/ignored.txt')) addedIgnored = true
-//
-//     const stagingMatch = line.match(stagingRegex)
-//     if (stagingMatch) stagedName = stagingMatch[1]
-//
-//     if (line.endsWith('Success')) break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(completedStaging, true, 'should complete staging')
-//   is(readdedFile, true, 'should readd package.json after truncate')
-//   is(addedIgnored, false, 'should not add ignored.txt')
-//   is(addedIndex, true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--name', `test-name-${testId}`, link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
 
-// test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-//   plan(7)
-//
-//   const testId = Math.floor(Math.random() * 100000)
-//   const relativePath = path.relative(harness, minimal)
-//   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-//   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   await stager1.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-//   `, { returnByValue: false })
-//
-//   let link
-//   for await (const line of stager1.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'addendum') link = result.data.link
-//     if (result.tag === 'final') break
-//   }
-//
-//   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager1.inspector.close()
-//   const { code: code1 } = await stager1.until.exit
-//   is(code1, 0, 'should have exit code 0 for initial stage')
-//
-//   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-//   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', link, relativePath]
-//   await stager2.inspector.evaluate(`
-//       __PEAR_TEST__.command(${JSON.stringify(argv)})
-//   `, { returnByValue: false })
-//
-//   const seen = new Set()
-//   const tags = []
-//   const files = []
-//   let stagedName
-//   for await (const line of stager2.lineout) {
-//     const result = JSON.parse(line)
-//     if (result.tag === 'byte-diff') files.push(result.data.message)
-//     if (seen.has(result.tag)) continue
-//     seen.add(result.tag)
-//     tags.push(result.tag)
-//
-//     if (result.tag === 'staging') stagedName = result.data.name
-//     if (result.tag === 'final') break
-//   }
-//   await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
-//   await stager2.inspector.close()
-//
-//   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
-//   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
-//   is(files.includes('/index.js'), true, 'should add index.js')
-//   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-//   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
-//   const { code } = await stager2.until.exit
-//   is(code, 0, 'should have exit code 0')
-// })
+  let completedStaging = false
+  const stagingRegex = /Staging (.*) into/
+  let stagedName
+  for await (const line of stager2.lineout) {
+    if (line === 'Staging complete!') completedStaging = true
+
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
+
+    if (line.endsWith('Success')) break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
+  plan(4)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--name', `test-name-${testId}`, '--json', link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  let stagedName
+  for await (const line of stager2.lineout) {
+    const result = JSON.parse(line)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
+  plan(5)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+  const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  let completedStaging = false
+  let addedIgnored = false
+  const stagingRegex = /Staging (.*) into/
+  let stagedName
+  for await (const line of stager2.lineout) {
+    if (line === 'Staging complete!') completedStaging = true
+
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
+
+    if (line.includes('/ignored.txt')) addedIgnored = true
+    if (line.endsWith('Success')) break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(addedIgnored, false, 'should not add ignored.txt')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
+  plan(5)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const ignoredFile = path.join(harness, 'ignored.txt')
+  fs.writeFileSync(ignoredFile, 'this file should be ignored')
+  teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
+  const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, '--json', link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  const files = []
+  let stagedName
+  for await (const line of stager2.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'byte-diff') files.push(result.data.message)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
+  plan(7)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const stagingRegex = /Staging (.*) into/
+  let completedStaging = false
+  let readdedFile = false
+  let addedIndex = false
+  let addedIgnored = false
+  let stagedName
+  for await (const line of stager2.lineout) {
+    if (line === 'Staging dry run complete!') completedStaging = true
+    if (line.includes('/package.json')) readdedFile = true
+    if (line.includes('/index.js')) addedIndex = true
+    if (line.includes('/ignored.txt')) addedIgnored = true
+
+    const stagingMatch = line.match(stagingRegex)
+    if (stagingMatch) stagedName = stagingMatch[1]
+
+    if (line.endsWith('Success')) break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(completedStaging, true, 'should complete staging')
+  is(readdedFile, true, 'should readd package.json after truncate')
+  is(addedIgnored, false, 'should not add ignored.txt')
+  is(addedIndex, true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
+
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
+  plan(7)
+
+  const testId = Math.floor(Math.random() * 100000)
+  const relativePath = path.relative(harness, minimal)
+  const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  await stager1.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
+  `, { returnByValue: false })
+
+  let link
+  for await (const line of stager1.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'addendum') link = result.data.link
+    if (result.tag === 'final') break
+  }
+
+  await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager1.inspector.close()
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
+
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', link, relativePath]
+  await stager2.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  const files = []
+  let stagedName
+  for await (const line of stager2.lineout) {
+    const result = JSON.parse(line)
+    if (result.tag === 'byte-diff') files.push(result.data.message)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+
+    if (result.tag === 'staging') stagedName = result.data.name
+    if (result.tag === 'final') break
+  }
+  await stager2.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await stager2.inspector.close()
+
+  is(files.includes('/package.json'), true, 'should readd package.json after truncate')
+  is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
+  is(files.includes('/index.js'), true, 'should add index.js')
+  is(stagedName, 'test-name-' + testId, 'should use --name flag')
+  alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
+})
 
 test.todo('pear seed <channel> <absolute-path>')
 test.todo('pear seed <channel> <relative-path>')
