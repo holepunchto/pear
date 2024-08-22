@@ -2,7 +2,7 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi, trust, outputter } = require('./iface')
+const { ansi, permit, outputter } = require('./iface')
 
 const output = outputter('init', {
   writing: () => '',
@@ -44,7 +44,7 @@ module.exports = (ipc) => async function init (cmd) {
     '\nType "TRUST" to allow template initialization or anything else to exit\n\n'
     const ask = 'Trust template'
     const act = 'Use pear init again to initalize from trusted template'
-    await trust({ ipc, key: err.info.key, message: err.message, explain, ask, act })
+    await permit({ ipc, key: err.info.key, message: err.message, explain, ask, act })
   } finally {
     await ipc.close()
   }

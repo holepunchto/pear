@@ -5,13 +5,11 @@ const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT } = require('../../../errors')
-const Store = require('../lib/store')
-const encryptionKeys = new Store('encryption-keys')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs } = {}) {
+  async #op ({ name, channel, link, verbose, seeders, dir, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
@@ -29,20 +27,10 @@ module.exports = class Seed extends Opstream {
 
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
+    const bundle = new Bundle({ corestore, key, channel, log })
+    await session.add(bundle)
 
-    const storedEncryptionKey = await encryptionKeys.get(encryptionKey)
-    encryptionKey = storedEncryptionKey ? Buffer.from(storedEncryptionKey, 'hex') : null
-
-    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
-
-    try {
-      await session.add(bundle)
-      await bundle.ready()
-      if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
-    } catch {
-      throw ERR_INVALID_INPUT('Encryption key required')
-    }
-
+    await bundle.ready()
     if (key === null && bundle.drive.core.length === 0) {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
@@ -56,12 +44,6 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
 
     await bundle.join(this.sidecar.swarm, { seeders, server: true })
-
-    try {
-      await bundle.drive.get('/package.json')
-    } catch {
-      throw ERR_INVALID_INPUT('Encryption key required')
-    }
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client

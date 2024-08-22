@@ -9,7 +9,6 @@ const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
-const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
@@ -29,10 +28,9 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../run/definition')
 const { version } = require('../../package.json')
-const deriveEncryptionKey = require('pw-to-ek')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_INVALID_PACKAGE_JSON, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
@@ -50,14 +48,6 @@ const ops = {
   Shift: require('./ops/shift'),
   EncryptionKey: require('./ops/encryption-key')
 }
-
-class PermitStore extends Store {
-  async get (key) {
-    return await super.get(key) || await preferences.get(key)
-  }
-}
-
-const permits = new PermitStore('permits')
 
 // ensure that we are registered as a link handler
 registerUrlHandler(WAKEUP)
@@ -449,14 +439,8 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
-  async permit (params, client) {
-    if (params.password || params.encryptionKey) {
-      const encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
-      const encryptionKeys = await permits.get('encryption-keys') || {}
-      encryptionKeys[hypercoreid.normalize(params.key)] = encryptionKey.toString('hex')
-      permits.set('encryption-keys', encryptionKeys)
-    }
-    const trusted = new Set((await permits.get('trusted')) || [])
+  async trust (key, client) {
+    const trusted = new Set((await preferences.get('trusted')) || [])
     const session = client.userData ? null : new Session(client)
     if (session) {
       client.userData = {
@@ -466,9 +450,9 @@ class Sidecar extends ReadyResource {
       }
       session.add(client.userData.bundle)
     }
-    if (this.swarm && client.userData.bundle?.corestore) await client.userData.bundle.join(this.swarm)
-    if (params.key !== null) {
-      const z32 = hypercoreid.encode(params.key)
+    if (this.swarm && client.userData.bundle.corestore) await client.userData.bundle.join(this.swarm)
+    if (key !== null) {
+      const z32 = hypercoreid.encode(key)
       trusted.add(z32)
     }
     let pkg = null
@@ -479,7 +463,7 @@ class Sidecar extends ReadyResource {
     } catch (err) {
       if (err instanceof SyntaxError) throw ERR_INVALID_PACKAGE_JSON('Package.json parsing error, invalid JSON')
       console.error('Unexpected error while attempting trust', err)
-      return await permits.set('trusted', Array.from(trusted))
+      return await preferences.set('trusted', Array.from(trusted))
     } finally {
       await session?.close()
     }
@@ -493,7 +477,7 @@ class Sidecar extends ReadyResource {
         }
       }
     }
-    return await permits.set('trusted', Array.from(trusted))
+    return await preferences.set('trusted', Array.from(trusted))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -665,22 +649,7 @@ class Sidecar extends ReadyResource {
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-
-    let encryptionKey
-    if (flags.encryptionKey) {
-      encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
-    } else {
-      const { drive } = parseLink(link)
-      let storedEncryptedKey
-      if (drive.key) {
-        const encryptionKeys = await permits.get('encryption-keys') || {}
-        storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
-      } else {
-        storedEncryptedKey = null
-      }
-      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
-    }
-
+    const encryptionKey = !flags.encryptionKey ? null : await encryptionKeys.get(flags.encryptionKey)
     const running = this.#start(encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
@@ -741,7 +710,7 @@ class Sidecar extends ReadyResource {
       app.bundle = appBundle
 
       // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
-      await this.permit({ key: state.key }, client)
+      await this.trust(state.key, client)
 
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
@@ -755,7 +724,7 @@ class Sidecar extends ReadyResource {
     }
 
     const aliases = Object.values(ALIASES).map(hypercoreid.encode)
-    const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
+    const trusted = new Set([...aliases, ...((await preferences.get('trusted')) || [])])
     const z32 = hypercoreid.encode(state.key)
     if (trusted.has(z32) === false) {
       const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
@@ -769,21 +738,9 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    // check for drive encryption, only throws if the drive has been previously replicated
-    const corestore = this._getCorestore(state.manifest?.name, state.channel)
-    let drive
-    try {
-      drive = new Hyperdrive(corestore, state.key, { encryptionKey })
-      await drive.ready()
-    } catch {
-      const err = ERR_PERMISSION_REQUIRED('Encryption key required', state.key, true)
-      app.report({ err })
-      return { startId, bail: err }
-    }
-
     const appBundle = new Bundle({
       encryptionKey,
-      corestore,
+      corestore: this._getCorestore(state.manifest?.name, state.channel),
       appling: state.appling,
       channel: state.channel,
       checkout: state.checkout,
@@ -792,27 +749,11 @@ class Sidecar extends ReadyResource {
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       trace,
-      drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) { app.report({ err }) }
     })
 
     await session.add(appBundle)
-
-    if (this.swarm) appBundle.join(this.swarm)
-
-    // needed for drive encryption check, in case the drive hasnt been replicated before
-    try {
-      await drive.get('/package.json')
-    } catch {
-      const err = ERR_PERMISSION_REQUIRED('Encryption key required', state.key, true)
-      app.report({ err })
-      return { startId, bail: err }
-    }
-
-    if (encryptionKey && state.key) {
-      await permits.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
-    }
 
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
@@ -827,7 +768,9 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     // app is trusted, refresh trust for any updated configured link keys:
-    await this.permit({ key: state.key }, client)
+    await this.trust(state.key, client)
+
+    if (this.swarm) appBundle.join(this.swarm)
 
     try {
       await appBundle.calibrate()

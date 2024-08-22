@@ -13,7 +13,6 @@ async function runTests () {
   await import('./04-updates.test.js')
   // await import('./05-commands.test.js')
   await import('./06-worker.test.js')
-  await import('./07-encrypted.test.js')
 
   test.resume()
 }

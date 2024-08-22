@@ -18,7 +18,6 @@ class PearError extends Error {
   static ERR_HTTP_GONE = ERR_HTTP_GONE
   static ERR_HTTP_BAD_REQUEST = ERR_HTTP_BAD_REQUEST
   static ERR_HTTP_NOT_FOUND = ERR_HTTP_NOT_FOUND
-  static ERR_SECRET_NOT_FOUND = ERR_SECRET_NOT_FOUND
   static ERR_COULD_NOT_INFER_MODULE_PATH = ERR_COULD_NOT_INFER_MODULE_PATH
   static ERR_INVALID_MANIFEST = ERR_INVALID_MANIFEST
   static ERR_ASSERTION = ERR_ASSERTION
@@ -72,8 +71,8 @@ function ERR_INVALID_TEMPLATE (msg) {
   return new PearError(msg, 'ERR_INVALID_TEMPLATE', ERR_INVALID_TEMPLATE)
 }
 
-function ERR_PERMISSION_REQUIRED (msg, key, encrypted = false) {
-  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, { key, encrypted })
+function ERR_PERMISSION_REQUIRED (msg, key) {
+  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, { key })
 }
 
 function ERR_HTTP_GONE () {
@@ -92,10 +91,6 @@ function ERR_HTTP_NOT_FOUND (msg) {
   const err = new PearError(msg, 'ERR_HTTP_NOT_FOUND', ERR_HTTP_NOT_FOUND)
   err.status = 404
   return err
-}
-
-function ERR_SECRET_NOT_FOUND (msg) {
-  return new PearError(msg, 'ERR_SECRET_NOT_FOUND', ERR_SECRET_NOT_FOUND)
 }
 
 function ERR_COULD_NOT_INFER_MODULE_PATH (msg) {
