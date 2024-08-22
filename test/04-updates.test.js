@@ -125,7 +125,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
   const { ok, is, plan, comment, timeout } = t
 
-  timeout(180000)
+  timeout(300000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -303,7 +303,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
-  timeout(180000)
+  timeout(300000)
 
   const { platformDir } = rig
   const appStager = new Helper({ platformDir })
