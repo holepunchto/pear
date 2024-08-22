@@ -46,6 +46,8 @@ module.exports = class Http extends ReadyResource {
       } catch (err) {
         if (err.code === 'MODULE_NOT_FOUND') {
           err.status = err.status || 404
+        } else if (err.code === 'ERR_HTTP_NOT_FOUND') {
+          err.status = err.status || 404
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
