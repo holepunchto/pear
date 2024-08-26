@@ -343,11 +343,12 @@ class Sidecar extends ReadyResource {
   }
 
   async identify (params, client) {
-    if (!client.userData && params.startId) {
+    if (params.startId) {
       const starting = this.running.get(params.startId)
       if (starting) client.userData = starting.client.userData
       else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
     }
+    if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
     const id = client.userData.id
     const host = await this.address()
     return { host, id }
@@ -667,22 +668,7 @@ class Sidecar extends ReadyResource {
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
 
-    let encryptionKey
-    if (flags.encryptionKey) {
-      encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
-    } else {
-      const { drive } = parseLink(link)
-      let storedEncryptedKey
-      if (drive.key) {
-        const encryptionKeys = await permits.get('encryption-keys') || {}
-        storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
-      } else {
-        storedEncryptedKey = null
-      }
-      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
-    }
-
-    const running = this.#start(encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
+    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -704,10 +690,25 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (encryptionKey, flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
+  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+
+    let encryptionKey
+    if (flags.encryptionKey) {
+      encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
+    } else {
+      const { drive } = parseLink(link)
+      let storedEncryptedKey
+      if (drive.key) {
+        const encryptionKeys = await permits.get('encryption-keys') || {}
+        storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
+      } else {
+        storedEncryptedKey = null
+      }
+      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
+    }
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
