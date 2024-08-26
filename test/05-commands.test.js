@@ -3,26 +3,52 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const fs = require('bare-fs')
 const LocalDrive = require('localdrive')
+const os = require('bare-os')
 
 const fixtures = path.join(Helper.root, 'test', 'fixtures')
 const harness = path.join(fixtures, 'harness')
 const minimal = path.join(fixtures, 'minimal')
+const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
-  setup = async ({ comment }) => {
-    this.helper = new Helper()
+  setup = async ({ comment, timeout }) => {
+    timeout(180000)
+    const helper = new Helper()
+    this.helper = helper
     comment('connecting local sidecar')
-    await this.helper.ready()
-    await this.helper.shutdown()
-    this.helper = new Helper()
-    await this.helper.ready()
+    await helper.ready()
     comment('local sidecar connected')
+    const id = Math.floor(Math.random() * 10000)
+    comment('staging platform...')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
+    await Helper.pick(staging, { tag: 'final' })
+    comment('platform staged')
+    comment('seeding platform...')
+    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const key = await until.key
+    await until.announced
+    comment('platform seeding')
+    comment('bootstrapping tmp platform...')
+    const platformDir = path.join(tmp, 'tmp-pear')
+    this.platformDir = platformDir
+    await Helper.bootstrap(key, platformDir)
+    comment('tmp platform bootstrapped')
+    const bootstrapped = new Helper({ platformDir: this.platformDir })
+    this.bootstrapped = bootstrapped
+    comment('connecting tmp sidecar...')
+    await bootstrapped.ready()
+    comment('tmp sidecar connected')
+    global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
+    comment('shutting down bootstrapped sidecar')
+    await this.bootstrapped.shutdown()
+    comment('bootstrapped sidecar shutdown')
     comment('shutting down local sidecar')
     await this.helper.shutdown()
-    comment('local sidecar shut down')
+    comment('local sidecar shutdown')
   }
 }
 
