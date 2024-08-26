@@ -4,6 +4,7 @@ const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const parseLink = require('../lib/parse-link')
 const { ERR_INVALID_INPUT } = require('../errors')
+const { password } = require('./iface')
 
 let blocks = 0
 let total = 0
@@ -20,7 +21,16 @@ const output = outputter('stage', {
     const message = (data.success ? 'Warmed' : 'Warming') + ' up app (used ' + blocks + '/' + total + ' blocks) ' // Adding a space as a hack for an issue with the outputter which duplicates the last char on done
     return { output: 'status', message }
   },
-  error: ({ code, stack }) => `Staging Error (code: ${code || 'none'}) ${stack}`,
+  error: async (err, ipc) => {
+    if (err.info && err.info.encrypted) {
+      const explain = 'This application is encrypted.\n' +
+        '\nEnter the password to stage the app.\n\n'
+      const message = 'Added encryption key, run stage again to complete it.'
+      return password({ ipc, key: err.info.key, explain, message })
+    } else {
+      return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
+    }
+  },
   addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`
 })
 
@@ -33,5 +43,5 @@ module.exports = (ipc) => async function stage (cmd) {
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, encryptionKey, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }))
+  await output(json, ipc.stage({ id, channel, key, dir, encryptionKey, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), ipc)
 }

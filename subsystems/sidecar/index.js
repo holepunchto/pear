@@ -697,6 +697,7 @@ class Sidecar extends ReadyResource {
     let encryptionKey
     if (flags.encryptionKey) {
       encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey

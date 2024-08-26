@@ -69,15 +69,15 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('add encryption key')
   const name = 'test-encryption-key'
-  const secret = hypercoreid.encode(crypto.randomBytes(32))
-  const addEncryptionKey = helper.encryptionKey({ action: 'add', name, secret })
+  const preimage = hypercoreid.encode(crypto.randomBytes(32))
+  const addEncryptionKey = helper.encryptionKey({ action: 'add', name, value: preimage })
   const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
   is(encryptionKey.name, name)
 
   comment('staging throws without encryption key')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const error = await Helper.pick(stagingA, { tag: 'error' })
-  is(error.code, 'ERR_INVALID_INPUT')
+  is(error.code, 'ERR_PERMISSION_REQUIRED')
 
   comment('staging with encryption key')
   const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: name, bare: true })
@@ -93,7 +93,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('run encrypted pear application')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir, encryptionKey: secret })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir, encryptionKey: name })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
   is(value?.app?.key, appKey, 'app version matches staged key')

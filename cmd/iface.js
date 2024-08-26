@@ -60,7 +60,7 @@ function indicator (value, type = 'success') {
   return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
-const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
+const outputter = (cmd, taggers = {}) => async (json, stream, info = {}, ipc) => {
   let error = null
   if (Array.isArray(stream)) stream = asyncIterate(stream)
   try {
@@ -71,7 +71,7 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
       }
       let result = null
       try {
-        result = typeof taggers[tag] === 'function' ? taggers[tag](data, info) : (taggers[tag] || false)
+        result = typeof taggers[tag] === 'function' ? await taggers[tag](data, info, ipc) : (taggers[tag] || false)
       } catch (err) {
         error = err
         break
@@ -165,18 +165,15 @@ async function trust ({ ipc, key, explain, act, ask, message }) {
   }
 }
 
-async function password ({ ipc, key }) {
-  const z32 = key ? hypercoreid.encode(key) : ''
-  const explain = z32 + ' is an encrypted application. \n' +
-    '\nEnter the password to run the app.\n\n'
-  const dialog = ansi.cross + explain
+async function password ({ ipc, key, explain, message }) {
+  const dialog = ansi.cross + ' ' + explain
   const ask = 'Password'
   const delim = ':'
   const validation = (key) => key.length > 0
   const msg = '\nPlease, enter a valid password.\n'
   const result = await permit({ dialog, ask, delim, validation, msg })
   await ipc.permit({ key, password: result.value })
-  print('\n' + ansi.tick + ' Added encryption key for pear://' + z32 + '\n')
+  print('\n' + ansi.tick + ' ' + message + '\n')
   await ipc.close()
   Bare.exit()
 }

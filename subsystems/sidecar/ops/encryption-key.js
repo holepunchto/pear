@@ -15,9 +15,9 @@ module.exports = class EncryptionKey extends Opstream {
     this.store = new Store('encryption-keys')
   }
 
-  async #add ({ name, secret }) {
-    try { hypercoreid.decode(secret) } catch { throw ERR_INVALID_INPUT('Invalid encryption key') }
-    const encryptionKey = await deriveEncryptionKey(secret, SALT)
+  async #add ({ name, value }) {
+    try { hypercoreid.decode(value) } catch { throw ERR_INVALID_INPUT('Invalid encryption key') }
+    const encryptionKey = await deriveEncryptionKey(value, SALT)
     const result = await this.store.set(name, encryptionKey.toString('hex'))
     this.push({ tag: 'added', data: { name } })
     return result
