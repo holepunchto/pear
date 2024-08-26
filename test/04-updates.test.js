@@ -249,7 +249,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(announced, 'seeding is announced')
 
   t.comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -351,7 +351,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -458,7 +458,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
@@ -548,7 +548,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   ok(announced, 'seeding is announced')
 
   comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'tmp-pear-rcv')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
