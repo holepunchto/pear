@@ -23,11 +23,12 @@ module.exports = (ipc) => async function seed (cmd) {
   const isKey = parseLink(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
-  let { name } = cmd.flags
+  let { name, encryptionKey } = cmd.flags
   if (!name && !link) {
     const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
     name = pkg.pear?.name || pkg.name
   }
   const id = Bare.pid
-  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, cmdArgs: Bare.argv.slice(1) }))
+
+  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
 }

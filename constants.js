@@ -72,6 +72,8 @@ exports.DESKTOP_RUNTIME = toPath(new URL(BIN + DESKTOP_EXEC, swapURL))
 
 exports.BARE_RESTART_EXIT_CODE = 75
 
+exports.SALT = b4a.from('d134aa8b0631f1193b5031b356d82dbea214389208fa4a0bcdf5c2e062d8ced2', 'hex')
+
 function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)

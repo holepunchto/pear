@@ -18,7 +18,8 @@ module.exports = [
   flag('--appling <path>', 'Set application shell path'),
   flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
   flag('--detached', 'Wakeup existing app or run detached'),
-  hiddenFlag('--encryption-key <name>'), // internal temporarily
+  flag('--encryption-key <name>', 'Application encryption key'),
+  flag('--no-ask', 'Suppress permissions dialog'),
   hiddenFlag('--detach'),
   hiddenFlag('--trace <n>'),
   hiddenFlag('--swap <path>'),

@@ -60,7 +60,7 @@ function indicator (value, type = 'success') {
   return value < 0 ? ansi.cross + ' ' : (value > 0 ? ansi.tick + ' ' : ansi.gray('- '))
 }
 
-const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
+const outputter = (cmd, taggers = {}) => async (json, stream, info = {}, ipc) => {
   let error = null
   if (Array.isArray(stream)) stream = asyncIterate(stream)
   try {
@@ -71,7 +71,7 @@ const outputter = (cmd, taggers = {}) => async (json, stream, info = {}) => {
       }
       let result = null
       try {
-        result = typeof taggers[tag] === 'function' ? taggers[tag](data, info) : (taggers[tag] || false)
+        result = typeof taggers[tag] === 'function' ? await taggers[tag](data, info, ipc) : (taggers[tag] || false)
       } catch (err) {
         error = err
         break
@@ -144,37 +144,52 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function permit ({ ipc, key, message, explain, ask, act }) {
+async function trust ({ ipc, key, explain, act, ask, message }) {
   const z32 = hypercoreid.encode(key)
-  explain = explain ?? 'Be sure that software is trusted before running it\n' +
-    '\nType "TRUST" to allow execution or anything else to exit\n\n'
-  ask = ask ?? 'Trust application'
-  act = act ?? 'Use pear run again to execute trusted application'
-  const sure = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
+  const dialog = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
+  const delim = '?'
+  const validation = (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST')
+  const msg = ansi.cross + ' uppercase TRUST to confirm'
 
-  const prompt = new Interact(sure, [
-    {
-      name: 'trust',
-      default: '',
-      prompt: ask,
-      delim: '?',
-      validation: (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST'),
-      msg: ansi.cross + ' uppercase TRUST to confirm'
-    }
-  ])
-  const result = await prompt.run()
-  if (result.trust === 'TRUST') {
-    await ipc.trust(key)
+  const result = await permit({ dialog, ask, delim, validation, msg })
+  if (result.value === 'TRUST') {
+    await ipc.permit({ key })
     print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
     print(act + '\n')
     await ipc.close()
     Bare.exit()
   } else {
-    print('')
-    print(message + '\n', false)
+    print(message, false)
     await ipc.close()
     Bare.exit(77)
   }
 }
 
-module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+async function password ({ ipc, key, explain, message }) {
+  const dialog = ansi.cross + ' ' + explain
+  const ask = 'Password'
+  const delim = ':'
+  const validation = (key) => key.length > 0
+  const msg = '\nPlease, enter a valid password.\n'
+  const result = await permit({ dialog, ask, delim, validation, msg })
+  await ipc.permit({ key, password: result.value })
+  print('\n' + ansi.tick + ' ' + message + '\n')
+  await ipc.close()
+  Bare.exit()
+}
+
+async function permit ({ dialog, ask, delim, validation, msg }) {
+  const interact = new Interact(dialog, [
+    {
+      name: 'value',
+      default: '',
+      prompt: ask,
+      delim,
+      validation,
+      msg
+    }
+  ])
+  return interact.run()
+}
+
+module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

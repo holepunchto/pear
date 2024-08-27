@@ -3,6 +3,7 @@ const { spawn } = require('bare-subprocess')
 const { once } = require('bare-events')
 const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
+const Hyperdrive = require('hyperdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
@@ -12,7 +13,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
 const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED } = require('../../../errors')
+const { ERR_TRACER_FAILED, ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   static async * trace (bundle, client) {
@@ -53,19 +54,50 @@ module.exports = class Stage extends Opstream {
       dir,
       cmdArgs
     })
+
     await sidecar.ready()
-    if (key) key = hypercoreid.decode(key)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
-    const encryptionKeys = new Store('encryption-keys')
-    const encryptionKey = await encryptionKeys.get(params.encryptionKey)
+
+    if (key) {
+      key = hypercoreid.decode(key)
+    } else {
+      await corestore.ready()
+      const drive = new Hyperdrive(corestore.session())
+      await drive.ready()
+      key = drive.key
+      await drive.close()
+    }
+
+    const encrypted = state.options.encrypted
+
+    if (!encrypted && params.encryptionKey) {
+      const err = ERR_INVALID_CONFIG('pear.encrypted field is required in package.json')
+      throw err
+    }
+
+    const permits = new Store('permits')
+    const secrets = new Store('encryption-keys')
+    const encryptionKeys = await permits.get('encryption-keys') || {}
+    const encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(params.encryptionKey)
+
+    if (encrypted === true && !encryptionKey && !params.encryptionKey) {
+      const err = ERR_PERMISSION_REQUIRED('encryption key required', key, true)
+      throw err
+    }
+
+    if (encrypted === true && !encryptionKey) {
+      const err = ERR_SECRET_NOT_FOUND('Not found encryption key: ' + params.encryptionKey)
+      throw err
+    }
+
     const bundle = new Bundle({
       key,
       corestore,
       channel,
       truncate,
       stage: true,
-      encryptionKey,
+      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null,
       failure (err) { console.error(err) }
     })
     await session.add(bundle)
@@ -74,7 +106,7 @@ module.exports = class Stage extends Opstream {
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun, name })
 
-    await sidecar.trust(bundle.drive.key, client)
+    await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
     if (terminalBare) bare = true
