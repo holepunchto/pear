@@ -6,7 +6,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT } = require('../../../errors')
 const Store = require('../lib/store')
-const encryptionKeys = new Store('encryption-keys')
+const permits = new Store('permits')
+const secrets = new Store('encryption-keys')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -30,10 +31,10 @@ module.exports = class Seed extends Opstream {
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const storedEncryptionKey = await encryptionKeys.get(encryptionKey)
-    encryptionKey = storedEncryptionKey ? Buffer.from(storedEncryptionKey, 'hex') : null
+    const encryptionKeys = await permits.get('encryption-keys') || {}
+    encryptionKey = key ? encryptionKeys[hypercoreid.normalize(key)] : encryptionKey ? await secrets.get(encryptionKey) : null
 
-    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey })
+    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
 
     try {
       await session.add(bundle)
