@@ -58,16 +58,9 @@ module.exports = class Stage extends Opstream {
     await sidecar.ready()
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
+    await corestore.ready()
 
-    if (key) {
-      key = hypercoreid.decode(key)
-    } else {
-      await corestore.ready()
-      const drive = new Hyperdrive(corestore.session())
-      await drive.ready()
-      key = drive.key
-      await drive.close()
-    }
+    key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
 

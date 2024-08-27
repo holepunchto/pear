@@ -6,6 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT } = require('../../../errors')
 const Store = require('../lib/store')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -24,7 +25,8 @@ module.exports = class Seed extends Opstream {
     await this.sidecar.ready()
 
     const corestore = this.sidecar._getCorestore(name, channel)
-    const key = link ? hypercoreid.decode(link) : null
+    await corestore.ready()
+    const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
@@ -44,7 +46,7 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Encryption key required')
     }
 
-    if (key === null && bundle.drive.core.length === 0) {
+    if (!link && bundle.drive.core.length === 0) {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
