@@ -1076,7 +1076,7 @@ class Window extends GuiCtrl {
     const requestFilter = (details, respond) => {
       const url = new URL(details.url)
       const isAllowed = allowedHosts.some(({ protocol, hostname, port }) =>
-        protocol === url.protocol && hostname === url.hostname && (port === '' || port === url.port))
+        protocol === url.protocol && (hostname === '*' || hostname === url.hostname) && (port === '' || port === url.port))
       respond({ cancel: isAllowed === false })
     }
 
