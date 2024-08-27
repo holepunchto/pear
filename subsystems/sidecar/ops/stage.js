@@ -80,10 +80,6 @@ module.exports = class Stage extends Opstream {
     if (terminalBare) bare = true
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
-    ignore = ignore.map((file) => {
-      const suffix = file.length > 0 && file[file.length - 1] === '/' ? '/' : ''
-      return unixPathResolve('/', file) + suffix
-    })
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
@@ -95,7 +91,7 @@ module.exports = class Stage extends Opstream {
     const main = unixPathResolve('/', state.main)
     const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
     const dst = bundle.drive
-    const opts = { filter: (key) => ignore.some((path) => key.startsWith(path)) === false, dryRun, batch: true }
+    const opts = { ignore, dryRun, batch: true }
     const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
     const entrypoints = [main, ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
