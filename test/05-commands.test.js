@@ -15,12 +15,14 @@ class Rig {
     await helper.ready()
   }
 
-  getOrCreateSeedInstance = async () => {
-    if (this.pearSeedInstance) return this.pearSeedInstance
+  getOrCreateSeedInstance = async (name) => {
+    if (!this.pearSeedInstance) this.pearSeedInstance = {}
+    const id = name ?? 'minimal'
+    if (this.pearSeedInstance[id]) return this.pearSeedInstance[id]
 
     const testId = Math.floor(Math.random() * 100000)
     const relativePath = path.relative(harness, minimal)
-    const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
+    const argvInit = ['stage', '--json', 'test-' + testId, ...(name ? ['--name', name] : []), relativePath]
     const stager = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
     await stager.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
@@ -28,7 +30,7 @@ class Rig {
 
     for await (const line of stager.lineout) {
       const result = JSON.parse(line)
-      if (result.tag === 'addendum') this.pearSeedInstance = result.data
+      if (result.tag === 'addendum') this.pearSeedInstance[id] = result.data
       if (result.tag === 'final') break
     }
 
@@ -36,7 +38,7 @@ class Rig {
     await stager.inspector.close()
     await stager.until.exit
 
-    return this.pearSeedInstance
+    return this.pearSeedInstance[id]
   }
 
   cleanup = async ({ comment }) => {
@@ -204,9 +206,65 @@ test('pear seed --json <channel> <relative-path>', async function ({ plan, is, a
 test.todo('pear seed --seeders <key> <channel> <relative-path>')
 test.todo('pear seed --seeders <key> --json <channel> <relative-path>')
 
-// TODO: Implement when --name flag works
-test.todo('pear seed --name <name> <channel> <relative-path>')
-test.todo('pear seed --name <name> --json <channel> <relative-path>')
+test('pear seed --name <name> <channel> <relative-path>', async function ({ plan, is }) {
+  plan(2)
+  const name = 'custom-name-' + Math.floor(Math.random() * 100000)
+  const { channel } = await rig.getOrCreateSeedInstance(name)
+  const relativePath = path.relative(harness, minimal)
+
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const argv = ['seed', '--name', name, channel, relativePath]
+  await seeder.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  let announced = false
+  for await (const line of seeder.lineout) {
+    if (line === '^_^ announced') {
+      announced = true
+      break
+    }
+  }
+
+  seeder.subprocess.kill('SIGINT')
+  await seeder.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await seeder.inspector.close()
+
+  is(announced, true, 'should successfully announce')
+  const { code } = await seeder.until.exit
+  is(code, 130, 'should have exit code 130')
+})
+
+test('pear seed --name <name> --json <channel> <relative-path>', async function ({ plan, is, alike }) {
+  plan(2)
+  const name = 'custom-name-' + Math.floor(Math.random() * 100000)
+  const { channel } = await rig.getOrCreateSeedInstance(name)
+  const relativePath = path.relative(harness, minimal)
+
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const argv = ['seed', '--name', name, '--json', channel, relativePath]
+  await seeder.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  for await (const line of seeder.lineout) {
+    const result = JSON.parse(line)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+    if (result.tag === 'announced') break
+  }
+
+  seeder.subprocess.kill('SIGINT')
+  await seeder.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await seeder.inspector.close()
+
+  alike(tags, ['seeding', 'key', 'announced'], 'should output correct tags')
+  const { code } = await seeder.until.exit
+  is(code, 130, 'should have exit code 130')
+})
 
 test('pear seed pear://<key>', async function ({ plan, is }) {
   plan(2)
@@ -268,9 +326,63 @@ test('pear seed --json pear://<key>', async function ({ plan, is, alike }) {
 test.todo('pear seed --seeders <key> pear://<key>')
 test.todo('pear seed --seeders <key> --json pear://<key>')
 
-// TODO: Implement when --name flag works
-test.todo('pear seed --name <name> pear://<key>')
-test.todo('pear seed --name <name> --json pear://<key>')
+test('pear seed --name <name> pear://<key>', async function ({ plan, is }) {
+  plan(2)
+  const name = 'custom-name-' + Math.floor(Math.random() * 100000)
+  const { link } = await rig.getOrCreateSeedInstance(name)
+
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const argv = ['seed', '--name', name, link]
+  await seeder.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  let announced = false
+  for await (const line of seeder.lineout) {
+    if (line === '^_^ announced') {
+      announced = true
+      break
+    }
+  }
+
+  seeder.subprocess.kill('SIGINT')
+  await seeder.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await seeder.inspector.close()
+
+  is(announced, true, 'should successfully announce')
+  const { code } = await seeder.until.exit
+  is(code, 130, 'should have exit code 130')
+})
+
+test('pear seed --name <name> --json pear://<key>', async function ({ plan, is, alike }) {
+  plan(2)
+  const name = 'custom-name-' + Math.floor(Math.random() * 100000)
+  const { link } = await rig.getOrCreateSeedInstance(name)
+
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const argv = ['seed', '--name', name, '--json', link]
+  await seeder.inspector.evaluate(`
+      __PEAR_TEST__.command(${JSON.stringify(argv)})
+  `, { returnByValue: false })
+
+  const seen = new Set()
+  const tags = []
+  for await (const line of seeder.lineout) {
+    const result = JSON.parse(line)
+    if (seen.has(result.tag)) continue
+    seen.add(result.tag)
+    tags.push(result.tag)
+    if (result.tag === 'announced') break
+  }
+
+  seeder.subprocess.kill('SIGINT')
+  await seeder.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
+  await seeder.inspector.close()
+
+  alike(tags, ['seeding', 'key', 'announced'], 'should output correct tags')
+  const { code } = await seeder.until.exit
+  is(code, 130, 'should have exit code 130')
+})
 
 test.todo('pear run <absolute-path>')
 test.todo('pear run <relative-path>')
