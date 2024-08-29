@@ -4,6 +4,7 @@ const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('../errors')
+const { password } = require('./iface')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -40,11 +41,20 @@ const output = outputter('info', {
   keys,
   info,
   changelog,
-  error: ({ code, stack }) => `Info Error (code: ${code || 'none'}) ${stack}`
+  error: (err, info, ipc) => {
+    if (err.info && err.info.encrypted && info.ask) {
+      const explain = 'This application is encrypted.\n' +
+        '\nEnter the password to retrieve app info.\n\n'
+      const message = 'Added encryption key, run info again to complete it.'
+      return password({ ipc, key: err.info.key, explain, message })
+    } else {
+      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
+    }
+  }
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, encryptionKey } = cmd.flags
   const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
@@ -60,6 +70,7 @@ module.exports = (ipc) => async function info (cmd) {
     metadata,
     changelog,
     full,
+    encryptionKey,
     cmdArgs: Bare.argv.slice(1)
-  }))
+  }), { ask: cmd.flags.ask }, ipc)
 }
