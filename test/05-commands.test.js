@@ -6,14 +6,13 @@ const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
 
 class Rig {
-  setup = async ({ comment }) => {
-    this.helper = new Helper()
+  setup = async ({ comment, timeout }) => {
+    timeout(180000)
+    this.platformDir = path.join(Helper.root, 'pear')
+    const helper = new Helper({ platformDir: this.platformDir })
+    this.helper = helper
     comment('connecting local sidecar')
-    await this.helper.ready()
-    await this.helper.shutdown()
-    this.helper = new Helper()
-    await this.helper.ready()
-    comment('local sidecar connected')
+    await helper.ready()
   }
 
   getOrCreateSeedInstance = async () => {
@@ -22,7 +21,7 @@ class Rig {
     const testId = Math.floor(Math.random() * 100000)
     const relativePath = path.relative(harness, minimal)
     const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-    const stager = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+    const stager = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
     await stager.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
   `, { returnByValue: false })
@@ -58,7 +57,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
 
   const argv = ['stage', '--json', 'test-' + testId, minimal]
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
 
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -120,7 +119,7 @@ test('pear seed <channel> <absolute-path>', async function ({ plan, is }) {
   plan(2)
   const { channel } = await rig.getOrCreateSeedInstance()
 
-  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['seed', channel, minimal]
   await seeder.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -148,7 +147,7 @@ test('pear seed <channel> <relative-path>', async function ({ plan, is }) {
   const { channel } = await rig.getOrCreateSeedInstance()
 
   const relativePath = path.relative(harness, minimal)
-  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['seed', channel, relativePath]
   await seeder.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -176,7 +175,7 @@ test('pear seed --json <channel> <relative-path>', async function ({ plan, is, a
   const { channel } = await rig.getOrCreateSeedInstance()
 
   const relativePath = path.relative(harness, minimal)
-  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['seed', '--json', channel, relativePath]
   await seeder.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -213,7 +212,7 @@ test('pear seed pear://<key>', async function ({ plan, is }) {
   plan(2)
   const { link } = await rig.getOrCreateSeedInstance()
 
-  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['seed', link]
   await seeder.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -240,7 +239,7 @@ test('pear seed --json pear://<key>', async function ({ plan, is, alike }) {
   plan(2)
   const { link } = await rig.getOrCreateSeedInstance()
 
-  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['seed', '--json', link]
   await seeder.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
