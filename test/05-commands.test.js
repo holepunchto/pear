@@ -6,14 +6,14 @@ const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
 
 class Rig {
-  setup = async ({ comment }) => {
-    this.helper = new Helper()
+  setup = async ({ comment, timeout }) => {
+    timeout(180000)
+    this.platformDir = path.join(Helper.root, 'pear')
+    const helper = new Helper({ platformDir: this.platformDir })
+
+    this.helper = helper
     comment('connecting local sidecar')
-    await this.helper.ready()
-    await this.helper.shutdown()
-    this.helper = new Helper()
-    await this.helper.ready()
-    comment('local sidecar connected')
+    await helper.ready()
   }
 
   getOrCreateInfoInstance = async () => {
@@ -22,7 +22,7 @@ class Rig {
     const testId = Math.floor(Math.random() * 100000)
     const relativePath = path.relative(harness, minimal)
     const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
-    const stager = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+    const stager = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
     await stager.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit)})
   `, { returnByValue: false })
@@ -194,7 +194,7 @@ test('pear info --json', async function ({ plan, alike, is }) {
   await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
-  alike(tags, ['retrieving', 'keys', 'info', 'final'], 'should output correct tags')
+  alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
   const { code } = await running.until.exit
   is(code, 0, 'should have exit code 0')
 })
@@ -204,7 +204,7 @@ test('pear info <channel> <relative-path>', async function ({ plan, is }) {
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -235,7 +235,7 @@ test('pear info --json <channel> <relative-path>', async function ({ plan, alike
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -264,7 +264,7 @@ test('pear info --changelog <channel> <relative-path>', async function ({ plan, 
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -295,7 +295,7 @@ test('pear info --changelog --json <channel> <relative-path>', async function ({
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -324,7 +324,7 @@ test('pear info --changelog --metadata <channel> <relative-path>', async functio
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -355,7 +355,7 @@ test('pear info --changelog --metadata --json <channel> <relative-path>', async 
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -384,7 +384,7 @@ test('pear info --changelog --key <channel> <relative-path>', async function ({ 
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -415,7 +415,7 @@ test('pear info --changelog --key --json <channel> <relative-path>', async funct
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -444,7 +444,7 @@ test('pear info --changelog --metadata --key <channel> <relative-path>', async f
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -475,7 +475,7 @@ test('pear info --changelog --metadata --key --json <channel> <relative-path>', 
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -504,7 +504,7 @@ test('pear info --full-changelog <channel> <relative-path>', async function ({ p
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -535,7 +535,7 @@ test('pear info --full-changelog --metadata <channel> <relative-path>', async fu
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -566,7 +566,7 @@ test('pear info --full-changelog --metadata --json <channel> <relative-path>', a
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -595,7 +595,7 @@ test('pear info --full-changelog --metadata --key <channel> <relative-path>', as
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -626,7 +626,7 @@ test('pear info --full-changelog --metadata --key --json <channel> <relative-pat
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -657,7 +657,7 @@ test('pear info --metadata <channel> <relative-path>', async function ({ plan, i
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -688,7 +688,7 @@ test('pear info --metadata --key <channel> <relative-path>', async function ({ p
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', '--key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -719,7 +719,7 @@ test('pear info --metadata --key --json <channel> <relative-path>', async functi
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', '--key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -748,7 +748,7 @@ test('pear info --key <channel> <relative-path>', async function ({ plan, is }) 
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -779,7 +779,7 @@ test('pear info --key --json <channel> <relative-path>', async function ({ plan,
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -807,7 +807,7 @@ test('pear info pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -837,7 +837,7 @@ test('pear info --json pear://<key>', async function ({ plan, alike, is }) {
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -865,7 +865,7 @@ test('pear info --changelog pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -895,7 +895,7 @@ test('pear info --changelog --json pear://<key>', async function ({ plan, alike,
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -923,7 +923,7 @@ test('pear info --changelog --metadata pear://<key>', async function ({ plan, is
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -953,7 +953,7 @@ test('pear info --changelog --metadata --json pear://<key>', async function ({ p
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -981,7 +981,7 @@ test('pear info --changelog --key pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1011,7 +1011,7 @@ test('pear info --changelog --key --json pear://<key>', async function ({ plan, 
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1039,7 +1039,7 @@ test('pear info --changelog --metadata --key pear://<key>', async function ({ pl
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1069,7 +1069,7 @@ test('pear info --changelog --metadata --key --json pear://<key>', async functio
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--changelog', '--metadata', '--key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1097,7 +1097,7 @@ test('pear info --full-changelog pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1127,7 +1127,7 @@ test('pear info --full-changelog --metadata pear://<key>', async function ({ pla
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1157,7 +1157,7 @@ test('pear info --full-changelog --metadata --json pear://<key>', async function
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1185,7 +1185,7 @@ test('pear info --full-changelog --metadata --key pear://<key>', async function 
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1215,7 +1215,7 @@ test('pear info --full-changelog --metadata --key --json pear://<key>', async fu
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--full-changelog', '--metadata', '--key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1243,7 +1243,7 @@ test('pear info --metadata pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1273,7 +1273,7 @@ test('pear info --metadata --key pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', '--key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1303,7 +1303,7 @@ test('pear info --metadata --key --json pear://<key>', async function ({ plan, a
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--metadata', '--key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1331,7 +1331,7 @@ test('pear info --key pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1361,7 +1361,7 @@ test('pear info --key --json pear://<key>', async function ({ plan, alike, is })
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1390,7 +1390,7 @@ test('pear info --no-changelog <channel> <relative-path>', async function ({ pla
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1421,7 +1421,7 @@ test('pear info --no-changelog --json <channel> <relative-path>', async function
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1450,7 +1450,7 @@ test('pear info --no-metadata <channel> <relative-path>', async function ({ plan
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1481,7 +1481,7 @@ test('pear info --no-metadata --json <channel> <relative-path>', async function 
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-metadata', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1510,7 +1510,7 @@ test('pear info --no-key <channel> <relative-path>', async function ({ plan, is 
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1541,7 +1541,7 @@ test('pear info --no-key --json <channel> <relative-path>', async function ({ pl
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1570,7 +1570,7 @@ test('pear info --no-changelog --no-metadata <channel> <relative-path>', async f
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1601,7 +1601,7 @@ test('pear info --no-changelog --no-metadata --json <channel> <relative-path>', 
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1630,7 +1630,7 @@ test('pear info --no-changelog --no-key <channel> <relative-path>', async functi
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1661,7 +1661,7 @@ test('pear info --no-changelog --no-key --json <channel> <relative-path>', async
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1690,7 +1690,7 @@ test('pear info --no-key --no-metadata <channel> <relative-path>', async functio
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--no-metadata', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1721,7 +1721,7 @@ test('pear info --no-key --no-metadata --json <channel> <relative-path>', async 
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--no-metadata', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1750,7 +1750,7 @@ test('pear info --no-changelog --no-metadata --no-key <channel> <relative-path>'
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--no-key', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1781,7 +1781,7 @@ test('pear info --no-changelog --no-metadata --no-key --json <channel> <relative
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--no-key', '--json', channel, relativePath]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1809,7 +1809,7 @@ test('pear info --no-changelog pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1839,7 +1839,7 @@ test('pear info --no-changelog --json pear://<key>', async function ({ plan, ali
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1867,7 +1867,7 @@ test('pear info --no-metadata pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1897,7 +1897,7 @@ test('pear info --no-metadata --json pear://<key>', async function ({ plan, alik
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-metadata', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1925,7 +1925,7 @@ test('pear info --no-key pear://<key>', async function ({ plan, is }) {
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1955,7 +1955,7 @@ test('pear info --no-key --json pear://<key>', async function ({ plan, alike, is
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -1983,7 +1983,7 @@ test('pear info --no-changelog --no-metadata pear://<key>', async function ({ pl
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2013,7 +2013,7 @@ test('pear info --no-changelog --no-metadata --json pear://<key>', async functio
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2041,7 +2041,7 @@ test('pear info --no-changelog --no-key pear://<key>', async function ({ plan, i
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2071,7 +2071,7 @@ test('pear info --no-changelog --no-key --json pear://<key>', async function ({ 
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2099,7 +2099,7 @@ test('pear info --no-key --no-metadata pear://<key>', async function ({ plan, is
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--no-metadata', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2129,7 +2129,7 @@ test('pear info --no-key --no-metadata --json pear://<key>', async function ({ p
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-key', '--no-metadata', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2157,7 +2157,7 @@ test('pear info --no-changelog --no-metadata --no-key pear://<key>', async funct
   plan(4)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--no-key', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -2187,7 +2187,7 @@ test('pear info --no-changelog --no-metadata --no-key --json pear://<key>', asyn
   plan(2)
   const { link } = await rig.getOrCreateInfoInstance()
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
   const argv = ['info', '--no-changelog', '--no-metadata', '--no-key', '--json', link]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
