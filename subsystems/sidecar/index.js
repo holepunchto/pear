@@ -812,10 +812,6 @@ class Sidecar extends ReadyResource {
       return { startId, bail: err }
     }
 
-    if (encryptionKey && state.key) {
-      await permits.set('encryption-key:' + hypercoreid.normalize(state.key), encryptionKey.toString('hex'))
-    }
-
     const linker = new ScriptLinker(appBundle, {
       builtins: this.gunk.builtins,
       map: this.gunk.app.map,
@@ -829,7 +825,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     // app is trusted, refresh trust for any updated configured link keys:
-    await this.permit({ key: state.key }, client)
+    await this.permit({ key: state.key, encryptionKey }, client)
 
     try {
       await appBundle.calibrate()
