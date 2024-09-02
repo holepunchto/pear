@@ -56,7 +56,7 @@ module.exports = class Info extends Opstream {
       await session.add(bundle)
       await bundle.join(this.sidecar.swarm)
       try {
-        bundle.drive.get('/package.json')
+        await bundle.drive.get('/package.json')
       } catch {
         const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
         throw err
