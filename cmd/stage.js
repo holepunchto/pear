@@ -21,8 +21,8 @@ const output = outputter('stage', {
     const message = (data.success ? 'Warmed' : 'Warming') + ' up app (used ' + blocks + '/' + total + ' blocks) ' // Adding a space as a hack for an issue with the outputter which duplicates the last char on done
     return { output: 'status', message }
   },
-  error: async (err, ipc) => {
-    if (err.info && err.info.encrypted) {
+  error: async (err, info, ipc) => {
+    if (err.info && err.info.encrypted && info.ask) {
       const explain = 'This application is encrypted.\n' +
         '\nEnter the password to stage the app.\n\n'
       const message = 'Added encryption key, run stage again to complete it.'
@@ -43,5 +43,5 @@ module.exports = (ipc) => async function stage (cmd) {
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, encryptionKey, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), ipc)
+  await output(json, ipc.stage({ id, channel, key, dir, encryptionKey, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
 }
