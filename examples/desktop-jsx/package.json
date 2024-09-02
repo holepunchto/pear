@@ -1,0 +1,33 @@
+{
+  "name": "deskjsx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "brittle"
+  },
+  "type": "module",
+  "pear": {
+    "name": "deskjsx",
+    "gui": {
+      "width": 900,
+      "height": 500,
+      "minWidth": 500,
+      "backgroundColor": "#151517"
+    },
+    "links": {
+      "react": "https://unpkg.com/react@18/umd/react.production.min.js",
+      "react-dom": "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    },
+    "transforms": {
+      "**/*.jsx": ["pear-jsx"]
+    }
+  },
+  "dependencies":{
+    "pear-jsx": "github:holepunchto/pear-jsx"
+  },
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "pear-interface": "^1.0.0"
+  }
+}

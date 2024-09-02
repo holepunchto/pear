@@ -4,6 +4,8 @@ const ScriptLinker = require('script-linker')
 const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
+const { PassThrough } = require('streamx')
+const picomatch = require('picomatch')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
@@ -167,10 +169,25 @@ module.exports = class Http extends ReadyResource {
         app.warmup({ protocol, batch })
       }
 
-      const meta = await bundle.entry(link.filename)
-      if (meta === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
+      let buffer = await bundle.get(link.filename)
+      if (buffer === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
-      const stream = bundle.streamFrom(meta)
+      const transforms = []
+      const patterns = app.state?.transforms
+
+      for (const ptn in patterns) {
+        const isMatch = picomatch(ptn)
+        if (isMatch(link.filename)) {
+          transforms.push(...patterns[ptn])
+          if (ptn.endsWith('.jsx') || ptn.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+        }
+      }
+
+      const pipeline = new transform.Pipeline(bundle.drive)
+      buffer = await pipeline.run(buffer, transforms)
+
+      const stream = new PassThrough()
+      stream.end(buffer)
       await streamx.pipelinePromise(stream, res)
     }
   }

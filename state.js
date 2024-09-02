@@ -59,6 +59,7 @@ module.exports = class State {
       ...(pkg?.bundledDependencies || [])
     ]
     state.entrypoints = new Set(pkg?.pear?.stage?.entrypoints || [])
+    state.transforms = pkg?.pear?.transforms || null
     if (pkg == null) return
     try { this.storage(state) } catch (err) { state.error = err }
   }
