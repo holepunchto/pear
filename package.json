@@ -107,6 +107,7 @@
     "script-linker": "^2.5.2",
     "sodium-native": "^4.1.1",
     "streamx": "^2.16.1",
+    "tiny-buffer-rpc": "github:holepunchto/tiny-buffer-rpc#fix/sigpipe",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.8.9",
     "unix-path-resolve": "^1.0.2",
