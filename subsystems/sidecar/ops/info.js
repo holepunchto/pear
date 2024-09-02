@@ -7,7 +7,7 @@ const Bundle = require('../lib/bundle')
 const Store = require('../lib/store')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED, ERR_NOT_FOUND_OR_NOT_CONNECTED } = require('../../../errors')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
@@ -56,10 +56,14 @@ module.exports = class Info extends Opstream {
       await session.add(bundle)
       await bundle.join(this.sidecar.swarm)
       try {
-        await bundle.drive.get('/package.json')
-      } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
-        throw err
+        const pkg = await bundle.drive.get('/package.json', { wait: false })
+        if (pkg === null) throw ERR_NOT_FOUND_OR_NOT_CONNECTED('could not get /package.json')
+      } catch (error) {
+        if (error.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') {
+          throw error
+        } else {
+          throw ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+        }
       }
     }
 
