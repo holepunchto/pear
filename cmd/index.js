@@ -118,7 +118,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--encryption-key <name>', 'Application encryption key'),
-    flag('--no-ask', 'Suppress permissions dialog'),
+    flag('--no-ask', 'Suppress permissions dialogs'),
     runners.dump(ipc)
   )
 
