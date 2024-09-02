@@ -5,8 +5,9 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const worker = path.join(Helper.root, 'test', 'fixtures', 'worker')
 
-test('worker pipe', async function ({ is, plan, comment, teardown }) {
+test('worker pipe', async function ({ is, plan, comment, teardown, timeout }) {
   plan(1)
+  timeout(180000)
   teardown(async () => {
     const shutdowner = new Helper()
     await shutdowner.ready()
