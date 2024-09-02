@@ -54,11 +54,11 @@ class Rig {
 
 const rig = new Rig()
 
-test.hook('encrypted test setup', rig.setup)
+test('encrypted test setup', rig.setup)
 
-test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout }) {
+test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(7)
+  plan(6)
 
   const { platformDir } = rig
   const helper = rig.bootstrapped
@@ -102,12 +102,6 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   await running.inspector.close()
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
-
-  comment('pear info encrypted app')
-  const infoCmd = helper.info({ link, encryptionKey: name, cmdArgs: [] })
-  const untilInfo = await Helper.pick(infoCmd, [{ tag: 'info' }])
-  const info = await untilInfo.info
-  ok(info, 'retrieves info from encrypted app')
 })
 
-test.hook('encrypted test cleanup', rig.cleanup)
+test('encrypted test cleanup', rig.cleanup)

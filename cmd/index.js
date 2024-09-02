@@ -107,7 +107,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--key', 'View key only'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--encryption-key <name>', 'Application encryption key'),
-    flag('--no-ask', 'Suppress permissions dialog'),
     runners.info(ipc)
   )
 

@@ -2,66 +2,48 @@
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
 const parseLink = require('../../../lib/parse-link')
-const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
-const Store = require('../lib/store')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link, channel, dir, showKey, metadata, changelog, full, encryptionKey, cmdArgs } = {}) {
+  async #op ({ link, channel, dir, showKey, metadata, changelog, full, cmdArgs } = {}) {
     const { session } = this
     let bundle = null
-    let drive = null
     const anyFlag = [changelog, full, metadata, showKey].some(flag => flag === true)
     const isEnabled = (flag) => anyFlag ? !!flag : !flag
-
-    const state = new State({ flags: { channel, link }, dir, cmdArgs })
-    const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
-
-    const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(encryptionKey)
-
-    if (link || channel) {
-      try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
-        await drive.ready()
-      } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
-        throw err
-      }
-    } else {
-      drive = this.sidecar.drive
-    }
-
-    if (link || channel) {
-      bundle = new Bundle({ corestore, key, drive })
+    if (link) {
+      const parsed = parseLink(link)
+      const key = parsed.drive.key
+      const hex = key.toString('hex')
+      const z32 = hypercoreid.encode(key)
+      const corestore = this.sidecar._getCorestore(null, null)
+      bundle = new Bundle({ corestore, key })
       await bundle.ready()
+      if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
+    } else if (channel) {
+      const state = new State({ flags: { channel, link }, dir, cmdArgs })
+      const corestore = this.sidecar._getCorestore(state.name, channel)
+      bundle = new Bundle({ corestore, channel })
+      await bundle.ready()
+      const hex = bundle.drive.key.toString('hex')
+      const z32 = hypercoreid.encode(bundle.drive.key)
+      if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
+    } else if (this.sidecar.drive.key) {
+      const hex = this.sidecar.drive.key.toString('hex')
+      const z32 = hypercoreid.encode(this.sidecar.drive.key)
+      if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
     }
-
-    const hex = key.toString('hex')
-    const z32 = hypercoreid.encode(key)
-    if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
-
     await this.sidecar.ready()
     if (bundle) {
       await session.add(bundle)
       await bundle.join(this.sidecar.swarm)
-      try {
-        bundle.drive.get('/package.json')
-      } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
-        throw err
-      }
     }
+    const drive = bundle?.drive || this.sidecar.drive
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
       if (isEnabled(metadata)) {
