@@ -44,7 +44,7 @@ const output = outputter('info', {
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask) {
       const explain = 'This application is encrypted.\n' +
-        '\nEnter the password to retrieve app info.\n\n'
+        '\nEnter the password to retrieve info.\n\n'
       const message = 'Added encryption key, run info again to complete it.'
       return password({ ipc, key: err.info.key, explain, message })
     } else {
