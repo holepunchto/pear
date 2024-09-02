@@ -73,6 +73,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--encryption-key <name>', 'Application encryption key'),
+    flag('--no-ask', 'Suppress permissions dialogs'),
     runners.stage(ipc)
   )
 
@@ -118,6 +119,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--json', 'Newline delimited JSON output'),
+    flag('--encryption-key <name>', 'Application encryption key'),
+    flag('--no-ask', 'Suppress permissions dialogs'),
     runners.dump(ipc)
   )
 
