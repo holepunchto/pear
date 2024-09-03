@@ -32,6 +32,7 @@ ansi.tick = isWindows ? '^' : ansi.green('✔')
 ansi.cross = isWindows ? 'x' : ansi.red('✖')
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
+ansi.key = isWindows ? '>' : '🔑'
 
 function status (msg, success) {
   msg = msg || ''
@@ -171,14 +172,15 @@ async function password ({ ipc, key, explain, message }) {
   const delim = ':'
   const validation = (key) => key.length > 0
   const msg = '\nPlease, enter a valid password.\n'
-  const result = await permit({ dialog, ask, delim, validation, msg })
+  const result = await permit({ dialog, ask, delim, validation, msg, masked: true })
+  print(`\n\n${ansi.key} Hashing password...`)
   await ipc.permit({ key, password: result.value })
   print('\n' + ansi.tick + ' ' + message + '\n')
   await ipc.close()
   Bare.exit()
 }
 
-async function permit ({ dialog, ask, delim, validation, msg }) {
+async function permit ({ dialog, ask, delim, validation, msg, masked }) {
   const interact = new Interact(dialog, [
     {
       name: 'value',
@@ -188,7 +190,7 @@ async function permit ({ dialog, ask, delim, validation, msg }) {
       validation,
       msg
     }
-  ])
+  ], {}, { masked })
   return interact.run()
 }
 
