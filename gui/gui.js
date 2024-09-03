@@ -1073,16 +1073,20 @@ class Window extends GuiCtrl {
       .filter((link) => link !== null && (link.protocol === 'http:' || link.protocol === 'https:'))
     allowedHosts.push(new URL(this.entry))
 
-    const requestFilter = (details, respond) => {
+    const onBeforeRequest = (details, respond) => {
       const url = new URL(details.url)
       const isAllowed = allowedHosts.some(({ protocol, hostname, port }) =>
         protocol === url.protocol && (hostname === '*' || hostname === url.hostname) && (port === '' || port === url.port))
       respond({ cancel: isAllowed === false })
     }
+    const onBeforeSendHeaders = (details, next) => {
+      details.requestHeaders.Pragma = details.requestHeaders['Cache-Control'] = 'no-cache'
+      next({ requestHeaders: details.requestHeaders })
+    }
 
     const urls = ['http://*/*', 'https://*/*']
-    this.session.webRequest.onBeforeRequest({ urls }, requestFilter)
-    session.webRequest.onBeforeRequest({ urls }, requestFilter)
+    session.webRequest.onBeforeRequest({ urls }, onBeforeRequest)
+    session.webRequest.onBeforeSendHeaders(onBeforeSendHeaders)
 
     if (this.closing) return false
 
@@ -1465,7 +1469,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('isMaximized', (evt, ...args) => this.isMaximized(...args))
     electron.ipcMain.handle('isFullscreen', (evt, ...args) => this.isFullscreen(...args))
     electron.ipcMain.handle('setSize', (evt, ...args) => this.setSize(...args))
-    electron.ipcMain.handle('permit', (evt, ...args) => this.permit(...args))
+    electron.ipcMain.handle('trust', (evt, ...args) => this.trust(...args))
     electron.ipcMain.handle('unloading', async (evt, ...args) => this.unloading(...args))
     electron.ipcMain.handle('completeUnload', (evt, ...args) => this.completeUnload(...args))
     electron.ipcMain.handle('attachMainView', (evt, ...args) => this.attachMainView(...args))
@@ -1743,7 +1747,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  permit (params) { return this.ipc.permit(params) }
+  trust (params) { return this.ipc.trust(params) }
 
   // DEPRECATED - assess to remove from Sep 2024
   preferences () { return this.ipc.preferences() }
