@@ -24,5 +24,5 @@ module.exports = [
   hiddenFlag('--trace <n>'),
   hiddenFlag('--swap <path>'),
   hiddenFlag('--start-id <id>'),
-  hiddenFlag('--no-sandbox') // electron passthrough
+  hiddenFlag('--sandbox') // enable electron/chromium sandbox
 ]
