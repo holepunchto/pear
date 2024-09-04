@@ -190,7 +190,7 @@ async function permit ({ dialog, ask, delim, validation, msg, masked }) {
       validation,
       msg
     }
-  ], {}, { masked })
+  ], { masked })
   return interact.run()
 }
 
