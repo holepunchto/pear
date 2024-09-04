@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('../lib/parse-link')
-const { outputter, ansi } = require('./iface')
+const { outputter, ansi, password } = require('./iface')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -14,11 +14,20 @@ const output = outputter('seed', {
   announced: '^_^ announced',
   'peer-add': (info) => `o-o peer join ${info}`,
   'peer-remove': (info) => `-_- peer drop ${info}`,
-  error: ({ code, message, stack }) => code === 'ERR_INVALID_INPUT' ? message : `Seed Error (code: ${code || 'none'}) ${stack}`
+  error: (err, info, ipc) => {
+    if (err.info && err.info.encrypted && info.ask) {
+      const explain = 'This application is encrypted.\n' +
+        '\nEnter the password to seed the app.\n\n'
+      const message = 'Added encryption key, run seed again to complete it.'
+      return password({ ipc, key: err.info.key, explain, message })
+    } else {
+      return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
+    }
+  }
 })
 
 module.exports = (ipc) => async function seed (cmd) {
-  const { json, verbose, seeders } = cmd.flags
+  const { json, verbose, seeders, ask } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const isKey = parseLink(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
@@ -30,5 +39,5 @@ module.exports = (ipc) => async function seed (cmd) {
   }
   const id = Bare.pid
 
-  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }))
+  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs: Bare.argv.slice(1) }), { ask }, ipc)
 }
