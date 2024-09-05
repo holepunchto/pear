@@ -129,6 +129,10 @@ if (process.isMainFrame) {
     #onfocus = null
     #onblur = null
     #demax = null
+    #closing = null
+    get closing () {
+      return this.#closing === null ? Promise.resolve() : this.#closing
+    }
 
     static get observedAttributes () {
       return ['data-minimizable', 'data-maximizable']
@@ -144,21 +148,23 @@ if (process.isMainFrame) {
       }
     }
 
+    async #maclights (visible) {
+      await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible })
+      const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
+      await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+    }
+
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
-        const ctrl = this.root.querySelector('#ctrl')
+        this.#maclights(true).catch(console.error)
         this.mutations = new MutationObserver(async () => {
-          const { x, y } = ctrl.getBoundingClientRect()
+          const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
           await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         })
         this.mutations.observe(this, { attributes: true })
 
-        this.intesections = new IntersectionObserver(async ([element]) => {
-          await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
-          const { x, y } = ctrl.getBoundingClientRect()
-          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
-        }, { threshold: 0 })
+        this.intesections = new IntersectionObserver(([element]) => this.#maclights(element.isIntersecting), { threshold: 0 })
 
         this.intesections.observe(this)
         this.#setCtrl()
@@ -210,6 +216,7 @@ if (process.isMainFrame) {
       if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
+        this.#closing = this.gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
         return
       }
 

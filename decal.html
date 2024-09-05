@@ -834,8 +834,10 @@
           await ipc.afterViewLoaded({ id: Pear.Window.self.id })
           if (this.#updating) return true
           this.hide()
-          document.querySelector('#window-controls pear-ctrl').remove()
+          const ctrl = document.querySelector('#window-controls pear-ctrl')
+          ctrl.remove()
           document.getElementById('window-controls').remove()
+          await ctrl.closing
           await ipc.attachMainView({ id: Pear.Window.self.id })
         }
         constructor () {
