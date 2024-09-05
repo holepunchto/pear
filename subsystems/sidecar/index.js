@@ -497,6 +497,10 @@ class Sidecar extends ReadyResource {
     return await permits.set('trusted', Array.from(trusted))
   }
 
+  async trusted () {
+    return await permits.get('trusted')
+  }
+
   async detached ({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
     if (!storage) {

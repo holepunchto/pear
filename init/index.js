@@ -22,9 +22,8 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   let params = null
   if (isPear) {
     const { drive } = parseLink(link)
-    const trusted = new Set(await ipc.getPreference({ key: 'trusted' }) || [])
-    hypercoreid.encode(drive.key, hypercoreid.encode(drive.key), trusted)
-    if (trusted.has(hypercoreid.encode(drive.key)) === false) {
+    const trusted = await ipc.trusted()
+    if (trusted.includes(hypercoreid.encode(drive.key)) === false) {
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
     }
   }
@@ -36,6 +35,9 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
+    if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
+      throw new ERR_PERMISSION_REQUIRED(data.message, data.info.key, data.info.encrypted)
+    }
     if (tag !== 'file') continue
     try {
       const definition = JSON.parse(data.value)

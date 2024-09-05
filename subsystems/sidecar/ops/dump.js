@@ -27,7 +27,7 @@ module.exports = class Dump extends Opstream {
     const permits = new Store('permits')
     const secrets = new Store('encryption-keys')
     const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(encryptionKey)
+    encryptionKey = (hypercoreid.isValid(key) && encryptionKeys[hypercoreid.normalize(key)]) || await secrets.get(encryptionKey)
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
     let drive = null

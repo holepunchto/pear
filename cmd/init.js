@@ -2,7 +2,7 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi, trust, outputter } = require('./iface')
+const { ansi, trust, outputter, password } = require('./iface')
 
 const output = outputter('init', {
   writing: () => '',
@@ -39,12 +39,22 @@ module.exports = (ipc) => async function init (cmd) {
   try {
     await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header }))
   } catch (err) {
-    if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
-    const explain = 'Be sure that software is trusted before using it\n' +
-    '\nType "TRUST" to allow template initialization or anything else to exit\n\n'
-    const ask = 'Trust template'
-    const act = 'Use pear init again to initalize from trusted template'
-    await trust({ ipc, key: err.info.key, message: err.message, explain, ask, act })
+    if (err.code !== 'ERR_PERMISSION_REQUIRED') {
+      throw err
+    } else {
+      if (err.info && err.info.encrypted) {
+        const explain = 'This template is encrypted.\n' +
+          '\nEnter the password to init from the template.\n\n'
+        const message = 'Added encryption key, run init again to complete it.'
+        await password({ ipc, key: err.info.key, explain, message })
+      } else {
+        const explain = 'Be sure that software is trusted before using it\n' +
+          '\nType "TRUST" to allow template initialization or anything else to exit\n\n'
+        const ask = 'Trust template'
+        const act = 'Use pear init again to initalize from trusted template'
+        await trust({ ipc, key: err.info.key, message: err.message, explain, ask, act })
+      }
+    }
   } finally {
     await ipc.close()
   }
