@@ -66,7 +66,7 @@ function configureElectron () {
 
   // Linux upgrades can effect chromium-sandbox, Windows has a similar issue with sandboxing
   // we already disable sandbox when opening the app window, so no security risk posed
-  if (isMac || process.argv.indexOf('--sandbox') === -1) electron.app.commandLine.appendSwitch('no-sandbox')
+  if (!isMac && process.argv.indexOf('--sandbox') === -1) electron.app.commandLine.appendSwitch('no-sandbox')
 
   /* c8 ignore start */
   const inspix = process.argv.indexOf('--inspector-port')
