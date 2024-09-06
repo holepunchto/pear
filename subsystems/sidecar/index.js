@@ -730,7 +730,7 @@ class Sidecar extends ReadyResource {
       const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
-        const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
+        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
         app.report({ err })
         return { startId, bail: err }
       }
