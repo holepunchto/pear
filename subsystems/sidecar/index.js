@@ -661,6 +661,7 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    const trustedFlag = cmdArgs.some((arg) => arg === '--trusted')
 
     let encryptionKey
     if (flags.encryptionKey) {
@@ -724,13 +725,15 @@ class Sidecar extends ReadyResource {
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
-    const aliases = Object.values(ALIASES).map(hypercoreid.encode)
-    const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
-    const z32 = hypercoreid.encode(state.key)
-    if (trusted.has(z32) === false) {
-      const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
-      app.report({ err })
-      return { startId, bail: err }
+    if (!trustedFlag) {
+      const aliases = Object.values(ALIASES).map(hypercoreid.encode)
+      const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
+      const z32 = hypercoreid.encode(state.key)
+      if (trusted.has(z32) === false) {
+        const err = ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
+        app.report({ err })
+        return { startId, bail: err }
+      }
     }
 
     // if app is being staged, stage command sends over its client id, so tracer
