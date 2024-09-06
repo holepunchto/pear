@@ -455,7 +455,7 @@ class Sidecar extends ReadyResource {
       const encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
       const encryptionKeys = await permits.get('encryption-keys') || {}
       encryptionKeys[hypercoreid.normalize(params.key)] = encryptionKey.toString('hex')
-      permits.set('encryption-keys', encryptionKeys)
+      await permits.set('encryption-keys', encryptionKeys)
     }
     const trusted = new Set((await permits.get('trusted')) || [])
     if (params.key !== null) {
@@ -661,7 +661,6 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
-    const trustedFlag = cmdArgs.some((arg) => arg === '--trusted')
 
     let encryptionKey
     if (flags.encryptionKey) {
@@ -725,7 +724,7 @@ class Sidecar extends ReadyResource {
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
-    if (!trustedFlag) {
+    if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
       const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
       const z32 = hypercoreid.encode(state.key)
