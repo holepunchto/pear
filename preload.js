@@ -216,7 +216,7 @@ if (process.isMainFrame) {
       if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
-        this.#closing = this.gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
+        this.#closing = gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
         return
       }
 
