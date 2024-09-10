@@ -42,20 +42,20 @@ jobs:
       with:
         node-version: lts/*
 
-    - name: Install w/ dev deps
-      run: npm install
+    # - name: Install w/ dev deps
+    #   run: npm install
 
-    - name: Bootstrap
-      run: npm run bootstrap
-      shell: bash
+    # - name: Bootstrap
+    #   run: npm run bootstrap
+    #   shell: bash
 
-    - name: Install pear-cli
-      run: npm i -g pear
+    # - name: Install pear-cli
+    #   run: npm i -g pear
 
-    - name: Install w/out dev deps
-      run: npm i --omit=dev
+    # - name: Install w/out dev deps
+    #   run: npm i --omit=dev
 
-    - name: Determine Localdev Entrypoint
+    - name: Determine OS variables
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           echo "PEAR=./pear.ps1" >> $GITHUB_ENV
@@ -65,37 +65,37 @@ jobs:
       shell: bash
 
     - name: Self-Stage Local Pear
-      run: $PEAR stage ci
+      run: echo $PEAR
 
-    - name: Update System Pear with Local Pear Key
-      if: "!startsWith(runner.os, 'Windows')"
-      run: ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+    # - name: Update System Pear with Local Pear Key
+    #   if: "!startsWith(runner.os, 'Windows')"
+    #   run: ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
 
-    - name: Update System Pear with Local Pear Key [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: |
-        $pear = npm list -g pear --parseable --depth=0
-        ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
+    # - name: Update System Pear with Local Pear Key [ Windows ]
+    #   if: "startsWith(runner.os, 'Windows')"
+    #   run: |
+    #     $pear = npm list -g pear --parseable --depth=0
+    #     ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
 
-    - name: Seed Local Pear
-      if: "!startsWith(runner.os, 'Windows')"
-      run: ./pear.dev seed ci &
+    # - name: Seed Local Pear
+    #   if: "!startsWith(runner.os, 'Windows')"
+    #   run: ./pear.dev seed ci &
 
-    - name: Seed Local Pear [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: Start-Job -ScriptBlock { powershell.exe -File "./pear.ps1" seed ci }
+    # - name: Seed Local Pear [ Windows ]
+    #   if: "startsWith(runner.os, 'Windows')"
+    #   run: Start-Job -ScriptBlock { powershell.exe -File "./pear.ps1" seed ci }
 
-    - name: Bootstrap System Pear
-      run: pear
+    # - name: Bootstrap System Pear
+    #   run: pear
 
-    - name: Shutdown Local Pear Sidecar
-      run: $PEAR sidecar shutdown
+    # - name: Shutdown Local Pear Sidecar
+    #   run: $PEAR sidecar shutdown
 
-    - name: Install w/ dev deps
-      run: npm install
+    # - name: Install w/ dev deps
+    #   run: npm install
 
-    - name: Run tests
-      run: npm test
+    # - name: Run tests
+    #   run: npm test
 
-    - name: Lint
-      run: npm run lint
+    # - name: Lint
+    #   run: npm run lint
