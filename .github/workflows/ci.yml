@@ -61,6 +61,7 @@ jobs:
           echo "PEAR=./pear.ps1" >> $GITHUB_ENV
         else
           echo "PEAR=./pear.dev" >> $GITHUB_ENV
+        fi
       shell: bash
 
     - name: Self-Stage Local Pear
