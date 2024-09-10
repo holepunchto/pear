@@ -61,7 +61,7 @@ jobs:
           PEAR=./pear.ps1
           PEAR_SYS_UPD=npm list -g pear --parseable --depth=0 | %% { ./pear.ps1 info ci --key | Out-File `$\($_`)/pear.key }
         else
-          PEAR_SYS_UPD=./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key" >> $GITHUB_ENV
+          PEAR_SYS_UPD=./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key"
           PEAR=./pear.dev
         fi
         
