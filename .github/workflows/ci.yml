@@ -64,7 +64,7 @@ jobs:
         shell: bash
 
     - name: Self-Stage Local Pear
-      run: ${{env.PEAR}} stage ci
+      run: $PEAR stage ci
 
     - name: Update System Pear with Local Pear Key
       if: "!startsWith(runner.os, 'Windows')"
@@ -88,7 +88,7 @@ jobs:
       run: pear
 
     - name: Shutdown Local Pear Sidecar
-      run: ${{env.PEAR}} sidecar shutdown
+      run: $PEAR sidecar shutdown
 
     - name: Install w/ dev deps
       run: npm install
