@@ -38,8 +38,7 @@
         "sidecar.crash.log",
         "electron-main.crash.log",
         "cli.crash.log",
-        "node_modules/.package-lock.json",
-        ".dev_node_modules"
+        "node_modules/.package-lock.json"
       ]
     },
     "platform": {
