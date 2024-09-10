@@ -44,9 +44,9 @@ jobs:
     - name: Determine Localdev Pear per OS
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "PEAR='pwsh -File ./pear.ps1'" >> $GITHUB_ENV
+          echo "PEAR=\"pwsh -File ./pear.ps1\"" >> $GITHUB_ENV
         else
-          echo "PEAR='./pear.dev" >> $GITHUB_ENV
+          echo "PEAR=./pear.dev >> $GITHUB_ENV
         fi
       shell: bash
 
