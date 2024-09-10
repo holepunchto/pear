@@ -14,12 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          platform: linux
-          arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
+        # - os: ubuntu-latest
+        #   platform: linux
+        #   arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -59,20 +59,26 @@ jobs:
       if: "startsWith(runner.os, 'Windows')"
       run: Remove-Item -Recurse -Force node_modules && npm i --omit=dev
 
-    - name: Self-Stage and Seed Local Pear
+    - name: Self-Stage
       if: "!startsWith(runner.os, 'Windows')"
       run: |
         ./pear.dev stage ci
         ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-        ./pear.dev seed ci &
 
-    - name: Self-Stage and Seed Local Pear [ Windows ]
+    - name: Self-Stage [ Windows ]
       if: "startsWith(runner.os, 'Windows')"
       run: |
         ./pear.ps1 stage ci
         $pear = npm list -g pear --parseable --depth=0
         ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
-        Start-Process -FilePath "powershell" -ArgumentList "./pear.ps1 seed ci"
+
+    - name: Self-Seed
+      if: "!startsWith(runner.os, 'Windows')"
+      run: ./pear.dev seed ci &
+
+    - name: Self-Seed [ Windows]
+      if: "startsWith(runner.os, 'Windows')"
+      run: pwsh -File ./pear.ps1 seed ci &
 
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
