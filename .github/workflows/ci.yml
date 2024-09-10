@@ -14,12 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          platform: linux
-          arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
+        # - os: ubuntu-latest
+        #   platform: linux
+        #   arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -46,6 +46,7 @@ jobs:
 
     - name: Bootstrap
       run: npm run bootstrap
+      shell: bash
 
     - name: Install pear-cli
       run: npm i -g pear
