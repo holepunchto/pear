@@ -14,18 +14,17 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          platform: linux
-          arch: x64
+        # - os: ubuntu-latest
+        #   platform: linux
+        #   arch: x64
         # - os: macos-latest
         #   platform: darwin
         #   arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-
     steps:
     - name: Checkout
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1 https://github.com/actions/checkout/releases/tag/v4.1.1
@@ -53,40 +52,45 @@ jobs:
       run: npm i -g pear
 
     - name: Install w/out dev deps
-      run: npm i --omit=dev
+      if: "!startsWith(runner.os, 'Windows')"
+      run: rm -fr node_modules && npm i --omit=dev
 
-    - name: Determine OS Commands
+    - name: Install w/out dev deps [ Windows ]
+      if: "startsWith(runner.os, 'Windows')"
+      run: Remove-Item -Recurse -Force node_modules && npm i --omit=dev
+
+    - name: Self-Stage and Seed Local Pear
+      if: "!startsWith(runner.os, 'Windows')"
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-            PEAR=./pear.ps1
-            PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | %% { ./pear.ps1 info ci --key | Out-File \"\$(\$_)/pear.key\" }"
-            PEAR_SEED="Start-Job -ScriptBlock { powershell.exe -File \"./pear.ps1\" seed ci }"
-          else
-            PEAR=./pear.dev
-            PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.dev info ci --key | Out-File \"\$(\$_)/pear.key\" }"
-            PEAR_SEED="./pear.dev seed ci &"
-          fi
+        ./pear.dev stage ci
+        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        ./pear.dev seed ci &
 
-          echo "PEAR_STAGE='$PEAR stage ci'" >> $GITHUB_ENV
-          echo "PEAR_SYS_UPD=\"$PEAR_SYS_UPD\"" >> $GITHUB_ENV
-          echo "PEAR_SEED=\"$PEAR_SEED\"" >> $GITHUB_ENV
-          echo "PEAR_SIDECAR_SHUTDOWN=\"$PEAR sidecar shutdown\"" >> $GITHUB_ENV
-      shell: bash
+    - name: Self-Stage and Seed Local Pear
+      if: "!startsWith(runner.os, 'Windows')"
+      run: |
+        ./pear.dev stage ci
+        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        ./pear.dev seed ci &
 
-    - name: Self-Stage Local Pear
-      run: ./pear.dev stage ci
+    - name: Self-Stage and Seed Local Pear [ Windows ]
+      if: "startsWith(runner.os, 'Windows')"
+      run: |
+        ./pear.ps1 stage ci
+        $pear = npm list -g pear --parseable --depth=0
+        ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
+        Start-Process -FilePath "powershell" -ArgumentList "./pear.ps1 seed ci"
 
-    - name: Update System Pear with Local Pear Key
-      run: $PEAR_SYS_UPD
-
-    - name: Seed Local Pear
-      run: $PEAR_SEED
-
-    - name: Bootstrap System Pear
+    - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
 
     - name: Shutdown Local Pear Sidecar
-      run: $PEAR_SIDECAR_SHUTDOWN
+      if: "!startsWith(runner.os, 'Windows')"
+      run: ./pear.dev sidecar shutdown
+
+    - name: Shutdown Local Pear Sidecar [ Windows ]
+      if: "startsWith(runner.os, 'Windows')"
+      run: ./pear.ps1 sidecar shutdown
 
     - name: Install w/ dev deps
       run: npm install
