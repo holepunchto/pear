@@ -59,7 +59,6 @@ jobs:
       if: "startsWith(runner.os, 'Windows')"
       run: Remove-Item -Recurse -Force node_modules
 
-
     - name: Install w/out dev deps
       run: npm i --omit=dev
 
@@ -74,7 +73,8 @@ jobs:
       if: "startsWith(runner.os, 'Windows')"
       run: |
         ./pear.ps1 stage ci
-        ./pear.ps1 info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        $pear = npm list -g pear --parseable --depth=0
+        ./foo.ps1 info ci --key | Out-File "$pear/pear.key"
         ./pear.ps1 seed ci &
 
     - name: Bootstrap System Pear from Local Seeded Pear
