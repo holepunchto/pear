@@ -52,25 +52,41 @@ jobs:
       run: npm i -g pear
 
     - name: Remove node_modules
+      if: "!startsWith(runner.os, 'Windows')"
       run: rm -fr node_modules
-      shell: bash
+
+    - name: Remove node_modules
+      if: "startsWith(runner.os, 'Windows')"
+      run: rd /s /q node_modules
+
 
     - name: Install w/out dev deps
       run: npm i --omit=dev
 
     - name: Self-Stage and Seed Local Pear
+      if: "!startsWith(runner.os, 'Windows')"
       run: |
         ./pear.dev stage ci
         ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
         ./pear.dev seed ci &
-      shell: bash # win compat
+
+    - name: Self-Stage and Seed Local Pear
+      if: "startsWith(runner.os, 'Windows')"
+      run: |
+        ./pear.ps1 stage ci
+        ./pear.ps1 info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        ./pear.ps1 seed ci &
 
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
 
     - name: Shutdown Local Pear Sidecar
+      if: "!startsWith(runner.os, 'Windows')"
       run: ./pear.dev sidecar shutdown
-      shell: bash # win compat
+
+    - name: Shutdown Local Pear Sidecar
+      if: "startsWith(runner.os, 'Windows')"
+      run: ./pear.ps1 sidecar shutdown
 
     - name: Install w/ dev deps
       run: npm install

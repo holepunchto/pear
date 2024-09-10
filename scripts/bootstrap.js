@@ -31,8 +31,7 @@ try {
 }
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
-const isCygwin = global.process?.env.OSTYPE === 'cygwin'
-if (isWindows === false || isCygwin) {
+if (isWindows === false) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
     fs.symlinkSync(runtime, peardev)
@@ -59,7 +58,7 @@ if (ARCHDUMP) {
 }
 
 function advise () {
-  if (isWindows === false || isCygwin) {
+  if (isWindows === false) {
     console.log('🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.')
     return
   }
