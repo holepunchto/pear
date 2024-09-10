@@ -25,6 +25,9 @@ jobs:
           arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    env:
+      PEAR: ${{ runner.os == 'Windows' && './pear.ps1' || './pear.dev' }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1 https://github.com/actions/checkout/releases/tag/v4.1.1
@@ -52,38 +55,34 @@ jobs:
       run: npm i -g pear
 
     - name: Install w/out dev deps
+      run: npm i --omit=dev
+
+    - name: Self-Stage Local Pear
+      run: ${{env.PEAR}} stage ci
+
+    - name: Update System Pear with Local Pear Key
       if: "!startsWith(runner.os, 'Windows')"
-      run: rm -fr node_modules && npm i --omit=dev
+      run: ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
 
-    - name: Install w/out dev deps [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: Remove-Item -Recurse -Force node_modules && npm i --omit=dev
-
-    - name: Self-Stage and Seed Local Pear
-      if: "!startsWith(runner.os, 'Windows')"
-      run: |
-        ./pear.dev stage ci
-        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-        ./pear.dev seed ci &
-
-    - name: Self-Stage and Seed Local Pear [ Windows ]
+    - name: Update System Pear with Local Pear Key [ Windows ]
       if: "startsWith(runner.os, 'Windows')"
       run: |
-        ./pear.ps1 stage ci
         $pear = npm list -g pear --parseable --depth=0
         ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
-        Start-Process -FilePath "powershell" -ArgumentList "./pear.ps1 seed ci"
 
-    - name: Bootstrap System Pear from Local Seeded Pear
+    - name: Seed Local Pear
+      if: "!startsWith(runner.os, 'Windows')"
+      run: ./pear.dev seed ci &
+
+    - name: Seed Local Pear [ Windows ]
+      if: "startsWith(runner.os, 'Windows')"
+      run: Start-Job -ScriptBlock { powershell.exe -File "./pear.ps1" seed ci }
+
+    - name: Bootstrap System Pear
       run: pear
 
     - name: Shutdown Local Pear Sidecar
-      if: "!startsWith(runner.os, 'Windows')"
-      run: ./pear.dev sidecar shutdown
-
-    - name: Shutdown Local Pear Sidecar [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: ./pear.ps1 sidecar shutdown
+      run: ${{env.PEAR}} sidecar shutdown
 
     - name: Install w/ dev deps
       run: npm install
