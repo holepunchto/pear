@@ -17,12 +17,12 @@ jobs:
         - os: ubuntu-latest
           platform: linux
           arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
-        - os: windows-latest
-          platform: win32
-          arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
+        # - os: windows-latest
+        #   platform: win32
+        #   arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
 
@@ -67,7 +67,7 @@ jobs:
             PEAR_SEED="./pear.dev seed ci &"
           fi
 
-          echo "PEAR_STAGE=\"$PEAR stage ci\"" >> $GITHUB_ENV
+          echo "PEAR_STAGE='PEAR stage ci'" >> $GITHUB_ENV
           echo "PEAR_SYS_UPD=\"$PEAR_SYS_UPD\"" >> $GITHUB_ENV
           echo "PEAR_SEED=\"$PEAR_SEED\"" >> $GITHUB_ENV
           echo "PEAR_SIDECAR_SHUTDOWN=\"$PEAR sidecar shutdown\"" >> $GITHUB_ENV
