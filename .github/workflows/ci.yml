@@ -79,6 +79,7 @@ jobs:
     - name: Self-Seed [ Windows]
       if: "startsWith(runner.os, 'Windows')"
       run: pwsh -File ./pear.ps1 seed ci &
+      shell: bash
 
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
