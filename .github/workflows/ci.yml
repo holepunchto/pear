@@ -10,16 +10,16 @@ on:
   repository_dispatch:
   workflow_dispatch:
 jobs:
-  build:
+  local-setup:
     strategy:
       matrix:
         include:
-        # - os: ubuntu-latest
-        #   platform: linux
-        #   arch: x64
-        # - os: macos-latest
-        #   platform: darwin
-        #   arch: x64
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -51,43 +51,69 @@ jobs:
     - name: Install pear-cli
       run: npm i -g pear
 
-    - name: Remove node_modules
-      if: "!startsWith(runner.os, 'Windows')"
-      run: rm -fr node_modules
-
-    - name: Remove node_modules
-      if: "startsWith(runner.os, 'Windows')"
-      run: Remove-Item -Recurse -Force node_modules
-
+  system-setup-win:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
     - name: Install w/out dev deps
-      run: npm i --omit=dev
+      run: Remove-Item -Recurse -Force node_modules && npm i --omit=dev
 
     - name: Self-Stage and Seed Local Pear
-      if: "!startsWith(runner.os, 'Windows')"
-      run: |
-        ./pear.dev stage ci
-        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-        ./pear.dev seed ci &
-
-    - name: Self-Stage and Seed Local Pear
-      if: "startsWith(runner.os, 'Windows')"
       run: |
         ./pear.ps1 stage ci
         $pear = npm list -g pear --parseable --depth=0
-        ./foo.ps1 info ci --key | Out-File "$pear/pear.key"
+        ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
         ./pear.ps1 seed ci &
 
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
 
     - name: Shutdown Local Pear Sidecar
-      if: "!startsWith(runner.os, 'Windows')"
       run: ./pear.dev sidecar shutdown
 
+  system-setup:
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+    - name: Install w/out dev deps
+      run: rm -fr node_modules && npm i --omit=dev
+
+    - name: Self-Stage and Seed Local Pear
+      run: |
+        ./pear.dev stage ci
+        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        ./pear.dev seed ci &
+
+    - name: Bootstrap System Pear from Local Seeded Pear
+      run: pear
+
     - name: Shutdown Local Pear Sidecar
-      if: "startsWith(runner.os, 'Windows')"
       run: ./pear.ps1 sidecar shutdown
 
+  checks:
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     - name: Install w/ dev deps
       run: npm install
 
