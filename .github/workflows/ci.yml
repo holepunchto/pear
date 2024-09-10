@@ -114,6 +114,7 @@ jobs:
           arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    steps:
     - name: Install w/ dev deps
       run: npm install
 
