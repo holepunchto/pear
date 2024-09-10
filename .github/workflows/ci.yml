@@ -41,44 +41,36 @@ jobs:
       with:
         node-version: lts/*
 
+    - name: Determine Localdev Pear per OS
+      run: |
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          echo "PEAR='pwsh -File ./pear.ps1'" >> $GITHUB_ENV
+        else
+          echo "PEAR='$PEAR'" >> $GITHUB_ENV
+      shell: bash
+
     - name: Install w/ dev deps
       run: npm install
 
     - name: Bootstrap
       run: npm run bootstrap
-      shell: bash
 
     - name: Install pear-cli
       run: npm i -g pear
 
     - name: Install w/out dev deps
-      if: "!startsWith(runner.os, 'Windows')"
-      run: rm -fr node_modules && npm i --omit=dev
-
-    - name: Install w/out dev deps [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: Remove-Item -Recurse -Force node_modules && npm i --omit=dev
+      run: npm i --omit=dev
 
     - name: Self-Stage
-      if: "!startsWith(runner.os, 'Windows')"
-      run: |
-        ./pear.dev stage ci
-        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+      run: $PEAR stage ci
+      shell: bash
 
-    - name: Self-Stage [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: |
-        ./pear.ps1 stage ci
-        $pear = npm list -g pear --parseable --depth=0
-        ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
+    - name: Update System Pear Key
+      run: $PEAR info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+      shell: bash
 
     - name: Self-Seed
-      if: "!startsWith(runner.os, 'Windows')"
-      run: ./pear.dev seed ci &
-
-    - name: Self-Seed [ Windows]
-      if: "startsWith(runner.os, 'Windows')"
-      run: pwsh -File ./pear.ps1 seed ci &
+      run: $PEAR seed ci &
       shell: bash
 
     - name: Bootstrap System Pear from Local Seeded Pear
@@ -86,11 +78,8 @@ jobs:
 
     - name: Shutdown Local Pear Sidecar
       if: "!startsWith(runner.os, 'Windows')"
-      run: ./pear.dev sidecar shutdown
-
-    - name: Shutdown Local Pear Sidecar [ Windows ]
-      if: "startsWith(runner.os, 'Windows')"
-      run: ./pear.ps1 sidecar shutdown
+      run: $PEAR sidecar shutdown
+      shell: bash
 
     - name: Install w/ dev deps
       run: npm install
