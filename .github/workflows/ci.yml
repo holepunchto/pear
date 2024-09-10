@@ -24,7 +24,7 @@ jobs:
           platform: win32
           arch: x64
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
     - name: Checkout
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1 https://github.com/actions/checkout/releases/tag/v4.1.1
@@ -72,7 +72,7 @@ jobs:
         ./pear.ps1 stage ci
         $pear = npm list -g pear --parseable --depth=0
         ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
-        ./pear.ps1 seed ci &
+        Start-Process -FilePath "powershell" -ArgumentList "./pear.ps1 seed ci"
 
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
