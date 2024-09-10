@@ -54,7 +54,7 @@ const output = outputter('info', {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  final (data, info) { return info.onlyShowKey && data.success && {} }
+  final (data, info) { return info.onlyShowKey && data.success ? {} : false }
 })
 
 module.exports = (ipc) => async function info (cmd) {
