@@ -74,7 +74,7 @@ jobs:
       shell: bash
 
     - name: Self-Stage Local Pear
-      run: $PEAR_STAGE
+      run: ./pear.dev stage ci
 
     - name: Update System Pear with Local Pear Key
       run: $PEAR_SYS_UPD
