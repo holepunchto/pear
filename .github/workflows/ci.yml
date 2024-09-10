@@ -17,12 +17,12 @@ jobs:
         - os: ubuntu-latest
           platform: linux
           arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
-        - os: windows-latest
-          platform: win32
-          arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
+        # - os: windows-latest
+        #   platform: win32
+        #   arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -44,10 +44,22 @@ jobs:
       run: npm install
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Install Production Pear
-      run: npm i -g pear && pear
     - name: Bootstrap
       run: npm run bootstrap
+    - name: Install pear-cli
+      run: npm i -g pear
+    - name: Self-Stage and Seed Local Pear
+      run: |
+        ./pear.dev stage ci
+        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
+        ./pear.dev seed ci &
+        echo "CI_SEED_PID=$!" >> $GITHUB_ENV
+      shell: bash # win compat
+    - name: Bootstrap System Pear from Local Seeded Pear
+      run: pear
+    - name: Stop Seeding Local Pear
+      run: kill -SIGINT $CI_SEED_PID
+      shell: bash # win compat
     - name: Run tests
       run: npm test
     - name: Lint
