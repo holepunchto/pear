@@ -66,13 +66,6 @@ jobs:
         ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
         ./pear.dev seed ci &
 
-    - name: Self-Stage and Seed Local Pear
-      if: "!startsWith(runner.os, 'Windows')"
-      run: |
-        ./pear.dev stage ci
-        ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-        ./pear.dev seed ci &
-
     - name: Self-Stage and Seed Local Pear [ Windows ]
       if: "startsWith(runner.os, 'Windows')"
       run: |
