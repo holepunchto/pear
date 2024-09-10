@@ -31,7 +31,8 @@ try {
 }
 
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
-if (isWindows === false) {
+const isCygwin = global.process?.env.OSTYPE === 'cygwin'
+if (isWindows === false || isCygwin) {
   try {
     const peardev = path.join(SWAP, 'pear.dev')
     fs.symlinkSync(runtime, peardev)
