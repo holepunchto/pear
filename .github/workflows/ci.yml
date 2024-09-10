@@ -17,12 +17,12 @@ jobs:
         - os: ubuntu-latest
           platform: linux
           arch: x64
-        # - os: macos-latest
-        #   platform: darwin
-        #   arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -50,15 +50,19 @@ jobs:
       run: npm i -g pear
     - name: Self-Stage and Seed Local Pear
       run: |
+        mv node_modules .dev_node_modules
+        npm i --omit=dev
         ./pear.dev stage ci
         ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
         ./pear.dev seed ci &
         echo "CI_SEED_PID=$!" >> $GITHUB_ENV
+        rm -fr node_modules
+        mv .dev_node_modules node_modules
       shell: bash # win compat
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
-    - name: Stop Seeding Local Pear
-      run: kill -SIGINT $CI_SEED_PID
+    - name: Shutdown Local Pear Sidecar
+      run: ./pear.dev sidecar shutdown
       shell: bash # win compat
     - name: Run tests
       run: npm test
