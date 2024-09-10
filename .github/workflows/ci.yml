@@ -57,7 +57,7 @@ jobs:
 
     - name: Remove node_modules
       if: "startsWith(runner.os, 'Windows')"
-      run: rd /s /q node_modules
+      run: Remove-Item -Recurse -Force node_modules
 
 
     - name: Install w/out dev deps
