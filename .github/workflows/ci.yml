@@ -47,6 +47,7 @@ jobs:
           echo "PEAR='pwsh -File ./pear.ps1'" >> $GITHUB_ENV
         else
           echo "PEAR='$PEAR'" >> $GITHUB_ENV
+        fi
       shell: bash
 
     - name: Install w/ dev deps
