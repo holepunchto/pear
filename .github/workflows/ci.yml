@@ -80,7 +80,6 @@ jobs:
       run: $PEAR_SYS_UPD
 
     - name: Seed Local Pear
-      if: "!startsWith(runner.os, 'Windows')"
       run: $PEAR_SEED
 
     - name: Bootstrap System Pear
