@@ -59,7 +59,7 @@ if (ARCHDUMP) {
 }
 
 function advise () {
-  if (isWindows === false) {
+  if (isWindows === false || isCygwin) {
     console.log('🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.')
     return
   }
