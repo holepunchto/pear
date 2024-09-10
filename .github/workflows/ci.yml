@@ -59,25 +59,21 @@ jobs:
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           PEAR=./pear.ps1
+          echo "PEAR_SYS_UPD=npm list -g pear --parseable --depth=0 | %% { ./pear.ps1 info ci --key | Out-File `$\($_`)/pear.key }" >> $GITHUB_ENV
         else
+          echo "PEAR_SYS_UPD=./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key" >> $GITHUB_ENV
           PEAR=./pear.dev
         fi
-        echo "PEAR_STAGE=$PEAR stage ci" >> $GITHUB_ENV
-        echo "PEAR_STAGE=$PEAR stage ci" >> $GITHUB_ENV
+        
+        echo "PEAR_STAGE='$PEAR stage ci'" >> $GITHUB_ENV
+        echo "PEAR_SYS_UPD='$PEAR_SYS_UPD" >> $GITHUB_ENV
       shell: bash
 
     - name: Self-Stage Local Pear
       run: $PEAR_STAGE
 
-    # - name: Update System Pear with Local Pear Key
-    #   if: "!startsWith(runner.os, 'Windows')"
-    #   run: ./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-
-    # - name: Update System Pear with Local Pear Key [ Windows ]
-    #   if: "startsWith(runner.os, 'Windows')"
-    #   run: |
-    #     $pear = npm list -g pear --parseable --depth=0
-    #     ./pear.ps1 info ci --key | Out-File "$pear/pear.key"
+    - name: Update System Pear with Local Pear Key
+      run: $PEAR_SYS_UPD
 
     # - name: Seed Local Pear
     #   if: "!startsWith(runner.os, 'Windows')"
