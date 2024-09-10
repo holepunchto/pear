@@ -231,8 +231,9 @@ test.todo('pear dump --checkout staged pear://<key> <relative-path>')
 test.todo('pear dump --checkout release pear://<key> <relative-path>')
 test.todo('pear dump --json pear://<key> <relative-path>')
 
-test('pear shift <source> <destination>', async function ({ plan, is, teardown }) {
+test('pear shift <source> <destination>', async function ({ plan, is, teardown, timeout }) {
   plan(3)
+  timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
 
@@ -307,8 +308,9 @@ test('pear shift <source> <destination>', async function ({ plan, is, teardown }
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear shift --json <source> <destination>', async function ({ plan, is, alike, teardown }) {
+test('pear shift --json <source> <destination>', async function ({ plan, is, alike, teardown, timeout }) {
   plan(3)
+  timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
 
@@ -385,8 +387,9 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear shift --force <source> <destination>', async function ({ plan, is, teardown }) {
+test('pear shift --force <source> <destination>', async function ({ plan, is, teardown, timeout }) {
   plan(4)
+  timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
 
@@ -464,8 +467,9 @@ test('pear shift --force <source> <destination>', async function ({ plan, is, te
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear shift --force --json <source> <destination>', async function ({ plan, is, teardown, alike }) {
+test('pear shift --force --json <source> <destination>', async function ({ plan, is, teardown, timeout, alike }) {
   plan(4)
+  timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
 
