@@ -55,13 +55,13 @@ jobs:
     - name: Install w/out dev deps
       run: npm i --omit=dev
 
-      - name: Determine Localdev Entrypoint
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "PEAR=./pear.ps1" >> $GITHUB_ENV
-          else
-            echo "PEAR=./pear.dev" >> $GITHUB_ENV
-        shell: bash
+    - name: Determine Localdev Entrypoint
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          echo "PEAR=./pear.ps1" >> $GITHUB_ENV
+        else
+          echo "PEAR=./pear.dev" >> $GITHUB_ENV
+      shell: bash
 
     - name: Self-Stage Local Pear
       run: $PEAR stage ci
