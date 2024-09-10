@@ -41,13 +41,8 @@ jobs:
       with:
         node-version: lts/*
 
-    - name: Determine Localdev Pear per OS
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "PEAR=pwsh -File ./pear.ps1" >> $GITHUB_ENV
-        else
-          echo "PEAR=./pear.dev" >> $GITHUB_ENV
-        fi
+    - name: Determine Local Pear Command per OS
+      run: echo "PEAR=$( [[ \"$RUNNER_OS\" == \"Windows\" ]] && echo 'pwsh -File ./pear.ps1' || echo './pear.dev' )" >> $GITHUB_ENV
       shell: bash
 
     - name: Install w/ dev deps
