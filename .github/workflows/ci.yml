@@ -14,12 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-        # - os: ubuntu-latest
-        #   platform: linux
-        #   arch: x64
-        # - os: macos-latest
-        #   platform: darwin
-        #   arch: x64
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -59,15 +59,18 @@ jobs:
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
           PEAR=./pear.ps1
-          PEAR_SYS_UPD=npm list -g pear --parseable --depth=0 | %% { ./pear.ps1 info ci --key | Out-File `$\($_`)/pear.key }
+          PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.ps1 info ci --key | Out-File "$($_)/pear.key" }"
+          PEAR_SEED="Start-Job -ScriptBlock \{ powershell.exe -File \"./pear.ps1\" seed ci \}"
         else
-          PEAR_SYS_UPD=./pear.dev info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key"
           PEAR=./pear.dev
+          PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.ps1 info ci --key | Out-File \"\$(\$_)/pear.key\" }"
+          PEAR_SEED=""./pear.dev seed ci &""
         fi
         
         echo "PEAR_STAGE='$PEAR stage ci'" >> $GITHUB_ENV
         echo "PEAR_SYS_UPD='$PEAR_SYS_UPD" >> $GITHUB_ENV
         echo "PEAR_SEED='$PEAR_SEED'" >> $GITHUB_ENV
+        echo "PEAR_SIDECAR_SHUTDOWN='$PEAR sidecar shutdown'" >> $GITHUB_ENV
       shell: bash
 
     - name: Self-Stage Local Pear
@@ -76,25 +79,21 @@ jobs:
     - name: Update System Pear with Local Pear Key
       run: $PEAR_SYS_UPD
 
-    # - name: Seed Local Pear
-    #   if: "!startsWith(runner.os, 'Windows')"
-    #   run: ./pear.dev seed ci &
+    - name: Seed Local Pear
+      if: "!startsWith(runner.os, 'Windows')"
+      run: $PEAR_SEED
 
-    # - name: Seed Local Pear [ Windows ]
-    #   if: "startsWith(runner.os, 'Windows')"
-    #   run: Start-Job -ScriptBlock { powershell.exe -File "./pear.ps1" seed ci }
+    - name: Bootstrap System Pear
+      run: pear
 
-    # - name: Bootstrap System Pear
-    #   run: pear
+    - name: Shutdown Local Pear Sidecar
+      run: $PEAR_SIDECAR_SHUTDOWN
 
-    # - name: Shutdown Local Pear Sidecar
-    #   run: $PEAR sidecar shutdown
+    - name: Install w/ dev deps
+      run: npm install
 
-    # - name: Install w/ dev deps
-    #   run: npm install
+    - name: Run tests
+      run: npm test
 
-    # - name: Run tests
-    #   run: npm test
-
-    # - name: Lint
-    #   run: npm run lint
+    - name: Lint
+      run: npm run lint
