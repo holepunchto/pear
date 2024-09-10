@@ -58,19 +58,19 @@ jobs:
     - name: Determine OS Commands
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
-          PEAR=./pear.ps1
-          PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.ps1 info ci --key | Out-File "$($_)/pear.key" }"
-          PEAR_SEED="Start-Job -ScriptBlock \{ powershell.exe -File \"./pear.ps1\" seed ci \}"
-        else
-          PEAR=./pear.dev
-          PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.ps1 info ci --key | Out-File \"\$(\$_)/pear.key\" }"
-          PEAR_SEED=""./pear.dev seed ci &""
-        fi
-        
-        echo "PEAR_STAGE='$PEAR stage ci'" >> $GITHUB_ENV
-        echo "PEAR_SYS_UPD='$PEAR_SYS_UPD" >> $GITHUB_ENV
-        echo "PEAR_SEED='$PEAR_SEED'" >> $GITHUB_ENV
-        echo "PEAR_SIDECAR_SHUTDOWN='$PEAR sidecar shutdown'" >> $GITHUB_ENV
+            PEAR=./pear.ps1
+            PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | %% { ./pear.ps1 info ci --key | Out-File \"\$(\$_)/pear.key\" }"
+            PEAR_SEED="Start-Job -ScriptBlock { powershell.exe -File \"./pear.ps1\" seed ci }"
+          else
+            PEAR=./pear.dev
+            PEAR_SYS_UPD="npm list -g pear --parseable --depth=0 | % { ./pear.dev info ci --key | Out-File \"\$(\$_)/pear.key\" }"
+            PEAR_SEED="./pear.dev seed ci &"
+          fi
+
+          echo "PEAR_STAGE=\"$PEAR stage ci\"" >> $GITHUB_ENV
+          echo "PEAR_SYS_UPD=\"$PEAR_SYS_UPD\"" >> $GITHUB_ENV
+          echo "PEAR_SEED=\"$PEAR_SEED\"" >> $GITHUB_ENV
+          echo "PEAR_SIDECAR_SHUTDOWN=\"$PEAR sidecar shutdown\"" >> $GITHUB_ENV
       shell: bash
 
     - name: Self-Stage Local Pear
