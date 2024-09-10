@@ -67,7 +67,7 @@ jobs:
             PEAR_SEED="./pear.dev seed ci &"
           fi
 
-          echo "PEAR_STAGE='PEAR stage ci'" >> $GITHUB_ENV
+          echo "PEAR_STAGE='$PEAR stage ci'" >> $GITHUB_ENV
           echo "PEAR_SYS_UPD=\"$PEAR_SYS_UPD\"" >> $GITHUB_ENV
           echo "PEAR_SEED=\"$PEAR_SEED\"" >> $GITHUB_ENV
           echo "PEAR_SIDECAR_SHUTDOWN=\"$PEAR sidecar shutdown\"" >> $GITHUB_ENV
