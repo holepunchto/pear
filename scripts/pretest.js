@@ -21,8 +21,7 @@ async function install () {
     if (isWindows) {
       // to be updated when bare-subprocess spawn implements shell
       const npm = (spawnSync('where', ['npm'])).stdout.toString().split('\r')[0]
-      console.lg('does broken pipe start from spawn?')
-      // spawn('node', [path.join(path.dirname(npm), 'node_modules', 'npm', 'bin', 'npm-cli.js'), 'install'], { cwd: path.dirname(dir), stdio: 'inherit' })
+      spawn('node', [path.join(path.dirname(npm), 'node_modules', 'npm', 'bin', 'npm-cli.js'), 'install'], { cwd: path.dirname(dir), stdio: 'inherit' })
     } else {
       run('npm', ['install'], { stdio: 'inherit', cwd: path.dirname(dir) })
     }
