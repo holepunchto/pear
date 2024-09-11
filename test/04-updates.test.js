@@ -413,7 +413,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await running.inspector.close()
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
-// })
+})
 
 // test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
 //   const { ok, is, plan, timeout, comment, teardown } = t
