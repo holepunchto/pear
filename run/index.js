@@ -30,7 +30,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const isFile = link.startsWith('file://')
   const isPath = isPear === false && isFile === false
   if (key !== null && isPear === false) {
-    throw ERR_INVALID_INPUT('Key must start with pear://')
+    throw new ERR_INVALID_INPUT('Key must start with pear://')
   }
 
   let cwd = os.cwd()
@@ -78,7 +78,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       await fsp.stat(applingApp)
     } catch {
       ipc.close().catch(console.error)
-      throw ERR_INVALID_APPLING('Appling does not exist')
+      throw new ERR_INVALID_APPLING('Appling does not exist')
     }
 
     if (link.startsWith('pear://runtime')) {
@@ -195,7 +195,7 @@ function project (dir, origin, cwd) {
     const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
     const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
     const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
-    throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
+    throw new ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
   }
   return project(parent, origin, cwd)
 }

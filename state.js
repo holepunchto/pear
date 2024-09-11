@@ -14,7 +14,7 @@ const ENV = isBare ? require('bare-env') : process.env
 const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('./errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
-  throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
+  throw new ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
 }
 const readPkg = (pkgPath) => {
   let pkg = null
@@ -74,7 +74,7 @@ module.exports = class State {
     const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
     state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (state.key === null && state.storage.startsWith(state.dir)) {
-      throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
+      throw new ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
     }
   }
 

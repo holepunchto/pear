@@ -14,7 +14,7 @@ module.exports = class GC extends streamx.Readable {
     this.client = client
     if (resource === 'releases') this.releases({ resource })
     else if (resource === 'sidecars') this.sidecars({ pid, resource })
-    else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
+    else throw new ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
   _destroy (cb) {

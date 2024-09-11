@@ -80,7 +80,7 @@ exports.SALT = b4a.from('d134aa8b0631f1193b5031b356d82dbea214389208fa4a0bcdf5c2e
 function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)
-  if (i === -1) throw ERR_COULD_NOT_INFER_MODULE_PATH('Could not infer the actual module path')
+  if (i === -1) throw new ERR_COULD_NOT_INFER_MODULE_PATH('Could not infer the actual module path')
   return new URL(u.href.slice(0, i) + 'constants.js')
 }
 

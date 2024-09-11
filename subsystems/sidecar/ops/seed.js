@@ -47,7 +47,7 @@ module.exports = class Seed extends Opstream {
     }
 
     if (!link && bundle.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+      throw new ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
     if (verbose) {
@@ -63,7 +63,7 @@ module.exports = class Seed extends Opstream {
     try {
       await bundle.drive.get('/package.json')
     } catch {
-      throw ERR_INVALID_INPUT('Encryption key required')
+      throw new ERR_INVALID_INPUT('Encryption key required')
     }
 
     for await (const { msg } of notices) this.push(msg)

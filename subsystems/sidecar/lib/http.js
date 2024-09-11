@@ -18,14 +18,14 @@ module.exports = class Http extends ReadyResource {
     this.server = http.createServer(async (req, res) => {
       try {
         const ua = req.headers['user-agent']
-        if (ua.slice(0, 4) !== 'Pear') throw ERR_HTTP_BAD_REQUEST()
+        if (ua.slice(0, 4) !== 'Pear') throw new ERR_HTTP_BAD_REQUEST()
         const [url, protocol = 'app', type = 'app'] = req.url.split('+')
         req.url = (url === '/') ? '/index.html' : url
         if (protocol === 'platform-resolve' || protocol === 'holepunch') {
           return await this.#lookup(this.sidecar, protocol === 'platform-resolve' ? 'resolve' : protocol, type, req, res)
         }
         if (protocol !== 'app' && protocol !== 'resolve') {
-          throw ERR_HTTP_BAD_REQUEST('Unknown protocol')
+          throw new ERR_HTTP_BAD_REQUEST('Unknown protocol')
         }
         const id = ua.slice(5)
 
@@ -33,7 +33,7 @@ module.exports = class Http extends ReadyResource {
 
         const [clientId, startId] = id.split('@')
         const client = this.ipc.client(clientId)
-        if (client === null) throw ERR_HTTP_BAD_REQUEST('Bad Client ID')
+        if (client === null) throw new ERR_HTTP_BAD_REQUEST('Bad Client ID')
         const app = client.userData
 
         if (app.reported && app.state.options.minver) {
@@ -82,8 +82,8 @@ module.exports = class Http extends ReadyResource {
 
   async lookup (app, protocol, type, req, res, startId) {
     try {
-      if (app.startId !== startId) throw ERR_HTTP_NOT_FOUND()
-      if (app.reported?.err) throw ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
+      if (app.startId !== startId) throw new ERR_HTTP_NOT_FOUND()
+      if (app.reported?.err) throw new ERR_HTTP_NOT_FOUND('Not Found - ' + (app.reported.err.code || 'ERR_UNKNOWN') + ' - ' + app.reported.err.message)
       return await this.#lookup(app, protocol, type, req, res)
     } catch (err) {
       if (err.code === 'ERR_HTTP_NOT_FOUND') return await this.#notFound(app, req, res)
@@ -92,11 +92,11 @@ module.exports = class Http extends ReadyResource {
   }
 
   async #lookup (app, protocol, type, req, res) {
-    if (app.closed) throw ERR_HTTP_GONE()
+    if (app.closed) throw new ERR_HTTP_GONE()
     const { bundle, linker } = app
     const url = `${protocol}://${type}${req.url}`
     let link = null
-    try { link = ScriptLinker.link.parse(url) } catch { throw ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
+    try { link = ScriptLinker.link.parse(url) } catch { throw new ERR_HTTP_BAD_REQUEST(`Bad Request (Malformed URL: ${url})`) }
 
     const isImport = link.transform === 'esm' || link.transform === 'app'
 
@@ -140,12 +140,12 @@ module.exports = class Http extends ReadyResource {
         }
       }
 
-      throw ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
+      throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
     }
 
     if (protocol === 'resolve') {
       res.setHeader('Content-Type', 'text/plain; charset=UTF-8')
-      if (!link.resolve && !link.dirname && !link.filename) throw ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
+      if (!link.resolve && !link.dirname && !link.filename) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${req.url}"`)
       res.end(link.filename)
       return
     }

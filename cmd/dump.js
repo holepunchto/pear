@@ -22,8 +22,8 @@ module.exports = (ipc) => async function dump (cmd) {
   const { checkout, json, encryptionKey, ask } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
-  if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
-  if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
+  if (!link) throw new ERR_INVALID_INPUT('<link> must be specified.')
+  if (!dir) throw new ERR_INVALID_INPUT('<dir> must be specified.')
   dir = dir === '-' ? '-' : (isAbsolute(dir) ? dir : resolve('.', dir))
   await output(json, ipc.dump({ id: Bare.pid, link, dir, checkout, encryptionKey }), { ask }, ipc)
 }

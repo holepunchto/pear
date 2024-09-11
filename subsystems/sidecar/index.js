@@ -346,9 +346,9 @@ class Sidecar extends ReadyResource {
     if (params.startId) {
       const starting = this.running.get(params.startId)
       if (starting) client.userData = starting.client.userData
-      else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
+      else throw new ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
     }
-    if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
+    if (!client.userData) throw new ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
     const id = client.userData.id
     const host = await this.address()
     return { host, id }
@@ -631,7 +631,7 @@ class Sidecar extends ReadyResource {
       client.userData = starting.client.userData
       return await starting.running
     }
-    if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
+    if (startId && !starting) throw new ERR_INTERNAL_ERROR('start failure unrecognized startId')
     const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
 

@@ -26,7 +26,7 @@ class EncryptionKey {
 
   async add (cmd) {
     const { name, secret } = cmd.args
-    try { hypercoreid.decode(secret) } catch { throw ERR_INVALID_INPUT('Invalid encryption key') }
+    try { hypercoreid.decode(secret) } catch { throw new ERR_INVALID_INPUT('Invalid encryption key') }
     const stream = this.ipc.encryptionKey({ pid: Bare.pid, action: 'add', name, value: secret }, this.ipc)
     await output(false, stream)
   }

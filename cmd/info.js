@@ -62,7 +62,7 @@ module.exports = (ipc) => async function info (cmd) {
   const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
-  if (link && isKey === false) throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+  if (link && isKey === false) throw new ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
   let dir = cmd.args.dir || os.cwd()
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 

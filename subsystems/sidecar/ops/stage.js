@@ -36,7 +36,7 @@ module.exports = class Stage extends Opstream {
     const [status] = await closed
 
     if (status) {
-      const err = ERR_TRACER_FAILED('Tracer Failed!')
+      const err = new ERR_TRACER_FAILED('Tracer Failed!')
       err.exitCode = status
       throw err
     }
@@ -65,7 +65,7 @@ module.exports = class Stage extends Opstream {
     const encrypted = state.options.encrypted
 
     if (!encrypted && params.encryptionKey) {
-      const err = ERR_INVALID_CONFIG('pear.encrypted field is required in package.json')
+      const err = new ERR_INVALID_CONFIG('pear.encrypted field is required in package.json')
       throw err
     }
 
@@ -79,7 +79,7 @@ module.exports = class Stage extends Opstream {
     }
 
     if (encrypted === true && !encryptionKey) {
-      const err = ERR_SECRET_NOT_FOUND('Not found encryption key: ' + params.encryptionKey)
+      const err = new ERR_SECRET_NOT_FOUND('Not found encryption key: ' + params.encryptionKey)
       throw err
     }
 
