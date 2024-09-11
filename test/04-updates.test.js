@@ -50,72 +50,71 @@ const rig = new Rig()
 
 test.hook('updates setup', rig.setup)
 
-// test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
-//   timeout(180000)
-//   plan(7)
+test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(7)
 
-//   const testId = Math.floor(Math.random() * 100000)
-//   const { platformDir } = rig
-//   const stager1 = new Helper({ platformDir })
-//   teardown(() => stager1.close())
-//   await stager1.ready()
+  const testId = Math.floor(Math.random() * 100000)
+  const stager1 = new Helper(rig)
+  teardown(() => stager1.close())
+  await stager1.ready()
 
-//   comment('1. Stage and run app')
+  comment('1. Stage and run app')
 
-//   comment('\tstaging')
-//   const staging = stager1.stage(stageOpts(testId))
-//   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
-//   const { key, link } = await until.staging
-//   await until.final
+  comment('\tstaging')
+  const staging = stager1.stage(stageOpts(testId))
+  const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
+  const { key, link } = await until.staging
+  await until.final
 
-//   comment('\trunning')
-//   const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
-//   const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-//   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
-//   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
+  comment('\trunning')
+  const running = await Helper.open(link, { tags: ['exit'] }, rig)
+  const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
+  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
+  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
 
-//   comment('2. Create new file, restage, and reseed')
+  comment('2. Create new file, restage, and reseed')
 
-//   const file = `${ts()}.tmp`
-//   comment(`\tcreating test file (${file})`)
-//   fs.writeFileSync(path.join(harness, file), 'test')
-//   teardown(() => { try { fs.unlinkSync(path.join(harness, file)) } catch { /* ignore */ } })
-//   comment('\tstaging')
-//   const stager2 = new Helper({ platformDir })
-//   teardown(() => stager2.close())
-//   await stager2.ready()
+  const file = `${ts()}.tmp`
+  comment(`\tcreating test file (${file})`)
+  fs.writeFileSync(path.join(harness, file), 'test')
+  teardown(() => { try { fs.unlinkSync(path.join(harness, file)) } catch { /* ignore */ } })
+  comment('\tstaging')
+  const stager2 = new Helper(rig)
+  teardown(() => stager2.close())
+  await stager2.ready()
 
-//   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
+  await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-//   fs.unlinkSync(path.join(harness, file))
+  fs.unlinkSync(path.join(harness, file))
 
-//   const update1 = await update1ActualPromise
-//   const update1Version = update1?.value?.version
-//   is(hypercoreid.normalize(update1Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
-//   is(update1Version?.fork, 0, 'app version.fork is 0')
-//   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
+  const update1 = await update1ActualPromise
+  const update1Version = update1?.value?.version
+  is(hypercoreid.normalize(update1Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
+  is(update1Version?.fork, 0, 'app version.fork is 0')
+  ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
-//   comment('releasing')
-//   const update2Promise = await update2LazyPromise
-//   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-//   const releaser = new Helper({ platformDir })
-//   teardown(() => releaser.close())
-//   await releaser.ready()
+  comment('releasing')
+  const update2Promise = await update2LazyPromise
+  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
+  const releaser = new Helper(rig)
+  teardown(() => releaser.close())
+  await releaser.ready()
 
-//   const releasing = releaser.release(releaseOpts(testId, key))
-//   await Helper.pick(releasing, { tag: 'released' })
-//   teardown(() => releaser.close()) // TODO why is this needed?
-//   comment('waiting for update')
-//   const update2 = await update2ActualPromise
-//   const update2Version = update2?.value?.version
-//   is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
-//   is(update2Version?.fork, 0, 'app version.fork is 0')
-//   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
-//   await running.inspector.evaluate('__PEAR_TEST__.close()')
-//   await running.inspector.close()
-//   const { code } = await running.until.exit
-//   is(code, 0, 'exit code is 0')
-// })
+  const releasing = releaser.release(releaseOpts(testId, key))
+  await Helper.pick(releasing, { tag: 'released' })
+  teardown(() => releaser.close()) // TODO why is this needed?
+  comment('waiting for update')
+  const update2 = await update2ActualPromise
+  const update2Version = update2?.value?.version
+  is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
+  is(update2Version?.fork, 0, 'app version.fork is 0')
+  ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
+  await running.inspector.evaluate('__PEAR_TEST__.close()')
+  await running.inspector.close()
+  const { code } = await running.until.exit
+  is(code, 0, 'exit code is 0')
+})
 
 // test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
 //   const { ok, is, plan, comment, timeout, teardown } = t
@@ -128,8 +127,7 @@ test.hook('updates setup', rig.setup)
 //   comment('1. Stage and run app')
 
 //   comment('\tstaging')
-//   const { platformDir } = rig
-//   const stager1 = new Helper({ platformDir })
+//   const stager1 = new Helper(rig)
 //   teardown(() => stager1.close())
 //   await stager1.ready()
 //   const staging = stager1.stage(stageOpts(testId))
@@ -138,7 +136,7 @@ test.hook('updates setup', rig.setup)
 //   await until.final
 
 //   comment('\trunning')
-//   const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
+//   const running = await Helper.open(link, { tags: ['exit'] }, rig)
 //   const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
 //   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
 //   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
@@ -152,7 +150,7 @@ test.hook('updates setup', rig.setup)
 //   fs.writeFileSync(path.join(harness, file), 'test')
 
 //   comment('\trestaging')
-//   const stager2 = new Helper({ platformDir })
+//   const stager2 = new Helper(rig)
 //   teardown(() => stager2.close())
 //   await stager2.ready()
 //   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
@@ -176,7 +174,7 @@ test.hook('updates setup', rig.setup)
 //   const update2Promise = await update2LazyPromise
 //   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
 
-//   const stager3 = new Helper({ platformDir })
+//   const stager3 = new Helper(rig)
 //   teardown(() => stager3.close())
 //   await stager3.ready()
 //   await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
@@ -200,8 +198,7 @@ test.hook('updates setup', rig.setup)
 //   const { ok, is, plan, timeout, comment, teardown } = t
 //   plan(10)
 //   timeout(180000)
-//   const { platformDir } = rig
-//   const appStager = new Helper({ platformDir })
+//   const appStager = new Helper(rig)
 //   teardown(() => appStager.close())
 //   await appStager.ready()
 
@@ -215,7 +212,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appFinal.success, 'stage succeeded')
 
 //   comment('seeding app')
-//   const appSeeder = new Helper({ platformDir })
+//   const appSeeder = new Helper(rig)
 //   teardown(() => appSeeder.close())
 //   teardown(() => appSeeder.close())
 //   await appSeeder.ready()
@@ -229,7 +226,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appAnnounced, 'seeding is announced')
 
 //   comment('staging tmp platform')
-//   const stager = new Helper({ platformDir })
+//   const stager = new Helper(rig)
 //   teardown(() => stager.close())
 //   await stager.ready()
 //   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -237,7 +234,7 @@ test.hook('updates setup', rig.setup)
 //   ok(final.success, 'stage succeeded')
 
 //   comment('seeding tmp platform')
-//   const seeder = new Helper({ platformDir })
+//   const seeder = new Helper(rig)
 //   teardown(() => seeder.close())
 //   teardown(() => seeder.close())
 //   await seeder.ready()
@@ -285,7 +282,7 @@ test.hook('updates setup', rig.setup)
 //   teardown(() => { try { fs.unlinkSync(path.join(Helper.root, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
 //   comment('restaging tmp platform')
-//   const stager2 = new Helper({ platformDir })
+//   const stager2 = new Helper(rig)
 //   teardown(() => stager2.close())
 //   await stager2.ready()
 //   const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -308,8 +305,7 @@ test.hook('updates setup', rig.setup)
 //   plan(12)
 //   timeout(180000)
 
-//   const { platformDir } = rig
-//   const appStager = new Helper({ platformDir })
+//   const appStager = new Helper(rig)
 //   teardown(() => appStager.close())
 //   await appStager.ready()
 
@@ -323,7 +319,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appFinal.success, 'stage succeeded')
 
 //   comment('seeding app')
-//   const appSeeder = new Helper({ platformDir })
+//   const appSeeder = new Helper(rig)
 //   teardown(() => appSeeder.close())
 
 //   await appSeeder.ready()
@@ -337,7 +333,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appAnnounced, 'seeding is announced')
 
 //   comment('staging tmp platform')
-//   const stager = new Helper({ platformDir })
+//   const stager = new Helper(rig)
 //   teardown(() => stager.close())
 //   await stager.ready()
 //   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -345,7 +341,7 @@ test.hook('updates setup', rig.setup)
 //   ok(final.success, 'stage succeeded')
 
 //   comment('seeding tmp platform')
-//   const seeder = new Helper({ platformDir })
+//   const seeder = new Helper(rig)
 //   teardown(() => seeder.close())
 //   await seeder.ready()
 //   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
@@ -383,7 +379,7 @@ test.hook('updates setup', rig.setup)
 //   teardown(() => { fs.unlinkSync(path.join(Helper.root, file)) }, { order: -Infinity })
 
 //   comment('restaging tmp platform')
-//   const stager2 = new Helper({ platformDir })
+//   const stager2 = new Helper(rig)
 //   teardown(() => stager2.close())
 //   await stager2.ready()
 //   const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -398,7 +394,7 @@ test.hook('updates setup', rig.setup)
 //   comment('releasing tmp platform')
 //   const update2Promise = await update2LazyPromise
 //   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-//   const releaser = new Helper({ platformDir })
+//   const releaser = new Helper(rig)
 //   teardown(() => releaser.close())
 //   await releaser.ready()
 //   const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
@@ -423,8 +419,7 @@ test.hook('updates setup', rig.setup)
 //   const { ok, is, plan, timeout, comment, teardown } = t
 //   plan(10)
 //   timeout(180000)
-//   const { platformDir } = rig
-//   const appStager = new Helper({ platformDir })
+//   const appStager = new Helper(rig)
 //   teardown(() => appStager.close())
 //   await appStager.ready()
 //   const pid = Math.floor(Math.random() * 10000)
@@ -437,7 +432,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appFinal.success, 'stage succeeded')
 
 //   comment('seeding app')
-//   const appSeeder = new Helper({ platformDir })
+//   const appSeeder = new Helper(rig)
 //   teardown(() => appSeeder.close())
 //   await appSeeder.ready()
 //   const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
@@ -450,7 +445,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appAnnounced, 'seeding is announced')
 
 //   comment('staging tmp platform')
-//   const stager = new Helper({ platformDir })
+//   const stager = new Helper(rig)
 //   teardown(() => stager.close())
 //   await stager.ready()
 //   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -458,7 +453,7 @@ test.hook('updates setup', rig.setup)
 //   ok(final.success, 'stage succeeded')
 
 //   comment('seeding tmp platform')
-//   const seeder = new Helper({ platformDir })
+//   const seeder = new Helper(rig)
 //   teardown(() => seeder.close())
 //   await seeder.ready()
 //   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
@@ -496,7 +491,7 @@ test.hook('updates setup', rig.setup)
 //   teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
 
 //   comment('restaging app')
-//   const appStager2 = new Helper({ platformDir })
+//   const appStager2 = new Helper(rig)
 //   teardown(() => appStager2.close())
 //   await appStager2.ready()
 //   const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
@@ -518,8 +513,7 @@ test.hook('updates setup', rig.setup)
 //   const { ok, is, plan, timeout, comment, teardown } = t
 //   plan(12)
 //   timeout(180000)
-//   const { platformDir } = rig
-//   const appStager = new Helper({ platformDir })
+//   const appStager = new Helper(rig)
 //   teardown(() => appStager.close())
 //   await appStager.ready()
 //   const pid = Math.floor(Math.random() * 10000)
@@ -532,7 +526,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appFinal.success, 'stage succeeded')
 
 //   comment('seeding app')
-//   const appSeeder = new Helper({ platformDir })
+//   const appSeeder = new Helper(rig)
 //   teardown(() => appSeeder.close())
 //   await appSeeder.ready()
 //   const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
@@ -545,7 +539,7 @@ test.hook('updates setup', rig.setup)
 //   ok(appAnnounced, 'seeding is announced')
 
 //   comment('staging tmp platform')
-//   const stager = new Helper({ platformDir })
+//   const stager = new Helper(rig)
 //   teardown(() => stager.close())
 //   await stager.ready()
 //   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
@@ -553,7 +547,7 @@ test.hook('updates setup', rig.setup)
 //   ok(final.success, 'stage succeeded')
 
 //   comment('seeding tmp platform')
-//   const seeder = new Helper({ platformDir })
+//   const seeder = new Helper(rig)
 //   teardown(() => seeder.close())
 //   await seeder.ready()
 //   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
@@ -591,7 +585,7 @@ test.hook('updates setup', rig.setup)
 //   teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
 
 //   comment('restaging app')
-//   const appStager2 = new Helper({ platformDir })
+//   const appStager2 = new Helper(rig)
 //   teardown(() => appStager2.close())
 //   await appStager2.ready()
 //   const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
@@ -606,7 +600,7 @@ test.hook('updates setup', rig.setup)
 //   comment('releasing app')
 //   const update2Promise = await update2LazyPromise
 //   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-//   const releaser = new Helper({ platformDir })
+//   const releaser = new Helper(rig)
 //   teardown(() => releaser.close())
 //   await releaser.ready()
 

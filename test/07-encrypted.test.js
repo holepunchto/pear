@@ -34,18 +34,10 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    const bootstrapped = new Helper({ platformDir: this.platformDir })
-    this.bootstrapped = bootstrapped
-    comment('connecting tmp sidecar...')
-    await bootstrapped.ready()
-    comment('tmp sidecar connected')
     global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
-    comment('shutting down bootstrapped sidecar')
-    await this.bootstrapped.shutdown()
-    comment('bootstrapped sidecar shutdown')
     comment('closing helper client')
     await this.helper.close()
     comment('helper client closed')
@@ -60,8 +52,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   timeout(180000)
   plan(7)
 
-  const { platformDir } = rig
-  const helper = new Helper({ platformDir })
+  const helper = new Helper(rig)
   teardown(() => helper.close())
   await helper.ready()
   const dir = encrypted
@@ -94,7 +85,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('run encrypted pear application')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir, encryptionKey: name })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: rig.platformDir, encryptionKey: name })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
   is(value?.app?.key, appKey, 'app version matches staged key')
