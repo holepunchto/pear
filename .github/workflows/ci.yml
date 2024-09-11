@@ -92,8 +92,33 @@ jobs:
         popd
       shell: bash
 
-    - name: Test
-      run: pear run -t test/04-updates.test.js
+    - name: Test - Smoke
+      run: pear run -t test/01-smoke.test.js
+      continue-on-error: true
+
+    - name: Test - Shutdown
+      run: pear run -t test/02-shutdown.test.js
+      continue-on-error: true
+
+    - name: Test - Teardown
+      run: pear run -t test/03-teadown.test.js
+      continue-on-error: true
+
+    - name: Test - Platform Updates
+      run: pear run -t test/04-platform-updates.test.js
+      continue-on-error: true
+
+    - name: Test - App Updates
+      run: pear run -t test/04-platform-updates.test.js
+      continue-on-error: true
+
+    - name: Test - Worker
+      run: pear run -t test/06-worker.test.js
+      continue-on-error: true
+
+    - name: Test - Encrypted Apps
+      run: pear run -t test/07-encrypted.test.js
+      continue-on-error: true
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown

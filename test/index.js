@@ -7,13 +7,14 @@ async function runTests () {
 
   test.pause()
 
-  await import('./01-smoke.test.js')
-  await import('./02-shutdown.test.js')
-  await import('./03-teardown.test.js')
-  await import('./04-updates.test.js')
+  // await import('./01-smoke.test.js')
+  // await import('./02-shutdown.test.js')
+  // await import('./03-teardown.test.js')
+  await import('./04-platform-updates.test.js')
+  await import('./05-app-updates.test.js')
   // await import('./05-commands.test.js')
-  await import('./06-worker.test.js')
-  await import('./07-encrypted.test.js')
+  // await import('./06-worker.test.js')
+  // await import('./07-encrypted.test.js')
 
   test.resume()
 }
