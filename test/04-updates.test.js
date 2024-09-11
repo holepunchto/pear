@@ -36,18 +36,10 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    const bootstrapped = new Helper({ platformDir: this.platformDir })
-    this.bootstrapped = bootstrapped
-    comment('connecting tmp sidecar...')
-    await bootstrapped.ready()
-    comment('tmp sidecar connected')
     global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
-    comment('shutting down bootstrapped sidecar')
-    await this.bootstrapped.shutdown()
-    comment('bootstrapped sidecar shutdown')
     comment('closing helper client')
     await this.helper.close()
     comment('helper client closed')
