@@ -789,7 +789,7 @@ class Sidecar extends ReadyResource {
       await appBundle.calibrate()
     } catch (error) {
       if (error.code === 'DECODING_ERROR') {
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
+        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', state.key, true)
         app.report({ err })
         return { startId, bail: err }
       } else {
