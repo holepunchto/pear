@@ -9,9 +9,8 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed`, true)
   print('Shutting down current Sidecar...', 0)
   await ipc.shutdown()
-
   print('Sidecar has shutdown', true)
-
+  if (cmd.command.name === 'shutdown') return
   const { CHECKOUT, RUNTIME } = require('../constants')
   const KEY = CHECKOUT.key
 
