@@ -31,11 +31,6 @@ jobs:
       with:
         persist-credentials: false
         ref: ${{ github.event.pull_request.head.ref }}
-    - name: Cache Corestore
-      uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0 https://github.com/actions/cache/releases/tag/v4.0.0
-      with:
-        path: pear/corestores/platform
-        key: platform-${{ matrix.platform }}-${{ matrix.arch }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2 https://github.com/actions/setup-node/releases/tag/v4.0.2
       with:
