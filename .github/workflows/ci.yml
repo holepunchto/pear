@@ -76,11 +76,7 @@ jobs:
 
     - name: Run tests
       run:  |
-        npm test
-        if [ $? -eq 141 ]; then
-          echo "Process exited with 141 due to SIGPIPE"
-          exit 1
-        fi
+        npm test && echo $?
 
     - name: Lint
       run: npm run lint
