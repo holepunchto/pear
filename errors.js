@@ -1,7 +1,7 @@
 'use strict'
 class PearError extends Error {
   static define (code, defmsg, props = null) {
-    this[code] = { 
+    this[code] = {
       [code]: class extends this {
         constructor (msg = defmsg, info = null) {
           super(msg, code, info)
