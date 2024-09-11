@@ -46,22 +46,23 @@ class Rig {
     comment('shutting down bootstrapped sidecar')
     await this.bootstrapped.shutdown()
     comment('bootstrapped sidecar shutdown')
-    comment('shutting down local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shutdown')
+    comment('closing helper client')
+    await this.helper.close()
+    comment('helper client closed')
   }
 }
 
 const rig = new Rig()
 
-test.hook('encrypted test setup', rig.setup)
+test.hook('encrypted setup', rig.setup)
 
-test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout }) {
+test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(7)
 
   const { platformDir } = rig
-  const helper = rig.bootstrapped
+  const helper = new Helper({ platformDir })
+  teardown(() => helper.close())
   await helper.ready()
   const dir = encrypted
 
@@ -110,4 +111,4 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(info, 'retrieves info from encrypted app')
 })
 
-test.hook('encrypted test cleanup', rig.cleanup)
+test.hook('encrypted cleanup', rig.cleanup)

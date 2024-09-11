@@ -17,12 +17,12 @@ jobs:
         - os: ubuntu-latest
           platform: linux
           arch: x64
-        # - os: macos-latest
-        #   platform: darwin
-        #   arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -83,7 +83,11 @@ jobs:
       run: npm install
 
     - name: Run tests
-      run:  pear run -t test && echo $?
+      run:  pear run -t test
+
+    - name: Shutdown Local Pear Sidecar
+      run: $PEAR sidecar shutdown
+      shell: bash
 
     - name: Lint
       run: npm run lint

@@ -8,13 +8,8 @@ const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
-  teardown(async () => {
-    const shutdowner = new Helper()
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  })
-
   const stager = new Helper()
+  teardown(() => stager.close())
   await stager.ready()
   const dir = harness
 
@@ -27,6 +22,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   comment('seeding')
   const seeder = new Helper()
+  teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
