@@ -82,11 +82,18 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Pretest
-      run: pear run  -t scripts/pretest.js
+    - name: Test Deps
+      run: |
+        pushd ./test/fixtures/harness
+        npm install
+        popd
+        pushd ./test/fixtures/encrypted
+        npm install
+        popd
+      shell: bash
 
     - name: Test
-      run: pear run -t test
+      run: npm test
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
