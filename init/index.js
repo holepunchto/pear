@@ -22,11 +22,6 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   let params = null
   if (isPear) {
     const { drive } = parseLink(link)
-
-
-    if (trusted.includes(hypercoreid.encode(drive.key)) === false) {
-      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
-
     const trusted = await ipc.trusted()
     if (trusted.includes(hypercoreid.encode(drive.key)) === false) {
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
