@@ -93,7 +93,7 @@ jobs:
       shell: bash
 
     - name: Test
-      run: npm test
+      run: pear run -t test/01-updates.test.js
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
