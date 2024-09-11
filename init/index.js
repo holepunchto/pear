@@ -62,7 +62,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (empty === false) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
-  const prompt = new Interact(header, params, defaults)
+  const prompt = new Interact(header, params, { defaults })
   const locals = await prompt.run({ autosubmit })
   output.push({ tag: 'writing' })
   const promises = []
