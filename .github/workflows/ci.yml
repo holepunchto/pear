@@ -14,15 +14,15 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          platform: linux
-          arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
-        # - os: windows-latest
-        #   platform: win32
+        # - os: ubuntu-latest
+        #   platform: linux
         #   arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -82,18 +82,21 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Install fixture deps
-      run: |
-        pushd ./test/fixtures/harness
-        npm install
-        popd
-        pushd ./test/fixtures/encrypted
-        npm install
-        popd
-      shell: bash
+    - name: dbg
+      run: pear run -t scripts/pretest.js
 
-    - name: Test
-      run: npm test
+    # - name: Install fixture deps
+    #   run: |
+    #     pushd ./test/fixtures/harness
+    #     npm install
+    #     popd
+    #     pushd ./test/fixtures/encrypted
+    #     npm install
+    #     popd
+    #   shell: bash
+
+    # - name: Test
+    #   run: npm test
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
