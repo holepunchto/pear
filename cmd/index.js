@@ -137,6 +137,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const sidecar = command(
     'sidecar',
+    command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
     flag('--verbose|-v', 'Additional output'),

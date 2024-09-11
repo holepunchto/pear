@@ -18,8 +18,8 @@ module.exports = class Info extends Opstream {
     const { session } = this
     let bundle = null
     let drive = null
-    const anyFlag = [changelog, full, metadata, showKey].some(flag => flag === true)
-    const isEnabled = (flag) => anyFlag ? !!flag : !flag
+    const enabledFlags = new Set([changelog, full, metadata, showKey].filter((value) => value === true))
+    const isEnabled = (flag) => enabledFlags.size > 0 ? !!flag : !flag
 
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
     const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
@@ -35,8 +35,7 @@ module.exports = class Info extends Opstream {
         drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
         await drive.ready()
       } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
-        throw err
+        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     } else {
       drive = this.sidecar.drive
@@ -47,9 +46,11 @@ module.exports = class Info extends Opstream {
       await bundle.ready()
     }
 
-    const hex = key.toString('hex')
     const z32 = hypercoreid.encode(key)
-    if (isEnabled(showKey)) this.push({ tag: 'retrieving', data: { hex, z32 } })
+    if (isEnabled(showKey)) {
+      const onlyShowKey = enabledFlags.size === 1
+      this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
+    }
 
     await this.sidecar.ready()
     if (bundle) {
@@ -62,7 +63,7 @@ module.exports = class Info extends Opstream {
         if (error.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') {
           throw error
         } else {
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+          throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
         }
       }
     }

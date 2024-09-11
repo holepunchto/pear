@@ -73,8 +73,8 @@ function ERR_INVALID_TEMPLATE (msg) {
   return new PearError(msg, 'ERR_INVALID_TEMPLATE', ERR_INVALID_TEMPLATE)
 }
 
-function ERR_PERMISSION_REQUIRED (msg, key, encrypted = false) {
-  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, { key, encrypted })
+function ERR_PERMISSION_REQUIRED (msg, info = {}) {
+  return new PearError(msg, 'ERR_PERMISSION_REQUIRED', ERR_PERMISSION_REQUIRED, info)
 }
 
 function ERR_HTTP_GONE () {

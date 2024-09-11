@@ -43,7 +43,7 @@ module.exports = class Seed extends Opstream {
       await bundle.ready()
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch {
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (!link && bundle.drive.core.length === 0) {

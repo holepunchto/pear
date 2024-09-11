@@ -20,6 +20,7 @@ module.exports = [
   flag('--detached', 'Wakeup existing app or run detached'),
   flag('--encryption-key <name>', 'Application encryption key'),
   flag('--no-ask', 'Suppress permissions dialog'),
+  hiddenFlag('--trusted'),
   hiddenFlag('--detach'),
   hiddenFlag('--trace <n>'),
   hiddenFlag('--swap <path>'),

@@ -129,6 +129,10 @@ if (process.isMainFrame) {
     #onfocus = null
     #onblur = null
     #demax = null
+    #closing = null
+    get closing () {
+      return this.#closing === null ? Promise.resolve() : this.#closing
+    }
 
     static get observedAttributes () {
       return ['data-minimizable', 'data-maximizable']
@@ -144,21 +148,23 @@ if (process.isMainFrame) {
       }
     }
 
+    async #maclights (visible) {
+      await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible })
+      const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
+      await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
+    }
+
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
-        const ctrl = this.root.querySelector('#ctrl')
+        this.#maclights(true).catch(console.error)
         this.mutations = new MutationObserver(async () => {
-          const { x, y } = ctrl.getBoundingClientRect()
+          const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
           await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
         })
         this.mutations.observe(this, { attributes: true })
 
-        this.intesections = new IntersectionObserver(async ([element]) => {
-          await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: element.isIntersecting })
-          const { x, y } = ctrl.getBoundingClientRect()
-          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
-        }, { threshold: 0 })
+        this.intesections = new IntersectionObserver(([element]) => this.#maclights(element.isIntersecting), { threshold: 0 })
 
         this.intesections.observe(this)
         this.#setCtrl()
@@ -210,6 +216,7 @@ if (process.isMainFrame) {
       if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
+        this.#closing = gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
         return
       }
 
@@ -264,10 +271,11 @@ if (process.isMainFrame) {
       #ctrl > .ctrl {
         opacity: 0.8;
         height: 24px;
-        width: 24px;
+        width: 36px;
         display: table-cell;
         vertical-align: middle;
         text-align: center;
+
       }
       #ctrl > .ctrl:hover {
         opacity: 1;
@@ -281,34 +289,30 @@ if (process.isMainFrame) {
       .max #restore.ctrl  {
         display: table-cell;
       }
-
+      #min {
+        padding-bottom: 4px;
+      }
     </style>
     <div id="ctrl">
       <div id="min" class="ctrl">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 12.998H5V10.998H19V12.998Z" fill="white"/>
+        <svg width="10" height="1" viewBox="0 0 10 1" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="10" height="1" fill="white"/>
         </svg>
       </div>
       <div id="max" class="ctrl">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="6" y="6" width="12" height="12" stroke="white" stroke-width="2"/>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M9 1H1V9H9V1ZM0 0V10H10V0H0Z" fill="white"/>
         </svg>
       </div>
       <div id="restore" class="ctrl">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g clip-path="url(#clip0_9105_112084)">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M8.11108 6H17.2222V15.1111H19.2222V5V4H18.2222H8.11108V6ZM6 10.3333H12.8889V17.2222H6V10.3333ZM4 8.33333H6H12.8889H14.8889V10.3333V17.2222V19.2222H12.8889H6H4V17.2222V10.3333V8.33333Z" fill="white"/>
-          </g>
-          <defs>
-            <clipPath id="clip0_9105_112084">
-              <rect width="24" height="24" fill="white"/>
-            </clipPath>
-          </defs>
-        </svg>      
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1H9V7H8V8H9H10V7V1V0H9H3H2V1V2H3V1Z" fill="white"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M7 3H1V9H7V3ZM0 2V10H8V2H0Z" fill="white"/>
+        </svg>
       </div>
       <div id="close" class="ctrl">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill="white"/>
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M4.64645 5.35355L0 0.707107L0.707107 0L5.35355 4.64645L10 0L10.7071 0.707107L6.06066 5.35355L10.7071 10L10 10.7071L5.35355 6.06066L0.707107 10.7071L0 10L4.64645 5.35355Z" fill="white"/>
         </svg>
       </div>
     </div>

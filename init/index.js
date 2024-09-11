@@ -22,9 +22,14 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   let params = null
   if (isPear) {
     const { drive } = parseLink(link)
-    const trusted = await ipc.trusted()
+
+
     if (trusted.includes(hypercoreid.encode(drive.key)) === false) {
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
+
+    const trusted = await ipc.trusted()
+    if (trusted.includes(hypercoreid.encode(drive.key)) === false) {
+      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
 
@@ -64,7 +69,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (empty === false) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
-  const prompt = new Interact(header, params, defaults)
+  const prompt = new Interact(header, params, { defaults })
   const locals = await prompt.run({ autosubmit })
   output.push({ tag: 'writing' })
   const promises = []

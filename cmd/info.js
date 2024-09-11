@@ -37,7 +37,10 @@ const changelog = ({ changelog, full }) => `
 `
 
 const output = outputter('info', {
-  retrieving: ({ z32 }) => `---:\n pear://${z32}\n...`,
+  retrieving: ({ z32, onlyShowKey }, info) => {
+    info.onlyShowKey = onlyShowKey
+    return onlyShowKey ? `pear://${z32}` : `---:\n pear://${z32}\n...`
+  },
   keys,
   info,
   changelog,
@@ -50,7 +53,8 @@ const output = outputter('info', {
     } else {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }
-  }
+  },
+  final (data, info) { return info.onlyShowKey && data.success ? {} : false }
 })
 
 module.exports = (ipc) => async function info (cmd) {
