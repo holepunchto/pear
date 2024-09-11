@@ -173,7 +173,7 @@ async function password ({ ipc, key, explain, message }) {
   const validation = (key) => key.length > 0
   const msg = '\nPlease, enter a valid password.\n'
   const result = await permit({ dialog, ask, delim, validation, msg, masked: true })
-  print(`\n\n${ansi.key} Hashing password...`)
+  print(`\n${ansi.key} Hashing password...`)
   await ipc.permit({ key, password: result.value })
   print('\n' + ansi.tick + ' ' + message + '\n')
   await ipc.close()

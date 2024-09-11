@@ -729,7 +729,7 @@ class Sidecar extends ReadyResource {
       const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', state.key)
+        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
         app.report({ err })
         return { startId, bail: err }
       }
@@ -748,7 +748,7 @@ class Sidecar extends ReadyResource {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
     } catch {
-      const err = ERR_PERMISSION_REQUIRED('Encryption key required', state.key, true)
+      const err = ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
       app.report({ err })
       return { startId, bail: err }
     }
@@ -789,7 +789,7 @@ class Sidecar extends ReadyResource {
       await appBundle.calibrate()
     } catch (error) {
       if (error.code === 'DECODING_ERROR') {
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', state.key, true)
+        const err = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
         app.report({ err })
         return { startId, bail: err }
       } else {

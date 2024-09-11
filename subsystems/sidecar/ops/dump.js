@@ -38,7 +38,7 @@ module.exports = class Dump extends Opstream {
         drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
         await drive.ready()
       } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+        const err = ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
         throw err
       }
     }

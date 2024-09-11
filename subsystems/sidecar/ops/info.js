@@ -35,7 +35,7 @@ module.exports = class Info extends Opstream {
         drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
         await drive.ready()
       } catch {
-        const err = ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+        const err = ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
         throw err
       }
     } else {
@@ -64,7 +64,7 @@ module.exports = class Info extends Opstream {
         if (error.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') {
           throw error
         } else {
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', key, true)
+          throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
         }
       }
     }

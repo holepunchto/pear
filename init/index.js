@@ -25,7 +25,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     const trusted = new Set(await ipc.getPreference({ key: 'trusted' }) || [])
     hypercoreid.encode(drive.key, hypercoreid.encode(drive.key), trusted)
     if (trusted.has(hypercoreid.encode(drive.key)) === false) {
-      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', drive.key)
+      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
 
