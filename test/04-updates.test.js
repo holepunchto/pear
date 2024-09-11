@@ -607,8 +607,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const releasing = releaser.release({ channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
-  teardown(() => releaser.close()) // TODO why is this needed?
-
   comment('waiting for app update notification')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
