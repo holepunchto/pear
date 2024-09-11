@@ -789,9 +789,9 @@ class Sidecar extends ReadyResource {
       await appBundle.calibrate()
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
-        const permissionRequiredError = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-        app.report({ err: permissionRequiredError })
-        return { startId, bail: permissionRequiredError }
+        const bail = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
+        app.report({ err: bail })
+        return { startId, bail }
       } else {
         await session.close()
         throw err
