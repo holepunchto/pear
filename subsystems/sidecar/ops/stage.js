@@ -75,8 +75,7 @@ module.exports = class Stage extends Opstream {
     const encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(params.encryptionKey)
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
-      const err = ERR_PERMISSION_REQUIRED('encryption key required', key, true)
-      throw err
+      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (encrypted === true && !encryptionKey) {
