@@ -11,8 +11,7 @@ const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
 class Rig {
   setup = async ({ comment, timeout }) => {
     timeout(180000)
-    this.platformDir = path.join(Helper.root, 'pear')
-    const helper = new Helper({ platformDir: this.platformDir })
+    const helper = new Helper()
     this.helper = helper
     comment('connecting local sidecar')
     await helper.ready()
@@ -36,7 +35,7 @@ test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
 
   const argv = ['stage', '--json', 'test-' + testId, minimal]
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
 
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -239,7 +238,7 @@ test('pear shift <source> <destination>', async function ({ plan, is, teardown, 
 
   const testId1 = Math.floor(Math.random() * 100000)
   const argvInit1 = ['stage', '--json', `test-${testId1}`, relativePath]
-  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit1)})
   `, { returnByValue: false })
@@ -257,7 +256,7 @@ test('pear shift <source> <destination>', async function ({ plan, is, teardown, 
 
   const testId2 = Math.floor(Math.random() * 100000)
   const argvInit2 = ['stage', '--json', `test-${testId2}`, relativePath]
-  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager2.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit2)})
   `, { returnByValue: false })
@@ -287,7 +286,7 @@ test('pear shift <source> <destination>', async function ({ plan, is, teardown, 
   })
 
   const argv = ['shift', staged1.link, staged2.link]
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
@@ -316,7 +315,7 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
 
   const testId1 = Math.floor(Math.random() * 100000)
   const argvInit1 = ['stage', '--json', `test-${testId1}`, relativePath]
-  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit1)})
   `, { returnByValue: false })
@@ -334,7 +333,7 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
 
   const testId2 = Math.floor(Math.random() * 100000)
   const argvInit2 = ['stage', '--json', `test-${testId2}`, relativePath]
-  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager2.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit2)})
   `, { returnByValue: false })
@@ -364,7 +363,7 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
   })
 
   const argv = ['shift', '--json', staged1.link, staged2.link]
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
@@ -395,7 +394,7 @@ test('pear shift --force <source> <destination>', async function ({ plan, is, te
 
   const testId1 = Math.floor(Math.random() * 100000)
   const argvInit1 = ['stage', '--json', `test-${testId1}`, relativePath]
-  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit1)})
   `, { returnByValue: false })
@@ -413,7 +412,7 @@ test('pear shift --force <source> <destination>', async function ({ plan, is, te
 
   const testId2 = Math.floor(Math.random() * 100000)
   const argvInit2 = ['stage', '--json', `test-${testId2}`, relativePath]
-  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager2.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit2)})
   `, { returnByValue: false })
@@ -445,7 +444,7 @@ test('pear shift --force <source> <destination>', async function ({ plan, is, te
   })
 
   const argv = ['shift', '--force', staged1.link, staged2.link]
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
@@ -475,7 +474,7 @@ test('pear shift --force --json <source> <destination>', async function ({ plan,
 
   const testId1 = Math.floor(Math.random() * 100000)
   const argvInit1 = ['stage', '--json', `test-${testId1}`, relativePath]
-  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit1)})
   `, { returnByValue: false })
@@ -493,7 +492,7 @@ test('pear shift --force --json <source> <destination>', async function ({ plan,
 
   const testId2 = Math.floor(Math.random() * 100000)
   const argvInit2 = ['stage', '--json', `test-${testId2}`, relativePath]
-  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await stager2.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvInit2)})
   `, { returnByValue: false })
@@ -525,7 +524,7 @@ test('pear shift --force --json <source> <destination>', async function ({ plan,
   })
 
   const argv = ['shift', '--force', '--json', staged1.link, staged2.link]
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
   `, { returnByValue: false })
