@@ -32,7 +32,7 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    // global.Pear.teardown(async () => Helper.gc(platformDir))
+    global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
