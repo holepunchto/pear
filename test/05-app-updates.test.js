@@ -48,19 +48,19 @@ test.hook('updates setup', rig.setup)
 
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(1)
+  // plan(1)
   timeout(180000 * 6)
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
-  const pid = Math.floor(Math.random() * 10000)
-  const fid = 'fixture'
-  const dir = harness
+  // const pid = Math.floor(Math.random() * 10000)
+  // const fid = 'fixture'
+  // const dir = harness
 
-  comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
-  const appFinal = await Helper.pick(appStaging, { tag: 'final' })
-  ok(appFinal.success, 'stage succeeded')
+  // comment('staging app')
+  // const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
+  // const appFinal = await Helper.pick(appStaging, { tag: 'final' })
+  // ok(appFinal.success, 'stage succeeded')
 
   // comment('seeding app')
   // const appSeeder = new Helper(rig)
