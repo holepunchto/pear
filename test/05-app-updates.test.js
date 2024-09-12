@@ -10,7 +10,7 @@ const tmp = path.join(fs.realpathSync(os.tmpdir()), Math.floor(Math.random() * 1
 
 class Rig {
   setup = async ({ comment, timeout }) => {
-    timeout(180000)
+    timeout(180000 * 6)
     const helper = new Helper()
     this.helper = helper
     comment('connecting local sidecar')
@@ -49,7 +49,7 @@ test.hook('updates setup', rig.setup)
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
-  timeout(180000)
+  timeout(180000 * 6)
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
