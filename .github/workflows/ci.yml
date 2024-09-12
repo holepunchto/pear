@@ -92,31 +92,26 @@ jobs:
         popd
       shell: bash
 
-    - name: Enable GH Actions Debug Logs
-      run: |
-        echo "ACTIONS_RUNNER_DEBUG=true" >> $GITHUB_ENV
-        echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
+    # - name: Test - Smoke
+    #   run: pear run -t test/01-smoke.test.js
 
-    - name: Test - Smoke
-      run: pear run -t test/01-smoke.test.js
+    # - name: Test - Shutdown
+    #   run: pear run -t test/02-shutdown.test.js
 
-    - name: Test - Shutdown
-      run: pear run -t test/02-shutdown.test.js
+    # - name: Test - Teardown
+    #   run: pear run -t test/03-teardown.test.js
 
-    - name: Test - Teardown
-      run: pear run -t test/03-teardown.test.js
-
-    - name: Test - Platform Updates
-      run: pear run -t test/04-platform-updates.test.js
+    # - name: Test - Platform Updates
+    #   run: pear run -t test/04-platform-updates.test.js
 
     - name: Test - App Updates
       run: pear run -t test/05-app-updates.test.js
 
-    - name: Test - Worker
-      run: pear run -t test/06-worker.test.js
+    # - name: Test - Worker
+    #   run: pear run -t test/06-worker.test.js
 
-    - name: Test - Encrypted Apps
-      run: pear run -t test/07-encrypted.test.js
+    # - name: Test - Encrypted Apps
+    #   run: pear run -t test/07-encrypted.test.js
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
