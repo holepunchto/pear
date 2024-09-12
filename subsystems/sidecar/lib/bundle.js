@@ -277,7 +277,7 @@ module.exports = class Bundle {
 
     if (this.channel === null) this.channel = channelNode?.value || ''
 
-    const warmup = warmupNode.value
+    const warmup = warmupNode?.value
 
     if (warmup) {
       this.ranges = Tracer.inflate(warmup.meta, warmup.data)
