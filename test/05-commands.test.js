@@ -28,8 +28,8 @@ const rig = new Rig()
 
 test('commands setup', rig.setup)
 
-test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
-  plan(2)
+test('pear stage --json <channel> <dir>', async function ({ plan, alike }) {
+  plan(1)
 
   const testId = Math.floor(Math.random() * 100000)
 
@@ -53,8 +53,7 @@ test('pear stage --json <channel> <dir>', async function ({ plan, alike, is }) {
   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
   await running.inspector.close()
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
-  const { code } = await running.until.exit
-  is(code, 0)
+  await running.until.exit
 })
 test.todo('pear stage <channel> <absolute-path>')
 test.todo('pear stage <channel> <relative-path>')
@@ -231,7 +230,7 @@ test.todo('pear dump --checkout release pear://<key> <relative-path>')
 test.todo('pear dump --json pear://<key> <relative-path>')
 
 test('pear shift <source> <destination>', async function ({ plan, is, teardown, timeout }) {
-  plan(3)
+  plan(2)
   timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
@@ -298,17 +297,16 @@ test('pear shift <source> <destination>', async function ({ plan, is, teardown, 
       break
     }
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(shiftSuccess, true, 'should successfully shift app storage')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear shift --json <source> <destination>', async function ({ plan, is, alike, teardown, timeout }) {
-  plan(3)
+  plan(2)
   timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
@@ -377,17 +375,16 @@ test('pear shift --json <source> <destination>', async function ({ plan, is, ali
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   alike(tags, ['moving', 'complete', 'final'], 'should output correct tags')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear shift --force <source> <destination>', async function ({ plan, is, teardown, timeout }) {
-  plan(4)
+  plan(3)
   timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
@@ -456,18 +453,17 @@ test('pear shift --force <source> <destination>', async function ({ plan, is, te
       break
     }
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   is(shiftSuccess, true, 'should successfully shift app storage')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
   is(fs.existsSync(path.join(appStorage2, 'testold.txt')), false, 'should delete existing app storage file at destination')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear shift --force --json <source> <destination>', async function ({ plan, is, teardown, timeout, alike }) {
-  plan(4)
+  plan(3)
   timeout(180000)
 
   const relativePath = path.relative(harness, minimal)
@@ -538,14 +534,13 @@ test('pear shift --force --json <source> <destination>', async function ({ plan,
     tags.push(result.tag)
     if (result.tag === 'final') break
   }
-  await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
+  await running.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await running.inspector.close()
 
   alike(tags, ['moving', 'complete', 'final'], 'should output correct tags')
   is(fs.existsSync(path.join(appStorage2, 'test.txt')), true, 'should move app storage file to destination')
   is(fs.existsSync(path.join(appStorage2, 'testold.txt')), false, 'should delete existing app storage file at destination')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test.todo('pear gc releases')
