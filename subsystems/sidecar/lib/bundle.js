@@ -268,11 +268,16 @@ module.exports = class Bundle {
     }
 
     const { db } = this.drive
-    this.platformVersion = ((await db.get('platformVersion'))?.value) || null
+    const [platformVersionNode, channelNode, warmupNode] = await Promise.all([
+      db.get('platformVersion'),
+      db.get('channel'),
+      db.get('warmup')
+    ])
+    this.platformVersion = (platformVersionNode?.value) || null
 
-    if (this.channel === null) this.channel = (await db.get('channel'))?.value || ''
+    if (this.channel === null) this.channel = channelNode?.value || ''
 
-    const warmup = (await db.get('warmup'))?.value
+    const warmup = warmupNode.value
 
     if (warmup) {
       this.ranges = Tracer.inflate(warmup.meta, warmup.data)
