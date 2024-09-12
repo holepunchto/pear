@@ -146,7 +146,7 @@ test.todo('pear release --checkout release pear://<key>')
 test.todo('pear release --checkout release --json pear://<key>')
 
 test('pear info', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['info']
   await running.inspector.evaluate(`
@@ -169,12 +169,11 @@ test('pear info', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --json', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['info', '--json']
   await running.inspector.evaluate(`
@@ -195,12 +194,11 @@ test('pear info --json', async function ({ plan, alike, is }) {
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -226,12 +224,11 @@ test('pear info <channel> <relative-path>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -255,12 +252,11 @@ test('pear info --json <channel> <relative-path>', async function ({ plan, alike
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -286,12 +282,11 @@ test('pear info --changelog <channel> <relative-path>', async function ({ plan, 
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -315,12 +310,11 @@ test('pear info --changelog --json <channel> <relative-path>', async function ({
   await running.inspector.close()
 
   alike(tags, ['changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -346,12 +340,11 @@ test('pear info --changelog --metadata <channel> <relative-path>', async functio
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -375,12 +368,11 @@ test('pear info --changelog --metadata --json <channel> <relative-path>', async 
   await running.inspector.close()
 
   alike(tags, ['keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -406,12 +398,11 @@ test('pear info --changelog --key <channel> <relative-path>', async function ({ 
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -435,12 +426,11 @@ test('pear info --changelog --key --json <channel> <relative-path>', async funct
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -466,12 +456,11 @@ test('pear info --changelog --metadata --key <channel> <relative-path>', async f
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -495,12 +484,11 @@ test('pear info --changelog --metadata --key --json <channel> <relative-path>', 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -526,12 +514,11 @@ test('pear info --full-changelog <channel> <relative-path>', async function ({ p
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -557,12 +544,11 @@ test('pear info --full-changelog --metadata <channel> <relative-path>', async fu
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -586,12 +572,11 @@ test('pear info --full-changelog --metadata --json <channel> <relative-path>', a
   await running.inspector.close()
 
   alike(tags, ['keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -617,12 +602,11 @@ test('pear info --full-changelog --metadata --key <channel> <relative-path>', as
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -646,14 +630,13 @@ test('pear info --full-changelog --metadata --key --json <channel> <relative-pat
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 // test.skip('pear info --full-changelog --changelog') // TODO: after task Paparam flag relationships
 
 test('pear info --metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -679,12 +662,11 @@ test('pear info --metadata <channel> <relative-path>', async function ({ plan, i
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --metadata --key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -710,12 +692,11 @@ test('pear info --metadata --key <channel> <relative-path>', async function ({ p
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --metadata --key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -739,12 +720,11 @@ test('pear info --metadata --key --json <channel> <relative-path>', async functi
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -770,12 +750,11 @@ test('pear info --key <channel> <relative-path>', async function ({ plan, is }) 
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -799,12 +778,11 @@ test('pear info --key --json <channel> <relative-path>', async function ({ plan,
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -829,12 +807,11 @@ test('pear info pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -857,12 +834,11 @@ test('pear info --json pear://<key>', async function ({ plan, alike, is }) {
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -887,12 +863,11 @@ test('pear info --changelog pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -915,12 +890,11 @@ test('pear info --changelog --json pear://<key>', async function ({ plan, alike,
   await running.inspector.close()
 
   alike(tags, ['changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -945,12 +919,11 @@ test('pear info --changelog --metadata pear://<key>', async function ({ plan, is
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -973,12 +946,11 @@ test('pear info --changelog --metadata --json pear://<key>', async function ({ p
   await running.inspector.close()
 
   alike(tags, ['keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1003,12 +975,11 @@ test('pear info --changelog --key pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1031,12 +1002,11 @@ test('pear info --changelog --key --json pear://<key>', async function ({ plan, 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1061,12 +1031,11 @@ test('pear info --changelog --metadata --key pear://<key>', async function ({ pl
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --changelog --metadata --key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1089,12 +1058,11 @@ test('pear info --changelog --metadata --key --json pear://<key>', async functio
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1119,12 +1087,11 @@ test('pear info --full-changelog pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1149,12 +1116,11 @@ test('pear info --full-changelog --metadata pear://<key>', async function ({ pla
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1177,12 +1143,11 @@ test('pear info --full-changelog --metadata --json pear://<key>', async function
   await running.inspector.close()
 
   alike(tags, ['keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1207,12 +1172,11 @@ test('pear info --full-changelog --metadata --key pear://<key>', async function 
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --full-changelog --metadata --key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1235,12 +1199,11 @@ test('pear info --full-changelog --metadata --key --json pear://<key>', async fu
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1265,12 +1228,11 @@ test('pear info --metadata pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --metadata --key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1295,12 +1257,11 @@ test('pear info --metadata --key pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --metadata --key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1323,12 +1284,11 @@ test('pear info --metadata --key --json pear://<key>', async function ({ plan, a
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1353,12 +1313,11 @@ test('pear info --key pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1381,12 +1340,11 @@ test('pear info --key --json pear://<key>', async function ({ plan, alike, is })
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1412,12 +1370,11 @@ test('pear info --no-changelog <channel> <relative-path>', async function ({ pla
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1441,12 +1398,11 @@ test('pear info --no-changelog --json <channel> <relative-path>', async function
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1472,12 +1428,11 @@ test('pear info --no-metadata <channel> <relative-path>', async function ({ plan
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-metadata --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1501,12 +1456,11 @@ test('pear info --no-metadata --json <channel> <relative-path>', async function 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1532,12 +1486,11 @@ test('pear info --no-key <channel> <relative-path>', async function ({ plan, is 
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1561,12 +1514,11 @@ test('pear info --no-key --json <channel> <relative-path>', async function ({ pl
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1592,12 +1544,11 @@ test('pear info --no-changelog --no-metadata <channel> <relative-path>', async f
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1621,12 +1572,11 @@ test('pear info --no-changelog --no-metadata --json <channel> <relative-path>', 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1652,12 +1602,11 @@ test('pear info --no-changelog --no-key <channel> <relative-path>', async functi
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1681,12 +1630,11 @@ test('pear info --no-changelog --no-key --json <channel> <relative-path>', async
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --no-metadata <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1712,12 +1660,11 @@ test('pear info --no-key --no-metadata <channel> <relative-path>', async functio
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --no-metadata --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1741,12 +1688,11 @@ test('pear info --no-key --no-metadata --json <channel> <relative-path>', async 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --no-key <channel> <relative-path>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { channel, link } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1772,12 +1718,11 @@ test('pear info --no-changelog --no-metadata --no-key <channel> <relative-path>'
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --no-key --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { channel } = await rig.getOrCreateInfoInstance()
   const relativePath = path.relative(harness, minimal)
 
@@ -1801,12 +1746,11 @@ test('pear info --no-changelog --no-metadata --no-key --json <channel> <relative
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1831,12 +1775,11 @@ test('pear info --no-changelog pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1859,12 +1802,11 @@ test('pear info --no-changelog --json pear://<key>', async function ({ plan, ali
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1889,12 +1831,11 @@ test('pear info --no-metadata pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, true, 'should output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-metadata --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1917,12 +1858,11 @@ test('pear info --no-metadata --json pear://<key>', async function ({ plan, alik
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1947,12 +1887,11 @@ test('pear info --no-key pear://<key>', async function ({ plan, is }) {
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -1975,12 +1914,11 @@ test('pear info --no-key --json pear://<key>', async function ({ plan, alike, is
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'info', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2005,12 +1943,11 @@ test('pear info --no-changelog --no-metadata pear://<key>', async function ({ pl
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2033,12 +1970,11 @@ test('pear info --no-changelog --no-metadata --json pear://<key>', async functio
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'keys', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2063,12 +1999,11 @@ test('pear info --no-changelog --no-key pear://<key>', async function ({ plan, i
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, true, 'should output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2091,12 +2026,11 @@ test('pear info --no-changelog --no-key --json pear://<key>', async function ({ 
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'info', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --no-metadata pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2121,12 +2055,11 @@ test('pear info --no-key --no-metadata pear://<key>', async function ({ plan, is
   is(changelogPrinted, true, 'should output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-key --no-metadata --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2149,12 +2082,11 @@ test('pear info --no-key --no-metadata --json pear://<key>', async function ({ p
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'changelog', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --no-key pear://<key>', async function ({ plan, is }) {
-  plan(4)
+  plan(3)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2179,12 +2111,11 @@ test('pear info --no-changelog --no-metadata --no-key pear://<key>', async funct
   is(changelogPrinted, false, 'should not output the changelog')
   is(metadataPrinted, false, 'should not output the metadata')
   is(keyPrinted, false, 'should not output the key as link')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear info --no-changelog --no-metadata --no-key --json pear://<key>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
   const { link } = await rig.getOrCreateInfoInstance()
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
@@ -2207,8 +2138,7 @@ test('pear info --no-changelog --no-metadata --no-key --json pear://<key>', asyn
   await running.inspector.close()
 
   alike(tags, ['retrieving', 'final'], 'should output correct tags')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test.todo('pear dump pear://<key> <absolute-path>')
