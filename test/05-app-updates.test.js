@@ -10,12 +10,12 @@ const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
   setup = async ({ comment, timeout, teardown }) => {
-    // timeout(180000 * 6)
-    // const helper = new Helper()
-    // this.helper = helper
-    // comment('connecting local sidecar')
-    // await helper.ready()
-    // comment('local sidecar connected')
+    timeout(180000 * 6)
+    const helper = new Helper()
+    this.helper = helper
+    comment('connecting local sidecar')
+    await helper.ready()
+    comment('local sidecar connected')
     // const id = Math.floor(Math.random() * 10000)
     // comment('staging platform...')
     // const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
@@ -43,9 +43,9 @@ class Rig {
   }
 
   cleanup = async ({ comment }) => {
-    // comment('close helper')
-    // await this.helper.close()
-    // comment('close helper')
+    comment('close helper')
+    await this.helper.close()
+    comment('close helper')
   }
 }
 
