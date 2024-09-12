@@ -77,4 +77,8 @@ module.exports = (ipc) => async function info (cmd) {
     encryptionKey,
     cmdArgs: Bare.argv.slice(1)
   }), { ask: cmd.flags.ask }, ipc)
+
+  Bare?.on('exit', (code) => {
+    console.log('Bare.on("exit") has been called with exit code', code)
+  })
 }
