@@ -32,9 +32,8 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    global.Pear.teardown(async () => {
-      console.log('should not error')
-      // fs.promises.rm(platformDir, { recursive: true }).catch(() => {})
+    Bare.prependListener('beforeExit', async () => {
+      fs.promises.rm(platformDir, { recursive: true }).catch(() => {})
     }) // TODO simulate with Pear teadown or Helper.gc
   }
 
