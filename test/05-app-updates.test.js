@@ -6,7 +6,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 
-const tmp = fs.realpathSync(os.tmpdir())
+const tmp = 'tmp'
+//fs.realpathSync(os.tmpdir())
 
 class Rig {
   setup = async ({ comment, timeout }) => {
