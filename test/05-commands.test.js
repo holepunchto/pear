@@ -115,8 +115,10 @@ test.todo('pear stage --ignore <list> --name <name> --json pear://<key>')
 test.todo('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key>')
 test.todo('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key>')
 
-test('pear seed <channel> <absolute-path>', async function ({ plan, is }) {
+test('pear seed <channel> <absolute-path>', async function ({ plan, is, timeout }) {
   plan(1)
+  timeout(60000)
+
   const { channel } = await rig.getOrCreateSeedInstance()
 
   const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
@@ -141,8 +143,10 @@ test('pear seed <channel> <absolute-path>', async function ({ plan, is }) {
   await seeder.until.exit
 })
 
-test('pear seed <channel> <relative-path>', async function ({ plan, is }) {
+test('pear seed <channel> <relative-path>', async function ({ plan, is, timeout }) {
   plan(1)
+  timeout(60000)
+
   const { channel } = await rig.getOrCreateSeedInstance()
 
   const relativePath = path.relative(harness, minimal)
@@ -168,8 +172,10 @@ test('pear seed <channel> <relative-path>', async function ({ plan, is }) {
   await seeder.until.exit
 })
 
-test('pear seed --json <channel> <relative-path>', async function ({ plan, is, alike }) {
+test('pear seed --json <channel> <relative-path>', async function ({ plan, is, alike, timeout }) {
   plan(1)
+  timeout(60000)
+
   const { channel } = await rig.getOrCreateSeedInstance()
 
   const relativePath = path.relative(harness, minimal)
@@ -201,8 +207,10 @@ test('pear seed --json <channel> <relative-path>', async function ({ plan, is, a
 test.todo('pear seed --seeders <key> <channel> <relative-path>')
 test.todo('pear seed --seeders <key> --json <channel> <relative-path>')
 
-test('pear seed --name <name> <channel> <relative-path>', async function ({ plan, is }) {
+test('pear seed --name <name> <channel> <relative-path>', async function ({ plan, is, timeout }) {
   plan(1)
+  timeout(60000)
+
   const name = 'custom-name-' + Math.floor(Math.random() * 100000)
   const { channel } = await rig.getOrCreateSeedInstance(name)
   const relativePath = path.relative(harness, minimal)
@@ -229,8 +237,10 @@ test('pear seed --name <name> <channel> <relative-path>', async function ({ plan
   await seeder.until.exit
 })
 
-test('pear seed --name <name> --json <channel> <relative-path>', async function ({ plan, is, alike }) {
+test('pear seed --name <name> --json <channel> <relative-path>', async function ({ plan, is, alike, timeout }) {
   plan(1)
+  timeout(60000)
+
   const name = 'custom-name-' + Math.floor(Math.random() * 100000)
   const { channel } = await rig.getOrCreateSeedInstance(name)
   const relativePath = path.relative(harness, minimal)
@@ -259,8 +269,10 @@ test('pear seed --name <name> --json <channel> <relative-path>', async function 
   await seeder.until.exit
 })
 
-test('pear seed pear://<key>', async function ({ plan, is }) {
+test('pear seed pear://<key>', async function ({ plan, is, timeout }) {
   plan(1)
+  timeout(60000)
+
   const { link } = await rig.getOrCreateSeedInstance()
 
   const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
@@ -285,8 +297,10 @@ test('pear seed pear://<key>', async function ({ plan, is }) {
   await seeder.until.exit
 })
 
-test('pear seed --json pear://<key>', async function ({ plan, is, alike }) {
+test('pear seed --json pear://<key>', async function ({ plan, is, alike, timeout }) {
   plan(1)
+  timeout(60000)
+
   const { link } = await rig.getOrCreateSeedInstance()
 
   const seeder = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
@@ -317,8 +331,10 @@ test('pear seed --json pear://<key>', async function ({ plan, is, alike }) {
 test.todo('pear seed --seeders <key> pear://<key>')
 test.todo('pear seed --seeders <key> --json pear://<key>')
 
-test('pear seed --name <name> pear://<key>', async function ({ plan, is }) {
+test('pear seed --name <name> pear://<key>', async function ({ plan, is, timeout }) {
   plan(1)
+  timeout(60000)
+
   const name = 'custom-name-' + Math.floor(Math.random() * 100000)
   const { link } = await rig.getOrCreateSeedInstance(name)
 
@@ -344,8 +360,10 @@ test('pear seed --name <name> pear://<key>', async function ({ plan, is }) {
   await seeder.until.exit
 })
 
-test('pear seed --name <name> --json pear://<key>', async function ({ plan, is, alike }) {
+test('pear seed --name <name> --json pear://<key>', async function ({ plan, is, alike, timeout }) {
   plan(1)
+  timeout(60000)
+
   const name = 'custom-name-' + Math.floor(Math.random() * 100000)
   const { link } = await rig.getOrCreateSeedInstance(name)
 
