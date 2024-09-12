@@ -9,8 +9,7 @@ const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
 class Rig {
   setup = async ({ comment, timeout }) => {
     timeout(180000)
-    this.platformDir = path.join(Helper.root, 'pear')
-    const helper = new Helper({ platformDir: this.platformDir })
+    const helper = new Helper()
 
     this.helper = helper
     comment('connecting local sidecar')
@@ -22,7 +21,7 @@ class Rig {
 
     const testId = Math.floor(Math.random() * 100000)
     const argvStage = ['stage', '--json', 'test-' + testId, minimal]
-    const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+    const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
     await stager1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvStage)})
   `, { returnByValue: false })
@@ -38,7 +37,7 @@ class Rig {
     await stager1.until.exit
 
     const argvRelease = ['release', '--json', 'test-' + testId, minimal]
-    const releaser1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+    const releaser1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
     await releaser1.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvRelease)})
   `, { returnByValue: false })
@@ -54,7 +53,7 @@ class Rig {
 
     fs.writeFileSync(path.join(minimal, 'testfile.txt'), 'this is a test file')
 
-    const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+    const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
     await stager2.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argvStage)})
   `, { returnByValue: false })
@@ -95,7 +94,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
 
   const argv = ['stage', '--json', 'test-' + testId, minimal]
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
 
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -291,7 +290,7 @@ test('pear dump pear://<key> <absolute-path>', async function ({ plan, is, teard
   const targetDir = path.join(harness, `pear-dump-${testId}`)
   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['dump', link, targetDir]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -324,7 +323,7 @@ test('pear dump pear://<key> <relative-path>', async function ({ plan, is, teard
   const targetDirRelative = path.relative(harness, targetDir)
   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['dump', link, targetDirRelative]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -357,7 +356,7 @@ test('pear dump --checkout <n> pear://<key> <relative-path>', async function ({ 
   const targetDirRelative = path.relative(harness, targetDir)
   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['dump', link, '--checkout', `${versionOld}`, targetDirRelative]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -390,7 +389,7 @@ test('pear dump --checkout staged pear://<key> <relative-path>', async function 
   const targetDirRelative = path.relative(harness, targetDir)
   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['dump', link, '--checkout', 'staged', targetDirRelative]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -424,7 +423,7 @@ test('pear dump --checkout staged pear://<key> <relative-path>', async function 
 //   const targetDirRelative = path.relative(harness, targetDir)
 //   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 //
-//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+//   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
 //   const argv = ['dump', link, '--checkout', 'release', targetDirRelative]
 //   await running.inspector.evaluate(`
 //       __PEAR_TEST__.command(${JSON.stringify(argv)})
@@ -457,7 +456,7 @@ test('pear dump --json pear://<key> <relative-path>', async function ({ plan, is
   const targetDirRelative = path.relative(harness, targetDir)
   teardown(async () => fs.promises.rm(targetDir, { recursive: true }))
 
-  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true, platformDir: rig.platformDir })
+  const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['dump', '--json', link, targetDirRelative]
   await running.inspector.evaluate(`
       __PEAR_TEST__.command(${JSON.stringify(argv)})
