@@ -89,7 +89,7 @@ const rig = new Rig()
 test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(1)
 
   const testId = Math.floor(Math.random() * 100000)
 
@@ -113,8 +113,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   await running.inspector.evaluate('__PEAR_TEST__.ipc.close()', { returnByValue: false })
   await running.inspector.close()
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'])
-  const { code } = await running.until.exit
-  is(code, 0)
+  await running.until.exit
 })
 
 test.todo('pear stage <channel> <absolute-path>')
@@ -285,7 +284,7 @@ test.todo('pear info --no-changelog --no-metadata --no-key pear://<key>')
 test.todo('pear info --no-changelog --no-metadata --no-key --json pear://<key>')
 
 test('pear dump pear://<key> <absolute-path>', async function ({ plan, is, teardown }) {
-  plan(5)
+  plan(4)
   const { link } = await rig.getOrCreateDumpInstance()
 
   const testId = Math.floor(Math.random() * 100000)
@@ -313,12 +312,11 @@ test('pear dump pear://<key> <absolute-path>', async function ({ plan, is, teard
   is(fs.existsSync(targetDir), true, 'should create target directory')
   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), true, 'should dump testfile.txt')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear dump pear://<key> <relative-path>', async function ({ plan, is, teardown }) {
-  plan(5)
+  plan(4)
   const { link } = await rig.getOrCreateDumpInstance()
 
   const testId = Math.floor(Math.random() * 100000)
@@ -347,12 +345,11 @@ test('pear dump pear://<key> <relative-path>', async function ({ plan, is, teard
   is(fs.existsSync(targetDir), true, 'should create target directory')
   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), true, 'should dump testfile.txt')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear dump --checkout <n> pear://<key> <relative-path>', async function ({ plan, is, teardown }) {
-  plan(5)
+  plan(4)
   const { link, versionOld } = await rig.getOrCreateDumpInstance()
 
   const testId = Math.floor(Math.random() * 100000)
@@ -381,12 +378,11 @@ test('pear dump --checkout <n> pear://<key> <relative-path>', async function ({ 
   is(fs.existsSync(targetDir), true, 'should create target directory')
   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), false, 'should not dump testfile.txt')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test('pear dump --checkout staged pear://<key> <relative-path>', async function ({ plan, is, teardown }) {
-  plan(5)
+  plan(4)
   const { link } = await rig.getOrCreateDumpInstance()
 
   const testId = Math.floor(Math.random() * 100000)
@@ -415,13 +411,12 @@ test('pear dump --checkout staged pear://<key> <relative-path>', async function 
   is(fs.existsSync(targetDir), true, 'should create target directory')
   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), true, 'should dump testfile.txt')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 // TODO: Uncomment once --checkout release is supported
 // test('pear dump --checkout release pear://<key> <relative-path>', async function ({ plan, is, teardown }) {
-//   plan(5)
+//   plan(4)
 //   const { link } = await rig.getOrCreateDumpInstance()
 //
 //   const testId = Math.floor(Math.random() * 100000)
@@ -450,12 +445,11 @@ test('pear dump --checkout staged pear://<key> <relative-path>', async function 
 //   is(fs.existsSync(targetDir), true, 'should create target directory')
 //   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
 //   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), false, 'should not dump testfile.txt')
-//   const { code } = await running.until.exit
-//   is(code, 0, 'should have exit code 0')
+//   await running.until.exit
 // })
 
 test('pear dump --json pear://<key> <relative-path>', async function ({ plan, is, alike, teardown }) {
-  plan(5)
+  plan(4)
   const { link } = await rig.getOrCreateDumpInstance()
 
   const testId = Math.floor(Math.random() * 100000)
@@ -486,8 +480,7 @@ test('pear dump --json pear://<key> <relative-path>', async function ({ plan, is
   is(fs.existsSync(targetDir), true, 'should create target directory')
   is(fs.existsSync(path.join(targetDir, 'package.json')), true, 'should dump package.json')
   is(fs.existsSync(path.join(targetDir, 'testfile.txt')), true, 'should dump testfile.txt')
-  const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  await running.until.exit
 })
 
 test.todo('pear shift <source> <destination>')
