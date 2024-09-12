@@ -101,7 +101,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   await Helper.bootstrap(key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
+  // teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -119,7 +119,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
   fs.writeFileSync(path.join(dir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
+  // teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
