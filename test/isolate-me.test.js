@@ -32,7 +32,7 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    global.Pear.teardown(async () => Helper.gc(platformDir))
+    global.Pear.teardown(async () => Helper.gc(platformDir)) // TODO simulate with Pear teadown or Helper.gc 
   }
 
   cleanup = async ({ comment }) => {
@@ -46,7 +46,7 @@ const rig = new Rig()
 
 test.hook('updates setup', rig.setup)
 
-test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
+test('TODO: remove brittle', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   // plan(1)
   timeout(180000 * 6)

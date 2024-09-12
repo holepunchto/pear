@@ -106,7 +106,7 @@ jobs:
 
     - name: Test - App Updates
       run: |
-        pear run -t test/05-app-updates.test.js
+        pear run -t test/isolate-me.test.js
         echo $LASTEXITCODE
 
 
