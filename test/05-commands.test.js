@@ -43,7 +43,7 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ is, tim
 
     // const completedStaging = false
     for await (const line of running.lineout) {
-      // console.log(line)
+      console.log('stdout:', line)
       // if (line === 'Staging dry run complete!') completedStaging = true
       if (line.endsWith('Success')) break
     }
