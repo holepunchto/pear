@@ -6,7 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 
-const tmp = path.join(fs.realpathSync(os.tmpdir()), Math.floor(Math.random() * 10000) + '')
+const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
   setup = async ({ comment, timeout }) => {
@@ -32,13 +32,13 @@ class Rig {
     this.platformDir = platformDir
     await Helper.bootstrap(key, platformDir)
     comment('tmp platform bootstrapped')
-    global.Pear.teardown(async () => Helper.gc(platformDir))
+    // global.Pear.teardown(async () => Helper.gc(platformDir))
   }
 
   cleanup = async ({ comment }) => {
-    comment('shutdown local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shutdown')
+    comment('close helper')
+    await this.helper.close()
+    comment('close helper')
   }
 }
 
