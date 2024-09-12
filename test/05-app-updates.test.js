@@ -10,26 +10,29 @@ const tmp = fs.realpathSync(os.tmpdir())
 
 class Rig {
   setup = async ({ comment, timeout, teardown }) => {
-    timeout(180000 * 6)
-    const helper = new Helper()
-    this.helper = helper
-    comment('connecting local sidecar')
-    await helper.ready()
-    comment('local sidecar connected')
-    const id = Math.floor(Math.random() * 10000)
-    comment('staging platform...')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
-    comment('seeding platform...')
-    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
-    await until.announced
-    comment('platform seeding')
+    // timeout(180000 * 6)
+    // const helper = new Helper()
+    // this.helper = helper
+    // comment('connecting local sidecar')
+    // await helper.ready()
+    // comment('local sidecar connected')
+    // const id = Math.floor(Math.random() * 10000)
+    // comment('staging platform...')
+    // const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
+    // await Helper.pick(staging, { tag: 'final' })
+    // comment('platform staged')
+    // comment('seeding platform...')
+    // const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
+    // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    // const key = await until.key
+    // await until.announced
+    // comment('platform seeding')
+    const key = (await Pear.versions()).platform.key
+    comment('Using', key)
     comment('bootstrapping tmp platform...')
     const platformDir = path.join(tmp, 'tmp-pear')
-    this.platformDir = platformDir
+    // this.platformDir = platformDir
+    
     await Helper.bootstrap(key, platformDir)
     const appStager = new Helper(rig)
     teardown(() => appStager.close())
@@ -40,9 +43,9 @@ class Rig {
   }
 
   cleanup = async ({ comment }) => {
-    comment('close helper')
-    await this.helper.close()
-    comment('close helper')
+    // comment('close helper')
+    // await this.helper.close()
+    // comment('close helper')
   }
 }
 

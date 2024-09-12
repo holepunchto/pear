@@ -71,9 +71,9 @@ jobs:
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
 
-    - name: Shutdown Local Pear Sidecar
-      run: $PEAR sidecar shutdown
-      shell: bash
+    # - name: Shutdown Local Pear Sidecar
+    #   run: $PEAR sidecar shutdown
+    #   shell: bash
 
     - name: Remove node_modules
       run: rm -fr node_modules
@@ -82,15 +82,15 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Install fixture deps
-      run: |
-        pushd ./test/fixtures/harness
-        npm install
-        popd
-        pushd ./test/fixtures/encrypted
-        npm install
-        popd
-      shell: bash
+    # - name: Install fixture deps
+    #   run: |
+    #     pushd ./test/fixtures/harness
+    #     npm install
+    #     popd
+    #     pushd ./test/fixtures/encrypted
+    #     npm install
+    #     popd
+    #   shell: bash
 
     # - name: Test - Smoke
     #   run: pear run -t test/01-smoke.test.js
