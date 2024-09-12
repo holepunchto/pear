@@ -1,5 +1,23 @@
 # Pear Runtime Changelog
 
+## v1.5.0
+
+### Features
+
+* Add support for encryption in `pear run`, `pear stage`, `pear dump`, `pear init` and `pear info`.
+* Add `--no-ask` flag for `pear run`, `pear stage`, `pear dump`, `pear init` and `pear info`.
+
+### Fixes
+
+* CLI - `pear stage --name` and `pear seed --name` flag fix.
+* API - Untrusted worker on first run fix.
+
+### Improvements
+
+* CLI - `pear dev` deprecated.
+* Desktop - Add support for `https://*` and `http://*` in the pear.links.
+* Desktop - Update Windows `pear-ctrl` icons.
+
 ## v1.4.0
 
 ### Features
