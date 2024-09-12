@@ -50,9 +50,9 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const { ok, is, plan, timeout, comment, teardown } = t
   // plan(1)
   timeout(180000 * 6)
-  const appStager = new Helper(rig)
-  teardown(() => appStager.close())
-  await appStager.ready()
+  // const appStager = new Helper(rig)
+  // teardown(() => appStager.close())
+  // await appStager.ready()
   // const pid = Math.floor(Math.random() * 10000)
   // const fid = 'fixture'
   // const dir = harness
