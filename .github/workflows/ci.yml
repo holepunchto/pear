@@ -105,7 +105,10 @@ jobs:
     #   run: pear run -t test/04-platform-updates.test.js
 
     - name: Test - App Updates
-      run: pear run -t test/05-app-updates.test.js
+      run: |
+        pear run -t test/05-app-updates.test.js
+        echo $LASTEXITCODE
+
 
     # - name: Test - Worker
     #   run: pear run -t test/06-worker.test.js
