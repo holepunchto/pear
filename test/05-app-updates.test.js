@@ -36,9 +36,9 @@ class Rig {
   }
 
   cleanup = async ({ comment }) => {
-    comment('closing helper client')
-    await this.helper.close()
-    comment('helper client closed')
+    comment('shutdown local sidecar')
+    await this.helper.shutdown()
+    comment('local sidecar shutdown')
   }
 }
 
