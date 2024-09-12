@@ -16,19 +16,18 @@ class Rig {
     comment('connecting local sidecar')
     await helper.ready()
     comment('local sidecar connected')
-    // const id = Math.floor(Math.random() * 10000)
-    // comment('staging platform...')
-    // const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
-    // await Helper.pick(staging, { tag: 'final' })
-    // comment('platform staged')
-    // comment('seeding platform...')
-    // const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
-    // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    // const key = await until.key
-    // await until.announced
-    // comment('platform seeding')
-    const key = (await Pear.versions()).platform.key
-    comment('Using', key)
+    const id = Math.floor(Math.random() * 10000)
+    comment('staging platform...')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
+    await Helper.pick(staging, { tag: 'final' })
+    comment('platform staged')
+    comment('seeding platform...')
+    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const key = await until.key
+    await until.announced
+    comment('platform seeding')
+    
     comment('bootstrapping tmp platform...')
     const platformDir = path.join(tmp, 'tmp-pear')
     // this.platformDir = platformDir
