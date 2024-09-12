@@ -44,4 +44,8 @@ module.exports = (ipc) => async function stage (cmd) {
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
   await output(json, ipc.stage({ id, channel, key, dir, encryptionKey, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
+
+  Bare?.on('exit', (code) => {
+    console.log('Bare.on("exit") has been called with exit code', code)
+  })
 }
