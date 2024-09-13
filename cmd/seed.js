@@ -16,10 +16,7 @@ const output = outputter('seed', {
   'peer-remove': (info) => `-_- peer drop ${info}`,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask) {
-      const explain = 'This application is encrypted.\n' +
-        '\nEnter the password to seed the app.\n\n'
-      const message = 'Added encryption key, run seed again to complete it.'
-      return password({ ipc, key: err.info.key, explain, message })
+      return password({ ipc, key: err.info.key, cmd: 'seed' })
     } else {
       return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }

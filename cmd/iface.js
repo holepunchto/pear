@@ -145,42 +145,81 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function trust ({ ipc, key, explain, act, ask, message }) {
-  const z32 = hypercoreid.encode(key)
-  const dialog = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain
-  const delim = '?'
-  const validation = (value) => !(value.toLowerCase() !== 'trust' && value === 'TRUST')
-  const msg = ansi.cross + ' uppercase TRUST to confirm'
-
-  const result = await permit({ dialog, ask, delim, validation, msg })
-  if (result.value === 'TRUST') {
-    await ipc.permit({ key })
-    print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
-    print(act + '\n')
-    await ipc.close()
-    Bare.exit()
-  } else {
-    print(message, false)
-    await ipc.close()
-    Bare.exit(77)
+async function trust ({ ipc, key, cmd }) {
+  const explain = {
+    run: 'Be sure that software is trusted before running it\n' +
+      '\nType "TRUST" to allow execution or anything else to exit\n\n',
+    init: 'This template is encrypted.\n' +
+      '\nEnter the password to init from the template.\n\n'
   }
-}
 
-async function password ({ ipc, key, explain, message }) {
-  const dialog = ansi.cross + ' ' + explain
-  const ask = 'Password'
-  const delim = ':'
-  const validation = (key) => key.length > 0
-  const msg = '\nPlease, enter a valid password.\n'
-  const result = await permit({ dialog, ask, delim, validation, msg, masked: true })
-  print(`\n${ansi.key} Hashing password...`)
-  await ipc.permit({ key, password: result.value })
-  print('\n' + ansi.tick + ' ' + message + '\n')
+  const act = {
+    run: 'Use pear run again to execute trusted application',
+    init: 'Use pear init again to initalize from trusted template'
+  }
+
+  const ask = {
+    run: 'Tust application',
+    init: 'Tust template'
+  }
+
+  const z32 = hypercoreid.encode(key)
+  const dialog = ansi.cross + ' Key pear://' + z32 + ' is not known\n\n' + explain[cmd]
+  const delim = '?'
+  const validation = (value) => value === 'TRUST'
+  const msg = '\n' + ansi.cross + ' uppercase TRUST to confirm\n'
+
+  const interact = new Interact(dialog, [
+    {
+      name: 'value',
+      default: '',
+      prompt: ask[cmd],
+      delim,
+      validation,
+      msg
+    }
+  ])
+
+  await interact.run()
+  await ipc.permit({ key })
+  print('\n' + ansi.tick + ' pear://' + z32 + ' is now trusted\n')
+  print(act[cmd] + '\n')
   await ipc.close()
   Bare.exit()
 }
 
-async function permit ({ dialog, ask, delim, validation, msg, masked }) {
+async function password ({ ipc, key, cmd }) {
+  const z32 = hypercoreid.normalize(key)
+
+  const explain = {
+    run: 'pear://' + z32 + ' is an encrypted application. \n' +
+      '\nEnter the password to run the app.\n\n',
+    stage: 'This application is encrypted.\n' +
+        '\nEnter the password to stage the app.\n\n',
+    seed: 'This application is encrypted.\n' +
+        '\nEnter the password to seed the app.\n\n',
+    dump: 'This application is encrypted.\n' +
+        '\nEnter the password to dump the app.\n\n',
+    init: 'This template is encrypted.\n' +
+      '\nEnter the password to init from the template.\n\n',
+    info: 'This application is encrypted.\n' +
+      '\nEnter the password to retrieve info.\n\n'
+  }
+
+  const message = {
+    run: 'Added encryption key for pear://' + z32,
+    stage: 'Added encryption key, run stage again to complete it.',
+    seed: 'Added encryption key, run seed again to complete it.',
+    dump: 'Added encryption key, run dump again to complete it.',
+    init: 'Added encryption key, run init again to complete it.',
+    info: 'Added encryption key, run info again to complete it.'
+  }
+
+  const dialog = ansi.cross + ' ' + explain[cmd]
+  const ask = 'Password'
+  const delim = ':'
+  const validation = (key) => key.length > 0
+  const msg = '\nPlease, enter a valid password.\n'
   const interact = new Interact(dialog, [
     {
       name: 'value',
@@ -190,8 +229,13 @@ async function permit ({ dialog, ask, delim, validation, msg, masked }) {
       validation,
       msg
     }
-  ], { masked })
-  return interact.run()
+  ], { masked: true })
+  const result = await interact.run()
+  print(`\n${ansi.key} Hashing password...`)
+  await ipc.permit({ key, password: result.value })
+  print('\n' + ansi.tick + ' ' + message[cmd] + '\n')
+  await ipc.close()
+  Bare.exit()
 }
 
 module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }

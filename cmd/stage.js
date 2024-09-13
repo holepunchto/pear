@@ -23,10 +23,7 @@ const output = outputter('stage', {
   },
   error: async (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask) {
-      const explain = 'This application is encrypted.\n' +
-        '\nEnter the password to stage the app.\n\n'
-      const message = 'Added encryption key, run stage again to complete it.'
-      return password({ ipc, key: err.info.key, explain, message })
+      return password({ ipc, key: err.info.key, cmd: 'stage' })
     } else {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }

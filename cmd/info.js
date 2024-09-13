@@ -46,10 +46,7 @@ const output = outputter('info', {
   changelog,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask) {
-      const explain = 'This application is encrypted.\n' +
-        '\nEnter the password to retrieve info.\n\n'
-      const message = 'Added encryption key, run info again to complete it.'
-      return password({ ipc, key: err.info.key, explain, message })
+      return password({ ipc, key: err.info.key, cmd: 'info' })
     } else {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }

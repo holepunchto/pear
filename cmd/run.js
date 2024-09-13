@@ -1,6 +1,5 @@
 'use strict'
 const { outputter, trust, stdio, password } = require('./iface')
-const hypercoreid = require('hypercore-id-encoding')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -24,17 +23,9 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask) {
       if (!err.info.encrypted) {
-        const explain = 'Be sure that software is trusted before running it\n' +
-          '\nType "TRUST" to allow execution or anything else to exit\n\n'
-        const act = 'Use pear run again to execute trusted application\n'
-        const ask = 'Trust application'
-        await trust({ ipc, key: err.info.key, message: err.message, explain, act, ask })
+        await trust({ ipc, key: err.info.key, cmd: 'run' })
       } else {
-        const z32 = hypercoreid.normalize(err.info.key)
-        const explain = 'pear://' + z32 + ' is an encrypted application. \n' +
-          '\nEnter the password to run the app.\n\n'
-        const message = 'Added encryption key for pear://' + z32
-        await password({ ipc, key: err.info.key, explain, message })
+        await password({ ipc, key: err.info.key, cmd: 'run' })
       }
     } else {
       throw err

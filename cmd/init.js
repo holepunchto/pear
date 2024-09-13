@@ -41,16 +41,9 @@ module.exports = (ipc) => async function init (cmd) {
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
     if (err.info && err.info.encrypted) {
-      const explain = 'This template is encrypted.\n' +
-        '\nEnter the password to init from the template.\n\n'
-      const message = 'Added encryption key, run init again to complete it.'
-      await password({ ipc, key: err.info.key, explain, message })
+      await password({ ipc, key: err.info.key, cmd: 'init' })
     } else {
-      const explain = 'Be sure that software is trusted before using it\n' +
-        '\nType "TRUST" to allow template initialization or anything else to exit\n\n'
-      const ask = 'Trust template'
-      const act = 'Use pear init again to initalize from trusted template'
-      await trust({ ipc, key: err.info.key, message: err.message, explain, ask, act })
+      await trust({ ipc, key: err.info.key, cmd: 'init' })
     }
   } finally {
     await ipc.close()
