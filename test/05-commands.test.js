@@ -26,7 +26,6 @@ class Rig {
 
 const rig = new Rig()
 
-// TODO: Readd exit code checks once Windows bug is fixed
 test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
