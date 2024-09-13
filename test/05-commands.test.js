@@ -402,7 +402,7 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
 })
 
 test('pear stage --truncate <n> <channel> <relative-path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -418,7 +418,8 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', 'test-' + testId, relativePath]
@@ -442,7 +443,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
 })
 
 test('pear stage --truncate <n> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -458,7 +459,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', 'test-' + testId, relativePath]
@@ -632,7 +634,7 @@ test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>'
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-  plan(5)
+  plan(6)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -648,7 +650,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const ignoredFile = path.join(harness, 'ignored.txt')
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
@@ -690,7 +693,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-  plan(5)
+  plan(6)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -706,7 +709,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const ignoredFile = path.join(harness, 'ignored.txt')
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
@@ -744,7 +748,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
 })
 
 test('pear stage pear://<key> <path>', async function ({ plan, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -763,7 +767,8 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', link, relativePath]
@@ -784,7 +789,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
 })
 
 test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -803,7 +808,8 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--json', link, relativePath]
@@ -829,7 +835,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 })
 
 test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -848,7 +854,8 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', link, relativePath]
@@ -869,7 +876,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
 })
 
 test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -888,7 +895,8 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--json', link, relativePath]
@@ -917,7 +925,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
 })
 
 test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -936,7 +944,8 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--bare', link, relativePath]
@@ -960,7 +969,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
 })
 
 test('pear stage --bare --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -979,7 +988,8 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--bare', '--json', link, relativePath]
@@ -1008,7 +1018,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
 })
 
 test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1027,7 +1037,8 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1054,7 +1065,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
 })
 
 test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1073,7 +1084,8 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1104,7 +1116,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
 })
 
 test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1123,7 +1135,8 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', link, relativePath]
@@ -1147,7 +1160,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
 })
 
 test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1166,7 +1179,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', link, relativePath]
@@ -1195,7 +1209,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 })
 
 test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1214,7 +1228,8 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, link, relativePath]
@@ -1242,7 +1257,7 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
 })
 
 test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1261,7 +1276,8 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, '--json', link, relativePath]
@@ -1290,7 +1306,7 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
 })
 
 test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1309,7 +1325,8 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1343,7 +1360,7 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
 })
 
 test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1362,7 +1379,8 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1397,7 +1415,7 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
-  plan(5)
+  plan(6)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1416,7 +1434,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, link, relativePath]
@@ -1453,7 +1472,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(5)
+  plan(6)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1472,7 +1491,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
 
   await stager1.inspector.evaluate('__PEAR_TEST__.ipc.destroy()', { returnByValue: false })
   await stager1.inspector.close()
-  await stager1.until.exit
+  const { code: code1 } = await stager1.until.exit
+  is(code1, 0, 'should have exit code 0 for initial stage')
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', link, relativePath]
