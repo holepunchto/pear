@@ -144,6 +144,7 @@ class Sidecar extends ReadyResource {
       app = null
       unload = null
       unloader = null
+      transformer = null
       minvering = false
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
@@ -511,7 +512,7 @@ class Sidecar extends ReadyResource {
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
       metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
-      if (app.transformWorker) app.transformWorker.close()
+      if (app.transformer) app.transformer.close()
       const tearingDown = app.teardown()
       if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }

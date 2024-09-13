@@ -15,23 +15,26 @@
       "minWidth": 500,
       "backgroundColor": "#151517"
     },
-    "links": {
-      "react": "https://unpkg.com/react@18/umd/react.production.min.js",
-      "react-dom": "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-    },
     "transforms": {
       "**/*.jsx": [
         {
           "name": "pear-jsx",
           "options": {
-            "pragma": "React.createElement"
+            "pragma": "React.createElement",
+            "import": {
+              "module": "./~react",
+              "export": "default",
+              "type": "esm"
+            }
           }
         }
       ]
     }
   },
   "dependencies": {
-    "pear-jsx": "github:holepunchto/pear-jsx"
+    "pear-jsx": "github:holepunchto/pear-jsx",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "brittle": "^3.0.0",
