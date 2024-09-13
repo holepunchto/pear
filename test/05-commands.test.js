@@ -123,7 +123,7 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   packageJson.pear.stage = { entrypoints: ['index.js'] }
   fs.writeFileSync(path.join(targetDir, 'run.js'), 'console.log("run")')
   fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
-  teardown(async () => { await fs.promises.rm(targetDir, { recursive: true }) })
+  teardown(() => { fs.rmSync(targetDir, { recursive: true }) })
 
   const relativePath = path.relative(harness, targetDir)
   const argv = ['stage', 'test-' + testId, relativePath]
@@ -165,7 +165,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   packageJson.pear.stage = { ignore: ['/ignoreinner.txt'] }
   fs.writeFileSync(path.join(targetDir, 'ignoreinner.txt'), 'this file should be ignored')
   fs.writeFileSync(path.join(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2))
-  teardown(async () => { await fs.promises.rm(targetDir, { recursive: true }) })
+  teardown(() => { fs.rmSync(targetDir, { recursive: true }) })
 
   const relativePath = path.relative(harness, targetDir)
   const argv = ['stage', 'test-' + testId, relativePath]
