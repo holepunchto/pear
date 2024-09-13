@@ -18,7 +18,7 @@ class Harness extends ReadyResource {
     console.log(`{ "tag": "inspector", "data": { "key": "${this.inspectorKey}" }}`)
   }
 
-  async close () {
+  async _close () {
     await this.inspector.disable()
     await this.sub?.destroy()
     if (this._client) await this._client.close()
