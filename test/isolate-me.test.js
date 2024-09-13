@@ -1,6 +1,14 @@
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
+
+global.Pear = {
+  config: {
+    args: [],
+    applink: `file:///${os.cwd()}`
+  }
+}
+
 const Helper = require('./helper')
 
 const tmp = fs.realpathSync(os.tmpdir())
@@ -29,8 +37,8 @@ class Rig {
     await Helper.bootstrap(key, platformDir)
     console.log('tmp platform bootstrapped')
     Bare.prependListener('beforeExit', async () => {
-      console.log('before rm')
-      fs.promises.rm(platformDir, { recursive: true }).catch(() => {})
+      console.log('before rm', platformDir)
+      await fs.promises.rm(platformDir, { recursive: true }).catch(() => {})
       console.log('after rm')
     }) // TODO simulate with Pear teadown or Helper.gc
   }
@@ -46,9 +54,7 @@ const rig = new Rig()
 
 async function main () {
   await rig.setup()
-  const appStager = new Helper(rig)
-  await appStager.ready()
-  appStager.close()
+
   await rig.cleanup()
 }
 
