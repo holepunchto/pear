@@ -29,7 +29,7 @@ const rig = new Rig()
 test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const argv = ['stage', '--json', 'test-' + testId, minimal]
@@ -52,11 +52,12 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   await running.inspector.close()
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const argv = ['stage', 'test-' + testId, minimal]
@@ -75,11 +76,12 @@ test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -99,11 +101,12 @@ test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage <channel> <relative-path> (package.json pear.config.stage.entrypoints <relative-paths>)', async function ({ plan, teardown, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
 
@@ -139,11 +142,12 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <relative-paths>)', async function ({ plan, teardown, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
 
@@ -183,11 +187,12 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
 
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignoreinner.txt')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -211,11 +216,12 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
   await running.inspector.close()
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, is }) {
-  plan(1)
+  plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -235,11 +241,12 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, i
   await running.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -267,11 +274,12 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
 
   is(completeTag?.data?.dryRun, true)
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -294,11 +302,12 @@ test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }
 
   is(completedStaging, true, 'should complete staging')
   is(skippedWarmup, true, 'should skip warmup')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --bare --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -326,11 +335,12 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
 
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -360,11 +370,12 @@ test('pear stage --ignore <list> <channel> <relative-path>', async function ({ p
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignored.txt')
   is(addedIndex, true, 'should add index.js')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -397,11 +408,12 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
   is(files.includes('/index.js'), true, 'should add index.js')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --truncate <n> <channel> <relative-path>', async function ({ plan, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -438,11 +450,12 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
 
   is(completedStaging, true, 'should complete staging')
   is(readdedFile, true, 'should readd index.js')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --truncate <n> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -484,11 +497,12 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 
   is(files.includes('/index.js'), true, 'should readd index.js')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -515,11 +529,12 @@ test('pear stage --name <name> <channel> <relative-path>', async function ({ pla
 
   is(completedStaging, true, 'should complete staging')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -547,11 +562,12 @@ test('pear stage --name <name> --json <channel> <relative-path>', async function
 
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-  plan(4)
+  plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -589,11 +605,12 @@ test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async
   is(addedIndex, true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
 
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-  plan(4)
+  plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -629,11 +646,12 @@ test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>'
   is(files.includes('/index.js'), true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await running.until.exit
+  const { code } = await running.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
-  plan(6)
+  plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -688,11 +706,12 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
   is(addedIgnored, false, 'should not add ignored.txt')
   is(addedIndex, true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
-  plan(6)
+  plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -743,11 +762,12 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   is(files.includes('/index.js'), true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage pear://<key> <path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -784,11 +804,12 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -830,11 +851,12 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
   await stager2.inspector.close()
 
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -871,11 +893,12 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
   await stager2.inspector.close()
 
   is(completedStaging, true, 'should complete staging')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -920,11 +943,12 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
 
   alike(tags, ['staging', 'dry', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
   is(completeTag?.data?.dryRun, true, 'should be dry run')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -964,11 +988,12 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
 
   is(completedStaging, true, 'should complete staging')
   is(skippedWarmup, true, 'should skip warmup')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --bare --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1013,11 +1038,12 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
 
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1060,11 +1086,12 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
 
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignored.txt')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(2)
+  plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1111,11 +1138,12 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   await stager2.inspector.close()
 
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1155,11 +1183,12 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
 
   is(completedStaging, true, 'should complete staging')
   is(readdedFile, true, 'should readd package.json after truncate')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1204,11 +1233,12 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 
   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1252,11 +1282,12 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
 
   is(completedStaging, true, 'should complete staging')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(3)
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1301,11 +1332,12 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
 
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(4)
+  plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1355,11 +1387,12 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignored.txt')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
-  plan(4)
+  plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1410,11 +1443,12 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
-  plan(6)
+  plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1467,11 +1501,12 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
   is(addedIgnored, false, 'should not add ignored.txt')
   is(addedIndex, true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
-  plan(6)
+  plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1521,7 +1556,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   is(files.includes('/index.js'), true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
-  await stager2.until.exit
+  const { code } = await stager2.until.exit
+  is(code, 0, 'should have exit code 0')
 })
 
 test.todo('pear seed <channel> <absolute-path>')
