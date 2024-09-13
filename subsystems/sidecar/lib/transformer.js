@@ -23,7 +23,6 @@ module.exports = class Transformer {
   }
 
   close () {
-    console.log('closing transformer...')
     this.#queue = null
     this.stream.end()
     this.pipe.end()
