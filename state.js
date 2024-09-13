@@ -11,10 +11,44 @@ const { PLATFORM_DIR, RUNTIME } = require('./constants')
 const parseLink = require('./lib/parse-link')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
-const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE } = require('./errors')
+const { ERR_INVALID_APP_NAME, ERR_INVALID_APP_STORAGE, ERR_INVALID_CONFIG } = require('./errors')
 const validateAppName = (name) => {
   if (/^[@/a-z0-9-_]+$/.test(name)) return name
   throw ERR_INVALID_APP_NAME('The package.json name / pear.name field must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
+}
+const validateString = (str) => {
+  if (/^[@/a-zA-Z0-9-_.]+$/.test(str)) return str
+  throw ERR_INVALID_CONFIG('Invalid string in config. The string may only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), underscores (_), forward slashes (/), asperands (@), and periods (.).')
+}
+const validatePattern = (pattern) => {
+  if (/^[a-zA-Z0-9-_*?!.@/[\]{}()+^$\\|]+$/.test(pattern)) return pattern
+  throw ERR_INVALID_CONFIG(`Invalid pattern "${pattern}". Pattern contains invalid characters.`)
+}
+const validateTransforms = (transforms) => {
+  if (!transforms) return null
+  if (typeof transforms !== 'object') throw ERR_INVALID_CONFIG('Transforms should be an object.')
+  for (const pattern in transforms) {
+    validatePattern(pattern)
+    const transformArray = transforms[pattern]
+    if (!Array.isArray(transformArray)) throw ERR_INVALID_CONFIG(`Transforms for "${pattern}" should be an array.`)
+    for (const transform of transformArray) {
+      if (typeof transform === 'string') {
+        validateString(transform)
+        continue
+      }
+      if (typeof transform === 'object' && transform !== null) {
+        if (!transform.name || typeof transform.name !== 'string') throw ERR_INVALID_CONFIG(`Each transform in "${pattern}" should have a "name" field of type string.`)
+        validateString(transform.name)
+
+        if ('options' in transform && (typeof transform.options !== 'object' || transform.options === null)) {
+          throw ERR_INVALID_CONFIG(`The "options" field in "${pattern}" should be an object.`)
+        }
+        continue
+      }
+      throw ERR_INVALID_CONFIG(`Invalid transform format in "${pattern}". Each transform should be either a string or an object.`)
+    }
+  }
+  return transforms
 }
 const readPkg = (pkgPath) => {
   let pkg = null
@@ -60,7 +94,7 @@ module.exports = class State {
       ...(pkg?.bundledDependencies || [])
     ]
     state.entrypoints = new Set(pkg?.pear?.stage?.entrypoints || [])
-    state.transforms = pkg?.pear?.transforms || null
+    state.transforms = validateTransforms(pkg?.pear?.transforms) || null
     if (pkg == null) return
     try { this.storage(state) } catch (err) { state.error = err }
   }

@@ -10,9 +10,13 @@ let transforms = []
 let bundles = []
 let buffer = null
 
+let timer = null
+
 stream.on('data', (data) => {
+  timeout(10_000)
+
   if (transforms.length === 0) {
-    try { transforms = JSON.parse(data.toString()) } catch (err) { console.error(err) }
+    transforms = JSON.parse(data.toString())
     return
   }
 
@@ -38,5 +42,15 @@ stream.on('data', (data) => {
 
   bundles.push(data)
 })
-stream.on('end', () => stream.end())
+stream.on('end', () => {
+  pipe.end()
+  Pear.exit()
+})
 stream.on('error', (err) => console.error(err))
+
+function timeout (ms) {
+  clearTimeout(timer)
+  timer = setTimeout(async () => {
+    if (transforms.length === 0) stream.end()
+  }, ms)
+}
