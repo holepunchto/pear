@@ -1,7 +1,8 @@
+'use strict'
 /* global Pear */
-import Module from 'bare-module'
-import FramedStream from 'framed-stream'
-import { isWindows } from 'which-runtime'
+const Module = require('bare-module')
+const FramedStream = require('framed-stream')
+const { isWindows } = require('which-runtime')
 
 const pipe = Pear.worker.pipe()
 const stream = new FramedStream(pipe)
