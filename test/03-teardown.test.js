@@ -1,3 +1,4 @@
+'use strict'
 const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
@@ -10,6 +11,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   plan(5)
 
   const stager = new Helper()
+  teardown(() => stager.close())
   await stager.ready()
 
   const dir = harness
@@ -23,7 +25,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.shutdown())
+  teardown(() => seeder.close())
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
@@ -53,6 +55,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   plan(5)
 
   const stager = new Helper()
+  teardown(() => stager.close())
   await stager.ready()
 
   const dir = harness
@@ -66,7 +69,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.shutdown())
+  teardown(() => seeder.close())
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
@@ -103,6 +106,7 @@ test.skip('exit with non-zero code in teardown', async function ({ is, ok, plan,
   plan(4)
 
   const stager = new Helper()
+  teardown(() => stager.close())
   await stager.ready()
 
   const dir = harness
@@ -116,7 +120,7 @@ test.skip('exit with non-zero code in teardown', async function ({ is, ok, plan,
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.shutdown())
+  teardown(() => seeder.close())
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
