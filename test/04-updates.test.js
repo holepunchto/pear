@@ -1,70 +1,26 @@
+'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const os = require('bare-os')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-
 const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
 const seedOpts = (id, dir = harness) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-const tmp = fs.realpathSync(os.tmpdir())
+const rig = new Helper.Rig()
+const { tmp } = rig
 
-class Rig {
-  setup = async ({ comment, timeout }) => {
-    timeout(180000)
-    const helper = new Helper()
-    this.helper = helper
-    comment('connecting local sidecar')
-    await helper.ready()
-    comment('local sidecar connected')
-    const id = Math.floor(Math.random() * 10000)
-    comment('staging platform...')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
-    comment('seeding platform...')
-    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
-    await until.announced
-    comment('platform seeding')
-    comment('bootstrapping tmp platform...')
-    const platformDir = path.join(tmp, 'tmp-pear')
-    this.platformDir = platformDir
-    await Helper.bootstrap(key, platformDir)
-    comment('tmp platform bootstrapped')
-    const bootstrapped = new Helper({ platformDir: this.platformDir })
-    this.bootstrapped = bootstrapped
-    comment('connecting tmp sidecar...')
-    await bootstrapped.ready()
-    comment('tmp sidecar connected')
-    global.Pear.teardown(async () => Helper.gc(platformDir))
-  }
-
-  cleanup = async ({ comment }) => {
-    comment('shutting down bootstrapped sidecar')
-    await this.bootstrapped.shutdown()
-    comment('bootstrapped sidecar shutdown')
-    comment('shutting down local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shutdown')
-  }
-}
-
-const rig = new Rig()
-
-test('updates setup', rig.setup)
+test.hook('updates setup', rig.setup)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
-  const { platformDir } = rig
-  const stager1 = new Helper({ platformDir })
+  const stager1 = new Helper(rig)
+  teardown(() => stager1.close())
   await stager1.ready()
 
   comment('1. Stage and run app')
@@ -76,7 +32,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, rig)
   const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
@@ -88,7 +44,8 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   fs.writeFileSync(path.join(harness, file), 'test')
   teardown(() => { try { fs.unlinkSync(path.join(harness, file)) } catch { /* ignore */ } })
   comment('\tstaging')
-  const stager2 = new Helper({ platformDir })
+  const stager2 = new Helper(rig)
+  teardown(() => stager2.close())
   await stager2.ready()
 
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
@@ -104,7 +61,8 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   comment('releasing')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releaser = new Helper({ platformDir })
+  const releaser = new Helper(rig)
+  teardown(() => releaser.close())
   await releaser.ready()
 
   const releasing = releaser.release(releaseOpts(testId, key))
@@ -123,7 +81,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 })
 
 test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
-  const { ok, is, plan, comment, timeout } = t
+  const { ok, is, plan, comment, timeout, teardown } = t
 
   timeout(180000)
   plan(7)
@@ -133,8 +91,8 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   comment('1. Stage and run app')
 
   comment('\tstaging')
-  const { platformDir } = rig
-  const stager1 = new Helper({ platformDir })
+  const stager1 = new Helper(rig)
+  teardown(() => stager1.close())
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
@@ -142,7 +100,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir })
+  const running = await Helper.open(link, { tags: ['exit'] }, rig)
   const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
   const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
@@ -156,7 +114,8 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   fs.writeFileSync(path.join(harness, file), 'test')
 
   comment('\trestaging')
-  const stager2 = new Helper({ platformDir })
+  const stager2 = new Helper(rig)
+  teardown(() => stager2.close())
   await stager2.ready()
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
@@ -179,7 +138,8 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
 
-  const stager3 = new Helper({ platformDir })
+  const stager3 = new Helper(rig)
+  teardown(() => stager3.close())
   await stager3.ready()
   await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
 
@@ -202,8 +162,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
   timeout(180000)
-  const { platformDir } = rig
-  const appStager = new Helper({ platformDir })
+  const appStager = new Helper(rig)
+  teardown(() => appStager.close())
   await appStager.ready()
 
   const pid = Math.floor(Math.random() * 10000)
@@ -216,7 +176,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
-  const appSeeder = new Helper({ platformDir })
+  const appSeeder = new Helper(rig)
+  teardown(() => appSeeder.close())
   teardown(() => appSeeder.close())
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
@@ -229,14 +190,16 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(appAnnounced, 'seeding is announced')
 
   comment('staging tmp platform')
-  const stager = new Helper({ platformDir })
+  const stager = new Helper(rig)
+  teardown(() => stager.close())
   await stager.ready()
   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding tmp platform')
-  const seeder = new Helper({ platformDir })
+  const seeder = new Helper(rig)
+  teardown(() => seeder.close())
   teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
@@ -283,7 +246,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   teardown(() => { try { fs.unlinkSync(path.join(Helper.root, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
   comment('restaging tmp platform')
-  const stager2 = new Helper({ platformDir })
+  const stager2 = new Helper(rig)
+  teardown(() => stager2.close())
   await stager2.ready()
   const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final2 = await Helper.pick(staging2, { tag: 'final' })
@@ -305,8 +269,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   plan(12)
   timeout(180000)
 
-  const { platformDir } = rig
-  const appStager = new Helper({ platformDir })
+  const appStager = new Helper(rig)
+  teardown(() => appStager.close())
   await appStager.ready()
 
   const pid = Math.floor(Math.random() * 10000)
@@ -319,7 +283,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
-  const appSeeder = new Helper({ platformDir })
+  const appSeeder = new Helper(rig)
+  teardown(() => appSeeder.close())
 
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
@@ -332,14 +297,16 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   ok(appAnnounced, 'seeding is announced')
 
   comment('staging tmp platform')
-  const stager = new Helper({ platformDir })
+  const stager = new Helper(rig)
+  teardown(() => stager.close())
   await stager.ready()
   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding tmp platform')
-  const seeder = new Helper({ platformDir })
+  const seeder = new Helper(rig)
+  teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -376,7 +343,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   teardown(() => { fs.unlinkSync(path.join(Helper.root, file)) }, { order: -Infinity })
 
   comment('restaging tmp platform')
-  const stager2 = new Helper({ platformDir })
+  const stager2 = new Helper(rig)
+  teardown(() => stager2.close())
   await stager2.ready()
   const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final2 = await Helper.pick(staging2, { tag: 'final' })
@@ -390,7 +358,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('releasing tmp platform')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releaser = new Helper({ platformDir })
+  const releaser = new Helper(rig)
+  teardown(() => releaser.close())
   await releaser.ready()
   const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
   await Helper.pick(releasing, { tag: 'released' })
@@ -414,22 +383,23 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(10)
   timeout(180000)
-  const { platformDir } = rig
-  const appStager = new Helper({ platformDir })
+  const appStager = new Helper(rig)
+  teardown(() => appStager.close())
   await appStager.ready()
   const pid = Math.floor(Math.random() * 10000)
   const fid = 'fixture'
-  const appDir = path.join(Helper.root, 'test', 'fixtures', 'harness')
+  const dir = harness
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
-  const appSeeder = new Helper({ platformDir })
+  const appSeeder = new Helper(rig)
+  teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -439,14 +409,16 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   ok(appAnnounced, 'seeding is announced')
 
   comment('staging tmp platform')
-  const stager = new Helper({ platformDir })
+  const stager = new Helper(rig)
+  teardown(() => stager.close())
   await stager.ready()
   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding tmp platform')
-  const seeder = new Helper({ platformDir })
+  const seeder = new Helper(rig)
+  teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -479,13 +451,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(appDir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(dir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
 
   comment('restaging app')
-  const appStager2 = new Helper({ platformDir })
+  const appStager2 = new Helper(rig)
+  teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -504,22 +477,23 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(12)
   timeout(180000)
-  const { platformDir } = rig
-  const appStager = new Helper({ platformDir })
+  const appStager = new Helper(rig)
+  teardown(() => appStager.close())
   await appStager.ready()
   const pid = Math.floor(Math.random() * 10000)
   const fid = 'fixture'
-  const appDir = path.join(Helper.root, 'test', 'fixtures', 'harness')
+  const dir = harness
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
-  const appSeeder = new Helper({ platformDir })
+  const appSeeder = new Helper(rig)
+  teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -529,14 +503,16 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   ok(appAnnounced, 'seeding is announced')
 
   comment('staging tmp platform')
-  const stager = new Helper({ platformDir })
+  const stager = new Helper(rig)
+  teardown(() => stager.close())
   await stager.ready()
   const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding tmp platform')
-  const seeder = new Helper({ platformDir })
+  const seeder = new Helper(rig)
+  teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
@@ -569,13 +545,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(appDir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(appDir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(dir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
 
   comment('restaging app')
-  const appStager2 = new Helper({ platformDir })
+  const appStager2 = new Helper(rig)
+  teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -587,13 +564,12 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('releasing app')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releaser = new Helper({ platformDir })
+  const releaser = new Helper(rig)
+  teardown(() => releaser.close())
   await releaser.ready()
 
   const releasing = releaser.release({ channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
-
-  teardown(() => releaser.close()) // TODO why is this needed?
 
   comment('waiting for app update notification')
   const update2 = await update2ActualPromise
@@ -608,5 +584,3 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
 })
-
-test('updates cleanup', rig.cleanup)

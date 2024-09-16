@@ -49,6 +49,10 @@ jobs:
     - name: Install pear-cli
       run: npm i -g pear
 
+    - name: Remove node_modules
+      run: rm -fr node_modules
+      shell: bash
+
     - name: Install w/out dev deps
       run: npm i --omit=dev
 
@@ -67,15 +71,52 @@ jobs:
     - name: Bootstrap System Pear from Local Seeded Pear
       run: pear
 
+    - name: Bootstrap Artifact Pears
+      run: pear run -t scripts/artifacts.mjs $(cat $(npm list -g pear --parseable --depth=0)/pear.key)
+      shell: bash
+
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
+      shell: bash
+
+    - name: Remove node_modules
+      run: rm -fr node_modules
       shell: bash
 
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Run tests
-      run: npm test
+    - name: Install fixture deps
+      run: |
+        pushd ./test/fixtures/harness
+        npm install
+        popd
+        pushd ./test/fixtures/encrypted
+        npm install
+        popd
+      shell: bash
+
+    - name: Test - Smoke
+      run: pear run -t test/01-smoke.test.js
+
+    - name: Test - Shutdown
+      run: pear run -t test/02-shutdown.test.js
+
+    - name: Test - Teardown
+      run: pear run -t test/03-teardown.test.js
+
+    - name: Test - Updates
+      run: pear run -t test/04-updates.test.js
+
+    - name: Test - Worker
+      run: pear run -t test/05-worker.test.js
+
+    - name: Test - Encrypted Apps
+      run: pear run -t test/06-encrypted.test.js
+
+    - name: Shutdown Local Pear Sidecar
+      run: $PEAR sidecar shutdown
+      shell: bash
 
     - name: Lint
       run: npm run lint
