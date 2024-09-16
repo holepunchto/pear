@@ -34,7 +34,7 @@ const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
 } = require('../../constants')
-const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED, ERR_INVALID_PROJECT_DIR } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
@@ -477,6 +477,16 @@ class Sidecar extends ReadyResource {
     const appling = (await this.applings.get(key.toString('hex'))) || null
 
     return { wokeup, appling }
+  }
+
+  async touch (params) {
+    const dir = params.dir
+    const state = new State({ dir, flags: params.flags || {} })
+    if (!state.manifest) throw new ERR_INVALID_PROJECT_DIR(`"${state.pkgPath}" not found. Pear project must have a package.json`)
+    const corestore = this._getCorestore(state.manifest.name, params.channel)
+    await corestore.ready()
+    const key = await Hyperdrive.getDriveKey(corestore)
+    return hypercoreid.normalize(key)
   }
 
   shutdown (params, client) { return this.#shutdown(client) }
