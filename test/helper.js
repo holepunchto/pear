@@ -1,4 +1,6 @@
 'use strict'
+const os = require('bare-os')
+const env = require('bare-env')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const fs = require('bare-fs')
@@ -14,13 +16,48 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const PLATFORM_DIR = global.Pear.config.pearDir
+const { PLATFORM_DIR } = require('../constants')
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 
+class Rig {
+  tmp = fs.realpathSync(os.tmpdir())
+  setup = async ({ comment, timeout }) => {
+    if (env.CI) {
+      comment('CI: using prepared artifacts for rigging')
+      return
+    }
+    timeout(180000)
+    const helper = new Helper()
+    this.helper = helper
+    comment('connecting local sidecar')
+    await helper.ready()
+    comment('local sidecar connected')
+    const id = Math.floor(Math.random() * 10000)
+    comment('staging platform...')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
+    await Helper.pick(staging, { tag: 'final' })
+    comment('platform staged')
+    comment('seeding platform...')
+    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const key = await until.key
+    await until.announced
+    comment('platform seeding')
+    comment('bootstrapping tmp platform...')
+    this.platformDir = path.join(this.tmp, 'tmp-pear')
+    await Helper.bootstrap(key, this.platformDir)
+    comment('tmp platform bootstrapped')
+    comment('closing helper client')
+    await this.helper.close()
+    comment('helper client closed')
+  }
+}
+
 class Helper extends IPC {
-  #expectSidecar = false
-  static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
+  static Rig = Rig
+
+  // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor (opts = {}) {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
@@ -45,12 +82,10 @@ class Helper extends IPC {
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
-    this.lock = lock
-    this.socketPath = socketPath
-    this.#expectSidecar = opts.expectSidecar
-    this.opts = opts
   }
 
+  // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
+  static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
@@ -137,7 +172,7 @@ class Helper extends IPC {
     }
   }
 
-  async accessLock (platformDir) {
+  static async accessLock (platformDir) {
     const pdir = platformDir || PLATFORM_DIR
     const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
       if (err) {
@@ -168,10 +203,6 @@ class Helper extends IPC {
       }
     }
     return true
-  }
-
-  async sleep (ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   static async bootstrap (key, dir) {

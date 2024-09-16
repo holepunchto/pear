@@ -101,6 +101,7 @@
     "pear-ipc": "^2.0.0",
     "pear-link": "^2.0.1",
     "pear-updater": "^3.1.0",
+    "pear-updater-bootstrap": "^1.1.3",
     "protomux": "^3.6.0",
     "pw-to-ek": "^1.0.0",
     "quickbit-universal": "^2.2.0",
@@ -127,7 +128,6 @@
     "hypercore": "^10.36.4",
     "newline-decoder": "^1.0.2",
     "pear-inspect": "^1.1.3",
-    "pear-updater-bootstrap": "^1.1.3",
     "port-get": "^1.0.4",
     "standard": "^17.0.0"
   },

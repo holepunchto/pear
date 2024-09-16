@@ -4,64 +4,18 @@ const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const Helper = require('./helper')
-const os = require('bare-os')
-const fs = require('bare-fs')
-const tmp = fs.realpathSync(os.tmpdir())
 const encrypted = path.join(Helper.root, 'test', 'fixtures', 'encrypted')
 
-class Rig {
-  setup = async ({ comment, timeout }) => {
-    timeout(180000)
-    const helper = new Helper()
-    this.helper = helper
-    comment('connecting local sidecar')
-    await helper.ready()
-    comment('local sidecar connected')
-    const id = Math.floor(Math.random() * 10000)
-    comment('staging platform...')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
-    comment('seeding platform...')
-    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
-    this.key = key
-    await until.announced
-    comment('platform seeding')
-    comment('bootstrapping tmp platform...')
-    const platformDir = path.join(tmp, 'tmp-pear')
-    this.platformDir = platformDir
-    await Helper.bootstrap(key, platformDir)
-    comment('tmp platform bootstrapped')
-    const bootstrapped = new Helper({ platformDir: this.platformDir })
-    this.bootstrapped = bootstrapped
-    comment('connecting tmp sidecar...')
-    await bootstrapped.ready()
-    comment('tmp sidecar connected')
-    global.Pear.teardown(async () => Helper.gc(platformDir))
-  }
+const rig = new Helper.Rig()
 
-  cleanup = async ({ comment }) => {
-    comment('shutting down bootstrapped sidecar')
-    await this.bootstrapped.shutdown()
-    comment('bootstrapped sidecar shutdown')
-    comment('shutting down local sidecar')
-    await this.helper.shutdown()
-    comment('local sidecar shutdown')
-  }
-}
+test.hook('encrypted setup', rig.setup)
 
-const rig = new Rig()
-
-test.hook('encrypted test setup', rig.setup)
-
-test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout }) {
+test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(7)
 
-  const { platformDir } = rig
-  const helper = rig.bootstrapped
+  const helper = new Helper(rig)
+  teardown(() => helper.close())
   await helper.ready()
   const dir = encrypted
 
@@ -93,7 +47,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('run encrypted pear application')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir, encryptionKey: name })
+  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: rig.platformDir, encryptionKey: name })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
 
   is(value?.app?.key, appKey, 'app version matches staged key')
@@ -109,5 +63,3 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
 })
-
-test.hook('encrypted test cleanup', rig.cleanup)

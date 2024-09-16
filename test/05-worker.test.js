@@ -7,25 +7,12 @@ const worker = path.join(Helper.root, 'test', 'fixtures', 'worker')
 
 test('worker pipe', async function ({ is, plan, comment, teardown }) {
   plan(1)
-  teardown(async () => {
-    const shutdowner = new Helper()
-    await shutdowner.ready()
-    await shutdowner.shutdown()
-  })
-
   const stager = new Helper()
+  teardown(() => stager.close())
   await stager.ready()
   const dir = worker
 
-  const id = Math.floor(Math.random() * 10000)
-
-  comment('staging')
-  const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const addendum = await Helper.pick(staging, { tag: 'addendum' })
-
-  comment('run worker')
-
-  const pipe = Pear.worker.run(addendum.link)
+  const pipe = Pear.worker.run(dir)
 
   const messages = []
   const response = new Promise((resolve) => {
