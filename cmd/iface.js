@@ -139,7 +139,9 @@ provides access to corestores.
 This command instructs any existing sidecar process to shutdown
 and then becomes the sidecar.`,
 
-  dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`
+  dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`,
+
+  touch: 'If channel name is not specified, a random 16 bytes hex name will be used.'
 
 }
 

@@ -128,9 +128,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Get channel key by name'),
+    summary('Create Pear link'),
     description(usage.descriptions.touch),
-    arg('<channel>', 'Channel name'),
+    arg('[channel]', 'Channel name'),
     flag('--json', 'Newline delimited JSON output'),
     runners.touch(ipc)
   )
