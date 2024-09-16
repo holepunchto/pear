@@ -18,7 +18,9 @@ module.exports = class Transformer {
   }
 
   run (link, args) {
-    this.pipe = this.worker.run(link, args, { stdio: ['ignore', 'ignore', 'ignore'] })
+    this.pipe = this.worker.run(link, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    this.pipe.on('error', (err) => { console.error(err.data.toString()) })
+
     this.stream = new FramedStream(this.pipe)
   }
 
@@ -55,9 +57,13 @@ module.exports = class Transformer {
 
     stream.write(buffer)
 
-    const transformedBuffer = await new Promise((resolve) => {
+    const transformedBuffer = await new Promise((resolve, reject) => {
       stream.once('data', (data) => {
         resolve(data)
+      })
+
+      stream.on('error', (data) => {
+        reject(new Error('Transform error:', data.toString()))
       })
     })
 
