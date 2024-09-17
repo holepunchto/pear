@@ -5,6 +5,9 @@ const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
+const { PassThrough } = require('streamx')
+const picomatch = require('picomatch')
+const { TransformWorker } = require('../../../lib/worker')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
@@ -169,6 +172,36 @@ module.exports = class Http extends ReadyResource {
       const meta = await bundle.entry(link.filename)
       if (meta === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
+      const transforms = []
+      const patterns = app.state?.transforms
+
+      for (const ptn in patterns) {
+        const isMatch = picomatch(ptn)
+        if (isMatch(link.filename)) {
+          transforms.push(...patterns[ptn])
+          if (ptn.endsWith('.jsx') || ptn.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+        }
+      }
+
+      if (transforms.length > 0) {
+        if (!app.transformWorker || app.transformWorker?.running === null) {
+          const workerLink = `${this.sidecar.bundle.link}/transform`
+          app.transformWorker = new TransformWorker(app)
+          app.transformWorker.run(workerLink)
+        }
+
+        const buffer = await bundle.get(link.filename)
+        const worker = app.transformWorker
+        worker.running = worker.running
+          .then(() => worker.transform(transforms, buffer))
+          .then((buffer) => {
+            const stream = new PassThrough()
+            stream.end(buffer)
+            return streamx.pipelinePromise(stream, res)
+          })
+
+        return worker.running
+      }
       const stream = bundle.streamFrom(meta)
       await streamx.pipelinePromise(stream, res)
     }
