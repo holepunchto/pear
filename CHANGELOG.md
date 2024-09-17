@@ -5,19 +5,23 @@
 ### Features
 
 * Add support for encryption in `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info`.
-* CLI - Add `--no-ask` flag for `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info`.
-* CLI - `pear touch` - create Pear link.
+* CLI - add `--no-ask` flag for `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info`.
+* CLI - `pear touch` -  Create Pear Link. Advanced. Combine with `pear stage <link>` and `pear release <link>`. Useful for automation since no channel name is required.
 
 ### Fixes
 
 * CLI - `pear stage --name` and `pear seed --name` flag fix.
-* API - Untrusted worker on first run fix.
+* API - untrusted worker on first run fix.
+* Return `ERR_HTTP_NOT_FOUND` with a 404 error from the sidecar when a requested file is not found.
+* Mac - ensure traffic lights visibility fix.
 
 ### Improvements
 
-* CLI - `pear dev` deprecated.
-* Desktop - Add support for `https://*` and `http://*` in the pear.links.
-* Desktop - Update Windows `pear-ctrl` icons.
+* CLI - `pear dev` deprecated. Use `pear run --dev` instead.
+* Desktop - add support for `https://*` and `http://*` in the pear.links.
+* Desktop - update Windows `pear-ctrl` icons.
+* Add `no-cache` to sidecar request headers.
+* Disable the default Electron sandbox and add the `--sandbox` flag to re-enable it.
 
 ## v1.4.0
 
