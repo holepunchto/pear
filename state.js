@@ -60,6 +60,7 @@ module.exports = class State {
       ...(pkg?.bundledDependencies || [])
     ]
     state.entrypoints = new Set(pkg?.pear?.stage?.entrypoints || [])
+    state.transforms = pkg?.pear?.transforms || null
     if (pkg == null) return
     try { this.storage(state) } catch (err) { state.error = err }
   }
@@ -80,9 +81,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, transforms } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, transforms, pearDir }
   }
 
   static isKeetInvite (segment) {
