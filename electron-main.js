@@ -10,7 +10,7 @@ const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
 const runDefinition = require('./run/definition')
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 const runix = argv.indexOf('--run')
-const { accessSync, constants } = require('fs')
+const { accessSync, statSync, constants } = require('fs')
 if (runix > -1) argv.splice(runix, 1)
 
 configureElectron()
@@ -70,6 +70,9 @@ function configureElectron () {
   if (!isMac && process.argv.indexOf('--sandbox') === -1) {
     if (isLinux) {
       try {
+        const mode = statSync('/dev/shm').mode
+        const stickyBitMask = 0o1000
+        if (mode & stickyBitMask === 0 || mode.uid !== 0) throw new Error()
         accessSync('/dev/shm', constants.W_OK | constants.X_OK)
       } catch {
         electron.app.commandLine.appendSwitch('no-sandbox')
