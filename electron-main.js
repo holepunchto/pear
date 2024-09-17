@@ -10,6 +10,7 @@ const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
 const runDefinition = require('./run/definition')
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 const runix = argv.indexOf('--run')
+const { accessSync, constants } = require('fs')
 if (runix > -1) argv.splice(runix, 1)
 
 configureElectron()
@@ -66,7 +67,17 @@ function configureElectron () {
 
   // Linux upgrades can effect chromium-sandbox, Windows has a similar issue with sandboxing
   // we already disable sandbox when opening the app window, so no security risk posed
-  if (!isMac && process.argv.indexOf('--sandbox') === -1) electron.app.commandLine.appendSwitch('no-sandbox')
+  if (!isMac && process.argv.indexOf('--sandbox') === -1) {
+    if (isLinux) {
+      try {
+        accessSync('/dev/shm', constants.W_OK | constants.X_OK)
+      } catch {
+        electron.app.commandLine.appendSwitch('no-sandbox')
+      }
+    } else {
+      electron.app.commandLine.appendSwitch('no-sandbox')
+    }
+  }
 
   /* c8 ignore start */
   const inspix = process.argv.indexOf('--inspector-port')
