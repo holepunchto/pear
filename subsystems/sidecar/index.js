@@ -741,7 +741,7 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    // check for drive encryption, only throws if the drive has been previously replicated
+    // check for drive encryption, only throws DECODING_ERROR if the drive has been previously replicated
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
