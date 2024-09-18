@@ -9,6 +9,8 @@ const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
 
+const isTTY = stdio.in.isTTY
+
 const pt = (arg) => arg
 const es = () => ''
 const ansi = isWindows
@@ -194,4 +196,4 @@ async function permit ({ dialog, ask, delim, validation, msg, masked }) {
   return interact.run()
 }
 
-module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }

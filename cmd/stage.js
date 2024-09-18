@@ -4,7 +4,7 @@ const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const parseLink = require('../lib/parse-link')
 const { ERR_INVALID_INPUT } = require('../errors')
-const { password } = require('./iface')
+const { password, isTTY } = require('./iface')
 
 let blocks = 0
 let total = 0
@@ -22,7 +22,7 @@ const output = outputter('stage', {
     return { output: 'status', message }
   },
   error: async (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask) {
+    if (err.info && err.info.encrypted && info.ask && isTTY) {
       const explain = 'This application is encrypted.\n' +
         '\nEnter the password to stage the app.\n\n'
       const message = 'Added encryption key, run stage again to complete it.'

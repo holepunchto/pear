@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, trust, stdio, password } = require('./iface')
+const { outputter, trust, stdio, password, isTTY } = require('./iface')
 const hypercoreid = require('hypercore-id-encoding')
 
 const output = outputter('run', {
@@ -22,7 +22,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     const appArgs = cmd.rest || []
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
-    if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask) {
+    if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask && isTTY) {
       if (!err.info.encrypted) {
         const explain = 'Be sure that software is trusted before running it\n' +
           '\nType "TRUST" to allow execution or anything else to exit\n\n'
