@@ -747,10 +747,11 @@ class Sidecar extends ReadyResource {
     try {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
-    } catch {
-      const err = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-      app.report({ err })
-      return { startId, bail: err }
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
+      const permissionError = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
+      app.report({ err: permissionError })
+      return { startId, bail: permissionError }
     }
 
     const appBundle = new Bundle({
