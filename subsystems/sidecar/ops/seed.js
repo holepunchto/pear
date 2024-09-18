@@ -51,14 +51,6 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
-    if (verbose) {
-      this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
-      this.push({ tag: 'meta-discovery-key', data: bundle.drive.discoveryKey.toString('hex') })
-      this.push({ tag: 'content-key', data: bundle.drive.contentKey.toString('hex') })
-    }
-
-    this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
-
     await bundle.join(this.sidecar.swarm, { seeders, server: true })
 
     try {
@@ -67,6 +59,14 @@ module.exports = class Seed extends Opstream {
       if (err.code !== 'DECODING_ERROR') throw err
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
+
+    if (verbose) {
+      this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
+      this.push({ tag: 'meta-discovery-key', data: bundle.drive.discoveryKey.toString('hex') })
+      this.push({ tag: 'content-key', data: bundle.drive.contentKey.toString('hex') })
+    }
+
+    this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
