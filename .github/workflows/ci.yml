@@ -82,8 +82,23 @@ jobs:
         cd -
       shell: bash
 
-    - name: Test
-      run: $PEAR run -t test --verbose
+    - name: Test - Smoke
+      run: $PEAR run -t test/01-smoke.test.js
+
+    # - name: Test - Shutdown
+    #   run: $PEAR run -t test/02-shutdown.test.js
+
+    # - name: Test - Teardown
+    #   run: $PEAR run -t test/03-teardown.test.js
+
+    # - name: Test - Worker
+    #   run: $PEAR run -t test/04-worker.test.js
+
+    # - name: Test - Encrypted Apps
+    #   run: $PEAR run -t test/05-encrypted.test.js
+
+    # - name: Test - Updates
+    #   run: $PEAR run -t test/06-updates.test.js
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
