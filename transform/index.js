@@ -35,7 +35,7 @@ stream.on('data', (data) => {
       try {
         const transform = Module.load(new URL('app:/transform.bundle'), bundle).exports
         return transform(source, options)
-      } catch (err){ return stream.emit('error', err) }
+      } catch (err) { return stream.emit('error', err) }
     }, buffer)
 
     stream.write(buffer)
