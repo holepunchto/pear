@@ -64,5 +64,4 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(info, 'retrieves info from encrypted app')
 })
 
-
 test.hook('encrypted cleanup', rig.cleanup)

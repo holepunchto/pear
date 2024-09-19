@@ -169,7 +169,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -177,7 +177,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -238,7 +238,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -247,7 +247,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   teardown(() => appSeeder.close())
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -280,7 +280,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment(`creating platform test file (${file})`)
   fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
   teardown(() => { fs.unlinkSync(path.join(rig.artifactDir, file)) }, { order: -Infinity })
-  
+
   comment('restaging rig platform')
   const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
   await Helper.pick(staging, { tag: 'final' })
@@ -322,7 +322,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -330,7 +330,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -368,7 +368,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -394,7 +394,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -402,7 +402,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -440,7 +440,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -456,7 +456,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(() => releaser.close())
   await releaser.ready()
 
-  const releasing = releaser.release({ channel: channel, name: channel, key: appKey })
+  const releasing = releaser.release({ channel, name: channel, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for app update notification')

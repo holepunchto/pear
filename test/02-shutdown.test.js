@@ -23,7 +23,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
     fs.closeSync(fd)
     comment('file descriptor closed')
   })
-  
+
   const granted = fsext.tryLock(fd)
   ok(granted, 'file lock is free')
 })
