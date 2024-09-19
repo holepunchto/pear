@@ -3,11 +3,14 @@ const hypercoreid = require('hypercore-id-encoding')
 const byteSize = require('tiny-byte-size')
 const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
+const tty = require('bare-tty')
 const Interact = require('../lib/interact')
 const { CHECKOUT } = require('../constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
+
+const isTTY = tty.isTTY(0)
 
 const pt = (arg) => arg
 const es = () => ''
@@ -139,7 +142,9 @@ provides access to corestores.
 This command instructs any existing sidecar process to shutdown
 and then becomes the sidecar.`,
 
-  dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`
+  dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`,
+
+  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.'
 
 }
 
@@ -238,4 +243,4 @@ async function password ({ ipc, key, cmd }) {
   Bare.exit()
 }
 
-module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter }
+module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }

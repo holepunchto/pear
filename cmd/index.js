@@ -11,6 +11,7 @@ const runners = {
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
+  touch: require('./touch'),
   shift: require('./shift'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
@@ -126,6 +127,15 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.dump(ipc)
   )
 
+  const touch = command(
+    'touch',
+    summary('Create Pear link'),
+    description(usage.descriptions.touch),
+    arg('[channel]', 'Channel name'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.touch(ipc)
+  )
+
   const shift = command(
     'shift',
     summary('Advanced. Move storage between apps'),
@@ -186,6 +196,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     release,
     info,
     dump,
+    touch,
     shift,
     sidecar,
     gc,
