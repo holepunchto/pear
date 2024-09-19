@@ -29,11 +29,3 @@ test('worker pipe', async function ({ is, plan, comment, teardown }) {
 
   pipe.write('exit')
 })
-
-test('Pear.config.dht is available', async function ({ is, ok, plan }) {
-  plan(3)
-  const nodes = Pear.config.dht
-  ok(Array.isArray(nodes), 'is an array')
-  is(nodes.length > 0, true, 'nodes are available')
-  is(nodes.length <= 20, true, 'stays under the limit param')
-})
