@@ -46,6 +46,32 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
 
+    - name: Remove node_modules
+      run: rm -fr node_modules
+      shell: bash
+
+    - name: Install w/out dev deps
+      run: npm i --omit=dev
+
+    - name: Self-Stage
+      run: $PEAR stage ci
+      shell: bash
+
+    - name: Artifact Pear
+      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artifact-pear
+      shell: bash
+
+    - name: Shutdown Local Pear Sidecar
+      run: $PEAR sidecar shutdown
+      shell: bash
+
+    - name: Remove node_modules
+      run: rm -fr node_modules
+      shell: bash
+
+    - name: Install w/ dev deps
+      run: npm install
+
     - name: Install fixture deps
       run: |
         cd ./test/fixtures/harness
