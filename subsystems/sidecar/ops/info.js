@@ -34,7 +34,8 @@ module.exports = class Info extends Opstream {
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
         await drive.ready()
-      } catch {
+      } catch (err) {
+        if (err.code !== 'DECODING_ERROR') throw err
         throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     } else {
@@ -60,11 +61,8 @@ module.exports = class Info extends Opstream {
         const pkg = await bundle.drive.get('/package.json', { wait: false })
         if (pkg === null) throw ERR_NOT_FOUND_OR_NOT_CONNECTED('could not get /package.json')
       } catch (error) {
-        if (error.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') {
-          throw error
-        } else {
-          throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
-        }
+        if (error.code !== 'DECODING_ERROR') throw error
+        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     }
 

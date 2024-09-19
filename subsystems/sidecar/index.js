@@ -744,16 +744,17 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    // check for drive encryption, only throws if the drive has been previously replicated
+    // check for drive encryption, only throws DECODING_ERROR if the drive has been previously replicated
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
-    } catch {
-      const err = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-      app.report({ err })
-      return { startId, bail: err }
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
+      const permissionError = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
+      app.report({ err: permissionError })
+      return { startId, bail: permissionError }
     }
 
     const appBundle = new Bundle({

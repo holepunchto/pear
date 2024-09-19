@@ -42,12 +42,22 @@ module.exports = class Seed extends Opstream {
       await session.add(bundle)
       await bundle.ready()
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
-    } catch {
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (!link && bundle.drive.core.length === 0) {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+    }
+
+    await bundle.join(this.sidecar.swarm, { seeders, server: true })
+
+    try {
+      await bundle.drive.get('/package.json')
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
+      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (verbose) {
@@ -57,8 +67,6 @@ module.exports = class Seed extends Opstream {
     }
 
     this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
-
-    await bundle.join(this.sidecar.swarm, { seeders, server: true })
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
