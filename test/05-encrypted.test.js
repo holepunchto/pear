@@ -4,7 +4,7 @@ const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const Helper = require('./helper')
-const encrypted = path.join(Helper.root, 'test', 'fixtures', 'encrypted')
+const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 const rig = new Helper.Rig()
 
@@ -63,3 +63,5 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
 })
+
+test.hook('encrypted cleanup', rig.cleanup)

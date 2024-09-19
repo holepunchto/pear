@@ -9,9 +9,11 @@ const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 
-const url = global.Pear?.config?.applink && global.Pear.config.applink.startsWith('file:')
-  ? (global.Pear.config.applink.endsWith('/') ? global.Pear.config.applink : global.Pear.config.applink + '/')
-  : (module.url || electronModuleURL())
+let url = module.url || electronModuleURL()
+if (url.protocol === 'pear:' && url.host === 'dev') {
+  url = global.Pear.config.applink
+  if (url.slice(-1) !== '/') url += '/'
+}
 
 const mount = new URL('.', url)
 const LOCALDEV = CHECKOUT.length === null
