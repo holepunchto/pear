@@ -2,7 +2,9 @@ const Bundle = require('bare-bundle')
 const FramedStream = require('framed-stream')
 const b4a = require('b4a')
 const path = require('bare-path')
+const picomatch = require('picomatch')
 const Worker = require('../../../lib/worker')
+const { ERR_TRANSFORM_FAILED } = require('../../../errors')
 
 module.exports = class Transformer {
   app = null
@@ -11,23 +13,28 @@ module.exports = class Transformer {
   stream = null
   #queue = null
 
-  constructor (app) {
+  constructor (app, link, args) {
+    if (app.transformer) return app.transformer
+
     this.app = app
-    this.worker = new Worker()
-    this.#queue = Promise.resolve()
+    this.link = link
+    this.args = args
+    app.transformer = this
   }
 
-  run (link, args) {
-    this.pipe = this.worker.run(link, args, { stdio: ['ignore', 'pipe', 'pipe'] })
-    this.pipe.on('error', (err) => { console.error(err.data.toString()) })
-
+  open () {
+    this.#queue = Promise.resolve()
+    this.worker = new Worker()
+    this.pipe = this.worker.run(this.link, this.args, { stdio: 'inherit' })
     this.stream = new FramedStream(this.pipe)
+    this.stream.on('end', () => this.stream.end())
   }
 
   close () {
     this.#queue = null
-    this.stream.end()
+    this.worker = null
     this.pipe.end()
+    this.stream.end()
   }
 
   queue (transforms, buffer, next) {
@@ -39,9 +46,20 @@ module.exports = class Transformer {
     return this.#queue === null
   }
 
-  async transform (transforms, buffer) {
-    if (transforms.length === 0) return buffer
+  async transform (buffer, filename) {
+    const transforms = []
+    const patterns = this.app.state?.transforms
+    for (const ptn in patterns) {
+      const isMatch = picomatch(ptn)
+      if (isMatch(filename)) {
+        transforms.push(...patterns[ptn])
+      }
+    }
+    if (transforms.length === 0) return null
 
+    if (this.isClosed) this.open()
+
+    const pipe = this.pipe
     const stream = this.stream
     stream.write(b4a.from(JSON.stringify(transforms)))
 
@@ -62,8 +80,13 @@ module.exports = class Transformer {
         resolve(data)
       })
 
-      stream.on('error', (data) => {
-        reject(new Error('Transform error:', data.toString()))
+      stream.on('error', () => {
+        reject(new ERR_TRANSFORM_FAILED(`Transform failed: ${filename}`))
+
+      })
+
+      pipe.on('crash', () => {
+        reject(new ERR_TRANSFORM_FAILED(`Transform failed: ${filename}`))
       })
     })
 

@@ -2,7 +2,6 @@
 /* global Pear */
 const Module = require('bare-module')
 const FramedStream = require('framed-stream')
-const { isWindows } = require('which-runtime')
 
 const pipe = Pear.worker.pipe()
 const stream = new FramedStream(pipe)
@@ -14,7 +13,13 @@ let buffer = null
 let timer = null
 
 stream.on('data', (data) => {
-  timeout(10_000)
+  clearTimeout(timer)
+  timer = setTimeout(() => {
+    if (transforms.length === 0) {
+      stream.end()
+      pipe.end()
+    }
+  }, 10_000)
 
   if (transforms.length === 0) {
     transforms = JSON.parse(data.toString())
@@ -27,10 +32,10 @@ stream.on('data', (data) => {
     buffer = bundles.reduce((source, bundle, index) => {
       const config = transforms[index]
       const { options = {} } = typeof config === 'string' ? {} : config
-      const root = isWindows ? 'file:///c:' : 'file://'
-      const transform = Module.load(new URL(root + '/transform.bundle'), bundle).exports
-
-      return transform(source, options)
+      try {
+        const transform = Module.load(new URL('app:/transform.bundle'), bundle).exports
+        return transform(source, options)
+      } catch (err){ return stream.emit('error', err) }
     }, buffer)
 
     stream.write(buffer)
@@ -43,15 +48,15 @@ stream.on('data', (data) => {
 
   bundles.push(data)
 })
-stream.on('end', () => {
-  pipe.end()
-  Pear.exit()
-})
-stream.on('error', (err) => console.error(err))
 
-function timeout (ms) {
+stream.on('error', () => {
   clearTimeout(timer)
-  timer = setTimeout(async () => {
-    if (transforms.length === 0) stream.end()
-  }, ms)
-}
+  stream.destroy()
+  pipe.end()
+  Pear.exit(1)
+})
+
+stream.on('end', () => {
+  clearTimeout(timer)
+  pipe.end()
+})
