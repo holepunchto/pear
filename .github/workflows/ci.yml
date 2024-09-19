@@ -20,9 +20,9 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -82,9 +82,8 @@ jobs:
         cd -
       shell: bash
 
-    - name: Test - Smoke
-      run: $PEAR run -t test/01-smoke.test.js
-
+    - name: Test
+      run: $PEAR run -t test
     # - name: Test - Shutdown
     #   run: $PEAR run -t test/02-shutdown.test.js
 
