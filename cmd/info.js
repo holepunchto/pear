@@ -4,7 +4,7 @@ const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('../errors')
-const { password } = require('./iface')
+const { password, isTTY } = require('./iface')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -45,7 +45,7 @@ const output = outputter('info', {
   info,
   changelog,
   error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask) {
+    if (err.info && err.info.encrypted && info.ask && isTTY) {
       const explain = 'This application is encrypted.\n' +
         '\nEnter the password to retrieve info.\n\n'
       const message = 'Added encryption key, run info again to complete it.'
