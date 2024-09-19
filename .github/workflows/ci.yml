@@ -20,9 +20,9 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -46,32 +46,6 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
 
-    - name: Remove node_modules
-      run: rm -fr node_modules
-      shell: bash
-
-    - name: Install w/out dev deps
-      run: npm i --omit=dev
-
-    - name: Self-Stage
-      run: $PEAR stage ci
-      shell: bash
-
-    - name: Artifact Pear
-      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artifact-pear
-      shell: bash
-                      
-    - name: Shutdown Local Pear Sidecar
-      run: $PEAR sidecar shutdown
-      shell: bash
-
-    - name: Remove node_modules
-      run: rm -fr node_modules
-      shell: bash
-
-    - name: Install w/ dev deps
-      run: npm install
-
     - name: Install fixture deps
       run: |
         cd ./test/fixtures/harness
@@ -83,21 +57,12 @@ jobs:
       shell: bash
 
     - name: Test
+      if: runner.os != 'Windows'
       run: $PEAR run -t test
-    # - name: Test - Shutdown
-    #   run: $PEAR run -t test/02-shutdown.test.js
 
-    # - name: Test - Teardown
-    #   run: $PEAR run -t test/03-teardown.test.js
-
-    # - name: Test - Worker
-    #   run: $PEAR run -t test/04-worker.test.js
-
-    # - name: Test - Encrypted Apps
-    #   run: $PEAR run -t test/05-encrypted.test.js
-
-    # - name: Test - Updates
-    #   run: $PEAR run -t test/06-updates.test.js
+    - name: Test (Win)
+      if: runner.os == 'Windows'
+      run: ./pear.ps1 run -t test
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
