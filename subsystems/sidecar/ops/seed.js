@@ -60,12 +60,6 @@ module.exports = class Seed extends Opstream {
 
     await bundle.join(this.sidecar.swarm, { seeders, server: true })
 
-    try {
-      await bundle.drive.get('/package.json')
-    } catch {
-      throw ERR_INVALID_INPUT('Encryption key required')
-    }
-
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
   }

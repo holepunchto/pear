@@ -46,9 +46,6 @@ jobs:
     - name: Bootstrap
       run: npm run bootstrap
 
-    - name: Install pear-cli
-      run: npm i -g pear
-
     - name: Remove node_modules
       run: rm -fr node_modules
       shell: bash
@@ -60,19 +57,8 @@ jobs:
       run: $PEAR stage ci
       shell: bash
 
-    - name: Update System Pear Key
-      run: $PEAR info ci --key > $(npm list -g pear --parseable --depth=0)/pear.key
-      shell: bash
-
-    - name: Self-Seed
-      run: $PEAR seed ci &
-      shell: bash
-
-    - name: Bootstrap System Pear from Local Seeded Pear
-      run: pear
-
-    - name: Bootstrap Artifact Pears
-      run: pear run -t scripts/artifacts.mjs $(cat $(npm list -g pear --parseable --depth=0)/pear.key)
+    - name: Artifact Pear
+      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artifact-pear
       shell: bash
 
     - name: Shutdown Local Pear Sidecar
@@ -88,31 +74,21 @@ jobs:
 
     - name: Install fixture deps
       run: |
-        pushd ./test/fixtures/harness
+        cd ./test/fixtures/harness
         npm install
-        popd
-        pushd ./test/fixtures/encrypted
+        cd -
+        cd ./test/fixtures/encrypted
         npm install
-        popd
+        cd -
       shell: bash
 
-    - name: Test - Smoke
-      run: pear run -t test/01-smoke.test.js
+    - name: Test
+      if: runner.os != 'Windows'
+      run: $PEAR run -t test
 
-    - name: Test - Shutdown
-      run: pear run -t test/02-shutdown.test.js
-
-    - name: Test - Teardown
-      run: pear run -t test/03-teardown.test.js
-
-    - name: Test - Updates
-      run: pear run -t test/04-updates.test.js
-
-    - name: Test - Worker
-      run: pear run -t test/05-worker.test.js
-
-    - name: Test - Encrypted Apps
-      run: pear run -t test/06-encrypted.test.js
+    - name: Test (Win)
+      if: runner.os == 'Windows'
+      run: ./pear.ps1 run -t test
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
