@@ -82,7 +82,6 @@ module.exports = class Transformer {
 
       stream.on('error', () => {
         reject(new ERR_TRANSFORM_FAILED(`Transform failed: ${filename}`))
-
       })
 
       pipe.on('crash', () => {
