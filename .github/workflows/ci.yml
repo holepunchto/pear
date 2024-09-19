@@ -83,7 +83,7 @@ jobs:
       shell: bash
 
     - name: Test
-      run: $PEAR run -t test
+      run: $PEAR run -t test --verbose
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
