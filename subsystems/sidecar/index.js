@@ -48,7 +48,8 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  EncryptionKey: require('./ops/encryption-key')
+  EncryptionKey: require('./ops/encryption-key'),
+  Touch: require('./ops/touch')
 }
 
 class PermitStore extends Store {
@@ -369,6 +370,8 @@ class Sidecar extends ReadyResource {
   gc (params, client) { return new ops.GC(params, client) }
 
   encryptionKey (params, client) { return new ops.EncryptionKey(params, client) }
+
+  touch (params, client) { return new ops.Touch(params, client, this) }
 
   warmup (params, client) {
     if (!client.userData) return
