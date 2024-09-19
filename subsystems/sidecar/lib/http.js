@@ -5,7 +5,6 @@ const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
-const picomatch = require('picomatch')
 const Transformer = require('./transformer')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
@@ -52,6 +51,8 @@ module.exports = class Http extends ReadyResource {
           err.status = err.status || 404
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
+        } else if (err.code === 'ERR_TRANSFORM_FAILED') {
+          err.status = err.status || 500
         } else {
           LOG.error('internal', 'Unknown HTTP Server Error', err)
           err.status = 500
@@ -130,6 +131,8 @@ module.exports = class Http extends ReadyResource {
         res.end(out)
         return
       }
+
+      if (ct === 'text/jsx') res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
     }
 
     if (await bundle.has(link.filename) === false) {
@@ -171,25 +174,11 @@ module.exports = class Http extends ReadyResource {
       const meta = await bundle.entry(link.filename)
       if (meta === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
 
-      const transforms = []
-      const patterns = app.state?.transforms
-
-      for (const ptn in patterns) {
-        const isMatch = picomatch(ptn)
-        if (isMatch(link.filename)) {
-          transforms.push(...patterns[ptn])
-          if (ptn.endsWith('.jsx') || ptn.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
-        }
-      }
-
-      if (transforms.length > 0) {
-        if (!app.transformer || app.transformer?.isClosed) {
-          const workerLink = `${this.sidecar.bundle.link}/transform`
-          app.transformer = new Transformer(app)
-          app.transformer.run(workerLink)
-        }
-        const buffer = await bundle.get(link.filename)
-        return app.transformer.queue(transforms, buffer, (buffer) => res.end(buffer))
+      const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform`)
+      const transformed = await transformer.transform(await bundle.get(link.filename), link.filename)
+      if (transformed !== null) {
+        res.end(transformed)
+        return
       }
 
       const stream = bundle.streamFrom(meta)
