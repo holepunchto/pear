@@ -3,13 +3,13 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const worker = path.join(Helper.root, 'test', 'fixtures', 'worker')
+const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
 
 test('worker pipe', async function ({ is, plan, comment, teardown }) {
   plan(1)
-  const stager = new Helper()
-  teardown(() => stager.close())
-  await stager.ready()
+  const helper = new Helper()
+  teardown(() => helper.close())
+  await helper.ready()
   const dir = worker
 
   const pipe = Pear.worker.run(dir)
