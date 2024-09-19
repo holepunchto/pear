@@ -4,7 +4,7 @@ const Helper = require('./helper')
 const fs = require('bare-fs')
 const LocalDrive = require('localdrive')
 
-const fixtures = path.join(Helper.root, 'test', 'fixtures')
+const fixtures = path.join(Helper.localDir, 'test', 'fixtures')
 const harness = path.join(fixtures, 'harness')
 const minimal = path.join(fixtures, 'minimal')
 
