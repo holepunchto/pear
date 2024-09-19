@@ -15,6 +15,7 @@ wakeups(async (wakeup) => {
 
 document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
 document.getElementById('release').innerText = config.release || (config.dev ? 'none [ dev ]' : '0')
+document.getElementById('dht').innerText = config.dht
 const { app, platform } = await versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork

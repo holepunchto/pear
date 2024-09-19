@@ -35,6 +35,7 @@ module.exports = class State {
   error = null
   entrypoints = null
   applink = null
+  dht = null
   static injestPackage (state, pkg, overrides = {}) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
@@ -79,9 +80,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir }
   }
 
   static isKeetInvite (segment) {
@@ -116,11 +117,13 @@ module.exports = class State {
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
+    const dht = sidecar?.swarm?.dht?.toArray({ limit: 20 }) || []
 
     const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
     this.sidecar = sidecar
+    this.dht = dht
     this.store = store
     this.args = args
     this.appling = appling
