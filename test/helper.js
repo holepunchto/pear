@@ -4,7 +4,6 @@ const env = require('bare-env')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const fs = require('bare-fs')
-const fsext = require('fs-native-extensions')
 const ReadyResource = require('ready-resource')
 const { arch, platform, isWindows } = require('which-runtime')
 const { Session } = require('pear-inspect')
@@ -19,44 +18,58 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 const { PLATFORM_DIR } = require('../constants')
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
+const tmp = fs.realpathSync(os.tmpdir()) 
+Error.stackTraceLimit = Infinity
 
 class Rig {
-  tmp = fs.realpathSync(os.tmpdir())
+  platformDir = path.join(tmp, 'rig-pear')
+  artifactDir = env.CI ? path.join(tmp, 'artifact-pear') : Helper.localDir
+  id = Math.floor(Math.random() * 10000)
+  local = new Helper()
+  tmp = tmp
   setup = async ({ comment, timeout }) => {
-    if (env.CI) {
-      comment('CI: using prepared artifacts for rigging')
-      return
-    }
     timeout(180000)
-    const helper = new Helper()
-    this.helper = helper
-    comment('connecting local sidecar')
-    await helper.ready()
-    comment('local sidecar connected')
-    const id = Math.floor(Math.random() * 10000)
+    comment('connecting to sidecar')
+    await this.local.ready()
+    comment('connected to sidecar')
     comment('staging platform...')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, dryRun: false, bare: true })
+    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    comment('seeding platform...')
-    const seeding = await helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: Helper.root, key: null, cmdArgs: [] })
+    const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, key: null, cmdArgs: [] })
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
+    this.key = await until.key
     await until.announced
     comment('platform seeding')
-    comment('bootstrapping tmp platform...')
-    this.platformDir = path.join(this.tmp, 'tmp-pear')
-    await Helper.bootstrap(key, this.platformDir)
-    comment('tmp platform bootstrapped')
-    comment('closing helper client')
-    await this.helper.close()
-    comment('helper client closed')
+    comment('bootstrapping rig platform...')
+    await Helper.bootstrap(this.key, this.platformDir)
+    comment('rig platform bootstrapped')
+    comment('connecting to rig sidecar')
+    this.artifact = new Helper({ platformDir: this.platformDir })
+    await this.artifact.ready()
+  }
+  cleanup = async ({ comment }) => {
+    comment('shutdown rig sidecar')
+    await this.artifact.shutdown()
+    comment('rig sidecar closed')
+    comment('closing local client')
+    await this.local.close()
+    comment('local client closed')
+  }
+}
+
+class OperationError extends Error {
+  constructor ({ code, message, stack }) {
+    super(message)
+    this.code = code
+    this.sidecarStack = stack
   }
 }
 
 class Helper extends IPC {
   static Rig = Rig
-
+  static tmp = tmp
+  static PLATFORM_DIR = PLATFORM_DIR
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor (opts = {}) {
     const verbose = global.Pear.config.args.includes('--verbose')
@@ -85,7 +98,8 @@ class Helper extends IPC {
   }
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
-  static root = isWindows ? path.normalize(pathname.slice(1)) : pathname
+  static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
+
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
     const verbose = Bare.argv.includes('--verbose')
@@ -94,7 +108,7 @@ class Helper extends IPC {
 
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const subprocess = spawn(runtime, args, { detached: !verbose, stdio: ['pipe', 'pipe', 'inherit'] })
+    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
     const iterable = new Readable({ objectMode: true })
@@ -131,6 +145,7 @@ class Helper extends IPC {
   static async pick (iter, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
     for await (const output of iter) {
+      if ((ptn?.[by] !== 'error') && output[by] === 'error') throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
@@ -148,7 +163,7 @@ class Helper extends IPC {
 
     (async function match () {
       for await (const output of iter) {
-        if (output[by] === 'error') throw new Error(output.data?.stack)
+        if (output[by] === 'error') throw new OperationError(output.data)
         for (const ptn of patterns) {
           // NOTE: only resolves to first match, subsequent matches are ignored
           if (matchesPattern(output, ptn) && resolvers[ptn[by]]) {
@@ -172,21 +187,6 @@ class Helper extends IPC {
     }
   }
 
-  static async accessLock (platformDir) {
-    const pdir = platformDir || PLATFORM_DIR
-    const fd = await new Promise((resolve, reject) => fs.open(path.join(pdir, 'corestores', 'platform', 'primary-key'), 'r+', (err, fd) => {
-      if (err) {
-        reject(err)
-        return
-      }
-      resolve(fd)
-    }))
-
-    const granted = fsext.tryLock(fd)
-    if (granted) fsext.unlock(fd)
-
-    return granted
-  }
 
   static matchesPattern (message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false

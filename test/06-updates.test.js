@@ -4,8 +4,8 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
-const seedOpts = (id, dir = harness) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir, cmdArgs: [] })
+const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: harness, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -160,27 +160,24 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(10)
+  plan(6)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
 
-  const pid = Math.floor(Math.random() * 10000)
-  const fid = 'fixture'
-  const appDir = path.join(Helper.root, 'test', 'fixtures', 'harness')
+  const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
   comment('seeding app')
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
-  teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -189,52 +186,20 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(hypercoreid.isValid(appKey), 'app key is valid')
   ok(appAnnounced, 'seeding is announced')
 
-  comment('staging tmp platform')
-  const stager = new Helper(rig)
-  teardown(() => stager.close())
-  await stager.ready()
-  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final = await Helper.pick(staging, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding tmp platform')
-  const seeder = new Helper(rig)
-  teardown(() => seeder.close())
-  teardown(() => seeder.close())
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'platform key is valid')
-
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
-  t.comment('bootstrapping rcv platform...')
+  comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(key, platformDirRcv)
+  await Helper.bootstrap(rig.key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
   teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
-  const rcv = new Helper({ platformDir: platformDirRcv })
-
-  comment('connecting rcv sidecar...')
-  await rcv.ready()
-  comment('rcv sidecar connected')
-  teardown(async () => {
-    comment('rcv sidecar shutting down..')
-    await rcv.shutdown()
-    comment('rcv sidecar shutdown')
-  })
 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
-  is(pearVersionKey, key, 'platform version key matches staged key')
+  is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
   const updatePromise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
   const updateActualPromise = running.inspector.awaitPromise(updatePromise.objectId)
@@ -242,17 +207,14 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(Helper.root, file), 'test')
-  teardown(() => { try { fs.unlinkSync(path.join(Helper.root, file)) } catch { /* ignore */ } }, { order: -Infinity })
+  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
+  teardown(() => { try { fs.unlinkSync(path.join(rig.artifactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
-  comment('restaging tmp platform')
-  const stager2 = new Helper(rig)
-  teardown(() => stager2.close())
-  await stager2.ready()
-  const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final2 = await Helper.pick(staging2, { tag: 'final' })
-  ok(final2.success, 'stage succeeded')
-
+  comment('restaging rig platform')
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  await Helper.pick(staging, { tag: 'final' })
+  comment('rig platform restaged')
+  comment('waiting for update')
   const update = await updateActualPromise
   const updateVersion = update?.value?.version
   const pearUpdateLength = updateVersion.length
@@ -266,19 +228,17 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(12)
+  plan(8)
   timeout(180000)
 
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
 
-  const pid = Math.floor(Math.random() * 10000)
-  const fid = 'fixture'
-  const appDir = path.join(Helper.root, 'test', 'fixtures', 'harness')
+  const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -287,7 +247,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   teardown(() => appSeeder.close())
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir: appDir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -296,30 +256,9 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   ok(hypercoreid.isValid(appKey), 'app key is valid')
   ok(appAnnounced, 'seeding is announced')
 
-  comment('staging tmp platform')
-  const stager = new Helper(rig)
-  teardown(() => stager.close())
-  await stager.ready()
-  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final = await Helper.pick(staging, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding tmp platform')
-  const seeder = new Helper(rig)
-  teardown(() => seeder.close())
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'platform key is valid')
-
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(key, platformDirRcv)
+  await Helper.bootstrap(rig.key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
   teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
@@ -330,7 +269,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
   const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
-  is(pearVersionKey, key, 'platform version key matches staged key')
+  is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
   const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
   const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
@@ -339,38 +278,32 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(Helper.root, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(Helper.root, file)) }, { order: -Infinity })
-
-  comment('restaging tmp platform')
-  const stager2 = new Helper(rig)
-  teardown(() => stager2.close())
-  await stager2.ready()
-  const staging2 = stager2.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final2 = await Helper.pick(staging2, { tag: 'final' })
-  ok(final2.success, 'stage succeeded')
-
+  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(rig.artifactDir, file)) }, { order: -Infinity })
+  
+  comment('restaging rig platform')
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  await Helper.pick(staging, { tag: 'final' })
+  comment('rig platform restaged')
+  comment('waiting for update')
   const update1 = await update1ActualPromise
   const update1Version = update1?.value?.version
   const pearUpdateLength = update1Version.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
 
-  comment('releasing tmp platform')
+  comment('releasing rig platform')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releaser = new Helper(rig)
-  teardown(() => releaser.close())
-  await releaser.ready()
-  const releasing = releaser.release({ channel: `test-${pid}`, name: `test-${pid}`, key })
-  await Helper.pick(releasing, { tag: 'released' })
-  teardown(() => releaser.close()) // TODO why is this needed?
+  const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir })
+  await Helper.pick(releasing, { tag: 'final' })
+
   comment('waiting for platform update notification')
   const update2 = await update2ActualPromise
   const update2Version = update2?.value?.version
   const pearUpdate2Key = update2Version.key
   const pearUpdate2Length = update2Version.length
 
-  is(pearUpdate2Key, key, 'platform release update matches staging key')
+  is(pearUpdate2Key, rig.key, 'platform release update matches staging key')
   ok(pearUpdate2Length > pearUpdateLength, `platform version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
   await running.inspector.evaluate('__PEAR_TEST__.close()')
@@ -381,17 +314,15 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(10)
+  plan(7)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
-  const pid = Math.floor(Math.random() * 10000)
-  const fid = 'fixture'
-  const dir = harness
+  const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -399,7 +330,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -408,30 +339,9 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   ok(hypercoreid.isValid(appKey), 'app key is valid')
   ok(appAnnounced, 'seeding is announced')
 
-  comment('staging tmp platform')
-  const stager = new Helper(rig)
-  teardown(() => stager.close())
-  await stager.ready()
-  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final = await Helper.pick(staging, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding tmp platform')
-  const seeder = new Helper(rig)
-  teardown(() => seeder.close())
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'platform key is valid')
-
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(key, platformDirRcv)
+  await Helper.bootstrap(rig.key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
   teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
@@ -451,14 +361,14 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(dir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(harness, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(harness, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -475,17 +385,16 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(12)
+  plan(9)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close())
   await appStager.ready()
-  const pid = Math.floor(Math.random() * 10000)
-  const fid = 'fixture'
-  const dir = harness
+
+  const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -493,7 +402,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close())
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel: `test-${fid}`, name: `test-${fid}`, dir, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel: channel, name: channel, dir: harness, key: null, cmdArgs: [] })
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -502,30 +411,9 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   ok(hypercoreid.isValid(appKey), 'app key is valid')
   ok(appAnnounced, 'seeding is announced')
 
-  comment('staging tmp platform')
-  const stager = new Helper(rig)
-  teardown(() => stager.close())
-  await stager.ready()
-  const staging = stager.stage({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, dryRun: false, bare: true })
-  const final = await Helper.pick(staging, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding tmp platform')
-  const seeder = new Helper(rig)
-  teardown(() => seeder.close())
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${pid}`, name: `test-${pid}`, dir: Helper.root, key: null, cmdArgs: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'platform key is valid')
-
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(key, platformDirRcv)
+  await Helper.bootstrap(rig.key, platformDirRcv)
   const prefs = 'preferences.json'
   fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
   teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
@@ -545,14 +433,14 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(dir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(dir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(harness, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(harness, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close())
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel: `test-${fid}`, name: `test-${fid}`, dir, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel: channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -568,7 +456,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(() => releaser.close())
   await releaser.ready()
 
-  const releasing = releaser.release({ channel: `test-${fid}`, name: `test-${fid}`, key: appKey })
+  const releasing = releaser.release({ channel: channel, name: channel, key: appKey })
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for app update notification')
@@ -584,3 +472,5 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
 })
+
+test.hook('updates cleanup', rig.cleanup)
