@@ -663,7 +663,8 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
-    const state = new State({ sidecar: this, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    await this.ready()
+    const state = new State({ dht: this.swarm.dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {

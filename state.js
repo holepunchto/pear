@@ -104,7 +104,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { sidecar, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
+    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, trace, updates, updatesDiff,
@@ -117,7 +117,7 @@ module.exports = class State {
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
-    const dhtArray = sidecar?.swarm?.dht?.toArray({ limit: 20 }) || []
+    const dhtArray = dht?.toArray({ limit: 20 }) || []
 
     const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
