@@ -117,13 +117,12 @@ module.exports = class State {
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
-    const dht = sidecar?.swarm?.dht?.toArray({ limit: 20 }) || []
+    const dhtArray = sidecar?.swarm?.dht?.toArray({ limit: 20 }) || []
 
     const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
-    this.sidecar = sidecar
-    this.dht = dht
+    this.dht = dhtArray
     this.store = store
     this.args = args
     this.appling = appling
