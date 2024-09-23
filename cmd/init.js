@@ -39,7 +39,7 @@ module.exports = (ipc) => async function init (cmd) {
   try {
     await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header }))
   } catch (err) {
-    if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
+    if (err.code !== 'ERR_PERMISSION_REQUIRED' || !cmd.flags.ask) throw err
     await permit(ipc, err.info, 'init')
   } finally {
     await ipc.close()
