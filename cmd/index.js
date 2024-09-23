@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy } = require('paparam')
+const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -56,9 +56,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
     flag('--name <name>', 'Advanced. Override app name'),
-    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
+    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
     runners.seed(ipc)
   )
 
@@ -74,8 +74,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
-    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
     runners.stage(ipc)
   )
 
@@ -109,8 +109,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--metadata', 'View metadata only'),
     flag('--key', 'View key only'),
     flag('--json', 'Newline delimited JSON output'),
-    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
     runners.info(ipc)
   )
 
@@ -121,8 +121,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--json', 'Newline delimited JSON output'),
-    flag('--encryption-key <name>', 'Application encryption key'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
     runners.dump(ipc)
   )
 
