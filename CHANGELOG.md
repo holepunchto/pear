@@ -4,24 +4,25 @@
 
 ### Features
 
-* Add support for encryption in `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info`.
-* CLI - add `--no-ask` flag for `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info`.
-* CLI - `pear touch` -  Create Pear Link. Advanced. Combine with `pear stage <link>` and `pear release <link>`. Useful for automation since no channel name is required.
+* CLI - Support for Encrypted Applications in `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info` - unlock via password input w/ `--no-ask` opt-out.
+* Desktop - Password input dialog for Encrypted Applications
+* CLI - `pear touch` - Create Pear Link. Advanced. Combine with `pear stage <link>` and `pear release <link>`. Useful for automation since no channel name is required.
 
 ### Fixes
 
 * CLI - `pear stage --name` and `pear seed --name` flag fix.
 * API - untrusted worker on first run fix.
-* Return `ERR_HTTP_NOT_FOUND` with a 404 error from the sidecar when a requested file is not found.
-* Mac - ensure traffic lights visibility fix.
+* Desktop - `ERR_HTTP_NOT_FOUND` 404 response from the sidecar when a requested file is not found
+* Mac - traffic lights visibility fix.
 
 ### Improvements
 
 * CLI - `pear dev` deprecated. Use `pear run --dev` instead.
-* Desktop - add support for `https://*` and `http://*` in the pear.links.
+* Desktop - add support for `https://*` and `http://*` in the package.json config `pear.links`.
 * Desktop - update Windows `pear-ctrl` icons.
-* Add `no-cache` to sidecar request headers.
-* Disable the default Electron sandbox and add the `--sandbox` flag to re-enable it.
+* Desktop - Add `no-cache` to sidecar request headers.
+* Windows/Linux - Avoid OS/Electron issues by disabling the sandbox (already unused), the `--sandbox` flag can be used to re-enable
+* Performance - 3x speedup with concurrent Hyperbee gets in application loading flow
 
 ## v1.4.0
 
