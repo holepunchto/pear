@@ -4,7 +4,7 @@ const { outputter } = require('./iface')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('../errors')
-const { password, isTTY } = require('./iface')
+const { permit, isTTY } = require('./iface')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -46,7 +46,7 @@ const output = outputter('info', {
   changelog,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return password({ ipc, key: err.info.key, cmd: 'info' })
+      return permit(ipc, err.info, 'info')
     } else {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }

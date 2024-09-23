@@ -1,7 +1,7 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('../errors')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, password, isTTY } = require('./iface')
+const { outputter, permit, isTTY } = require('./iface')
 
 const output = outputter('stage', {
   dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,
@@ -9,7 +9,7 @@ const output = outputter('stage', {
   complete: '\nDumping complete!\n',
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return password({ ipc, key: err.info.key, cmd: 'dump' })
+      return permit(ipc, err.info, 'dump')
     }
     return `Dumping Error (code: ${err.code || 'none'}) ${err.stack}`
   }

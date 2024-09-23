@@ -2,7 +2,7 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi, trust, outputter, password } = require('./iface')
+const { ansi, outputter, permit } = require('./iface')
 
 const output = outputter('init', {
   writing: () => '',
@@ -40,11 +40,7 @@ module.exports = (ipc) => async function init (cmd) {
     await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, force, defaults, header }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED') throw err
-    if (err.info && err.info.encrypted) {
-      await password({ ipc, key: err.info.key, cmd: 'init' })
-    } else {
-      await trust({ ipc, key: err.info.key, cmd: 'init' })
-    }
+    await permit(ipc, err.info, 'init')
   } finally {
     await ipc.close()
   }

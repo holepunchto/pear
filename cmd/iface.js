@@ -150,7 +150,7 @@ and then becomes the sidecar.`,
 
 const usage = { header, version, banner, descriptions, footer }
 
-async function trust ({ ipc, key, cmd }) {
+async function trust (ipc, key, cmd) {
   const explain = {
     run: 'Be sure that software is trusted before running it\n' +
       '\nType "TRUST" to allow execution or anything else to exit\n\n',
@@ -193,7 +193,7 @@ async function trust ({ ipc, key, cmd }) {
   Bare.exit()
 }
 
-async function password ({ ipc, key, cmd }) {
+async function password (ipc, key, cmd) {
   const z32 = hypercoreid.normalize(key)
 
   const explain = {
@@ -243,4 +243,13 @@ async function password ({ ipc, key, cmd }) {
   Bare.exit()
 }
 
-module.exports = { usage, trust, password, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }
+function permit (ipc, info, cmd) {
+  const key = info.key
+  if (info.encrypted) {
+    return password(ipc, key, cmd)
+  } else {
+    return trust(ipc, key, cmd)
+  }
+}
+
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }

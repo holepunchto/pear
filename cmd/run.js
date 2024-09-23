@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, trust, stdio, password, isTTY } = require('./iface')
+const { outputter, stdio, permit, isTTY } = require('./iface')
 
 const output = outputter('run', {
   exit: ({ code }) => Bare.exit(code),
@@ -22,11 +22,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask && isTTY) {
-      if (!err.info.encrypted) {
-        await trust({ ipc, key: err.info.key, cmd: 'run' })
-      } else {
-        await password({ ipc, key: err.info.key, cmd: 'run' })
-      }
+      await permit(ipc, err.info, 'run')
     } else {
       throw err
     }

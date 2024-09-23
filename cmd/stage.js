@@ -4,7 +4,7 @@ const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
 const parseLink = require('../lib/parse-link')
 const { ERR_INVALID_INPUT } = require('../errors')
-const { password, isTTY } = require('./iface')
+const { permit, isTTY } = require('./iface')
 
 let blocks = 0
 let total = 0
@@ -23,7 +23,7 @@ const output = outputter('stage', {
   },
   error: async (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return password({ ipc, key: err.info.key, cmd: 'stage' })
+      return permit(ipc, err.info, 'stage')
     } else {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
