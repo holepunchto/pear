@@ -691,8 +691,6 @@ class Sidecar extends ReadyResource {
 
     app.state = state
 
-    await this.ready()
-
     if (state.key === null) {
       const drive = new LocalDrive(state.dir, { followLinks: true })
       this.#updatePearInterface(drive)
