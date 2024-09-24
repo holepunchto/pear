@@ -663,7 +663,9 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
-    const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    await this.ready()
+    const dht = this.swarm.dht.toArray({ limit: 20 })
+    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {
@@ -688,8 +690,6 @@ class Sidecar extends ReadyResource {
     }
 
     app.state = state
-
-    await this.ready()
 
     if (state.key === null) {
       const drive = new LocalDrive(state.dir, { followLinks: true })
