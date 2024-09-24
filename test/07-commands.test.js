@@ -5,8 +5,8 @@ const { discoveryKey } = require('hypercore-crypto')
 const fs = require('bare-fs')
 const parseLink = require('../lib/parse-link')
 
-const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
-const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
+const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const minimal = path.join(Helper.localDir, 'test', 'fixtures', 'minimal')
 
 class Rig {
   setup = async ({ comment, timeout }) => {
