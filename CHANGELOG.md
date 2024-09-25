@@ -20,6 +20,7 @@
 * CLI - `pear dev` deprecated. Use `pear run --dev` instead.
 * Desktop - add support for `https://*` and `http://*` in the package.json config `pear.links`.
 * Desktop - update Windows `pear-ctrl` icons.
+* Desktop - added `--trusted` hidden flag to `run` command.
 * Desktop - Add `no-cache` to sidecar request headers.
 * Windows/Linux - Avoid OS/Electron issues by disabling the sandbox (already unused), the `--sandbox` flag can be used to re-enable
 * Performance - 3x speedup with concurrent Hyperbee gets in application loading flow
