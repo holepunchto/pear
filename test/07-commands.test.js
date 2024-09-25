@@ -2,8 +2,8 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 
-const harness = path.join(Helper.root, 'test', 'fixtures', 'harness')
-const minimal = path.join(Helper.root, 'test', 'fixtures', 'minimal')
+const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const minimal = path.join(Helper.localDir, 'test', 'fixtures', 'minimal')
 
 class Rig {
   setup = async ({ comment, timeout }) => {
