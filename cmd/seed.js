@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('../lib/parse-link')
-const { outputter, ansi, password, isTTY } = require('./iface')
+const { outputter, ansi, permit, isTTY } = require('./iface')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -16,10 +16,7 @@ const output = outputter('seed', {
   'peer-remove': (info) => `-_- peer drop ${info}`,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
-      const explain = 'This application is encrypted.\n' +
-        '\nEnter the password to seed the app.\n\n'
-      const message = 'Added encryption key, run seed again to complete it.'
-      return password({ ipc, key: err.info.key, explain, message })
+      return permit(ipc, err.info, 'seed')
     } else {
       return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }

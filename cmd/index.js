@@ -34,6 +34,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--type|-t <type>', 'Template type. Overrides <link|type>'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--with|-w <name>', 'Additional functionality. Available: node'),
+    flag('--no-ask', 'Suppress permissions dialogs'),
     runners.init(ipc)
   )
 

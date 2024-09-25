@@ -2,7 +2,6 @@
 const { pipelinePromise, Readable } = require('streamx')
 const { pathToFileURL } = require('bare-url')
 const path = require('bare-path')
-const hypercoreid = require('hypercore-id-encoding')
 const transform = require('../lib/transform')
 const Localdrive = require('localdrive')
 const Interact = require('../lib/interact')
@@ -22,9 +21,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   let params = null
   if (isPear) {
     const { drive } = parseLink(link)
-    const trusted = new Set(await ipc.getPreference({ key: 'trusted' }) || [])
-    hypercoreid.encode(drive.key, hypercoreid.encode(drive.key), trusted)
-    if (trusted.has(hypercoreid.encode(drive.key)) === false) {
+    if (await ipc.trusted(drive.key) === false) {
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
@@ -36,6 +33,9 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
+    if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
+      throw new ERR_PERMISSION_REQUIRED(data.message, data.info)
+    }
     if (tag !== 'file') continue
     try {
       const definition = JSON.parse(data.value)
