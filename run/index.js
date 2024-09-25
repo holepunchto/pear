@@ -8,7 +8,7 @@ const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
-const { isMac, isWindows } = require('which-runtime')
+const { isMac, isWindows, isLinux } = require('which-runtime')
 const constants = require('../constants')
 const State = require('../state')
 const API = require('../lib/api')
@@ -83,6 +83,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     if (link.startsWith('pear://runtime')) {
       args = [constants.BOOT, '--appling', appling, '--run', ...args]
+      if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
       spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
     } else {
       if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
@@ -148,6 +149,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (type === 'desktop') {
     if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
+    if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
