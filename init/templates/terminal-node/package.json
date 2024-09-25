@@ -19,7 +19,7 @@
     "bare-events": "^2.2.0",
     "events": "npm:bare-node-events",
     "bare-fs": "^2.1.5",
-
+    "fs": "npm:bare-fs",
     "bare-http1": "^2.0.3",
     "http": "npm:bare-node-http",
     "bare-inspector": "^1.1.2",
