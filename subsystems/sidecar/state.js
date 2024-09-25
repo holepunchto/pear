@@ -40,10 +40,10 @@ module.exports = class State extends SharedState {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
-        throw ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
+        throw new ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
       }
       if (result.value === null) {
-        throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
+        throw new ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
       }
       this.constructor.injestPackage(this, result.value)
     } else if (this.stage) {
@@ -59,7 +59,7 @@ module.exports = class State extends SharedState {
     const tier = !this.key ? 'dev' : bundle.live ? 'production' : 'staging'
     if (app?.reported) return
 
-    if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
+    if (this.stage && this.manifest === null) throw new ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
 
     const { dependencies } = this.manifest
     const options = this.manifest.pear || this.manifest.holepunch || {}

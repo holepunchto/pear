@@ -48,7 +48,7 @@ module.exports = class Seed extends Opstream {
     }
 
     if (!link && bundle.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+      throw new ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
     await bundle.join(this.sidecar.swarm, { seeders, server: true })

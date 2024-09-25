@@ -36,12 +36,12 @@ module.exports = class Release extends Opstream {
     const manifest = await bundle.db.get('manifest')
 
     if (manifest === null) {
-      throw ERR_UNSTAGED(`The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`)
+      throw new ERR_UNSTAGED(`The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`)
     }
 
     const invalid = manifest.pear?.previewFor !== undefined && manifest.pear?.previewFor !== null
     if (invalid) {
-      throw ERR_INVALID_CONFIG('The `pear.previewFor` package.json field is invalid for production releases. Remove or null the field in order to release.')
+      throw new ERR_INVALID_CONFIG('The `pear.previewFor` package.json field is invalid for production releases. Remove or null the field in order to release.')
     }
 
     const currentLength = bundle.db.feed.length

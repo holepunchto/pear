@@ -21,7 +21,7 @@ module.exports = class Session {
 
     if (this.closed) {
       await resource.close()
-      throw ERR_INTERNAL_ERROR('Session is closed')
+      throw new ERR_INTERNAL_ERROR('Session is closed')
     }
 
     this.resources.add(resource)

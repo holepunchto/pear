@@ -104,8 +104,8 @@ module.exports = class Bundle {
   }
 
   async finalizeTracing () {
-    if (this.opened === false) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle must be opened before warmup can commence')
-    if (!this.tracer) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle critical called without a tracer present')
+    if (this.opened === false) throw new ERR_TRACER_FAILED('Internal Platform Error: Bundle must be opened before warmup can commence')
+    if (!this.tracer) throw new ERR_TRACER_FAILED('Internal Platform Error: Bundle critical called without a tracer present')
     const ranges = this.tracer.deflate()
     await this.drive.db.put('warmup', ranges)
   }

@@ -17,12 +17,12 @@ module.exports = class Shift extends Opstream {
     let to = null
     this.push({ tag: 'moving', data: { src, dst } })
 
-    if (!src) throw ERR_INVALID_INPUT('src must be specified')
-    if (!dst) throw ERR_INVALID_INPUT('dst must be specified')
+    if (!src) throw new ERR_INVALID_INPUT('src must be specified')
+    if (!dst) throw new ERR_INVALID_INPUT('dst must be specified')
     const srcKey = parseLink(src).drive?.key
     const dstKey = parseLink(dst).drive?.key
-    if (!srcKey) throw ERR_INVALID_INPUT('Invalid source app key')
-    if (!dstKey) throw ERR_INVALID_INPUT('Invalid destination app key')
+    if (!srcKey) throw new ERR_INVALID_INPUT('Invalid source app key')
+    if (!dstKey) throw new ERR_INVALID_INPUT('Invalid destination app key')
     const byDkey = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey')
     from = path.join(byDkey, discoveryKey(srcKey).toString('hex'))
     to = path.join(byDkey, discoveryKey(dstKey).toString('hex'))
@@ -30,14 +30,14 @@ module.exports = class Shift extends Opstream {
     let gc = null
     try {
       if (await exists(from) === false) {
-        throw ERR_INVALID_INPUT('No app storage for found for ' + src)
+        throw new ERR_INVALID_INPUT('No app storage for found for ' + src)
       }
       if (await exists(to)) {
         if (force) {
           gc = path.join(GC, randomBytes(8).toString('hex'))
           await fs.promises.rename(to, gc)
         } else {
-          throw ERR_INVALID_INPUT('App storage for ' + dst + ' already exists. Use --force to overwrite')
+          throw new ERR_INVALID_INPUT('App storage for ' + dst + ' already exists. Use --force to overwrite')
         }
       }
 

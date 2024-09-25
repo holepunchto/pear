@@ -59,7 +59,7 @@ module.exports = class Info extends Opstream {
       await bundle.join(this.sidecar.swarm)
       try {
         const pkg = await bundle.drive.get('/package.json', { wait: false })
-        if (pkg === null) throw ERR_NOT_FOUND_OR_NOT_CONNECTED('could not get /package.json')
+        if (pkg === null) throw new ERR_NOT_FOUND_OR_NOT_CONNECTED('could not get /package.json')
       } catch (error) {
         if (error.code !== 'DECODING_ERROR') throw error
         throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
