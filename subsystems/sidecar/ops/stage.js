@@ -21,7 +21,7 @@ module.exports = class Stage extends Opstream {
     const tracer = bundle.startTracing()
     const sp = spawn(
       DESKTOP_RUNTIME,
-      [BOOT, `--trace=${client.id}`, '--swap', SWAP, 'pear://' + hypercoreid.encode(bundle.drive.key)]
+      [BOOT, '--no-sandbox', `--trace=${client.id}`, '--swap', SWAP, 'pear://' + hypercoreid.encode(bundle.drive.key)]
     )
 
     const onclose = () => sp.kill()
