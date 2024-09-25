@@ -40,7 +40,7 @@ class Harness extends ReadyResource {
       const { default: cmd } = await import('pear/cmd')
       this.cmd = cmd
     }
-    return new this.Helper(opts)
+    return new this.Helper({ platformDir: global.Pear.config.pearDir, opts })
   }
 
   nextUpdate () {
