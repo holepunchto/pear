@@ -8,7 +8,7 @@ const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
-const { isMac, isWindows } = require('which-runtime')
+const { isMac, isWindows, isLinux } = require('which-runtime')
 const constants = require('../constants')
 const State = require('../state')
 const API = require('../lib/api')
@@ -83,6 +83,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     if (link.startsWith('pear://runtime')) {
       args = [constants.BOOT, '--appling', appling, '--run', ...args]
+      if (isLinux && hasRestrictedNamespaces()) args.push('--no-sandbox')
       spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
     } else {
       if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
@@ -149,6 +150,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     args = [constants.BOOT, ...args]
+    if (isLinux && hasRestrictedNamespaces()) args.push('--no-sandbox')
     const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
@@ -198,4 +200,42 @@ function project (dir, origin, cwd) {
     throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
   }
   return project(parent, origin, cwd)
+}
+
+async function hasRestrictedNamespaces () {
+  async function open (path) {
+    return new Promise((resolve, reject) => {
+      fs.open(path, 'r', (status, fd) => status ? reject(status) : resolve(fd))
+    })
+  }
+
+  async function read (fd, length) {
+    const buffer = Buffer.alloc(length)
+    return new Promise((resolve, reject) => {
+      fs.read(fd, buffer, 0, length, 0, function (err, num) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(buffer)
+        }
+      })
+    })
+  }
+
+  let appArmorRestrict = false
+  let unpriviledgeUsersRestrict = false
+
+  try {
+    const fd = await open('/proc/sys/kernel/apparmor_restrict_unprivileged_userns')
+    appArmorRestrict = (await read(fd, 1)).toString() === '1'
+  } catch {
+  }
+
+  try {
+    const fd = await open('/proc/sys/kernel/unprivileged_userns_clone')
+    unpriviledgeUsersRestrict = (await read(fd, 1)).toString() === '0'
+  } catch {
+  }
+
+  return appArmorRestrict || unpriviledgeUsersRestrict
 }
