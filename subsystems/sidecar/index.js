@@ -107,8 +107,15 @@ class Sidecar extends ReadyResource {
     this.bus = new Iambus()
     this.version = CHECKOUT
 
+    this.updating = false
     this.updater = updater
-    if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    if (this.updater) {
+      this.updater.on('updating', () => { this.updating = true })
+      this.updater.on('update', (checkout) => {
+        this.updating = false
+        this.updateNotify(checkout)
+      })
+    }
 
     this.#spindownCountdown()
 
@@ -324,6 +331,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
       if (this.hasClients) return
+      if (this.updating) return
       this.close().catch(console.error)
     }, this.spindownms)
   }
