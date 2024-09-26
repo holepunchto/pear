@@ -43,6 +43,9 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
+    - name: System Pear
+      run: npm i -g pear && pear
+
     - name: Bootstrap
       run: npm run bootstrap
 
@@ -83,12 +86,7 @@ jobs:
       shell: bash
 
     - name: Test
-      if: runner.os != 'Windows'
-      run: $PEAR run -t test
-
-    - name: Test (Win)
-      if: runner.os == 'Windows'
-      run: ./pear.ps1 run -t test
+      run: npm test
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
