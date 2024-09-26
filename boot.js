@@ -43,8 +43,8 @@ function getBootType () {
       ? BOOT_ELECTRON_PRELOAD
       : BOOT_ELECTRON
   }
-  const { command, arg, hiddenFlag } = require('paparam')
-  cmd = command('pear', hiddenFlag('--sidecar'), hiddenFlag('--as <swap>'), arg('[cmd]'))
+  const { command, arg, hiddenFlag, rest } = require('paparam')
+  cmd = command('pear', hiddenFlag('--sidecar'), hiddenFlag('--as <swap>'), arg('[cmd]'), rest('[cmd-args]'))
   cmd.parse(global.Bare.argv.slice(1))
   if (cmd.flags.as) return BOOT_AS
   if (cmd.flags.sidecar) return BOOT_SIDECAR
