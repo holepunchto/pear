@@ -15,7 +15,8 @@ switch (getBootType()) {
     const argv = Bare.argv.slice(1)
     const offset = argv[cmd.indices.flags.as] === cmd.flags.as ? 1 : 0
     argv.splice(cmd.indices.flags.as - offset, 1 + offset)
-    require('bare-subprocess').spawn(path.join(cmd.flags.as, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime' + (isWindows ? '.exe' : '')), argv, { stdio: 'inherit' })
+    const runtime = path.join(cmd.flags.as, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime' + (isWindows ? '.exe' : ''))
+    require('bare-subprocess').spawn(runtime, argv, { stdio: 'inherit' })
     break
   }
   case BOOT_SIDECAR: {
@@ -42,8 +43,8 @@ function getBootType () {
       ? BOOT_ELECTRON_PRELOAD
       : BOOT_ELECTRON
   }
-  const { command, flag, rest, arg } = require('paparam')
-  cmd = command('pear', flag('--as <swap>'), flag('--sidecar'), arg('[cmd]'), rest('[...cmd-args]'))
+  const { command, arg, hiddenFlag } = require('paparam')
+  cmd = command('pear', hiddenFlag('--sidecar'), hiddenFlag('--as <swap>'), arg('[cmd]'))
   cmd.parse(global.Bare.argv.slice(1))
   if (cmd.flags.as) return BOOT_AS
   if (cmd.flags.sidecar) return BOOT_SIDECAR
