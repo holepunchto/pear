@@ -74,9 +74,10 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-    const file = transform.sync(key, locals)
+    const isPackageJson = key === '/package.json'
+    const file = transform.sync(key, locals, isPackageJson)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, locals), writeStream)
+    const promise = pipelinePromise(transform.stream(value, locals, isPackageJson), writeStream)
     promise.catch((err) => { output.push({ tag: 'error', data: err }) })
     promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
     promises.push(promise)
