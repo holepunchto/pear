@@ -75,16 +75,6 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Install fixture deps
-      run: |
-        cd ./test/fixtures/harness
-        npm install
-        cd -
-        cd ./test/fixtures/encrypted
-        npm install
-        cd -
-      shell: bash
-
     - name: Test
       run: npm test
 
