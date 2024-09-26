@@ -51,4 +51,5 @@ function run (cmd, args, opts) {
   })
 }
 
-module.exports = install().catch(console.error)
+module.exports = install()
+module.exports.catch(console.error)
