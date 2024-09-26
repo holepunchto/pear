@@ -30,8 +30,6 @@ function getBootType () {
       ? BOOT_ELECTRON_PRELOAD
       : BOOT_ELECTRON
   }
-  if (global.Bare.argv.includes('--sidecar')) {
-    return BOOT_SIDECAR
-  }
+  if (global.Bare.argv[1] === '--sidecar') return BOOT_SIDECAR
   return BOOT_CLI
 }
