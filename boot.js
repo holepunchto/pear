@@ -13,8 +13,8 @@ switch (getBootType()) {
   case BOOT_AS: {
     const path = require('bare-path')
     const argv = Bare.argv.slice(1)
-    const offset = argv[cmd.indices.flags.as] === cmd.flags.as ? 1 : 0
-    argv.splice(cmd.indices.flags.as - offset, 1 + offset)
+    const gap = argv[cmd.indices.flags.as] === cmd.flags.as ? 1 : 0
+    argv.splice(cmd.indices.flags.as - gap, 1 + gap)
     const runtime = path.join(cmd.flags.as, 'by-arch', platform + '-' + arch, 'bin', 'pear-runtime' + (isWindows ? '.exe' : ''))
     require('bare-subprocess').spawn(runtime, argv, { stdio: 'inherit' })
     break
