@@ -510,15 +510,15 @@ class App {
         autoresize: unfilteredGuiOptions.autoresize,
         backgroundColor: unfilteredGuiOptions.backgroundColor,
         decal: unfilteredGuiOptions.decal,
-        width: unfilteredGuiOptions.width,
-        height: unfilteredGuiOptions.height,
-        x: unfilteredGuiOptions.x,
-        y: unfilteredGuiOptions.y,
+        width: parseConfigNumber(unfilteredGuiOptions.width, 'gui.width'),
+        height: parseConfigNumber(unfilteredGuiOptions.height, 'gui.height'),
+        x: parseConfigNumber(unfilteredGuiOptions.x, 'gui.x'),
+        y: parseConfigNumber(unfilteredGuiOptions.y, 'gui.y'),
         center: unfilteredGuiOptions.center,
-        minWidth: unfilteredGuiOptions.minWidth,
-        minHeight: unfilteredGuiOptions.minHeight,
-        maxWidth: unfilteredGuiOptions.maxWidth,
-        maxHeight: unfilteredGuiOptions.maxHeight,
+        minWidth: parseConfigNumber(unfilteredGuiOptions.minWidth, 'gui.minWidth'),
+        minHeight: parseConfigNumber(unfilteredGuiOptions.minHeight, 'gui.minHeight'),
+        maxWidth: parseConfigNumber(unfilteredGuiOptions.maxWidth, 'gui.maxWidth'),
+        maxHeight: parseConfigNumber(unfilteredGuiOptions.maxHeight, 'gui.maxHeight'),
         resizable: unfilteredGuiOptions.resizable,
         movable: unfilteredGuiOptions.movable,
         minimizable: unfilteredGuiOptions.minimizable,
@@ -691,12 +691,12 @@ function applyGuiOption (win, key, value) {
       x = x < 0 ? 0 : x
       y = y < 0 ? 0 : y
       try { win.setPosition(x, y, true) } catch { /* ignore */ }
-      return win.setSize(width, height, true)
+      return win.setSize(parseConfigNumber(width, 'gui.width'), parseConfigNumber(height, 'gui.height'), true)
     }
     case 'x:y': return win.setPosition(value[0], value[1], true)
     case 'center': return value && win.center()
-    case 'minWidth:minHeight': return win.setMinimumSize(...value)
-    case 'maxWidth:maxHeight': return win.setMaximumSize(...value)
+    case 'minWidth:minHeight': return win.setMinimumSize(parseConfigNumber(value[0], 'gui.minWidth'), parseConfigNumber(value[1], 'gui.minHeight'))
+    case 'maxWidth:maxHeight': return win.setMaximumSize(parseConfigNumber(value[0], 'gui.maxWidth'), parseConfigNumber(value[1], 'gui.maxHeight'))
     case 'resizable': return win.setResizable(value)
     case 'movable': return win.setMovable(value)
     case 'minimizable': return win.setMinimizable(value)
@@ -1789,6 +1789,12 @@ class Freelist {
       yield item
     }
   }
+}
+
+function parseConfigNumber (value, field) {
+  if (value === undefined || typeof value === 'number') return value
+  if (typeof value === 'string' && Number.isFinite(+value)) return +value
+  throw new Error(`The value of ${field} configuration field must be a number or numeric string, got: ${value}`)
 }
 
 module.exports = PearGUI
