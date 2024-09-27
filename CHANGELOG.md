@@ -14,6 +14,7 @@
 * API - untrusted worker on first run fix
 * Desktop - `ERR_HTTP_NOT_FOUND` 404 response from the sidecar when a requested file is not found
 * Mac - traffic lights visibility fix
+* Desktop - GUI configiguration can take numeric strings as values
 
 ### Improvements
 
@@ -26,6 +27,7 @@
 * Windows/Linux - Avoid OS/Electron issues by disabling the sandbox (already unused), the `--sandbox` flag can be used to re-enable
 * Performance - 3x speedup with concurrent Hyperbee gets in application loading flow
 * Performance - application boot speed regression fix, package lookup for worker trusted links
+* Performance - `pear info` concurrent Hyperbee gets
 
 ## v1.4.0
 
