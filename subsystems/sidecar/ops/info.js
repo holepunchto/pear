@@ -7,7 +7,7 @@ const Bundle = require('../lib/bundle')
 const Store = require('../lib/store')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED, ERR_NOT_FOUND_OR_NOT_CONNECTED } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
@@ -57,13 +57,6 @@ module.exports = class Info extends Opstream {
     if (bundle) {
       await session.add(bundle)
       await bundle.join(this.sidecar.swarm)
-      try {
-        const pkg = await bundle.drive.get('/package.json', { wait: false })
-        if (pkg === null) throw ERR_NOT_FOUND_OR_NOT_CONNECTED('could not get /package.json')
-      } catch (error) {
-        if (error.code !== 'DECODING_ERROR') throw error
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
-      }
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
@@ -77,16 +70,20 @@ module.exports = class Info extends Opstream {
           }
         })
       }
+      const [channel, release, manifest] = await Promise.all([
+        drive.db.get('channel'),
+        drive.db.get('release'),
+        drive.db.get('manifest')
+      ]).catch((error) => {
+        if (error.code === 'DECODING_ERROR') throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      })
 
-      const channel = (await drive.db.get('channel'))?.value
-      const release = (await drive.db.get('release'))?.value || '[ Unreleased ]'
-      const manifest = (await drive.db.get('manifest'))?.value
-      const name = manifest?.pear?.name || manifest?.holepunch?.name || manifest.name
+      const name = manifest?.value?.pear?.name || manifest?.value?.holepunch?.name || manifest?.value?.name
       const length = drive.core.length
       const byteLength = drive.core.byteLength
       const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
       const fork = drive.core.fork
-      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel, release, name, length, byteLength, blobs, fork } })
+      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel: channel?.value, release: release?.value || ['Unreleased'], name, length, byteLength, blobs, fork } })
     }
 
     const contents = await drive.get('/CHANGELOG.md')
