@@ -330,8 +330,7 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
-      if (this.hasClients) return
-      if (this.updating) return
+      if (this.hasClients || this.updating) return
       this.close().catch(console.error)
     }, this.spindownms)
   }
