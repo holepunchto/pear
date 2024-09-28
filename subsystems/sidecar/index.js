@@ -32,7 +32,8 @@ const { version } = require('../../package.json')
 const deriveEncryptionKey = require('pw-to-ek')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP,
+  SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
@@ -898,7 +899,7 @@ class Sidecar extends ReadyResource {
   }
 
   #getKnownNodes () {
-    let dht = this.swarm.dht.toArray({ limit: 20 })
+    let dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
     if (dht) {
       this.#setKnownNodes(dht)
     } else {
@@ -916,7 +917,7 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     const restarts = this.closeClients()
 
-    this.#setKnownNodes()
+    this.#setKnownNodes(this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
 
     this.spindownms = 0
     this.#spindownCountdown()
