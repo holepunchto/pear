@@ -13,7 +13,9 @@ module.exports = class Mime {
 
   type (filepath) {
     const split = filepath.split('.')
-    let contentType = this.extmap.get(split.pop() || 'js')
+    const extension = split.pop() || 'js'
+    let contentType = this.extmap.get(extension)
+    if (extension === 'jsx') contentType = 'application/javascript'
     if (!contentType) return 'application/octet-stream'
     contentType = contentType.replace('application/node', 'application/javascript').replace('text/javascript', 'application/javascript')
     if (contentType === 'application/javascript' || contentType === 'text/html' || contentType === 'application/json') {

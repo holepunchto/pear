@@ -2,9 +2,13 @@
 /* global Pear */
 const Module = require('bare-module')
 const FramedStream = require('framed-stream')
+const b4a = require('b4a')
 
 const pipe = Pear.worker.pipe()
 const stream = new FramedStream(pipe)
+
+const readyFrame = b4a.from([0x01])
+stream.write(readyFrame)
 
 let transforms = []
 let bundles = []
@@ -29,13 +33,20 @@ stream.on('data', (data) => {
   if (bundles.length > 0 && bundles.length === transforms.length) {
     if (!buffer) buffer = data
 
+    /* eslint-disable-next-line array-callback-return */
     buffer = bundles.reduce((source, bundle, index) => {
       const config = transforms[index]
       const { options = {} } = typeof config === 'string' ? {} : config
+      const name = typeof config === 'string' ? config.split('.')[0] : config.name
       try {
-        const transform = Module.load(new URL('app:/transform.bundle'), bundle).exports
+        const transform = Module.load(new URL(`pear-transform:/${name}.bundle`), bundle).exports
         return transform(source, options)
-      } catch (err) { return stream.emit('error', err) }
+      } catch (err) {
+        clearTimeout(timer)
+        stream.destroy()
+        pipe.end()
+        Pear.exit(1)
+      }
     }, buffer)
 
     stream.write(buffer)
