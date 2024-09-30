@@ -112,7 +112,7 @@
     "ready-resource": "^1.0.3",
     "redhat-overpass-font": "^1.0.0",
     "safety-catch": "^1.0.2",
-    "script-linker": "^2.5.2",
+    "script-linker": "file:../script-linker",
     "sodium-native": "^4.1.1",
     "streamx": "^2.16.1",
     "tiny-byte-size": "^1.1.0",

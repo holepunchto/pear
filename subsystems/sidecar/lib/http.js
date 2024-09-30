@@ -108,6 +108,9 @@ module.exports = class Http extends ReadyResource {
       builtin = link.filename === link.resolve && linker.builtins.has(link.resolve)
     }
 
+    const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform`)
+    await transformer.ready()
+
     let isJS = false
     if (protocol !== 'resolve') {
       const ct = mime.type(link.filename)
@@ -131,8 +134,6 @@ module.exports = class Http extends ReadyResource {
         res.end(out)
         return
       }
-
-      if (ct === 'text/jsx') res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
     }
 
     if (await bundle.has(link.filename) === false) {
@@ -156,12 +157,12 @@ module.exports = class Http extends ReadyResource {
 
     const isSourceMap = link.transform === 'map'
     if (isJS || isSourceMap) {
-      const out = await linker.transform(link)
+      const out = await linker.transform({ ...link, sourceTransform: transformer.transform.bind(transformer) })
       if (isSourceMap) res.setHeader('Content-Type', 'application/json')
       res.end(out)
     } else {
       if (protocol === 'app' && (link.filename.endsWith('.html') || link.filename.endsWith('.htm'))) {
-        const mods = await linker.warmup(link.filename)
+        const mods = await linker.warmup(link.filename, { sourceTransform: transformer.transform.bind(transformer) })
         const batch = []
         for (const [filename, mod] of mods) {
           if (mod.type === 'module') continue
@@ -173,13 +174,6 @@ module.exports = class Http extends ReadyResource {
 
       const meta = await bundle.entry(link.filename)
       if (meta === null) throw new ERR_HTTP_NOT_FOUND(`Not Found: "${link.filename}"`)
-
-      const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform`)
-      const transformed = await transformer.transform(await bundle.get(link.filename), link.filename)
-      if (transformed !== null) {
-        res.end(transformed)
-        return
-      }
 
       const stream = bundle.streamFrom(meta)
       await streamx.pipelinePromise(stream, res)

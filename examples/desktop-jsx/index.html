@@ -2,14 +2,6 @@
 <html>
 <head>
   <title>Pear JSX example</title>
-  <script type="importmap">
-    {
-      "imports": {
-        "react": "./node_modules/react/index.js",
-        "react-dom/client": "./node_modules/react-dom/client.js"
-      }
-    }
-  </script>
   <style>
     body {
       font-family: Helvetica, sans-serif;
@@ -45,6 +37,56 @@
       margin-top: 18px;
       margin-left: 12px;
     }
+
+
+* {
+  box-sizing: border-box;
+}
+
+    ol {
+      margin: 0;
+    }
+    .main {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+.square {
+  background: transparent;
+  border: 1px solid #999;
+  color: #fff;
+  float: left;
+  font-size: 48px;
+  font-weight: bold;
+  line-height: 68px;
+  height: 68px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 0;
+  text-align: center;
+  width: 68px;
+}
+
+.board-row:after {
+  clear: both;
+  content: '';
+  display: table;
+}
+
+.status {
+  margin-top: 20px;
+}
+.game {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.game-info {
+  margin-left: 40px;
+}
+
   </style>
 </head>
 <body>
