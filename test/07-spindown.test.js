@@ -105,12 +105,13 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.comment('Starting sidecar (primary rig)')
   const sidecar = startSidecar(rig)
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
+  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
+  t.teardown(async () => onExit)
 
   t.comment('Waiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
   t.comment(`Waiting for sidecar to spindown (${constants.SPINDOWN_TIMEOUT / 1000}s)`)
-  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   let timeoutObject
   let timeoutReject
   const timeout = new Promise((resolve, reject) => {
@@ -122,11 +123,9 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   if (hasSpunDown === false) {
     t.fail('sidecar failed to spin down')
     process.kill(sidecar.pid)
-    await onExit
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
-    await onExit
     t.pass('sidecar has spun down')
   }
 })
@@ -142,12 +141,13 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   t.comment(`Starting sidecar at ${rig.platformDir2}`)
   const sidecar = startSidecar({ platformDir: rig.platformDir2, args: ['--key', rig.staged.key] })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
+  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
+  t.teardown(async () => onExit)
 
   t.comment('Waiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
   t.comment(`Waiting for sidecar spindown timeout to lapse (${(constants.SPINDOWN_TIMEOUT + 30_000) / 1000}s)`)
-  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   let timeoutObject
   let timeoutReject
   const timeout = new Promise((resolve, reject) => {
@@ -159,11 +159,9 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   if (hasSpunDown === false) {
     t.pass('sidecar successfully blocked spindown during update')
     sidecar.kill()
-    await onExit
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
-    await onExit
     t.fail('sidecar failed to prevent spindown during update')
   }
 })
