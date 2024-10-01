@@ -19,6 +19,7 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 const { PLATFORM_DIR } = require('../constants')
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
+const MAX_OP_STEP_WAIT = 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
@@ -132,15 +133,15 @@ class Helper extends IPC {
     const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
     tags = ['inspector', ...tags].map((tag) => ({ tag }))
 
-    const iterable = new Readable({ objectMode: true })
+    const stream = new Readable({ objectMode: true })
     const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
     const onLine = (line) => {
       if (line.indexOf('teardown') > -1) {
-        iterable.push({ tag: 'teardown', data: line })
+        stream.push({ tag: 'teardown', data: line })
         return
       }
       if (line.indexOf('"tag": "inspector"') > -1) {
-        iterable.push(JSON.parse(line))
+        stream.push(JSON.parse(line))
         return
       }
       if (opts.lineout) lineout.push(line)
@@ -152,9 +153,9 @@ class Helper extends IPC {
     })
     subprocess.once('exit', (code, signal) => {
       for (const line of decoder.end()) onLine(line.toString().trim())
-      iterable.push({ tag: 'exit', data: { code, signal } })
+      stream.push({ tag: 'exit', data: { code, signal } })
     })
-    const until = await this.pick(iterable, tags)
+    const until = await this.pick(stream, tags)
 
     const data = await until.inspector
     const inspector = new Helper.Inspector(data.key)
@@ -163,47 +164,47 @@ class Helper extends IPC {
     return { inspector, until, subprocess, lineout }
   }
 
-  static async pick (iter, ptn = {}, by = 'tag') {
-    if (Array.isArray(ptn)) return this.#pickify(iter, ptn, by)
-    for await (const output of iter) {
+  static async pick (stream, ptn = {}, by = 'tag') {
+    if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
+    for await (const output of stream) {
       if ((ptn?.[by] !== 'error') && output[by] === 'error') throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
   }
 
-  static #pickify (iter, patterns = [], by) {
-    const picks = {}
-    const resolvers = {}
-
-    for (const ptn of patterns) picks[ptn[by]] = new Promise((resolve) => { resolvers[ptn[by]] = resolve })
-
-    const matchesPattern = (output, pattern) => {
-      return Object.keys(pattern).every(key => pattern[key] === output[key])
-    };
-
-    (async function match () {
-      for await (const output of iter) {
-        if (output[by] === 'error') throw new OperationError(output.data)
-        for (const ptn of patterns) {
-          // NOTE: only resolves to first match, subsequent matches are ignored
-          if (matchesPattern(output, ptn) && resolvers[ptn[by]]) {
-            resolvers[ptn[by]](output.data ? output.data : true)
-            resolvers[ptn[by]] = null
-          }
+  static #untils (stream, patterns = [], by) {
+    const untils = {}
+    for (const ptn of patterns) {
+      untils[ptn[by]] = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => { reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn)) + ' after ' + MAX_OP_STEP_WAIT + 'ms') }, MAX_OP_STEP_WAIT)
+        const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
+        const onerror = (err) => reject(err)
+        const ondata = (data) => {
+          if (data === null || data?.tag === 'final') stream.off('close', onclose)
         }
-
-        if (Object.keys(resolvers).length === 0) break
-      }
-
-      for (const ptn of patterns) if (resolvers[ptn[by]]) resolvers.resolve[ptn[by]](null)
-    })()
-
-    return picks
+        stream.on('data', ondata)
+        stream.on('close', onclose)
+        stream.on('error', onerror)
+        const onpick = (data) => {
+          const result = data === undefined ? true : data
+          resolve(result)
+        }
+        this.pick(new Reiterate(stream), ptn, by)
+          .then(onpick, reject)
+          .finally(() => {
+            clearTimeout(timeout)
+            stream.off('data', ondata)
+            stream.off('close', onclose)
+            stream.off('error', onerror)
+          })
+      })
+    }
+    return untils
   }
 
-  static async sink (iter, ptn) {
-    for await (const output of iter) {
+  static async sink (stream, ptn) {
+    for await (const output of stream) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
     }
   }
@@ -288,3 +289,59 @@ class Helper extends IPC {
 }
 
 module.exports = Helper
+
+class Reiterate {
+  constructor (stream) {
+    this.stream = stream
+    this.complete = false
+    this.buffer = []
+    this.readers = []
+
+    this._ondata = this._ondata.bind(this)
+    this._onend = this._onend.bind(this)
+    this.onerror = this._onerror.bind(this)
+
+    this.stream.on('data', this._ondata)
+    this.stream.on('end', this._onend)
+    this.stream.on('error', this._onerror)
+  }
+
+  _ondata (value) {
+    this.buffer.push({ value, done: false })
+    for (const { resolve } of this.readers) resolve()
+    this.readers.length = 0
+  }
+
+  _onend () {
+    this.buffer.push({ done: true })
+    this.complete = true
+    for (const { resolve } of this.readers) resolve()
+    this.readers.length = 0
+  }
+
+  _onerror (err) {
+    for (const { reject } of this.readers) reject(err)
+    this.readers.length = 0
+  }
+
+  async * _tail () {
+    try {
+      let i = 0
+      while (i < this.buffer.length || !this.complete) {
+        if (i < this.buffer.length) {
+          const { value, done } = this.buffer[i++]
+          if (done) break
+          yield value
+        } else {
+          await new Promise((resolve, reject) => this.readers.push({ resolve, reject }))
+        }
+      }
+    } finally {
+      this.stream.off('data', this._ondata)
+      this.stream.off('end', this._onend)
+      this.stream.off('error', this._onerror)
+    }
+  }
+
+  [Symbol.asyncIterator] () { return this._tail() }
+}
