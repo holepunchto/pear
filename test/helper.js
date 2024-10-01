@@ -19,7 +19,7 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 const { PLATFORM_DIR } = require('../constants')
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
-const MAX_OP_STEP_WAIT = 120000
+const MAX_OP_STEP_WAIT = 3000000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
