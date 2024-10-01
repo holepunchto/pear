@@ -122,7 +122,6 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   const hasSpunDown = await Promise.race([onExit, timeout])
   if (hasSpunDown === false) {
     t.fail('sidecar failed to spin down')
-    process.kill(sidecar.pid)
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
@@ -158,7 +157,6 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   const hasSpunDown = await Promise.race([onExit, timeout])
   if (hasSpunDown === false) {
     t.pass('sidecar successfully blocked spindown during update')
-    sidecar.kill()
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
