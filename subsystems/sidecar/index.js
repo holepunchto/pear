@@ -865,8 +865,7 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    const nodes = knownNodes.get('nodes') || this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, knownNodes: nodes })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, knownNodes: await knownNodes.get('nodes') || [] })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
