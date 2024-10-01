@@ -101,6 +101,7 @@ test.hook('bootstrap secondary rig', async ({ comment }) => {
 test.hook('shutdown primary rig', rig.cleanup)
 
 test('sidecar should spindown after a period of inactivity', async (t) => {
+  t.plan(1)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
   t.comment('Starting sidecar (primary rig)')
@@ -131,6 +132,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 })
 
 test('sidecar should not spindown when there is an ongoing update', async (t) => {
+  t.plan(2)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
   t.comment('Starting slow seeder')
