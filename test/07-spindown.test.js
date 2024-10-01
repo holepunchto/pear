@@ -59,7 +59,8 @@ class SlowSeeder extends ReadyResource {
     this.swarm = new Hyperswarm({ keyPair })
     const corestore = this.corestore
     this.swarm.on('connection', (connection) => {
-      // add increasing delay to writes to let the first few writes through (triggering update on client) then slowing down
+      // let hypercore metadata packets be initially sent with small delay then increasingly slow down for the rest
+      // this is to trigger the update event in client sidecars without actually completing the update
       const originalWrite = connection.write
       let delay = 0
       connection.write = function (...args) {
@@ -137,6 +138,9 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   await seeder.ready()
   t.teardown(async () => seeder.close())
 
+  let peerAdded = false
+  seeder.bus.sub({ topic: 'seed', msg: { tag: 'peer-add' } }).once('data', () => { peerAdded = true })
+
   t.comment(`Starting sidecar at ${rig.platformDir2}`)
   const sidecar = startSidecar({ platformDir: rig.platformDir2, args: ['--key', rig.staged.key] })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
@@ -157,6 +161,7 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   const hasSpunDown = await Promise.race([onExit, timeout])
   if (hasSpunDown === false) {
     t.pass('sidecar successfully blocked spindown during update')
+    t.is(peerAdded, true, 'sidecar successfully connected to slow seeder')
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
