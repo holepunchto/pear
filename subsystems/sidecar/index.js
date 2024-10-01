@@ -38,7 +38,7 @@ const {
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
-const knownNodes = new Store('known-nodes')
+const knownNodes = new Store('dht')
 const SharedState = require('../../state')
 const State = require('./state')
 const { preferences } = State
@@ -672,7 +672,7 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
-    const dht = this.#getKnownNodes()
+    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || knownNodes.get('nodes') || []
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
@@ -894,20 +894,6 @@ class Sidecar extends ReadyResource {
     yield * preferences.entries()
   }
 
-  #setKnownNodes (dht) {
-    if (dht) knownNodes.set('dht', dht)
-  }
-
-  #getKnownNodes () {
-    let dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-    if (dht) {
-      this.#setKnownNodes(dht)
-    } else {
-      dht = knownNodes.get('dht') || []
-    }
-    return dht
-  }
-
   async #shutdown (client) {
     if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
@@ -917,7 +903,7 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     const restarts = this.closeClients()
 
-    this.#setKnownNodes(this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
+    knownNodes.set('nodes', this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
 
     this.spindownms = 0
     this.#spindownCountdown()
