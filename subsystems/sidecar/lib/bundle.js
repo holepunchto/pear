@@ -209,14 +209,15 @@ module.exports = class Bundle {
     return !!(this.checkout === 'release' && this.release)
   }
 
-  async bundle (entrypoint) {
+  async bundle ({ entrypoint, nodeMode } = {}, sidecarDrive) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
     const res = await DriveBundler.bundle(this.drive, {
       entrypoint: entrypoint || '.',
       cwd: SWAP,
       absolutePrebuilds: true,
-      mount: 'pear://' + id
+      mount: 'pear://' + id,
+      ...(nodeMode ? new NodeMode(sidecarDrive) : {})
     })
 
     return { key: id, ...res }
@@ -315,5 +316,16 @@ module.exports = class Bundle {
     if (this.tracer) this.tracer.destroy()
     await this.drain()
     await this.drive.close()
+  }
+}
+
+
+class NodeMode {
+  imports = {
+    fs: 'pear://pear/node_modules/bare-fs/index.js',
+    events: 'bare-events'
+  }
+  constructor (drive) {
+    this.mounts = { 'pear://pear' : drive }
   }
 }

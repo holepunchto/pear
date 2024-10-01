@@ -135,7 +135,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
         return bundle.sources[url.href]
       }
     })
-
+    console.log(bundle.resolutions)
     Module.load(new URL(bundle.entrypoint), {
       protocol,
       resolutions: bundle.resolutions
