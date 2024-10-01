@@ -59,8 +59,8 @@ class SlowSeeder extends ReadyResource {
     this.swarm = new Hyperswarm({ keyPair })
     const corestore = this.corestore
     this.swarm.on('connection', (connection) => {
-      // let hypercore metadata packets be sent with small delay then increasingly slow down for the rest
-      // this is to trigger the update event in client sidecars without actually completing the update
+      // send initial (metadata) packets right away then slow down as it starts sending data packets
+      // this is to trigger the start of the update in client sidecars without actually completing the update
       const originalWrite = connection.write
       let delay = 0
       connection.write = function (...args) {
