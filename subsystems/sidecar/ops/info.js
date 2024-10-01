@@ -15,6 +15,7 @@ module.exports = class Info extends Opstream {
   }
 
   async #op ({ link, channel, dir, showKey, metadata, changelog, full, encryptionKey, cmdArgs } = {}) {
+    console.log('info')
     const { session } = this
     let bundle = null
     let drive = null
@@ -24,16 +25,24 @@ module.exports = class Info extends Opstream {
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
     const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
 
+    console.log('pre getDriveKey')
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
+    console.log('aft getDriveKey')
     const permits = new Store('permits')
     const secrets = new Store('encryption-keys')
+    console.log('pre encryption-keys')
     const encryptionKeys = await permits.get('encryption-keys') || {}
+    console.log('aft encryption-keys')
+    console.log('pre secrets.get')
     encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(encryptionKey)
+    console.log('aft secrets.get')
 
     if (link || channel) {
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+        console.log('pre drive.ready')
         await drive.ready()
+        console.log('aft drive.ready')
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
         throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
@@ -44,7 +53,9 @@ module.exports = class Info extends Opstream {
 
     if (link || channel) {
       bundle = new Bundle({ corestore, key, drive })
+      console.log('pre bundle.ready')
       await bundle.ready()
+      console.log('aft bundle.ready')
     }
 
     const z32 = hypercoreid.encode(key)
@@ -52,11 +63,16 @@ module.exports = class Info extends Opstream {
       const onlyShowKey = enabledFlags.size === 1
       this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
     }
-
+    console.log('pre sidecar ready')
     await this.sidecar.ready()
+    console.log('aft sidecar ready')
     if (bundle) {
+      console.log('pre sess add')
       await session.add(bundle)
+      console.log('aft sess add')
+      console.log('pre bun join')
       await bundle.join(this.sidecar.swarm)
+      console.log('aft bun join')
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
@@ -70,11 +86,13 @@ module.exports = class Info extends Opstream {
           }
         })
       }
+      console.log('pre Promise.all db.gets')
       const [channel, release, manifest] = await Promise.all([
         drive.db.get('channel'),
         drive.db.get('release'),
         drive.db.get('manifest')
       ]).catch((error) => {
+        console.error('catch', error)
         if (error.code === 'DECODING_ERROR') throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       })
 
@@ -85,8 +103,9 @@ module.exports = class Info extends Opstream {
       const fork = drive.core.fork
       if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel: channel?.value, release: release?.value || ['Unreleased'], name, length, byteLength, blobs, fork } })
     }
-
+    console.log('pre drive get')
     const contents = await drive.get('/CHANGELOG.md')
+    console.log('aft drive get')
 
     const type = full ? 'full' : 'latest'
     const showChangelog = isEnabled(changelog) || full ? type : false
