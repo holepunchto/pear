@@ -1,3 +1,4 @@
+/* global Pear */
 'use strict'
 const os = require('bare-os')
 const env = require('bare-env')
@@ -21,12 +22,21 @@ const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
+Pear.teardown(async () => {
+  console.log('# Teardown: Shutting Down Local Sidecar')
+  const local = new Helper()
+  await local.ready()
+  await local.shutdown()
+  console.log('# Teardown: Local Sidecar Shutdown')
+})
+
 class Rig {
   platformDir = path.join(tmp, 'rig-pear')
   artifactDir = env.CI ? path.join(tmp, 'artifact-pear') : Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
+  artifactShutdown = false
   setup = async ({ comment, timeout }) => {
     timeout(180000)
     comment('connecting to sidecar')
@@ -46,12 +56,21 @@ class Rig {
     comment('rig platform bootstrapped')
     comment('connecting to rig sidecar')
     this.artifact = new Helper({ platformDir: this.platformDir })
+    Pear.teardown(async () => {
+      if (this.artifactShutdown) return
+      console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
+      const helper = this.artifact.closed ? new Helper({ platform: this.platformDir }) : this.artifact
+      await helper.ready()
+      await helper.shutdown()
+      console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
+    })
     await this.artifact.ready()
   }
 
   cleanup = async ({ comment }) => {
     comment('shutdown rig sidecar')
     await this.artifact.shutdown()
+    this.artifactShutdown = true
     comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()
