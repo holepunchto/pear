@@ -672,7 +672,7 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
-    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || knownNodes.get('nodes') || []
+    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
@@ -865,7 +865,8 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair })
+    const nodes = knownNodes.get('nodes') || this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, knownNodes: nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
@@ -903,8 +904,6 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     const restarts = this.closeClients()
 
-    knownNodes.set('nodes', this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
-
     this.spindownms = 0
     this.#spindownCountdown()
     await this.closing
@@ -916,7 +915,10 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.http) await this.http.close()
-    if (this.swarm) await this.swarm.destroy()
+    if (this.swarm) {
+      knownNodes.set('nodes', this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
+      await this.swarm.destroy()
+    }
     if (this.corestore) await this.corestore.close()
     if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed', PLATFORM_DIR)
   }
