@@ -96,6 +96,7 @@ class Helper extends IPC {
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
+    this.verbose = verbose
   }
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
@@ -103,9 +104,9 @@ class Helper extends IPC {
 
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
-    const verbose = Bare.argv.includes('--verbose')
+
     const args = !opts.encryptionKey ? ['run', '-t', link] : ['run', '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
-    if (verbose) args.push('--verbose')
+    if (this.verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
@@ -215,7 +216,7 @@ class Helper extends IPC {
   static async gc (dir) {
     if (NO_GC) return
 
-    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
+    await fs.promises.rm(dir, { recursive: true }).catch(() => { })
   }
 
   static Inspector = class extends ReadyResource {
