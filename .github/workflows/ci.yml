@@ -14,12 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-        # - os: ubuntu-latest
-        #   platform: linux
-        #   arch: x64
-        # - os: macos-latest
-        #   platform: darwin
-        #   arch: x64
+        - os: ubuntu-latest
+          platform: linux
+          arch: x64
+        - os: macos-latest
+          platform: darwin
+          arch: x64
         - os: windows-latest
           platform: win32
           arch: x64
@@ -88,5 +88,5 @@ jobs:
       run: $PEAR sidecar shutdown
       shell: bash
 
-    # - name: Lint
-    #   run: npm run lint
+    - name: Lint
+      run: npm run lint
