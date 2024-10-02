@@ -57,9 +57,9 @@ class Rig {
     this.key = await until.key
     await until.announced
     comment('platform seeding')
-    // comment('bootstrapping rig platform...')
-    // await Helper.bootstrap(this.key, this.platformDir)
-    // comment('rig platform bootstrapped')
+    comment('bootstrapping rig platform...')
+    await Helper.bootstrap(this.key, this.platformDir)
+    comment('rig platform bootstrapped')
     // Pear.teardown(async () => {
     //   if (this.artefactShutdown) return
     //   console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')

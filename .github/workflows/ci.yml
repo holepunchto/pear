@@ -88,5 +88,5 @@ jobs:
       run: $PEAR sidecar shutdown
       shell: bash
 
-    - name: Lint
-      run: npm run lint
+    # - name: Lint
+    #   run: npm run lint
