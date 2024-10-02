@@ -27,11 +27,11 @@ Error.stackTraceLimit = Infinity
 const rigPear = path.join(tmp, 'rig-pear')
 
 Pear.teardown(async () => {
-  console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
-  const helper = new Helper({ platform: rigPear })
-  await helper.ready()
-  await helper.shutdown()
-  console.log('# Teardown: Rig Sidecar Shutdown')
+  // console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
+  // const helper = new Helper({ platform: rigPear })
+  // await helper.ready()
+  // await helper.shutdown()
+  // console.log('# Teardown: Rig Sidecar Shutdown')
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
@@ -64,9 +64,9 @@ class Rig {
     this.key = await until.key
     await until.announced
     comment('platform seeding')
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
+    // comment('bootstrapping rig platform...')
+    // await Helper.bootstrap(this.key, this.platformDir)
+    // comment('rig platform bootstrapped')
   }
 
   cleanup = async ({ comment }) => {
