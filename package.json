@@ -128,7 +128,7 @@
     "hyperbee": "^2.0.1",
     "hypercore": "^10.36.4",
     "newline-decoder": "^1.0.2",
-    "pear-inspect": "^1.1.3",
+    "pear-inspect": "github:rafapaezbas/pear-inspect",
     "port-get": "^1.0.4",
     "standard": "^17.0.0"
   },
