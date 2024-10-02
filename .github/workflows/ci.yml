@@ -73,7 +73,7 @@ jobs:
       shell: bash
 
     - name: Bootstrap System Pear From CI Pear
-      run: cat $(npm list -g pear --parseable --depth=0)/pear.key && pear && pear -v
+      run: pear
       shell: bash
 
     - name: Shutdown Local Pear Sidecar

@@ -39,7 +39,10 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(final.success, 'stage succeeded')
 
   comment('seeding encrypted app')
-  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: name, cmdArgs: [] })
+  const seeder = new Helper(rig)
+  teardown(() => seeder.close())
+  await seeder.ready()
+  const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: name, cmdArgs: [] })
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const appKey = await until.key
   const announced = await until.announced
