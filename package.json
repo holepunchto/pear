@@ -97,7 +97,7 @@
     "paparam": "^1.4.0",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
-    "pear-ipc": "^2.2.1",
+    "pear-ipc": "github:holepunchto/pear-ipc#win-shutdown-in-teardown-fix",
     "pear-link": "^2.0.1",
     "pear-updater": "^3.1.0",
     "pear-updater-bootstrap": "^1.1.3",
