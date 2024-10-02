@@ -22,7 +22,7 @@ const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
 const DLRUNTIME = argv.includes('--dlruntime')
-const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy'
+const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwhos'
 try {
   fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file')
 } catch (err) {

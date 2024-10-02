@@ -55,6 +55,23 @@ First run will install runtimes in `by-arch`, create platform directory called `
 Use `./pear.dev` (`\\pear.ps1` / `\\pear.cmd`) to execute the Pear Runtime directly in localdev.
 
 
+## Drives
+
+The following are public drives for the Production Pear.
+
+### Runtimes Bootstrap
+
+```
+pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwhos
+```
+
+### Production Build
+
+```
+pear://pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
+```
+
+
 ## License
 
 Apache-2.0
