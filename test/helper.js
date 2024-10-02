@@ -34,21 +34,21 @@ Pear.teardown(async () => {
 
 class Rig {
   platformDir = path.join(tmp, 'rig-pear')
-  artifactDir = env.CI ? path.join(tmp, 'artifact-pear') : Helper.localDir
+  artefactDir = env.CI ? path.join(tmp, 'artefact-pear') : Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
-  artifactShutdown = false
+  artefactShutdown = false
   setup = async ({ comment, timeout }) => {
     timeout(180000)
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
     comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, dryRun: false, bare: true })
+    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, key: null, cmdArgs: [] })
+    const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
@@ -57,22 +57,22 @@ class Rig {
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
     comment('connecting to rig sidecar')
-    this.artifact = new Helper({ platformDir: this.platformDir })
+    this.artefact = new Helper({ platformDir: this.platformDir })
     Pear.teardown(async () => {
-      if (this.artifactShutdown) return
+      if (this.artefactShutdown) return
       console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
-      const helper = this.artifact.closed ? new Helper({ platform: this.platformDir }) : this.artifact
+      const helper = this.artefact.closed ? new Helper({ platform: this.platformDir }) : this.artefact
       await helper.ready()
       await helper.shutdown()
       console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
     })
-    await this.artifact.ready()
+    await this.artefact.ready()
   }
 
   cleanup = async ({ comment }) => {
     comment('shutdown rig sidecar')
-    await this.artifact.shutdown()
-    this.artifactShutdown = true
+    await this.artefact.shutdown()
+    this.artefactShutdown = true
     comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()

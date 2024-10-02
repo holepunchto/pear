@@ -60,8 +60,8 @@ jobs:
       run: $PEAR stage ci
       shell: bash
 
-    - name: Artifact Pear
-      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artifact-pear
+    - name: Artefact Pear
+      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artefact-pear
       shell: bash
 
     - name: Shutdown Local Pear Sidecar
