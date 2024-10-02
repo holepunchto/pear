@@ -43,9 +43,6 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: System Pear
-      run: npm i -g pear && pear
-
     - name: Bootstrap
       run: npm run bootstrap
 
@@ -59,6 +56,17 @@ jobs:
     - name: Self-Stage
       run: $PEAR stage ci
       shell: bash
+
+    - name: Self-Seed
+      run: $PEAR stage ci &
+      shell: bash
+
+    - name: Update System Pear Key
+      run: echo $($PEAR info ci --key) >> $(npm list -g pear --parseable --depth=0)/pear.key
+      shell: bash
+
+    - name: System Pear
+      run: npm i -g pear && pear
 
     - name: Artefact Pear
       run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artefact-pear
