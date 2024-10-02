@@ -31,7 +31,7 @@ Pear.teardown(async () => {
   console.log('# Teardown: Triggering Shutdown of Local Sidecar')
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
-})
+}, Infinity)
 
 class Rig {
   platformDir = path.join(tmp, 'rig-pear')
@@ -39,8 +39,7 @@ class Rig {
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
-  artefactShutdown = false
-  setup = async ({ comment, timeout, teardown }) => {
+  setup = async ({ comment, timeout }) => {
     timeout(180000)
     comment('connecting to sidecar')
     await this.local.ready()
@@ -60,26 +59,19 @@ class Rig {
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
-    // Pear.teardown(async () => {
-    //   if (this.artefactShutdown) return
-    //   console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
-    //   const helper = new Helper({ platform: this.platformDir })
-    //   await helper.ready()
-    //   await helper.shutdown()
-    //   console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
-    // })
+    Pear.teardown(async () => {
+      console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
+      const helper = new Helper({ platform: this.platformDir })
+      await helper.ready()
+      await helper.shutdown()
+      console.log('# Teardown: Rig Sidecar Shutdown')
+    })
   }
 
   cleanup = async ({ comment }) => {
     comment('closing seeder client')
     await this.seeder.close()
     comment('seeder client closed')
-    // comment('shutdown rig sidecar')
-    // const artefact = new Helper({ platformDir: this.platformDir })
-    // await artefact.ready()
-    // await artefact.shutdown()
-    // this.artefactShutdown = true
-    // comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()
     comment('local client closed')
