@@ -136,6 +136,7 @@ class Helper extends IPC {
     const stream = new Readable({ objectMode: true })
     const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
     const onLine = (line) => {
+      console.log('online', line)
       if (line.indexOf('teardown') > -1) {
         stream.push({ tag: 'teardown', data: line })
         return

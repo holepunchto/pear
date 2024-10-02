@@ -36,8 +36,11 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   comment('running')
   const link = 'pear://' + key
   const running = await Helper.open(link, { tags: ['exit'] })
+  comment('opened')
 
+  comment('inspecting')
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
+  comment('Pear version evaluated')
 
   is(value?.app?.key, key, 'app version matches staged key')
 
