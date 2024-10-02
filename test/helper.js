@@ -26,7 +26,9 @@ Error.stackTraceLimit = Infinity
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
+  console.log('# Teardown: Connecting Local Sidecar')
   await local.ready()
+  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
 })
