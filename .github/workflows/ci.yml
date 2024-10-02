@@ -58,7 +58,7 @@ jobs:
       shell: bash
 
     - name: Self-Seed
-      run: $PEAR stage ci &
+      run: $PEAR seed ci &
       shell: bash
 
     - name: Update System Pear Key
