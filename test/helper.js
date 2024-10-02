@@ -27,11 +27,11 @@ Error.stackTraceLimit = Infinity
 const rigPear = path.join(tmp, 'rig-pear')
 
 Pear.teardown(async () => {
-  // console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
-  // const helper = new Helper({ platform: rigPear })
-  // await helper.ready()
-  // await helper.shutdown()
-  // console.log('# Teardown: Rig Sidecar Shutdown')
+  console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
+  const helper = new Helper({ platform: rigPear })
+  await helper.ready()
+  await helper.shutdown()
+  console.log('# Teardown: Rig Sidecar Shutdown')
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
@@ -73,9 +73,6 @@ class Rig {
     comment('closing seeder client')
     await this.seeder.close()
     comment('seeder client closed')
-    comment('closing local client')
-    await this.local.close()
-    comment('local client closed')
   }
 }
 
