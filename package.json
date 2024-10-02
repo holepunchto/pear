@@ -82,6 +82,7 @@
     "crc-universal": "^1.0.4",
     "debounceify": "^1.1.0",
     "drive-bundler": "^1.4.4",
+    "event-loop-delay": "github:davidmarkclements/event-loop-delay#bare",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.2.7",
     "hypercore-crypto": "^3.4.1",

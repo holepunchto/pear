@@ -2,6 +2,14 @@
 
 runTests()
 
+const loopDelay = require('event-loop-delay')
+const sampler = loopDelay()
+
+setInterval(function () {
+  console.log('Accumulated delay in ms is', sampler.delay)
+  console.log('Accumulated times a delay was detected', sampler.times)
+}, 1000)
+
 async function runTests () {
   const test = (await import('brittle')).default
 
