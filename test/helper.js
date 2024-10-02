@@ -53,12 +53,10 @@ class Rig {
     await this.local.ready()
     comment('connected to sidecar')
     
-    if (!env.CI) {
-      comment('staging platform...')
-      const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
-      await Helper.pick(staging, { tag: 'final' })
-      comment('platform staged')
-    }
+    comment('staging platform...')
+    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
+    await Helper.pick(staging, { tag: 'final' })
+    comment('platform staged')
 
     comment('seeding platform')
     this.seeder = new Helper()
@@ -69,9 +67,9 @@ class Rig {
     await until.announced
     comment('platform seeding')
     
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
+    // comment('bootstrapping rig platform...')
+    // await Helper.bootstrap(this.key, this.platformDir)
+    // comment('rig platform bootstrapped')
   }
 
   cleanup = async ({ comment }) => {
