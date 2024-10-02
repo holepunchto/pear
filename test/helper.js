@@ -40,7 +40,7 @@ class Rig {
   local = new Helper()
   tmp = tmp
   artefactShutdown = false
-  setup = async ({ comment, timeout }) => {
+  setup = async ({ comment, timeout, teardown }) => {
     timeout(180000)
     comment('connecting to sidecar')
     await this.local.ready()
@@ -50,6 +50,7 @@ class Rig {
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
     const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
+    teardown(() => seeding.close())
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
@@ -57,8 +58,6 @@ class Rig {
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
-    comment('connecting to rig sidecar')
-    this.artefact = new Helper({ platformDir: this.platformDir })
     Pear.teardown(async () => {
       if (this.artefactShutdown) return
       console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
@@ -67,7 +66,10 @@ class Rig {
       await helper.shutdown()
       console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
     })
+    comment('connecting to rig sidecar')
+    this.artefact = new Helper({ platformDir: this.platformDir })
     await this.artefact.ready()
+    comment('connected to rig sidecar')
   }
 
   cleanup = async ({ comment }) => {

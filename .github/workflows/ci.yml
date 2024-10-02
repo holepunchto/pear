@@ -65,12 +65,12 @@ jobs:
       run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artefact-pear
       shell: bash
 
+    - name: Install System Pear
+      run: npm i -g pear
+
     - name: Update System Pear Key
       run: echo $($PEAR info ci --key) > $(npm list -g pear --parseable --depth=0)/pear.key
       shell: bash
-
-    - name: Install System Pear
-      run: npm i -g pear
 
     - name: Bootstrap System Pear From CI Pear
       run: cat $(npm list -g pear --parseable --depth=0)/pear.key && pear && pear -v
