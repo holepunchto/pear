@@ -26,12 +26,12 @@ Error.stackTraceLimit = Infinity
 
 const rigPear = path.join(tmp, 'rig-pear')
 
-Pear.teardown(async () => {
-  console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
-  const helper = new Helper({ platform: rigPear })
-  await helper.ready()
-  await helper.shutdown()
-  console.log('# Teardown: Rig Sidecar Shutdown')
+Bare.on('beforeExit', async () => {
+  // console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
+  // const helper = new Helper({ platform: rigPear })
+  // await helper.ready()
+  // await helper.shutdown()
+  // console.log('# Teardown: Rig Sidecar Shutdown')
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
@@ -39,7 +39,7 @@ Pear.teardown(async () => {
   console.log('# Teardown: Triggering Shutdown of Local Sidecar')
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
-}, Infinity)
+})
 
 class Rig {
   platformDir = rigPear
@@ -52,13 +52,13 @@ class Rig {
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
-    comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
+    // comment('staging platform...')
+    // const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
+    // await Helper.pick(staging, { tag: 'final' })
+    // comment('platform staged')
     // comment('seeding platform')
-    this.seeder = new Helper()
-    await this.seeder.ready()
+    // this.seeder = new Helper()
+    // await this.seeder.ready()
     // const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
     // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     // this.key = await until.key
@@ -70,9 +70,9 @@ class Rig {
   }
 
   cleanup = async ({ comment }) => {
-    comment('closing seeder client')
-    await this.seeder.close()
-    comment('seeder client closed')
+    // comment('closing seeder client')
+    // await this.seeder.close()
+    // comment('seeder client closed')
     comment('closing local client')
     await this.local.close()
     comment('local client closed')
