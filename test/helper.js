@@ -74,12 +74,12 @@ class Rig {
     comment('closing seeder client')
     await this.seeder.close()
     comment('seeder client closed')
-    comment('shutdown rig sidecar')
-    const artefact = new Helper({ platformDir: this.platformDir })
-    await artefact.ready()
-    await artefact.shutdown()
-    this.artefactShutdown = true
-    comment('rig sidecar closed')
+    // comment('shutdown rig sidecar')
+    // const artefact = new Helper({ platformDir: this.platformDir })
+    // await artefact.ready()
+    // await artefact.shutdown()
+    // this.artefactShutdown = true
+    // comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()
     comment('local client closed')
