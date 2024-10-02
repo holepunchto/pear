@@ -150,9 +150,13 @@ class Helper extends IPC {
     }
     const decoder = new NewlineDecoder()
     subprocess.stdout.on('data', (data) => {
-      for (const line of decoder.push(data)) onLine(line.toString().trim())
+      for (const line of decoder.push(data)) {
+        console.log('subprocess data....', line.toString())
+        onLine(line.toString().trim())
+      }
     })
     subprocess.once('exit', (code, signal) => {
+      console.log('subprocess exit....')
       for (const line of decoder.end()) onLine(line.toString().trim())
       stream.push({ tag: 'exit', data: { code, signal } })
     })
