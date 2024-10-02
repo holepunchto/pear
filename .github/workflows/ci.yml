@@ -61,23 +61,22 @@ jobs:
       run: $PEAR seed ci &
       shell: bash
 
-    - name: Update System Pear Key
-      run: echo $($PEAR info ci --key) > $(npm list -g pear --parseable --depth=0)/pear.key && cat $(npm list -g pear --parseable --depth=0)/pear.key
-      shell: bash
-
-    - name: System Pear
-      run: npm i -g pear && pear && pear -v
-
     - name: Artefact Pear
       run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artefact-pear
       shell: bash
 
-    - name: Shutdown Local Pear Sidecar
-      run: $PEAR sidecar shutdown
+    - name: Update System Pear Key
+      run: echo $($PEAR info ci --key) > $(npm list -g pear --parseable --depth=0)/pear.key && cat $(npm list -g pear --parseable --depth=0)/pear.key
       shell: bash
 
-    - name: Remove node_modules
-      run: rm -fr node_modules
+    - name: Install System Pear
+      run: npm i -g pear
+
+    - name: Bootstrap System Pear From CI Pear
+      run: pear
+
+    - name: Shutdown Local Pear Sidecar
+      run: $PEAR sidecar shutdown
       shell: bash
 
     - name: Install w/ dev deps
