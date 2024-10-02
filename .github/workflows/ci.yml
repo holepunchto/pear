@@ -62,7 +62,7 @@ jobs:
       shell: bash
 
     - name: Update System Pear Key
-      run: echo $($PEAR info ci --key) >> $(npm list -g pear --parseable --depth=0)/pear.key
+      run: echo $($PEAR info ci --key) > $(npm list -g pear --parseable --depth=0)/pear.key
       shell: bash
 
     - name: System Pear
