@@ -24,6 +24,7 @@ const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
 Pear.teardown(async () => {
+  if (env.ci && isWindows) return // until new builds
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   await local.ready()

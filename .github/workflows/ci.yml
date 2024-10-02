@@ -20,9 +20,9 @@ jobs:
         - os: macos-latest
           platform: darwin
           arch: x64
-        # - os: windows-latest
-        #   platform: win32
-        #   arch: x64
+        - os: windows-latest
+          platform: win32
+          arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
