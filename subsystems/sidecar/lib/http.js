@@ -5,7 +5,7 @@ const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
-const Transformer = require('./transformer')
+const Transformer = require('../../../transformer')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
@@ -108,7 +108,7 @@ module.exports = class Http extends ReadyResource {
       builtin = link.filename === link.resolve && linker.builtins.has(link.resolve)
     }
 
-    const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform`)
+    const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform.js`)
     await transformer.ready()
 
     let isJS = false
