@@ -26,7 +26,13 @@ Error.stackTraceLimit = Infinity
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
-  await local.ready()
+  try {
+    await local.ready()
+  } catch (err) {
+    if (err.code !== 'EPIPE') throw err
+    console.log('# Teardown: Local Sidecar Shutdown (socket already closed)')
+    return
+  }
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
 })
