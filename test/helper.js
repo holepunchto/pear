@@ -26,18 +26,18 @@ Error.stackTraceLimit = Infinity
 
 const rigPear = path.join(tmp, 'rig-pear')
 
-const onexit = () => {
+
+const onexit = async () => {
   Bare.removeListener('beforeExit', onexit)
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
-  local.ready().then(() => {
-    console.log('# Teardown: Triggering Shutdown of Local Sidecar')
-    local.shutdown().then(() => {
-      console.log('# Teardown: Local Sidecar Shutdown')
-    })
-  })
+  await local.ready()
+  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
+  await local.shutdown()
+  console.log('# Teardown: Local Sidecar Shutdown')
 }
+
 Bare.prependListener('beforeExit', onexit)
 
 class Rig {
@@ -51,7 +51,7 @@ class Rig {
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
-
+    
     comment('staging platform...')
     const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
@@ -65,7 +65,7 @@ class Rig {
     this.key = await until.key
     await until.announced
     comment('platform seeding')
-
+    
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
