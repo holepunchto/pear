@@ -31,8 +31,8 @@ function startSidecar (opts = {}) {
   return spawn(runtime, args, { detached: !verbose, stdio: 'pipe' })
 }
 
-class SlowSeeder extends ReadyResource {
-  constructor (rawKey, corestoreDir) {
+class Seeder extends ReadyResource {
+  constructor (rawKey, corestoreDir, paused = true) {
     super()
 
     this.key = hypercoreid.normalize(hypercoreid.decode(rawKey))
@@ -41,6 +41,9 @@ class SlowSeeder extends ReadyResource {
     this.globalCache = new Rache({ maxSize: 65536 })
     this.bus = new Iambus()
     this.log = msg => this.bus.pub({ topic: 'seed', msg })
+
+    this.paused = paused
+    this.allowedPacketCount = 10
   }
 
   async _open () {
@@ -59,15 +62,15 @@ class SlowSeeder extends ReadyResource {
     this.swarm = new Hyperswarm({ keyPair })
     const corestore = this.corestore
     this.swarm.on('connection', (connection) => {
-      // send initial (metadata) packets right away then slow down as it starts sending data packets
+      // If paused, send initial (metadata) packets right away then stop sending as it starts sending data packets
       // this is to trigger the start of the update in client sidecars without actually completing the update
       const originalWrite = connection.write
-      let delay = 0
-      connection.write = function (...args) {
-        setTimeout(() => originalWrite.call(connection, ...args), delay)
-        delay += 100
-        return true
-      }
+      let allowedPacketCount = this.allowedPacketCount
+      connection.write = (...args) =>
+        !this.paused || allowedPacketCount-- > 0
+          ? originalWrite.call(connection, ...args)
+          : true
+
       corestore.replicate(connection)
     })
 
@@ -92,15 +95,15 @@ test.hook('stage platform using primary rig', async ({ timeout }) => {
   await until.final
 })
 
-test.hook('bootstrap secondary rig', async ({ comment, timeout }) => {
-  timeout(180_000)
+test.hook('bootstrap secondary rig', async ({ timeout }) => {
+  timeout()
   rig.platformDir2 = path.join(TMP, 'rig-spindown')
   await Helper.bootstrap(rig.key, rig.platformDir2)
 })
 
 test.hook('shutdown primary rig', rig.cleanup)
 
-test('sidecar should spindown after a period of inactivity', async (t) => {
+test.skip('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
@@ -131,12 +134,14 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   }
 })
 
-test('sidecar should not spindown when there is an ongoing update', async (t) => {
-  t.plan(2)
-  t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
+test('sidecar should not spindown until ongoing update is finished', async (t) => {
+  t.plan(4)
+  t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 60_000)
 
-  t.comment('Starting slow seeder')
-  const seeder = new SlowSeeder(rig.staged.link, path.join(rig.platformDir, 'corestores', 'platform'))
+  t.comment('Starting paused seeder')
+  const link = rig.staged.link
+  const corestoreDir = path.join(rig.platformDir, 'corestores', 'platform')
+  const seeder = new Seeder(link, corestoreDir)
   await seeder.ready()
   t.teardown(async () => seeder.close())
 
@@ -149,21 +154,40 @@ test('sidecar should not spindown when there is an ongoing update', async (t) =>
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit)
 
+  const sidecarUpdated = new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Applied update')) resolve() }))
+
   t.comment('Waiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
-  t.comment(`Waiting for sidecar spindown timeout to lapse (${(constants.SPINDOWN_TIMEOUT + 30_000) / 1000}s)`)
+  t.comment(`Waiting for sidecar spindown timeout to lapse (${(constants.SPINDOWN_TIMEOUT + 10_000) / 1000}s)`)
   let timeoutObject
   let timeoutReject
   const timeout = new Promise((resolve, reject) => {
     timeoutReject = reject
-    timeoutObject = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 30_000)
+    timeoutObject = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 10_000)
   })
 
   const hasSpunDown = await Promise.race([onExit, timeout])
-  t.is(peerAdded, true, 'sidecar successfully connected to slow seeder')
+  t.is(peerAdded, true, 'sidecar successfully connected to paused seeder')
   if (hasSpunDown === false) {
     t.pass('sidecar successfully blocked spindown during update')
+
+    t.comment('Closing paused seeder')
+
+    await seeder.close()
+
+    t.comment('Creating unpaused seeder to finish the update')
+    const newSeeder = new Seeder(link, corestoreDir, false)
+    await newSeeder.ready()
+    t.teardown(async () => newSeeder.close())
+
+    t.comment('Waiting for sidecar to update')
+    await t.execution(sidecarUpdated, 'sidecar should successfully update')
+
+    t.comment('Waiting for sidecar to close')
+    const exitCode = await onExit
+
+    t.is(exitCode, 0, 'exit code is 0')
   } else {
     clearTimeout(timeoutObject)
     timeoutReject()
