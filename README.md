@@ -62,7 +62,7 @@ The following are public drives for the Production Pear.
 ### Runtimes Bootstrap
 
 ```
-pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwhos
+pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
 ```
 
 ### Production Build
