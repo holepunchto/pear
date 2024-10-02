@@ -69,8 +69,8 @@ jobs:
       run: $PEAR sidecar shutdown
       shell: bash
 
-    - name: System Pear
-      run: npm i -g pear && pear
+    - name: Faux CI System Pear 
+      run: npm i -g pear@ci
 
     - name: Install w/ dev deps
       run: npm install
