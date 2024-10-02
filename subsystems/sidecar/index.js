@@ -633,6 +633,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { return client.userData.unloading() }
 
   async start (params, client) {
+    console.log("starting in sidecar....")
     const { flags, env, cwd, link, dir, args, cmdArgs } = params
     let { startId } = params
     const starting = this.running.get(startId)

@@ -23,6 +23,7 @@ const { PLATFORM_LOCK } = require('../constants')
 const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
+  console.log('client ipc run....')
   const { drive, pathname } = parseLink(link)
   const entry = isWindows ? path.normalize(pathname.slice(1)) : pathname
   const { key } = drive
