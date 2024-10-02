@@ -19,7 +19,7 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 const { PLATFORM_DIR } = require('../constants')
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
-const MAX_OP_STEP_WAIT = 3000000
+const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
@@ -177,7 +177,9 @@ class Helper extends IPC {
     const untils = {}
     for (const ptn of patterns) {
       untils[ptn[by]] = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => { reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn)) + ' after ' + MAX_OP_STEP_WAIT + 'ms') }, MAX_OP_STEP_WAIT)
+        const timeout = setTimeout(() => {
+          reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn) + ' after ' + MAX_OP_STEP_WAIT + 'ms'))
+        }, MAX_OP_STEP_WAIT)
         const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
         const ondata = (data) => {
