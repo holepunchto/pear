@@ -94,7 +94,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
 
+  console.log('starting...')
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  console.log('client started...')
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
@@ -110,6 +112,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       global.process?.exit(1) || global.Bare.exit(1)
     }
 
+    console.log('ipc ready...')
     await ipc.ready()
     state.update({ config: await ipc.config() })
 
@@ -128,6 +131,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       await global.Pear.restart()
     })
 
+    console.log('module protocol...')
     const protocol = new Module.Protocol({
       exists (url) {
         return Object.hasOwn(bundle.sources, url.href)
@@ -137,6 +141,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       }
     })
 
+    console.log('Module load....')
     Module.load(new URL(bundle.entrypoint), {
       protocol,
       resolutions: bundle.resolutions
