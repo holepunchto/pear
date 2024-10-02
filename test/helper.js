@@ -64,9 +64,9 @@ class Rig {
     this.key = await until.key
     await until.announced
     comment('platform seeding')
-    // comment('bootstrapping rig platform...')
-    // await Helper.bootstrap(this.key, this.platformDir)
-    // comment('rig platform bootstrapped')
+    comment('bootstrapping rig platform...')
+    await Helper.bootstrap(this.key, this.platformDir)
+    comment('rig platform bootstrapped')
   }
 
   cleanup = async ({ comment }) => {
