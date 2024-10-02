@@ -52,18 +52,23 @@ class Rig {
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
-    comment('staging platform...')
-    // const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
-    // await Helper.pick(staging, { tag: 'final' })
-    // comment('platform staged')
-    // comment('seeding platform')
+    
+    if (!env.CI) {
+      comment('staging platform...')
+      const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
+      await Helper.pick(staging, { tag: 'final' })
+      comment('platform staged')
+    }
+
+    comment('seeding platform')
     this.seeder = new Helper()
     await this.seeder.ready()
-    // const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
-    // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    // this.key = await until.key
-    // await until.announced
-    // comment('platform seeding')
+    const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    this.key = await until.key
+    await until.announced
+    comment('platform seeding')
+    
     // comment('bootstrapping rig platform...')
     // await Helper.bootstrap(this.key, this.platformDir)
     // comment('rig platform bootstrapped')
