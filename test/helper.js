@@ -56,23 +56,26 @@ class Rig {
     const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    comment('seeding platform')
+    // comment('seeding platform')
     this.seeder = new Helper()
     await this.seeder.ready()
-    const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    this.key = await until.key
-    await until.announced
-    comment('platform seeding')
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
+    // const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
+    // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    // this.key = await until.key
+    // await until.announced
+    // comment('platform seeding')
+    // comment('bootstrapping rig platform...')
+    // await Helper.bootstrap(this.key, this.platformDir)
+    // comment('rig platform bootstrapped')
   }
 
   cleanup = async ({ comment }) => {
     comment('closing seeder client')
     await this.seeder.close()
     comment('seeder client closed')
+    comment('closing local client')
+    await this.local.close()
+    comment('local client closed')
   }
 }
 
