@@ -386,9 +386,12 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
+    console.log('?Versions call')
     if (!this.electronVersion) {
       const args = ['-p', 'global.process.versions.electron']
+      console.log('gettng electron version')
       const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
+      console.log('ended electron version')
       if (!subprocess.error) this.electronVersion = subprocess.stdout.toString().trim()
     }
 
