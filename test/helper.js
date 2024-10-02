@@ -21,9 +21,17 @@ const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
+
 Error.stackTraceLimit = Infinity
 
+const rigPear = path.join(tmp, 'rig-pear')
+
 Pear.teardown(async () => {
+  console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
+  const helper = new Helper({ platform: rigPear })
+  await helper.ready()
+  await helper.shutdown()
+  console.log('# Teardown: Rig Sidecar Shutdown')
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
@@ -34,7 +42,7 @@ Pear.teardown(async () => {
 }, Infinity)
 
 class Rig {
-  platformDir = path.join(tmp, 'rig-pear')
+  platformDir = rigPear
   artefactDir = env.CI ? path.join(tmp, 'artefact-pear') : Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
@@ -59,13 +67,6 @@ class Rig {
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
-    Pear.teardown(async () => {
-      console.log('# Teardown: Ensuring Rig Sidecar Shutdown')
-      const helper = new Helper({ platform: this.platformDir })
-      await helper.ready()
-      await helper.shutdown()
-      console.log('# Teardown: Rig Sidecar Shutdown')
-    })
   }
 
   cleanup = async ({ comment }) => {
