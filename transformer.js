@@ -1,11 +1,12 @@
+const { isBare } = require('which-runtime')
+const path = isBare ? require('bare-path') : require('path')
 const Bundle = require('bare-bundle')
 const FramedStream = require('framed-stream')
 const b4a = require('b4a')
-const path = require('bare-path')
 const picomatch = require('picomatch')
 const ReadyResource = require('ready-resource')
-const Worker = require('../../../lib/worker')
-const { ERR_TRANSFORM_FAILED } = require('../../../errors')
+const Worker = require('./lib/worker')
+const { ERR_TRANSFORM_FAILED, ERR_INVALID_CONFIG } = require('./errors')
 const TRANSFORM_MAX_WAIT = 5000
 
 module.exports = class Transformer extends ReadyResource {
@@ -13,7 +14,6 @@ module.exports = class Transformer extends ReadyResource {
   worker = null
   pipe = null
   stream = null
-  #queue = null
 
   constructor (app, link, args) {
     super()
@@ -27,8 +27,7 @@ module.exports = class Transformer extends ReadyResource {
   }
 
   async _open () {
-    this.#queue = Promise.resolve()
-    this.worker = new Worker()
+    this.worker = new Worker({ carry: false })
     this.pipe = this.worker.run(this.link, this.args, { stdio: ['ignore', 'pipe', 'pipe'] })
     this.stream = new FramedStream(this.pipe)
     this.stream.on('end', () => this.stream.end())
@@ -50,15 +49,9 @@ module.exports = class Transformer extends ReadyResource {
   }
 
   async _close () {
-    this.#queue = null
     this.worker = null
     this.pipe.end()
     this.stream.end()
-  }
-
-  queue (transforms, buffer, next) {
-    this.#queue = this.#queue.then(() => this.transform(transforms, buffer)).then(next)
-    return this.#queue
   }
 
   async transform (buffer, filename) {
@@ -129,5 +122,42 @@ module.exports = class Transformer extends ReadyResource {
     b.resolutions = res
 
     return b.toBuffer()
+  }
+
+  static validate (transforms) {
+    if (!transforms) return null
+
+    const validateString = (str) => {
+      if (/^[@/a-zA-Z0-9-_.]+$/.test(str)) return str
+      throw new ERR_INVALID_CONFIG('Invalid string in config. The string may only contain letters (a-z, A-Z), numbers (0-9), hyphens (-), underscores (_), forward slashes (/), asperands (@), and periods (.).')
+    }
+    const validatePattern = (pattern) => {
+      if (/^[a-zA-Z0-9-_*?!.@/[\]{}()+^$\\|]+$/.test(pattern)) return pattern
+      throw new ERR_INVALID_CONFIG(`Invalid pattern "${pattern}". Pattern contains invalid characters.`)
+    }
+
+    if (typeof transforms !== 'object') throw new ERR_INVALID_CONFIG('Transforms should be an object.')
+    for (const pattern in transforms) {
+      validatePattern(pattern)
+      const transformArray = transforms[pattern]
+      if (!Array.isArray(transformArray)) throw new ERR_INVALID_CONFIG(`Transforms for "${pattern}" should be an array.`)
+      for (const transform of transformArray) {
+        if (typeof transform === 'string') {
+          validateString(transform)
+          continue
+        }
+        if (typeof transform === 'object' && transform !== null) {
+          if (!transform.name || typeof transform.name !== 'string') throw new ERR_INVALID_CONFIG(`Each transform in "${pattern}" should have a "name" field of type string.`)
+          validateString(transform.name)
+
+          if ('options' in transform && (typeof transform.options !== 'object' || transform.options === null)) {
+            throw new ERR_INVALID_CONFIG(`The "options" field in "${pattern}" should be an object.`)
+          }
+          continue
+        }
+        throw new ERR_INVALID_CONFIG(`Invalid transform format in "${pattern}". Each transform should be either a string or an object.`)
+      }
+    }
+    return transforms
   }
 }

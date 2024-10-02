@@ -1,5 +1,5 @@
 {
-  "name": "deskjsx",
+  "name": "desktop-jsx",
   "version": "1.0.0",
   "description": "",
   "main": "index.html",
@@ -8,7 +8,7 @@
   },
   "type": "module",
   "pear": {
-    "name": "deskjsx",
+    "name": "desktop-jsx",
     "gui": {
       "width": 900,
       "height": 500,
