@@ -35,7 +35,7 @@ Pear.teardown(async () => {
 
 class Rig {
   platformDir = path.join(tmp, 'rig-pear')
-  artefactDir = Helper.localDir
+  artefactDir = env.CI ? path.join(tmp, 'artefact-pear') : Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
@@ -49,7 +49,7 @@ class Rig {
     const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    // comment('seeding platform')
+    comment('seeding platform')
     // this.seeder = new Helper()
     // await this.seeder.ready()
     // const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
