@@ -80,7 +80,7 @@ jobs:
       shell: bash
 
     - name: Test
-      run: npm test
+      run: npm test -- --verbose
 
     - name: Shutdown Local Pear Sidecar
       run: $PEAR sidecar shutdown
