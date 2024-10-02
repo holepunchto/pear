@@ -110,7 +110,7 @@ module.exports = class Http extends ReadyResource {
     }
 
     const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform.js`)
-    await transformer.ready()
+    if (app.state?.transforms) await transformer.ready()
 
     let isJS = false
     if (protocol !== 'resolve') {
@@ -158,12 +158,12 @@ module.exports = class Http extends ReadyResource {
 
     const isSourceMap = link.transform === 'map'
     if (isJS || isSourceMap) {
-      const out = await linker.transform({ ...link, sourceTransform: transformer.transform.bind(transformer) })
+      const out = await linker.transform(link)
       if (isSourceMap) res.setHeader('Content-Type', 'application/json')
       res.end(out)
     } else {
       if (protocol === 'app' && (link.filename.endsWith('.html') || link.filename.endsWith('.htm'))) {
-        const mods = await linker.warmup(link.filename, { sourceTransform: transformer.transform.bind(transformer) })
+        const mods = await linker.warmup(link.filename)
         const batch = []
         for (const [filename, mod] of mods) {
           if (mod.type === 'module') continue
