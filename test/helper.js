@@ -45,43 +45,43 @@ class Rig {
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
-    comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
-    comment('seeding platform')
-    this.seeder = new Helper() 
-    await this.seeder.ready()
-    const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    this.key = await until.key
-    await until.announced
-    comment('platform seeding')
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
-    Pear.teardown(async () => {
-      if (this.artefactShutdown) return
-      console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
-      const helper = this.artefact.closed ? new Helper({ platform: this.platformDir }) : this.artefact
-      await helper.ready()
-      await helper.shutdown()
-      console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
-    })
-    comment('connecting to rig sidecar')
-    this.artefact = new Helper({ platformDir: this.platformDir })
-    await this.artefact.ready()
-    comment('connected to rig sidecar')
+    // comment('staging platform...')
+    // const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
+    // await Helper.pick(staging, { tag: 'final' })
+    // comment('platform staged')
+    // comment('seeding platform')
+    // this.seeder = new Helper() 
+    // await this.seeder.ready()
+    // const seeding = await this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
+    // const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    // this.key = await until.key
+    // await until.announced
+    // comment('platform seeding')
+    // comment('bootstrapping rig platform...')
+    // await Helper.bootstrap(this.key, this.platformDir)
+    // comment('rig platform bootstrapped')
+    // Pear.teardown(async () => {
+    //   if (this.artefactShutdown) return
+    //   console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
+    //   const helper = this.artefact.closed ? new Helper({ platform: this.platformDir }) : this.artefact
+    //   await helper.ready()
+    //   await helper.shutdown()
+    //   console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
+    // })
+    // comment('connecting to rig sidecar')
+    // this.artefact = new Helper({ platformDir: this.platformDir })
+    // await this.artefact.ready()
+    // comment('connected to rig sidecar')
   }
 
   cleanup = async ({ comment }) => {
-    comment('closing seeder client')
-    await this.seeder.close()
-    comment('seeder client closed')
-    comment('shutdown rig sidecar')
-    await this.artefact.shutdown()
-    this.artefactShutdown = true
-    comment('rig sidecar closed')
+    // comment('closing seeder client')
+    // await this.seeder.close()
+    // comment('seeder client closed')
+    // comment('shutdown rig sidecar')
+    // await this.artefact.shutdown()
+    // this.artefactShutdown = true
+    // comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()
     comment('local client closed')
