@@ -84,16 +84,16 @@ class SlowSeeder extends ReadyResource {
 
 test.hook('spindown setup', rig.setup)
 
-test.hook('stage platform using primary rig', async ({ comment }) => {
-  comment('staging platform using primary rig...')
+test.hook('stage platform using primary rig', async ({ timeout }) => {
+  timeout(60_000)
   const staging = rig.artifact.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
   const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   rig.staged = await until.addendum
   await until.final
-  comment('platform staged using primary rig')
 })
 
-test.hook('bootstrap secondary rig', async ({ comment }) => {
+test.hook('bootstrap secondary rig', async ({ comment, timeout }) => {
+  timeout(180_000)
   rig.platformDir2 = path.join(TMP, 'rig-spindown')
   await Helper.bootstrap(rig.key, rig.platformDir2)
 })
