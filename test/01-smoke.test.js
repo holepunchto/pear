@@ -42,8 +42,6 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   is(value?.app?.key, key, 'app version matches staged key')
 
   await running.inspector.close()
-  console.log(running.until)
   const { code } = await running.until.exit
-  console.log(running.until)
   is(code, 0, 'exit code is 0')
 })
