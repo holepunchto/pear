@@ -63,15 +63,11 @@ class Rig {
     // Pear.teardown(async () => {
     //   if (this.artefactShutdown) return
     //   console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
-    //   const helper = this.artefact.closed ? new Helper({ platform: this.platformDir }) : this.artefact
+    //   const helper = new Helper({ platform: this.platformDir })
     //   await helper.ready()
     //   await helper.shutdown()
     //   console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
     // })
-    comment('connecting to rig sidecar')
-    this.artefact = new Helper({ platformDir: this.platformDir })
-    await this.artefact.ready()
-    comment('connected to rig sidecar')
   }
 
   cleanup = async ({ comment }) => {
@@ -79,7 +75,9 @@ class Rig {
     await this.seeder.close()
     comment('seeder client closed')
     comment('shutdown rig sidecar')
-    // await this.artefact.shutdown()
+    const artefact = new Helper({ platformDir: this.platformDir })
+    await artefact.ready()
+    await artefact.shutdown()
     this.artefactShutdown = true
     comment('rig sidecar closed')
     comment('closing local client')
