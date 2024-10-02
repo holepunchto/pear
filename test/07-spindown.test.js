@@ -173,7 +173,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     t.pass('sidecar successfully blocked spindown during update')
 
     t.comment('Closing paused seeder')
-
     await seeder.close()
 
     t.comment('Creating unpaused seeder to finish the update')
