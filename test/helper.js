@@ -165,7 +165,6 @@ class Helper extends IPC {
   static async pick (stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
-      console.log('output', output)
       if ((ptn?.[by] !== 'error') && output[by] === 'error') throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
@@ -177,7 +176,8 @@ class Helper extends IPC {
     for (const ptn of patterns) {
       untils[ptn[by]] = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn) + ' after ' + MAX_OP_STEP_WAIT + 'ms'))
+          if (ptn.tag === 'inspector') resolve(ptn)
+          else reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn) + ' after ' + MAX_OP_STEP_WAIT + 'ms'))
         }, MAX_OP_STEP_WAIT)
         const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
