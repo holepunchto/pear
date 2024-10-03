@@ -169,27 +169,29 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   const hasSpunDown = await Promise.race([onExit, timeout])
   t.is(peerAdded, true, 'sidecar successfully connected to paused seeder')
-  if (hasSpunDown === false) {
-    t.pass('sidecar successfully blocked spindown during update')
 
-    t.comment('Closing paused seeder')
-    await seeder.close()
-
-    t.comment('Creating unpaused seeder to finish the update')
-    const newSeeder = new Seeder(link, corestoreDir, false)
-    await newSeeder.ready()
-    t.teardown(async () => newSeeder.close())
-
-    t.comment('Waiting for sidecar to update')
-    await t.execution(sidecarUpdated, 'sidecar should successfully update')
-
-    t.comment('Waiting for sidecar to close')
-    const exitCode = await onExit
-
-    t.is(exitCode, 0, 'exit code is 0')
-  } else {
+  if (hasSpunDown !== false) {
     clearTimeout(timeoutObject)
     timeoutReject()
     t.fail('sidecar failed to prevent spindown during update')
+    return
   }
+
+  t.pass('sidecar successfully blocked spindown during update')
+
+  t.comment('Closing paused seeder')
+  await seeder.close()
+
+  t.comment('Creating unpaused seeder to finish the update')
+  const newSeeder = new Seeder(link, corestoreDir, false)
+  await newSeeder.ready()
+  t.teardown(async () => newSeeder.close())
+
+  t.comment('Waiting for sidecar to update')
+  await t.execution(sidecarUpdated, 'sidecar should successfully update')
+
+  t.comment('Waiting for sidecar to close')
+  const exitCode = await onExit
+
+  t.is(exitCode, 0, 'exit code is 0')
 })
