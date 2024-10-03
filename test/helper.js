@@ -26,7 +26,7 @@ Error.stackTraceLimit = Infinity
 
 const rigPear = path.join(tmp, 'rig-pear')
 
-Bare.on('beforeExit', async () => {
+Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
   console.log('# Teardown: Connecting Local Sidecar')
