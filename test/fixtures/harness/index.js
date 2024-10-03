@@ -19,6 +19,8 @@ class Harness extends ReadyResource {
   }
 
   async close () {
+    if (this.closing || this.closed) return
+    this.closing = true
     await this.inspector.disable()
     await this.sub?.destroy()
     this.inspector = null
@@ -29,6 +31,7 @@ class Harness extends ReadyResource {
     this.cmd = null
     this.API = null
     this.ipc = null
+    this.closed = true
   }
 
   async client (opts) {
