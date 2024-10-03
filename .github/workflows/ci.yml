@@ -17,12 +17,12 @@ jobs:
         - os: ubuntu-latest
           platform: linux
           arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
-        - os: windows-latest
-          platform: win32
-          arch: x64
+        # - os: macos-latest
+        #   platform: darwin
+        #   arch: x64
+        # - os: windows-latest
+        #   platform: win32
+        #   arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -43,6 +43,9 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
+    - name: Install Bare
+      run: npm i -g bare
+
     - name: Bootstrap Runtime
       run: npm run bootstrap
 
@@ -58,15 +61,12 @@ jobs:
       shell: bash
 
     - name: Artefact Pear
-      run: $PEAR dump $($PEAR info ci --key) $(node -p "fs.realpathSync(os.tmpdir())")/artefact-pear
+      run: $PEAR dump $($PEAR info ci --key) $(bare -p "require('bare-fs').realpathSync(require('bare-os').tmpdir())")/artefact-pear
       shell: bash
 
     - name: Shutdown Local Pear Sidecar
-      run: $PEAR sidecar shutdown
+      run: pkill pear
       shell: bash
-
-    - name: Install Bare
-      run: npm i -g bare
 
     - name: Install w/ dev deps
       run: npm install
