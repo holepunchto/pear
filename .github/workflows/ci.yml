@@ -65,7 +65,7 @@ jobs:
       shell: bash
 
     - name: Shutdown Local Pear Sidecar
-      run: pkill pear
+      run: $PEAR sidecar shutdown
       shell: bash
 
     - name: Install w/ dev deps
