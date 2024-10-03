@@ -81,7 +81,7 @@
     "corestore": "^6.18.3",
     "crc-universal": "^1.0.4",
     "debounceify": "^1.1.0",
-    "drive-bundler": "^1.4.4",
+    "drive-bundler": "^2.0.0",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.2.7",
     "hypercore-crypto": "^3.4.1",

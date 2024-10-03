@@ -12,7 +12,7 @@ const b = new Bundle()
 const cache = {}
 const res = {}
 
-const { entrypoint, resolutions, sources } = await DriveBundler.bundle(drive, { cache, cwd: dirname, entrypoint: '/boot.js', absolutePrebuilds: false })
+const { entrypoint, resolutions, sources } = await DriveBundler.bundle(drive, { cache, cwd: dirname, entrypoint: '/boot.js', absoluteFiles: false })
 
 for (const [key, map] of Object.entries(resolutions)) {
   res[key] = map
