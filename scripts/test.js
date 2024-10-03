@@ -4,10 +4,10 @@ const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
 const { isWindows } = require('which-runtime')
 const { RUNTIME } = require('../constants')
-const { pathname } = new URL(global.Pear.config.applink)
-const root = isWindows ? path.normalize(pathname.slice(1)) : pathname
-const force = global.Pear.config.args.includes('--force-install')
-const cwd = isWindows ? path.normalize(pathname.slice(1)) : pathname
+const root = path.resolve(__dirname, '..')
+const args = Bare.argv.slice(2)
+const force = args.includes('--force-install')
+if (force) args.splice(args.indexOf('--force-install'), 1)
 
 const dirs = [
   path.join(root, 'test', 'fixtures', 'harness', 'node_modules'),
@@ -22,6 +22,6 @@ for (const dir of dirs) {
   else spawnSync('npm', ['install'], { cwd: path.dirname(dir), stdio: 'inherit' })
 }
 
-const tests = spawn(RUNTIME, ['run', '-t', 'test', ...global.Pear.config.args], { cwd, stdio: 'inherit' })
+const tests = spawn(RUNTIME, ['run', '-t', 'test', ...args], { cwd: root, stdio: 'inherit' })
 
 tests.on('exit', (code) => { Bare.exitCode = code })

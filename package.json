@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.js test/*.test.js",
-    "test": "pear run -t scripts/test.js",
+    "test": "bare scripts/test.js",
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
