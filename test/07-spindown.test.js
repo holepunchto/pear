@@ -104,7 +104,7 @@ test.hook('bootstrap secondary rig', async ({ timeout, comment }) => {
   await until.announced
 
   comment('Bootstrapping secondary rig')
-  rig.platformDir2 = path.join(TMP, 'rig-spindown')
+  rig.platformDir2 = path.join(TMP, 'rig-sd')
   await Helper.bootstrap(rig.key, rig.platformDir2)
 })
 
