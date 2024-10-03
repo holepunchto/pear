@@ -96,7 +96,8 @@ class Helper extends IPC {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const args = ['--sidecar']
+    const bootstrap = Pear.config.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = ['--sidecar', '--bootstrap', bootstrap]
     if (verbose) args.push('--verbose')
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -125,7 +126,8 @@ class Helper extends IPC {
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
 
-    const args = !opts.encryptionKey ? ['run', '-t', link] : ['run', '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
+    const bootstrap = Pear.config.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = !opts.encryptionKey ? ['run', '--bootstrap', bootstrap, '-t', link] : ['run', '--bootstrap', bootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
     if (this.verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR

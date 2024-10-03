@@ -8,7 +8,7 @@ const rig = new Helper.Rig()
 
 test.hook('shutdown setup', rig.setup)
 
-test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
+test('lock released after shutdown', async function ({ ok, plan, comment, teardown, timeout }) {
   plan(1)
   comment('shutting down sidecar')
   await rig.artifact.shutdown()
