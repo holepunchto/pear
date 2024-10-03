@@ -68,8 +68,8 @@ jobs:
     - name: Install Bare
       run: npm i -g bare
 
-    # - name: Install w/ dev deps
-    #   run: npm install
+    - name: Install w/ dev deps
+      run: npm install
 
     - name: Install fixture deps
       run: |
@@ -88,5 +88,5 @@ jobs:
       run: $PEAR sidecar shutdown
       shell: bash
 
-    # - name: Lint
-    #   run: npm run lint
+    - name: Lint
+      run: npm run lint

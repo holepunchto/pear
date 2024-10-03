@@ -42,7 +42,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   await running.inspector.evaluate('Pear.teardown(() => console.log(\'teardown\'))')
 
   await running.inspector.close()
-  
+
   const td = await running.until.teardown
   is(td, 'teardown', 'teardown has been triggered')
 
