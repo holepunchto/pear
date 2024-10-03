@@ -95,15 +95,8 @@ test.hook('stage platform using primary rig', async ({ timeout }) => {
   await until.final
 })
 
-test.hook('bootstrap secondary rig', async ({ timeout, comment }) => {
-  timeout(180_1000)
-
-  comment('Reseeding rig')
-  const seeding = await rig.local.seed({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, key: null, cmdArgs: [] })
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-  await until.announced
-
-  comment('Bootstrapping secondary rig')
+test.hook('bootstrap secondary rig', async ({ timeout }) => {
+  timeout(180_000)
   rig.platformDir2 = path.join(TMP, 'rig-sd')
   await Helper.bootstrap(rig.key, rig.platformDir2)
 })
