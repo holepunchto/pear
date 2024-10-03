@@ -165,6 +165,7 @@ class Helper extends IPC {
   static async pick (stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
+      console.log('output', output)
       if ((ptn?.[by] !== 'error') && output[by] === 'error') throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
