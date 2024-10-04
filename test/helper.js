@@ -49,8 +49,8 @@ class Rig {
     const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    this.seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, key: null, cmdArgs: [] })
+    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
     comment('platform seeding')
@@ -74,6 +74,7 @@ class Rig {
     comment('shutdown rig sidecar')
     await this.artifact.shutdown()
     this.artifactShutdown = true
+    await Helper.teardownStream(this.seeding)
     comment('rig sidecar closed')
     comment('closing local client')
     await this.local.close()

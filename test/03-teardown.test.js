@@ -11,7 +11,7 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   plan(5)
 
   const stager = new Helper()
-  teardown(() => stager.close())
+  teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
 
   const dir = harness
@@ -25,9 +25,10 @@ test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.close())
+  teardown(() => seeder.close(), { order: Infinity })
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
+  teardown(() => Helper.teardownStream(seed))
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced
@@ -55,7 +56,7 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
   plan(5)
 
   const stager = new Helper()
-  teardown(() => stager.close())
+  teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
 
   const dir = harness
@@ -69,9 +70,10 @@ test('teardown during teardown', async function ({ is, ok, plan, comment, teardo
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.close())
+  teardown(() => seeder.close(), { order: Infinity })
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
+  teardown(() => Helper.teardownStream(seed))
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced
@@ -106,7 +108,7 @@ test.skip('exit with non-zero code in teardown', async function ({ is, ok, plan,
   plan(4)
 
   const stager = new Helper()
-  teardown(() => stager.close())
+  teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
 
   const dir = harness
@@ -121,8 +123,10 @@ test.skip('exit with non-zero code in teardown', async function ({ is, ok, plan,
   comment('seeding')
   const seeder = new Helper()
   teardown(() => seeder.close())
+  teardown(() => seeder.close(), { order: Infinity })
   await seeder.ready()
   const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
+  teardown(() => Helper.teardownStream(seed))
   const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
   const key = await until.key
   const announced = await until.announced
