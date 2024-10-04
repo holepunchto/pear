@@ -235,6 +235,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   timeout(180000)
 
   const appStager = new Helper(rig)
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
@@ -373,7 +374,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
@@ -447,7 +447,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
