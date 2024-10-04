@@ -93,7 +93,6 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\tstaging')
   const stager1 = new Helper(rig)
-  teardown(() => stager1.close())
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
@@ -329,7 +328,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
   comment('staging app')
   const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
