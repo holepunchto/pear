@@ -163,6 +163,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   plan(6)
   timeout(180000)
   const appStager = new Helper(rig)
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
@@ -284,7 +285,6 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('restaging rig platform')
   const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(staging))
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
@@ -399,7 +399,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('staging app')
   const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
