@@ -41,6 +41,11 @@ class Rig {
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
+  keepAlive = true
+  constructor ({ keepAlive = true } = {}) {
+    this.keepAlive = keepAlive
+  }
+
   setup = async ({ comment, timeout }) => {
     timeout(180000)
     comment('connecting to sidecar')
@@ -64,11 +69,12 @@ class Rig {
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
-
-    comment('connecting to rig sidecar')
-    this.rig = new Helper(this)
-    await this.rig.ready()
-    comment('connected to rig sidecar')
+    if (this.keepAlive) {
+      comment('connecting to rig sidecar')
+      this.rig = new Helper(this)
+      await this.rig.ready()
+      comment('connected to rig sidecar')
+    }
   }
 
   cleanup = async ({ comment }) => {
@@ -76,9 +82,11 @@ class Rig {
     await Helper.teardownStream(this.seeding)
     await this.seeder.close()
     comment('seeder client closed')
-    comment('closing rig client')
-    await this.rig.close()
-    comment('rig client closed')
+    if (this.keepAlive) {
+      comment('closing rig client')
+      await this.rig.close()
+      comment('rig client closed')
+    }
     comment('closing local client')
     await this.local.close()
     comment('local client closed')

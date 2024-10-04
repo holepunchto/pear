@@ -4,7 +4,7 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const fsext = require('fs-native-extensions')
 const Helper = require('./helper')
-const rig = new Helper.Rig()
+const rig = new Helper.Rig({ keepAlive: false })
 
 test.hook('shutdown setup', rig.setup)
 
