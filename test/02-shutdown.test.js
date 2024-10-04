@@ -88,6 +88,25 @@ class Seeder extends ReadyResource {
   }
 }
 
+test.hook('stage platform using primary rig', async ({ timeout }) => {
+  timeout(60_000)
+  const helper = new Helper(rig)
+  await helper.ready()
+
+  const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
+  const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  rig.staged = await until.addendum
+  await until.final
+
+  await helper.close()
+})
+
+test.hook('bootstrap secondary rig', async ({ timeout }) => {
+  timeout(180_000)
+  rig.platformDir2 = path.join(TMP, 'rig-sd')
+  await Helper.bootstrap(rig.key, rig.platformDir2)
+})
+
 test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
   plan(1)
   comment('shutting down sidecar')
@@ -109,27 +128,6 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
   const granted = fsext.tryLock(fd)
   ok(granted, 'file lock is free')
 })
-
-test.hook('stage platform using primary rig', async ({ timeout }) => {
-  timeout(60_000)
-  const helper = new Helper(rig)
-  await helper.ready()
-
-  const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
-  const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  rig.staged = await until.addendum
-  await until.final
-
-  await helper.close()
-})
-
-test.hook('bootstrap secondary rig', async ({ timeout }) => {
-  timeout(180_000)
-  rig.platformDir2 = path.join(TMP, 'rig-sd')
-  await Helper.bootstrap(rig.key, rig.platformDir2)
-})
-
-test.hook('shutdown primary rig', rig.cleanup)
 
 test.skip('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
@@ -165,6 +163,12 @@ test.skip('sidecar should spindown after a period of inactivity', async (t) => {
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(4)
   t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 60_000)
+
+  t.comment('Shutting down sidecar')
+  const helper = new Helper(rig)
+  await helper.ready()
+  await helper.shutdown()
+  await helper.close()
 
   t.comment('Starting paused seeder')
   const link = rig.staged.link
@@ -223,3 +227,5 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.is(exitCode, 0, 'exit code is 0')
 })
+
+test.hook('shutdown cleanup', rig.cleanup)
