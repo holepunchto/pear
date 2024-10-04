@@ -113,10 +113,13 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
 test.hook('stage platform using primary rig', async ({ timeout }) => {
   timeout(60_000)
   const helper = new Helper(rig)
+  await helper.ready()
+
   const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
   const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   rig.staged = await until.addendum
   await until.final
+
   await helper.close()
 })
 
