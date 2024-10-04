@@ -163,7 +163,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   plan(6)
   timeout(180000)
   const appStager = new Helper(rig)
-  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
