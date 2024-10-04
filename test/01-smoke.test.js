@@ -19,12 +19,13 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
-
+  staging.end()
   comment('seeding')
   const seeder = new Helper()
   teardown(() => seeder.close())
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => seeding.end()) // CLEAN UP STREAM
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await until.key
@@ -38,9 +39,8 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   const running = await Helper.open(link, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-
   is(value?.app?.key, key, 'app version matches staged key')
-
+  await running.inspector.evaluate('__PEAR_TEST__.close()')
   await running.inspector.close()
   const { code } = await running.until.exit
   is(code, 0, 'exit code is 0')
