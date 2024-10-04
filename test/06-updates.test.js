@@ -93,6 +93,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\tstaging')
   const stager1 = new Helper(rig)
+  teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
