@@ -14,6 +14,7 @@ module.exports = class Transformer extends ReadyResource {
   worker = null
   pipe = null
   stream = null
+  transforms = null
 
   constructor (app, link, args) {
     super()
@@ -22,6 +23,7 @@ module.exports = class Transformer extends ReadyResource {
     this.app = app
     this.link = link
     this.args = args
+    this.transforms = app.state?.transforms
 
     app.transformer = this
   }
@@ -56,7 +58,7 @@ module.exports = class Transformer extends ReadyResource {
 
   async transform (buffer, filename) {
     const transforms = []
-    const patterns = this.app.state?.transforms
+    const patterns = this.transforms
     for (const ptn in patterns) {
       const isMatch = picomatch(ptn)
       if (isMatch(filename)) {
@@ -122,6 +124,31 @@ module.exports = class Transformer extends ReadyResource {
     b.resolutions = res
 
     return b.toBuffer()
+  }
+
+  identify (doubles, singles) {
+    const patterns = this.transforms
+    const jsx = Object.keys(patterns).some(pattern => pattern.includes('jsx'))
+    const double = jsx ? /\.(m|c)?jsx?"$/ : /\.(m|c)?js"$/
+    const single = jsx ? /\.(m|c)?jsx?'$/ : /\.(m|c)?js'$/
+
+    const entries = []
+    if (doubles) {
+      for (const s of doubles) {
+        if (double.test(s)) {
+          entries.push(s.slice(1, -1))
+        }
+      }
+    }
+
+    if (singles) {
+      for (const s of singles) {
+        if (single.test(s)) {
+          entries.push(s.slice(1, -1))
+        }
+      }
+    }
+    return entries
   }
 
   static validate (transforms) {

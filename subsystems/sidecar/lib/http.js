@@ -162,7 +162,7 @@ module.exports = class Http extends ReadyResource {
       res.end(out)
     } else {
       if (protocol === 'app' && (link.filename.endsWith('.html') || link.filename.endsWith('.htm'))) {
-        const mods = await linker.warmup(link.filename)
+        const mods = await linker.warmup(link.filename, { identify: transformer.identify.bind(transformer) })
         const batch = []
         for (const [filename, mod] of mods) {
           if (mod.type === 'module') continue
