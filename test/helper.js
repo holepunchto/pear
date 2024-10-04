@@ -83,9 +83,9 @@ class Rig {
     await this.seeder.close()
     comment('seeder client closed')
     if (this.keepAlive) {
-      comment('closing rig client')
-      await this.rig.close()
-      comment('rig client closed')
+      comment('shutting down rig sidecar')
+      await this.rig.shutdown()
+      comment('rig sidecar shutdown')
     }
     comment('closing local client')
     await this.local.close()
