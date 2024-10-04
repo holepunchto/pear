@@ -23,7 +23,6 @@ const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
-
 const rigPear = path.join(tmp, 'rig-pear')
 
 Pear.teardown(async () => {
