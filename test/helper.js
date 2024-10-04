@@ -26,7 +26,9 @@ Error.stackTraceLimit = Infinity
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
+  console.log('# Teardown: Connecting to Local Sidecar')
   await local.ready()
+  console.log('# Teardown: Attempting Local Sidecar Shutdown')
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
 })
@@ -118,6 +120,12 @@ class Helper extends IPC {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.verbose = verbose
+  }
+
+  static async teardownStream (stream) {
+    if (stream.destroyed) return
+    stream.end()
+    return new Promise((resolve) => stream.on('close', resolve))
   }
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)

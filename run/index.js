@@ -125,8 +125,13 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
 
       await global.Pear.restart()
-    })
+    }).on('error', () => {})
 
+    global.Pear.teardown(async () => {
+      if (reloadSubscriber.destroyed) return
+      reloadSubscriber.end()
+      return new Promise((resolve) => reloadSubscriber.on('close', resolve))
+    })
     const protocol = new Module.Protocol({
       exists (url) {
         return Object.hasOwn(bundle.sources, url.href)
