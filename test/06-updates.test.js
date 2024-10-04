@@ -27,7 +27,6 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('\tstaging')
   const staging = stager1.stage(stageOpts(testId))
-  teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
   await until.final
@@ -171,7 +170,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   comment('staging app')
   const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 

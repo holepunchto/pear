@@ -21,6 +21,7 @@ class Harness extends ReadyResource {
   async close () {
     await this.inspector.disable()
     await this.sub?.destroy()
+    if (this._client) await this._client.close()
     this.inspector = null
     this.sub = null
     this.key = null
@@ -52,8 +53,8 @@ class Harness extends ReadyResource {
 
   async command (argv) {
     if (this.closed) throw new Error('Harness closed')
-    const ipc = await this.client()
-    return this.cmd(ipc, argv)
+    this._client = await this.client()
+    return this.cmd(this._client, argv)
   }
 }
 const harness = new Harness()
