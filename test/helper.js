@@ -38,7 +38,7 @@ Pear.teardown(async () => {
 
 class Rig {
   platformDir = rigPear
-  artefactDir = env.CI ? path.join(tmp, 'artefact-pear') : Helper.localDir
+  artefactDir = Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
