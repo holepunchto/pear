@@ -234,14 +234,12 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   timeout(180000)
 
   const appStager = new Helper(rig)
-  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
 
   comment('staging app')
   const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
