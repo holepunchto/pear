@@ -39,6 +39,7 @@ const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
 const State = require('./state')
+const Transformer = require('../../transformer')
 const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
@@ -138,6 +139,7 @@ class Sidecar extends ReadyResource {
       app = null
       unload = null
       unloader = null
+      transformer = null
       minvering = false
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
@@ -697,6 +699,9 @@ class Sidecar extends ReadyResource {
 
     app.state = state
 
+    const transformer = new Transformer(app, `${this.bundle.link}/transform.js`)
+    const sourceTransform = state.transforms ? transformer.transform.bind(transformer) : null
+
     if (state.key === null) {
       const drive = new LocalDrive(state.dir, { followLinks: true })
       this.#updatePearInterface(drive)
@@ -711,7 +716,8 @@ class Sidecar extends ReadyResource {
         mapImport: this.gunk.app.mapImport,
         symbol: this.gunk.app.symbol,
         protocol: this.gunk.app.protocol,
-        runtimes: this.gunk.app.runtimes
+        runtimes: this.gunk.app.runtimes,
+        sourceTransform
       })
 
       await session.add(appBundle)
@@ -789,7 +795,8 @@ class Sidecar extends ReadyResource {
       mapImport: this.gunk.app.mapImport,
       symbol: this.gunk.app.symbol,
       protocol: this.gunk.app.protocol,
-      runtimes: this.gunk.app.runtimes
+      runtimes: this.gunk.app.runtimes,
+      sourceTransform
     })
 
     app.linker = linker

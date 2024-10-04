@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pear JSX example</title>
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #151517;
+      color: #fff;
+      font-size: 20px;
+      padding-left: 1em;
+    }
+
+    body {
+      --title-bar-height: 42px;
+      padding-top: var(--title-bar-height);
+    }
+
+    #bar {
+      background: #151517;
+      -webkit-app-region: drag;
+      height: var(--title-bar-height);
+      padding: 0;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      color: #fff;
+      white-space: nowrap;
+      box-sizing: border-box;
+      position: fixed;
+      z-index: 2;
+      width: 100%;
+      left: 0;
+      top: 0;
+    }
+
+    pear-ctrl[data-platform=darwin] {
+      margin-top: 18px;
+      margin-left: 12px;
+    }
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+    ol {
+      margin: 0;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+  .square {
+    background: transparent;
+    border: 1px solid #999;
+    color: #fff;
+    float: left;
+    font-size: 48px;
+    font-weight: bold;
+    line-height: 68px;
+    height: 68px;
+    margin-right: -1px;
+    margin-top: -1px;
+    padding: 0;
+    text-align: center;
+    width: 68px;
+  }
+
+  .board-row:after {
+    clear: both;
+    content: '';
+    display: table;
+  }
+
+  .status {
+    margin-bottom: 20px;
+  }
+
+  .game {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .game-info {
+    margin-left: 40px;
+  }
+
+  </style>
+</head>
+<body>
+  <div id="bar"><pear-ctrl></pear-ctrl></div>
+  <div id="root"></div>
+  <script src="./index.jsx" type="module"></script>
+</body>
+</html>

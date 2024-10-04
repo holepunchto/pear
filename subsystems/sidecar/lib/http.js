@@ -5,6 +5,7 @@ const ReadyResource = require('ready-resource')
 const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
+const Transformer = require('../../../transformer')
 const transform = require('../../../lib/transform')
 const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
 const mime = new Mime()
@@ -50,6 +51,8 @@ module.exports = class Http extends ReadyResource {
           err.status = err.status || 404
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
+        } else if (err.code === 'ERR_TRANSFORM_FAILED') {
+          err.status = err.status || 500
         } else {
           console.error('Unknown Server Error', err)
           err.status = 500
@@ -106,6 +109,9 @@ module.exports = class Http extends ReadyResource {
       builtin = link.filename === link.resolve && linker.builtins.has(link.resolve)
     }
 
+    const transformer = new Transformer(app, `${this.sidecar.bundle.link}/transform.js`)
+    if (app.state?.transforms) await transformer.ready()
+
     let isJS = false
     if (protocol !== 'resolve') {
       const ct = mime.type(link.filename)
@@ -157,7 +163,7 @@ module.exports = class Http extends ReadyResource {
       res.end(out)
     } else {
       if (protocol === 'app' && (link.filename.endsWith('.html') || link.filename.endsWith('.htm'))) {
-        const mods = await linker.warmup(link.filename)
+        const mods = await linker.warmup(link.filename, { identify: transformer.identify.bind(transformer) })
         const batch = []
         for (const [filename, mod] of mods) {
           if (mod.type === 'module') continue
