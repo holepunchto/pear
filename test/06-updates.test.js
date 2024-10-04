@@ -207,11 +207,11 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
-  teardown(() => { try { fs.unlinkSync(path.join(rig.artifactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
+  fs.writeFileSync(path.join(rig.artefactDir, file), 'test')
+  teardown(() => { try { fs.unlinkSync(path.join(rig.artefactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
@@ -278,11 +278,11 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(rig.artifactDir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(rig.artefactDir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(rig.artefactDir, file)) }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
@@ -294,7 +294,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('releasing rig platform')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir })
+  const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir })
   await Helper.pick(releasing, { tag: 'final' })
 
   comment('waiting for platform update notification')
