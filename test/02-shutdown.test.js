@@ -88,17 +88,17 @@ class Seeder extends ReadyResource {
   }
 }
 
-test.hook('stage platform using primary rig', async ({ timeout }) => {
+test.hook('stage platform using primary rig', async ({ timeout, teardown }) => {
   timeout(60_000)
   const helper = new Helper(rig)
   await helper.ready()
+  teardown(async () => helper.close(), { order: Infinity })
 
   const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
+  teardown(async () => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   rig.staged = await until.addendum
   await until.final
-
-  await helper.close()
 })
 
 test.hook('bootstrap secondary rig', async ({ timeout }) => {
@@ -175,7 +175,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const corestoreDir = path.join(rig.platformDir, 'corestores', 'platform')
   const seeder = new Seeder(link, corestoreDir)
   await seeder.ready()
-  t.teardown(async () => seeder.close())
+  t.teardown(async () => seeder.close(), { order: Infinity })
 
   let peerAdded = false
   seeder.bus.sub({ topic: 'seed', msg: { tag: 'peer-add' } }).once('data', () => { peerAdded = true })
