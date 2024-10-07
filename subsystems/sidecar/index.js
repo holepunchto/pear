@@ -87,14 +87,14 @@ class Sidecar extends ReadyResource {
     try {
       const result = command('pear', flag('--sidecar'), flag('--verbose'), dhtBootstrapFlag, arg('<cmd>'), rest('rest')).parse(argv).flags
       verbose = result.verbose
-      dhtBootstrap = result.dhtBootstrap || ''
+      dhtBootstrap = result.dhtBootstrap || undefined
     } catch {
       const result = command('pear', flag('--sidecar'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
       verbose = result.verbose
     }
     return {
       verbose,
-      dhtBootstrap: dhtBootstrap.length ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : undefined
+      dhtBootstrap: typeof dhtBootstrap === 'string' ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : dhtBootstrap
     }
   }
 
