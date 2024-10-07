@@ -516,6 +516,14 @@ class Sidecar extends ReadyResource {
 
   shutdown (params, client) { return this.#shutdown(client) }
 
+  #endStreams (client) {
+    const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
+    return Promise.all(streams.map((stream) => new Promise((resolve) => {
+      stream.once('close', resolve)
+      stream.end()
+    })))
+  }
+
   closeClients () {
     if (this.hasClients === false) return []
     const metadata = []
@@ -528,7 +536,7 @@ class Sidecar extends ReadyResource {
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
       metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
       const tearingDown = app.teardown()
-      if (tearingDown === false) client.close()
+      if (tearingDown === false) this.#endStreams(client).then(() => client.close())
     }
     return metadata
   }
@@ -547,8 +555,8 @@ class Sidecar extends ReadyResource {
           }
           client.once('close', resolve)
           const app = client.userData
-          const tearingDown = !!app && app.teardown()
-          if (tearingDown === false) client.close()
+          const tearingDown = app && app.teardown()
+          if (tearingDown === false) this.#endStreams(client).then(() => client.close())
         })
       }
       if (appling) {
@@ -921,8 +929,8 @@ class Sidecar extends ReadyResource {
   async #shutdown (client) {
     if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
-    const tearingDown = !!app && app.teardown()
-    if (tearingDown === false) client.close()
+    const tearingDown = app && app.teardown()
+    if (tearingDown === false) this.#endStreams(client).then(() => client.close())
 
     this.spindownms = 0
     const restarts = this.closeClients()
