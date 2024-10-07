@@ -129,7 +129,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
   ok(granted, 'file lock is free')
 })
 
-test.skip('sidecar should spindown after a period of inactivity', async (t) => {
+test('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
