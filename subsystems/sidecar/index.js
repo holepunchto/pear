@@ -694,7 +694,7 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || [] }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
