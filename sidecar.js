@@ -19,11 +19,8 @@ const {
 } = require('./constants.js')
 const registerUrlHandler = require('./url-handler.js')
 const gunk = require('./gunk')
-const verbose = Bare.argv.includes('--verbose')
 crasher('sidecar', SWAP)
-module.exports = bootSidecar().then(() => {
-  if (verbose) console.log('- Sidecar booted')
-}).catch((err) => {
+module.exports = bootSidecar().catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
 })
@@ -45,8 +42,7 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const dhtBootstrap = Bare.argv.includes('--dht-bootstrap') ? mapDhtBootstrap() : undefined
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk, verbose, dhtBootstrap })
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk })
   await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
@@ -98,8 +94,4 @@ function getUpgradeTarget () {
     checkout: { key, length: 0, fork: 0 },
     swap: null
   }
-}
-
-function mapDhtBootstrap () {
-  return Bare.argv[Bare.argv.indexOf('--dht-bootstrap') + 1].split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
 }
