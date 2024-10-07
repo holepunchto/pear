@@ -34,7 +34,6 @@ module.exports = class State extends SharedState {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
-    this.applink = bundle.link
 
     if (this.key) {
       const result = await bundle.db.get('manifest')

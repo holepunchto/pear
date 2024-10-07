@@ -525,8 +525,8 @@ class Sidecar extends ReadyResource {
       if (!app || !app.state) continue // ignore e.g. `pear sidecar` cli i/o client
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
-      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, applink, options } = app.state
+      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, applink, options })
       const tearingDown = app.teardown()
       if (tearingDown === false) client.close()
     }
@@ -596,12 +596,11 @@ class Sidecar extends ReadyResource {
     if (this.verbose) console.log('Restarting', restarts.length, 'apps')
 
     await sidecarClosed
-
-    for (const { cwd, dir, appling, cmdArgs, env, options } of restarts) {
+    for (const { cwd, dir, appling, cmdArgs, env, applink, options } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        if (isMac) spawn('open', [applink], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
         const TARGET_RUNTIME = this.updater === null

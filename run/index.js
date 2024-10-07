@@ -57,6 +57,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
+
     if (wokeup) {
       ipc.close().catch(console.error)
       return stream

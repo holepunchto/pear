@@ -24,7 +24,6 @@ module.exports = bootSidecar().catch((err) => {
   console.error(err.stack)
   Bare.exit(1)
 })
-
 async function gc () {
   try { await fs.promises.rm(GC, { recursive: true }) } catch {}
   await fs.promises.mkdir(GC, { recursive: true })
