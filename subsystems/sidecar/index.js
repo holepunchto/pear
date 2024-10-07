@@ -94,7 +94,7 @@ class Sidecar extends ReadyResource {
     }
     return {
       verbose,
-      dhtBootstrap: dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
+      dhtBootstrap: dhtBootstrap.length ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : undefined
     }
   }
 
