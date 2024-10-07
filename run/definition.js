@@ -19,7 +19,7 @@ module.exports = [
   flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
   flag('--detached', 'Wakeup existing app or run detached'),
   flag('--no-ask', 'Suppress permissions dialog'),
-  hiddenFlag('--bootstrap|-b <nodes>', 'DHT boostrap'),
+  hiddenFlag('--dht-bootstrap <nodes>', 'DHT boostrap'),
   hiddenFlag('--encryption-key <name>', 'Application encryption key'),
   hiddenFlag('--trusted'),
   hiddenFlag('--detach'),

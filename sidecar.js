@@ -45,8 +45,8 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const bootstrap = Bare.argv.includes('--bootstrap') ? mapBootstrap() : undefined
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk, verbose, bootstrap })
+  const dhtBootstrap = Bare.argv.includes('--dht-bootstrap') ? mapDhtBootstrap() : undefined
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk, verbose, dhtBootstrap })
   await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
@@ -100,6 +100,6 @@ function getUpgradeTarget () {
   }
 }
 
-function mapBootstrap () {
-  return Bare.argv[Bare.argv.indexOf('--bootstrap') + 1].split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
+function mapDhtBootstrap () {
+  return Bare.argv[Bare.argv.indexOf('--dht-bootstrap') + 1].split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
 }

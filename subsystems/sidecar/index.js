@@ -79,7 +79,7 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  constructor ({ updater, drive, corestore, gunk, verbose = false, bootstrap }) {
+  constructor ({ updater, drive, corestore, gunk, verbose = false, dhtBootstrap }) {
     super()
     this.bus = new Iambus()
     this.version = CHECKOUT
@@ -125,7 +125,7 @@ class Sidecar extends ReadyResource {
     this.http = new Http(this)
     this.running = new Map()
 
-    this.bootstrap = bootstrap
+    this.dhtBootstrap = dhtBootstrap
 
     const sidecar = this
     this.App = class App {
@@ -865,7 +865,7 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.bootstrap })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)

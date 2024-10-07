@@ -26,11 +26,11 @@ for (const dir of dirs) {
 }
 
 const testnet = await createTestnet(10)
-const bootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
+const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
 
 const verbose = Bare.argv.includes('--verbose') ? '--verbose' : ''
 
-const tests = spawn(RUNTIME, ['run', '--bootstrap', bootstrap, '-t', 'test', verbose], { cwd: root, stdio: 'inherit' })
+const tests = spawn(RUNTIME, ['run', '--dht-bootstrap', dhtBootstrap, '-t', 'test', verbose], { cwd: root, stdio: 'inherit' })
 
 tests.on('exit', async (code) => {
   await testnet.destroy()
