@@ -47,6 +47,9 @@
 - **RC Versioned?**
   - [ ] - NO: complete **Dev**
   - [ ] - YES: continue
+- **System Pear is on Latest Devkey?**
+  - [ ] - NO: ensure devkey is seeding, ensure pear sidecar --key is correct, ensure sys sidecar is on latest, then continue
+  - [ ] - YES: continue
 - [ ] - `pear seed staging` (own terminal)
 - [ ] - `pear dump <devkey> .`
 - [ ] - `pear stage --dry-run staging`
@@ -87,6 +90,12 @@
   - [ ] - NO:
     - [ ] - complete **Staging**
   - [ ] YES: continue
+- **System Pear is on Latest Stagekey or on Devkey matching Stagekey?**
+  - [ ] - NO: ensure stagekey is seeding, ensure `pear sidecar --key` is correct, ensure sys sidecar is on latest, then continue
+  - [ ] - YES: continue
+- [ ] - `pear seed staging` (own terminal)
+- [ ] - `pear dump <devkey> .`
+- [ ] - `pear stage --dry-run staging`
 - [ ] - `pear seed rc` (own terminal)
 - [ ] - `pear dump <stagekey> .`
 - [ ] - `pear stage --dry-run rc`
