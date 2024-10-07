@@ -33,15 +33,20 @@
           - [ ] - YES:
             - [ ] - `pear sidecar` (own terminal)
             - **System Pear is Latest `dev`?**
-              - [ ] - NO: diagnose, correct, if platform issue resolved, [restart](./CHECKLIST.md), if system issue resolved, continue to **Staging**
-              - [ ] - YES: continue to **Staging**
+              - [ ] - NO: diagnose, correct, if platform issue resolved, [restart](./CHECKLIST.md), if system issue resolved then YES
+              - [ ] - YES:
+                  - **RC Versioned?**
+                    - [ ] - NO:
+                      - [ ] - `npm version <major.minor.patch-rc.n>`, `git push --follow-tags`
+                      - [ ] - [restart](./CHECKLIST.md)
+                    - [ ] - YES: continue to **Staging**
+ 
 
 ## Staging
 
-- **Staging RC Versioned?**
-  - [ ] - NO:
-    - [ ] - `npm version <major.minor.patch-rc.n>`, `git push --follow-tags`
-    - [ ] - Complete Dev Checklists to update
+- **RC Versioned?**
+  - [ ] - NO: complete **Dev**
+  - [ ] - YES: continue
 - [ ] - `pear seed staging` (own terminal)
 - [ ] - `pear dump <devkey> .`
 - [ ] - `pear stage --dry-run staging`
@@ -66,16 +71,22 @@
               - [ ] - NO: diagnose, correct, if platform issue resolved, [restart](./CHECKLIST.md)
               - [ ] - YES: 
                 - **Only Changelog and/or Version update?** 
-                  - [ ] NO: await QA Approval then continue
-                  - [ ] YES: continue
+                  - [ ] NO: await QA Approval then YES
+                  - [ ] YES:
+                    - **Changelog Updated & Versioned?**
+                      - [ ] - NO:
+                        - [ ] - Update Changelog, `git push`
+                        - [ ] - `npm version <major.minor.patch>`, `git push --follow-tags`
+                        - [ ] - Complete **Dev** & **Staging** Checklists
+                      - [ ] - YES: continue to **Release-Candidate**
+
 
 ## Release-Candidate
 
 - **Changelog Updated & Versioned?**
   - [ ] - NO:
-    - [ ] - Update Changelog, `git push`
-    - [ ] - `npm version <major.minor.patch>`, `git push --follow-tags`
-    - [ ] - Complete Dev & Stage Checklists to update
+    - [ ] - complete **Staging**
+  - [ ] YES: continue
 - [ ] - `pear seed rc` (own terminal)
 - [ ] - `pear dump <stagekey> .`
 - [ ] - `pear stage --dry-run rc`
