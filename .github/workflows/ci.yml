@@ -39,11 +39,11 @@ jobs:
     - name: Install w/ dev deps
       run: npm install
 
-    - name: Bootstrap
-      run: npm run bootstrap
-
     - name: Install Bare
       run: npm i -g bare-runtime
+
+    - name: Bootstrap
+      run: npm run bootstrap
 
     - name: Test
       run: npm test
