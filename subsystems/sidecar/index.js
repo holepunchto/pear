@@ -699,7 +699,7 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
-    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || [] }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
