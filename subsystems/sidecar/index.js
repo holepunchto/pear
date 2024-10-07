@@ -940,7 +940,7 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) await this.swarm.destroy()
     if (this.corestore) await this.corestore.close()
-    if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed', PLATFORM_DIR)
+    if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed')
   }
 
   async _close () {
