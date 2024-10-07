@@ -3,12 +3,10 @@
 ## Dev
 
 - [ ] `./pear.dev sidecar shutdown`
+- [ ] `git clean -x -f -d`
 - [ ] `git pull`
-- **Build Update?**
-  - [ ] NO: continue
-  - [ ] YES: 
-    - [ ] `npm install`
-    - [ ] `npm run bootstrap -- --dlruntime`
+- [ ] `npm install`
+- [ ] `npm run archdump`
 - [ ] `rm -fr node_modules`
 - [ ] `npm install --omit=dev`
 - [ ] `npm run prune`
