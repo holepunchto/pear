@@ -5,9 +5,9 @@
 ## Dev
 
 - [ ] `./pear.dev sidecar shutdown`
-- [ ] `git clean -x -f -d`
 - [ ] `git pull`
 - [ ] `npm install`
+- [ ] `rm -fr by-arch`
 - [ ] `npm run archdump`
 - [ ] `rm -fr node_modules`
 - [ ] `npm install --omit=dev`
