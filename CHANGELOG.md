@@ -1,5 +1,34 @@
 # Pear Runtime Changelog
 
+## v1.5.0
+
+### Features
+
+* CLI - Support for Encrypted Applications in `pear run`, `pear stage`, `pear dump`, `pear init`, `pear seed` and `pear info` - unlock via password input w/ `--no-ask` opt-out
+* Desktop - Password input dialog for Encrypted Applications
+* CLI - `pear touch` - Create Pear Link. Advanced. Combine with `pear stage <link>` and `pear release <link>`. Useful for automation since no channel name is required
+
+### Fixes
+
+* CLI - `pear stage --name` and `pear seed --name` flag fix
+* API - untrusted worker on first run fix
+* Desktop - `ERR_HTTP_NOT_FOUND` 404 response from the sidecar when a requested file is not found
+* Mac - traffic lights visibility fix
+* Desktop - GUI configiguration can take numeric strings as values
+
+### Improvements
+
+* CLI - `pear dev` deprecated. Use `pear run --dev` instead
+* Desktop - add support for `https://*` and `http://*` in the package.json config `pear.links`
+* Desktop - update Windows `pear-ctrl` icons
+* Desktop - added `--trusted` hidden flag to `run` command
+* Desktop - Add `no-cache` to sidecar request headers
+* Desktop - zombie processes reduction measures: IPC lifecycle improvements + heartbeat
+* Windows/Linux - Avoid OS/Electron issues by disabling the sandbox (already unused), the `--sandbox` flag can be used to re-enable
+* Performance - 3x speedup with concurrent Hyperbee gets in application loading flow
+* Performance - application boot speed regression fix, package lookup for worker trusted links
+* Performance - `pear info` concurrent Hyperbee gets
+
 ## v1.4.0
 
 ### Features
