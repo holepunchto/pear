@@ -4,14 +4,16 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const fsext = require('fs-native-extensions')
 const Helper = require('./helper')
-const rig = new Helper.Rig()
+const rig = new Helper.Rig({ keepAlive: false })
 
 test.hook('shutdown setup', rig.setup)
 
 test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
   plan(1)
   comment('shutting down sidecar')
-  await rig.artifact.shutdown()
+  const helper = new Helper(rig)
+  await helper.ready()
+  await helper.shutdown()
   comment('sidecar shutdown')
   comment('checking file lock is free')
   const lock = path.join(rig.platformDir, 'corestores', 'platform', 'primary-key')

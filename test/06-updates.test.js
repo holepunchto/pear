@@ -20,7 +20,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   const testId = Math.floor(Math.random() * 100000)
   const stager1 = new Helper(rig)
-  teardown(() => stager1.close())
+  teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
 
   comment('1. Stage and run app')
@@ -45,7 +45,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   teardown(() => { try { fs.unlinkSync(path.join(harness, file)) } catch { /* ignore */ } })
   comment('\tstaging')
   const stager2 = new Helper(rig)
-  teardown(() => stager2.close())
+  teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
 
   await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
@@ -92,7 +92,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\tstaging')
   const stager1 = new Helper(rig)
-  teardown(() => stager1.close())
+  teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
@@ -163,7 +163,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   plan(6)
   timeout(180000)
   const appStager = new Helper(rig)
-  teardown(() => appStager.close())
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
@@ -175,9 +175,10 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   comment('seeding app')
   const appSeeder = new Helper(rig)
-  teardown(() => appSeeder.close())
+  teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -207,11 +208,11 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
-  teardown(() => { try { fs.unlinkSync(path.join(rig.artifactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
+  fs.writeFileSync(path.join(rig.artefactDir, file), 'test')
+  teardown(() => { try { fs.unlinkSync(path.join(rig.artefactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
@@ -232,7 +233,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   timeout(180000)
 
   const appStager = new Helper(rig)
-  teardown(() => appStager.close())
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
@@ -244,10 +245,11 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('seeding app')
   const appSeeder = new Helper(rig)
-  teardown(() => appSeeder.close())
+  teardown(() => appSeeder.close(), { order: Infinity })
 
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -278,11 +280,11 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating platform test file (${file})`)
-  fs.writeFileSync(path.join(rig.artifactDir, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(rig.artifactDir, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(rig.artefactDir, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(rig.artefactDir, file)) }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
@@ -294,7 +296,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('releasing rig platform')
   const update2Promise = await update2LazyPromise
   const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-  const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artifactDir })
+  const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir })
   await Helper.pick(releasing, { tag: 'final' })
 
   comment('waiting for platform update notification')
@@ -317,7 +319,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   plan(7)
   timeout(180000)
   const appStager = new Helper(rig)
-  teardown(() => appStager.close())
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
   const channel = 'test-fixture'
 
@@ -328,9 +330,10 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
   comment('seeding app')
   const appSeeder = new Helper(rig)
-  teardown(() => appSeeder.close())
+  teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -366,7 +369,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
-  teardown(() => appStager2.close())
+  teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
@@ -388,7 +391,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   plan(9)
   timeout(180000)
   const appStager = new Helper(rig)
-  teardown(() => appStager.close())
+  teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
   const channel = 'test-fixture'
@@ -400,9 +403,10 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('seeding app')
   const appSeeder = new Helper(rig)
-  teardown(() => appSeeder.close())
+  teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
@@ -438,7 +442,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
-  teardown(() => appStager2.close())
+  teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })

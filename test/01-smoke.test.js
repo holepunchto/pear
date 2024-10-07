@@ -5,11 +5,11 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
   timeout(180000)
   plan(5)
   const stager = new Helper()
-  teardown(() => stager.close())
+  teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
   const dir = harness
 
@@ -17,14 +17,16 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   comment('staging')
   const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding')
   const seeder = new Helper()
-  teardown(() => seeder.close())
+  teardown(() => seeder.close(), { order: Infinity })
   await seeder.ready()
   const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const key = await until.key

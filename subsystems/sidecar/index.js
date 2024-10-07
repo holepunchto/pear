@@ -17,7 +17,8 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
-const { command } = require('paparam')
+const { command, flag, arg, rest } = require('paparam')
+const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
 const Applings = require('./lib/applings')
@@ -29,7 +30,6 @@ const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../run/definition')
 const { version } = require('../../package.json')
-const deriveEncryptionKey = require('pw-to-ek')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
   SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
@@ -79,8 +79,32 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  constructor ({ updater, drive, corestore, gunk, verbose = false }) {
+  #parsePlatformFlags () {
+    const argv = Bare.argv.slice(1)
+    let verbose = false
+    let dhtBootstrap = ''
+    const dhtBootstrapFlag = flag('--dht-bootstrap <nodes>')
+    try {
+      const result = command('pear', flag('--sidecar'), flag('--verbose'), dhtBootstrapFlag, arg('<cmd>'), rest('rest')).parse(argv).flags
+      verbose = result.verbose
+      dhtBootstrap = result.dhtBootstrap || undefined
+    } catch {
+      const result = command('pear', flag('--sidecar'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
+      verbose = result.verbose
+    }
+    return {
+      verbose,
+      dhtBootstrap: typeof dhtBootstrap === 'string' ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : dhtBootstrap
+    }
+  }
+
+  constructor ({ updater, drive, corestore, gunk }) {
     super()
+
+    const { verbose, dhtBootstrap } = this.#parsePlatformFlags()
+    this.verbose = verbose
+    this.dhtBootstrap = dhtBootstrap
+
     this.bus = new Iambus()
     this.version = CHECKOUT
 
@@ -124,6 +148,8 @@ class Sidecar extends ReadyResource {
 
     this.http = new Http(this)
     this.running = new Map()
+
+    this.dhtBootstrap = dhtBootstrap
 
     const sidecar = this
     this.App = class App {
@@ -282,6 +308,7 @@ class Sidecar extends ReadyResource {
     await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.http.ready()
     await this.#ensureSwarm()
+    if (this.verbose) console.log('- Sidecar booted')
   }
 
   get clients () { return this.ipc.clients }
@@ -863,7 +890,7 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)

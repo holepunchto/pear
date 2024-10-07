@@ -15,7 +15,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   plan(7)
 
   const helper = new Helper(rig)
-  teardown(() => helper.close())
+  teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
   const dir = encrypted
 
@@ -25,6 +25,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const name = 'test-encryption-key'
   const preimage = hypercoreid.encode(crypto.randomBytes(32))
   const addEncryptionKey = helper.encryptionKey({ action: 'add', name, value: preimage })
+  teardown(() => Helper.teardownStream(addEncryptionKey))
   const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
   is(encryptionKey.name, name)
 
@@ -40,6 +41,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('seeding encrypted app')
   const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: name, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const appKey = await until.key
   const announced = await until.announced

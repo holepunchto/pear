@@ -23,56 +23,70 @@ const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
+const rigPear = path.join(tmp, 'rig-pear')
+
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
+  console.log('# Teardown: Connecting Local Sidecar')
   await local.ready()
+  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
   await local.shutdown()
   console.log('# Teardown: Local Sidecar Shutdown')
 })
 
 class Rig {
-  platformDir = path.join(tmp, 'rig-pear')
-  artifactDir = env.CI ? path.join(tmp, 'artifact-pear') : Helper.localDir
+  platformDir = rigPear
+  artefactDir = Helper.localDir
   id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
-  artifactShutdown = false
+  keepAlive = true
+  constructor ({ keepAlive = true } = {}) {
+    this.keepAlive = keepAlive
+  }
+
   setup = async ({ comment, timeout }) => {
     timeout(180000)
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')
+
     comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, dryRun: false, bare: true })
+    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
-    const seeding = await this.local.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artifactDir, key: null, cmdArgs: [] })
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+
+    comment('seeding platform')
+    this.seeder = new Helper()
+    await this.seeder.ready()
+    this.seeding = this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
+    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
     comment('platform seeding')
+
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
-    comment('connecting to rig sidecar')
-    this.artifact = new Helper({ platformDir: this.platformDir })
-    Pear.teardown(async () => {
-      if (this.artifactShutdown) return
-      console.log('# Teardown: Shutting Down Rig Sidecar [ DIRTY ]')
-      const helper = this.artifact.closed ? new Helper({ platform: this.platformDir }) : this.artifact
-      await helper.ready()
-      await helper.shutdown()
-      console.log('# Teardown: Rig Sidecar Shutdown [ DIRTY ]')
-    })
-    await this.artifact.ready()
+    if (this.keepAlive) {
+      comment('connecting to rig sidecar')
+      this.rig = new Helper(this)
+      await this.rig.ready()
+      comment('connected to rig sidecar')
+    }
   }
 
   cleanup = async ({ comment }) => {
-    comment('shutdown rig sidecar')
-    await this.artifact.shutdown()
-    this.artifactShutdown = true
-    comment('rig sidecar closed')
+    comment('closing seeder client')
+    await Helper.teardownStream(this.seeding)
+    await this.seeder.close()
+    comment('seeder client closed')
+    if (this.keepAlive) {
+      comment('shutting down rig sidecar')
+      await this.rig.shutdown()
+      comment('rig sidecar shutdown')
+    }
     comment('closing local client')
     await this.local.close()
     comment('local client closed')
@@ -96,7 +110,8 @@ class Helper extends IPC {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const args = ['--sidecar']
+    const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
     if (verbose) args.push('--verbose')
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -119,13 +134,20 @@ class Helper extends IPC {
     this.verbose = verbose
   }
 
+  static async teardownStream (stream) {
+    if (stream.destroyed) return
+    stream.end()
+    return new Promise((resolve) => stream.on('close', resolve))
+  }
+
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
 
-    const args = !opts.encryptionKey ? ['run', '-t', link] : ['run', '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
+    const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
     if (this.verbose) args.push('--verbose')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
@@ -232,7 +254,7 @@ class Helper extends IPC {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
-    await updaterBootstrap(key, dir)
+    await updaterBootstrap(key, dir, { bootstrap: Pear.config.dhtBootstrap })
   }
 
   static async gc (dir) {
