@@ -32,11 +32,13 @@ const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
-  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP,
+  SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
+const knownNodes = new Store('dht')
 const SharedState = require('../../state')
 const State = require('./state')
 const { preferences } = State
@@ -692,7 +694,7 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const dht = this.swarm.dht.toArray({ limit: 20 })
+    const dht = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || []
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
@@ -924,7 +926,7 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, knownNodes: await knownNodes.get('nodes') || [] })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
@@ -955,7 +957,10 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.http) await this.http.close()
-    if (this.swarm) await this.swarm.destroy()
+    if (this.swarm) {
+      knownNodes.set('nodes', this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }))
+      await this.swarm.destroy()
+    }
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
