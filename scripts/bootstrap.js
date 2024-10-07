@@ -1,21 +1,23 @@
 #!/usr/bin/env bare
 'use strict'
 
-const { platform, arch, isWindows, isBare } = require('which-runtime')
-const fs = isBare ? require('bare-fs') : require('fs')
-const path = isBare ? require('bare-path') : require('path')
+const { platform, arch, isWindows } = require('which-runtime')
+const fs = require('bare-fs')
+const path = require('bare-path')
 const Corestore = require('corestore')
 const Localdrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
-const goodbye = global.Pear?.teardown || require('graceful-goodbye')
+const goodbye = require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
 
-const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
-const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
+global.process = require('bare-process')
+
+const argv = Bare.argv
+const ROOT = __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')

@@ -1,6 +1,6 @@
 import Localdrive from 'localdrive'
 import { fileURLToPath } from 'url-file-url'
-import path from 'path'
+import path from 'bare-path'
 
 const drive = new Localdrive(path.join(fileURLToPath(import.meta.url), '../..'))
 
