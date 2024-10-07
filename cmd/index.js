@@ -154,6 +154,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--verbose|-v', 'Additional output'),
     flag('--mem', 'memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
+    hiddenFlag('--dht-bootstrap <nodes>'),
     runners.sidecar(ipc)
   )
 

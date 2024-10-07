@@ -18,10 +18,9 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  Bare.argv.push('--spindown-timeout=2147483647')
-  Bare.argv.push('--runtime', RUNTIME)
-
-  if (!cmd.args.verbose) Bare.argv.push('--verbose')
+  if (!cmd.args.verbose) {
+    Bare.argv.push('--verbose')
+  }
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')

@@ -17,7 +17,7 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
-const { command, flag, arg, rest } = require('paparam')
+const { command, flag, sloppy, arg, rest } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
@@ -80,16 +80,15 @@ class Sidecar extends ReadyResource {
   teardown () { global.Bare.exit() }
 
   #parsePlatformFlags () {
-    const argv = Bare.argv.slice(1)
+    const argv = Bare.argv.slice(2)
     let verbose = false
     let dhtBootstrap = ''
-    const dhtBootstrapFlag = flag('--dht-bootstrap <nodes>')
     try {
-      const result = command('pear', flag('--sidecar'), flag('--verbose'), dhtBootstrapFlag, arg('<cmd>'), rest('rest')).parse(argv).flags
+      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), flag('--dht-bootstrap <nodes>'), arg('<cmd>'), rest('rest')).parse(argv).flags
       verbose = result.verbose
       dhtBootstrap = result.dhtBootstrap || undefined
     } catch {
-      const result = command('pear', flag('--sidecar'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
+      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
       verbose = result.verbose
     }
     return {
