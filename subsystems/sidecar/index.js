@@ -556,7 +556,7 @@ class Sidecar extends ReadyResource {
           }
           client.once('close', resolve)
           const app = client.userData
-          const tearingDown = app && app.teardown()
+          const tearingDown = !!app && app.teardown()
           if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
         })
       }
@@ -930,7 +930,7 @@ class Sidecar extends ReadyResource {
   async #shutdown (client) {
     if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
-    const tearingDown = app && app.teardown()
+    const tearingDown = !!app && app.teardown()
     if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
 
     this.spindownms = 0
