@@ -1428,19 +1428,28 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('warming', (event) => {
       const warming = this.warming()
       warming.on('data', (data) => event.reply('warming', data))
-      warming.on('end', () => event.reply('warming', null))
+      warming.on('end', () => {
+        warming.end()
+        event.reply('warming', null)
+      })
     })
 
     electron.ipcMain.on('reports', (event) => {
       const reports = this.reports()
       reports.on('data', (data) => event.reply('reports', data))
-      reports.on('end', () => event.reply('reports', null))
+      reports.on('end', () => {
+        reports.end()
+        event.reply('reports', null)
+      })
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
-      messages.on('end', () => event.reply('messages', null))
+      messages.on('end', () => {
+        messages.end()
+        event.reply('messages', null)
+      })
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
