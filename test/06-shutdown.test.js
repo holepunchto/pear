@@ -70,19 +70,6 @@ class Seeder extends ReadyResource {
   }
 }
 
-test.hook('stage platform using rig', async ({ timeout, teardown }) => {
-  timeout(60_000)
-  const helper = new Helper(rig)
-  await helper.ready()
-  teardown(async () => helper.close(), { order: Infinity })
-
-  const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
-  teardown(async () => Helper.teardownStream(staging))
-  const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  rig.staged = await until.addendum
-  await until.final
-})
-
 test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
   plan(1)
   comment('shutting down sidecar')
@@ -140,18 +127,26 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.plan(4)
   t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 180_000)
 
+  t.comment('Staging platform using the rig')
+  const helper = new Helper(rig)
+  await helper.ready()
+
+  const staging = helper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artifactDir, dryRun: false, bare: true })
+  const until = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await until.addendum
+  await until.final
+  await Helper.teardownStream(staging)
+
+  t.comment('Shutting down sidecar')
+  await helper.shutdown()
+  await helper.close()
+
   t.comment('Bootstrapping rcv platform...')
   const platformDirRcv = path.join(TMP, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
 
-  t.comment('Shutting down sidecar')
-  const helper = new Helper(rig)
-  await helper.ready()
-  await helper.shutdown()
-  await helper.close()
-
   t.comment('Starting paused seeder')
-  const link = rig.staged.link
+  const link = staged.link
   const corestoreDir = path.join(rig.platformDir, 'corestores', 'platform')
   const seeder = new Seeder(link, corestoreDir)
   await seeder.ready()
@@ -161,7 +156,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   seeder.bus.sub({ topic: 'seed', msg: { tag: 'peer-add' } }).once('data', () => { peerAdded = true })
 
   t.comment(`Starting rcv sidecar at ${platformDirRcv}`)
-  const sidecar = spawn(path.join(platformDirRcv, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', rig.staged.key], { stdio: 'pipe' })
+  const sidecar = spawn(path.join(platformDirRcv, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', staged.key], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit)
