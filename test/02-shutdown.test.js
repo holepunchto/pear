@@ -23,15 +23,6 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 
 test.hook('shutdown setup', rig.setup)
 
-function startSidecar (opts = {}) {
-  const verbose = global.Pear.config.args.includes('--verbose')
-  const platformDir = opts.platformDir || constants.PLATFORM_DIR
-  const runtime = path.join(platformDir, 'current', BY_ARCH)
-  const args = ['--sidecar', '--verbose', ...opts.args || []]
-
-  return spawn(runtime, args, { detached: !verbose, stdio: 'pipe' })
-}
-
 class Seeder extends ReadyResource {
   constructor (rawKey, corestoreDir, paused = true) {
     super()
@@ -125,7 +116,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
   t.comment('Starting sidecar (primary rig)')
-  const sidecar = startSidecar(rig)
+  const sidecar = spawn(path.join(rig.platformDir, 'current', BY_ARCH), ['--sidecar', '--verbose'], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit)
@@ -172,7 +163,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   seeder.bus.sub({ topic: 'seed', msg: { tag: 'peer-add' } }).once('data', () => { peerAdded = true })
 
   t.comment(`Starting sidecar at ${rig.platformDir2}`)
-  const sidecar = startSidecar({ platformDir: rig.platformDir2, args: ['--key', rig.staged.key] })
+  const sidecar = spawn(path.join(rig.platformDir2, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', rig.staged.key], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit)
