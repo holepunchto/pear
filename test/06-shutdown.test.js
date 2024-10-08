@@ -83,12 +83,6 @@ test.hook('stage platform using primary rig', async ({ timeout, teardown }) => {
   await until.final
 })
 
-test.hook('bootstrap secondary rig', async ({ timeout }) => {
-  timeout(180_000)
-  rig.platformDir2 = path.join(TMP, 'rig-sd')
-  await Helper.bootstrap(rig.key, rig.platformDir2)
-})
-
 test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
   plan(1)
   comment('shutting down sidecar')
@@ -144,7 +138,11 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(4)
-  t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 60_000)
+  t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 180_000)
+
+  t.comment('Bootstrapping rcv platform...')
+  const platformDirRcv = path.join(TMP, 'rcv-pear')
+  await Helper.bootstrap(rig.key, platformDirRcv)
 
   t.comment('Shutting down sidecar')
   const helper = new Helper(rig)
@@ -162,8 +160,8 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   let peerAdded = false
   seeder.bus.sub({ topic: 'seed', msg: { tag: 'peer-add' } }).once('data', () => { peerAdded = true })
 
-  t.comment(`Starting sidecar at ${rig.platformDir2}`)
-  const sidecar = spawn(path.join(rig.platformDir2, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', rig.staged.key], { stdio: 'pipe' })
+  t.comment(`Starting rcv sidecar at ${platformDirRcv}`)
+  const sidecar = spawn(path.join(platformDirRcv, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', rig.staged.key], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit)
