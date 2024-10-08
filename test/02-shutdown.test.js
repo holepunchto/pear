@@ -8,11 +8,9 @@ const constants = require('../constants')
 const { spawn } = require('bare-subprocess')
 const ReadyResource = require('ready-resource')
 const hypercoreid = require('hypercore-id-encoding')
-const Rache = require('rache')
 const Iambus = require('iambus')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
-const Replicator = require('../subsystems/sidecar/lib/replicator')
 const Hyperswarm = require('hyperswarm')
 const os = require('bare-os')
 const { platform, arch, isWindows } = require('which-runtime')
@@ -41,7 +39,6 @@ class Seeder extends ReadyResource {
     this.key = hypercoreid.normalize(hypercoreid.decode(rawKey))
     this.corestoreDir = corestoreDir
 
-    this.globalCache = new Rache({ maxSize: 65536 })
     this.bus = new Iambus()
     this.log = msg => this.bus.pub({ topic: 'seed', msg })
 
@@ -50,20 +47,14 @@ class Seeder extends ReadyResource {
   }
 
   async _open () {
-    this.corestore = new Corestore(this.corestoreDir, { globalCache: this.globalCache, manifestVersion: 1, compat: false })
+    this.corestore = new Corestore(this.corestoreDir, { manifestVersion: 1, compat: false })
     await this.corestore.ready()
 
     this.drive = new Hyperdrive(this.corestore, this.key)
+    this.drive.core.on('peer-add', (peer) => this.log({ tag: 'peer-add', data: peer.remotePublicKey.toString('hex') }))
     await this.drive.ready()
 
-    this.replicator = new Replicator(this.drive)
-    this.replicator.on('announce', () => this.log({ tag: 'announced' }))
-    this.drive.core.on('peer-add', (peer) => this.log({ tag: 'peer-add', data: peer.remotePublicKey.toString('hex') }))
-    this.drive.core.on('peer-remove', (peer) => this.log({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') }))
-
-    const keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair })
-    const corestore = this.corestore
+    this.swarm = new Hyperswarm({ keyPair: await this.corestore.createKeyPair('holepunch') })
     this.swarm.on('connection', (connection) => {
       // If paused, send initial (metadata) packets right away then stop sending as it starts sending data packets
       // this is to trigger the start of the update in client sidecars without actually completing the update
@@ -74,14 +65,14 @@ class Seeder extends ReadyResource {
           ? originalWrite.call(connection, ...args)
           : true
 
-      corestore.replicate(connection)
+      this.corestore.replicate(connection)
     })
 
-    await this.replicator.join(this.swarm, { announceSeeds: null, server: true, client: false })
+    await this.swarm.join(this.drive.discoveryKey, { client: true, server: true }).flushed()
   }
 
   async _close () {
-    await this.replicator?.leave(this.swarm)
+    await this.swarm?.leave(this.drive.discoveryKey)
     await this.swarm?.destroy()
     await this.corestore?.close()
     await this.drive?.close()
