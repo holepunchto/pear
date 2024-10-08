@@ -70,7 +70,7 @@ class Seeder extends ReadyResource {
   }
 }
 
-test.hook('stage platform using primary rig', async ({ timeout, teardown }) => {
+test.hook('stage platform using rig', async ({ timeout, teardown }) => {
   timeout(60_000)
   const helper = new Helper(rig)
   await helper.ready()
@@ -109,7 +109,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
-  t.comment('Starting sidecar (primary rig)')
+  t.comment('Starting sidecar')
   const sidecar = spawn(path.join(rig.platformDir, 'current', BY_ARCH), ['--sidecar', '--verbose'], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
