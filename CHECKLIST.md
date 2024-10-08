@@ -14,6 +14,7 @@
 - [ ] `npm run prune`
 - [ ] `./pear.dev sidecar` (own terminal)
 - [ ] `./pear.dev seed dev` (own terminal)
+- [ ] `rm package-lock.json`
 - [ ] `./pear.dev stage --dry-run dev`
 - **Dry Run Correct?**
   - [ ] - NO: diagnose, correct, [restart](./CHECKLIST.md)
