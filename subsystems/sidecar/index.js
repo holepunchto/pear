@@ -699,7 +699,7 @@ class Sidecar extends ReadyResource {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
-    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }) || [] }
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
@@ -892,7 +892,8 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes: await knownNodes.get('nodes') })
+    const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
@@ -942,9 +943,9 @@ class Sidecar extends ReadyResource {
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.http) await this.http.close()
     if (this.swarm) {
-      const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-      if (nodes.length > 0) {
-        knownNodes.set('nodes', nodes)
+      if (!this.dhtBootstrap) {
+        const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
+        if (nodes.length) knownNodes.set('nodes', nodes)
       }
       await this.swarm.destroy()
     }
