@@ -2,6 +2,7 @@
 const streamx = require('streamx')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
+  src = null
   constructor (op, params, client, sidecar = null) {
     super({
       read (cb) {
@@ -23,5 +24,9 @@ module.exports = class Opstream extends streamx.Readable {
     this.client = client
     this.sidecar = sidecar
     this.session = new Session(client)
+    this.id = sidecar.opstreams.alloc(this)
+    this.once('close', () => {
+      sidecar.opstreams.free(this.id)
+    })
   }
 }

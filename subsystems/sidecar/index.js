@@ -104,6 +104,8 @@ class Sidecar extends ReadyResource {
     this.verbose = verbose
     this.dhtBootstrap = dhtBootstrap
 
+    this.opstreams = new Freelist()
+
     this.bus = new Iambus()
     this.version = CHECKOUT
 
@@ -516,11 +518,16 @@ class Sidecar extends ReadyResource {
 
   shutdown (params, client) { return this.#shutdown(client) }
 
-  #endStreams (client) {
-    const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
-    return Promise.all(streams.map((stream) => new Promise((resolve) => {
-      stream.once('close', resolve)
-      stream.end()
+  #teardownPipelines (client) {
+    return Promise.all([...this.opstreams].map((stream) => new Promise((resolve) => {
+      const src = stream.src || stream
+      const dst = stream._readableState.pipeTo || stream
+      if (dst.destroyed) {
+        resolve()
+        return
+      }
+      dst.once('close', () => { resolve() })
+      src.push(null)
     })))
   }
 
@@ -536,7 +543,7 @@ class Sidecar extends ReadyResource {
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
       metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
       const tearingDown = app.teardown()
-      if (tearingDown === false) this.#endStreams(client).then(() => client.close())
+      if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }
     return metadata
   }
@@ -556,7 +563,7 @@ class Sidecar extends ReadyResource {
           client.once('close', resolve)
           const app = client.userData
           const tearingDown = app && app.teardown()
-          if (tearingDown === false) this.#endStreams(client).then(() => client.close())
+          if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
         })
       }
       if (appling) {
@@ -930,7 +937,7 @@ class Sidecar extends ReadyResource {
     if (this.verbose) console.log('- Sidecar shutting down...')
     const app = client.userData
     const tearingDown = app && app.teardown()
-    if (tearingDown === false) this.#endStreams(client).then(() => client.close())
+    if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
 
     this.spindownms = 0
     const restarts = this.closeClients()
@@ -983,6 +990,41 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+class Freelist {
+  alloced = []
+  freed = []
+
+  nextId () {
+    return this.freed.length === 0 ? this.alloced.length : this.freed[this.freed.length - 1]
+  }
+
+  alloc (item) {
+    const id = this.freed.length === 0 ? this.alloced.push(null) - 1 : this.freed.pop()
+    this.alloced[id] = item
+    return id
+  }
+
+  free (id) {
+    this.freed.push(id)
+    this.alloced[id] = null
+  }
+
+  from (id) {
+    return id < this.alloced.length ? this.alloced[id] : null
+  }
+
+  emptied () {
+    return this.freed.length === this.alloced.length
+  }
+
+  * [Symbol.iterator] () {
+    for (const item of this.alloced) {
+      if (item === null) continue
+      yield item
+    }
+  }
 }
 
 module.exports = Sidecar

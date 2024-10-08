@@ -9,7 +9,10 @@ const Store = require('../lib/store')
 const Hyperdrive = require('hyperdrive')
 
 module.exports = class Seed extends Opstream {
-  constructor (...args) { super((...args) => this.#op(...args), ...args) }
+  constructor (params, client, sidecar) {
+    super((...args) => this.#op(...args), params, client, sidecar)
+    this.src = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
+  }
 
   async #op ({ name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs } = {}) {
     const { client, session } = this
@@ -20,7 +23,6 @@ module.exports = class Seed extends Opstream {
       cmdArgs
     })
     client.userData = new this.sidecar.App({ state, session })
-
     this.push({ tag: 'seeding', data: { key: link, name, channel } })
     await this.sidecar.ready()
 
@@ -29,7 +31,6 @@ module.exports = class Seed extends Opstream {
     const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
     const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
-    const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
     const permits = new Store('permits')
     const secrets = new Store('encryption-keys')
@@ -68,7 +69,7 @@ module.exports = class Seed extends Opstream {
 
     this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
 
-    for await (const { msg } of notices) this.push(msg)
+    for await (const { msg } of this.src) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
   }
 }
