@@ -7,6 +7,7 @@ const fs = require('bare-fs')
 const Rache = require('rache')
 const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
+const teardown = require('./lib/teardown')
 const {
   SWAP,
   GC,
@@ -43,6 +44,7 @@ async function bootSidecar () {
 
   const updater = createUpdater()
   const sidecar = new Sidecar({ updater, drive, corestore, gunk })
+  teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
