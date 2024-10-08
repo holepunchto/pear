@@ -39,6 +39,7 @@ const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
 const State = require('./state')
+const Freelist = require('./lib/freelist')
 const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
@@ -104,6 +105,8 @@ class Sidecar extends ReadyResource {
     this.verbose = verbose
     this.dhtBootstrap = dhtBootstrap
 
+    this.opstreams = new Freelist()
+
     this.bus = new Iambus()
     this.version = CHECKOUT
 
@@ -120,7 +123,13 @@ class Sidecar extends ReadyResource {
     this.ipc = new IPC({
       handlers: this,
       lock: PLATFORM_LOCK,
-      socketPath: SOCKET_PATH
+      socketPath: SOCKET_PATH,
+      onpipeline: (_, stream) => {
+        const id = this.opstreams.alloc(stream)
+        stream.once('close', () => {
+          this.opstreams.free(id)
+        })
+      }
     })
 
     this.ipc.on('client', (client) => {
@@ -516,13 +525,13 @@ class Sidecar extends ReadyResource {
 
   shutdown (params, client) { return this.#shutdown(client) }
 
-  #teardownPipelines (client) {
-    // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
-    const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
-    return Promise.all(streams.map((stream) => new Promise((resolve) => {
-      stream.once('close', resolve)
-      stream.end()
-    })))
+  #teardownPipelines () {
+    return Promise.all([...this.opstreams].map((s) => {
+      return new Promise((resolve) => {
+        s.once('close', () => { resolve() })
+        s.push(null)
+      })
+    }))
   }
 
   closeClients () {
@@ -938,7 +947,7 @@ class Sidecar extends ReadyResource {
 
     this.spindownms = 0
     this.#spindownCountdown()
-    await this.closing
+    await this.close()
     return restarts
   }
 
@@ -955,7 +964,7 @@ class Sidecar extends ReadyResource {
   async _close () {
     if (this.decomissioned) return
     this.decomissioned = true
-    for (const client of this.clients) await this.#teardownPipelines(client)
+    for (const client of this.clients) this.#teardownPipelines(client).then(() => client.close())
     // point of no return, death-march ensues
     this.deathClock()
     const closing = this.#close()
