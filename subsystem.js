@@ -10,7 +10,7 @@ module.exports = async function subsystem (drive, entrypoint) {
     cache,
     cwd: SWAP,
     mount: MOUNT,
-    absolutePrebuilds: true
+    absoluteFiles: true
   })
 
   const protocol = new Module.Protocol({
