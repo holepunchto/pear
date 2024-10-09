@@ -36,7 +36,6 @@ module.exports = class State {
   entrypoints = null
   applink = null
   dht = null
-  dhtBootstrap = null
   static injestPackage (state, pkg, overrides = {}) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
@@ -81,9 +80,9 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, dhtBootstrap } = state
+    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, dhtBootstrap, pearDir }
+    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, trace, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir }
   }
 
   static isKeetInvite (segment) {
@@ -122,7 +121,6 @@ module.exports = class State {
     this.#onupdate = onupdate
     this.startId = startId || null
     this.dht = dht
-    this.dhtBootstrap = flags.dhtBootstrap?.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
     this.store = store
     this.args = args
     this.appling = appling

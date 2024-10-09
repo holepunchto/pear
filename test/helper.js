@@ -110,7 +110,7 @@ class Helper extends IPC {
     const verbose = global.Pear.config.args.includes('--verbose')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
     if (verbose) args.push('--verbose')
     const pipeId = (s) => {
@@ -146,7 +146,7 @@ class Helper extends IPC {
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
 
-    const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
     if (this.verbose) args.push('--verbose')
 
@@ -254,7 +254,7 @@ class Helper extends IPC {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
-    await updaterBootstrap(key, dir, { bootstrap: Pear.config.dhtBootstrap })
+    await updaterBootstrap(key, dir, { bootstrap: Pear.config.dht.bootstrap })
   }
 
   static async gc (dir) {

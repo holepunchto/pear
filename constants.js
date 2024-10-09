@@ -79,6 +79,8 @@ exports.BARE_RESTART_EXIT_CODE = 75
 
 exports.SALT = b4a.from('d134aa8b0631f1193b5031b356d82dbea214389208fa4a0bcdf5c2e062d8ced2', 'hex')
 
+exports.KNOWN_NODES_LIMIT = 100
+
 function electronModuleURL () {
   const u = pathToFileURL(process.execPath)
   const i = u.href.lastIndexOf(BIN)
