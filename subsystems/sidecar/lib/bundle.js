@@ -221,7 +221,7 @@ module.exports = class Bundle {
     const res = await DriveBundler.bundle(this.drive, {
       entrypoint: entrypoint || '.',
       cwd: SWAP,
-      assets
+      assets,
       absoluteFiles: true,
       mount: 'pear://' + id
     })
