@@ -212,8 +212,12 @@ module.exports = class Bundle {
   async bundle (entrypoint) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
+
     // TODO: gc the old assets on bundle close and on platform boot
-    const assets = `assets/${this.drive.discoveryKey.toString('hex')}.${this.drive.core.length}.${this.drive.core.fork}`
+    const assets = this.drive.core
+      ? `assets/${this.drive.core.fork}.${this.drive.core.length}.${this.drive.discoveryKey.toString('hex')}`
+      : true // assets on localdrives are just passthrough per default
+
     const res = await DriveBundler.bundle(this.drive, {
       entrypoint: entrypoint || '.',
       cwd: SWAP,
