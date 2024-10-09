@@ -945,7 +945,7 @@ class Sidecar extends ReadyResource {
     if (this.swarm) {
       if (!this.dhtBootstrap) {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-        if (nodes.length) knownNodes.set('nodes', nodes)
+        if (nodes.length) await knownNodes.set('nodes', nodes)
       }
       await this.swarm.destroy()
     }
