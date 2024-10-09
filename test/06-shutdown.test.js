@@ -6,13 +6,11 @@ const fsext = require('fs-native-extensions')
 const Helper = require('./helper')
 const constants = require('../constants')
 const { spawn } = require('bare-subprocess')
-const os = require('bare-os')
 const { platform, arch, isWindows } = require('which-runtime')
 const LocalDrive = require('localdrive')
 
 const rig = new Helper.Rig({ keepAlive: false })
 
-const TMP = fs.realpathSync(os.tmpdir())
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
@@ -75,7 +73,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.plan(4)
   t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 180_000)
 
-  const patchedArtefactDir = path.join(TMP, 'slo-pear')
+  const patchedArtefactDir = path.join(Helper.tmp, 'slo-pear')
   t.comment('1. Prepare patched platform that throttles seeding')
   t.comment(`\tCopying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
@@ -121,7 +119,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => Helper.teardownStream(patchedSeeder))
 
   t.comment('\tBootstrapping patched platform as rcv')
-  const platformDirRcv = path.join(TMP, 'rcv-pear')
+  const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
   await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
   t.teardown(() => Helper.gc(platformDirRcv))
 
