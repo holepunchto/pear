@@ -10,3 +10,4 @@ pear/current
 *.log
 .DS_Store
 *.tmp
+assets
