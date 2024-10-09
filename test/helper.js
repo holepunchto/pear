@@ -126,7 +126,8 @@ class Helper extends IPC {
       : () => {
           const sc = spawn(runtime, args, {
             detached: !verbose,
-            stdio: verbose ? 'inherit' : 'ignore'
+            stdio: verbose ? 'inherit' : 'ignore',
+            env: opts.env
           })
           sc.unref()
         }
