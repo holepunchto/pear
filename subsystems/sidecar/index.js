@@ -453,20 +453,20 @@ class Sidecar extends ReadyResource {
     if (keyPair) {
       keyPair.publicKey = Buffer.from(Object.values(keyPair.publicKey))
     } else {
-      keyPair = await crypto.keyPair(publicKey.buffer)
-      identity.set('keyPair', keyPair)
+      keyPair = crypto.keyPair(publicKey.buffer)
+      await identity.set('keyPair', keyPair)
     }
     return keyPair.publicKey
   }
 
   async shareIdentity (params) {
     const { publicKey, attestation } = params
-    identity.set('publicKey', publicKey)
-    identity.set('attestation', attestation)
+    await identity.set('publicKey', publicKey)
+    await identity.set('attestation', attestation)
   }
 
   async clearIdentity () {
-    identity.clear()
+    return identity.clear()
   }
 
   async message (params, client) {
