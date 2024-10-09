@@ -268,7 +268,7 @@ class Helper extends IPC {
 
     constructor (key) {
       super()
-      this.#session = new Session({ inspectorKey: Buffer.from(key, 'hex') })
+      this.#session = new Session({ inspectorKey: Buffer.from(key, 'hex'), bootstrap: Pear.config.dht.bootstrap })
     }
 
     async _open () {

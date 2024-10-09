@@ -12,7 +12,7 @@ class Harness extends ReadyResource {
   ipc = null
   sub = null
   async _open () {
-    this.inspector = new Inspector({ inspector: bareInspector })
+    this.inspector = new Inspector({ inspector: bareInspector, bootstrap: Pear.config.dht.bootstrap })
     this.key = await this.inspector.enable()
     this.inspectorKey = this.key.toString('hex')
     console.log(`{ "tag": "inspector", "data": { "key": "${this.inspectorKey}" }}`)
