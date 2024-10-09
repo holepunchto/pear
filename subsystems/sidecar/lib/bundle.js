@@ -212,9 +212,8 @@ module.exports = class Bundle {
   async bundle (entrypoint) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
-    // TODO: pick a better asset id, like drive.key + drive.version
-    // also we should gc the assets on bundle close and on platform boot
-    const assets = 'assets/' + Math.random().toString(16).slice(2)
+    // TODO: gc the old assets on bundle close and on platform boot
+    const assets = `assets/${this.drive.discoveryKey.toString('hex')}.${this.drive.core.length}.${this.drive.core.fork}`
     const res = await DriveBundler.bundle(this.drive, {
       entrypoint: entrypoint || '.',
       cwd: SWAP,
