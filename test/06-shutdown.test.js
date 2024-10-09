@@ -16,7 +16,7 @@ const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.e
 
 test.hook('shutdown setup', rig.setup)
 
-test.skip('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
+test('lock released after shutdown', async function ({ ok, plan, comment, teardown }) {
   plan(1)
   comment('shutting down sidecar')
   const helper = new Helper(rig)
@@ -38,7 +38,7 @@ test.skip('lock released after shutdown', async function ({ ok, plan, comment, t
   ok(granted, 'file lock is free')
 })
 
-test.skip('sidecar should spindown after a period of inactivity', async (t) => {
+test('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
   t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
