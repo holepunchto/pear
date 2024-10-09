@@ -8,7 +8,6 @@ const fixtures = path.join(Helper.localDir, 'test', 'fixtures')
 const harness = path.join(fixtures, 'harness')
 const minimal = path.join(fixtures, 'minimal')
 
-
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
   plan(2)
 
@@ -16,9 +15,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   const argv = ['stage', '--json', 'test-' + testId, minimal]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -44,9 +41,7 @@ test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
   const argv = ['stage', 'test-' + testId, minimal]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of running.lineout) {
@@ -69,9 +64,7 @@ test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
   const argv = ['stage', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of running.lineout) {
@@ -110,9 +103,7 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   const argv = ['stage', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of running.lineout) {
@@ -152,9 +143,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   const argv = ['stage', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let addedIgnored = false
@@ -180,9 +169,7 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
   const argv = ['stage', '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -209,9 +196,7 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, i
   const argv = ['stage', '--dry-run', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of running.lineout) {
@@ -234,9 +219,7 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
   const argv = ['stage', '--dry-run', '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -267,9 +250,7 @@ test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }
   const argv = ['stage', '--bare', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let skippedWarmup = false
@@ -295,9 +276,7 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
   const argv = ['stage', '--bare', '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -332,9 +311,7 @@ test('pear stage --ignore <list> <channel> <relative-path>', async function ({ p
   const argv = ['stage', '--ignore', 'ignored.txt', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let addedIgnored = false
@@ -367,9 +344,7 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
   const argv = ['stage', '--ignore', 'ignored.txt', '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -400,9 +375,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   for await (const line of stager1.lineout) {
     if (line.endsWith('Success')) break
@@ -415,9 +388,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', 'test-' + testId, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let readdedFile = false
@@ -442,9 +413,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   for await (const line of stager1.lineout) {
     if (line.endsWith('Success')) break
@@ -457,9 +426,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', 'test-' + testId, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -490,9 +457,7 @@ test('pear stage --name <name> <channel> <relative-path>', async function ({ pla
   const argv = ['stage', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let stagedName
@@ -522,9 +487,7 @@ test('pear stage --name <name> --json <channel> <relative-path>', async function
   const argv = ['stage', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -559,9 +522,7 @@ test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async
   const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let addedIgnored = false
@@ -602,9 +563,7 @@ test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>'
   const argv = ['stage', '--ignore', 'ignored.txt', '--name', 'test-name-' + testId, '--json', 'test-' + testId, relativePath]
 
   const running = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await running.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await running.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -638,9 +597,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   for await (const line of stager1.lineout) {
     if (line.endsWith('Success')) break
@@ -657,9 +614,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, 'test-' + testId, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const stagingRegex = /Staging (.*) into/
   let completedStaging = false
@@ -698,9 +653,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   for await (const line of stager1.lineout) {
     if (line.endsWith('Success')) break
@@ -717,9 +670,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', 'test-' + testId, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -754,9 +705,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -772,9 +721,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of stager2.lineout) {
@@ -796,9 +743,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -814,9 +759,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -843,9 +786,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -861,9 +802,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   for await (const line of stager2.lineout) {
@@ -885,9 +824,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -903,9 +840,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -935,9 +870,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -953,9 +886,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--bare', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let skippedWarmup = false
@@ -980,9 +911,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -998,9 +927,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--bare', '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -1030,9 +957,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1051,9 +976,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
   const argv = ['stage', '--ignore', 'ignored.txt', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let addedIgnored = false
@@ -1078,9 +1001,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1099,9 +1020,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
   const argv = ['stage', '--ignore', 'ignored.txt', '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -1130,9 +1049,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1148,9 +1065,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let readdedFile = false
@@ -1175,9 +1090,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1193,9 +1106,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -1225,9 +1136,7 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1243,9 +1152,7 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   const stagingRegex = /Staging (.*) into/
@@ -1274,9 +1181,7 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1292,9 +1197,7 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -1324,9 +1227,7 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1345,9 +1246,7 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
   const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   let completedStaging = false
   let addedIgnored = false
@@ -1379,9 +1278,7 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1400,9 +1297,7 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
   teardown(() => { try { fs.unlinkSync(ignoredFile) } catch { /* ignore */ } })
   const argv = ['stage', '--ignore', 'ignored.txt', '--name', `test-name-${testId}`, '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
@@ -1435,9 +1330,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1453,9 +1346,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const stagingRegex = /Staging (.*) into/
   let completedStaging = false
@@ -1493,9 +1384,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   const relativePath = path.relative(harness, minimal)
   const argvInit = ['stage', '--json', 'test-' + testId, relativePath]
   const stager1 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
-  await stager1.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argvInit)})
-  `, { returnByValue: false })
+  await stager1.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argvInit)}) `, { returnByValue: false })
 
   let link
   for await (const line of stager1.lineout) {
@@ -1511,9 +1400,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', link, relativePath]
-  await stager2.inspector.evaluate(`
-      __PEAR_TEST__.command(${JSON.stringify(argv)})
-  `, { returnByValue: false })
+  await stager2.inspector.evaluate(` __PEAR_TEST__.command(${JSON.stringify(argv)}) `, { returnByValue: false })
 
   const seen = new Set()
   const tags = []
