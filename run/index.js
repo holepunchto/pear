@@ -134,7 +134,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     })
     const protocol = new Module.Protocol({
       exists (url) {
-        return Object.hasOwn(bundle.sources, url.href)
+        return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
       },
       read (url) {
         return bundle.sources[url.href]
