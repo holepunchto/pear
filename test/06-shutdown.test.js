@@ -80,7 +80,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => Helper.gc(patchedArtefactDir))
   const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
     prune: false,
-    filter: (key) => !(key.startsWith('/pear/') || key.startsWith('/.git/'))
+    filter: (key) => !(key.startsWith('/pear/') || key.startsWith('/.git/') || key.startsWith('/test/'))
   })
   // eslint-disable-next-line no-unused-vars
   for await (const val of mirror) { /* ignore */ }
