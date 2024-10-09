@@ -8,23 +8,6 @@ const fixtures = path.join(Helper.localDir, 'test', 'fixtures')
 const harness = path.join(fixtures, 'harness')
 const minimal = path.join(fixtures, 'minimal')
 
-class Rig {
-  setup = async ({ comment, timeout }) => {
-    timeout(180000)
-    this.helper = new Helper()
-    comment('connecting to local sidecar')
-    await this.helper.ready()
-  }
-
-  cleanup = async ({ comment }) => {
-    comment('closing local sidecar connection')
-    await this.helper.close()
-  }
-}
-
-const rig = new Rig()
-
-test('commands setup', rig.setup)
 
 test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
   plan(2)
@@ -1557,5 +1540,3 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   const { code } = await stager2.until.exit
   is(code, 0, 'should have exit code 0')
 })
-
-test('commands cleanup', rig.cleanup)
