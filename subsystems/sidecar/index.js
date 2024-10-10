@@ -17,7 +17,7 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
-const { command, flag, arg, rest } = require('paparam')
+const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
@@ -28,7 +28,7 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
-const runDefinition = require('../../run/definition')
+const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -79,30 +79,13 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  #parsePlatformFlags () {
-    const argv = Bare.argv.slice(2)
-    let verbose = false
-    let dhtBootstrap = ''
-    try {
-      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), flag('--dht-bootstrap <nodes>'), arg('<cmd>'), rest('rest')).parse(argv).flags
-      verbose = result.verbose
-      dhtBootstrap = result.dhtBootstrap || undefined
-    } catch {
-      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
-      verbose = result.verbose
-    }
-    return {
-      verbose,
-      dhtBootstrap: typeof dhtBootstrap === 'string' ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : dhtBootstrap
-    }
-  }
-
-  constructor ({ updater, drive, corestore, gunk }) {
+  constructor ({ updater, drive, corestore, gunk, flags, logger }) {
     super()
-
-    const { verbose, dhtBootstrap } = this.#parsePlatformFlags()
-    this.verbose = verbose
-    this.dhtBootstrap = dhtBootstrap
+    this.logger = logger
+    this.verbose = flags.verbose
+    this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
+      ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
+      : flags.dhtBootstrap
 
     this.bus = new Iambus()
     this.version = CHECKOUT
@@ -115,7 +98,6 @@ class Sidecar extends ReadyResource {
     this.drive = drive
     this.corestore = corestore
     this.gunk = gunk
-    this.verbose = verbose
 
     this.ipc = new IPC({
       handlers: this,
@@ -147,8 +129,6 @@ class Sidecar extends ReadyResource {
 
     this.http = new Http(this)
     this.running = new Map()
-
-    this.dhtBootstrap = dhtBootstrap
 
     const sidecar = this
     this.App = class App {

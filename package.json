@@ -68,6 +68,7 @@
     "bare-env": "^2.1.0",
     "bare-events": "^2.2.2",
     "bare-fs": "^2.3.0",
+    "bare-hrtime": "^2.0.9",
     "bare-http1": "^3.2.1",
     "bare-module": "^4.3.1",
     "bare-os": "^2.3.0",
