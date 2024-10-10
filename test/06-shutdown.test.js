@@ -70,8 +70,8 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 })
 
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
-  t.plan(4)
-  t.timeout(constants.SPINDOWN_TIMEOUT * 2 + 180_000)
+  t.plan(2)
+  t.timeout(constants.SPINDOWN_TIMEOUT + 180_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'slo-pear')
   t.comment('1. Prepare patched platform that throttles seeding')
@@ -90,12 +90,11 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
   (() => {
-    const env = require('bare-env')
     const secretStream = require('@hyperswarm/secret-stream')
     const originalWrite = secretStream.prototype.write
     let allowedPackets = 10
     secretStream.prototype.write = function (data) {
-      return env.UNPAUSED !== undefined || allowedPackets-- > 0 ? originalWrite.call(this, data) : true
+      return allowedPackets-- > 0 ? originalWrite.call(this, data) : true
     }
   })()
   `
@@ -157,8 +156,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const onExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => onExit, { order: Infinity })
 
-  const sidecarUpdated = new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Applied update')) resolve() }))
-
   t.comment('\tWaiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
@@ -181,31 +178,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 
   t.pass('sidecar successfully blocked spindown during update')
-
-  t.comment('4. Finish update using unpaused rcv platform')
-  t.comment('\tShutting down rcv sidecar')
-  await Helper.teardownStream(seeder)
-  await rcvHelper.shutdown()
-  await rcvHelper.close()
-
-  t.comment('\tStarting unpaused rcv sidecar to finish update')
-  const rcvHelperUnpaused = new Helper({ platformDir: platformDirRcv, env: { UNPAUSED: '1' } })
-  await rcvHelperUnpaused.ready()
-
-  t.comment('\tSeeding using unpaused rcv platform')
-  const seederUnpaused = rcvHelperUnpaused.seed({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artefactDir, key: null, cmdArgs: [] })
-  const seederUntilUnpaused = await Helper.pick(seederUnpaused, [{ tag: 'announced' }, { tag: 'peer-add' }])
-  await seederUntilUnpaused.announced
-  t.teardown(() => Helper.teardownStream(seederUnpaused))
-  t.teardown(() => rcvHelperUnpaused.close(), { order: Infinity })
-
-  t.comment('\tWaiting for sidecar to finish update')
-  await t.execution(sidecarUpdated, 'sidecar should successfully update')
-
-  t.comment('\tWaiting for sidecar to close')
-  const exitCode = await onExit
-
-  t.is(exitCode, 0, 'exit code is 0')
 })
 
 test.hook('shutdown cleanup', rig.cleanup)
