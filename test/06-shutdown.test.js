@@ -96,9 +96,6 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => untilExit)
 
-  t.comment('Waiting for sidecar to be ready')
-  await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
-
   t.comment(`Waiting for sidecar to spindown (${SPINDOWN_TIMEOUT / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
     untilExit.finally(() => {
@@ -201,9 +198,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => untilExit, { order: Infinity })
-
-  t.comment('\tWaiting for sidecar to be ready')
-  await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
   t.comment(`\tWaiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
