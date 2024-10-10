@@ -1,0 +1,9 @@
+name: Bump Deps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump-deps:
+    uses: holepunchto/actions/.github/workflows/bump-deps.yml@v1
+    secrets: inherit

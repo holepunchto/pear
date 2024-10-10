@@ -1,0 +1,22 @@
+name: Bump Versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: Select version type to bump
+        required: true
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump-versions:
+    uses: holepunchto/actions/.github/workflows/bump-versions.yml@v1
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      labels: 'bump-versions'

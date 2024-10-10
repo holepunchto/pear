@@ -1,0 +1,35 @@
+name: Bump Versions on Merged
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  version: ${{ github.event.pull_request.title }}
+
+jobs:
+  tag:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'bump-versions') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Git config
+        run: |
+          git config user.name 'GitHub Actions Bot'
+          git config user.email 'bot@github.actions.com'
+
+      - name: Tag
+        run: |
+          echo ${{ env.version }}
+          git tag ${{ env.version }}
+          git push --tags
+
+  build:
+    needs: tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: TODO
+        run: |
+          echo "TODO: Implement build job"
