@@ -79,9 +79,8 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  constructor ({ updater, drive, corestore, gunk, flags, logger }) {
+  constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
-    this.logger = logger
     this.verbose = flags.verbose
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -206,9 +205,9 @@ class Sidecar extends ReadyResource {
             fork: state.options.minver.fork
           }
           if (minver.key !== current.key) {
-            console.warn('Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
+            LOG.error('internal-error', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
           } else if (typeof minver.length !== 'number') {
-            console.warn(`Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
+            LOG.error('internal-error', `Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
           } else if (minver.length > current.length) {
             const checkout = {
               length: minver.length,
@@ -279,7 +278,7 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().catch((err) => console.error(err))
+      this.ready().catch((err) => LOG.error('internal-error', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
   }
 
@@ -304,7 +303,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
       if (this.hasClients) return
-      this.close().catch(console.error)
+      this.close().catch((err) => { LOG.error('internal-error', 'Failed to Close Sidecar', err) })
     }, this.spindownms)
   }
 
@@ -865,7 +864,7 @@ class Sidecar extends ReadyResource {
       await fsx.swap(next, current)
       await fs.promises.rm(tmp, { recursive: true })
     } catch (err) {
-      console.error('Unexpected error while attempting to update pear-interface in project', drive.root, err)
+      LOG.error('internal-error', 'Unexpected error while attempting to update pear-interface in project', drive.root, err)
     }
   }
 
@@ -953,7 +952,7 @@ class Sidecar extends ReadyResource {
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
-      console.error('DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
+      LOG.error('internal-error', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
   }

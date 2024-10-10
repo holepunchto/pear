@@ -26,7 +26,7 @@ const platformFlags = () => paparam.command('sidecar', ...require('./def/sidecar
 crasher('sidecar', SWAP)
 
 const flags = platformFlags()
-const logger = new Logger(
+global.LOG = new Logger(
   flags.log
     ? { level: 2, labels: ['life'], fields: 'h:level,h:label,h:delta' }
     : {
@@ -37,7 +37,7 @@ const logger = new Logger(
       })
 
 module.exports = bootSidecar().catch((err) => {
-  console.error(err.stack)
+  LOG.error('internal-error', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })
 async function gc () {
@@ -57,7 +57,7 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk, flags, logger })
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk, flags })
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
