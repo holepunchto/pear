@@ -7,12 +7,17 @@ jobs:
   bump-deps:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Git config
+        run: |
+          git config user.name 'GitHub Actions Bot'
+          git config user.email 'bot@github.actions.com'
+
       - name: Bump Deps
-        id: bump-deps
         # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
-        uses: holepunchto/actions/.github/steps/bump-deps@0f453ede95e75ef1857b42b359bf57da62f36d30
+        uses: holepunchto/actions/.github/steps/bump-deps@d2a8e4f1a935901f05a70357b8785fe74805cf4e
         with:
-          use-checkout: true
-          use-git-config: true
           use-create-pr: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
