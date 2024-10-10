@@ -33,8 +33,6 @@ class Harness extends ReadyResource {
   }
 
   async client (opts) {
-    global.Pear.config.args.push('--no-helper-teardown')
-
     if (this.Helper === null) {
       const { default: Helper } = await import('pear/test/helper')
       this.Helper = Helper
@@ -43,6 +41,8 @@ class Harness extends ReadyResource {
       const { default: cmd } = await import('pear/cmd')
       this.cmd = cmd
     }
+
+    this.Helper.skipTeardown = true
 
     return new this.Helper({ platformDir: global.Pear.config.pearDir, opts })
   }
