@@ -15,10 +15,10 @@ on:
 
 jobs:
   bump-deps:
-    uses: holepunchto/actions/.github/workflows/bump-deps-v2.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f
+    uses: holepunchto/actions/.github/workflows/bump-deps-v2.yml@0f453ede95e75ef1857b42b359bf57da62f36d30
   
   bump-versions:
-    uses: holepunchto/actions/.github/workflows/bump-versions.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f 
+    uses: holepunchto/actions/.github/workflows/bump-versions.yml@0f453ede95e75ef1857b42b359bf57da62f36d30 
     with:
       version: ${{ inputs.version }}
   
