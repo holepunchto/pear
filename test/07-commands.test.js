@@ -35,7 +35,7 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
@@ -57,7 +57,7 @@ test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
@@ -80,7 +80,7 @@ test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage <channel> <relative-path> (package.json pear.config.stage.entrypoints <relative-paths>)', async function ({ plan, teardown, is }) {
@@ -119,7 +119,7 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <relative-paths>)', async function ({ plan, teardown, is }) {
@@ -162,7 +162,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignoreinner.txt')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --json <channel> <relative-path>', async function ({ plan, alike, is }) {
@@ -189,7 +189,7 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
 
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, is }) {
@@ -212,7 +212,7 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, i
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --json <channel> <relative-path>', async function ({ plan, alike, is }) {
@@ -243,7 +243,7 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
   is(completeTag?.data?.dryRun, true)
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }) {
@@ -269,7 +269,7 @@ test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }
   is(completedStaging, true, 'should complete staging')
   is(skippedWarmup, true, 'should skip warmup')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --bare --json <channel> <relative-path>', async function ({ plan, alike, is }) {
@@ -300,7 +300,7 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> <channel> <relative-path>', async function ({ plan, teardown, is }) {
@@ -333,7 +333,7 @@ test('pear stage --ignore <list> <channel> <relative-path>', async function ({ p
   is(addedIgnored, false, 'should not add ignored.txt')
   is(addedIndex, true, 'should add index.js')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
@@ -369,7 +369,7 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
   is(files.includes('/index.js'), true, 'should add index.js')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --truncate <n> <channel> <relative-path>', async function ({ plan, is }) {
@@ -388,7 +388,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--truncate', '0', 'test-' + testId, relativePath]
@@ -407,7 +407,7 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
   is(completedStaging, true, 'should complete staging')
   is(readdedFile, true, 'should readd index.js')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --truncate <n> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
@@ -426,7 +426,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', 'test-' + testId, relativePath]
@@ -450,7 +450,7 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   is(files.includes('/index.js'), true, 'should readd index.js')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is }) {
@@ -480,7 +480,7 @@ test('pear stage --name <name> <channel> <relative-path>', async function ({ pla
   is(completedStaging, true, 'should complete staging')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
@@ -511,7 +511,7 @@ test('pear stage --name <name> --json <channel> <relative-path>', async function
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
@@ -552,7 +552,7 @@ test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
 
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
@@ -591,7 +591,7 @@ test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>'
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await running.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
@@ -610,7 +610,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const ignoredFile = path.join(harness, 'ignored.txt')
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
@@ -647,7 +647,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
   is(addedIndex, true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
@@ -666,7 +666,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const ignoredFile = path.join(harness, 'ignored.txt')
   fs.writeFileSync(ignoredFile, 'this file should be ignored')
@@ -699,7 +699,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage pear://<key> <path>', async function ({ plan, is }) {
@@ -721,7 +721,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', link, relativePath]
@@ -737,7 +737,7 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -759,7 +759,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--json', link, relativePath]
@@ -780,7 +780,7 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
 
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
@@ -802,7 +802,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--dry-run', link, relativePath]
@@ -818,7 +818,7 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
 
   is(completedStaging, true, 'should complete staging')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -840,7 +840,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--dry-run', '--json', link, relativePath]
@@ -864,7 +864,7 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
   alike(tags, ['staging', 'dry', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
   is(completeTag?.data?.dryRun, true, 'should be dry run')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
@@ -886,7 +886,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--bare', link, relativePath]
@@ -905,7 +905,7 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
   is(completedStaging, true, 'should complete staging')
   is(skippedWarmup, true, 'should skip warmup')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --bare --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -927,7 +927,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--bare', '--json', link, relativePath]
@@ -951,7 +951,7 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
   is(skipTag?.data?.reason, 'bare', 'should skip warmup')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, teardown, is }) {
@@ -973,7 +973,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -995,7 +995,7 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   is(completedStaging, true, 'should complete staging')
   is(addedIgnored, false, 'should not add ignored.txt')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
@@ -1017,7 +1017,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1044,7 +1044,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is }) {
@@ -1066,7 +1066,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--truncate', '0', link, relativePath]
@@ -1085,7 +1085,7 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
   is(completedStaging, true, 'should complete staging')
   is(readdedFile, true, 'should readd package.json after truncate')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -1107,7 +1107,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--truncate', '0', '--json', link, relativePath]
@@ -1131,7 +1131,7 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   is(files.includes('/package.json'), true, 'should readd package.json after truncate')
   alike(tags, ['staging', 'byte-diff', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
@@ -1153,7 +1153,7 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, link, relativePath]
@@ -1176,7 +1176,7 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
   is(completedStaging, true, 'should complete staging')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -1198,7 +1198,7 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--name', `test-name-${testId}`, '--json', link, relativePath]
@@ -1222,7 +1222,7 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
@@ -1244,7 +1244,7 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1273,7 +1273,7 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   is(addedIgnored, false, 'should not add ignored.txt')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
@@ -1295,7 +1295,7 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const ignoredFile = path.join(harness, 'ignored.txt')
@@ -1325,7 +1325,7 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
@@ -1347,7 +1347,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, link, relativePath]
@@ -1379,7 +1379,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
   is(addedIndex, true, 'should add index.js')
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
@@ -1401,7 +1401,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   await stager1.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager1.inspector.close()
   const { code: code1 } = await stager1.until.exit
-  is(code1, 0, 'should have exit code 0 for initial stage')
+  is(code1, 0, `should have exit code 0 for initial stage, got ${code1}`)
 
   const stager2 = await Helper.open(harness, { tags: ['exit'] }, { ...rig, lineout: true })
   const argv = ['stage', '--dry-run', '--bare', '--ignore', 'ignored.txt', '--truncate', '0', '--name', `test-name-${testId}`, '--json', link, relativePath]
@@ -1430,7 +1430,7 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   is(stagedName, 'test-name-' + testId, 'should use --name flag')
   alike(tags, ['staging', 'dry', 'byte-diff', 'summary', 'skipping', 'complete', 'final'], 'should output expected tags')
   const { code } = await stager2.until.exit
-  is(code, 0, 'should have exit code 0')
+  is(code, 0, `should have exit code 0, got ${code}`)
 })
 
 test.hook('commands cleanup', rig.cleanup)
