@@ -42,7 +42,7 @@ class Harness extends ReadyResource {
       this.cmd = cmd
     }
 
-    Helper.PLATFORM_DIR = global.Pear.config.pearDir
+    this.Helper.PLATFORM_DIR = global.Pear.config.pearDir
 
     return new this.Helper({ opts })
   }
