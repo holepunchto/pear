@@ -970,7 +970,7 @@ class Sidecar extends ReadyResource {
 
     this.spindownms = 0
     this.#spindownCountdown()
-    await this.close()
+    await this.closing
     return restarts
   }
 
@@ -997,7 +997,7 @@ class Sidecar extends ReadyResource {
   async _close () {
     if (this.decomissioned) return
     this.decomissioned = true
-    for (const client of this.clients) this.#teardownPipelines(client).then(() => client.close())
+    for (const client of this.clients) await this.#teardownPipelines(client)
     // point of no return, death-march ensues
     this.deathClock()
     const closing = this.#close()
