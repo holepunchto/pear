@@ -7,7 +7,7 @@ if (process.isMainFrame) {
   const timers = require('timers')
   const runtime = require('script-linker/runtime')
   const { isMac, isWindows, platform } = require('which-runtime')
-  const GUI = require('./gui')
+  const GUI = require('pear-gui')
   const gunk = require('./gunk')
   const API = require('./lib/api')
 

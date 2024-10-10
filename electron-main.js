@@ -3,7 +3,8 @@ const electron = require('electron')
 const { isWindows, isMac, isLinux } = require('which-runtime')
 const { command } = require('paparam')
 const State = require('./state')
-const GUI = require('./gui')
+const GUI = require('pear-gui')
+const constants = require('./constants')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
@@ -36,7 +37,8 @@ async function electronMain (cmd) {
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
     tryboot,
-    state
+    state,
+    platformLock: constants.PLATFORM_LOCK
   })
 
   await gui.ready()
