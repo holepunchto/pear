@@ -1,4 +1,4 @@
-name: Bump Deps
+name: Bump Versions
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ on:
           - major
 
 jobs:
-  bump-deps:
+  bump-versions:
     # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
     uses: holepunchto/actions/.github/workflows/bump-versions.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f 
     with:
