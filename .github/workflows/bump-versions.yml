@@ -1,4 +1,4 @@
-name: Bump Deps
+name: Bump Versions
 
 on:
   workflow_dispatch:
@@ -14,8 +14,16 @@ on:
           - major
 
 jobs:
-  bump-deps:
-    # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
-    uses: holepunchto/actions/.github/workflows/bump-versions.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f 
-    with:
-      version: ${{ inputs.version }}
+  bump-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bump Versions
+        id: bump-versions
+        # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
+        uses: holepunchto/actions/.github/steps/bump-versions@0f453ede95e75ef1857b42b359bf57da62f36d30
+        with:
+          use-checkout: true
+          use-git-config: true
+          use-create-pr: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ inputs.version }}
