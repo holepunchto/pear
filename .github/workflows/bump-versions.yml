@@ -16,6 +16,6 @@ on:
 jobs:
   bump-versions:
     # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
-    uses: holepunchto/actions/.github/workflows/bump-versions.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f 
+    uses: holepunchto/actions/.github/workflows/bump-versions.yml@fe4796aadeb8d9357eee26df1fd934b4a6f09980 
     with:
       version: ${{ inputs.version }}
