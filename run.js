@@ -9,17 +9,17 @@ const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
 const { isMac, isWindows, isLinux } = require('which-runtime')
-const constants = require('../constants')
-const State = require('../state')
-const API = require('../lib/api')
+const constants = require('./constants')
+const State = require('./state')
+const API = require('./lib/api')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
-} = require('../errors')
-const parseLink = require('../lib/parse-link')
-const teardown = require('../lib/teardown')
-const { PLATFORM_LOCK } = require('../constants')
+} = require('./errors')
+const parseLink = require('./lib/parse-link')
+const teardown = require('./lib/teardown')
+const { PLATFORM_LOCK } = require('./constants')
 const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {

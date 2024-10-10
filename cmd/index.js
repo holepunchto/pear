@@ -3,7 +3,10 @@ const { header, footer, command, flag, hiddenCommand, arg, summary, description,
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
-const rundef = require('../run/definition')
+const def = {
+  run: require('../def/run'),
+  pear: require('../def/pear')
+}
 const runners = {
   init: require('./init'),
   stage: require('./stage'),
@@ -95,7 +98,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'run',
     summary('Run an application from a key or dir'),
     description(usage.descriptions.run),
-    ...rundef,
+    ...def.run,
     runners.run(ipc)
   )
 
@@ -151,10 +154,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
-    flag('--verbose|-v', 'Additional output'),
-    flag('--mem', 'memory mode: RAM corestore'),
+    flag('--mem', 'Memory mode: RAM corestore'),
+    ...def.pear,
     flag('--key <key>', 'Advanced. Switch release lines'),
-    hiddenFlag('--dht-bootstrap <nodes>'),
     runners.sidecar(ipc)
   )
 
@@ -188,6 +190,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const cmd = command('pear',
     flag('-v', 'Output version'),
+    ...def.pear,
     header(usage.header),
     init,
     dev,

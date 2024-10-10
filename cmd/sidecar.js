@@ -5,7 +5,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
-  if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed${cmd.args.verbose ? JSON.stringify(restarts) : ''}`, true)
+  if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed${JSON.stringify(restarts)}`, true)
   print('Shutting down current Sidecar...', 0)
   await ipc.shutdown()
   print('Sidecar has shutdown', true)
@@ -18,9 +18,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  if (!cmd.args.verbose) {
-    Bare.argv.push('--verbose')
-  }
+  if (Bare.argv.some((arg) => arg.startsWith('--log') === false)) Bare.argv.push('--log')
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')

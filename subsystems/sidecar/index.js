@@ -17,7 +17,7 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
-const { command, flag, arg, rest } = require('paparam')
+const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Store = require('./lib/store')
@@ -28,7 +28,7 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
-const runDefinition = require('../../run/definition')
+const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
@@ -79,30 +79,12 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  #parsePlatformFlags () {
-    const argv = Bare.argv.slice(2)
-    let verbose = false
-    let dhtBootstrap = ''
-    try {
-      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), flag('--dht-bootstrap <nodes>'), arg('<cmd>'), rest('rest')).parse(argv).flags
-      verbose = result.verbose
-      dhtBootstrap = result.dhtBootstrap || undefined
-    } catch {
-      const result = command('pear', flag('--key <key>'), flag('--mem'), flag('--verbose'), arg('<cmd>'), rest('rest')).parse(argv).flags
-      verbose = result.verbose
-    }
-    return {
-      verbose,
-      dhtBootstrap: typeof dhtBootstrap === 'string' ? dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) })) : dhtBootstrap
-    }
-  }
-
-  constructor ({ updater, drive, corestore, gunk }) {
+  constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
 
-    const { verbose, dhtBootstrap } = this.#parsePlatformFlags()
-    this.verbose = verbose
-    this.dhtBootstrap = dhtBootstrap
+    this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
+      ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
+      : flags.dhtBootstrap
 
     this.bus = new Iambus()
     this.version = CHECKOUT
@@ -115,7 +97,6 @@ class Sidecar extends ReadyResource {
     this.drive = drive
     this.corestore = corestore
     this.gunk = gunk
-    this.verbose = verbose
 
     this.ipc = new IPC({
       handlers: this,
@@ -147,8 +128,6 @@ class Sidecar extends ReadyResource {
 
     this.http = new Http(this)
     this.running = new Map()
-
-    this.dhtBootstrap = dhtBootstrap
 
     const sidecar = this
     this.App = class App {
@@ -226,9 +205,9 @@ class Sidecar extends ReadyResource {
             fork: state.options.minver.fork
           }
           if (minver.key !== current.key) {
-            console.warn('Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
+            LOG.error('internal-error', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
           } else if (typeof minver.length !== 'number') {
-            console.warn(`Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
+            LOG.error('internal-error', `Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
           } else if (minver.length > current.length) {
             const checkout = {
               length: minver.length,
@@ -299,7 +278,7 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().catch((err) => console.error(err))
+      this.ready().catch((err) => LOG.error('internal-error', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
   }
 
@@ -307,7 +286,7 @@ class Sidecar extends ReadyResource {
     await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.http.ready()
     await this.#ensureSwarm()
-    if (this.verbose) console.log('- Sidecar booted')
+    LOG.info('life', '- Sidecar booted')
   }
 
   get clients () { return this.ipc.clients }
@@ -324,7 +303,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
       if (this.hasClients) return
-      this.close().catch(console.error)
+      this.close().catch((err) => { LOG.error('internal-error', 'Failed to Close Sidecar', err) })
     }, this.spindownms)
   }
 
@@ -332,16 +311,10 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     this.updateAvailable = { version, info }
 
-    if (this.verbose) {
-      if (info.link) {
-        console.log('Application update available:')
-      } else if (version.force) {
-        console.log('Platform Force update (' + version.force.reason + '). Updating to:')
-      } else {
-        console.log('Platform update Available. Restart to update to:')
-      }
-      console.log(' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
-    }
+    if (info.link) LOG.info('life', 'Application update available:')
+    else if (version.force) LOG.info('life', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    else LOG.info('life', 'Platform update Available. Restart to update to:')
+    LOG.info('life', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
     const messaged = new Set()
@@ -543,7 +516,7 @@ class Sidecar extends ReadyResource {
   }
 
   async restart ({ platform = false, hard = true } = {}, client) {
-    if (this.verbose) console.log(`${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
+    LOG.info('life', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
@@ -602,7 +575,7 @@ class Sidecar extends ReadyResource {
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
-    if (this.verbose) console.log('Restarting', restarts.length, 'apps')
+    LOG.info('life', 'Restarting', restarts.length, 'apps')
 
     await sidecarClosed
 
@@ -706,7 +679,8 @@ class Sidecar extends ReadyResource {
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
     const dht = this.swarm.dht.toArray({ limit: 20 })
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    const dhtBootstrap = this.swarm.dht.bootstrapNodes
+    const state = new State({ dht, dhtBootstrap, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {
@@ -885,7 +859,7 @@ class Sidecar extends ReadyResource {
       await fsx.swap(next, current)
       await fs.promises.rm(tmp, { recursive: true })
     } catch (err) {
-      console.error('Unexpected error while attempting to update pear-interface in project', drive.root, err)
+      LOG.error('internal-error', 'Unexpected error while attempting to update pear-interface in project', drive.root, err)
     }
   }
 
@@ -928,7 +902,7 @@ class Sidecar extends ReadyResource {
   }
 
   async #shutdown (client) {
-    if (this.verbose) console.log('- Sidecar shutting down...')
+    LOG.info('life', '- Sidecar shutting down...')
     const app = client.userData
     const tearingDown = !!app && app.teardown()
     if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
@@ -949,7 +923,7 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) await this.swarm.destroy()
     if (this.corestore) await this.corestore.close()
-    if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed')
+    LOG.info('life', (isWindows ? '^' : '✔') + ' Sidecar closed')
   }
 
   async _close () {
@@ -965,7 +939,7 @@ class Sidecar extends ReadyResource {
 
     if (this.updater) {
       if (await this.updater.applyUpdate() !== null) {
-        if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Applied update')
+        LOG.info('life', (isWindows ? '^' : '✔') + ' Applied update')
       }
     }
   }
@@ -973,7 +947,7 @@ class Sidecar extends ReadyResource {
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
-      console.error('DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
+      LOG.error('internal-error', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
   }

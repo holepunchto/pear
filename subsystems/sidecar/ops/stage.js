@@ -89,8 +89,7 @@ module.exports = class Stage extends Opstream {
       channel,
       truncate,
       stage: true,
-      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null,
-      failure (err) { console.error(err) }
+      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     })
     await session.add(bundle)
     client.userData = new sidecar.App({ state, bundle })

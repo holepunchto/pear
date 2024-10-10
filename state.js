@@ -105,7 +105,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
+    const { dhtBootstrap, dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, trace, updates, updatesDiff,
@@ -121,8 +121,8 @@ module.exports = class State {
     const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
+    this.dhtBootstrap = dhtBootstrap
     this.dht = dht
-    this.dhtBootstrap = flags.dhtBootstrap?.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
     this.store = store
     this.args = args
     this.appling = appling

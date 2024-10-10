@@ -8,6 +8,7 @@ const Rache = require('rache')
 const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
 const teardown = require('./lib/teardown')
+const Logger = require('./lib/logger')
 const {
   SWAP,
   GC,
@@ -20,12 +21,23 @@ const {
 } = require('./constants.js')
 const registerUrlHandler = require('./url-handler.js')
 const gunk = require('./gunk')
+const flags = require('./lib/platform-flags')(Bare.argv.slice(2))
 crasher('sidecar', SWAP)
+
+global.LOG = new Logger(
+  flags.log
+    ? { level: 2, labels: ['life'], fields: 'h:level,h:label,h:delta' }
+    : {
+        level: flags.logLevel,
+        labels: flags.logLabels,
+        fields: flags.logFields,
+        stacks: flags.logStacks
+      })
+
 module.exports = bootSidecar().catch((err) => {
-  console.error(err.stack)
+  LOG.error('internal-error', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })
-
 async function gc () {
   try { await fs.promises.rm(GC, { recursive: true }) } catch {}
   await fs.promises.mkdir(GC, { recursive: true })
@@ -43,7 +55,7 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk })
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk, flags })
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
