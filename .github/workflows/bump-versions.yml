@@ -32,3 +32,4 @@ jobs:
           use-create-pr: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ inputs.version }}
+          labels: 'bump-versions'
