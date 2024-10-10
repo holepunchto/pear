@@ -42,8 +42,6 @@ class Harness extends ReadyResource {
       this.cmd = cmd
     }
 
-    this.Helper.skipTeardown = true
-
     return new this.Helper({ platformDir: global.Pear.config.pearDir, opts })
   }
 
