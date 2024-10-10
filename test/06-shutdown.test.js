@@ -40,7 +40,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
 
 test('sidecar should spindown after a period of inactivity', async (t) => {
   t.plan(1)
-  t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
+  t.timeout(constants.SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
   const sidecar = spawn(path.join(rig.platformDir, 'current', BY_ARCH), ['--sidecar', '--verbose'], { stdio: 'pipe' })
@@ -71,7 +71,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
-  t.timeout(constants.SPINDOWN_TIMEOUT + 180_000)
+  t.timeout(constants.SPINDOWN_TIMEOUT + 60_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'slo-pear')
   t.comment('1. Prepare patched platform that throttles seeding')
