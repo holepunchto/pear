@@ -18,10 +18,10 @@ const {
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('./constants.js')
-const registerUrlHandler = require('./url-handler.js')
+} = require('./constants')
+const registerUrlHandler = require('./url-handler')
 const gunk = require('./gunk')
-const flags = require('./lib/platform-flags')(Bare.argv.slice(2))
+const flags = require('./flags')(Bare.argv.slice(2))
 crasher('sidecar', SWAP)
 
 global.LOG = new Logger(
