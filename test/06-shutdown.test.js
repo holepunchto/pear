@@ -81,8 +81,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     prune: false,
     filter: (key) => !(key.startsWith('/pear/') || key.startsWith('/.git/') || key.startsWith('/test/'))
   })
-  // eslint-disable-next-line no-unused-vars
-  for await (const val of mirror) { /* ignore */ }
+  await mirror.done()
 
   t.comment('\tPatching sidecar to throttle seeding')
   const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
