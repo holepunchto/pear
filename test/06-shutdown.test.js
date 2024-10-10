@@ -45,26 +45,25 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.comment('Starting sidecar')
   const sidecar = spawn(path.join(rig.platformDir, 'current', BY_ARCH), ['--sidecar', '--verbose'], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
-  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
-  t.teardown(async () => onExit)
+  const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
+  t.teardown(async () => untilExit)
 
   t.comment('Waiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
   t.comment(`Waiting for sidecar to spindown (${constants.SPINDOWN_TIMEOUT / 1000}s)`)
-  let timeoutObject
-  let timeoutReject
-  const timeout = new Promise((resolve, reject) => {
-    timeoutReject = reject
-    timeoutObject = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 30_000)
+  const timeoutUntil = new Promise((resolve) => {
+    untilExit.finally(() => {
+      if (timeout) clearTimeout(timeout)
+      resolve()
+    })
+    const timeout = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 30_000)
   })
 
-  const hasSpunDown = await Promise.race([onExit, timeout])
+  const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
   if (hasSpunDown === false) {
     t.fail('sidecar failed to spin down')
   } else {
-    clearTimeout(timeoutObject)
-    timeoutReject()
     t.pass('sidecar has spun down')
   }
 })
@@ -153,31 +152,30 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const dhtBootstrap = global.Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
   const sidecar = spawn(path.join(rig.platformDir, 'current', BY_ARCH), ['--sidecar', '--verbose', '--key', staged.key, '--dht-bootstrap', dhtBootstrap], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
-  const onExit = new Promise(resolve => sidecar.once('exit', resolve))
-  t.teardown(async () => onExit, { order: Infinity })
+  const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
+  t.teardown(async () => untilExit, { order: Infinity })
 
   t.comment('\tWaiting for sidecar to be ready')
   await new Promise(resolve => sidecar.stdout.on('data', (data) => { if (data.toString().includes('Sidecar booted')) resolve() }))
 
   t.comment(`\tWaiting for sidecar spindown timeout to lapse (${(constants.SPINDOWN_TIMEOUT + 10_000) / 1000}s)`)
-  let timeoutObject
-  let timeoutReject
-  const timeout = new Promise((resolve, reject) => {
-    timeoutReject = reject
-    timeoutObject = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 10_000)
+  const timeoutUntil = new Promise((resolve) => {
+    untilExit.finally(() => {
+      if (timeout) clearTimeout(timeout)
+      resolve()
+    })
+
+    const timeout = setTimeout(() => resolve(false), constants.SPINDOWN_TIMEOUT + 10_000)
   })
 
-  const hasSpunDown = await Promise.race([onExit, timeout])
+  const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
   t.is(peerAdded, true, 'sidecar successfully connected to paused seeder')
 
   if (hasSpunDown !== false) {
-    clearTimeout(timeoutObject)
-    timeoutReject()
     t.fail('sidecar failed to prevent spindown during update')
-    return
+  } else {
+    t.pass('sidecar successfully blocked spindown during update')
   }
-
-  t.pass('sidecar successfully blocked spindown during update')
 })
 
 test.hook('shutdown cleanup', rig.cleanup)
