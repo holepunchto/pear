@@ -108,7 +108,7 @@ class Helper extends IPC {
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor (opts = {}) {
     const log = global.Pear.config.args.includes('--log')
-    const platformDir = opts.platformDir || PLATFORM_DIR
+    const platformDir = opts.platformDir || Helper.PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
     const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
