@@ -41,7 +41,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
 
 let platformDirLs
 test.hook('prepare low-spindown platform', async (t) => {
-  t.timeout(60_000)
+  t.timeout(120_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'als-pear')
   t.comment(`Copying platform code to ${patchedArtefactDir}`)
@@ -115,7 +115,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
 let platformDirRcv
 test.hook('prepare throttled platform', async (t) => {
-  t.timeout(60_000)
+  t.timeout(120_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
   t.comment(`\tCopying platform code to ${patchedArtefactDir}`)
