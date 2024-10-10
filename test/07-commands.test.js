@@ -8,7 +8,7 @@ const fixtures = path.join(Helper.localDir, 'test', 'fixtures')
 const harness = path.join(fixtures, 'harness')
 const minimal = path.join(fixtures, 'minimal')
 
-const rig = new Helper.Rig()
+const rig = new Helper.Rig({ keepAlive: false })
 
 test.hook('commands setup', rig.setup)
 
