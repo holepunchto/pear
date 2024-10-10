@@ -1,4 +1,4 @@
-name: Bump Versions on Merged
+name: Bump Version on Merged
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ env:
 
 jobs:
   tag:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'bump-versions') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'bump-version') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

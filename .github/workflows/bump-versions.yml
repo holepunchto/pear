@@ -1,4 +1,4 @@
-name: Bump Versions
+name: Bump Version
 
 on:
   workflow_dispatch:
@@ -14,9 +14,9 @@ on:
           - major
 
 jobs:
-  bump-versions:
-    uses: holepunchto/actions/.github/workflows/bump-versions.yml@v1
+  bump-version:
+    uses: holepunchto/actions/.github/workflows/bump-version.yml@v1
     secrets: inherit
     with:
       version: ${{ inputs.version }}
-      labels: 'bump-versions'
+      labels: 'bump-version'
