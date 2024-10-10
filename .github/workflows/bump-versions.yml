@@ -26,8 +26,7 @@ jobs:
           git config user.email 'bot@github.actions.com'
 
       - name: Bump Versions
-        # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
-        uses: holepunchto/actions/.github/steps/bump-versions@d2a8e4f1a935901f05a70357b8785fe74805cf4e
+        uses: holepunchto/actions/.github/steps/bump-versions@v1
         with:
           use-create-pr: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
