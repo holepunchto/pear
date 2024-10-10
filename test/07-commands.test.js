@@ -994,8 +994,8 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, teardown, is }) {
-  plan(3)
+test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
+  plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
   const relativePath = path.relative(harness, minimal)
@@ -1037,6 +1037,7 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   await stager2.inspector.evaluate('__PEAR_TEST__.close()', { returnByValue: false })
   await stager2.inspector.close()
 
+  alike(tags, ['staging', 'summary', 'skipping', 'complete', 'addendum', 'final'], 'should output expected tags')
   is(files.includes('/ignored.txt'), false, 'should not add ignored.txt')
   const { code } = await stager2.until.exit
   is(code, 0, 'should have exit code 0')
