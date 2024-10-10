@@ -1,0 +1,9 @@
+name: Bump Deps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump-deps:
+    # TODO: Use @main after merging https://github.com/holepunchto/actions/pull/1
+    uses: holepunchto/actions/.github/workflows/bump-deps-v2.yml@87f1c8e3ef71f8659b08a4dbed0e28b3068aad3f
