@@ -3,7 +3,6 @@ const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
-const paparam = require('paparam')
 const fs = require('bare-fs')
 const Rache = require('rache')
 const subsystem = require('./subsystem.js')
@@ -22,10 +21,9 @@ const {
 } = require('./constants.js')
 const registerUrlHandler = require('./url-handler.js')
 const gunk = require('./gunk')
-const platformFlags = () => paparam.command('sidecar', ...require('./def/sidecar'), paparam.arg('<cmd>'), paparam.rest('rest')).parse(Bare.argv.slice(2)).flags
+const flags = require('./lib/platform-flags')(Bare.argv.slice(2))
 crasher('sidecar', SWAP)
 
-const flags = platformFlags()
 global.LOG = new Logger(
   flags.log
     ? { level: 2, labels: ['life'], fields: 'h:level,h:label,h:delta' }

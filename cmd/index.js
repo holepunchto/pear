@@ -5,7 +5,7 @@ const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
 const def = {
   run: require('../def/run'),
-  sidecar: require('../def/sidecar')
+  pear: require('../def/pear')
 }
 const runners = {
   init: require('./init'),
@@ -154,7 +154,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
-    ...def.sidecar,
+    flag('--mem', 'Memory mode: RAM corestore'),
+    ...def.pear,
+    flag('--key <key>', 'Advanced. Switch release lines'),
     runners.sidecar(ipc)
   )
 
@@ -188,6 +190,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const cmd = command('pear',
     flag('-v', 'Output version'),
+    ...def.pear,
     header(usage.header),
     init,
     dev,

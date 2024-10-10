@@ -81,7 +81,7 @@ class Sidecar extends ReadyResource {
 
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
-    this.verbose = flags.verbose
+
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
       : flags.dhtBootstrap
@@ -286,7 +286,7 @@ class Sidecar extends ReadyResource {
     await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.http.ready()
     await this.#ensureSwarm()
-    if (this.verbose) console.log('- Sidecar booted')
+    LOG.info('life', '- Sidecar booted')
   }
 
   get clients () { return this.ipc.clients }
@@ -311,16 +311,10 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     this.updateAvailable = { version, info }
 
-    if (this.verbose) {
-      if (info.link) {
-        console.log('Application update available:')
-      } else if (version.force) {
-        console.log('Platform Force update (' + version.force.reason + '). Updating to:')
-      } else {
-        console.log('Platform update Available. Restart to update to:')
-      }
-      console.log(' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
-    }
+    if (info.link) LOG.info('life', 'Application update available:')
+    else if (version.force) LOG.info('life', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    else LOG.info('life', 'Platform update Available. Restart to update to:')
+    LOG.info('life', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
     const messaged = new Set()
@@ -522,7 +516,7 @@ class Sidecar extends ReadyResource {
   }
 
   async restart ({ platform = false, hard = true } = {}, client) {
-    if (this.verbose) console.log(`${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
+    LOG.info('life', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
@@ -581,7 +575,7 @@ class Sidecar extends ReadyResource {
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
-    if (this.verbose) console.log('Restarting', restarts.length, 'apps')
+    LOG.info('life', 'Restarting', restarts.length, 'apps')
 
     await sidecarClosed
 
@@ -685,7 +679,8 @@ class Sidecar extends ReadyResource {
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     await this.ready()
     const dht = this.swarm.dht.toArray({ limit: 20 })
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    const dhtBootstrap = this.swarm.dht.bootstrapNodes
+    const state = new State({ dht, dhtBootstrap, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {
@@ -907,7 +902,7 @@ class Sidecar extends ReadyResource {
   }
 
   async #shutdown (client) {
-    if (this.verbose) console.log('- Sidecar shutting down...')
+    LOG.info('life', '- Sidecar shutting down...')
     const app = client.userData
     const tearingDown = !!app && app.teardown()
     if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
@@ -928,7 +923,7 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) await this.swarm.destroy()
     if (this.corestore) await this.corestore.close()
-    if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Sidecar closed')
+    LOG.info('life', (isWindows ? '^' : '✔') + ' Sidecar closed')
   }
 
   async _close () {
@@ -944,7 +939,7 @@ class Sidecar extends ReadyResource {
 
     if (this.updater) {
       if (await this.updater.applyUpdate() !== null) {
-        if (this.verbose) console.log((isWindows ? '^' : '✔') + ' Applied update')
+        LOG.info('life', (isWindows ? '^' : '✔') + ' Applied update')
       }
     }
   }
