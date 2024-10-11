@@ -5,7 +5,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
-  if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed${JSON.stringify(restarts)}`, true)
+  if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed`, true)
   print('Shutting down current Sidecar...', 0)
   await ipc.shutdown()
   print('Sidecar has shutdown', true)

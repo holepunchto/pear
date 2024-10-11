@@ -232,7 +232,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 
   const shell = require('../shell')(argv)
-  const cmdIx = shell.indices.args.cmd ?? -1
+  const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
   run.argv = argv
 
