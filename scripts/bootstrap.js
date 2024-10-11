@@ -1,6 +1,5 @@
 #!/usr/bin/env bare
 'use strict'
-
 const { platform, arch, isWindows, isBare } = require('which-runtime')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
