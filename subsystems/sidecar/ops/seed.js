@@ -28,7 +28,7 @@ module.exports = class Seed extends Opstream {
     await corestore.ready()
     const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
-    const log = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
+    const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
     const permits = new Store('permits')
@@ -36,7 +36,7 @@ module.exports = class Seed extends Opstream {
     const encryptionKeys = await permits.get('encryption-keys') || {}
     encryptionKey = key ? encryptionKeys[hypercoreid.normalize(key)] : encryptionKey ? await secrets.get(encryptionKey) : null
 
-    const bundle = new Bundle({ corestore, key, channel, log, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
 
     try {
       await session.add(bundle)

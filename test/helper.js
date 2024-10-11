@@ -107,12 +107,12 @@ class Helper extends IPC {
   static PLATFORM_DIR = PLATFORM_DIR
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor (opts = {}) {
-    const verbose = global.Pear.config.args.includes('--verbose')
+    const log = global.Pear.config.args.includes('--log')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
     const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
-    if (verbose) args.push('--verbose')
+    if (log) args.push('--log')
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
       sodium.crypto_generichash(buf, b4a.from(s))
@@ -125,13 +125,13 @@ class Helper extends IPC {
       ? true
       : () => {
           const sc = spawn(runtime, args, {
-            detached: !verbose,
-            stdio: verbose ? 'inherit' : 'ignore'
+            detached: !log,
+            stdio: log ? 'inherit' : 'ignore'
           })
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
-    this.verbose = verbose
+    this.log = log
   }
 
   static async teardownStream (stream) {
@@ -148,7 +148,7 @@ class Helper extends IPC {
 
     const dhtBootstrap = Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
-    if (this.verbose) args.push('--verbose')
+    if (this.log) args.push('--log')
 
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)

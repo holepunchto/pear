@@ -5,7 +5,6 @@ module.exports = class Session {
   constructor (client) {
     this.client = client
     this.resources = new Set()
-
     this._eagerTeardownBound = this._eagerTeardown.bind(this)
     this._tearingDown = null
     this._teardowns = []
