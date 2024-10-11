@@ -1,14 +1,14 @@
-name: Bump Version on Merged
+name: Build
 
 on:
-  pull_request:
-    types: [closed]
-
-env:
-  version: ${{ github.event.pull_request.title }}
-  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') }}
-  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') }}
-  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') }}
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        options:
+          - dev
+          - stage
+          - rc
 
 jobs:
   build:
@@ -16,5 +16,8 @@ jobs:
     steps:
       - name: Build
         run: |
-          channel=${channel-dev:-${channel-staging:-${channel-rc:-unknown}}}
-          echo $channel
+          keet-automation \
+            --seed ${{ secrets.AUTOMATION }} \
+            --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
+            --commit ${{ github.sha }} \
+            --channel ${{ inputs.channel }}

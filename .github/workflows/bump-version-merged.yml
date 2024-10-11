@@ -6,9 +6,9 @@ on:
 
 env:
   version: ${{ github.event.pull_request.title }}
-  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') }}
-  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') }}
-  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') }}
+  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') && 'true' }}
+  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') && 'true' }}
+  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') && 'true' }}
 
 jobs:
   tag:
@@ -30,8 +30,16 @@ jobs:
     steps:
       - name: Build
         run: |
+          channel=dev
+          if [[ ${{ env.channel-staging }} == 'true' ]]; then
+            channel=stage
+          elif [[ ${{ env.channel-rc }} == 'true' ]]; then
+            channel=rc
+          fi
+          echo "Building for $channel"
+
           keet-automation \
             --seed ${{ secrets.AUTOMATION }} \
             --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
             --commit ${{ github.sha }} \
-            --channel ${{ env.channel }}
+            --channel $channel
