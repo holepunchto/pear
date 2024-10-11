@@ -14,7 +14,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Repo
+        uses: holepunchto/actions/.github/steps/setup-repo@v1
+
       - name: Install keet-automation
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g @holepunchto/keet-automation
 
