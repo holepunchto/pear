@@ -1,0 +1,20 @@
+name: Bump Version on Merged
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  version: ${{ github.event.pull_request.title }}
+  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') }}
+  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') }}
+  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: |
+          channel=${channel-dev:-${channel-staging:-${channel-rc:-unknown}}}
+          echo $channel
