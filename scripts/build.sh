@@ -1,18 +1,36 @@
 #!/bin/bash
 
-./pear.dev sidecar shutdown
+channel=$1
 
-npm i
+devkey=TODO
+stagekey=TODO
 
-rm -fr by-arch
-npm run archdump
+if [ $channel == "dev" ]; then
+  ./pear.dev sidecar shutdown
 
-rm -rf ./node_modules
-npm i --omit=dev
-npm run prune
+  npm i
 
-./pear.dev sidecar &
-./pear.dev seed dev &
-rm package-lock.json
+  rm -fr by-arch
+  npm run archdump
 
-./pear.dev stage dev
+  rm -rf ./node_modules
+  npm i --omit=dev
+  npm run prune
+
+  ./pear.dev sidecar &
+  ./pear.dev seed dev &
+  rm package-lock.json
+  ./pear.dev stage dev
+fi
+
+if [ $channel == "staging" ]; then
+  pear seed staging &
+  pear dump $devkey .
+  pear stage staging
+fi
+
+if [ $channel == "rc" ]; then
+  pear seed rc &
+  pear dump $stagekey .
+  pear stage rc
+fi
