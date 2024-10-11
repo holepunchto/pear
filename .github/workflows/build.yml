@@ -14,6 +14,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Install keet-automation
+        run: |
+          npm install -g @holepunchto/keet-automation
+
       - name: Build
         run: |
           keet-automation \
