@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Inputs: $1 = channel (dev, staging, rc)
+# Outputs: JSON string "{ "version": "v1.5.0", "link": "pear://key", "success": "true" }"
+
 channel=$1
 
 devkey=TODO
