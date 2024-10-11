@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag, rest } = require('paparam')
+const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')

@@ -25,10 +25,9 @@ for (const dir of dirs) {
   else spawnSync('npm', ['install'], { cwd: path.dirname(dir), stdio: 'inherit' })
 }
 
-
 const testnet = await createTestnet(10)
 
-const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')  
+const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
 
 const logging = Bare.argv.filter((arg) => arg.startsWith('--log'))
 const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, '-t', 'test'], { cwd: root, stdio: 'inherit' })

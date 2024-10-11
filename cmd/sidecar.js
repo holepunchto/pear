@@ -18,7 +18,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  if (Bare.argv.some((arg) => arg.startsWith('--log') === false)) Bare.argv.push('--log')
+  Bare.argv.splice(1, 0, '--log', ...Bare.argv.filter((arg) => arg.startsWith('--log')))
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
