@@ -73,7 +73,6 @@ module.exports = class Http extends ReadyResource {
   async #notFound (app, req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.statusCode = 404
-
     const { name, version } = app.state
     const locals = { url: req.url, name, version: `v.${version.fork}.${version.length}.${version.key}` }
     const stream = transform.stream(await this.sidecar.bundle.get('/not-found.html'), locals)

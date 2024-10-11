@@ -100,7 +100,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   if (type === 'terminal') {
-    const state = new State({ flags, link, dir, cmdArgs, cwd })
+    const platformFlags = require('./flags')(Bare.argv.slice(1), true)
+    const dht = platformFlags.dhtBootstrap ? { bootstrap: platformFlags.dhtBootstrap } : undefined
+    const state = new State({ flags, link, dir, cmdArgs, cwd, dht })
 
     state.update({ host, id, type })
 

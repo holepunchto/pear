@@ -692,9 +692,8 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const dht = this.swarm.dht.toArray({ limit: 20 })
-    const dhtBootstrap = this.swarm.dht.bootstrapNodes
-    const state = new State({ dht, dhtBootstrap, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    const dht = { nodes: this.swarm.dht.toArray({ limit: 20 }), bootstrap: this.dhtBootstrap }
+    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {
