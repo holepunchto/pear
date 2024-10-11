@@ -10,7 +10,7 @@
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
     "bootstrap": "node scripts/bootstrap.js",
-    "prestage": "node scripts/prestage.js"
+    "prestage": "./scripts/prestage.sh"
   },
   "author": "Holepunch",
   "pear": {
