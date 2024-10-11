@@ -144,7 +144,7 @@ module.exports = class Bundle {
   async fatal (err) {
     try {
       this.status({ tag: 'bundle-error', data: err })
-      LOG.error('internal-error', 'Drive Bundle Failure', err)
+      LOG.error('internal', 'Drive Bundle Failure', err)
       if (typeof this.failure === 'function') {
         await this.failure(err)
       } else {

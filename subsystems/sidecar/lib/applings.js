@@ -127,7 +127,7 @@ class Applings extends ReadyResource {
     this._writes++
 
     if (!this.flushable) {
-      LOG.error('internal-error', 'Cannot flush applings file to disk (not flushable)')
+      LOG.error('internal', 'Cannot flush applings file to disk (not flushable)')
       return
     }
 
@@ -143,7 +143,7 @@ class Applings extends ReadyResource {
     try {
       await writeApplings(this._applings, this.path)
     } catch (err) {
-      LOG.error('internal-error', 'Could not flush applings file to disk', err)
+      LOG.error('internal', 'Could not flush applings file to disk', err)
     } finally {
       this._writes -= writesPreFlush
       release()

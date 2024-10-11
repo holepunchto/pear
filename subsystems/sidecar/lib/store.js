@@ -46,7 +46,7 @@ module.exports = class Store {
 
       this.#writes -= writes
     } catch (err) {
-      LOG.error('internal-error', 'Failed to flush Store', err)
+      LOG.error('internal', 'Failed to flush Store', err)
     } finally {
       release()
     }

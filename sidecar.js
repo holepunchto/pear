@@ -24,18 +24,16 @@ const gunk = require('./gunk')
 const flags = require('./flags')(Bare.argv.slice(2))
 crasher('sidecar', SWAP)
 
-global.LOG = new Logger(
-  flags.log
-    ? { level: 2, labels: ['life'], fields: 'h:level,h:label,h:delta' }
-    : {
-        level: flags.logLevel,
-        labels: flags.logLabels,
-        fields: flags.logFields,
-        stacks: flags.logStacks
-      })
-
+global.LOG = new Logger({
+  level: flags.logLevel,
+  labels: flags.logLabels,
+  fields: flags.logFields,
+  stacks: flags.logStacks,
+  pretty: flags.log
+})
+LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
-  LOG.error('internal-error', 'Sidecar Boot Failed', err)
+  LOG.error('internal', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })
 async function gc () {

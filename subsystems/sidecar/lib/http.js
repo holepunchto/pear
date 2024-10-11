@@ -51,7 +51,7 @@ module.exports = class Http extends ReadyResource {
         } else if (err.code === 'SESSION_CLOSED') {
           err.status = err.status || 503
         } else {
-          LOG.error('internal-error', 'Unknown HTTP Server Error', err)
+          LOG.error('internal', 'Unknown HTTP Server Error', err)
           err.status = 500
         }
         res.setHeader('Content-Type', 'text/plain')

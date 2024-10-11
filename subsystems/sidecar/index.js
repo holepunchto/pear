@@ -16,7 +16,7 @@ const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
-const { isMac, isWindows } = require('which-runtime')
+const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
@@ -205,9 +205,9 @@ class Sidecar extends ReadyResource {
             fork: state.options.minver.fork
           }
           if (minver.key !== current.key) {
-            LOG.error('internal-error', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
+            LOG.error('internal', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
           } else if (typeof minver.length !== 'number') {
-            LOG.error('internal-error', `Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
+            LOG.error('internal', `Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
           } else if (minver.length > current.length) {
             const checkout = {
               length: minver.length,
@@ -278,7 +278,7 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().catch((err) => LOG.error('internal-error', 'Failed to Open Sidecar', err))
+      this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
   }
 
@@ -286,7 +286,7 @@ class Sidecar extends ReadyResource {
     await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.http.ready()
     await this.#ensureSwarm()
-    LOG.info('life', '- Sidecar booted')
+    LOG.info('sidecar', '- Sidecar Booted')
   }
 
   get clients () { return this.ipc.clients }
@@ -303,7 +303,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients) return
     this.spindownt = setTimeout(async () => {
       if (this.hasClients) return
-      this.close().catch((err) => { LOG.error('internal-error', 'Failed to Close Sidecar', err) })
+      this.close().catch((err) => { LOG.error('internal', 'Failed to Close Sidecar', err) })
     }, this.spindownms)
   }
 
@@ -311,10 +311,10 @@ class Sidecar extends ReadyResource {
     this.spindownms = 0
     this.updateAvailable = { version, info }
 
-    if (info.link) LOG.info('life', 'Application update available:')
-    else if (version.force) LOG.info('life', 'Platform Force update (' + version.force.reason + '). Updating to:')
-    else LOG.info('life', 'Platform update Available. Restart to update to:')
-    LOG.info('life', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
+    if (info.link) LOG.info('sidecar', 'Application update available:')
+    else if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    else LOG.info('sidecar', 'Platform update Available. Restart to update to:')
+    LOG.info('sidecar', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
     const messaged = new Set()
@@ -516,7 +516,7 @@ class Sidecar extends ReadyResource {
   }
 
   async restart ({ platform = false, hard = true } = {}, client) {
-    LOG.info('life', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
+    LOG.info('sidecar', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
@@ -575,7 +575,7 @@ class Sidecar extends ReadyResource {
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
-    LOG.info('life', 'Restarting', restarts.length, 'apps')
+    LOG.info('sidecar', 'Restarting', restarts.length, 'apps')
 
     await sidecarClosed
 
@@ -642,22 +642,29 @@ class Sidecar extends ReadyResource {
 
   async start (params, client) {
     const { flags, env, cwd, link, dir, args, cmdArgs } = params
+    const LOG_RUN_LINK = ['run', link]
+    if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
     let { startId } = params
     const starting = this.running.get(startId)
     if (starting) {
+      LOG.info(LOG_RUN_LINK, startId, 'running, referencing existing client userData')
       client.userData = starting.client.userData
       return await starting.running
     }
     if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
-    const session = new Session(client)
     startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
+    LOG.info('session', 'new session for', startId)
+    const session = new Session(client)
 
     const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
+      LOG.info(LOG_RUN_LINK, client.userData.id, 'teardown')
+      LOG.info('session', 'tearing down for', startId)
       if (free.running === running) {
         this.running.delete(startId)
+        LOG.info(LOG_RUN_LINK, startId, 'removed from running set')
       }
     })
 
@@ -665,11 +672,13 @@ class Sidecar extends ReadyResource {
       const info = await running
       if (this.updateAvailable !== null) {
         const { version, info } = this.updateAvailable
+        LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
         client.userData.message({ type: 'pear/updates', version, diff: info.diff })
       }
       return info
     } catch (err) {
       await session.close()
+      LOG.info('session', 'session closed for', startId)
       throw err
     }
   }
@@ -677,19 +686,26 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
+    const LOG_RUN_LINK = ['run', link]
+    if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
+    LOG.info(LOG_RUN_LINK, 'ensuring sidecar ready')
     await this.ready()
+    LOG.info(LOG_RUN_LINK, 'sidecar is ready')
+
     const dht = this.swarm.dht.toArray({ limit: 20 })
     const dhtBootstrap = this.swarm.dht.bootstrapNodes
     const state = new State({ dht, dhtBootstrap, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
     let encryptionKey
     if (flags.encryptionKey) {
+      LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
       encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey
       if (drive.key) {
+        LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
         const encryptionKeys = await permits.get('encryption-keys') || {}
         storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
       } else {
@@ -701,12 +717,14 @@ class Sidecar extends ReadyResource {
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')
+      LOG.info(LOG_RUN_LINK, id, 'appling detected, storing path')
       await this.applings.set(applingKey, applingPath)
     }
 
     app.state = state
 
     if (state.key === null) {
+      LOG.info(LOG_RUN_LINK, id, 'running from disk')
       const drive = new LocalDrive(state.dir, { followLinks: true })
       this.#updatePearInterface(drive)
       const appBundle = new Bundle({
@@ -722,33 +740,44 @@ class Sidecar extends ReadyResource {
         protocol: this.gunk.app.protocol,
         runtimes: this.gunk.app.runtimes
       })
-
+      LOG.info('session', 'adding appBundle to session for', startId)
       await session.add(appBundle)
-
+      LOG.info('session', 'appBundle added to session for', startId)
       app.linker = linker
       app.bundle = appBundle
 
       // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
-      await this.permit({ key: state.key }, client)
+      await this.permit({ key: state.key }, client) // TODO: do we still need this?
 
+      LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
+        LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
+        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
         if (err.code === 'ERR_CONNECTION') app.report({ err })
       }
+      LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
+      if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
       const type = state.type
-      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, type, 'app')
+      const isTerminalApp = type === 'terminal'
+      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
+      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
     }
 
     if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
+      LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
       const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
         app.report({ err })
+        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
         return { startId, bail: err }
       }
     }
@@ -759,14 +788,20 @@ class Sidecar extends ReadyResource {
       ? this.ipc.client(state.trace).userData.bundle.tracer
       : null
 
-    // check for drive encryption, only throws DECODING_ERROR if the drive has been previously replicated
+    if (LOG.INF && trace) LOG.info(LOG_RUN_LINK, id, 'tracer mode')
+
+    LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
       await drive.ready()
     } catch (err) {
-      if (err.code !== 'DECODING_ERROR') throw err
+      if (err.code !== 'DECODING_ERROR') {
+        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failure checking for encryption for', link, 'app id:', id, err)
+        throw err
+      }
+      LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
       const permissionError = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
       app.report({ err: permissionError })
       return { startId, bail: permissionError }
@@ -785,10 +820,15 @@ class Sidecar extends ReadyResource {
       trace,
       drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
-      async failure (err) { app.report({ err }) }
+      async failure (err) {
+        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failure creating drive bundle for', link, 'app id:', id, err)
+        app.report({ err })
+      }
     })
 
+    LOG.info('session', 'adding appBundle to session for', startId)
     await session.add(appBundle)
+    LOG.info('session', 'appBundle added to session for', startId)
 
     if (this.swarm) appBundle.join(this.swarm)
 
@@ -808,34 +848,47 @@ class Sidecar extends ReadyResource {
       await appBundle.calibrate()
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
+        LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
         const bail = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
         app.report({ err: bail })
         return { startId, bail }
       } else {
+        LOG.error(LOG_RUN_LINK, 'Failure creating drive bundle for', link, 'app id:', id, err)
+        LOG.info('session', 'closing session for', startId)
         await session.close()
+        LOG.info('session', 'session closed for', startId)
         throw err
       }
     }
 
-    const initializing = state.initialize({ bundle: appBundle, app })
+    LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
-      await initializing
+      await state.initialize({ bundle: appBundle, app })
+      LOG.info(LOG_RUN_LINK, id, 'state initialized')
     } catch (err) {
+      LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
       if (err.code === 'ERR_CONNECTION') app.report({ err })
     }
     if (appBundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
       const type = state.type
-      const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, type, 'app')
+      const isTerminalApp = type === 'terminal'
+      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
+      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
     }
 
+    LOG.info(LOG_RUN_LINK, id, 'checking minver')
     const updating = await app.minver()
-
+    if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
     // start is tied to the lifecycle of the client itself so we don't tear it down now
     const type = state.type
-
-    const bundle = type === 'terminal' ? await app.bundle.bundle(state.entrypoint) : null
+    const isTerminalApp = type === 'terminal'
+    if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
+    const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+    LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
   }
 
@@ -859,7 +912,7 @@ class Sidecar extends ReadyResource {
       await fsx.swap(next, current)
       await fs.promises.rm(tmp, { recursive: true })
     } catch (err) {
-      LOG.error('internal-error', 'Unexpected error while attempting to update pear-interface in project', drive.root, err)
+      LOG.error('internal', 'Unexpected error while attempting to update pear-interface in project', drive.root, err)
     }
   }
 
@@ -902,7 +955,7 @@ class Sidecar extends ReadyResource {
   }
 
   async #shutdown (client) {
-    LOG.info('life', '- Sidecar shutting down...')
+    LOG.info('sidecar', '- Sidecar Shutting Down...')
     const app = client.userData
     const tearingDown = !!app && app.teardown()
     if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
@@ -923,7 +976,7 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) await this.swarm.destroy()
     if (this.corestore) await this.corestore.close()
-    LOG.info('life', (isWindows ? '^' : '✔') + ' Sidecar closed')
+    LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
   async _close () {
@@ -939,7 +992,7 @@ class Sidecar extends ReadyResource {
 
     if (this.updater) {
       if (await this.updater.applyUpdate() !== null) {
-        LOG.info('life', (isWindows ? '^' : '✔') + ' Applied update')
+        LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
       }
     }
   }
@@ -947,7 +1000,7 @@ class Sidecar extends ReadyResource {
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
-      LOG.error('internal-error', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
+      LOG.error('internal', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
   }
