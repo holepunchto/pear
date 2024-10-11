@@ -30,3 +30,4 @@ jobs:
             --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
             --commit ${{ github.sha }} \
             --channel ${{ inputs.channel }}
+            --notify true
