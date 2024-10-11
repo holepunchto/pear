@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag } = require('paparam')
+const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag, rest } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -189,7 +189,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   )
 
   const cmd = command('pear',
-    flag('-v', 'Output version'),
     ...def.pear,
     header(usage.header),
     init,
@@ -231,6 +230,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
     console.log(cmd.overview())
   }
+
+  const shell = require('../shell')(argv)
+  const cmdIx = shell.indices.args.cmd ?? -1
+  if (cmdIx > -1) argv = argv.slice(cmdIx)
+  run.argv = argv
 
   const program = cmd.parse(argv)
 

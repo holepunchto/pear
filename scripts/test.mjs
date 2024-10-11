@@ -26,8 +26,9 @@ for (const dir of dirs) {
 }
 
 const testnet = await createTestnet(10)
-const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
 
+const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
+spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 const tests = spawn(RUNTIME, ['--dht-bootstrap', dhtBootstrap, 'run', '-t', 'test'], { cwd: root, stdio: 'inherit' })
 
 tests.on('exit', async (code) => {

@@ -145,7 +145,6 @@ class Helper extends IPC {
 
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
-    console.log('..', Pear.config.dht)
     const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
     const args = !opts.encryptionKey ? ['--dht-bootstrap', dhtBootstrap, 'run', '-t', link] : ['--dht-bootstrap', dhtBootstrap, 'run', '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
     if (this.log) args.push('--log')

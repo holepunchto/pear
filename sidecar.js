@@ -21,7 +21,7 @@ const {
 } = require('./constants')
 const registerUrlHandler = require('./url-handler')
 const gunk = require('./gunk')
-const flags = require('./flags')(Bare.argv.slice(2))
+const { flags = {} } = require('./shell')(Bare.argv.slice(1))
 crasher('sidecar', SWAP)
 
 global.LOG = new Logger({

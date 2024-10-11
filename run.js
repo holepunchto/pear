@@ -100,9 +100,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   if (type === 'terminal') {
-    const platformFlags = require('./flags')(Bare.argv.slice(1), true)
-    const dht = platformFlags.dhtBootstrap ? { bootstrap: platformFlags.dhtBootstrap } : undefined
-    const state = new State({ flags, link, dir, cmdArgs, cwd, dht })
+    const state = new State({ flags, link, dir, cmdArgs, cwd })
 
     state.update({ host, id, type })
 
@@ -112,7 +110,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
 
     await ipc.ready()
-    state.update({ config: await ipc.config() })
+    const ipcConfig = await ipc.config()
+    state.update({ config: ipcConfig })
 
     const pear = new API(ipc, state)
 
