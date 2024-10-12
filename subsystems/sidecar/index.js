@@ -467,6 +467,13 @@ class Sidecar extends ReadyResource {
     return permits.set('trusted', Array.from(trusted))
   }
 
+  async untrust (key) {
+    const z32 = hypercoreid.encode(key)
+    const trusted = new Set((await permits.get('trusted')) || [])
+    trusted.splice(trusted.indexOf(z32), 1); // remove key from trusted
+    return permits.set('trusted', Array.from(trusted))
+  }
+
   async trusted (key) {
     const z32 = hypercoreid.encode(key)
     const trusted = await permits.get('trusted') || []
