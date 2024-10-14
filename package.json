@@ -9,6 +9,7 @@
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
+    "prestage": "npm run archdump",
     "bootstrap": "node scripts/bootstrap.js"
   },
   "author": "Holepunch",
