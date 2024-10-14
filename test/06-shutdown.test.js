@@ -91,7 +91,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['sidecar', '--log'], { stdio: 'pipe' })
+  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['sidecar'], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => untilExit)
@@ -194,7 +194,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment('2. Start sidecar and update using rcv-seeded key')
   t.comment('\tStarting sidecar')
   const dhtBootstrap = global.Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['--log', '--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key], { stdio: 'pipe' })
+  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key], { stdio: 'pipe' })
   t.teardown(() => { if (sidecar.exitCode === null) sidecar?.kill() })
   const untilExit = new Promise(resolve => sidecar.once('exit', resolve))
   t.teardown(async () => untilExit, { order: Infinity })
