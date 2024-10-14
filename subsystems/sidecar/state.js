@@ -75,7 +75,7 @@ module.exports = class State extends SharedState {
       await Promise.all([
         preferences.clear().catch(() => undefined),
         permits.clear().catch(() => undefined),
-      ]);
+      ])
     }
 
     await fsp.mkdir(this.storage, { recursive: true })
