@@ -1,15 +1,17 @@
-name: Build
+name: Bump Version
 
 on:
-  workflow_call:
-    inputs:
-      channel:
-        type: string
-        description: Channel to build
-        required: true
-        default: 'dev'
   workflow_dispatch:
     inputs:
+      version:
+        type: choice
+        description: Select version type to bump
+        required: true
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
       channel:
         type: choice
         description: Select channel to build
@@ -20,23 +22,9 @@ on:
           - rc
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Repo
-        uses: holepunchto/actions/.github/steps/setup-repo@v1
-
-      - name: Install keet-automation
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g @holepunchto/keet-automation
-
-      - name: Build
-        run: |
-          keet-automation \
-            --seed ${{ secrets.AUTOMATION }} \
-            --remote dcdc8039da38a92e2fc71c91d77326fbdc15e5e50d484f4221a32334754914b1 pear-platform \
-            --commit ${{ github.sha }} \
-            --channel ${{ inputs.channel }}
-            --notify true
+  bump-version:
+    uses: holepunchto/actions/.github/workflows/bump-version.yml@v1
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      labels: 'bump-version,${{ inputs.channel }}'
