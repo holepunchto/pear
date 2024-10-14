@@ -935,24 +935,6 @@ class Sidecar extends ReadyResource {
     return this.corestore.namespace(`${name}~${channel}`, { writable: false, ...opts })
   }
 
-  // DEPRECATED - assess for removal from Sep 2024
-  async * preferences () {
-    for await (const { data } of preferences.updates()) yield data
-  }
-
-  async setPreference ({ key, value }) {
-    const result = await preferences.set(key, value)
-    return result
-  }
-
-  async getPreference ({ key }) {
-    return await preferences.get(key)
-  }
-
-  async * iteratePreferences () {
-    yield * preferences.entries()
-  }
-
   async #shutdown (client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const app = client.userData
