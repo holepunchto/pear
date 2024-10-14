@@ -7,6 +7,7 @@ const Store = require('./lib/store')
 const SharedState = require('../../state')
 const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
 const preferences = new Store('preferences')
+const permits = new Store('permits')
 
 module.exports = class State extends SharedState {
   initialized = false
@@ -70,7 +71,12 @@ module.exports = class State extends SharedState {
     this.update({ tier, name, main, options, dependencies, channel, release })
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
-    if (this.clearPreferences) await preferences.clear()
+    if (this.clearPreferences) {
+      await Promise.all([
+        preferences.clear().catch(() => undefined),
+        permits.clear().catch(() => undefined),
+      ]);
+    }
 
     await fsp.mkdir(this.storage, { recursive: true })
     try { this.checkpoint = JSON.parse(await fsp.readFile(path.join(this.storage, 'checkpoint'))) } catch { /* ignore */ }
