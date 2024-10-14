@@ -27,4 +27,4 @@ jobs:
     secrets: inherit
     with:
       version: ${{ inputs.version }}
-      labels: 'bump-version,${{ inputs.channel }}'
+      labels: 'bump-version,channel-${{ inputs.channel }}'
