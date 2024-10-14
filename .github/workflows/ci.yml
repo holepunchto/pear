@@ -1,52 +1,30 @@
-name: Build Status
+name: Bump Version
+
 on:
-  schedule:
-    - cron:  '0 10 * * *'
-  push:
-    branches:
-      - main
-      - next
-  pull_request:
-  repository_dispatch:
   workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: Select version type to bump
+        required: true
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
+      channel:
+        type: choice
+        description: Select channel to build
+        required: true
+        options:
+          - dev
+          - stage
+          - rc
+
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-        - os: ubuntu-latest
-          platform: linux
-          arch: x64
-        - os: macos-latest
-          platform: darwin
-          arch: x64
-        - os: windows-latest
-          platform: win32
-          arch: x64
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
-    steps:
-    - name: Checkout
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1 https://github.com/actions/checkout/releases/tag/v4.1.1
-      with:
-        persist-credentials: false
-        ref: ${{ github.event.pull_request.head.ref }}
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2 https://github.com/actions/setup-node/releases/tag/v4.0.2
-      with:
-        node-version: lts/*
-
-    - name: Install w/ dev deps
-      run: npm install
-
-    - name: Bootstrap
-      run: npm run bootstrap
-
-    - name: Install Bare
-      run: npm i -g bare-runtime
-
-    - name: Test
-      run: npm test
-
-    - name: Lint
-      run: npm run lint
+  bump-version:
+    uses: holepunchto/actions/.github/workflows/bump-version.yml@v1
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      labels: 'bump-version,channel-${{ inputs.channel }}'
