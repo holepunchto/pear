@@ -74,7 +74,7 @@ module.exports = class State extends SharedState {
     if (this.clearPreferences) {
       await Promise.all([
         preferences.clear().catch(() => undefined),
-        permits.clear().catch(() => undefined),
+        permits.clear().catch(() => undefined)
       ])
     }
 
