@@ -12,6 +12,14 @@ on:
           - patch
           - minor
           - major
+      channel:
+        type: choice
+        description: Select channel to build
+        required: true
+        options:
+          - dev
+          - stage
+          - rc
 
 jobs:
   bump-version:
@@ -19,4 +27,4 @@ jobs:
     secrets: inherit
     with:
       version: ${{ inputs.version }}
-      labels: 'bump-version'
+      labels: 'bump-version,${{ inputs.channel }}'

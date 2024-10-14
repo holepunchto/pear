@@ -1,10 +1,19 @@
 name: Build
 
 on:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+        description: Channel to build
+        required: true
+        default: 'dev'
   workflow_dispatch:
     inputs:
       channel:
         type: choice
+        description: Select channel to build
+        required: true
         options:
           - dev
           - stage

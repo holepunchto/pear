@@ -24,20 +24,14 @@ jobs:
           git tag ${{ env.version }}
           git push --tags
 
-  build:
-    needs: tag
+
+  pre-build:
     runs-on: ubuntu-latest
+    outputs:
+      channel: ${{ steps.prepare-channel.outputs.channel }}
     steps:
-      - name: Setup Repo
-        uses: holepunchto/actions/.github/steps/setup-repo@v1
-
-      - name: Install keet-automation
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g @holepunchto/keet-automation
-
-      - name: Build
+      - name: Prepare channel
+        id: prepare-channel
         run: |
           channel=dev
           if [[ ${{ env.channel-staging }} == 'true' ]]; then
@@ -45,11 +39,12 @@ jobs:
           elif [[ ${{ env.channel-rc }} == 'true' ]]; then
             channel=rc
           fi
-          echo "Building for $channel"
+          echo "Channel to build: $channel"
+          echo channel=$channel >> $GITHUB_OUTPUT
 
-          keet-automation \
-            --seed ${{ secrets.AUTOMATION }} \
-            --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
-            --commit ${{ github.sha }} \
-            --channel $channel
-            --notify true
+  build:
+    needs: pre-build
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      channel: ${{ needs.pre-build.outputs.channel }}
