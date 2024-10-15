@@ -98,11 +98,11 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
   t.comment(`Waiting for sidecar to spindown (${SPINDOWN_TIMEOUT / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
     untilExit.finally(() => {
-      if (timeout) clearTimeout(timeout)
+      clearTimeout(timeout)
       resolve()
     })
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
   })
 
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
@@ -201,12 +201,11 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment(`\tWaiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
     untilExit.finally(() => {
-      if (timeout) clearTimeout(timeout)
+      clearTimeout(timeout)
       resolve()
     })
-
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
   })
 
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
