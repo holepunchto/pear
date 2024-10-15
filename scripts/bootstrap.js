@@ -27,7 +27,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const CORESTORE = cmd.flags.externalCorestore && 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+const CORESTORE = cmd.flags.externalCorestore ? '/tmp/pear-archdump/gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho' : null
 const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
