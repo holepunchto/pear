@@ -20,14 +20,14 @@ const argv = global.Pear?.config.args || global.Bare?.argv || global.process.arg
 const parser = command('bootstrap',
   flag('--archdump'),
   flag('--dlruntime'),
-  flag('--corestore <path>'),
+  flag('--external-corestore'),
   rest('rest')
 )
 const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const CORESTORE = cmd.flags.corestore
+const CORESTORE = cmd.flags.externalCorestore && 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
