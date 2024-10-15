@@ -26,6 +26,7 @@ jobs:
 
 
   pre-build:
+    needs: tag
     runs-on: ubuntu-latest
     outputs:
       channel: ${{ steps.prepare-channel.outputs.channel }}
