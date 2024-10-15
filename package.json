@@ -10,7 +10,6 @@
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
-    "prebuild": "node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js"
   },
   "author": "Holepunch",
