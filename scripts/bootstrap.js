@@ -4,6 +4,7 @@
 const { platform, arch, isWindows, isBare } = require('which-runtime')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
+const { command, flag, rest } = require('paparam')
 const Corestore = require('corestore')
 const Localdrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
@@ -15,15 +16,25 @@ const safetyCatch = require('safety-catch')
 const Rache = require('rache')
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
+
+const parser = command('bootstrap',
+  flag('--archdump'),
+  flag('--dlruntime'),
+  flag('--corestore <path>'),
+  rest('rest')
+)
+const cmd = parser.parse(argv.slice(2), { sync: true })
+
+const ARCHDUMP = cmd.flags.archdump === true
+const DLRUNTIME = cmd.flags.dlruntime === true
+const CORESTORE_PATH = cmd.flags.corestore
+const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
-const ARCHDUMP = argv.includes('--archdump')
-const CORESTORE_PATH = argv.includes('--corestore') ? argv[argv.indexOf('--corestore') + 1] : null
-const DLRUNTIME = argv.includes('--dlruntime')
-const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 try {
   fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file')
 } catch (err) {
