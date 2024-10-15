@@ -12,7 +12,8 @@ const rig = new Helper.Rig({ keepAlive: false })
 
 test.hook('commands setup', rig.setup)
 
-test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is }) {
+test('pear stage --json <channel> <absolute-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -38,7 +39,8 @@ test('pear stage --json <channel> <absolute-path>', async function ({ plan, alik
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
+test('pear stage <channel> <absolute-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -60,7 +62,8 @@ test('pear stage <channel> <absolute-path>', async function ({ plan, is }) {
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
+test('pear stage <channel> <relative-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -83,7 +86,8 @@ test('pear stage <channel> <relative-path>', async function ({ plan, is }) {
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage <channel> <relative-path> (package.json pear.config.stage.entrypoints <relative-paths>)', async function ({ plan, teardown, is }) {
+test('pear stage <channel> <relative-path> (package.json pear.config.stage.entrypoints <relative-paths>)', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -122,7 +126,8 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <relative-paths>)', async function ({ plan, teardown, is }) {
+test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <relative-paths>)', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -165,7 +170,8 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --json <channel> <relative-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -192,7 +198,8 @@ test('pear stage --json <channel> <relative-path>', async function ({ plan, alik
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, is }) {
+test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(2)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -215,7 +222,8 @@ test('pear stage --dry-run <channel> <relative-path>', async function ({ plan, i
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --dry-run --json <channel> <relative-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -246,7 +254,8 @@ test('pear stage --dry-run --json <channel> <relative-path>', async function ({ 
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }) {
+test('pear stage --bare <channel> <relative-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -272,7 +281,8 @@ test('pear stage --bare <channel> <relative-path>', async function ({ plan, is }
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --bare --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --bare --json <channel> <relative-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -303,7 +313,8 @@ test('pear stage --bare --json <channel> <relative-path>', async function ({ pla
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> <channel> <relative-path>', async function ({ plan, teardown, is }) {
+test('pear stage --ignore <list> <channel> <relative-path>', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -336,7 +347,8 @@ test('pear stage --ignore <list> <channel> <relative-path>', async function ({ p
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
+test('pear stage --ignore <list> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -372,7 +384,8 @@ test('pear stage --ignore <list> --json <channel> <relative-path>', async functi
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --truncate <n> <channel> <relative-path>', async function ({ plan, is }) {
+test('pear stage --truncate <n> <channel> <relative-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -410,7 +423,8 @@ test('pear stage --truncate <n> <channel> <relative-path>', async function ({ pl
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --truncate <n> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --truncate <n> --json <channel> <relative-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -453,7 +467,8 @@ test('pear stage --truncate <n> --json <channel> <relative-path>', async functio
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is }) {
+test('pear stage --name <name> <channel> <relative-path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -483,7 +498,8 @@ test('pear stage --name <name> <channel> <relative-path>', async function ({ pla
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is }) {
+test('pear stage --name <name> --json <channel> <relative-path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -514,7 +530,8 @@ test('pear stage --name <name> --json <channel> <relative-path>', async function
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
+test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -555,7 +572,8 @@ test('pear stage --ignore <list> --name <name> <channel> <relative-path>', async
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
+test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is, timeout }) {
+  timeout(120_000)
   plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -594,7 +612,8 @@ test('pear stage --ignore <list> --name <name> --json <channel> <relative-path>'
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is }) {
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <channel> <relative-path>', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -650,7 +669,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> <
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is }) {
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json <channel> <relative-path>', async function ({ plan, alike, teardown, is, timeout }) {
+  timeout(120_000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -702,7 +722,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> -
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -740,7 +761,8 @@ test('pear stage pear://<key> <path>', async function ({ plan, is }) {
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -783,7 +805,8 @@ test('pear stage --json pear://<key> <path>', async function ({ plan, alike, is 
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(3)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -821,7 +844,8 @@ test('pear stage --dry-run pear://<key> <path>', async function ({ plan, is }) {
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -867,7 +891,8 @@ test('pear stage --dry-run --json pear://<key> <path>', async function ({ plan, 
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage --bare pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -908,7 +933,8 @@ test('pear stage --bare pear://<key> <path>', async function ({ plan, is }) {
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --bare --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --bare --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -954,7 +980,8 @@ test('pear stage --bare --json pear://<key> <path>', async function ({ plan, ali
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, teardown, is }) {
+test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -998,7 +1025,8 @@ test('pear stage --ignore <list> pear://<key> <path>', async function ({ plan, t
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
+test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ plan, alike, teardown, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1047,7 +1075,8 @@ test('pear stage --ignore <list> --json pear://<key> <path>', async function ({ 
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1088,7 +1117,8 @@ test('pear stage --truncate <n> pear://<key> <path>', async function ({ plan, is
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1134,7 +1164,8 @@ test('pear stage --truncate <n> --json pear://<key> <path>', async function ({ p
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1179,7 +1210,8 @@ test('pear stage --name <name> pear://<key> <path>', async function ({ plan, is 
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --name <name> --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(4)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1225,7 +1257,8 @@ test('pear stage --name <name> --json pear://<key> <path>', async function ({ pl
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is }) {
+test('pear stage --ignore <list> --name <name> pear://<key> <path>', async function ({ plan, teardown, is, timeout }) {
+  timeout(120_000)
   plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1276,7 +1309,8 @@ test('pear stage --ignore <list> --name <name> pear://<key> <path>', async funct
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is }) {
+test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', async function ({ plan, alike, teardown, is, timeout }) {
+  timeout(120_000)
   plan(5)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1328,7 +1362,8 @@ test('pear stage --ignore <list> --name <name> --json pear://<key> <path>', asyn
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is }) {
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> pear://<key> <path>', async function ({ plan, is, timeout }) {
+  timeout(120_000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
@@ -1382,7 +1417,8 @@ test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> p
   is(code, 0, 'should have exit code 0')
 })
 
-test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is }) {
+test('pear stage --dry-run --bare --ignore <list> --truncate <n> --name <name> --json pear://<key> <path>', async function ({ plan, alike, is, timeout }) {
+  timeout(120_000)
   plan(7)
 
   const testId = Math.floor(Math.random() * 100000)
