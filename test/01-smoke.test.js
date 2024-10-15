@@ -7,7 +7,7 @@ const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
   timeout(180000)
-  plan(5)
+  plan(6)
   const stager = new Helper()
   teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
@@ -40,8 +40,10 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   const running = await Helper.open(link, { tags: ['exit'] })
 
   const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-
   is(value?.app?.key, key, 'app version matches staged key')
+
+  const dhtBootstrap = await running.inspector.evaluate('Pear.config.dht.bootstrap')
+  is(JSON.stringify(dhtBootstrap.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   await running.inspector.close()
   const { code } = await running.until.exit
