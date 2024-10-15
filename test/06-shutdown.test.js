@@ -49,7 +49,7 @@ test.hook('prepare low-spindown platform', async (t) => {
   t.teardown(() => Helper.gc(patchedArtefactDir))
   const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
     prune: false,
-    filter: (key) => !(key.startsWith('/pear/') || key.startsWith('/.git/') || key.startsWith('/test/'))
+    ignore: ['/pear', '/.git', '/test']
   })
   await mirror.done()
 
@@ -123,7 +123,7 @@ test.hook('prepare throttled platform', async (t) => {
   t.teardown(() => Helper.gc(patchedArtefactDir))
   const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
     prune: false,
-    filter: (key) => !(key.startsWith('/pear/') || key.startsWith('/.git/') || key.startsWith('/test/'))
+    ignore: ['/pear', '/.git', '/test']
   })
   await mirror.done()
 
