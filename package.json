@@ -9,7 +9,7 @@
     "lint": "standard",
     "lint:fix": "standard --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
-    "prestage": "node scripts/bootstrap.js --archdump --store-path ${STORE_PATH:-/tmp/pear-build/dev} && node scripts/prune-dual-prebuilds.mjs",
+    "prebuild": "node scripts/bootstrap.js --archdump --store-path ${STORE_PATH:-/tmp/pear-build/dev} && node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js"
   },
   "author": "Holepunch",
