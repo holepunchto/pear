@@ -113,10 +113,11 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   }
 })
 
-let platformDirRcv
-test.hook('prepare throttled platform', async (t) => {
+test('sidecar should not spindown until ongoing update is finished', async (t) => {
+  t.plan(2)
   t.timeout(120_000)
 
+  t.comment('1. Prepare throttled platform as rcv')
   const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
   t.comment(`\tCopying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
@@ -160,18 +161,14 @@ test.hook('prepare throttled platform', async (t) => {
   t.teardown(() => Helper.teardownStream(patchedSeeder))
 
   t.comment('\tBootstrapping patched platform')
-  platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
+  const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
   await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
+  t.teardown(() => Helper.gc(platformDirRcv))
 
   await Helper.teardownStream(patchedSeeder)
   await rigHelper.close()
-})
 
-test('sidecar should not spindown until ongoing update is finished', async (t) => {
-  t.plan(2)
-  t.timeout(60_000)
-
-  t.comment('1. Start patched rcv platform')
+  t.comment('2. Start patched rcv platform')
   t.comment('\tStarting rcv platform')
   const rcvHelper = new Helper({ platformDir: platformDirRcv })
   t.teardown(() => rcvHelper.close(), { order: Infinity })
@@ -191,7 +188,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   seederUntil['peer-add'].then(() => { peerAdded = true })
   t.teardown(() => Helper.teardownStream(seeder))
 
-  t.comment('2. Start sidecar and update using rcv-seeded key')
+  t.comment('3. Start sidecar and update using rcv-seeded key')
   t.comment('\tStarting sidecar')
   const dhtBootstrap = global.Pear.config.dhtBootstrap.map(e => `${e.host}:${e.port}`).join(',')
   const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key], { stdio: 'pipe' })
@@ -220,7 +217,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
 test.hook('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
-  await Helper.gc(platformDirRcv)
 })
 
 test.hook('shutdown cleanup', rig.cleanup)
