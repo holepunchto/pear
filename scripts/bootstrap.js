@@ -27,7 +27,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const CORESTORE_PATH = cmd.flags.corestore
+const CORESTORE = cmd.flags.corestore
 const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
@@ -85,7 +85,7 @@ async function * downloader (key, all) {
   if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
 
-  const store = CORESTORE_PATH || path.join(PEAR, 'corestores', 'platform')
+  const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
