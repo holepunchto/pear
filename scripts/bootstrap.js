@@ -21,7 +21,7 @@ const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 const ARCHDUMP = argv.includes('--archdump')
-const STORE_PATH = argv.includes('--store-path') ? argv[argv.indexOf('--store-path') + 1] : null
+const CORESTORE_PATH = argv.includes('--corestore') ? argv[argv.indexOf('--corestore') + 1] : null
 const DLRUNTIME = argv.includes('--dlruntime')
 const RUNTIMES_DRIVE_KEY = argv.slice(2).find(([ch]) => ch !== '-') || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 try {
@@ -74,7 +74,7 @@ async function * downloader (key, all) {
   if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
   else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
 
-  const store = STORE_PATH || path.join(PEAR, 'corestores', 'platform')
+  const store = CORESTORE_PATH || path.join(PEAR, 'corestores', 'platform')
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
