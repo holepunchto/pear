@@ -18,6 +18,17 @@ on:
           - dev
           - stage
           - rc
+      custom-commit:
+        type: string
+        description: Custom commit
+        required: false
+      dry-run:
+        type: choice
+        description: Dry run
+        required: false
+        options:
+          - false
+          - true
 
 jobs:
   build:
@@ -37,6 +48,6 @@ jobs:
           keet-automation \
             --seed ${{ secrets.AUTOMATION }} \
             --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
-            --commit ${{ github.sha }} \
+            --commit ${{ inputs.custom-commit || github.sha }} \
             --channel ${{ inputs.channel }} \
-            --notify true
+            --notify true ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
