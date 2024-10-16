@@ -927,6 +927,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
+    if (!this.dhtBootstrap) LOG.info('internal', 'DHT cache reading from file ' + nodes.length + ' nodes')
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
@@ -961,7 +962,10 @@ class Sidecar extends ReadyResource {
     if (this.swarm) {
       if (!this.dhtBootstrap) {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-        if (nodes.length) await knownNodes.set('nodes', nodes)
+        if (nodes.length) {
+          await knownNodes.set('nodes', nodes)
+          LOG.info('internal', 'DHT cache writing to file ' + nodes.length + ' nodes')
+        }
       }
       await this.swarm.destroy()
     }
