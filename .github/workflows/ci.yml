@@ -36,29 +36,17 @@ jobs:
       with:
         node-version: lts/*
 
-    - name: Cache ~/.npm
+    - name: Cache corestore
       uses: actions/cache@v4
       with:
-        path: ~/.npm
-        key: v1-ci-npm-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          v1-ci-npm-${{ hashFiles('package-lock.json') }}
-          v1-ci-npm-
-
-    - name: Cache node_modules
-      uses: actions/cache@v4
-      with:
-        path: node_modules
-        key: v1-ci-node-modules-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          v1-ci-node-modules-${{ hashFiles('package-lock.json') }}
-          v1-ci-node-modules-
+        path: /tmp/pear-bootstrap/v1-corestore
+        key: v1-corestore
 
     - name: Install w/ dev deps
       run: npm install
 
     - name: Bootstrap
-      run: npm run bootstrap
+      run: npm run bootstrap -- --corestore /tmp/pear-bootstrap/v1-corestore
 
     - name: Install Bare
       run: npm i -g bare-runtime
