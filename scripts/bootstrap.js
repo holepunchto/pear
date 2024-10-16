@@ -21,6 +21,7 @@ const parser = command('bootstrap',
   flag('--archdump'),
   flag('--dlruntime'),
   flag('--external-corestore'),
+  flag('--corestore <path>'),
   rest('rest')
 )
 const cmd = parser.parse(argv.slice(2), { sync: true })
@@ -28,7 +29,12 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
 const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
-const CORESTORE = cmd.flags.externalCorestore && `/tmp/pear-archdump/${RUNTIMES_DRIVE_KEY}`
+let CORESTORE
+if (cmd.flags.externalCorestore) {
+  CORESTORE = `/tmp/pear-archdump/${RUNTIMES_DRIVE_KEY}`
+} else if (cmd.flags.corestore) {
+  CORESTORE = cmd.flags.corestore
+}
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
