@@ -926,8 +926,12 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
+    if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set ', this.dhtBootstrap)
     const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
-    if (!this.dhtBootstrap) LOG.info('internal', 'DHT cache reading from file ' + nodes.length + ' nodes')
+    if (nodes) {
+      LOG.info('sidecar', 'DHT known nodes read from file ' + nodes.length + ' nodes')
+      LOG.trace('sidecar', nodes)
+    }
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
@@ -964,7 +968,8 @@ class Sidecar extends ReadyResource {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (nodes.length) {
           await knownNodes.set('nodes', nodes)
-          LOG.info('internal', 'DHT cache writing to file ' + nodes.length + ' nodes')
+          LOG.info('sidecar', 'DHT known nodes wrote to file ' + nodes.length + ' nodes')
+          LOG.trace('sidecar', nodes)
         }
       }
       await this.swarm.destroy()
