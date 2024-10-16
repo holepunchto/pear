@@ -697,6 +697,13 @@ class Sidecar extends ReadyResource {
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
+    const { unsafeClearPreferences } = flags
+    if (unsafeClearPreferences) {
+      LOG.info(LOG_RUN_LINK, 'clearing preferences')
+      await preferences.clear()
+      await permits.clear()
+    }
+
     let encryptionKey
     if (flags.encryptionKey) {
       LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
