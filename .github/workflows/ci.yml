@@ -36,6 +36,24 @@ jobs:
       with:
         node-version: lts/*
 
+    - name: Cache ~/.npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: v1-ci-npm-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          v1-ci-npm-${{ hashFiles('package-lock.json') }}
+          v1-ci-npm-
+
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: v1-ci-node-modules-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          v1-ci-node-modules-${{ hashFiles('package-lock.json') }}
+          v1-ci-node-modules-
+
     - name: Install w/ dev deps
       run: npm install
 
