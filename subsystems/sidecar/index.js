@@ -929,7 +929,7 @@ class Sidecar extends ReadyResource {
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
     const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
     if (nodes) {
-      LOG.info('sidecar', 'DHT known-nodes read from file ' + nodes.length + ' nodes')
+      LOG.info('sidecar', '- DHT known-nodes read from file ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
