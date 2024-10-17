@@ -108,7 +108,7 @@ module.exports = class State {
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, trace, updates, updatesDiff,
-      unsafeClearAppStorage, unsafeClearPreferences, chromeWebrtcInternals
+      unsafeClearAppStorage, chromeWebrtcInternals
     } = flags
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
@@ -147,7 +147,6 @@ module.exports = class State {
     this.cmdArgs = cmdArgs
     this.pkgPath = pkgPath
     this.id = id
-    this.clearPreferences = unsafeClearPreferences
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.env = { ...env }
