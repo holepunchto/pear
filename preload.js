@@ -123,7 +123,19 @@ if (process.isMainFrame) {
     }
   }
 
-  if (isDecal === false) warm().catch(console.error)
+  if (isDecal === false) {
+    if (Array.isArray(state.options.preloads)) {
+      for (const preload of state.options.preloads) {
+        try {
+          appsl.require(preload, { resolved: true })
+        } catch (err) {
+          console.error(`Could not preload ${preload}:\n\n`, err)
+        }
+      }
+    }
+
+    warm().catch(console.error)
+  }
 
   customElements.define('pear-ctrl', class extends HTMLElement {
     #onfocus = null
