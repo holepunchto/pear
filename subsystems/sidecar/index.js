@@ -926,11 +926,11 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set ', this.dhtBootstrap)
+    if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
     const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
     if (nodes) {
-      LOG.info('sidecar', 'DHT known nodes read from file ' + nodes.length + ' nodes')
-      LOG.trace('sidecar', nodes)
+      LOG.info('sidecar', '- DHT known-nodes read from file ' + nodes.length + ' nodes')
+      LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
     this.swarm.once('close', () => { this.swarm = null })
@@ -968,8 +968,8 @@ class Sidecar extends ReadyResource {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (nodes.length) {
           await knownNodes.set('nodes', nodes)
-          LOG.info('sidecar', 'DHT known nodes wrote to file ' + nodes.length + ' nodes')
-          LOG.trace('sidecar', nodes)
+          LOG.info('sidecar', '- DHT known-nodes wrote to file ' + nodes.length + ' nodes')
+          LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
       }
       await this.swarm.destroy()
