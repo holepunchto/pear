@@ -477,6 +477,10 @@ class App {
       }
     })
 
+    electron.app.on('app-exit', () => {
+      electron.app.exit()
+    })
+
     const { state } = this
 
     this.starting = this.ipc.start({
