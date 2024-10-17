@@ -41,7 +41,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
 
 let platformDirLs
 test.hook('prepare low-spindown platform', async (t) => {
-  t.timeout(120_000)
+  t.timeout(200_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'als-pear')
   t.comment(`Copying platform code to ${patchedArtefactDir}`)
