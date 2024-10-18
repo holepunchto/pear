@@ -29,6 +29,15 @@ on:
         options:
           - false
           - true
+        default: 'false'
+      tag-build:
+        type: choice
+        description: Tag build-<channel>
+        required: false
+        options:
+          - true
+          - false
+        default: 'true'
 
 jobs:
   build:
