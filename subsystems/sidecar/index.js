@@ -41,6 +41,7 @@ const encryptionKeys = new Store('encryption-keys')
 const knownNodes = new Store('dht')
 const SharedState = require('../../state')
 const State = require('./state')
+const Transformer = require('../../transformer')
 const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
@@ -144,6 +145,7 @@ class Sidecar extends ReadyResource {
       app = null
       unload = null
       unloader = null
+      transformer = null
       minvering = false
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
@@ -724,6 +726,9 @@ class Sidecar extends ReadyResource {
 
     app.state = state
 
+    const transformer = new Transformer(app, `${this.bundle.link}/transform.js`)
+    const sourceTransform = state.transforms ? transformer.transform.bind(transformer) : null
+
     if (state.key === null) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
       const drive = new LocalDrive(state.dir, { followLinks: true })
@@ -739,7 +744,8 @@ class Sidecar extends ReadyResource {
         mapImport: this.gunk.app.mapImport,
         symbol: this.gunk.app.symbol,
         protocol: this.gunk.app.protocol,
-        runtimes: this.gunk.app.runtimes
+        runtimes: this.gunk.app.runtimes,
+        sourceTransform
       })
       LOG.info('session', 'adding appBundle to session for', startId)
       await session.add(appBundle)
@@ -839,7 +845,8 @@ class Sidecar extends ReadyResource {
       mapImport: this.gunk.app.mapImport,
       symbol: this.gunk.app.symbol,
       protocol: this.gunk.app.protocol,
-      runtimes: this.gunk.app.runtimes
+      runtimes: this.gunk.app.runtimes,
+      sourceTransform
     })
 
     app.linker = linker

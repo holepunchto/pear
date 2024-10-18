@@ -9,6 +9,7 @@ module.exports = class Mime {
         this.extmap.set(extension, name)
       }
     }
+    this.extmap.set('jsx', this.extmap.get('js'))
   }
 
   type (filepath) {

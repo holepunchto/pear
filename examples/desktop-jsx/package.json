@@ -1,0 +1,43 @@
+{
+  "name": "desktop-jsx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "brittle"
+  },
+  "type": "module",
+  "pear": {
+    "name": "desktop-jsx",
+    "gui": {
+      "width": 900,
+      "height": 500,
+      "minWidth": 500,
+      "backgroundColor": "#151517"
+    },
+    "transforms": {
+      "**/*.jsx": [
+        {
+          "name": "pear-jsx",
+          "options": {
+            "pragma": "React.createElement",
+            "import": {
+              "module": "react",
+              "export": "default",
+              "type": "esm"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "pear-jsx": "github:holepunchto/pear-jsx",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "brittle": "^3.0.0",
+    "pear-interface": "^1.0.0"
+  }
+}
