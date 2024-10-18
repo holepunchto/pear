@@ -61,7 +61,8 @@ jobs:
             --channel ${{ inputs.channel }} \
             --notify true ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
 
-      - name: Track
+      - name: Tag
+        if: ${{ inputs.tag-build == 'true' }}
         run: |
           if [ -n "${{ inputs.custom-commit }}" ]; then
             git checkout ${{ inputs.custom-commit }}
