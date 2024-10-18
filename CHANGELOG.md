@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v1.5.1
+
+### Fixes
+
+* Desktop - forced teardown fix for Pear desktop apps that take longer than 15 seconds to close
+* Dependencies - udx-native updated to 1.13.3
+
 ## v1.5.0
 
 ### Features
