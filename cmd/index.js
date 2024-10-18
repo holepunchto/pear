@@ -125,6 +125,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--json', 'Newline delimited JSON output'),
+    flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     hiddenFlag('--encryption-key <name>', 'Application encryption key'),
     runners.dump(ipc)
