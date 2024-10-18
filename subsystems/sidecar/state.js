@@ -70,7 +70,6 @@ module.exports = class State extends SharedState {
     this.update({ tier, name, main, options, dependencies, channel, release })
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
-    if (this.clearPreferences) await preferences.clear()
 
     await fsp.mkdir(this.storage, { recursive: true })
     try { this.checkpoint = JSON.parse(await fsp.readFile(path.join(this.storage, 'checkpoint'))) } catch { /* ignore */ }
