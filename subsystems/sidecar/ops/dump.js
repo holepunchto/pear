@@ -7,15 +7,20 @@ const Store = require('../lib/store')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
 const hypercoreid = require('hypercore-id-encoding')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, checkout, encryptionKey }) {
+  async #op ({ link, dir, checkout, encryptionKey, force }) {
     const { session, sidecar } = this
     await sidecar.ready()
+
+    const files = await fsp.readdir(dir)
+    const empty = files.length === 0
+    if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
     const localFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
