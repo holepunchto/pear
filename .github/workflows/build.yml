@@ -51,3 +51,11 @@ jobs:
             --commit ${{ inputs.custom-commit || github.sha }} \
             --channel ${{ inputs.channel }} \
             --notify true ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
+
+      - name: Track
+        run: |
+          if [ -n "${{ inputs.custom-commit }}" ]; then
+            git checkout ${{ inputs.custom-commit }}
+          fi
+          git tag channel-${{ inputs.channel }} -f
+          git push origin channel-${{ inputs.channel }} -f
