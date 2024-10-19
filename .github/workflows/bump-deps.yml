@@ -8,4 +8,13 @@ jobs:
     uses: holepunchto/actions/.github/workflows/bump-deps.yml@v1
     secrets: inherit
 
-  notify-slack: # TODO
+  notify-slack:
+    needs: bump-deps
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        uses: holepunchto/actions/.github/steps/notify-slack@v1
+        with:
+          auth_token: ${{ secrets.SLACK_TOKEN }}
+          channel_id: "#pear-platform"
+          message: "Please review: Bump Deps ${{ steps.bump-deps.outputs.pull-request-url }}"
