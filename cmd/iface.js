@@ -162,8 +162,8 @@ async function trust (ipc, key, cmd) {
   }
 
   const ask = {
-    run: 'Tust application',
-    init: 'Tust template'
+    run: 'Trust application',
+    init: 'Trust template'
   }
 
   const z32 = hypercoreid.encode(key)
