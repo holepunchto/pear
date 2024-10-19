@@ -1,6 +1,8 @@
 name: Bump Deps
 
 on:
+  schedule:
+    - cron: '0 16 * * 1-5'
   workflow_dispatch:
 
 jobs:
