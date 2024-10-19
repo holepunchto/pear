@@ -17,4 +17,4 @@ jobs:
         with:
           auth_token: ${{ secrets.SLACK_TOKEN }}
           channel_id: "#pear-platform"
-          message: "Please review: Bump Deps ${{ steps.bump-deps.outputs.pull-request-url }}"
+          message: "Please review: Bump Deps ${{ needs.bump-deps.outputs.pull-request-url }}"

@@ -28,3 +28,14 @@ jobs:
     with:
       version: ${{ inputs.version }}
       labels: 'bump-version,channel-${{ inputs.channel }}'
+  
+  notify-slack:
+    needs: bump-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        uses: holepunchto/actions/.github/steps/notify-slack@v1
+        with:
+          auth_token: ${{ secrets.SLACK_TOKEN }}
+          channel_id: "#pear-platform"
+          message: "Please review: Bump Version ${{ needs.bump-version.outputs.pull-request-url }}"
