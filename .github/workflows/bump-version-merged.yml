@@ -15,7 +15,7 @@ jobs:
       - name: Tag
         run: |
           version=${{ github.event.pull_request.title }}
-          echo "Bumping version to $version"
+          echo "Tag $version"
           git tag $version -f
           git push origin $version -f
 
