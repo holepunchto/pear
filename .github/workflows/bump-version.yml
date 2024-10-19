@@ -28,3 +28,5 @@ jobs:
     with:
       version: ${{ inputs.version }}
       labels: 'bump-version,channel-${{ inputs.channel }}'
+
+  notify-slack: # TODO

@@ -4,12 +4,6 @@ on:
   pull_request:
     types: [closed]
 
-env:
-  version: ${{ github.event.pull_request.title }}
-  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') && 'true' }}
-  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') && 'true' }}
-  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') && 'true' }}
-
 jobs:
   tag:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'bump-version') }}
@@ -20,10 +14,10 @@ jobs:
 
       - name: Tag
         run: |
-          echo ${{ env.version }}
-          git tag ${{ env.version }}
-          git push --tags
-
+          version=${{ github.event.pull_request.title }}
+          echo "Bumping version to $version"
+          git tag $version -f
+          git push origin $version -f
 
   pre-build:
     needs: tag
@@ -34,10 +28,13 @@ jobs:
       - name: Prepare channel
         id: prepare-channel
         run: |
+          channel-staging=${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') && 'true' }}
+          channel-rc=${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') && 'true' }}
+
           channel=dev
-          if [[ ${{ env.channel-staging }} == 'true' ]]; then
+          if [[ "$channel-staging" == 'true' ]]; then
             channel=stage
-          elif [[ ${{ env.channel-rc }} == 'true' ]]; then
+          elif [[ "$channel-rc" == 'true' ]]; then
             channel=rc
           fi
           echo "Channel to build: $channel"
