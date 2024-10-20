@@ -22,6 +22,10 @@ on:
         type: string
         description: Custom commit
         required: false
+      add-tag:
+        type: string
+        description: Add tag
+        required: false
       dry-run:
         type: choice
         description: Dry run
@@ -29,6 +33,7 @@ on:
         options:
           - false
           - true
+        default: 'false'
 
 jobs:
   build:
@@ -51,3 +56,12 @@ jobs:
             --commit ${{ inputs.custom-commit || github.sha }} \
             --channel ${{ inputs.channel }} \
             --notify true ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}
+
+      - name: Tag
+        if: ${{ inputs.add-tag }}
+        run: |
+          if [ -n "${{ inputs.custom-commit }}" ]; then
+            git checkout ${{ inputs.custom-commit }}
+          fi
+          git tag ${{ inputs.add-tag }} -f
+          git push origin ${{ inputs.add-tag }} -f
