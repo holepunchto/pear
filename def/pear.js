@@ -10,5 +10,7 @@ module.exports = [
   flag('--log', 'Label:sidecar Level:2 Fields: h:level,h:label'),
   flag('--sidecar', 'Boot Sidecar'),
   hiddenFlag('--run'), // appling legacy
+  hiddenFlag('--sandbox'), // appling legacy
+  hiddenFlag('--appling'), // appling legacy
   hiddenFlag('--dht-bootstrap <nodes>')
 ]
