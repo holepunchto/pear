@@ -1,0 +1,219 @@
+{
+  "version": 2,
+  "schema": [
+    {
+      "name": "alias1",
+      "namespace": "example",
+      "alias": "fixed32",
+      "version": 2
+    },
+    {
+      "name": "struct1",
+      "namespace": "example",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "field1",
+          "required": true,
+          "type": "@example/alias1",
+          "version": 1
+        },
+        {
+          "name": "field1",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "struct2",
+      "namespace": "example",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "field1",
+          "required": true,
+          "type": "@example/struct1",
+          "version": 1
+        },
+        {
+          "name": "field2",
+          "required": true,
+          "type": "@example/struct1",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "record1",
+      "namespace": "example",
+      "compact": false,
+      "flagsPosition": 4,
+      "fields": [
+        {
+          "name": "id1",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "id2",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "id3",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "struct1",
+          "required": true,
+          "type": "@example/struct2",
+          "version": 1
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "age",
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "tags",
+          "array": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "collection-info",
+      "namespace": "example",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "count",
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "alias1",
+      "namespace": "pear",
+      "alias": "fixed32",
+      "version": 2
+    },
+    {
+      "name": "struct1",
+      "namespace": "pear",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "field1",
+          "required": true,
+          "type": "@example/alias1",
+          "version": 2
+        },
+        {
+          "name": "field1",
+          "required": true,
+          "type": "uint",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "name": "struct2",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "field1",
+          "required": true,
+          "type": "@example/struct1",
+          "version": 2
+        },
+        {
+          "name": "field2",
+          "required": true,
+          "type": "@example/struct1",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "name": "record1",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 4,
+      "fields": [
+        {
+          "name": "id1",
+          "required": true,
+          "type": "uint",
+          "version": 2
+        },
+        {
+          "name": "id2",
+          "required": true,
+          "type": "uint",
+          "version": 2
+        },
+        {
+          "name": "id3",
+          "required": true,
+          "type": "uint",
+          "version": 2
+        },
+        {
+          "name": "struct1",
+          "required": true,
+          "type": "@example/struct2",
+          "version": 2
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "version": 2
+        },
+        {
+          "name": "age",
+          "type": "uint",
+          "version": 2
+        },
+        {
+          "name": "tags",
+          "array": true,
+          "type": "string",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "name": "collection-info",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "count",
+          "type": "uint",
+          "version": 2
+        }
+      ]
+    }
+  ]
+}
