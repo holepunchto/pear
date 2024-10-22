@@ -39,3 +39,4 @@ jobs:
       channel: ${{ inputs.channel }}
       commit: ${{ inputs.custom-commit || github.sha }}
       dry-run: ${{ inputs.dry-run }}
+      notify: false # TODO: remove after testing
