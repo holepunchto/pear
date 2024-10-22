@@ -114,9 +114,7 @@ ${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}
 }
 
 const descriptions = {
-  release: `Set production release version.
-
-Set the release pointer against a version (default latest).
+  release: `Set the release pointer against a version (default latest).
 
 Use this to indicate production release points.`,
 
@@ -164,8 +162,8 @@ async function trust (ipc, key, cmd) {
   }
 
   const ask = {
-    run: 'Tust application',
-    init: 'Tust template'
+    run: 'Trust application',
+    init: 'Trust template'
   }
 
   const z32 = hypercoreid.encode(key)

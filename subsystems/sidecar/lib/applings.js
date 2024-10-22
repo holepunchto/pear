@@ -79,7 +79,6 @@ async function writeApplings (entries, applingsLoc) {
 class Applings extends ReadyResource {
   constructor (applingsPath) {
     super()
-
     this.path = applingsPath
     this._mutex = mutexify()
     this._applings = null
@@ -128,7 +127,7 @@ class Applings extends ReadyResource {
     this._writes++
 
     if (!this.flushable) {
-      console.warn('Cannot flush applings file to disk')
+      LOG.error('internal', 'Cannot flush applings file to disk (not flushable)')
       return
     }
 
@@ -144,7 +143,7 @@ class Applings extends ReadyResource {
     try {
       await writeApplings(this._applings, this.path)
     } catch (err) {
-      console.error(`Could not flush applings file to disk: ${err.stack}`)
+      LOG.error('internal', 'Could not flush applings file to disk', err)
     } finally {
       this._writes -= writesPreFlush
       release()

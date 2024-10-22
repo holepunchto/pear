@@ -17,9 +17,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       Bare.argv.push('.')
     }
 
-    const args = Bare.argv.slice(2)
+    const cmdArgs = cmd.command.argv
+    const args = cmdArgs.slice(1)
     const appArgs = cmd.rest || []
-    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs: Bare.argv.slice(1), storage: store, detached }))
+    await output(json, await require('../run')({ flags: cmd.flags, link: cmd.args.link, indices: cmd.indices, appArgs, ipc, args, cmdArgs, storage: store, detached }))
   } catch (err) {
     if (err.code === 'ERR_PERMISSION_REQUIRED' && cmd.flags.ask && isTTY) {
       await permit(ipc, err.info, 'run')

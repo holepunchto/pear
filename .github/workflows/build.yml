@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+        description: Channel to build
+        required: true
+        default: 'dev'
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        description: Select channel to build
+        required: true
+        options:
+          - dev
+          - stage
+          - rc
+      custom-commit:
+        type: string
+        description: Custom commit
+        required: false
+      dry-run:
+        type: choice
+        description: Dry run
+        required: false
+        options:
+          - false
+          - true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Repo
+        uses: holepunchto/actions/.github/steps/setup-repo@v1
+
+      - name: Install keet-automation
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install -g @holepunchto/keet-automation
+
+      - name: Build
+        run: |
+          keet-automation \
+            --seed ${{ secrets.AUTOMATION }} \
+            --remote c855820b0f7586b90a033b655aa97e713266fee588754223a29c489f540ef68d pear-platform \
+            --commit ${{ inputs.custom-commit || github.sha }} \
+            --channel ${{ inputs.channel }} \
+            --notify true ${{ inputs.dry-run == 'true' && '--dry-run' || '' }}

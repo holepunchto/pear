@@ -477,6 +477,10 @@ class App {
       }
     })
 
+    electron.app.on('app-exit', () => {
+      electron.app.exit()
+    })
+
     const { state } = this
 
     this.starting = this.ipc.start({
@@ -1525,20 +1529,6 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
-
-    // DEPRECATED - assess to remove from Sep 2024
-    electron.ipcMain.on('preferences', (evt) => {
-      const preferences = this.preferences()
-      preferences.on('data', (data) => evt.reply('preferences', data))
-      preferences.on('end', () => evt.reply('preferences', null))
-    })
-    electron.ipcMain.handle('setPreference', (evt, ...args) => this.setPreference(...args))
-    electron.ipcMain.handle('getPreference', (evt, ...args) => this.getPreference(...args))
-    electron.ipcMain.on('iteratePreferences', (evt) => {
-      const iteratePreferences = this.iteratePreferences()
-      iteratePreferences.on('data', (data) => evt.reply('iteratePreferences', data))
-      iteratePreferences.on('end', () => evt.reply('iteratePreferences', null))
-    })
   }
 
   async app () {
@@ -1757,12 +1747,6 @@ class PearGUI extends ReadyResource {
   reports () { return this.ipc.reports() }
 
   permit (params) { return this.ipc.permit(params) }
-
-  // DEPRECATED - assess to remove from Sep 2024
-  preferences () { return this.ipc.preferences() }
-  setPreference (key, value) { return this.ipc.setPreference({ key, value }) }
-  async getPreference (key) { return this.ipc.getPreference({ key }) }
-  iteratePreference () { return this.ipc.iteratePreference() }
 }
 
 class Freelist {

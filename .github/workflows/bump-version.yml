@@ -1,0 +1,30 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: Select version type to bump
+        required: true
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
+      channel:
+        type: choice
+        description: Select channel to build
+        required: true
+        options:
+          - dev
+          - stage
+          - rc
+
+jobs:
+  bump-version:
+    uses: holepunchto/actions/.github/workflows/bump-version.yml@v1
+    secrets: inherit
+    with:
+      version: ${{ inputs.version }}
+      labels: 'bump-version,channel-${{ inputs.channel }}'

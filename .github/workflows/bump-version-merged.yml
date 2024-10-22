@@ -1,0 +1,51 @@
+name: Bump Version on Merged
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  version: ${{ github.event.pull_request.title }}
+  channel-dev: ${{ contains(github.event.pull_request.labels.*.name, 'channel-dev') && 'true' }}
+  channel-staging: ${{ contains(github.event.pull_request.labels.*.name, 'channel-staging') && 'true' }}
+  channel-rc: ${{ contains(github.event.pull_request.labels.*.name, 'channel-rc') && 'true' }}
+
+jobs:
+  tag:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'bump-version') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: holepunchto/actions/.github/steps/setup-repo@v1
+
+      - name: Tag
+        run: |
+          echo ${{ env.version }}
+          git tag ${{ env.version }}
+          git push --tags
+
+
+  pre-build:
+    needs: tag
+    runs-on: ubuntu-latest
+    outputs:
+      channel: ${{ steps.prepare-channel.outputs.channel }}
+    steps:
+      - name: Prepare channel
+        id: prepare-channel
+        run: |
+          channel=dev
+          if [[ ${{ env.channel-staging }} == 'true' ]]; then
+            channel=stage
+          elif [[ ${{ env.channel-rc }} == 'true' ]]; then
+            channel=rc
+          fi
+          echo "Channel to build: $channel"
+          echo channel=$channel >> $GITHUB_OUTPUT
+
+  build:
+    needs: pre-build
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      channel: ${{ needs.pre-build.outputs.channel }}

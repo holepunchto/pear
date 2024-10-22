@@ -71,6 +71,13 @@ pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
 pear://pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
 ```
 
+### Stage Build
+
+```
+pear://fbdbkwt5yojdfidmqeh39tomepj348hn78xzwk181ecqr61jkzzo
+```
+
+Note: Always use the production build unless you are sure of what you are doing. The stage build may introduce untested breaking changes that could affect other Pear apps.
 
 ## License
 

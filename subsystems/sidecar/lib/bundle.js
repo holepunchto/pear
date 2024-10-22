@@ -15,11 +15,10 @@ const noop = Function.prototype
 module.exports = class Bundle {
   platformVersion = null
   warmup = { blocks: 0, total: 0 }
-  #log = null
   constructor (opts = {}) {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
-      key, channel, trace = null, stage = false, log = noop, failure,
+      key, channel, trace = null, stage = false, status = noop, failure,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
     this.checkout = checkout
@@ -28,7 +27,7 @@ module.exports = class Bundle {
     this.hexKey = this.key ? this.key.toString('hex') : null
     this.channel = channel || null
     this.local = !this.key
-    this.log = log
+    this.status = status
     this.failure = failure
     this.corestore = corestore
     this.trace = trace
@@ -41,12 +40,12 @@ module.exports = class Bundle {
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
     if (this.corestore) {
       this.replicator = new Replicator(this.drive, { appling: this.appling })
-      this.replicator.on('announce', () => this.log({ tag: 'announced' }))
+      this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
-        this.log({ tag: 'peer-add', data: peer.remotePublicKey.toString('hex') })
+        this.status({ tag: 'peer-add', data: peer.remotePublicKey.toString('hex') })
       })
       this.drive.core.on('peer-remove', (peer) => {
-        this.log({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
+        this.status({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
       })
     } else {
       this.replicator = null
@@ -144,7 +143,8 @@ module.exports = class Bundle {
 
   async fatal (err) {
     try {
-      this.log({ tag: 'bundle-error', data: err })
+      this.status({ tag: 'bundle-error', data: err })
+      LOG.error('internal', 'Drive Bundle Failure', err)
       if (typeof this.failure === 'function') {
         await this.failure(err)
       } else {

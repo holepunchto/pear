@@ -20,9 +20,9 @@
   "keywords": [],
   "author": "Holepunch",
   "dependencies": {
-    "bare-inspector": "^2.0.0",
+    "bare-inspector": "^3.0.1",
     "pear": "file:../../..",
-    "pear-inspect": "^1.1.1",
+    "pear-inspect": "^1.2.2",
     "ready-resource": "^1.1.1"
   }
 }
