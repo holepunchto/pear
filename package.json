@@ -130,7 +130,7 @@
     "graceful-goodbye": "^1.3.0",
     "hyperbee": "^2.0.1",
     "hypercore": "^10.36.4",
-    "hyperschema": "^1.0.2",
+    "hyperschema": "^1.0.3",
     "newline-decoder": "^1.0.2",
     "pear-inspect": "^1.2.2",
     "port-get": "^1.0.4",
