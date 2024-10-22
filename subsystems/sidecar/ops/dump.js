@@ -17,9 +17,11 @@ module.exports = class Dump extends Opstream {
     const { session, sidecar } = this
     await sidecar.ready()
 
-    const files = await fsp.readdir(dir)
-    const empty = files.length === 0
-    if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    if (dir !== '-') {
+      const files = await fsp.readdir(dir)
+      const empty = files.length === 0
+      if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    }
 
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
