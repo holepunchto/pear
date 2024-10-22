@@ -93,8 +93,7 @@ test('pear stage <channel> <relative-path> (package.json pear.config.stage.entry
   const sourceDrive = new LocalDrive(minimal)
   const targetDrive = new LocalDrive(targetDir)
   const mirror = sourceDrive.mirror(targetDrive, { prune: false })
-  // eslint-disable-next-line no-unused-vars
-  for await (const val of mirror) { /* ignore */ }
+  await mirror.done()
 
   const originalPackageJson = fs.readFileSync(path.join(targetDir, 'package.json'), 'utf8')
   const packageJson = JSON.parse(originalPackageJson)
@@ -133,8 +132,7 @@ test('pear stage <channel> <relative-path> (package.json pear.stage.ignore <rela
   const sourceDrive = new LocalDrive(minimal)
   const targetDrive = new LocalDrive(targetDir)
   const mirror = sourceDrive.mirror(targetDrive, { prune: false })
-  // eslint-disable-next-line no-unused-vars
-  for await (const val of mirror) { /* ignore */ }
+  await mirror.done()
 
   const originalPackageJson = fs.readFileSync(path.join(targetDir, 'package.json'), 'utf8')
   const packageJson = JSON.parse(originalPackageJson)
