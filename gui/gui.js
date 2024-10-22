@@ -1529,6 +1529,12 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
+
+    electron.app.once('will-quit', () => {
+      for (const pipe of this.pipes) {
+        pipe.sp.kill('SIGTERM')
+      }
+    })
   }
 
   async app () {
