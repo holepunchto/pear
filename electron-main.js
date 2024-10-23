@@ -56,6 +56,10 @@ async function electronMain (cmd) {
 }
 
 function configureElectron () {
+  if (isMac) {
+    electron.app.setAsDefaultProtocolClient('pear')
+  }
+
   const appName = applingName()
   if (appName) {
     process.title = appName
