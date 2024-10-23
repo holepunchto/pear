@@ -1,5 +1,5 @@
 'use strict'
-const { flag, hiddenFlag } = require('paparam')
+const { flag } = require('paparam')
 
 module.exports = [
   flag('-v', 'Print version'),
@@ -9,8 +9,8 @@ module.exports = [
   flag('--log-stacks', 'Add a stack trace to each log message'),
   flag('--log', 'Label:sidecar Level:2 Fields: h:level,h:label'),
   flag('--sidecar', 'Boot Sidecar'),
-  hiddenFlag('--run'), // appling legacy
-  hiddenFlag('--sandbox'), // appling legacy
-  hiddenFlag('--appling'), // appling legacy
-  hiddenFlag('--dht-bootstrap <nodes>')
+  flag('--run').hide(), // appling legacy
+  flag('--sandbox').hide(), // appling legacy
+  flag('--appling').hide(), // appling legacy
+  flag('--dht-bootstrap <nodes>').hide()
 ]

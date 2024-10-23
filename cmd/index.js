@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, hiddenCommand, arg, summary, description, bail, sloppy, hiddenFlag } = require('paparam')
+const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -62,7 +62,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
-    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.seed(ipc)
   )
 
@@ -79,7 +79,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.stage(ipc)
   )
 
@@ -114,7 +114,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--key', 'View key only'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.info(ipc)
   )
 
@@ -127,7 +127,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    hiddenFlag('--encryption-key <name>', 'Application encryption key'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.dump(ipc)
   )
 
@@ -182,12 +182,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     else console.log(cmd.overview({ full: true }))
   })
 
-  const encryptionKey = hiddenCommand(
+  const encryptionKey = command(
     'encryption-key',
     command('add', arg('<name>'), arg('<secret>'), (cmd) => runners.encryptionKey(ipc).add(cmd)),
     command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd)),
     command('generate', (cmd) => runners.encryptionKey(ipc).generate(cmd))
-  )
+  ).hide()
 
   const cmd = command('pear',
     ...def.pear,
