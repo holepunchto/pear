@@ -18,7 +18,7 @@ class Harness extends ReadyResource {
     console.log(`{ "tag": "inspector", "data": { "key": "${this.inspectorKey}" }}`)
   }
 
-  async _close () {
+  async close () {
     await this.inspector.disable()
     await this.sub?.destroy()
     if (this._client) await this._client.close()
@@ -41,10 +41,7 @@ class Harness extends ReadyResource {
       const { default: cmd } = await import('pear/cmd')
       this.cmd = cmd
     }
-
-    this.Helper.PLATFORM_DIR = global.Pear.config.pearDir
-
-    return new this.Helper({ opts })
+    return new this.Helper(opts)
   }
 
   nextUpdate () {
