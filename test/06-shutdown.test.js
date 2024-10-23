@@ -146,7 +146,12 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('\tStaging patched platform')
   const rigHelper = new Helper(rig)
-  t.teardown(() => rigHelper.close(), { order: Infinity })
+  t.teardown(async () => {
+    if (!rigHelper.closing) {
+      await rigHelper.shutdown()
+      await rigHelper.close()
+    }
+  }, { order: Infinity })
   await rigHelper.ready()
 
   const patchedStager = rigHelper.stage({ channel: 'test-spindown-throttled', name: 'test-spindown-throttled', dir: patchedArtefactDir, dryRun: false, bare: true })
@@ -166,6 +171,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => Helper.gc(platformDirRcv))
 
   await Helper.teardownStream(patchedSeeder)
+  await rigHelper.shutdown()
   await rigHelper.close()
 
   t.comment('2. Start patched rcv platform')
