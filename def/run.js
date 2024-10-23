@@ -1,5 +1,5 @@
 'use strict'
-const { flag, hiddenFlag, arg, rest } = require('paparam')
+const { flag, arg, rest } = require('paparam')
 
 module.exports = [
   arg('<link|dir>', 'Pear link, alias or directory to run app from'),
@@ -19,12 +19,12 @@ module.exports = [
   flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
   flag('--detached', 'Wakeup existing app or run detached'),
   flag('--no-ask', 'Suppress permissions dialog'),
-  hiddenFlag('--dht-bootstrap <nodes>', 'DHT boostrap'),
-  hiddenFlag('--encryption-key <name>', 'Application encryption key'),
-  hiddenFlag('--trusted'),
-  hiddenFlag('--detach'),
-  hiddenFlag('--trace <n>'),
-  hiddenFlag('--swap <path>'),
-  hiddenFlag('--start-id <id>'),
-  hiddenFlag('--sandbox') // electron passthrough
+  flag('--dht-bootstrap <nodes>', 'DHT boostrap').hide(),
+  flag('--encryption-key <name>', 'Application encryption key').hide(),
+  flag('--trusted').hide(),
+  flag('--detach').hide(),
+  flag('--trace <n>').hide(),
+  flag('--swap <path>').hide(),
+  flag('--start-id <id>').hide(),
+  flag('--sandbox').hide() // electron passthrough
 ]
