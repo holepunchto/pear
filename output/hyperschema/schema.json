@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "schema": [
+    {
+      "name": "dht-nodes",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "host",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "port",
+          "required": true,
+          "type": "int",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "encryption-keys",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "publicKey",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "privateKey",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "permits",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "z32",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 1,
+      "fields": [
+        {
+          "name": "publicKey",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "privateKey",
+          "required": false,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "apps",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "apps-owned",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "app-storage",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "app",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "channels",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "error-logs",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "type",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "trace",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "perf-stats",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "uptimeSeconds",
+          "required": true,
+          "type": "int",
+          "version": 1
+        },
+        {
+          "name": "ramUsage",
+          "required": true,
+          "type": "float64",
+          "version": 1
+        },
+        {
+          "name": "cpuUsage",
+          "required": true,
+          "type": "float64",
+          "version": 1
+        },
+        {
+          "name": "os",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}
