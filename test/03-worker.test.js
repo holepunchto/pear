@@ -1,12 +1,3 @@
-'use strict'
-/* global Pear */
-// const test = require('brittle')
-// const path = require('bare-path')
-// const Helper = require('./helper')
-// const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
-
-
-// 'use strict'
 const { isElectronRenderer, isWindows, isBare } = require('which-runtime')
 const fs = isBare ? require('bare-fs') : require('fs')
 const { spawn } = isBare ? require('bare-subprocess') : require('child_process')
@@ -95,11 +86,6 @@ setTimeout(() => {
 }, 20000)
 
 async function run () {
-// test('worker pipe', async function ({ is, plan, comment, teardown }) {
-//   plan(1)
-  // const helper = new Helper()
-//   teardown(() => helper.close())
-  // await helper.ready()
   const dir = worker
 
   const pipe = worker.run(dir)
@@ -115,11 +101,8 @@ async function run () {
   pipe.write('ping')
 
   const workerResponse = await response
-  // is(workerResponse, '0123', 'worker pipe can send and receive data')
-
+  console.log(workerResponse)
   pipe.write('exit')
-// })
-
 }
 
 run().catch(console.error)
