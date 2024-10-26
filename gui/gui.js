@@ -379,7 +379,9 @@ class App {
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
 
-  constructor (state, ipc) {
+  constructor (gui) {
+    const { state, ipc } = gui
+    this.gui = gui
     this.state = state
     this.ipc = ipc
     this.contextMenu = null
@@ -646,7 +648,8 @@ class App {
         resolve(false)
       }
     })
-    const closingPipes = this.pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
+    const pipes = [...this.gui.pipes]
+    const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
     const unloaders = [closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
@@ -656,7 +659,7 @@ class App {
       ctrl.unload({ type: 'close' })
       return ctrl.unloader.then(closed, closed)
     })]
-    for (const pipe of this.pipes) pipe.close()
+    for (const pipe of pipes) pipe.end()
     const unloading = Promise.all(unloaders)
     unloading.then(clear, clear)
     const result = await Promise.race([timeout, unloading])
@@ -1532,7 +1535,7 @@ class PearGUI extends ReadyResource {
   }
 
   async app () {
-    const app = new App(this.state, this.ipc)
+    const app = new App(this)
     this.once('close', async () => { app.quit() })
     await app.start()
     return app
