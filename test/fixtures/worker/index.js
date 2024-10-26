@@ -8,6 +8,10 @@ pipe.on('data', (data) => {
     setInterval(() => pipe.write((i++).toString()), 2000)
   }
   if (str === 'exit') {
+<<<<<<< Updated upstream
+=======
+    clearInterval(interval)
+>>>>>>> Stashed changes
     Pear.exit()
   }
 })
