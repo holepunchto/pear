@@ -985,6 +985,7 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     if (this.corestore) await this.corestore.close()
+    await db.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
