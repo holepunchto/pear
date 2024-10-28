@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "@fontsource/open-sans": "^5.0.22",
+    "@holepunchto/hyperdb": "^1.5.1",
     "@hyperswarm/seeders": "^1.1.6",
     "b4a": "^1.6.6",
     "bare-bundle": "^1.7.0",
