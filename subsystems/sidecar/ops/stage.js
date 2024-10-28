@@ -111,13 +111,12 @@ module.exports = class Stage extends Opstream {
     if (dryRun) this.push({ tag: 'dry' })
 
     const root = state.dir
-    const main = unixPathResolve('/', state.main)
     const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
     const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
-    const entrypoints = [main, ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+    const entrypoints = [...(state.manifest.main ? [state.main] : []), ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     const mirror = new Mirror(src, dst, opts)
