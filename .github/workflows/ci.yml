@@ -26,29 +26,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
-    - name: Checkout
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1 https://github.com/actions/checkout/releases/tag/v4.1.1
-      with:
-        persist-credentials: false
-        ref: ${{ github.event.pull_request.head.ref }}
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2 https://github.com/actions/setup-node/releases/tag/v4.0.2
-      with:
-        node-version: lts/*
+      - name: Setup repo
+        uses: holepunchto/actions/.github/steps/setup-repo@v1
 
-    - name: Install w/ dev deps
-      run: npm install
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install w/ dev deps
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Bootstrap
-      run: npm run bootstrap
+      - name: Bootstrap
+        run: npm run bootstrap
 
-    - name: Install Bare
-      run: npm i -g bare-runtime
+      - name: Install Bare
+        run: npm i -g bare-runtime
 
-    - name: Test
-      run: npm test
+      - name: Test
+        run: npm test
 
-    - name: Lint
-      run: npm run lint
+      - name: Lint
+        run: npm run lint
