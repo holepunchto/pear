@@ -6,6 +6,7 @@
 
 * Internal - Added sidecar logs
 * Performance - Added DHT persistent cache
+* CLI - `pear dump --dry-run` flag
 
 ### Fixes
 
@@ -13,11 +14,13 @@
 * Dependencies - udx-native updated to 1.13.3
 * Internal - Block of spindown while platform is updating
 * Desktop - Fix teardown of worker on app exit
+* Desktop - Decal run from disk bug fix
+* Desktop - Decal bar bug fix
+* CLI - Added --force flag to `dump`
 
 ### Improvements
 
 * API - Removed deprecated preferences methods from Pear API
-* CLI - Added --force flag to `dump` 
 * Internal - Added RocksDB native support
 
 ## v1.5.0
