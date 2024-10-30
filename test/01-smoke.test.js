@@ -3,6 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
+const { promiseToComplete } = require('./test.util')
 const worker = path.join(Helper.localDir, 'test', 'fixtures', 'basic-worker')
 const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
 
@@ -40,12 +41,18 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   const link = 'pear://' + key
 
   const pipe = Pear.worker.run(link)
+
+  const versionsPromise = promiseToComplete()
+  const dhtBootstrapPromise = promiseToComplete()
+
   pipe.on('data', (data) => {
     const obj = JSON.parse(data.toString())
     if (obj.type === 'versions') {
       is(obj.value.app.key, key, 'app version matches staged key')
+      versionsPromise.resolve()
     } else if (obj.type === 'dhtBootstrap') {
       is(JSON.stringify(obj.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
+      dhtBootstrapPromise.resolve()
     }
   })
   pipe.on('end', () => {
@@ -53,9 +60,9 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   })
 
   pipe.write('versions')
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await versionsPromise.promise
   pipe.write('dhtBootstrap')
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await dhtBootstrapPromise.promise
   pipe.write('exit')
 })
 
