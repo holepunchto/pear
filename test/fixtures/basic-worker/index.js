@@ -4,7 +4,7 @@ pipe.on('data', async (data) => {
   const type = data.toString()
 
   function pipeWrite (value) {
-    pipe.write(JSON.stringify({ type, value }))
+    pipe.write(JSON.stringify(value))
   }
 
   if (type === 'versions') {

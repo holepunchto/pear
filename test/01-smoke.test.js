@@ -43,10 +43,8 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   async function pipeWrite (type) {
     return new Promise((resolve) => {
       pipe.on('data', (data) => {
-        const obj = JSON.parse(data.toString())
-        if (obj.type === type) {
-          resolve(obj.value)
-        }
+        const value = JSON.parse(data.toString())
+        resolve(value)
       })
       pipe.on('end', () => {
         resolve(true)
