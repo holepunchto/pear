@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        type: string
+        description: Channel to build
+        required: true
+        default: 'dev'
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        description: Select channel to build
+        required: true
+        options:
+          - dev
+          - stage
+          - rc
+      custom-commit:
+        type: string
+        description: Custom commit
+        required: false
+      dry-run:
+        type: choice
+        description: Dry run
+        required: false
+        options:
+          - false
+          - true
+
+jobs:
+  build:
+    uses: holepunchto/actions/.github/workflows/keet-automation.yml@v1
+    secrets: inherit
+    with:
+      job: pear-platform
+      channel: ${{ inputs.channel }}
+      commit: ${{ inputs.custom-commit || github.sha }}
+      dry-run: ${{ inputs.dry-run }}
