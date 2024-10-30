@@ -17,7 +17,7 @@ test('worker pipe', async function ({ is, plan, comment, teardown }) {
   const messages = []
   const response = new Promise((resolve) => {
     pipe.on('data', (data) => {
-      messages.push(data.toString())
+      messages.push(JSON.parse(data.toString()).value)
       if (messages.length === 4) resolve(messages.join(''))
     })
   })

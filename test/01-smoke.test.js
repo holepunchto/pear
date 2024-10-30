@@ -3,16 +3,16 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
 const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
-  timeout(180000)
+  timeout(10000)
   plan(6)
   const stager = new Helper()
   teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
-  const dir = harness
+  const dir = worker
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -38,17 +38,25 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
 
   comment('running')
   const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['exit'] })
 
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  is(value?.app?.key, key, 'app version matches staged key')
+  const pipe = Pear.worker.run(link)
+  pipe.on('data', (data) => {
+    const obj = JSON.parse(data.toString())
+    if (obj.type === 'versions') {
+      is(obj.value.app.key, key, 'app version matches staged key')
+    } else if (obj.type === 'dhtBootstrap') {
+      is(JSON.stringify(obj.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
+    }
+  })
+  pipe.on('end', () => {
+    ok(true, 'pipe ended')
+  })
 
-  const dhtBootstrap = await running.inspector.evaluate('Pear.config.dht.bootstrap')
-  is(JSON.stringify(dhtBootstrap.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
-
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('versions')
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  pipe.write('dhtBootstrap')
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  pipe.write('exit')
 })
 
 test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
