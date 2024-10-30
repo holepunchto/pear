@@ -10,7 +10,6 @@ const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
 const constants = require('../constants')
-
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -380,7 +379,9 @@ class App {
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
 
-  constructor (state, ipc) {
+  constructor (gui) {
+    const { state, ipc } = gui
+    this.gui = gui
     this.state = state
     this.ipc = ipc
     this.contextMenu = null
@@ -647,8 +648,9 @@ class App {
         resolve(false)
       }
     })
-
-    const unloaders = PearGUI.ctrls().map((ctrl) => {
+    const pipes = [...this.gui.pipes]
+    const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
+    const unloaders = [closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -656,7 +658,8 @@ class App {
       }
       ctrl.unload({ type: 'close' })
       return ctrl.unloader.then(closed, closed)
-    })
+    })]
+    for (const pipe of pipes) pipe.end()
     const unloading = Promise.all(unloaders)
     unloading.then(clear, clear)
     const result = await Promise.race([timeout, unloading])
@@ -1498,8 +1501,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
 
-    electron.ipcMain.on('workerRun', (evt, link) => {
-      const pipe = this.worker.run(link)
+    electron.ipcMain.on('workerRun', (evt, link, args) => {
+      const pipe = this.worker.run(link, args)
       const id = this.pipes.alloc(pipe)
       pipe.on('close', () => {
         this.pipes.free(id)
@@ -1546,7 +1549,7 @@ class PearGUI extends ReadyResource {
   }
 
   async app () {
-    const app = new App(this.state, this.ipc)
+    const app = new App(this)
     this.once('close', async () => { app.quit() })
     await app.start()
     return app
