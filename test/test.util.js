@@ -1,4 +1,5 @@
-export function promiseToComplete () {
+'use strict'
+function promiseToComplete () {
   let resolveFn
   let rejectFn
   const promise = new Promise((resolve, reject) => {
@@ -10,4 +11,8 @@ export function promiseToComplete () {
     resolve: resolveFn,
     reject: rejectFn
   }
+}
+
+module.exports = {
+  promiseToComplete
 }
