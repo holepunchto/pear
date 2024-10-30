@@ -3,7 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
+const worker = path.join(Helper.localDir, 'test', 'fixtures', 'basic-worker')
 const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
