@@ -1,5 +1,25 @@
 # Pear Runtime Changelog
 
+## v1.6.0
+
+### Features
+
+* Internal - Added sidecar logs
+* Performance - Added DHT persistent cache
+
+### Fixes
+
+* Desktop - Forced teardown fix for Pear desktop apps that take longer than 15 seconds to close
+* Dependencies - udx-native updated to 1.13.3
+* Internal - Block of spindown while platform is updating
+* Desktop - Fix teardown of worker on app exit
+
+### Improvements
+
+* API - Removed deprecated preferences methods from Pear API
+* CLI - Added --force flag to `dump` 
+* Internal - Added RocksDB native support
+
 ## v1.5.0
 
 ### Features
