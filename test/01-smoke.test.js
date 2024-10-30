@@ -55,7 +55,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
 
   const versions = await pipeWrite('versions')
   is(versions.app.key, key, 'app version matches staged key')
-  
+
   const dhtBootstrap = await pipeWrite('dhtBootstrap')
   is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
