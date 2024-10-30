@@ -9,7 +9,7 @@
 
 ### Fixes
 
-* Desktop - Forced teardown fix for Pear desktop apps that take longer than 15 seconds to close
+* Desktop - Forced teardown fix for Pear Desktop apps that take longer than 15 seconds to close
 * Dependencies - udx-native updated to 1.13.3
 * Internal - Block of spindown while platform is updating
 * Desktop - Fix teardown of worker on app exit
