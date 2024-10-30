@@ -3,7 +3,6 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const { promiseToComplete } = require('./test.util')
 const worker = path.join(Helper.localDir, 'test', 'fixtures', 'basic-worker')
 const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
 
@@ -41,29 +40,29 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   const link = 'pear://' + key
 
   const pipe = Pear.worker.run(link)
+  async function pipeWrite (type) {
+    return new Promise((resolve) => {
+      pipe.on('data', (data) => {
+        const obj = JSON.parse(data.toString())
+        if (obj.type === type) {
+          resolve(obj.value)
+        }
+      })
+      pipe.on('end', () => {
+        resolve(true)
+      })
+      pipe.write(type)
+    })
+  }
 
-  const versionsPromise = promiseToComplete()
-  const dhtBootstrapPromise = promiseToComplete()
+  const versions = await pipeWrite('versions')
+  is(versions.app.key, key, 'app version matches staged key')
+  
+  const dhtBootstrap = await pipeWrite('dhtBootstrap')
+  is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  pipe.on('data', (data) => {
-    const obj = JSON.parse(data.toString())
-    if (obj.type === 'versions') {
-      is(obj.value.app.key, key, 'app version matches staged key')
-      versionsPromise.resolve()
-    } else if (obj.type === 'dhtBootstrap') {
-      is(JSON.stringify(obj.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
-      dhtBootstrapPromise.resolve()
-    }
-  })
-  pipe.on('end', () => {
-    ok(true, 'pipe ended')
-  })
-
-  pipe.write('versions')
-  await versionsPromise.promise
-  pipe.write('dhtBootstrap')
-  await dhtBootstrapPromise.promise
-  pipe.write('exit')
+  const res = await pipeWrite('exit')
+  is(res, true, 'exit message received')
 })
 
 test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
