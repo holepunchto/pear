@@ -13,7 +13,7 @@ const hypercoreid = require('hypercore-id-encoding')
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, checkout, encryptionKey, force }) {
+  async #op ({ link, dir, dryRun, checkout, encryptionKey, force }) {
     const { session, sidecar } = this
     await sidecar.ready()
 
@@ -65,6 +65,8 @@ module.exports = class Dump extends Opstream {
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
+    if (dryRun) this.push({ tag: 'dry' })
+
     if (!isFileLink) {
       try {
         await bundle.calibrate()
@@ -98,7 +100,7 @@ module.exports = class Dump extends Opstream {
 
     const dst = new LocalDrive(dir)
 
-    const mirror = src.mirror(dst, { prefix })
+    const mirror = src.mirror(dst, { dryRun, prefix })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
