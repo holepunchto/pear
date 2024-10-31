@@ -1,9 +1,0 @@
-{
-  "name": "basic-worker",
-  "main": "index.js",
-  "type": "module",
-  "pear": {
-    "name": "basic-worker",
-    "type": "terminal"
-  }
-}

@@ -1,0 +1,8 @@
+{
+  "name": "worker-basic",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-basic",
+    "type": "terminal"
+  }
+}

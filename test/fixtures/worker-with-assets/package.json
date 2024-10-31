@@ -1,0 +1,11 @@
+{
+  "name": "worker-with-assets",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-with-assets",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "bare-fs": "^3.1.1"
+  }
+}

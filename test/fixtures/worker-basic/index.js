@@ -14,7 +14,6 @@ pipe.on('data', async (data) => {
     pipeWrite(Pear.config.dht.bootstrap)
   }
   else if (type === 'exit') {
-    pipeWrite('exit')
     Pear.exit()
   }
 })

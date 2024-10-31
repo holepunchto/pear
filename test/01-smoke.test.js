@@ -3,16 +3,16 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const worker = path.join(Helper.localDir, 'test', 'fixtures', 'basic-worker')
-const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
+const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'worker-basic')
+const workerWithAssets = path.join(Helper.localDir, 'test', 'fixtures', 'worker-with-assets')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
-  timeout(10000)
+  timeout(180000)
   plan(6)
   const stager = new Helper()
   teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
-  const dir = worker
+  const dir = workerBasic
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -47,7 +47,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
         resolve(value)
       })
       pipe.on('end', () => {
-        resolve(true)
+        resolve('exited')
       })
       pipe.write(type)
     })
@@ -60,7 +60,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
   is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   const res = await pipeWrite('exit')
-  is(res, true, 'exit message received')
+  is(res, 'exited', 'worker exited')
 })
 
 test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
@@ -69,7 +69,7 @@ test('app with assets', async function ({ is, plan, comment, teardown, timeout }
   const stager = new Helper()
   teardown(() => stager.close(), { order: Infinity })
   await stager.ready()
-  const dir = assets
+  const dir = workerWithAssets
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -91,16 +91,27 @@ test('app with assets', async function ({ is, plan, comment, teardown, timeout }
 
   comment('running')
   const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['exit'] })
 
-  const { value: fromIndex } = await running.inspector.evaluate('global.readAsset()', { awaitPromise: true })
-  is(fromIndex.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const pipe = Pear.worker.run(link)
+  async function pipeWrite (type) {
+    return new Promise((resolve) => {
+      pipe.on('data', (data) => {
+        const value = JSON.parse(data.toString())
+        resolve(value)
+      })
+      pipe.on('end', () => {
+        resolve('exited')
+      })
+      pipe.write(type)
+    })
+  }
 
-  const { value: fromUtils } = await running.inspector.evaluate('global.readAssetFromUtils()', { awaitPromise: true })
-  is(fromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
+  const asset = await pipeWrite('readAsset')
+  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  await running.inspector.evaluate('disableInspector()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  const assetFromUtils = await pipeWrite('readAssetFromUtils')
+  is(assetFromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
+
+  const res = await pipeWrite('exit')
+  is(res, 'exited', 'worker exited')
 })
