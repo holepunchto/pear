@@ -2,11 +2,6 @@ const pipe = Pear.worker.pipe()
 
 pipe.on('data', async (data) => {
   const type = data.toString()
-
-  function pipeWrite (value) {
-    pipe.write(JSON.stringify(value))
-  }
-
   if (type === 'versions') {
     pipeWrite(await Pear.versions())
   }
@@ -17,3 +12,7 @@ pipe.on('data', async (data) => {
     Pear.exit()
   }
 })
+
+function pipeWrite (value) {
+  pipe.write(JSON.stringify(value))
+}
