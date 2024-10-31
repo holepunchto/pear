@@ -3,16 +3,6 @@ import ReadyResource from 'ready-resource'
 import bareInspector from 'bare-inspector'
 import { Inspector } from 'pear-inspect'
 
-const pipe = Pear.worker.pipe()
-pipe.on('data', async (data) => {
-  try {
-    pipe.write(JSON.stringify({ value: await eval(data.toString()) }))
-  } catch (err) {
-    console.error('Failed to eval: ', data.toString(), err)
-    pipe.write(JSON.stringify({ error: `${err}` }))
-  }
-})
-
 class Harness extends ReadyResource {
   inspector = null
   inspectorKey = null
@@ -69,5 +59,21 @@ class Harness extends ReadyResource {
 }
 const harness = new Harness()
 Pear.teardown(() => harness.close())
-await harness.ready()
+if (Pear.config.args.includes('--worker')) {
+  workerHandler()
+} else {
+  await harness.ready()
+}
 global.__PEAR_TEST__ = harness
+
+function workerHandler () {
+  const pipe = Pear.worker.pipe()
+  pipe.on('data', async (data) => {
+    try {
+      pipe.write(JSON.stringify({ value: await eval(data.toString()) }))
+    } catch (err) {
+      console.error('Failed to eval: ', data.toString(), err)
+      pipe.write(JSON.stringify({ error: `${err}` }))
+    }
+  })
+}

@@ -38,7 +38,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   comment('running')
   const link = 'pear://' + key
-  const { pipe } = await Helper.workerRun(link, { tags: ['exit'] })
+  const { pipe } = await Helper.workerRun(link, ['--worker'])
 
   const versions = await Helper.harnessEval(pipe, 'Pear.versions()')
   is(versions.value?.app?.key, key, 'app version matches staged key')

@@ -186,12 +186,10 @@ class Helper extends IPC {
     return { inspector, until, subprocess, lineout }
   }
 
-  static async workerRun (link, { tags = [] } = {}, opts = {}) {
+  static async workerRun (link, args) {
     if (!link) throw new Error('Key is missing')
 
-    // TODO: handle tags and opts
-
-    const pipe = Pear.worker.run(link)
+    const pipe = Pear.worker.run(link, args)
     return { pipe }
   }
 
