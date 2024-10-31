@@ -376,14 +376,14 @@ class Worker {
     const stager = new Helper()
     teardown(() => stager.close(), { order: Infinity })
     await stager.ready()
-  
+
     const id = Math.floor(Math.random() * 10000)
-  
+
     const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const final = await Helper.pick(staging, { tag: 'final' })
     ok(final.success, 'stage succeeded')
-  
+
     comment('seeding')
     const seeder = new Helper()
     teardown(() => seeder.close(), { order: Infinity })
@@ -391,10 +391,10 @@ class Worker {
     const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
     teardown(() => Helper.teardownStream(seeding))
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-  
+
     const key = await until.key
     const announced = await until.announced
-  
+
     ok(hypercoreid.isValid(key), 'app key is valid')
     ok(announced, 'seeding is announced')
 
@@ -412,7 +412,7 @@ class Worker {
   }
 }
 
-module.exports = { 
+module.exports = {
   Helper,
-  Worker,
+  Worker
 }
