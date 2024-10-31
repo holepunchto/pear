@@ -197,7 +197,7 @@ class Helper extends IPC {
     return new Promise((resolve) => {
       pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
       pipe.on('end', () => resolve('worker exited'))
-      pipe.write(str);
+      pipe.write(str)
     })
   }
 
