@@ -11,15 +11,15 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   plan(6)
 
   const key = await build({ dir: workerBasic, ok, comment, teardown })
-  const pipe = Pear.worker.run(`pear://${key}`)
+  const worker = new Worker(`pear://${key}`)
 
-  const versions = await pipeWrite(pipe, 'versions')
+  const versions = await worker.write('versions')
   is(versions.app.key, key, 'app version matches staged key')
 
-  const dhtBootstrap = await pipeWrite(pipe, 'dhtBootstrap')
+  const dhtBootstrap = await worker.write('dhtBootstrap')
   is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  const res = await pipeWrite(pipe, 'exit')
+  const res = await worker.write('exit')
   is(res, 'exited', 'worker exited')
 })
 
@@ -28,15 +28,15 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   plan(6)
 
   const key = await build({ dir: workerWithAssets, ok, comment, teardown })
-  const pipe = Pear.worker.run(`pear://${key}`)
+  const worker = new Worker(`pear://${key}`)
 
-  const asset = await pipeWrite(pipe, 'readAsset')
+  const asset = await worker.write('readAsset')
   is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  const assetFromUtils = await pipeWrite(pipe, 'readAssetFromUtils')
+  const assetFromUtils = await worker.write('readAssetFromUtils')
   is(assetFromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
 
-  const res = await pipeWrite(pipe, 'exit')
+  const res = await worker.write('exit')
   is(res, 'exited', 'worker exited')
 })
 
@@ -51,6 +51,20 @@ async function pipeWrite (pipe, type) {
     })
     pipe.write(type)
   })
+}
+
+class Worker {
+  pipe
+  constructor (link) {
+    this.pipe = Pear.worker.run(link)
+  }
+  async write (command) {
+    return new Promise((resolve) => {
+      this.pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+      this.pipe.on('end', () => resolve('exited'))
+      this.pipe.write(command)
+    })
+  }
 }
 
 async function build ({ dir, ok, comment, teardown }) {
