@@ -311,7 +311,11 @@ class Helper extends IPC {
       return reply
     }
   }
+
+  static Worker = WorkerHelper
 }
+
+module.exports = Helper
 
 class Reiterate {
   constructor (stream) {
@@ -460,9 +464,4 @@ class WorkerHelper {
     const res = await this.awaitPromise(command)
     return res
   }
-}
-
-module.exports = {
-  Helper,
-  WorkerHelper
 }

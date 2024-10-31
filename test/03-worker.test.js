@@ -2,7 +2,7 @@
 /* global Pear */
 const test = require('brittle')
 const path = require('bare-path')
-const { Helper } = require('./helper')
+const Helper = require('./helper')
 const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
 
 test('worker pipe', async function ({ is, plan, comment, teardown }) {
