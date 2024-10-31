@@ -12,13 +12,13 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   const worker = new WorkerHelper()
   const { key } = await worker.run({ dir: workerBasic, ok, comment, teardown })
 
-  const versions = await worker.write('versions')
-  is(versions.app.key, key, 'app version matches staged key')
+  const versions = await worker.writeAndWait('versions')
+  is(versions.value.app.key, key, 'app version matches staged key')
 
-  const dhtBootstrap = await worker.write('dhtBootstrap')
-  is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
+  const dhtBootstrap = await worker.writeAndWait('dhtBootstrap')
+  is(JSON.stringify(dhtBootstrap.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  const res = await worker.write('exit')
+  const res = await worker.writeAndWait('exit')
   is(res, 'exited', 'worker exited')
 })
 
@@ -29,12 +29,12 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const worker = new WorkerHelper()
   await worker.run({ dir: workerWithAssets, ok, comment, teardown })
 
-  const asset = await worker.write('readAsset')
-  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const asset = await worker.writeAndWait('readAsset')
+  is(asset.value.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  const assetFromUtils = await worker.write('readAssetFromUtils')
-  is(assetFromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
+  const assetFromUtils = await worker.writeAndWait('readAssetFromUtils')
+  is(assetFromUtils.value.trim(), 'This is the content of the asset', 'Read asset from lib')
 
-  const res = await worker.write('exit')
+  const res = await worker.writeAndWait('exit')
   is(res, 'exited', 'worker exited')
 })

@@ -5,10 +5,10 @@ const pipe = Pear.worker.pipe()
 pipe.on('data', async (data) => {
   const command = data.toString()
   if (command === 'readAsset') {
-    pipeWrite(await readAsset())
+    pipeWrite({ id: command, value: await readAsset() })
   }
   else if (command === 'readAssetFromUtils') {
-    pipeWrite(await readAssetFromUtils())
+    pipeWrite({ id: command, value: await readAssetFromUtils() })
   }
   else if (command === 'exit') {
     Pear.exit()

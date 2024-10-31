@@ -369,8 +369,40 @@ class Reiterate {
   [Symbol.asyncIterator] () { return this._tail() }
 }
 
+class LazyPromise {
+  _promise
+  _resolve
+  _reject
+
+  constructor () {
+    this._promise = new Promise((resolve, reject) => {
+      this._resolve = resolve
+      this._reject = reject
+    })
+  }
+
+  resolve (value) {
+    this._resolve(value)
+  }
+
+  reject (error) {
+    this._reject(error)
+  }
+
+  get promise () {
+    return this._promise
+  }
+}
+
 class WorkerHelper {
   pipe
+  promises = {}
+
+  constructor (promiseIds = []) {
+    promiseIds.forEach((id) => {
+      this.promises[id] = new LazyPromise()
+    })
+  }
 
   async run ({ dir, ok, comment, teardown }) {
     const stager = new Helper()
@@ -402,15 +434,31 @@ class WorkerHelper {
     comment('running')
     this.pipe = Pear.worker.run(`pear://${key}`)
 
+    this.pipe.on('data', (data) => {
+      const res = JSON.parse(data.toString())
+      this.promises[res.id].resolve(res)
+    })
+    this.pipe.on('end', () => {
+      this.promises.exit.resolve('exited')
+    })
+
     return { key }
   }
 
-  async write (command) {
-    return new Promise((resolve) => {
-      this.pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
-      this.pipe.on('end', () => resolve('exited'))
-      this.pipe.write(command)
-    })
+  write (command) {
+    this.promises[command] = new LazyPromise()
+    this.pipe.write(command)
+  }
+
+  async awaitPromise (id) {
+    const res = await this.promises[id].promise
+    return res
+  }
+
+  async writeAndWait (command) {
+    this.write(command)
+    const res = await this.awaitPromise(command)
+    return res
   }
 }
 
