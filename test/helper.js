@@ -192,7 +192,13 @@ class Helper extends IPC {
     // TODO: review tags and args
 
     const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
-    const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
+    const args = [
+      'run',
+      '--dht-bootstrap', dhtBootstrap,
+      ...(opts.encryptionKey ? ['--encryption-key', opts.encryptionKey] : []),
+      '--no-ask',
+      '-t', 
+    ]
     if (this.log) args.push('--log')
 
     const pipe = Pear.worker.run(link, args)
