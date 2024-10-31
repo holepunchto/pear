@@ -7,9 +7,9 @@ const pipe = Pear.worker.pipe()
 pipe.on('data', async (data) => {
   try {
     pipe.write(JSON.stringify({ value: await eval(data.toString()) }))
-  } catch (error) {
+  } catch (err) {
     console.error('Failed to eval: ', data.toString(), err)
-    pipe.write(JSON.stringify({ error }))
+    pipe.write(JSON.stringify({ error: `${err}` }))
   }
 })
 
