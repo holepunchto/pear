@@ -45,6 +45,7 @@ class Worker {
   constructor (link) {
     this.pipe = Pear.worker.run(link)
   }
+
   async write (command) {
     return new Promise((resolve) => {
       this.pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
