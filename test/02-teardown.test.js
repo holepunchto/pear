@@ -2,7 +2,7 @@
 const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
-const Helper = require('./helper')
+const { Helper } = require('./helper')
 const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
 
 test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {

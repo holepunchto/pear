@@ -14,6 +14,7 @@ const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
+const hypercoreid = require('hypercore-id-encoding')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const { PLATFORM_DIR } = require('../constants')
@@ -312,8 +313,6 @@ class Helper extends IPC {
   }
 }
 
-module.exports = Helper
-
 class Reiterate {
   constructor (stream) {
     this.stream = stream
@@ -368,4 +367,52 @@ class Reiterate {
   }
 
   [Symbol.asyncIterator] () { return this._tail() }
+}
+
+class Worker {
+  pipe
+
+  async run ({ dir, ok, comment, teardown }) {
+    const stager = new Helper()
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+  
+    const id = Math.floor(Math.random() * 10000)
+  
+    const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const final = await Helper.pick(staging, { tag: 'final' })
+    ok(final.success, 'stage succeeded')
+  
+    comment('seeding')
+    const seeder = new Helper()
+    teardown(() => seeder.close(), { order: Infinity })
+    await seeder.ready()
+    const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  
+    const key = await until.key
+    const announced = await until.announced
+  
+    ok(hypercoreid.isValid(key), 'app key is valid')
+    ok(announced, 'seeding is announced')
+
+    this.pipe = Pear.worker.run(`pear://${key}`)
+
+    return { key }
+  }
+
+  async write (command) {
+    return new Promise((resolve) => {
+      this.pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+      this.pipe.on('end', () => resolve('exited'))
+      this.pipe.write(command)
+    })
+  }
+}
+
+module.exports = { 
+  Helper,
+  Worker,
 }
