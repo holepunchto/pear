@@ -208,6 +208,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     encryptionKey,
     versions,
     help,
+    flag('-v', 'Print version'),
     footer(usage.footer),
     bail(explain),
     pear
