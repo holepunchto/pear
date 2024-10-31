@@ -369,7 +369,7 @@ class Reiterate {
   [Symbol.asyncIterator] () { return this._tail() }
 }
 
-class Worker {
+class WorkerHelper {
   pipe
 
   async run ({ dir, ok, comment, teardown }) {
@@ -414,5 +414,5 @@ class Worker {
 
 module.exports = {
   Helper,
-  Worker
+  WorkerHelper
 }

@@ -1,7 +1,7 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const { Helper, Worker } = require('./helper')
+const { Helper, WorkerHelper } = require('./helper')
 const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'worker-basic')
 const workerWithAssets = path.join(Helper.localDir, 'test', 'fixtures', 'worker-with-assets')
 
@@ -9,7 +9,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
-  const worker = new Worker()
+  const worker = new WorkerHelper()
   const { key } = await worker.run({ dir: workerBasic, ok, comment, teardown })
 
   const versions = await worker.write('versions')
@@ -26,7 +26,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   timeout(180000)
   plan(6)
 
-  const worker = new Worker()
+  const worker = new WorkerHelper()
   await worker.run({ dir: workerWithAssets, ok, comment, teardown })
 
   const asset = await worker.write('readAsset')
