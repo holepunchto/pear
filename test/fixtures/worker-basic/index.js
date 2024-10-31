@@ -1,14 +1,14 @@
 const pipe = Pear.worker.pipe()
 
 pipe.on('data', async (data) => {
-  const type = data.toString()
-  if (type === 'versions') {
+  const command = data.toString()
+  if (command === 'versions') {
     pipeWrite(await Pear.versions())
   }
-  else if (type === 'dhtBootstrap') {
+  else if (command === 'dhtBootstrap') {
     pipeWrite(Pear.config.dht.bootstrap)
   }
-  else if (type === 'exit') {
+  else if (command === 'exit') {
     Pear.exit()
   }
 })

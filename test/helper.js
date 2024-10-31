@@ -379,6 +379,7 @@ class WorkerHelper {
 
     const id = Math.floor(Math.random() * 10000)
 
+    comment('staging')
     const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const final = await Helper.pick(staging, { tag: 'final' })
@@ -398,6 +399,7 @@ class WorkerHelper {
     ok(hypercoreid.isValid(key), 'app key is valid')
     ok(announced, 'seeding is announced')
 
+    comment('running')
     this.pipe = Pear.worker.run(`pear://${key}`)
 
     return { key }

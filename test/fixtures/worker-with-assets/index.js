@@ -3,14 +3,14 @@ const readAssetFromUtils = require('./lib/utils.js')
 
 const pipe = Pear.worker.pipe()
 pipe.on('data', async (data) => {
-  const type = data.toString()
-  if (type === 'readAsset') {
+  const command = data.toString()
+  if (command === 'readAsset') {
     pipeWrite(await readAsset())
   }
-  else if (type === 'readAssetFromUtils') {
+  else if (command === 'readAssetFromUtils') {
     pipeWrite(await readAssetFromUtils())
   }
-  else if (type === 'exit') {
+  else if (command === 'exit') {
     Pear.exit()
   }
 })
