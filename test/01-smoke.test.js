@@ -40,19 +40,6 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   is(res, 'exited', 'worker exited')
 })
 
-async function pipeWrite (pipe, type) {
-  return new Promise((resolve) => {
-    pipe.on('data', (data) => {
-      const value = JSON.parse(data.toString())
-      resolve(value)
-    })
-    pipe.on('end', () => {
-      resolve('exited')
-    })
-    pipe.write(type)
-  })
-}
-
 class Worker {
   pipe
   constructor (link) {
