@@ -186,6 +186,27 @@ class Helper extends IPC {
     return { inspector, until, subprocess, lineout }
   }
 
+  static async workerRun (link, { tags = [] } = {}, opts = {}) {
+    if (!link) throw new Error('Key is missing')
+
+    // TODO: review tags and args
+
+    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
+    if (this.log) args.push('--log')
+
+    const pipe = Pear.worker.run(link, args)
+    return { pipe }
+  }
+
+  static async harnessEval (pipe, str) {
+    return new Promise((resolve) => {
+      pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+      pipe.on('end', () => resolve('worker exited'))
+      pipe.write(str);
+    })
+  }
+
   static async pick (stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {

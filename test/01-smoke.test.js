@@ -6,7 +6,7 @@ const Helper = require('./helper')
 const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
 const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
   const stager = new Helper()
@@ -38,17 +38,16 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end })
 
   comment('running')
   const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['exit'] })
+  const { pipe } = await Helper.workerRun(link, { tags: ['exit'] })
 
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  is(value?.app?.key, key, 'app version matches staged key')
+  const versions = await Helper.harnessEval(pipe, 'Pear.versions()')
+  is(versions.value?.app?.key, key, 'app version matches staged key')
 
-  const dhtBootstrap = await running.inspector.evaluate('Pear.config.dht.bootstrap')
+  const dhtBootstrap = await Helper.harnessEval(pipe, 'Pear.config.dht.bootstrap')
   is(JSON.stringify(dhtBootstrap.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  const exitRes = await Helper.harnessEval(pipe, 'Pear.exit()')
+  is(exitRes, 'worker exited', 'worker exited')
 })
 
 test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {

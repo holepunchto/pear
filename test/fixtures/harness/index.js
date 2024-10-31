@@ -3,6 +3,13 @@ import ReadyResource from 'ready-resource'
 import bareInspector from 'bare-inspector'
 import { Inspector } from 'pear-inspect'
 
+const pipe = Pear.worker.pipe()
+pipe.on('data', async (data) => {
+  const str = data.toString()
+  const value = await eval(str)
+  pipe.write(JSON.stringify({ value }))
+})
+
 class Harness extends ReadyResource {
   inspector = null
   inspectorKey = null
