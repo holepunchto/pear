@@ -5,7 +5,12 @@ import { Inspector } from 'pear-inspect'
 
 const pipe = Pear.worker.pipe()
 pipe.on('data', async (data) => {
-  pipe.write(JSON.stringify({ value: await eval(data.toString()) }))
+  try {
+    pipe.write(JSON.stringify({ value: await eval(data.toString()) }))
+  } catch (error) {
+    console.error('Failed to eval: ', data.toString(), err)
+    pipe.write(JSON.stringify({ error }))
+  }
 })
 
 class Harness extends ReadyResource {
