@@ -14,10 +14,9 @@ const root = path.dirname(dirname)
 const force = Bare.argv.includes('--force-install')
 
 const dirs = [
-  path.join(root, 'test', 'fixtures', 'worker-with-assets', 'node_modules'),
-
   path.join(root, 'test', 'fixtures', 'harness', 'node_modules'),
-  path.join(root, 'test', 'fixtures', 'encrypted', 'node_modules')
+  path.join(root, 'test', 'fixtures', 'encrypted', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'worker-with-assets', 'node_modules')
 ]
 for (const dir of dirs) {
   if (force === false && fs.existsSync(dir)) continue
