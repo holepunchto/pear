@@ -102,6 +102,99 @@ class OperationError extends Error {
   }
 }
 
+class LazyPromise {
+  _promise
+  _resolve
+  _reject
+
+  constructor () {
+    this._promise = new Promise((resolve, reject) => {
+      this._resolve = resolve
+      this._reject = reject
+    })
+  }
+
+  resolve (value) {
+    this._resolve(value)
+  }
+
+  reject (error) {
+    this._reject(error)
+  }
+
+  get promise () {
+    return this._promise
+  }
+}
+
+class WorkerHelper {
+  pipe
+  promises = {}
+
+  constructor (promiseIds = []) {
+    promiseIds.forEach((id) => {
+      this.promises[id] = new LazyPromise()
+    })
+  }
+
+  async run ({ dir, ok, comment, teardown }) {
+    const stager = new Helper()
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+
+    const id = Math.floor(Math.random() * 10000)
+
+    comment('staging')
+    const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const final = await Helper.pick(staging, { tag: 'final' })
+    ok(final.success, 'stage succeeded')
+
+    comment('seeding')
+    const seeder = new Helper()
+    teardown(() => seeder.close(), { order: Infinity })
+    await seeder.ready()
+    const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+
+    const key = await until.key
+    const announced = await until.announced
+
+    ok(hypercoreid.isValid(key), 'app key is valid')
+    ok(announced, 'seeding is announced')
+
+    comment('running')
+    this.pipe = Pear.worker.run(`pear://${key}`)
+
+    this.pipe.on('data', (data) => {
+      const res = JSON.parse(data.toString())
+      this.promises[res.id].resolve(res)
+    })
+    this.pipe.on('end', () => {
+      this.promises.exit.resolve('exited')
+    })
+
+    return { key }
+  }
+
+  write (command) {
+    this.promises[command] = new LazyPromise()
+    this.pipe.write(command)
+  }
+
+  async awaitPromise (id) {
+    const res = await this.promises[id].promise
+    return res
+  }
+
+  async writeAndWait (command) {
+    this.write(command)
+    const res = await this.awaitPromise(command)
+    return res
+  }
+}
+
 class Helper extends IPC {
   static Rig = Rig
   static tmp = tmp
@@ -371,97 +464,4 @@ class Reiterate {
   }
 
   [Symbol.asyncIterator] () { return this._tail() }
-}
-
-class LazyPromise {
-  _promise
-  _resolve
-  _reject
-
-  constructor () {
-    this._promise = new Promise((resolve, reject) => {
-      this._resolve = resolve
-      this._reject = reject
-    })
-  }
-
-  resolve (value) {
-    this._resolve(value)
-  }
-
-  reject (error) {
-    this._reject(error)
-  }
-
-  get promise () {
-    return this._promise
-  }
-}
-
-class WorkerHelper {
-  pipe
-  promises = {}
-
-  constructor (promiseIds = []) {
-    promiseIds.forEach((id) => {
-      this.promises[id] = new LazyPromise()
-    })
-  }
-
-  async run ({ dir, ok, comment, teardown }) {
-    const stager = new Helper()
-    teardown(() => stager.close(), { order: Infinity })
-    await stager.ready()
-
-    const id = Math.floor(Math.random() * 10000)
-
-    comment('staging')
-    const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-    teardown(() => Helper.teardownStream(staging))
-    const final = await Helper.pick(staging, { tag: 'final' })
-    ok(final.success, 'stage succeeded')
-
-    comment('seeding')
-    const seeder = new Helper()
-    teardown(() => seeder.close(), { order: Infinity })
-    await seeder.ready()
-    const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
-    const key = await until.key
-    const announced = await until.announced
-
-    ok(hypercoreid.isValid(key), 'app key is valid')
-    ok(announced, 'seeding is announced')
-
-    comment('running')
-    this.pipe = Pear.worker.run(`pear://${key}`)
-
-    this.pipe.on('data', (data) => {
-      const res = JSON.parse(data.toString())
-      this.promises[res.id].resolve(res)
-    })
-    this.pipe.on('end', () => {
-      this.promises.exit.resolve('exited')
-    })
-
-    return { key }
-  }
-
-  write (command) {
-    this.promises[command] = new LazyPromise()
-    this.pipe.write(command)
-  }
-
-  async awaitPromise (id) {
-    const res = await this.promises[id].promise
-    return res
-  }
-
-  async writeAndWait (command) {
-    this.write(command)
-    const res = await this.awaitPromise(command)
-    return res
-  }
 }
