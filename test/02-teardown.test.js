@@ -20,7 +20,7 @@ test.solo('teardown', async function ({ is, ok, plan, comment, teardown, timeout
   worker.write('exit')
 
   const res = await worker.awaitPromise(promiseId)
-  is(res,value, 'teardown executed', 'teardown has been executed')
+  is(res.value, 'teardown executed', 'teardown has been executed')
 })
 
 test('teardown during teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
