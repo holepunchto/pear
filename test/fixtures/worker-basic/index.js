@@ -1,5 +1,4 @@
 const pipe = Pear.worker.pipe()
-
 pipe.on('data', async (data) => {
   const command = data.toString()
   if (command === 'versions') {
