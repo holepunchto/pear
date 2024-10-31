@@ -189,19 +189,9 @@ class Helper extends IPC {
   static async workerRun (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
 
-    // TODO: review tags and args
+    // TODO: handle tags and opts
 
-    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
-    const args = [
-      'run',
-      '--dht-bootstrap', dhtBootstrap,
-      ...(opts.encryptionKey ? ['--encryption-key', opts.encryptionKey] : []),
-      '--no-ask',
-      '-t', 
-    ]
-    if (this.log) args.push('--log')
-
-    const pipe = Pear.worker.run(link, args)
+    const pipe = Pear.worker.run(link)
     return { pipe }
   }
 
