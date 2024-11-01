@@ -12,11 +12,11 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
   timeout(180000)
   plan(10)
 
-  const versions = await _run({ dir: versionsDir, ok, comment, teardown })
-  is(JSON.parse(versions.result).app.key, versions.key, 'app version matches staged key')
+  const versions = await _run({ dir: versionsDir, ok, comment, teardown, parse: true })
+  is(versions.result.app.key, versions.key, 'app version matches staged key')
 
-  const dhtBootstrap = await _run({ dir: dhtBootstrapDir, ok, comment, teardown })
-  alike(JSON.parse(dhtBootstrap.result), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
+  const dhtBootstrap = await _run({ dir: dhtBootstrapDir, ok, comment, teardown, parse: true })
+  alike(dhtBootstrap.result, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   await Helper.untilClose(versions.run.pipe)
   ok(true, 'ended')
@@ -47,10 +47,11 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   ok(true, 'ended')
 })
 
-async function _run ({ dir, ok, comment, teardown }) {
+async function _run ({ dir, ok, comment, teardown, parse }) {
   const build = await _build({ dir, ok, comment, teardown })
   const run = await Helper.run({ link: build.link })
-  const result = await Helper.untilResult(run.pipe)
+  const rawResult = await Helper.untilResult(run.pipe)
+  const result = parse ? JSON.parse(rawResult) : rawResult
   return { build, run, result }
 }
 
