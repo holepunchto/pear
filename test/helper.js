@@ -214,10 +214,13 @@ class Helper extends IPC {
 
     this.pipe.on('data', (data) => {
       const res = JSON.parse(data.toString())
-      this.promises[res.id].resolve(res)
+      this.promises[res.id]?.resolve(res)
     })
     this.pipe.on('end', () => {
-      this.promises.exit.resolve('exited')
+      this.promises.exit?.resolve('exited')
+    })
+    this.pipe.on('crash', (data) => {
+      this.promises.exitCode?.resolve(data)
     })
 
     return { key, link, staged, announced, encryptionKey, error }
