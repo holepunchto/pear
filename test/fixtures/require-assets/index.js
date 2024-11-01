@@ -5,6 +5,7 @@ pipe.on('data', () => {
   fsp.readFile(require.asset('./text-file.txt')).then((text) => {
     pipe.write(text)
   }).catch((err) => {
-    pipe.write(`${err}`)
+    console.error(err)
+    pipe.write('failed to read asset')
   })
 })

@@ -5,6 +5,7 @@ pipe.on('data', () => {
   readAsset().then((text) => {
     pipe.write(text)
   }).catch((err) => {
-    pipe.write(`${err}`)
+    console.error(err)
+    pipe.write('failed to read asset')
   })
 })
