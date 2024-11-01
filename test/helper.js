@@ -14,8 +14,6 @@ const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
-const crypto = require('hypercore-crypto')
-const hypercoreid = require('hypercore-id-encoding')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const { PLATFORM_DIR } = require('../constants')
@@ -103,36 +101,7 @@ class OperationError extends Error {
   }
 }
 
-class LazyPromise {
-  _promise
-  _resolve
-  _reject
-
-  constructor () {
-    this._promise = new Promise((resolve, reject) => {
-      this._resolve = resolve
-      this._reject = reject
-    })
-  }
-
-  resolve (value) {
-    this._resolve(value)
-  }
-
-  reject (error) {
-    this._reject(error)
-  }
-
-  get promise () {
-    return this._promise
-  }
-}
-
 class Helper extends IPC {
-  runtime
-  pipe
-  promises = {}
-
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
@@ -163,7 +132,6 @@ class Helper extends IPC {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
-    this.runtime = runtime
   }
 
   static async teardownStream (stream) {
@@ -175,7 +143,7 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async __open ({ dir, encryptionKeyName, args = [], comment = console.log, teardown = () => null }) {
+  async __open ({ dir, encryptionKeyName, comment = console.log, teardown = () => null }) {
     teardown(() => this.close(), { order: Infinity })
     await this.ready()
 
@@ -195,47 +163,38 @@ class Helper extends IPC {
     }
 
     comment('staging')
-    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
+    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
 
     comment('seeding')
-    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
+    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
     teardown(() => Helper.teardownStream(seeding))
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     const key = await until.key
 
     const link = `pear://${key}`
-    this.pipe = Pear.worker.run(link, args, {
-      runtime: this.runtime
-    })
+    const pipe = Pear.worker.run(link)
 
-    this.pipe.on('data', (data) => {
-      const res = JSON.parse(data.toString())
-      this.promises[res.id].resolve(res)
-    })
-    this.pipe.on('end', () => {
-      this.promises.exit.resolve('exited')
-    })
-
-    return { key, link, staged, announced, encryptionKey, error }
+    return { pipe, key, link, staged, announced }
   }
 
-  send (command) {
-    this.promises[command] = new LazyPromise()
-    this.pipe.write(command)
-  }
-
-  async awaitPromise (id) {
-    const res = await this.promises[id].promise
+  static async send (pipe, command) {
+    const res = new Promise((resolve) => {
+      pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+    })
+    pipe.write(command)
     return res
   }
 
-  async sendAndWait (command) {
-    this.send(command)
-    const res = await this.awaitPromise(command)
-    return res
+  static async end (pipe) {
+    pipe.end()
+    return new Promise((resolve) => pipe.on('end', resolve))
+  }
+
+  static async crash (pipe) {
+    return new Promise((resolve) => pipe.on('crash', resolve))
   }
 
   static async open (link, { tags = [] } = {}, opts = {}) {
