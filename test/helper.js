@@ -175,6 +175,10 @@ class Helper extends IPC {
         clearTimeout(timeoutId)
         resolve('closed')
       })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        resolve('ended')
+      })
     })
     pipe.end()
     return res
