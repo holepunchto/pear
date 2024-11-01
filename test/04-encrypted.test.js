@@ -1,6 +1,7 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
@@ -15,7 +16,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const helper = new Helper(rig)
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  
+
   const dir = encrypted
   const id = Math.floor(Math.random() * 10000)
 
@@ -55,7 +56,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   is(JSON.parse(versions).app.key, key, 'app version matches staged key')
 
   comment('pear info encrypted app')
-  const infoCmd = helper.info({ link, encryptionKey: encryptionKeyName, cmdArgs: [] })
+  const infoCmd = helper.info({ link, encryptionKey: name, cmdArgs: [] })
   const untilInfo = await Helper.pick(infoCmd, [{ tag: 'info' }])
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
