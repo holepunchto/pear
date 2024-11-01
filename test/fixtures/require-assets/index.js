@@ -6,6 +6,6 @@ pipe.on('data', () => {
     pipe.write(fs.readFileSync(require.asset('./text-file.txt'), 'utf8'))
   } catch (err) {
     console.error(err)
-    pipe.write('failed to read asset')
+    pipe.end()
   }
 })
