@@ -1,8 +1,8 @@
 {
-  "name": "worker-with-assets",
+  "name": "require-assets",
   "main": "index.js",
   "pear": {
-    "name": "worker-with-assets",
+    "name": "require-assets",
     "type": "terminal"
   },
   "dependencies": {

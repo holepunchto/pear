@@ -128,89 +128,11 @@ class LazyPromise {
   }
 }
 
-class WorkerHelper {
+class Helper extends IPC {
+  runtime
   pipe
   promises = {}
 
-  constructor (promiseIds = []) {
-    promiseIds.forEach((id) => {
-      this.promises[id] = new LazyPromise()
-    })
-  }
-
-  async run ({ dir, ok, is, comment, teardown, rig, encryptionKeyName }) {
-    const helper = new Helper(rig)
-    teardown(() => helper.close(), { order: Infinity })
-    await helper.ready()
-
-    const id = Math.floor(Math.random() * 10000)
-
-    if (encryptionKeyName) {
-      comment('add encryption key')
-      const preimage = hypercoreid.encode(crypto.randomBytes(32))
-      const addEncryptionKey = helper.encryptionKey({ action: 'add', name: encryptionKeyName, value: preimage })
-      teardown(() => Helper.teardownStream(addEncryptionKey))
-      const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
-      is(encryptionKey.name, encryptionKeyName)
-
-      comment('staging throws without encryption key')
-      const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-      const error = await Helper.pick(stagingA, { tag: 'error' })
-      is(error.code, 'ERR_PERMISSION_REQUIRED')
-    }
-    
-    comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
-    teardown(() => Helper.teardownStream(staging))
-    const final = await Helper.pick(staging, { tag: 'final' })
-    ok(final.success, 'stage succeeded')
-
-    comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
-    const announced = await until.announced
-    ok(hypercoreid.isValid(key), 'app key is valid')
-    ok(announced, 'seeding is announced')
-
-    comment('running')
-    const opts = {}
-    if (rig) opts.runtime = path.join(rig.platformDir, 'current', BY_ARCH)
-    if (encryptionKeyName) opts.encryptionKey = encryptionKeyName
-
-    const link = `pear://${key}`
-    this.pipe = Pear.worker.run(link, [], opts)
-
-    this.pipe.on('data', (data) => {
-      const res = JSON.parse(data.toString())
-      this.promises[res.id].resolve(res)
-    })
-    this.pipe.on('end', () => {
-      this.promises.exit.resolve('exited')
-    })
-
-    return { helper, key, link }
-  }
-
-  write (command) {
-    this.promises[command] = new LazyPromise()
-    this.pipe.write(command)
-  }
-
-  async awaitPromise (id) {
-    const res = await this.promises[id].promise
-    return res
-  }
-
-  async writeAndWait (command) {
-    this.write(command)
-    const res = await this.awaitPromise(command)
-    return res
-  }
-}
-
-class Helper extends IPC {
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
@@ -241,6 +163,7 @@ class Helper extends IPC {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
+    this.runtime = runtime
   }
 
   static async teardownStream (stream) {
@@ -251,6 +174,69 @@ class Helper extends IPC {
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
+
+  async __open ({ dir, args, encryptionKeyName, comment, teardown }) {
+    teardown(() => this.close(), { order: Infinity })
+    await this.ready()
+
+    const id = Math.floor(Math.random() * 10000)
+
+    let encryptionKey, error
+    if (encryptionKeyName) {
+      comment('add encryption key')
+      const preimage = hypercoreid.encode(crypto.randomBytes(32))
+      const addEncryptionKey = this.encryptionKey({ action: 'add', name: encryptionKeyName, value: preimage })
+      teardown(() => Helper.teardownStream(addEncryptionKey))
+      encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
+
+      comment('staging throws without encryption key')
+      const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+      error = await Helper.pick(stagingA, { tag: 'error' })
+    }
+
+    comment('staging')
+    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const staged = await Helper.pick(staging, { tag: 'final' })
+
+    comment('seeding')
+    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const announced = await until.announced
+    const key = await until.key
+
+    const link = `pear://${key}`
+    this.pipe = Pear.worker.run(link, args, {
+      runtime: this.runtime,
+    })
+
+    this.pipe.on('data', (data) => {
+      const res = JSON.parse(data.toString())
+      this.promises[res.id].resolve(res)
+    })
+    this.pipe.on('end', () => {
+      this.promises.exit.resolve('exited')
+    })
+
+    return { key, link, staged, announced, encryptionKey, error }
+  }
+
+  send (command) {
+    this.promises[command] = new LazyPromise()
+    this.pipe.write(command)
+  }
+
+  async awaitPromise (id) {
+    const res = await this.promises[id].promise
+    return res
+  }
+
+  async sendAndWait (command) {
+    this.send(command)
+    const res = await this.awaitPromise(command)
+    return res
+  }
 
   static async open (link, { tags = [] } = {}, opts = {}) {
     if (!link) throw new Error('Key is missing')
@@ -419,8 +405,6 @@ class Helper extends IPC {
       return reply
     }
   }
-
-  static Worker = WorkerHelper
 }
 
 module.exports = Helper
