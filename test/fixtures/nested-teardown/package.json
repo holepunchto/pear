@@ -1,0 +1,8 @@
+{
+  "name": "nested-teardown",
+  "main": "index.js",
+  "pear": {
+    "name": "nested-teardown",
+    "type": "terminal"
+  }
+}
