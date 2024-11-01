@@ -189,7 +189,7 @@ class Helper extends IPC {
       teardown(() => Helper.teardownStream(addEncryptionKey))
       encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
 
-      comment('staging throws without encryption key')
+      comment('staging error without encryption key')
       const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
       error = await Helper.pick(stagingA, { tag: 'error' })
     }
