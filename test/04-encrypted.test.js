@@ -10,11 +10,13 @@ test.hook('encrypted setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
-  plan(3)
+  plan(5)
 
   const encryptionKeyName = 'test-encryption-key'
   const helper = new Helper(rig)
-  const { key, link } = await helper.__open({ dir: workerEncrypted, encryptionKeyName, comment, teardown })
+  const { key, link, encryptionKey, error } = await helper.__open({ dir: workerEncrypted, encryptionKeyName, comment, teardown })
+  is(encryptionKey.name, encryptionKeyName)
+  is(error.code, 'ERR_PERMISSION_REQUIRED')
 
   const versions = await helper.sendAndWait('versions')
   is(versions.value.app.key, key, 'app version matches staged key')
