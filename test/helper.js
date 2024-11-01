@@ -14,6 +14,7 @@ const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
+const crypto = require('hypercore-crypto')
 const hypercoreid = require('hypercore-id-encoding')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
@@ -137,35 +138,49 @@ class WorkerHelper {
     })
   }
 
-  async run ({ dir, ok, comment, teardown }) {
-    const stager = new Helper()
-    teardown(() => stager.close(), { order: Infinity })
-    await stager.ready()
+  async run ({ dir, ok, is, comment, teardown, rig, encryptionKeyName }) {
+    const helper = new Helper(rig)
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
 
     const id = Math.floor(Math.random() * 10000)
 
+    if (encryptionKeyName) {
+      comment('add encryption key')
+      const preimage = hypercoreid.encode(crypto.randomBytes(32))
+      const addEncryptionKey = helper.encryptionKey({ action: 'add', name: encryptionKeyName, value: preimage })
+      teardown(() => Helper.teardownStream(addEncryptionKey))
+      const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
+      is(encryptionKey.name, encryptionKeyName)
+
+      comment('staging throws without encryption key')
+      const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+      const error = await Helper.pick(stagingA, { tag: 'error' })
+      is(error.code, 'ERR_PERMISSION_REQUIRED')
+    }
+    
     comment('staging')
-    const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const final = await Helper.pick(staging, { tag: 'final' })
     ok(final.success, 'stage succeeded')
 
     comment('seeding')
-    const seeder = new Helper()
-    teardown(() => seeder.close(), { order: Infinity })
-    await seeder.ready()
-    const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
     teardown(() => Helper.teardownStream(seeding))
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-
     const key = await until.key
     const announced = await until.announced
-
     ok(hypercoreid.isValid(key), 'app key is valid')
     ok(announced, 'seeding is announced')
 
     comment('running')
-    this.pipe = Pear.worker.run(`pear://${key}`)
+    const opts = {}
+    if (rig) opts.runtime = path.join(rig.platformDir, 'current', BY_ARCH)
+    if (encryptionKeyName) opts.encryptionKey = encryptionKeyName
+
+    const link = `pear://${key}`
+    this.pipe = Pear.worker.run(link, [], opts)
 
     this.pipe.on('data', (data) => {
       const res = JSON.parse(data.toString())
@@ -175,7 +190,7 @@ class WorkerHelper {
       this.promises.exit.resolve('exited')
     })
 
-    return { key }
+    return { helper, key, link }
   }
 
   write (command) {
