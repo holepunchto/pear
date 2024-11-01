@@ -3,27 +3,38 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const basic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
+const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+const dhtBootstrap = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
-const requireAssetsInSubDep = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets-in-sub-dep')
+const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
-test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
+test.solo('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(6)
+  plan(10)
 
-  const helper = new Helper()
-  const { pipe, key, staged, announced } = await helper.__open({ dir: basic, comment, teardown })
-  ok(hypercoreid.isValid(key), 'app key is valid')
-  ok(staged.success, 'stage succeeded')
-  ok(announced, 'seeding is announced')
+  const versionsHelper = new Helper()
+  const dhtBootstrapHelper = new Helper()
 
-  const versions = await Helper.send(pipe, 'versions')
-  is(versions.app.key, key, 'app version matches staged key')
+  const versionsBuild = await versionsHelper.build({ dir: versions, comment, teardown })
+  const dhtBootstrapBuild = await dhtBootstrapHelper.build({ dir: dhtBootstrap, comment, teardown })
+  ok(hypercoreid.isValid(versionsBuild.key), 'app key is valid')
+  ok(hypercoreid.isValid(dhtBootstrapBuild.key), 'app key is valid')
+  ok(versionsBuild.staged.success, 'stage succeeded')
+  ok(dhtBootstrapBuild.staged.success, 'stage succeeded')
+  ok(versionsBuild.announced, 'seeding is announced')
+  ok(dhtBootstrapBuild.announced, 'seeding is announced')
+  
+  const versionsRun = await Helper.run({ link: versionsBuild.link })
+  const dhtBootstrapRun = await Helper.run({ link: dhtBootstrapBuild.link })
 
-  const dhtBootstrap = await Helper.send(pipe, 'dhtBootstrap')
-  alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
+  const versionsRes = await Helper.untilResult(versionsRun.pipe)
+  is(JSON.parse(versionsRes).app.key, versionsBuild.key, 'app version matches staged key')
+  const dhtBootstrapRes = await Helper.untilResult(dhtBootstrapRun.pipe)
+  alike(JSON.parse(dhtBootstrapRes), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  await Helper.end(pipe)
+  await Helper.untilClose(versionsRun.pipe)
+  ok(true, 'ended')
+  await Helper.untilClose(dhtBootstrapRun.pipe)
   ok(true, 'ended')
 })
 
@@ -32,12 +43,13 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   plan(2)
 
   const helper = new Helper()
-  const { pipe } = await helper.__open({ dir: requireAssets, comment, teardown })
+  const { link } = await helper.build({ dir: requireAssets, comment, teardown })
+  const { pipe } = await Helper.run({ link })
 
-  const asset = await Helper.send(pipe, 'readAsset')
+  const asset = await Helper.untilResult(pipe)
   is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  await Helper.end(pipe)
+  await Helper.untilClose(pipe)
   ok(true, 'ended')
 })
 
@@ -46,11 +58,12 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   plan(2)
 
   const helper = new Helper()
-  const { pipe } = await helper.__open({ dir: requireAssetsInSubDep, comment, teardown })
+  const { link } = await helper.build({ dir: subDepRequireAssets, comment, teardown })
+  const { pipe } = await Helper.run({ link })
 
-  const asset = await Helper.send(pipe, 'readAsset')
+  const asset = await Helper.untilResult(pipe)
   is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  await Helper.end(pipe)
+  await Helper.untilClose(pipe)
   ok(true, 'ended')
 })

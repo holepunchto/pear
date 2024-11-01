@@ -143,7 +143,7 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async __open ({ dir, comment = console.log, teardown = () => null }) {
+  async build ({ dir, comment = console.log, teardown = () => undefined }) {
     teardown(() => this.close(), { order: Infinity })
     await this.ready()
 
@@ -160,28 +160,28 @@ class Helper extends IPC {
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     const key = await until.key
-
     const link = `pear://${key}`
-    const pipe = Pear.worker.run(link)
 
-    return { pipe, key, link, staged, announced }
+    return { key, link, staged, announced }
   }
 
-  static async send (pipe, command) {
+  static async run ({ link }) {
+    const pipe = Pear.worker.run(link)
+    return { pipe }
+  }
+
+  static async untilResult (pipe) {
     const res = new Promise((resolve) => {
-      pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+      pipe.on('data', (data) => resolve(data.toString()))
     })
-    pipe.write(command)
+    pipe.write('start')
     return res
   }
 
-  static async end (pipe) {
+  static async untilClose (pipe) {
+    const res = new Promise((resolve) => pipe.on('close', resolve))
     pipe.end()
-    return new Promise((resolve) => pipe.on('end', resolve))
-  }
-
-  static async crash (pipe) {
-    return new Promise((resolve) => pipe.on('crash', resolve))
+    return res
   }
 
   static async open (link, { tags = [] } = {}, opts = {}) {

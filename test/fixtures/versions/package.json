@@ -1,8 +1,8 @@
 {
-  "name": "basic",
+  "name": "versions",
   "main": "index.js",
   "pear": {
-    "name": "basic",
+    "name": "versions",
     "type": "terminal"
   }
 }
