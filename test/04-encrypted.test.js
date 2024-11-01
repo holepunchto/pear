@@ -31,16 +31,17 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   comment('staging throws without encryption key')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(stagingA))
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
-  comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: name, bare: true })
-  teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, { tag: 'final' })
-  ok(staged.success, 'stage succeeded')
+  comment('staging with encryption key')
+  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: name, bare: true })
+  teardown(() => Helper.teardownStream(stagingB))
+  const final = await Helper.pick(stagingB, { tag: 'final' })
+  ok(final.success, 'stage succeeded')
 
-  comment('seeding')
+  comment('seeding encrypted app')
   const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: name, cmdArgs: [] })
   teardown(() => Helper.teardownStream(seeding))
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
