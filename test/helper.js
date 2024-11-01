@@ -103,36 +103,7 @@ class OperationError extends Error {
   }
 }
 
-class LazyPromise {
-  _promise
-  _resolve
-  _reject
-
-  constructor () {
-    this._promise = new Promise((resolve, reject) => {
-      this._resolve = resolve
-      this._reject = reject
-    })
-  }
-
-  resolve (value) {
-    this._resolve(value)
-  }
-
-  reject (error) {
-    this._reject(error)
-  }
-
-  get promise () {
-    return this._promise
-  }
-}
-
 class Helper extends IPC {
-  runtime
-  pipe
-  promises = {}
-
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
@@ -163,7 +134,6 @@ class Helper extends IPC {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
-    this.runtime = runtime
   }
 
   static async teardownStream (stream) {
@@ -207,35 +177,26 @@ class Helper extends IPC {
     const key = await until.key
 
     const link = `pear://${key}`
-    this.pipe = Pear.worker.run(link, args, {
-      runtime: this.runtime
-    })
+    const pipe = Pear.worker.run(link, args)
 
-    this.pipe.on('data', (data) => {
-      const res = JSON.parse(data.toString())
-      this.promises[res.id].resolve(res)
-    })
-    this.pipe.on('end', () => {
-      this.promises.exit.resolve('exited')
-    })
-
-    return { key, link, staged, announced, encryptionKey, error }
+    return { pipe, key, link, staged, announced, encryptionKey, error }
   }
 
-  send (command) {
-    this.promises[command] = new LazyPromise()
-    this.pipe.write(command)
-  }
-
-  async awaitPromise (id) {
-    const res = await this.promises[id].promise
+  static async send (pipe, command) {
+    const res = new Promise((resolve) => {
+      pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+    });
+    pipe.write(command)
     return res
   }
 
-  async sendAndWait (command) {
-    this.send(command)
-    const res = await this.awaitPromise(command)
-    return res
+  static async end (pipe) {
+    pipe.end()
+    return new Promise((resolve) => pipe.on('end', resolve))
+  }
+
+  static async crash (pipe) {
+    return new Promise((resolve) => pipe.on('crash', resolve))
   }
 
   static async open (link, { tags = [] } = {}, opts = {}) {
