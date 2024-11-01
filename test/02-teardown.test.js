@@ -5,7 +5,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const workerTeardown = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 
-test.solo('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+test.solo('teardown', async function ({ is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(2)
 
@@ -20,7 +20,7 @@ test.solo('teardown', async function ({ is, ok, plan, comment, teardown, timeout
     helper.awaitPromise('teardown-executed'),
     helper.awaitPromise('exit')
   ])
-  ok(td, 'teardown executed')
+  is(td, 'teardown-executed', 'teardown executed')
   is(ex, 'exited', 'worker exited')
 })
 
