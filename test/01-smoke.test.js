@@ -5,6 +5,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const basic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
+const requireAssetsInSubDep = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets-in-sub-dep')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -28,7 +29,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
 test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(2)
 
   const helper = new Helper()
   const { pipe } = await helper.__open({ dir: requireAssets, comment, teardown })
@@ -36,8 +37,19 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const asset = await Helper.send(pipe, 'readAsset')
   is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  const assetFromUtils = await Helper.send(pipe, 'readAssetFromUtils')
-  is(assetFromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
+  await Helper.end(pipe)
+  ok(true, 'ended')
+})
+
+test('app with assets in sub dep', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(2)
+
+  const helper = new Helper()
+  const { pipe } = await helper.__open({ dir: requireAssetsInSubDep, comment, teardown })
+
+  const asset = await Helper.send(pipe, 'readAsset')
+  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
   await Helper.end(pipe)
   ok(true, 'ended')

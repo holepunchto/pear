@@ -14,8 +14,6 @@ const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
-const crypto = require('hypercore-crypto')
-const hypercoreid = require('hypercore-id-encoding')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const { PLATFORM_DIR } = require('../constants')
@@ -172,7 +170,7 @@ class Helper extends IPC {
   static async send (pipe, command) {
     const res = new Promise((resolve) => {
       pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
-    });
+    })
     pipe.write(command)
     return res
   }
