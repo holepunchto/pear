@@ -143,28 +143,6 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async build ({ dir, comment = console.log, teardown = () => undefined }) {
-    teardown(() => this.close(), { order: Infinity })
-    await this.ready()
-
-    const id = Math.floor(Math.random() * 10000)
-
-    comment('staging')
-    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, { tag: 'final' })
-
-    comment('seeding')
-    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const announced = await until.announced
-    const key = await until.key
-    const link = `pear://${key}`
-
-    return { key, link, staged, announced }
-  }
-
   static async run ({ link }) {
     const pipe = Pear.worker.run(link)
     return { pipe }
