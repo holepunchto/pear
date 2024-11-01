@@ -1,6 +1,5 @@
-const fsp = require('bare-fs/promises')
+const fs = require('bare-fs')
 
-module.exports = async () => {
-  const text = await fsp.readFile(require.asset('../text-file.txt'))
-  return text.toString()
+module.exports = () => {
+  return fs.readFileSync(require.asset('../text-file.txt'), 'utf8')
 }

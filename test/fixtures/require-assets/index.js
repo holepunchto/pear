@@ -1,11 +1,11 @@
-const fsp = require('bare-fs/promises')
+const fs = require('bare-fs')
 
 const pipe = Pear.worker.pipe()
 pipe.on('data', () => {
-  fsp.readFile(require.asset('./text-file.txt')).then((text) => {
-    pipe.write(text)
-  }).catch((err) => {
+  try {
+    pipe.write(fs.readFileSync(require.asset('./text-file.txt'), 'utf8'))
+  } catch (err) {
     console.error(err)
     pipe.write('failed to read asset')
-  })
+  }
 })
