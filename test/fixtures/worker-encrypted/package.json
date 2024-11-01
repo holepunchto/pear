@@ -1,0 +1,9 @@
+{
+  "name": "worker-encrypted",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-encrypted",
+    "type": "terminal",
+    "encrypted": true
+  }
+}
