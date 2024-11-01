@@ -17,20 +17,20 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const helper = new Helper(rig)
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
   const dir = encrypted
+
   const id = Math.floor(Math.random() * 10000)
 
   comment('add encryption key')
   const name = 'test-encryption-key'
   const preimage = hypercoreid.encode(crypto.randomBytes(32))
-  const addEncryptionKey = this.encryptionKey({ action: 'add', name, value: preimage })
+  const addEncryptionKey = helper.encryptionKey({ action: 'add', name, value: preimage })
   teardown(() => Helper.teardownStream(addEncryptionKey))
   const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
   is(encryptionKey.name, name)
 
   comment('staging error without encryption key')
-  const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
