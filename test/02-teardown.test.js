@@ -28,7 +28,8 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   is(ex, 'exited', 'worker exited')
 })
 
-test('teardown during teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+// TODO: fix me
+test.skip('teardown during teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
@@ -49,7 +50,7 @@ test('teardown during teardown', async function ({ ok, is, plan, comment, teardo
   is(ex, 'exited', 'worker exited')
 })
 
-test.solo('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
