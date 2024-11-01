@@ -6,7 +6,7 @@ const Helper = require('./helper')
 const basic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 
-test.solo('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
@@ -31,14 +31,14 @@ test('app with assets', async function ({ is, plan, comment, teardown, timeout }
   plan(3)
 
   const helper = new Helper()
-  await helper.__open({ dir: requireAssets, comment, teardown })
+  const { pipe } = await helper.__open({ dir: requireAssets, comment, teardown })
 
-  const asset = await helper.sendAndWait('readAsset')
-  is(asset.value.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const asset = await Helper.send(pipe, 'readAsset')
+  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  const assetFromUtils = await helper.sendAndWait('readAssetFromUtils')
-  is(assetFromUtils.value.trim(), 'This is the content of the asset', 'Read asset from lib')
+  const assetFromUtils = await Helper.send(pipe, 'readAssetFromUtils')
+  is(assetFromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
 
-  const res = await helper.sendAndWait('exit')
-  is(res, 'exited', 'worker exited')
+  await Helper.end(pipe)
+  ok(true, 'ended')
 })
