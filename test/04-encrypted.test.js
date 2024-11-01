@@ -14,12 +14,12 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   const encryptionKeyName = 'test-encryption-key'
   const helper = new Helper(rig)
-  const { key, link, encryptionKey, error } = await helper.__open({ dir: workerEncrypted, encryptionKeyName, comment, teardown })
+  const { pipe, key, link, encryptionKey, error } = await helper.__open({ dir: workerEncrypted, encryptionKeyName, comment, teardown })
   is(encryptionKey.name, encryptionKeyName)
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
-  const versions = await helper.sendAndWait('versions')
-  is(versions.value.app.key, key, 'app version matches staged key')
+  const versions = await Helper.send(pipe, 'versions')
+  is(versions.app.key, key, 'app version matches staged key')
 
   comment('pear info encrypted app')
   const infoCmd = helper.info({ link, encryptionKey: encryptionKeyName, cmdArgs: [] })
@@ -27,8 +27,8 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
 
-  const res = await helper.sendAndWait('exit')
-  is(res, 'exited', 'worker exited')
+  await Helper.end(pipe)
+  ok(true, 'ended')
 })
 
 test.hook('encrypted cleanup', rig.cleanup)

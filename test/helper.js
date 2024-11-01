@@ -158,12 +158,12 @@ class Helper extends IPC {
       encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
 
       comment('staging error without encryption key')
-      const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+      const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
       error = await Helper.pick(stagingA, { tag: 'error' })
     }
 
     comment('staging')
-    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
 
@@ -177,7 +177,7 @@ class Helper extends IPC {
     const link = `pear://${key}`
     const pipe = Pear.worker.run(link)
 
-    return { pipe, key, link, staged, announced }
+    return { pipe, key, link, staged, announced, encryptionKey, error }
   }
 
   static async send (pipe, command) {
