@@ -37,7 +37,7 @@ const {
   SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const db = HyperDB.rocks(path.join(PLATFORM_DIR, 'metrics.db'), require('../../output/hyperschema'))
+const db = HyperDB.rocks(path.join(PLATFORM_DIR, 'metrics.hyperdb'), require('../../schema'))
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const knownNodes = new Store('dht')
@@ -977,7 +977,13 @@ class Sidecar extends ReadyResource {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (nodes.length) {
           await knownNodes.set('nodes', nodes)
-          await db.insert('dht-nodes', nodes)
+
+          db.cork()
+          for (const node of nodes) {
+            await db.insert('@pear/dht-nodes', node)
+          }
+          db.uncork()
+
           LOG.info('sidecar', '- DHT known-nodes wrote to file ' + nodes.length + ' nodes')
           LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }

@@ -11,7 +11,7 @@
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js",
-    "schema": "bare scripts/schema.js"
+    "schema": "bare scripts/schema-builder.js"
   },
   "author": "Holepunch",
   "pear": {
