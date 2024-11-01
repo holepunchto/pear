@@ -1,8 +1,8 @@
 {
-  "name": "require-assets-in-sub-dep",
+  "name": "sub-dep-require-assets",
   "main": "index.js",
   "pear": {
-    "name": "require-assets-in-sub-dep",
+    "name": "sub-dep-require-assets",
     "type": "terminal"
   },
   "dependencies": {

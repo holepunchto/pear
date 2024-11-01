@@ -143,58 +143,33 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async __open ({ dir, encryptionKeyName, comment = console.log, teardown = () => null }) {
-    teardown(() => this.close(), { order: Infinity })
-    await this.ready()
-
-    const id = Math.floor(Math.random() * 10000)
-
-    let encryptionKey, error
-    if (encryptionKeyName) {
-      comment('add encryption key')
-      const preimage = hypercoreid.encode(crypto.randomBytes(32))
-      const addEncryptionKey = this.encryptionKey({ action: 'add', name: encryptionKeyName, value: preimage })
-      teardown(() => Helper.teardownStream(addEncryptionKey))
-      encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
-
-      comment('staging error without encryption key')
-      const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
-      error = await Helper.pick(stagingA, { tag: 'error' })
-    }
-
-    comment('staging')
-    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, { tag: 'final' })
-
-    comment('seeding')
-    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const announced = await until.announced
-    const key = await until.key
-
-    const link = `pear://${key}`
+  static async run ({ link }) {
     const pipe = Pear.worker.run(link)
-
-    return { pipe, key, link, staged, announced, encryptionKey, error }
+    return { pipe }
   }
 
-  static async send (pipe, command) {
-    const res = new Promise((resolve) => {
-      pipe.on('data', (data) => resolve(JSON.parse(data.toString())))
+  static async untilResult (pipe, timeout = 1000) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      pipe.on('data', (data) => {
+        clearTimeout(timeoutId)
+        resolve(data.toString())
+      })
     })
-    pipe.write(command)
+    pipe.write('start')
     return res
   }
 
-  static async end (pipe) {
+  static async untilClose (pipe, timeout = 1000) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        resolve('closed')
+      })
+    })
     pipe.end()
-    return new Promise((resolve) => pipe.on('end', resolve))
-  }
-
-  static async crash (pipe) {
-    return new Promise((resolve) => pipe.on('crash', resolve))
+    return res
   }
 
   static async open (link, { tags = [] } = {}, opts = {}) {
