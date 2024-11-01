@@ -197,14 +197,14 @@ class Helper extends IPC {
     comment('staging')
     const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
     teardown(() => Helper.teardownStream(staging))
-    const final = await Helper.pick(staging, { tag: 'final' })
+    const staged = await Helper.pick(staging, { tag: 'final' })
 
     comment('seeding')
     const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
     teardown(() => Helper.teardownStream(seeding))
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const key = await until.key
     const announced = await until.announced
+    const key = await until.key
 
     const link = `pear://${key}`
     this.pipe = Pear.worker.run(link, args, {
@@ -219,7 +219,7 @@ class Helper extends IPC {
       this.promises.exit.resolve('exited')
     })
 
-    return { key, link, final, announced, encryptionKey, error }
+    return { key, link, staged, announced, encryptionKey, error }
   }
 
   send (command) {

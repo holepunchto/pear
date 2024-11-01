@@ -1,16 +1,20 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
 const workerRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 
-test('smoke', async function ({ is, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(6)
 
   const helper = new Helper()
-  const { key } = await helper.__open({ dir: workerBasic, comment, teardown })
+  const { key, staged, announced } = await helper.__open({ dir: workerBasic, comment, teardown })
+  ok(hypercoreid.isValid(key), 'app key is valid')
+  ok(staged.success, 'stage succeeded')
+  ok(announced, 'seeding is announced')
 
   const versions = await helper.sendAndWait('versions')
   is(versions.value.app.key, key, 'app version matches staged key')
