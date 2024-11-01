@@ -1,12 +1,8 @@
 const program = global.Bare || global.process
 
-Pear.teardown(foo)
-
-function foo () {
-  return bar()
-}
-
-async function bar () {
+Pear.teardown(() => a())
+const a = () => b()
+const b = () => {
   Pear.teardown(async () => {
     await new Promise((resolve) => {
       pipe.write('teardown executed', resolve)
