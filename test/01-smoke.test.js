@@ -13,7 +13,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
   plan(10)
 
   const versions = await _run({ dir: versionsDir, ok, comment, teardown, parse: true })
-  is(versions.result.app.key, versions.key, 'app version matches staged key')
+  is(versions.result.app.key, versions.build.key, 'app version matches staged key')
 
   const dhtBootstrap = await _run({ dir: dhtBootstrapDir, ok, comment, teardown, parse: true })
   alike(dhtBootstrap.result, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
