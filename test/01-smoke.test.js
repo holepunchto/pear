@@ -5,13 +5,12 @@ const Helper = require('./helper')
 const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
 const workerRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
   const helper = new Helper()
-  const { key } = await helper.build({ dir: workerBasic, comment, teardown })
-  helper.__open(`pear://${key}`)
+  const { key } = await helper.__open({ dir: workerBasic, comment, teardown })
 
   const versions = await helper.sendAndWait('versions')
   is(versions.value.app.key, key, 'app version matches staged key')
@@ -23,13 +22,12 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   is(res, 'exited', 'worker exited')
 })
 
-test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
   const helper = new Helper()
-  const { key } = await helper.build({ dir: workerRequireAssets, comment, teardown })
-  helper.__open(`pear://${key}`)
+  await helper.__open({ dir: workerRequireAssets, comment, teardown })
 
   const asset = await helper.sendAndWait('readAsset')
   is(asset.value.trim(), 'This is the content of the asset', 'Read asset from entrypoint')

@@ -129,6 +129,7 @@ class LazyPromise {
 }
 
 class Helper extends IPC {
+  runtime
   pipe
   promises = {}
 
@@ -162,6 +163,7 @@ class Helper extends IPC {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
+    this.runtime = runtime
   }
 
   static async teardownStream (stream) {
@@ -173,7 +175,7 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async build ({ dir, encryptionKeyName, comment, teardown }) {
+  async __open ({ dir, args, encryptionKeyName, comment, teardown }) {
     teardown(() => this.close(), { order: Infinity })
     await this.ready()
 
@@ -191,7 +193,7 @@ class Helper extends IPC {
       const stagingA = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
       error = await Helper.pick(stagingA, { tag: 'error' })
     }
-    
+
     comment('staging')
     const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
     teardown(() => Helper.teardownStream(staging))
@@ -204,15 +206,10 @@ class Helper extends IPC {
     const key = await until.key
     const announced = await until.announced
 
-    return { encryptionKey, error, final, key, announced }
-  }
-
-  __open(link, opts = {}) {
-    const { platformDir } = opts
-    if (platformDir) {
-      opts.runtime = path.join(platformDir, 'current', BY_ARCH)
-    }
-    this.pipe = Pear.worker.run(link, [], opts)
+    const link = `pear://${key}`
+    this.pipe = Pear.worker.run(link, args, {
+      runtime: this.runtime,
+    })
 
     this.pipe.on('data', (data) => {
       const res = JSON.parse(data.toString())
@@ -221,6 +218,8 @@ class Helper extends IPC {
     this.pipe.on('end', () => {
       this.promises.exit.resolve('exited')
     })
+
+    return { key, link, final, announced, encryptionKey, error }
   }
 
   send (command) {
