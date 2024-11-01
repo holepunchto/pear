@@ -208,7 +208,7 @@ class Helper extends IPC {
 
     const link = `pear://${key}`
     this.pipe = Pear.worker.run(link, args, {
-      runtime: this.runtime,
+      runtime: this.runtime
     })
 
     this.pipe.on('data', (data) => {
