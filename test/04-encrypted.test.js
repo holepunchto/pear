@@ -14,7 +14,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   const encryptionKeyName = 'test-encryption-key'
   const helper = new Helper(rig)
-  const { key, link } = await helper.__open({ dir: workerEncrypted, comment, teardown, encryptionKeyName })
+  const { key, link } = await helper.__open({ dir: workerEncrypted, encryptionKeyName, comment, teardown })
 
   const versions = await helper.sendAndWait('versions')
   is(versions.value.app.key, key, 'app version matches staged key')
