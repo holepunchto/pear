@@ -21,7 +21,7 @@ test.solo('teardown', async function ({ ok, is, plan, comment, teardown, timeout
   os.kill(pid.value)
 
   const td = await helper.awaitPromise('teardown')
-  is(td.id, 'teardown', 'teardown executed')
+  is(td.value, 'teardown executed', 'teardown executed')
 
   const ex = await helper.awaitPromise('exit')
   is(ex, 'exited', 'worker exited')
