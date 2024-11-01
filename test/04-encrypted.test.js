@@ -29,7 +29,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const encryptionKey = await Helper.pick(addEncryptionKey, { tag: 'added' })
   is(encryptionKey.name, name)
 
-  comment('staging error without encryption key')
+  comment('staging throws without encryption key')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
