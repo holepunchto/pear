@@ -8,7 +8,7 @@ const dhtBootstrap = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstr
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
-test.solo('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(10)
 
