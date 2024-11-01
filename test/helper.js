@@ -17,7 +17,7 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('../constants')
-const { PLATFORM_DIR } = constants
+const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
@@ -149,13 +149,9 @@ class Helper extends IPC {
     if (encryptionKey) {
       program.argv.splice(2, 0, '--encryption-key', encryptionKey)
     }
-    if (platformDir) {
-      const runtime = path.join(platformDir, 'current', BY_ARCH)
-      // TODO: does not work
-      // https://github.com/holepunchto/pear/blob/d284704a8c9c3424cf4796921384d0ba076f4113/lib/worker.js#L43-L44
-      constants.RUNTIME = runtime 
-    }
+    if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
     const pipe = Pear.worker.run(link)
+    if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
     return { pipe }
   }
 
