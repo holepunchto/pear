@@ -152,12 +152,12 @@ class Helper extends IPC {
     const id = Math.floor(Math.random() * 10000)
 
     comment('staging')
-    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: encryptionKeyName, bare: true })
+    const staging = this.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
 
     comment('seeding')
-    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, encryptionKey: encryptionKeyName, cmdArgs: [] })
+    const seeding = this.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
     teardown(() => Helper.teardownStream(seeding))
     const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
