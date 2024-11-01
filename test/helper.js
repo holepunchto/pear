@@ -155,6 +155,7 @@ class Helper extends IPC {
         clearTimeout(timeoutId)
         resolve(data.toString())
       })
+      pipe.on('close', () => reject(new Error('unexpected closed')))
     })
     pipe.write('start')
     return res
