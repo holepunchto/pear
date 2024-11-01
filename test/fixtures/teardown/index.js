@@ -10,6 +10,7 @@ pipe.on('data', async (data) => {
 
 async function teardownFn () {
   await pipeWrite({ id: 'teardown' })
+  Pear.exit()
 }
 
 async function pipeWrite (value) {
