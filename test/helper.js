@@ -170,16 +170,26 @@ class Helper extends IPC {
     return { pipe }
   }
 
-  static async untilResult (pipe) {
-    const res = new Promise((resolve) => {
-      pipe.on('data', (data) => resolve(data.toString()))
+  static async untilResult (pipe, timeout = 1000) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject('timedOut'), timeout)
+      pipe.on('data', (data) => {
+        clearTimeout(timeoutId)
+        resolve(data.toString())
+      })
     })
     pipe.write('start')
     return res
   }
 
-  static async untilClose (pipe) {
-    const res = new Promise((resolve) => pipe.on('close', resolve))
+  static async untilClose (pipe, timeout = 1000) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject('timedOut'), timeout)
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        resolve('closed')
+      })
+    })
     pipe.end()
     return res
   }
