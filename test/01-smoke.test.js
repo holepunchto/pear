@@ -48,10 +48,10 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
 })
 
 async function run ({ dir, ok, comment, teardown }) {
-  const { link, key } = await build({ dir, ok, comment, teardown })
+  const { key, link } = await build({ dir, ok, comment, teardown })
   const { pipe } = await Helper.run({ link })
   const result = await Helper.untilResult(pipe)
-  return { pipe, result, key }
+  return { key, pipe, result }
 }
 
 async function build ({ dir, ok, comment, teardown }) {
@@ -79,5 +79,5 @@ async function build ({ dir, ok, comment, teardown }) {
   
   const link = `pear://${key}`
 
-  return { helper, key, link, staged, announced }
+  return { key, link }
 }
