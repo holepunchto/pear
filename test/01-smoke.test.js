@@ -14,13 +14,13 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
 
   const versionsRun = await run({ dir: versions, ok, comment, teardown })
   is(JSON.parse(versionsRun.result).app.key, versionsRun.key, 'app version matches staged key')
-  
+
   const dhtBootstrapRun = await run({ dir: dhtBootstrap, ok, comment, teardown })
   alike(JSON.parse(dhtBootstrapRun.result), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   await Helper.untilClose(versionsRun.pipe)
   ok(true, 'ended')
-  
+
   await Helper.untilClose(dhtBootstrapRun.pipe)
   ok(true, 'ended')
 })
@@ -76,7 +76,7 @@ async function build ({ dir, ok, comment, teardown }) {
 
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
-  
+
   const link = `pear://${key}`
 
   return { key, link }
