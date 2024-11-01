@@ -146,12 +146,14 @@ class Helper extends IPC {
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
   static async run ({ link, encryptionKey, platformDir }) {
-    if (encryptionKey) {
-      program.argv.splice(2, 0, '--encryption-key', encryptionKey)
-    }
+    if (encryptionKey) program.argv.splice(2, 0, '--encryption-key', encryptionKey)
     if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+
     const pipe = Pear.worker.run(link)
+
     if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
+    if (encryptionKey) program.argv.splice(2, 2)
+
     return { pipe }
   }
 
