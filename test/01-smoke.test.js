@@ -1,10 +1,9 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'worker-basic')
-const workerWithAssets = path.join(Helper.localDir, 'test', 'fixtures', 'worker-with-assets')
+const workerBasic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
+const workerRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 
 test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -29,7 +28,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   plan(3)
 
   const helper = new Helper()
-  const { key } = await helper.build({ dir: workerWithAssets, comment, teardown })
+  const { key } = await helper.build({ dir: workerRequireAssets, comment, teardown })
   helper.__open(`pear://${key}`)
 
   const asset = await helper.sendAndWait('readAsset')
