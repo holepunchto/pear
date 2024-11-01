@@ -2,7 +2,7 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const workerEncrypted = path.join(Helper.localDir, 'test', 'fixtures', 'worker-encrypted')
+const workerEncrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 const rig = new Helper.Rig()
 
@@ -13,10 +13,10 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   plan(8)
 
   const encryptionKeyName = 'test-encryption-key'
-  const worker = new Helper.Worker()
-  const { helper, key, link } = await worker.run({ dir: workerEncrypted, ok, is, comment, teardown, rig, encryptionKeyName })
+  const helper = new Helper(rig)
+  const { key } = await helper.__open({ dir: workerEncrypted, comment, teardown, encryptionKeyName })
 
-  const versions = await worker.writeAndWait('versions')
+  const versions = await worker.sendAndWait('versions')
   is(versions.value.app.key, key, 'app version matches staged key')
 
   comment('pear info encrypted app')
@@ -25,7 +25,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
 
-  const res = await worker.writeAndWait('exit')
+  const res = await worker.sendAndWait('exit')
   is(res, 'exited', 'worker exited')
 })
 
