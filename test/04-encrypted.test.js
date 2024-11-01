@@ -2,7 +2,7 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const workerEncrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
+const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 const rig = new Helper.Rig()
 
@@ -15,7 +15,8 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const helper = new Helper(rig)
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
+  
+  const dir = encrypted
   const id = Math.floor(Math.random() * 10000)
 
   comment('add encryption key')
