@@ -1,0 +1,8 @@
+{
+  "name": "dht-bootstrap",
+  "main": "index.js",
+  "pear": {
+    "name": "dht-bootstrap",
+    "type": "terminal"
+  }
+}
