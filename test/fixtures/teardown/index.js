@@ -12,8 +12,9 @@ pipe.on('data', async (data) => {
 })
 
 async function teardownFn () {
-  console.log('🚀 ~ teardownFn ~ teardownFn')
+  console.log('🚀 ~ teardownFn ~ start')
   await pipeWrite({ id: 'teardown-executed' })
+  console.log('🚀 ~ teardownFn ~ end')
 }
 
 async function pipeWrite (value) {
