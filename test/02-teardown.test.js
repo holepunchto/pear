@@ -12,15 +12,14 @@ test.solo('teardown', async function ({ is, plan, comment, teardown, timeout }) 
   const helper = new Helper()
   await helper.__open({ dir: workerTeardown, comment, teardown })
 
-  await helper.sendAndWait('teardown')
-  helper.register('teardown-executed')
+  helper.register('teardown')
   helper.send('exit')
 
   const [td, ex] = await Promise.all([
-    helper.awaitPromise('teardown-executed'),
+    helper.awaitPromise('teardown'),
     helper.awaitPromise('exit')
   ])
-  is(td, 'teardown-executed', 'teardown executed')
+  is(td, 'teardown', 'teardown executed')
   is(ex, 'exited', 'worker exited')
 })
 
