@@ -13,12 +13,12 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
   plan(10)
 
   const versionsBuild = await build({ dir: versions, comment, teardown })
-  const dhtBootstrapBuild = await build({ dir: dhtBootstrap, comment, teardown })
   ok(hypercoreid.isValid(versionsBuild.key), 'app key is valid')
-  ok(hypercoreid.isValid(dhtBootstrapBuild.key), 'app key is valid')
   ok(versionsBuild.staged.success, 'stage succeeded')
-  ok(dhtBootstrapBuild.staged.success, 'stage succeeded')
   ok(versionsBuild.announced, 'seeding is announced')
+  const dhtBootstrapBuild = await build({ dir: dhtBootstrap, comment, teardown })
+  ok(hypercoreid.isValid(dhtBootstrapBuild.key), 'app key is valid')
+  ok(dhtBootstrapBuild.staged.success, 'stage succeeded')
   ok(dhtBootstrapBuild.announced, 'seeding is announced')
   
   const versionsRun = await Helper.run({ link: versionsBuild.link })
