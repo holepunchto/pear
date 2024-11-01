@@ -1,24 +1,19 @@
+const program = global.Bare || global.process
+
+Pear.teardown(foo)
+
 function foo () {
-  bar()
+  return bar()
 }
-function bar () {
+
+async function bar () {
   Pear.teardown(async () => {
-    await pipeWrite({ id: 'teardown', value: 'teardown executed' })
+    await new Promise((resolve) => {
+      pipe.write('teardown executed', resolve)
+    })
     Pear.exit()
   })
 }
-Pear.teardown(foo)
 
 const pipe = Pear.worker.pipe()
-pipe.on('data', async (data) => {
-  const command = data.toString()
-  if (command === 'pid') {
-    pipeWrite({ id: command, value: Bare.pid })
-  }
-})
-
-async function pipeWrite (value) {
-  return new Promise((resolve) => {
-    pipe.write(JSON.stringify(value), resolve)
-  })
-}
+pipe.on('data', () => pipe.write(program.pid))
