@@ -1,5 +1,3 @@
 const fs = require('bare-fs')
 
-module.exports = () => {
-  return fs.readFileSync(require.asset('../text-file.txt'), 'utf8')
-}
+module.exports = () => fs.readFileSync(require.asset('../text-file.txt'), 'utf8')
