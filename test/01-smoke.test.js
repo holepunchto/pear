@@ -12,19 +12,15 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
   timeout(180000)
   plan(10)
 
-  const versionsBuild = await build({ dir: versions, ok, comment, teardown })
-  const dhtBootstrapBuild = await build({ dir: dhtBootstrap, ok, comment, teardown })
+  const versionsRun = await run({ dir: versions, ok, comment, teardown })
+  is(JSON.parse(versionsRun.result).app.key, versionsRun.key, 'app version matches staged key')
   
-  const versionsRun = await Helper.run({ link: versionsBuild.link })
-  const dhtBootstrapRun = await Helper.run({ link: dhtBootstrapBuild.link })
-
-  const versionsRes = await Helper.untilResult(versionsRun.pipe)
-  is(JSON.parse(versionsRes).app.key, versionsBuild.key, 'app version matches staged key')
-  const dhtBootstrapRes = await Helper.untilResult(dhtBootstrapRun.pipe)
-  alike(JSON.parse(dhtBootstrapRes), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
+  const dhtBootstrapRun = await run({ dir: dhtBootstrap, ok, comment, teardown })
+  alike(JSON.parse(dhtBootstrapRun.result), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   await Helper.untilClose(versionsRun.pipe)
   ok(true, 'ended')
+  
   await Helper.untilClose(dhtBootstrapRun.pipe)
   ok(true, 'ended')
 })
@@ -33,11 +29,8 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   timeout(180000)
   plan(5)
 
-  const { link } = await build({ dir: requireAssets, ok, comment, teardown })
-  const { pipe } = await Helper.run({ link })
-
-  const asset = await Helper.untilResult(pipe)
-  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const { pipe, result } = await run({ dir: requireAssets, ok, comment, teardown })
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
   await Helper.untilClose(pipe)
   ok(true, 'ended')
@@ -47,17 +40,21 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   timeout(180000)
   plan(5)
 
-  const { link } = await build({ dir: subDepRequireAssets, ok, comment, teardown })
-  const { pipe } = await Helper.run({ link })
-
-  const asset = await Helper.untilResult(pipe)
-  is(asset.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const { pipe, result } = await run({ dir: subDepRequireAssets, ok, comment, teardown })
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
   await Helper.untilClose(pipe)
   ok(true, 'ended')
 })
 
-async function build ({ dir, ok, comment = console.log, teardown = () => undefined }) {
+async function run ({ dir, ok, comment, teardown }) {
+  const { link, key } = await build({ dir, ok, comment, teardown })
+  const { pipe } = await Helper.run({ link })
+  const result = await Helper.untilResult(pipe)
+  return { pipe, result, key }
+}
+
+async function build ({ dir, ok, comment, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
