@@ -65,7 +65,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const info = await untilInfo.info
   ok(info, 'retrieves info from encrypted app')
 
-  await Helper.end(pipe)
+  await Helper.untilClose(pipe)
   ok(true, 'ended')
 })
 
