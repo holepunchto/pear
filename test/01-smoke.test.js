@@ -3,8 +3,8 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-const dhtBootstrap = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
+const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
@@ -12,16 +12,16 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
   timeout(180000)
   plan(10)
 
-  const versionsRun = await run({ dir: versions, ok, comment, teardown })
-  is(JSON.parse(versionsRun.result).app.key, versionsRun.key, 'app version matches staged key')
+  const versions = await _run({ dir: versionsDir, ok, comment, teardown })
+  is(JSON.parse(versions.result).app.key, versions.key, 'app version matches staged key')
 
-  const dhtBootstrapRun = await run({ dir: dhtBootstrap, ok, comment, teardown })
-  alike(JSON.parse(dhtBootstrapRun.result), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
+  const dhtBootstrap = await _run({ dir: dhtBootstrapDir, ok, comment, teardown })
+  alike(JSON.parse(dhtBootstrap.result), Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
-  await Helper.untilClose(versionsRun.pipe)
+  await Helper.untilClose(versions.run.pipe)
   ok(true, 'ended')
 
-  await Helper.untilClose(dhtBootstrapRun.pipe)
+  await Helper.untilClose(dhtBootstrap.run.pipe)
   ok(true, 'ended')
 })
 
@@ -29,10 +29,10 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   timeout(180000)
   plan(5)
 
-  const { pipe, result } = await run({ dir: requireAssets, ok, comment, teardown })
+  const { run, result } = await _run({ dir: requireAssets, ok, comment, teardown })
   is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  await Helper.untilClose(pipe)
+  await Helper.untilClose(run.pipe)
   ok(true, 'ended')
 })
 
@@ -40,21 +40,21 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   timeout(180000)
   plan(5)
 
-  const { pipe, result } = await run({ dir: subDepRequireAssets, ok, comment, teardown })
+  const { run, result } = await _run({ dir: subDepRequireAssets, ok, comment, teardown })
   is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  await Helper.untilClose(pipe)
+  await Helper.untilClose(run.pipe)
   ok(true, 'ended')
 })
 
-async function run ({ dir, ok, comment, teardown }) {
-  const { key, link } = await build({ dir, ok, comment, teardown })
-  const { pipe } = await Helper.run({ link })
-  const result = await Helper.untilResult(pipe)
-  return { key, pipe, result }
+async function _run ({ dir, ok, comment, teardown }) {
+  const build = await _build({ dir, ok, comment, teardown })
+  const run = await Helper.run({ link: build.link })
+  const result = await Helper.untilResult(run.pipe)
+  return { build, run, result }
 }
 
-async function build ({ dir, ok, comment, teardown }) {
+async function _build ({ dir, ok, comment, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
