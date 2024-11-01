@@ -1,24 +1,30 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
+const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const workerTeardown = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 
-test.solo('teardown', async function ({ is, plan, comment, teardown, timeout }) {
+test.solo('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(2)
+  plan(3)
 
   const helper = new Helper()
   await helper.__open({ dir: workerTeardown, comment, teardown })
 
   helper.register('teardown')
+  helper.register('exit')
   
-  const ex = await helper.sendAndWait('exit')
-  is(ex, 'exited', 'worker exited')
+  const pid = await helper.sendAndWait('pid')
+  ok(pid.value > 0, 'worker pid is valid')
+  os.kill(pid.value)
 
   const td = await helper.awaitPromise('teardown')
-  is(td, 'teardown', 'teardown executed')
+  is(td.id, 'teardown', 'teardown executed')
+
+  const ex = await helper.awaitPromise('exit')
+  is(ex, 'exited', 'worker exited')
 })
 
 test('teardown during teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
