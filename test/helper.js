@@ -155,6 +155,14 @@ class Helper extends IPC {
         clearTimeout(timeoutId)
         resolve(data.toString())
       })
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        reject(new Error('unexpected closed'))
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        reject(new Error('unexpected ended'))
+      })
     })
     pipe.write('start')
     return res
@@ -166,6 +174,10 @@ class Helper extends IPC {
       pipe.on('close', () => {
         clearTimeout(timeoutId)
         resolve('closed')
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        resolve('ended')
       })
     })
     pipe.end()
