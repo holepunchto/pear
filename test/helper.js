@@ -175,7 +175,7 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  async __open ({ dir, args, encryptionKeyName, comment, teardown }) {
+  async __open ({ dir, encryptionKeyName, args = [], comment = console.log, teardown = () => null }) {
     teardown(() => this.close(), { order: Infinity })
     await this.ready()
 
