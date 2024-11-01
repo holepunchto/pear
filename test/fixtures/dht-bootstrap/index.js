@@ -4,6 +4,6 @@ pipe.on('data', () => {
     pipe.write(JSON.stringify(Pear.config.dht.bootstrap))
   } catch (err) {
     console.error(err)
-    pipe.end()
+    Pear.exit()
   }
 })

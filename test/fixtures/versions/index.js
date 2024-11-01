@@ -4,6 +4,6 @@ pipe.on('data', () => {
     pipe.write(JSON.stringify(versions))
   }).catch((err) => {
     console.error(err)
-    pipe.end()
+    Pear.exit()
   })
 })

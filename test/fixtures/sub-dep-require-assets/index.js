@@ -6,6 +6,6 @@ pipe.on('data', () => {
     pipe.write(readAsset())
   } catch (err) {
     console.error(err)
-    pipe.end()
+    Pear.exit()
   }
 })
