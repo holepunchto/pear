@@ -206,6 +206,7 @@ class Helper extends IPC {
     const announced = await until.announced
     const key = await until.key
 
+    comment('running')
     const link = `pear://${key}`
     this.pipe = Pear.worker.run(link, args, {
       runtime: this.runtime
@@ -222,8 +223,12 @@ class Helper extends IPC {
     return { key, link, staged, announced, encryptionKey, error }
   }
 
-  send (command) {
+  register (command) {
     this.promises[command] = new LazyPromise()
+  }
+
+  send (command) {
+    this.register(command)
     this.pipe.write(command)
   }
 

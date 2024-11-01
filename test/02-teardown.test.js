@@ -3,52 +3,25 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const workerTeardown = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 
-test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+test.solo('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
   timeout(180000)
+  plan(2)
 
-  plan(5)
+  const helper = new Helper()
+  await helper.__open({ dir: workerTeardown, comment, teardown })
 
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
+  await helper.sendAndWait('teardown')
+  helper.register('teardown-executed')
+  helper.send('exit')
 
-  const dir = harness
-
-  const id = Math.floor(Math.random() * 10000)
-
-  comment('staging')
-  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
-  teardown(() => Helper.teardownStream(seed))
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
-
-  ok(hypercoreid.isValid(key), 'app key is valid')
-  ok(announced, 'seeding is announced')
-
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
-
-  await running.inspector.evaluate('Pear.teardown(() => console.log(\'teardown\'))')
-  await running.inspector.evaluate('Pear.shutdown()')
-  await running.inspector.close()
-
-  const td = await running.until.teardown
-  is(td, 'teardown', 'teardown has been triggered')
-
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  const [td, ex] = await Promise.all([
+    helper.awaitPromise('teardown-executed'),
+    helper.awaitPromise('exit')
+  ])
+  ok(td, 'teardown executed')
+  is(ex, 'exited', 'worker exited')
 })
 
 test('teardown during teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {

@@ -1,0 +1,8 @@
+{
+  "name": "teardown",
+  "main": "index.js",
+  "pear": {
+    "name": "teardown",
+    "type": "terminal"
+  }
+}
