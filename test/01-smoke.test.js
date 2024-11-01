@@ -26,7 +26,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   ok(true, 'ended')
 })
 
-test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
+test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
