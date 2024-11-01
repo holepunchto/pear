@@ -14,10 +14,11 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   timeout(180000)
   plan(8)
 
+  const dir = encrypted
+
   const helper = new Helper(rig)
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const dir = encrypted
 
   const id = Math.floor(Math.random() * 10000)
 
@@ -52,10 +53,11 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const link = `pear://${key}`
-
   const { pipe } = await Helper.run({ link })
-  const versions = await Helper.untilResult(pipe)
-  is(JSON.parse(versions).app.key, key, 'app version matches staged key')
+
+  const result = await Helper.untilResult(pipe)
+  const versions = JSON.parse(result)
+  is(versions.app.key, key, 'app version matches staged key')
 
   comment('pear info encrypted app')
   const infoCmd = helper.info({ link, encryptionKey: name, cmdArgs: [] })
