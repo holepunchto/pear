@@ -7,7 +7,7 @@ const basic = path.join(Helper.localDir, 'test', 'fixtures', 'basic')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const requireAssetsInSubDep = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets-in-sub-dep')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
@@ -21,7 +21,7 @@ test('smoke', async function ({ ok, is, plan, comment, teardown, timeout }) {
   is(versions.app.key, key, 'app version matches staged key')
 
   const dhtBootstrap = await Helper.send(pipe, 'dhtBootstrap')
-  is(JSON.stringify(dhtBootstrap), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
+  alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dth.bootstrap')
 
   await Helper.end(pipe)
   ok(true, 'ended')
