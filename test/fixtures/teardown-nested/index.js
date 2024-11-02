@@ -5,11 +5,11 @@ const a = () => b()
 const b = () => {
   Pear.teardown(async () => {
     await new Promise((resolve) => {
-      pipe.write('teardown executed', resolve)
+      pipe.write(JSON.stringify({ id: 'teardown' }), resolve)
     })
     Pear.exit()
   })
 }
 
 const pipe = Pear.worker.pipe()
-pipe.on('data', () => pipe.write(program.pid))
+pipe.on('data', () => pipe.write(JSON.stringify({ id: 'pid', value: program.pid })))

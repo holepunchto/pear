@@ -85,10 +85,10 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   ok(td, 'teardown executed')
 })
 
-// TODO: fix me
+// TODO: worker process does not exit
 test.skip('teardown during teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(6)
+  plan(5)
 
   const dir = teardownNestedDir
 
@@ -116,18 +116,51 @@ test.skip('teardown during teardown', async function ({ ok, is, plan, comment, t
 
   const link = `pear://${key}`
   const run = await Helper.run({ link })
+  const { pipe } = run
 
-  const pid = await Helper.untilResult(run.pipe)
+  const pidPromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
+    pipe.on('data', (data) => {
+      clearTimeout(timeoutId)
+      const res = JSON.parse(data.toString())
+      if (res.id === 'pid') resolve(res.value)
+    })
+    pipe.on('close', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected closed'))
+    })
+    pipe.on('end', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected ended'))
+    })
+  })
+
+  const teardownPromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
+    pipe.on('data', (data) => {
+      clearTimeout(timeoutId)
+      const res = JSON.parse(data.toString())
+      if (res.id === 'teardown') resolve(true)
+    })
+    pipe.on('close', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected closed'))
+    })
+    pipe.on('end', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected ended'))
+    })
+  })
+
+  pipe.write('start')
+  
+  const pid = await pidPromise
   ok(pid > 0, 'worker pid is valid')
   
-  const teardownPromise = Helper.untilResult(run.pipe)
   os.kill(pid)
 
   const td = await teardownPromise
-  is(td, 'teardown executed', 'teardown executed')
-
-  // await Helper.untilClose(run.pipe)
-  // ok(true, 'ended')
+  ok(td, 'teardown executed')
 })
 
 test('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
