@@ -85,7 +85,8 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   ok(td, 'teardown executed')
 })
 
-// TODO: worker process does not exit
+// TODO: this test will not work because in lib/teardown, 'handlers' is cloned to 'order', 
+// so mutating 'handlers' will not affect 'order'
 test.skip('teardown during teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
