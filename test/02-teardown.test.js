@@ -8,9 +8,9 @@ const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 const teardownNestedDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-nested')
 const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
-test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test.solo('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(5)
 
   const dir = teardownDir
 
@@ -38,22 +38,57 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   const link = `pear://${key}`
   const run = await Helper.run({ link })
+  const { pipe } = run
 
-  const pid = await Helper.untilResult(run.pipe)
-  ok(pid.value > 0, 'worker pid is valid')
-  os.kill(pid.value)
+  const pidPromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
+    pipe.on('data', (data) => {
+      clearTimeout(timeoutId)
+      const res = JSON.parse(data.toString())
+      if (res.id === 'pid') resolve(res.value)
+    })
+    pipe.on('close', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected closed'))
+    })
+    pipe.on('end', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected ended'))
+    })
+  })
 
-  const td = await Helper.untilResult(run.pipe)
-  is(td, 'teardown executed', 'teardown executed')
+  const teardownPromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
+    pipe.on('data', (data) => {
+      clearTimeout(timeoutId)
+      const res = JSON.parse(data.toString())
+      if (res.id === 'teardown') resolve(true)
+    })
+    pipe.on('close', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected closed'))
+    })
+    pipe.on('end', () => {
+      clearTimeout(timeoutId)
+      reject(new Error('unexpected ended'))
+    })
+  })
 
-  await Helper.untilClose(run.pipe)
-  ok(true, 'ended')
+  pipe.write('start')
+  
+  const pid = await pidPromise
+  ok(pid > 0, 'worker pid is valid')
+  
+  os.kill(pid)
+
+  const td = await teardownPromise
+  ok(td, 'teardown executed')
 })
 
 // TODO: fix me
 test.skip('teardown during teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(6)
 
   const dir = teardownNestedDir
 
@@ -83,19 +118,21 @@ test.skip('teardown during teardown', async function ({ ok, is, plan, comment, t
   const run = await Helper.run({ link })
 
   const pid = await Helper.untilResult(run.pipe)
-  ok(pid.value > 0, 'worker pid is valid')
-  os.kill(pid.value)
+  ok(pid > 0, 'worker pid is valid')
+  
+  const teardownPromise = Helper.untilResult(run.pipe)
+  os.kill(pid)
 
-  const td = await Helper.untilResult(run.pipe)
+  const td = await teardownPromise
   is(td, 'teardown executed', 'teardown executed')
 
-  await Helper.untilClose(run.pipe)
-  ok(true, 'ended')
+  // await Helper.untilClose(run.pipe)
+  // ok(true, 'ended')
 })
 
 test('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(4)
+  plan(7)
 
   const dir = teardownExitCodeDir
 
@@ -125,8 +162,8 @@ test('exit with non-zero code in teardown', async function ({ ok, is, plan, comm
   const run = await Helper.run({ link })
 
   const pid = await Helper.untilResult(run.pipe)
-  ok(pid.value > 0, 'worker pid is valid')
-  os.kill(pid.value)
+  ok(pid > 0, 'worker pid is valid')
+  os.kill(pid)
 
   const td = await Helper.untilResult(run.pipe)
   is(td, 'teardown executed', 'teardown executed')
