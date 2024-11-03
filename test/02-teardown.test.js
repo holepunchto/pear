@@ -74,10 +74,10 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   })
 
   pipe.write('start')
-  
+
   const pid = await pidPromise
   ok(pid > 0, 'worker pid is valid')
-  
+
   os.kill(pid)
 
   const td = await teardownPromise
@@ -160,10 +160,10 @@ test('exit with non-zero code in teardown', async function ({ ok, is, plan, comm
   })
 
   pipe.write('start')
-  
+
   const pid = await pidPromise
   ok(pid > 0, 'worker pid is valid')
-  
+
   os.kill(pid)
 
   const td = await teardownPromise
