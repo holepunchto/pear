@@ -148,7 +148,7 @@ class Helper extends IPC {
     return { pipe }
   }
 
-  static async untilResult (pipe, timeout = 1000) {
+  static async untilResult (pipe, timeout = 5000) {
     const res = new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('data', (data) => {
@@ -168,7 +168,7 @@ class Helper extends IPC {
     return res
   }
 
-  static async untilClose (pipe, timeout = 1000) {
+  static async untilClose (pipe, timeout = 5000) {
     const res = new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('close', () => {
