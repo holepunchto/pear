@@ -178,6 +178,9 @@ class Helper extends IPC {
   }
 
   static async untilClose (pipe, timeout = 5000) {
+    // TODO: fix the "Error: RPC destroyed" when pipe.end() too fast, the remove this hack delay
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
     const res = new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('close', () => {
