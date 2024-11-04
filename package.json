@@ -118,7 +118,7 @@
     "sodium-native": "^4.1.1",
     "streamx": "^2.16.1",
     "tiny-byte-size": "^1.1.0",
-    "udx-native": "^1.13.3",
+    "udx-native": "^1.14.1",
     "unix-path-resolve": "^1.0.2",
     "url-file-url": "^1.0.2",
     "watch-drive": "^2.0.2",
