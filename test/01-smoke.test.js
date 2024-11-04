@@ -84,10 +84,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     ok(true, 'ended')
   }
 
-  // TODO: Check "Error: RPC destroyed" when running concurrently
-  // await Promise.all([testVersions(), testDhtBootstrap()])
-  await testVersions()
-  await testDhtBootstrap()
+  await Promise.all([testVersions(), testDhtBootstrap()])
 })
 
 test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
