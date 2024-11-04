@@ -557,15 +557,6 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    if (!hard && this.hasClients) {
-      const seen = new Set()
-      for (const { userData: app } of this.clients) {
-        if (!app.state || seen.has(app.state.id)) continue
-        seen.add(app.state.id)
-        app.message({ type: 'pear/reload' })
-      }
-    }
-
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
