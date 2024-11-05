@@ -83,11 +83,7 @@ test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, t
   const run = await Helper.run({ link })
   const { pipe } = run
 
-  const pidPromise = Helper.untilResult(pipe)
-
-  pipe.write('start')
-
-  const pid = +(await pidPromise)
+  const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'worker pid is valid')
 
   const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
@@ -130,11 +126,7 @@ test('teardown on os kill with exit code', async function ({ ok, is, plan, comme
   const run = await Helper.run({ link })
   const { pipe } = run
 
-  const pidPromise = Helper.untilResult(pipe)
-
-  pipe.write('start')
-
-  const pid = +(await pidPromise)
+  const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'worker pid is valid')
 
   const exitCodePromise = new Promise((resolve, reject) => {
