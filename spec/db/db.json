@@ -1,0 +1,132 @@
+{
+  "version": 0,
+  "offset": 0,
+  "schema": [
+    {
+      "name": "dht-nodes",
+      "namespace": "pear",
+      "id": 0,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/dht-nodes",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    },
+    {
+      "name": "encryption-keys",
+      "namespace": "pear",
+      "id": 1,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/encryption-keys",
+      "derived": false,
+      "key": [
+        "publicKey"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "permits",
+      "namespace": "pear",
+      "id": 2,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/permits",
+      "derived": false,
+      "key": [
+        "z32"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "identity",
+      "namespace": "pear",
+      "id": 3,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/identity",
+      "derived": false,
+      "key": [
+        "publicKey"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "apps",
+      "namespace": "pear",
+      "id": 4,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/apps",
+      "derived": false,
+      "key": [
+        "key"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "apps-owned",
+      "namespace": "pear",
+      "id": 5,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/apps-owned",
+      "derived": false,
+      "key": [
+        "key"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "app-storage",
+      "namespace": "pear",
+      "id": 6,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/app-storage",
+      "derived": false,
+      "key": [
+        "app"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "channels",
+      "namespace": "pear",
+      "id": 7,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/channels",
+      "derived": false,
+      "key": [
+        "key"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "error-logs",
+      "namespace": "pear",
+      "id": 8,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/error-logs",
+      "derived": false,
+      "key": [
+        "type"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "perf-stats",
+      "namespace": "pear",
+      "id": 9,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/perf-stats",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    }
+  ]
+}

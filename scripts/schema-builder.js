@@ -1,10 +1,8 @@
-const path = require('bare-path')
-const { PLATFORM_DIR } = require('../constants')
 const Hyperschema = require('hyperschema')
-const HyperDB = require('@holepunchto/hyperdb/builder')
+const Builder = require('@holepunchto/hyperdb/builder')
 
-const SCHEMA_DIR = './schema'
-const DB_DIR = path.join(PLATFORM_DIR, 'metrics.hyperdb')
+const SCHEMA_DIR = './spec/schema'
+const DB_DIR = './spec/db'
 
 const schema = Hyperschema.from(SCHEMA_DIR)
 const pearSchema = schema.namespace('pear')
@@ -78,13 +76,12 @@ pearSchema.register({
 
 Hyperschema.toDisk(schema)
 
-const db = HyperDB.from(SCHEMA_DIR, DB_DIR)
+const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
 
 pearDB.collections.register({
   name: 'dht-nodes',
-  schema: '@pear/dht-nodes',
-  key: ['host', 'port']
+  schema: '@pear/dht-nodes'
 })
 
 pearDB.collections.register({
@@ -137,15 +134,7 @@ pearDB.collections.register({
 
 pearDB.collections.register({
   name: 'perf-stats',
-  schema: '@pear/perf-stats',
-  key: ['uptimeSeconds', 'os']
+  schema: '@pear/perf-stats'
 })
 
-pearDB.indexes.register({
-  name: 'error-logs-by-type',
-  collection: '@pear/error-logs',
-  key: ['type', 'trace'],
-  unique: false
-})
-
-HyperDB.toDisk(db)
+Builder.toDisk(db)

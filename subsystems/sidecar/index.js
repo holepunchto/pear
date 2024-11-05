@@ -37,7 +37,7 @@ const {
   SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const db = HyperDB.rocks(path.join(PLATFORM_DIR, 'metrics.hyperdb'), require('../../schema'))
+const db = HyperDB.rocks(path.join(PLATFORM_DIR, 'hyperdb'), require('../../spec/db'))
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
 const knownNodes = new Store('dht')
