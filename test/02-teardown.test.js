@@ -1,149 +1,157 @@
 'use strict'
+const { isWindows } = require('which-runtime')
 const test = require('brittle')
 const path = require('bare-path')
+const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
+const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
+const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
+const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
-test('teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
+test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+  
   timeout(180000)
-
-  plan(5)
-
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
-
-  const dir = harness
-
-  const id = Math.floor(Math.random() * 10000)
-
-  comment('staging')
-  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
-  teardown(() => Helper.teardownStream(seed))
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
-
-  ok(hypercoreid.isValid(key), 'app key is valid')
-  ok(announced, 'seeding is announced')
-
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
-
-  await running.inspector.evaluate('Pear.teardown(() => console.log(\'teardown\'))')
-  await running.inspector.evaluate('Pear.shutdown()')
-  await running.inspector.close()
-
-  const td = await running.until.teardown
-  is(td, 'teardown', 'teardown has been triggered')
-
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
-})
-
-test('teardown during teardown', async function ({ is, ok, plan, comment, teardown, timeout }) {
-  timeout(180000)
-  plan(5)
-
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
-
-  const dir = harness
-
-  const id = Math.floor(Math.random() * 10000)
-
-  comment('staging')
-  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
-
-  comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
-  teardown(() => Helper.teardownStream(seed))
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
-  const announced = await until.announced
-
-  ok(hypercoreid.isValid(key), 'app key is valid')
-  ok(announced, 'seeding is announced')
-
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
-
-  await running.inspector.evaluate(
-    `(() => {
-        const { teardown } = Pear
-        const a = () => { b() }
-        const b = () => { teardown(() => console.log('teardown from b')) }
-        teardown( () => a() )
-    })()`)
-
-  await running.inspector.evaluate('Pear.shutdown()')
-  await running.inspector.close()
-
-  const td = await running.until.teardown
-  is(td, 'teardown from b', 'teardown from b has been triggered')
-
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
-})
-
-// TODO: fixme
-test.skip('exit with non-zero code in teardown', async function ({ is, ok, plan, comment, teardown }) {
   plan(4)
 
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
+  const dir = teardownDir
 
-  const dir = harness
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const stage = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  const final = await Helper.pick(stage, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close())
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seed = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir })
-  teardown(() => Helper.teardownStream(seed))
-  const until = await Helper.pick(seed, [{ tag: 'key' }, { tag: 'announced' }])
-  const key = await until.key
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
-
-  ok(hypercoreid.isValid(key), 'app key is valid')
   ok(announced, 'seeding is announced')
 
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['teardown', 'exit'] })
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
 
-  await running.inspector.evaluate('Pear.teardown(() => Pear.exit(124))')
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+  const { pipe } = run
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  // running.subprocess.kill('SIGINT') <-- this was forcing the exit code, which false-positives the test
+  const teardownPromise = Helper.untilResult(run.pipe)
 
-  const { code } = await running.until.exit
-  is(code, 124, 'exit code is 124')
+  pipe.end()
+
+  const td = await teardownPromise
+  is(td, 'teardown', 'teardown executed')
+})
+
+test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+  
+  timeout(180000)
+  plan(5)
+
+  const dir = teardownOsKillDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+  const { pipe } = run
+
+  const pidPromise = Helper.untilResult(pipe)
+
+  pipe.write('start')
+
+  const pid = +(await pidPromise)
+  ok(pid > 0, 'worker pid is valid')
+
+  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
+
+  const td = await teardownPromise
+  ok(td, 'teardown executed')
+})
+
+test('teardown on os kill with exit code', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+
+  timeout(180000)
+  plan(6)
+
+  const dir = teardownExitCodeDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+  const { pipe } = run
+
+  const pidPromise = Helper.untilResult(pipe)
+
+  pipe.write('start')
+
+  const pid = +(await pidPromise)
+  ok(pid > 0, 'worker pid is valid')
+
+  const exitCodePromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
+    pipe.on('crash', (data) => {
+      clearTimeout(timeoutId)
+      resolve(data.exitCode)
+    })
+  })
+  
+  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
+
+  const td = await teardownPromise
+  ok(td, 'teardown executed')
+
+  const exitCode = await exitCodePromise
+  is(exitCode, 124, 'exit code is 124')
 })
