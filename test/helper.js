@@ -16,12 +16,14 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const { PLATFORM_DIR } = require('../constants')
+const constants = require('../constants')
+const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
+const program = global.Bare || global.process
 
 const rigPear = path.join(tmp, 'rig-pear')
 
@@ -143,8 +145,15 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async run ({ link }) {
+  static async run ({ link, encryptionKey, platformDir }) {
+    if (encryptionKey) program.argv.splice(2, 0, '--encryption-key', encryptionKey)
+    if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+
     const pipe = Pear.worker.run(link)
+
+    if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
+    if (encryptionKey) program.argv.splice(2, 2)
+
     return { pipe }
   }
 
