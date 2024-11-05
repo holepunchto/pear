@@ -51,7 +51,7 @@ test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, 
 
 test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, timeout }) {
   if (isWindows) return
-  
+
   timeout(180000)
   plan(5)
 
@@ -136,7 +136,7 @@ test('teardown on os kill with exit code', async function ({ ok, is, plan, comme
       resolve(data.exitCode)
     })
   })
-  
+
   const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
 
   const td = await teardownPromise
