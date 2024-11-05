@@ -1,13 +1,8 @@
-import bareInspector from 'bare-inspector'
-import { Inspector } from 'pear-inspect'
-
-const inspector = new Inspector({ inspector: bareInspector })
-const key = await inspector.enable()
-const inspectorKey = key.toString('hex')
-console.log(`{ "tag": "inspector", "data": { "key": "${inspectorKey}" }}`)
-
-function disableInspector () {
-  inspector.disable()
-}
-
-global.disableInspector = disableInspector
+const pipe = Pear.worker.pipe()
+pipe.on('data', () => {
+  Pear.versions().then((versions) => {
+    pipe.write(JSON.stringify(versions))
+  }).catch((err) => {
+    pipe.write(`${err}`)
+  })
+})
