@@ -92,23 +92,7 @@ test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, t
   const pid = +(await pidPromise)
   ok(pid > 0, 'worker pid is valid')
 
-  const teardownPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
-    pipe.once('data', (data) => {
-      clearTimeout(timeoutId)
-      resolve(data.toString())
-    })
-    pipe.on('close', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected closed'))
-    })
-    pipe.on('end', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected ended'))
-    })
-  })
-
-  os.kill(pid)
+  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
 
   const td = await teardownPromise
   ok(td, 'teardown executed')
@@ -155,22 +139,6 @@ test('teardown on os kill with exit code', async function ({ ok, is, plan, comme
   const pid = +(await pidPromise)
   ok(pid > 0, 'worker pid is valid')
 
-  const teardownPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
-    pipe.on('data', (data) => {
-      clearTimeout(timeoutId)
-      resolve(data.toString())
-    })
-    pipe.on('close', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected closed'))
-    })
-    pipe.on('end', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected ended'))
-    })
-  })
-
   const exitCodePromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
     pipe.on('crash', (data) => {
@@ -178,8 +146,8 @@ test('teardown on os kill with exit code', async function ({ ok, is, plan, comme
       resolve(data.exitCode)
     })
   })
-
-  os.kill(pid)
+  
+  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
 
   const td = await teardownPromise
   ok(td, 'teardown executed')
