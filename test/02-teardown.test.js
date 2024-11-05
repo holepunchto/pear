@@ -65,7 +65,7 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   ok(pid > 0, 'worker pid is valid')
 
   const teardownPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error('timed out')), 10000)
+    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
     pipe.on('data', (data) => {
       clearTimeout(timeoutId)
       const res = JSON.parse(data.toString())
@@ -139,6 +139,11 @@ test('exit with non-zero code in teardown', async function ({ ok, is, plan, comm
     })
   })
 
+  pipe.write('start')
+
+  const pid = await pidPromise
+  ok(pid > 0, 'worker pid is valid')
+
   const teardownPromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
     pipe.on('data', (data) => {
@@ -163,11 +168,6 @@ test('exit with non-zero code in teardown', async function ({ ok, is, plan, comm
       resolve(data.exitCode)
     })
   })
-
-  pipe.write('start')
-
-  const pid = await pidPromise
-  ok(pid > 0, 'worker pid is valid')
 
   os.kill(pid)
 
