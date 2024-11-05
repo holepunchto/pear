@@ -41,7 +41,7 @@ test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, 
   const run = await Helper.run({ link })
   const { pipe } = run
 
-  const teardownPromise = Helper.untilResult(run.pipe)
+  const teardownPromise = Helper.untilResult(pipe)
 
   pipe.end()
 
