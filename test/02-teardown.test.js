@@ -146,37 +146,20 @@ test('teardown on os kill with exit code', async function ({ ok, is, plan, comme
 
   const link = `pear://${key}`
   const run = await Helper.run({ link })
-
   const { pipe } = run
 
-  const pidPromise = new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
-    pipe.on('data', (data) => {
-      clearTimeout(timeoutId)
-      const res = JSON.parse(data.toString())
-      if (res.id === 'pid') resolve(res.value)
-    })
-    pipe.on('close', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected closed'))
-    })
-    pipe.on('end', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('unexpected ended'))
-    })
-  })
+  const pidPromise = Helper.untilResult(pipe)
 
   pipe.write('start')
 
-  const pid = await pidPromise
+  const pid = +(await pidPromise)
   ok(pid > 0, 'worker pid is valid')
 
   const teardownPromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
     pipe.on('data', (data) => {
       clearTimeout(timeoutId)
-      const res = JSON.parse(data.toString())
-      if (res.id === 'teardown') resolve(true)
+      resolve(data.toString())
     })
     pipe.on('close', () => {
       clearTimeout(timeoutId)
