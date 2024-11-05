@@ -517,8 +517,8 @@ class Sidecar extends ReadyResource {
     return metadata
   }
 
-  async restart ({ platform = false, hard = true } = {}, client) {
-    LOG.info('sidecar', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
+  async restart ({ platform = false } = {}, client) {
+    LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
@@ -563,8 +563,6 @@ class Sidecar extends ReadyResource {
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
-
-    if (!hard) return
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
