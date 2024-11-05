@@ -9,7 +9,7 @@ crasher('cli', SWAP)
 cli()
 
 async function cli () {
-  const ipc = new IPC({
+  const ipc = new IPC.PearIPCClient({
     lock: PLATFORM_LOCK,
     socketPath: SOCKET_PATH,
     connectTimeout: CONNECT_TIMEOUT,
