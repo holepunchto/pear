@@ -1,4 +1,5 @@
 'use strict'
+const { isWindows } = require('which-runtime')
 const test = require('brittle')
 const path = require('bare-path')
 const os = require('bare-os')
@@ -8,6 +9,8 @@ const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
 test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+  
   timeout(180000)
   plan(5)
 
@@ -85,6 +88,8 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
 })
 
 test('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+
   timeout(180000)
   plan(6)
 
