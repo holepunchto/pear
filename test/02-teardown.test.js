@@ -6,15 +6,58 @@ const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
+const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
 const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
-test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  if (isWindows) return
+  
+  timeout(180000)
+  plan(4)
+
+  const dir = teardownDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+  const { pipe } = run
+
+  const teardownPromise = Helper.untilResult(run.pipe)
+
+  pipe.end()
+
+  const td = await teardownPromise
+  is(td, 'teardown', 'teardown executed')
+})
+
+test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, timeout }) {
   if (isWindows) return
   
   timeout(180000)
   plan(5)
 
-  const dir = teardownDir
+  const dir = teardownOsKillDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -87,7 +130,7 @@ test('teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
   ok(td, 'teardown executed')
 })
 
-test('exit with non-zero code in teardown', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on os kill with exit code', async function ({ ok, is, plan, comment, teardown, timeout }) {
   if (isWindows) return
 
   timeout(180000)
