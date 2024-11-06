@@ -1,0 +1,11 @@
+{
+  "name": "require-assets",
+  "main": "index.js",
+  "pear": {
+    "name": "require-assets",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "bare-fs": "^3.1.1"
+  }
+}

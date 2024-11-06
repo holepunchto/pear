@@ -3,92 +3,162 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
-const assets = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
+const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
+const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
+const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
-test('smoke', async function ({ ok, is, plan, comment, teardown, timeout, end }) {
+test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(6)
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
-  const dir = harness
+  plan(10)
 
-  const id = Math.floor(Math.random() * 10000)
+  const testVersions = async () => {
+    const dir = versionsDir
 
-  comment('staging')
-  const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(staging))
-  const final = await Helper.pick(staging, { tag: 'final' })
-  ok(final.success, 'stage succeeded')
+    const helper = new Helper()
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
 
-  comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-  teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const id = Math.floor(Math.random() * 10000)
 
-  const key = await until.key
-  const announced = await until.announced
+    comment('staging')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const staged = await Helper.pick(staging, { tag: 'final' })
+    ok(staged.success, 'stage succeeded')
 
-  ok(hypercoreid.isValid(key), 'app key is valid')
-  ok(announced, 'seeding is announced')
+    comment('seeding')
+    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const announced = await until.announced
+    ok(announced, 'seeding is announced')
 
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['exit'] })
+    const key = await until.key
+    ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  is(value?.app?.key, key, 'app version matches staged key')
+    const link = `pear://${key}`
+    const run = await Helper.run({ link })
 
-  const dhtBootstrap = await running.inspector.evaluate('Pear.config.dht.bootstrap')
-  is(JSON.stringify(dhtBootstrap.value), JSON.stringify(Pear.config.dht.bootstrap), 'dht bootstrap matches Pear.config.dth.bootstrap')
+    const result = await Helper.untilResult(run.pipe)
+    const versions = JSON.parse(result)
+    is(versions.app.key, key, 'app version matches staged key')
 
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+    await Helper.untilClose(run.pipe)
+    ok(true, 'ended')
+  }
+
+  const testDhtBootstrap = async () => {
+    const dir = dhtBootstrapDir
+
+    const helper = new Helper()
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
+
+    const id = Math.floor(Math.random() * 10000)
+
+    comment('staging')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const staged = await Helper.pick(staging, { tag: 'final' })
+    ok(staged.success, 'stage succeeded')
+
+    comment('seeding')
+    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const announced = await until.announced
+    ok(announced, 'seeding is announced')
+
+    const key = await until.key
+    ok(hypercoreid.isValid(key), 'app key is valid')
+
+    const link = `pear://${key}`
+    const run = await Helper.run({ link })
+
+    const result = await Helper.untilResult(run.pipe)
+    const dhtBootstrap = JSON.parse(result)
+    alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
+
+    await Helper.untilClose(run.pipe)
+    ok(true, 'ended')
+  }
+
+  await Promise.all([testVersions(), testDhtBootstrap()])
 })
 
-test('app with assets', async function ({ is, plan, comment, teardown, timeout }) {
+test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
-  const stager = new Helper()
-  teardown(() => stager.close(), { order: Infinity })
-  await stager.ready()
-  const dir = assets
+  plan(5)
+
+  const dir = requireAssets
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = stager.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
-  await Helper.pick(staging, { tag: 'final' })
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
 
   comment('seeding')
-  const seeder = new Helper()
-  teardown(() => seeder.close(), { order: Infinity })
-  await seeder.ready()
-  const seeding = seeder.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(seeding))
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
 
   const key = await until.key
-  await until.announced
+  ok(hypercoreid.isValid(key), 'app key is valid')
 
-  comment('running')
-  const link = 'pear://' + key
-  const running = await Helper.open(link, { tags: ['exit'] })
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
 
-  const { value: fromIndex } = await running.inspector.evaluate('global.readAsset()', { awaitPromise: true })
-  is(fromIndex.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  const result = await Helper.untilResult(run.pipe)
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
-  const { value: fromUtils } = await running.inspector.evaluate('global.readAssetFromUtils()', { awaitPromise: true })
-  is(fromUtils.trim(), 'This is the content of the asset', 'Read asset from lib')
+  await Helper.untilClose(run.pipe)
+  ok(true, 'ended')
+})
 
-  await running.inspector.evaluate('disableInspector()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+test('app with assets in sub dep', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(5)
+
+  const dir = subDepRequireAssets
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+
+  await Helper.untilClose(run.pipe)
+  ok(true, 'ended')
 })
