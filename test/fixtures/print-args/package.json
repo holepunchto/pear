@@ -1,8 +1,8 @@
 {
-  "name": "dht-bootstrap",
+  "name": "print-args",
   "main": "index.js",
   "pear": {
-    "name": "dht-bootstrap",
+    "name": "print-args",
     "type": "terminal"
   }
 }
