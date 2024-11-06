@@ -9,9 +9,7 @@ const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
 const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
-test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, timeout }) {
-  if (isWindows) return
-
+test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
@@ -51,9 +49,7 @@ test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, 
   is(td, 'teardown', 'teardown executed')
 })
 
-test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, timeout }) {
-  if (isWindows) return
-
+test('teardown on os kill', { skip: isWindows },  async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
 
@@ -94,9 +90,7 @@ test('teardown on os kill', async function ({ ok, is, plan, comment, teardown, t
   ok(td, 'teardown executed')
 })
 
-test('teardown on os kill with exit code', async function ({ ok, is, plan, comment, teardown, timeout }) {
-  if (isWindows) return
-
+test('teardown on os kill with exit code', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
