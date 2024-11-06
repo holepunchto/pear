@@ -8,6 +8,7 @@ module.exports = [
   flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
   flag('--log-stacks', 'Add a stack trace to each log message'),
   flag('--log', 'Label:sidecar Level:2 Fields: h:level,h:label'),
+  flag('--performance-log', 'Label:sidecar Level:2 Fields: date,time'),
   flag('--sidecar', 'Boot Sidecar'),
   flag('--run').hide(), // appling legacy
   flag('--sandbox').hide(), // appling legacy
