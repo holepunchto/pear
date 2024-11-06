@@ -84,9 +84,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'worker pid is valid')
 
-  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
-
-  const td = await teardownPromise
+  const td = await Helper.untilResult(pipe, 5000, () => os.kill(pid))
   ok(td, 'teardown executed')
 })
 
@@ -133,9 +131,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
     })
   })
 
-  const teardownPromise = Helper.untilResult(pipe, 5000, () => os.kill(pid))
-
-  const td = await teardownPromise
+  const td = await Helper.untilResult(pipe, 5000, () => os.kill(pid))
   ok(td, 'teardown executed')
 
   const exitCode = await exitCodePromise
