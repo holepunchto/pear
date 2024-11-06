@@ -41,11 +41,7 @@ test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan
   const run = await Helper.run({ link })
   const { pipe } = run
 
-  const teardownPromise = Helper.untilResult(pipe)
-
-  pipe.end()
-
-  const td = await teardownPromise
+  const td = await Helper.untilResult(pipe, 5000, () => pipe.end())
   is(td, 'teardown', 'teardown executed')
 })
 
