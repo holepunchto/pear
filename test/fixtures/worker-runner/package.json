@@ -1,13 +1,8 @@
 {
   "name": "worker-runner",
-  "version": "1.0.0",
-  "description": "",
   "main": "index.js",
-  "type": "module",
   "pear": {
     "name": "worker-runner",
     "type": "terminal"
-  },
-  "keywords": [],
-  "author": "Holepunch"
+  }
 }
