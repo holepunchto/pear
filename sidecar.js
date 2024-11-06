@@ -29,7 +29,6 @@ global.LOG = new Logger({
   fields: flags.logFields,
   stacks: flags.logStacks,
   pretty: flags.log,
-  performanceLog: flags.performanceLog
 })
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
