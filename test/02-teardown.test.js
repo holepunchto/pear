@@ -49,7 +49,7 @@ test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan
   is(td, 'teardown', 'teardown executed')
 })
 
-test('teardown on os kill', { skip: isWindows },  async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
 
