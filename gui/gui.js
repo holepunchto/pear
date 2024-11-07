@@ -1396,7 +1396,7 @@ class PearGUI extends ReadyResource {
   constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
     this.state = state
-    this.ipc = new IPC.PearIPCClient({
+    this.ipc = new IPC.Client({
       lock: constants.PLATFORM_LOCK,
       socketPath,
       connectTimeout,

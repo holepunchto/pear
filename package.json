@@ -102,7 +102,7 @@
     "paparam": "^1.6.0",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
-    "pear-ipc": "github:holepunchto/pear-ipc#refactor",
+    "pear-ipc": "^3.0.0",
     "pear-link": "^2.0.1",
     "pear-updater": "^3.1.0",
     "pear-updater-bootstrap": "^1.2.0",

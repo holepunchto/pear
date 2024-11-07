@@ -103,7 +103,7 @@ class OperationError extends Error {
   }
 }
 
-class Helper extends IPC.PearIPCClient {
+class Helper extends IPC.Client {
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR

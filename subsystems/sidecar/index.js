@@ -100,7 +100,7 @@ class Sidecar extends ReadyResource {
     this.corestore = corestore
     this.gunk = gunk
 
-    this.ipc = new IPC.PearIPCServer({
+    this.ipc = new IPC.Server({
       handlers: this,
       lock: PLATFORM_LOCK,
       socketPath: SOCKET_PATH
