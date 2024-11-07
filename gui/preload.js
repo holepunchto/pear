@@ -67,7 +67,6 @@ module.exports = class PearGUI extends ReadyResource {
           fullscreen () { return ipc.parent({ act: 'fullscreen', id: this.#id }) }
           restore () { return ipc.parent({ act: 'restore', id: this.#id }) }
           dimensions (options = null) { return ipc.parent({ act: 'dimensions', id: this.#id, options }) }
-          getMediaSourceId () { return ipc.parent({ act: 'getMediaSourceId', id: this.#id }) }
           isVisible () { return ipc.parent({ act: 'isVisible', id: this.#id }) }
           isMinimized () { return ipc.parent({ act: 'isMinimized', id: this.#id }) }
           isMaximized () { return ipc.parent({ act: 'isMaximized', id: this.#id }) }
@@ -86,7 +85,6 @@ module.exports = class PearGUI extends ReadyResource {
           fullscreen () { return ipc.fullscreen({ id: this.id }) }
           restore () { return ipc.restore({ id: this.id }) }
           close () { return ipc.close({ id: this.id }) }
-          getMediaSourceId () { return ipc.getMediaSourceId({ id: this.id }) }
           dimensions (options = null) { return ipc.dimensions({ id: this.id, options }) }
           isVisible () { return ipc.isVisible({ id: this.id }) }
           isMinimized () { return ipc.isMinimized({ id: this.id }) }
@@ -162,7 +160,6 @@ module.exports = class PearGUI extends ReadyResource {
           focus (options = null) { return ipc.focus({ id: this.id, options }) }
           blur () { return ipc.blur({ id: this.id }) }
 
-          getMediaSourceId () { return ipc.getMediaSourceId({ id: this.id }) }
           dimensions (options = null) { return ipc.dimensions({ id: this.id, options }) }
           minimize () {
             if (this.constructor[kGuiCtrl] === 'view') throw new Error('A View cannot be minimized')
@@ -241,7 +238,6 @@ class IPC {
   restore (...args) { return electron.ipcRenderer.invoke('restore', ...args) }
   focus (...args) { return electron.ipcRenderer.invoke('focus', ...args) }
   blur (...args) { return electron.ipcRenderer.invoke('blur', ...args) }
-  getMediaSourceId (...args) { return electron.ipcRenderer.invoke('getMediaSourceId', ...args) }
   dimensions (...args) { return electron.ipcRenderer.invoke('dimensions', ...args) }
   isVisible (...args) { return electron.ipcRenderer.invoke('isVisible', ...args) }
   isClosed (...args) { return electron.ipcRenderer.invoke('isClosed', ...args) }

@@ -895,11 +895,6 @@ class GuiCtrl {
     if (this.closed) return false
   }
 
-  async getMediaSourceId () {
-    if (this.closed) throw Error(`Cannot get media source id if the ${this[kCtrl]} is closed`)
-    return (this.win && this.win.getMediaSourceId())
-  }
-
   async dimensions (opts = null) {
     if (this.closed) return null
     const item = this[kCtrl] === 'view' ? this.view : this.win
@@ -1477,7 +1472,6 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
     electron.ipcMain.handle('focus', (evt, ...args) => this.focus(...args))
     electron.ipcMain.handle('blur', (evt, ...args) => this.blur(...args))
-    electron.ipcMain.handle('getMediaSourceId', (evt, ...args) => this.getMediaSourceId(...args))
     electron.ipcMain.handle('dimensions', (evt, ...args) => this.dimensions(...args))
     electron.ipcMain.handle('isVisible', (evt, ...args) => this.isVisible(...args))
     electron.ipcMain.handle('isClosed', (evt, ...args) => this.isClosed(...args))
@@ -1600,7 +1594,6 @@ class PearGUI extends ReadyResource {
         hide () { return false },
         focus () { return false },
         blur () { return false },
-        getMediaSourceId () { return -1 },
         dimensions () { return null },
         maximize () { return false },
         minimize () { return false },
@@ -1652,7 +1645,6 @@ class PearGUI extends ReadyResource {
     if (act === 'show') return instance.show()
     if (act === 'hide') return instance.hide()
     if (act === 'dimensions') return instance.dimensions(...args)
-    if (act === 'getMediaSourceId') return instance.getMediaSourceId()
     if (act === 'isClosed') return instance.isClosed()
     if (act === 'isVisible') return instance.isVisible()
     if (act === 'isMinimized') return instance.isMinimized()
@@ -1684,8 +1676,6 @@ class PearGUI extends ReadyResource {
   focus ({ id, options }) { return this.get(id).focus(options) }
 
   blur ({ id }) { return this.get(id).blur() }
-
-  getMediaSourceId ({ id }) { return this.get(id).getMediaSourceId() }
 
   dimensions ({ id, options }) { return this.get(id).dimensions(options) }
 

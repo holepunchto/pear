@@ -1,0 +1,8 @@
+{
+  "name": "hello-world",
+  "main": "index.js",
+  "pear": {
+    "name": "hello-world",
+    "type": "terminal"
+  }
+}
