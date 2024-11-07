@@ -1,8 +1,0 @@
-{
-  "name": "teardown-exit-code",
-  "main": "index.js",
-  "pear": {
-    "name": "teardown-exit-code",
-    "type": "terminal"
-  }
-}

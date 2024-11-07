@@ -1,8 +1,0 @@
-{
-  "name": "teardown-os-kill",
-  "main": "index.js",
-  "pear": {
-    "name": "teardown-os-kill",
-    "type": "terminal"
-  }
-}
