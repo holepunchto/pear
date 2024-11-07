@@ -977,12 +977,7 @@ class Sidecar extends ReadyResource {
         const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (nodes.length) {
           await knownNodes.set('nodes', nodes)
-
-          db.cork()
-          for (const node of nodes) {
-            await db.insert('@pear/dht-nodes', node)
-          }
-          db.uncork()
+          await db.insert('@pear/dht-nodes', nodes)
 
           LOG.info('sidecar', '- DHT known-nodes wrote to file ' + nodes.length + ' nodes')
           LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))

@@ -8,10 +8,29 @@ const schema = Hyperschema.from(SCHEMA_DIR)
 const pearSchema = schema.namespace('pear')
 
 pearSchema.register({
+  name: 'node',
+  fields: [
+    {
+      name: 'host',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'port',
+      type: 'uint',
+      required: true
+    }
+  ]
+})
+
+pearSchema.register({
   name: 'dht-nodes',
   fields: [
-    { name: 'host', type: 'string', required: true },
-    { name: 'port', type: 'int', required: true }
+    {
+      name: 'nodes',
+      type: '@pear/node',
+      array: true
+    }
   ]
 })
 

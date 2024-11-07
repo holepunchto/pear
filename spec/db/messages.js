@@ -9,15 +9,15 @@ const { c } = require('hyperschema/runtime')
 // eslint-disable-next-line no-unused-vars
 let version = VERSION
 
-// @pear/dht-nodes
+// @pear/node
 const encoding0 = {
   preencode (state, m) {
     c.string.preencode(state, m.host)
-    c.int.preencode(state, m.port)
+    c.uint.preencode(state, m.port)
   },
   encode (state, m) {
     c.string.encode(state, m.host)
-    c.int.encode(state, m.port)
+    c.uint.encode(state, m.port)
   },
   decode (state) {
     const res = {}
@@ -25,14 +25,46 @@ const encoding0 = {
     res.port = 0
 
     res.host = c.string.decode(state)
-    res.port = c.int.decode(state)
+    res.port = c.uint.decode(state)
+
+    return res
+  }
+}
+
+// @pear/dht-nodes.nodes
+const encoding1_0 = c.frame(c.array(encoding0))
+
+// @pear/dht-nodes
+const encoding1 = {
+  preencode (state, m) {
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.preencode(state, flags)
+
+    if (m.nodes) encoding1_0.preencode(state, m.nodes)
+  },
+  encode (state, m) {
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.encode(state, flags)
+
+    if (m.nodes) encoding1_0.encode(state, m.nodes)
+  },
+  decode (state) {
+    const res = {}
+    res.nodes = null
+
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res.nodes = encoding1_0.decode(state)
 
     return res
   }
 }
 
 // @pear/encryption-keys
-const encoding1 = {
+const encoding2 = {
   preencode (state, m) {
     c.string.preencode(state, m.publicKey)
     c.string.preencode(state, m.privateKey)
@@ -54,7 +86,7 @@ const encoding1 = {
 }
 
 // @pear/permits
-const encoding2 = {
+const encoding3 = {
   preencode (state, m) {
     c.string.preencode(state, m.z32)
   },
@@ -72,7 +104,7 @@ const encoding2 = {
 }
 
 // @pear/identity
-const encoding3 = {
+const encoding4 = {
   preencode (state, m) {
     let flags = 0
     if (m.privateKey) flags |= 1
@@ -106,24 +138,6 @@ const encoding3 = {
 }
 
 // @pear/apps
-const encoding4 = {
-  preencode (state, m) {
-    c.string.preencode(state, m.key)
-  },
-  encode (state, m) {
-    c.string.encode(state, m.key)
-  },
-  decode (state) {
-    const res = {}
-    res.key = null
-
-    res.key = c.string.decode(state)
-
-    return res
-  }
-}
-
-// @pear/apps-owned
 const encoding5 = {
   preencode (state, m) {
     c.string.preencode(state, m.key)
@@ -141,8 +155,26 @@ const encoding5 = {
   }
 }
 
-// @pear/app-storage
+// @pear/apps-owned
 const encoding6 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.key)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.key)
+  },
+  decode (state) {
+    const res = {}
+    res.key = null
+
+    res.key = c.string.decode(state)
+
+    return res
+  }
+}
+
+// @pear/app-storage
+const encoding7 = {
   preencode (state, m) {
     c.string.preencode(state, m.app)
   },
@@ -160,7 +192,7 @@ const encoding6 = {
 }
 
 // @pear/channels
-const encoding7 = {
+const encoding8 = {
   preencode (state, m) {
     c.string.preencode(state, m.key)
   },
@@ -178,7 +210,7 @@ const encoding7 = {
 }
 
 // @pear/error-logs
-const encoding8 = {
+const encoding9 = {
   preencode (state, m) {
     c.string.preencode(state, m.type)
     c.string.preencode(state, m.trace)
@@ -200,7 +232,7 @@ const encoding8 = {
 }
 
 // @pear/perf-stats
-const encoding9 = {
+const encoding10 = {
   preencode (state, m) {
     c.int.preencode(state, m.uptimeSeconds)
     c.float64.preencode(state, m.ramUsage)
@@ -229,30 +261,40 @@ const encoding9 = {
   }
 }
 
+// @pear/dht-nodes/value.nodes
+const encoding11_0 = c.frame(c.array(encoding0))
+
 // @pear/dht-nodes/value
-const encoding10 = {
+const encoding11 = {
   preencode (state, m) {
-    c.string.preencode(state, m.host)
-    c.int.preencode(state, m.port)
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.preencode(state, flags)
+
+    if (m.nodes) encoding11_0.preencode(state, m.nodes)
   },
   encode (state, m) {
-    c.string.encode(state, m.host)
-    c.int.encode(state, m.port)
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.encode(state, flags)
+
+    if (m.nodes) encoding11_0.encode(state, m.nodes)
   },
   decode (state) {
     const res = {}
-    res.host = null
-    res.port = 0
+    res.nodes = null
 
-    res.host = c.string.decode(state)
-    res.port = c.int.decode(state)
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res.nodes = encoding11_0.decode(state)
 
     return res
   }
 }
 
 // @pear/encryption-keys/value
-const encoding11 = {
+const encoding12 = {
   preencode (state, m) {
     c.string.preencode(state, m.privateKey)
   },
@@ -270,7 +312,7 @@ const encoding11 = {
 }
 
 // @pear/permits/value
-const encoding12 = {
+const encoding13 = {
   preencode (state, m) {
 
   },
@@ -285,7 +327,7 @@ const encoding12 = {
 }
 
 // @pear/identity/value
-const encoding13 = {
+const encoding14 = {
   preencode (state, m) {
     let flags = 0
     if (m.privateKey) flags |= 1
@@ -314,21 +356,6 @@ const encoding13 = {
 }
 
 // @pear/apps/value
-const encoding14 = {
-  preencode (state, m) {
-
-  },
-  encode (state, m) {
-
-  },
-  decode (state) {
-    const res = {}
-
-    return res
-  }
-}
-
-// @pear/apps-owned/value
 const encoding15 = {
   preencode (state, m) {
 
@@ -343,7 +370,7 @@ const encoding15 = {
   }
 }
 
-// @pear/app-storage/value
+// @pear/apps-owned/value
 const encoding16 = {
   preencode (state, m) {
 
@@ -358,7 +385,7 @@ const encoding16 = {
   }
 }
 
-// @pear/channels/value
+// @pear/app-storage/value
 const encoding17 = {
   preencode (state, m) {
 
@@ -373,8 +400,23 @@ const encoding17 = {
   }
 }
 
-// @pear/error-logs/value
+// @pear/channels/value
 const encoding18 = {
+  preencode (state, m) {
+
+  },
+  encode (state, m) {
+
+  },
+  decode (state) {
+    const res = {}
+
+    return res
+  }
+}
+
+// @pear/error-logs/value
+const encoding19 = {
   preencode (state, m) {
     c.string.preencode(state, m.trace)
   },
@@ -392,7 +434,7 @@ const encoding18 = {
 }
 
 // @pear/perf-stats/value
-const encoding19 = {
+const encoding20 = {
   preencode (state, m) {
     c.int.preencode(state, m.uptimeSeconds)
     c.float64.preencode(state, m.ramUsage)
@@ -423,26 +465,27 @@ const encoding19 = {
 
 function getStructByName (name) {
   switch (name) {
-    case '@pear/dht-nodes': return encoding0
-    case '@pear/encryption-keys': return encoding1
-    case '@pear/permits': return encoding2
-    case '@pear/identity': return encoding3
-    case '@pear/apps': return encoding4
-    case '@pear/apps-owned': return encoding5
-    case '@pear/app-storage': return encoding6
-    case '@pear/channels': return encoding7
-    case '@pear/error-logs': return encoding8
-    case '@pear/perf-stats': return encoding9
-    case '@pear/dht-nodes/value': return encoding10
-    case '@pear/encryption-keys/value': return encoding11
-    case '@pear/permits/value': return encoding12
-    case '@pear/identity/value': return encoding13
-    case '@pear/apps/value': return encoding14
-    case '@pear/apps-owned/value': return encoding15
-    case '@pear/app-storage/value': return encoding16
-    case '@pear/channels/value': return encoding17
-    case '@pear/error-logs/value': return encoding18
-    case '@pear/perf-stats/value': return encoding19
+    case '@pear/node': return encoding0
+    case '@pear/dht-nodes': return encoding1
+    case '@pear/encryption-keys': return encoding2
+    case '@pear/permits': return encoding3
+    case '@pear/identity': return encoding4
+    case '@pear/apps': return encoding5
+    case '@pear/apps-owned': return encoding6
+    case '@pear/app-storage': return encoding7
+    case '@pear/channels': return encoding8
+    case '@pear/error-logs': return encoding9
+    case '@pear/perf-stats': return encoding10
+    case '@pear/dht-nodes/value': return encoding11
+    case '@pear/encryption-keys/value': return encoding12
+    case '@pear/permits/value': return encoding13
+    case '@pear/identity/value': return encoding14
+    case '@pear/apps/value': return encoding15
+    case '@pear/apps-owned/value': return encoding16
+    case '@pear/app-storage/value': return encoding17
+    case '@pear/channels/value': return encoding18
+    case '@pear/error-logs/value': return encoding19
+    case '@pear/perf-stats/value': return encoding20
     default: throw new Error('Encoder not found ' + name)
   }
 }

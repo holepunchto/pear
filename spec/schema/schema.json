@@ -2,7 +2,7 @@
   "version": 1,
   "schema": [
     {
-      "name": "dht-nodes",
+      "name": "node",
       "namespace": "pear",
       "compact": false,
       "flagsPosition": -1,
@@ -16,7 +16,21 @@
         {
           "name": "port",
           "required": true,
-          "type": "int",
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "dht-nodes",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "nodes",
+          "array": true,
+          "type": "@pear/node",
           "version": 1
         }
       ]
