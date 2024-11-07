@@ -61,8 +61,8 @@ test('worker should run directly in a terminal app', async function ({ is, plan,
   await until.final
 
   comment('Running worker using worker-runner...')
-  const { pipe } = await Helper.run({ link })
-  const response = await Helper.untilResult(pipe, helloWorld)
+  const { pipe } = await Helper.run({ link, args: [helloWorld] })
+  const response = await Helper.untilResult(pipe)
 
   is(response, 'hello world', 'worker should send expected response')
 
@@ -92,8 +92,8 @@ test('worker should run as a link in a terminal app', async function ({ is, plan
   await until2.final
 
   comment('Running worker using worker-runner...')
-  const { pipe } = await Helper.run({ link: runnerLink })
-  const response = await Helper.untilResult(pipe, workerLink)
+  const { pipe } = await Helper.run({ link: runnerLink, args: [workerLink] })
+  const response = await Helper.untilResult(pipe)
 
   is(response, 'hello world', 'worker should send expected response')
 
