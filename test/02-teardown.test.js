@@ -9,7 +9,7 @@ const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
 const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
 const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
-test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on pipe end', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
