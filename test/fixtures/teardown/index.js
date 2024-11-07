@@ -1,5 +1,3 @@
-const program = global.Bare || global.process
-
 const pipe = Pear.worker.pipe()
 
 Pear.teardown(async () => {
