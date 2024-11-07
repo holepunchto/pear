@@ -68,6 +68,7 @@ class Rig {
     await until.announced
     comment('platform seeding')
 
+    setInterval(() => comment('bep ' + Date.now()), 1000)
     comment('bootstrapping rig platform...')
     await Helper.bootstrap(this.key, this.platformDir)
     comment('rig platform bootstrapped')
