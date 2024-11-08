@@ -1,0 +1,8 @@
+{
+  "name": "print-args",
+  "main": "index.js",
+  "pear": {
+    "name": "print-args",
+    "type": "terminal"
+  }
+}

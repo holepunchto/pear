@@ -74,7 +74,7 @@ pear://pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
 ### Stage Build
 
 ```
-pear://fbdbkwt5yojdfidmqeh39tomepj348hn78xzwk181ecqr61jkzzo
+pear://17g37zzfo3dnmchf57ixw93gpxcncjmfyzybf4tjo99xi55ewf7o
 ```
 
 Note: Always use the production build unless you are sure of what you are doing. The stage build may introduce untested breaking changes that could affect other Pear apps.

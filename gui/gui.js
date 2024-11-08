@@ -10,7 +10,6 @@ const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
 const constants = require('../constants')
-
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -380,7 +379,9 @@ class App {
   appReady = false
   static root = unixPathResolve(resolve(__dirname, '..'))
 
-  constructor (state, ipc) {
+  constructor (gui) {
+    const { state, ipc } = gui
+    this.gui = gui
     this.state = state
     this.ipc = ipc
     this.contextMenu = null
@@ -647,8 +648,9 @@ class App {
         resolve(false)
       }
     })
-
-    const unloaders = PearGUI.ctrls().map((ctrl) => {
+    const pipes = [...this.gui.pipes]
+    const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
+    const unloaders = [closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -656,7 +658,8 @@ class App {
       }
       ctrl.unload({ type: 'close' })
       return ctrl.unloader.then(closed, closed)
-    })
+    })]
+    for (const pipe of pipes) pipe.end()
     const unloading = Promise.all(unloaders)
     unloading.then(clear, clear)
     const result = await Promise.race([timeout, unloading])
@@ -890,11 +893,6 @@ class GuiCtrl {
 
   async hide () {
     if (this.closed) return false
-  }
-
-  async getMediaSourceId () {
-    if (this.closed) throw Error(`Cannot get media source id if the ${this[kCtrl]} is closed`)
-    return (this.win && this.win.getMediaSourceId())
   }
 
   async dimensions (opts = null) {
@@ -1398,7 +1396,7 @@ class PearGUI extends ReadyResource {
   constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
     this.state = state
-    this.ipc = new IPC({
+    this.ipc = new IPC.Client({
       lock: constants.PLATFORM_LOCK,
       socketPath,
       connectTimeout,
@@ -1474,7 +1472,6 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('restore', (evt, ...args) => this.restore(...args))
     electron.ipcMain.handle('focus', (evt, ...args) => this.focus(...args))
     electron.ipcMain.handle('blur', (evt, ...args) => this.blur(...args))
-    electron.ipcMain.handle('getMediaSourceId', (evt, ...args) => this.getMediaSourceId(...args))
     electron.ipcMain.handle('dimensions', (evt, ...args) => this.dimensions(...args))
     electron.ipcMain.handle('isVisible', (evt, ...args) => this.isVisible(...args))
     electron.ipcMain.handle('isClosed', (evt, ...args) => this.isClosed(...args))
@@ -1498,8 +1495,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
 
-    electron.ipcMain.on('workerRun', (evt, link) => {
-      const pipe = this.worker.run(link)
+    electron.ipcMain.on('workerRun', (evt, link, args) => {
+      const pipe = this.worker.run(link, args)
       const id = this.pipes.alloc(pipe)
       pipe.on('close', () => {
         this.pipes.free(id)
@@ -1529,16 +1526,10 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
-
-    electron.app.once('will-quit', () => {
-      for (const pipe of this.pipes) {
-        pipe.sp.kill('SIGTERM')
-      }
-    })
   }
 
   async app () {
-    const app = new App(this.state, this.ipc)
+    const app = new App(this)
     this.once('close', async () => { app.quit() })
     await app.start()
     return app
@@ -1603,7 +1594,6 @@ class PearGUI extends ReadyResource {
         hide () { return false },
         focus () { return false },
         blur () { return false },
-        getMediaSourceId () { return -1 },
         dimensions () { return null },
         maximize () { return false },
         minimize () { return false },
@@ -1655,7 +1645,6 @@ class PearGUI extends ReadyResource {
     if (act === 'show') return instance.show()
     if (act === 'hide') return instance.hide()
     if (act === 'dimensions') return instance.dimensions(...args)
-    if (act === 'getMediaSourceId') return instance.getMediaSourceId()
     if (act === 'isClosed') return instance.isClosed()
     if (act === 'isVisible') return instance.isVisible()
     if (act === 'isMinimized') return instance.isMinimized()
@@ -1687,8 +1676,6 @@ class PearGUI extends ReadyResource {
   focus ({ id, options }) { return this.get(id).focus(options) }
 
   blur ({ id }) { return this.get(id).blur() }
-
-  getMediaSourceId ({ id }) { return this.get(id).getMediaSourceId() }
 
   dimensions ({ id, options }) { return this.get(id).dimensions(options) }
 

@@ -58,7 +58,7 @@
       outline: none;
     }
     #bar {
-      background: #0D0F16;
+      background: #151517;
       height: 50px;
       padding-top: 12px;
       padding-right: 8px;
@@ -492,12 +492,14 @@
     <script type="module">
       import constants from './constants.js'
       const hypercoreid = window[Symbol.for('hypercore-id-encoding')]
-      if (hypercoreid.normalize(Pear.config.key) !== hypercoreid.normalize(constants.ALIASES.keet)) {
-        if (Pear.config.options.platform?.__legacyTitlebar) {
-          document.getElementById('bar').style.display = 'block'
-          const winctrl = document.getElementById('window-controls')
-          const clone = winctrl.cloneNode()
-          global.winctrl = clone
+      if (Pear.config.key) {
+        if (hypercoreid.normalize(Pear.config.key) !== hypercoreid.normalize(constants.ALIASES.keet)) {
+          if (Pear.config.options.platform?.__legacyTitlebar) {
+            document.getElementById('bar').style.display = 'block'
+            const winctrl = document.getElementById('window-controls')
+            const clone = winctrl.cloneNode()
+            global.winctrl = clone
+          }
         }
       }
     </script>
@@ -812,11 +814,11 @@
         }
         show () {
           this.shadowRoot.querySelector('#loader').style.display = 'block'
-          document.getElementById('bar').style.display = 'none'
+          document.getElementById('bar').style.display = 'block'
         }
         hide () {
           this.shadowRoot.querySelector('#loader').style.display = 'none'
-          document.getElementById('bar').style.display = 'block'
+          document.getElementById('bar').style.display = 'none'
         }
         async restart () {
           let countdown = 3000
