@@ -58,6 +58,7 @@ exports.EOLS = EOLS
 
 exports.SWAP = swapPath
 exports.PLATFORM_DIR = PLATFORM_DIR
+exports.PLATFORM_CHANNEL = platformChannel()
 exports.PLATFORM_LOCK = PLATFORM_LOCK
 exports.GC = toPath(new URL('gc', PLATFORM_URL))
 exports.PLATFORM_CORESTORE = toPath(new URL('corestores/platform', PLATFORM_URL))
@@ -96,4 +97,11 @@ function pipeId (s) {
   const buf = b4a.allocUnsafe(32)
   sodium.crypto_generichash(buf, b4a.from(s))
   return b4a.toString(buf, 'hex')
+}
+
+function platformChannel () {
+  if (CHECKOUT.key === 'o1g3f6ht6x4tg8iofgkdryw6bjj4c1u7page87qzbnpkjstea91o') return 'dev'
+  if (CHECKOUT.key === '17g37zzfo3dnmchf57ixw93gpxcncjmfyzybf4tjo99xi55ewf7o') return 'stage'
+  if (CHECKOUT.key === 'nci49zxj3gt3njnoaf8i7d8dfhdc39ixqcmatx6x44zqdnaimb4o') return 'rc'
+  return LOCALDEV ? 'dev' : 'prod'
 }

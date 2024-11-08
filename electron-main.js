@@ -4,6 +4,7 @@ const { isWindows, isMac, isLinux } = require('which-runtime')
 const { command } = require('paparam')
 const State = require('./state')
 const GUI = require('./gui')
+const Logger = require('./lib/logger')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
@@ -19,6 +20,15 @@ run.parse(argv)
 run.running?.catch(console.error)
 
 async function electronMain (cmd) {
+  const { flags } = cmd
+  global.LOG = new Logger({
+    level: flags.logLevel,
+    labels: flags.logLabels,
+    fields: flags.logFields,
+    stacks: flags.logStacks,
+    pretty: flags.log
+  })
+
   const state = new State({
     link: cmd.args.link.replace('_||', '://'), // for Windows
     flags: cmd.flags,

@@ -2,6 +2,7 @@
 const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
+const Logger = require('../lib/logger')
 const errors = require('../errors')
 const def = {
   run: require('../def/run'),
@@ -234,6 +235,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 
   const shell = require('../shell')(argv)
+
+  const { flags = {} } = shell ?? {}
+  global.LOG = new Logger({
+    level: flags.logLevel,
+    labels: flags.logLabels,
+    fields: flags.logFields,
+    stacks: flags.logStacks,
+    pretty: flags.log
+  })
+
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
   run.argv = argv

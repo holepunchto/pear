@@ -10,10 +10,21 @@ if (process.isMainFrame) {
   const GUI = require('./gui')
   const gunk = require('./gunk')
   const API = require('./lib/api')
+  const Logger = require('./lib/logger')
 
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
   const { parentWcId, env, id, ...config } = state
+  
+  const { flags } = config
+  global.LOG = new Logger({
+    level: flags.logLevel,
+    labels: flags.logLabels,
+    fields: flags.logFields,
+    stacks: flags.logStacks,
+    pretty: flags.log
+  })
+
   const isDecal = state.isDecal || false
   if (config.key?.type === 'Buffer') config.key = Buffer.from(config.key.data)
   const dir = config.dir
