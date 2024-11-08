@@ -12,8 +12,6 @@ const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const rig = new Helper.Rig()
 const { tmp } = rig
 
-const noop = () => {}
-const APP_STAGE_TIMEOUT = 5_000
 const PLATFORM_STAGE_TIMEOUT = 30_000
 
 test.hook('updates setup', rig.setup)
@@ -37,11 +35,11 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('\trunning')
   const { pipe } = await Helper.run({ link })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   ok(versions?.app, 'updater is ready')
 
-  const untilUpdate1 = Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe)).then((data) => JSON.parse(data))
 
   comment('2. Create new file, restage, and reseed')
 
@@ -106,11 +104,11 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   comment('\trunning')
   const { pipe } = await Helper.run({ link })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   ok(versions?.app, 'updater is ready')
 
-  const untilUpdate1 = Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe)).then((data) => JSON.parse(data))
 
   comment('2. Create new file, restage, and reseed')
 
@@ -204,11 +202,11 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -273,12 +271,12 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate1 = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT, noop)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT)).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -355,11 +353,11 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -426,12 +424,12 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate1 = Helper.untilResult(pipe, APP_STAGE_TIMEOUT, noop).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT, noop)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe)).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`

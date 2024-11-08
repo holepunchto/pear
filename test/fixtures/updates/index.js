@@ -5,5 +5,6 @@ const updates = Pear.updates((data) => {
 })
 
 pipe.on('end', () => updates.end())
+pipe.resume()
 
 Pear.versions().then((versions) => pipe.write(JSON.stringify(versions)))
