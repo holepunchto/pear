@@ -4,8 +4,8 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const harness = path.join(Helper.localDir, 'test', 'fixtures', 'harness')
-const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: harness, cmdArgs: [] })
+const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
+const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -27,57 +27,61 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
 
   comment('\tstaging')
   const staging = stager1.stage(stageOpts(testId))
+  teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(link, { tags: ['exit'] }, rig)
-  const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
-  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
+  const { pipe } = await Helper.run({ link })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  ok(versions?.app, 'updater is ready')
+
+  const untilUpdate1 = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, 30_000)).then((data) => JSON.parse(data))
 
   comment('2. Create new file, restage, and reseed')
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(harness, file), 'test')
-  teardown(() => { try { fs.unlinkSync(path.join(harness, file)) } catch { /* ignore */ } })
+  fs.writeFileSync(path.join(updates, file), 'test')
+  teardown(() => { try { fs.unlinkSync(path.join(updates, file)) } catch { /* ignore */ } })
+
   comment('\tstaging')
   const stager2 = new Helper(rig)
   teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
 
-  await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
+  const staging2 = stager2.stage(stageOpts(testId))
+  teardown(() => Helper.teardownStream(staging2))
+  await Helper.pick(staging2, { tag: 'final' })
 
-  fs.unlinkSync(path.join(harness, file))
+  fs.unlinkSync(path.join(updates, file))
 
-  const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1 = await untilUpdate1
+  const update1Version = update1?.version
   is(hypercoreid.normalize(update1Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
   is(update1Version?.fork, 0, 'app version.fork is 0')
   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
 
-  comment('releasing')
-  const update2Promise = await update2LazyPromise
-  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
+  comment('\treleasing')
   const releaser = new Helper(rig)
-  teardown(() => releaser.close())
+  teardown(() => releaser.close(), { order: Infinity })
   await releaser.ready()
 
   const releasing = releaser.release(releaseOpts(testId, key))
+  teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'released' })
-  teardown(() => releaser.close()) // TODO why is this needed?
-  comment('waiting for update')
-  const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+
+  comment('\twaiting for update')
+  const update2 = await untilUpdate2
+  const update2Version = update2?.version
   is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
@@ -95,35 +99,38 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
+  teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
   await until.final
 
   comment('\trunning')
-  const running = await Helper.open(link, { tags: ['exit'] }, rig)
-  const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
-  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate(`
-    new Promise((resolve) =>  __PEAR_TEST__.sub.once("data", resolve))
-  `, { returnByValue: false }))
+  const { pipe } = await Helper.run({ link })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  ok(versions?.app, 'updater is ready')
+
+  const untilUpdate1 = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, 30_000)).then((data) => JSON.parse(data))
 
   comment('2. Create new file, restage, and reseed')
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(harness, file), 'test')
+  fs.writeFileSync(path.join(updates, file), 'test')
 
   comment('\trestaging')
   const stager2 = new Helper(rig)
-  teardown(() => stager2.close())
+  teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
-  await Helper.pick(stager2.stage(stageOpts(testId)), { tag: 'final' })
 
-  fs.unlinkSync(path.join(harness, file))
+  const staging2 = stager2.stage(stageOpts(testId))
+  teardown(() => Helper.teardownStream(staging2))
+  await Helper.pick(staging2, { tag: 'final' })
+  fs.unlinkSync(path.join(updates, file))
 
   comment('\twaiting for update')
-  const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1 = await untilUpdate1
+  const update1Version = update1?.version
   is(hypercoreid.normalize(update1Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
   is(update1Version?.fork, 0, 'app version.fork is 0')
   ok(update1Version?.length > 0, `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`)
@@ -132,35 +139,32 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
   const file2 = `${ts()}.tmp`
   comment(`\tcreating another test file (${file2})`)
-  fs.writeFileSync(path.join(harness, file2), 'test')
+  fs.writeFileSync(path.join(updates, file2), 'test')
 
   comment('\trestaging')
-  const update2Promise = await update2LazyPromise
-  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
-
   const stager3 = new Helper(rig)
-  teardown(() => stager3.close())
+  teardown(() => stager3.close(), { order: Infinity })
   await stager3.ready()
-  await Helper.pick(stager3.stage(stageOpts(testId)), { tag: 'final' })
+  const staging3 = stager3.stage(stageOpts(testId))
+  teardown(() => Helper.teardownStream(staging3))
+  await Helper.pick(staging3, { tag: 'final' })
 
-  fs.unlinkSync(path.join(harness, file2))
+  fs.unlinkSync(path.join(updates, file2))
 
   comment('\twaiting for update')
-  const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2 = await untilUpdate2
+  const update2Version = update2?.version
   is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(key), 'app updated with matching key')
   is(update2Version?.fork, 0, 'app version.fork is 0')
   ok(update2Version?.length > update1Version?.length, `app version.length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(6)
+  plan(5)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -169,7 +173,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -177,7 +182,8 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: updates, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
@@ -197,13 +203,12 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const updatePromise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const updateActualPromise = running.inspector.awaitPromise(updatePromise.objectId)
+  const untilUpdate = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -213,23 +218,22 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   comment('restaging rig platform')
   const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
-  const update = await updateActualPromise
-  const updateVersion = update?.value?.version
+  const update = await untilUpdate
+  const updateVersion = update?.version
   const pearUpdateLength = updateVersion.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(8)
+  plan(7)
   timeout(180000)
 
   const appStager = new Helper(rig)
@@ -239,7 +243,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -248,7 +253,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   teardown(() => appSeeder.close(), { order: Infinity })
 
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: updates, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
@@ -268,14 +273,13 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  const { key: pearVersionKey, length: pearVersionLength } = value?.platform || {}
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
-  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
+  const untilUpdate1 = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, 30_000)).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -285,38 +289,36 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   comment('restaging rig platform')
   const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
   comment('waiting for update')
-  const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1 = await untilUpdate1
+  const update1Version = update1?.version
   const pearUpdateLength = update1Version.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
 
   comment('releasing rig platform')
-  const update2Promise = await update2LazyPromise
-  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releasing = rig.local.release({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir })
+  teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'final' })
 
   comment('waiting for platform update notification')
-  const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2 = await untilUpdate2
+  const update2Version = update2?.version
   const pearUpdate2Key = update2Version.key
   const pearUpdate2Length = update2Version.length
 
   is(pearUpdate2Key, rig.key, 'platform release update matches staging key')
   ok(pearUpdate2Length > pearUpdateLength, `platform version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(7)
+  plan(6)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -324,7 +326,8 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -332,7 +335,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: updates, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
@@ -351,44 +354,41 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
-
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  const { key: appVersionKey, length: appVersionLength } = value?.app || {}
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const updatePromise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const updateActualPromise = running.inspector.awaitPromise(updatePromise.objectId)
+  const untilUpdate1 = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(harness, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(harness, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(updates, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(updates, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
-  const update = await updateActualPromise
-  const updateVersion = update?.value?.version
+  const update = await untilUpdate1
+  const updateVersion = update?.version
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(9)
+  plan(8)
   timeout(180000)
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -397,7 +397,8 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
 
@@ -405,7 +406,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel, name: channel, dir: harness, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: updates, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
@@ -425,56 +426,53 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
-  const running = await Helper.open(link, { tags: ['exit'] }, { platformDir: platformDirRcv })
-  const { value } = await running.inspector.evaluate('Pear.versions()', { awaitPromise: true })
-  const { key: appVersionKey, length: appVersionLength } = value?.app || {}
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const update1Promise = await running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false })
-  const update1ActualPromise = running.inspector.awaitPromise(update1Promise.objectId)
-  const update2LazyPromise = update1ActualPromise.then(() => running.inspector.evaluate('__PEAR_TEST__.nextUpdate()', { returnByValue: false }))
+  const untilUpdate1 = Helper.untilResult(pipe, 30_000).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, 30_000)).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(harness, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(harness, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(updates, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(updates, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel, name: channel, dir: harness, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
-  const update1 = await update1ActualPromise
-  const update1Version = update1?.value?.version
+  const update1 = await untilUpdate1
+  const update1Version = update1?.version
   const appUpdateLength = update1Version.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${update1Version?.fork}.${update1Version?.length})`)
 
   comment('releasing app')
-  const update2Promise = await update2LazyPromise
-  const update2ActualPromise = running.inspector.awaitPromise(update2Promise.objectId)
   const releaser = new Helper(rig)
-  teardown(() => releaser.close())
+  teardown(() => releaser.close(), { order: Infinity })
   await releaser.ready()
 
   const releasing = releaser.release({ channel, name: channel, key: appKey })
+  teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'released' })
 
   comment('waiting for app update notification')
-  const update2 = await update2ActualPromise
-  const update2Version = update2?.value?.version
+  const update2 = await untilUpdate2
+  const update2Version = update2?.version
   const appUpdate2Length = update2Version.length
 
   is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(appKey), 'app release update matches staging key')
   ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
-  await running.inspector.evaluate('__PEAR_TEST__.close()')
-  await running.inspector.close()
-  const { code } = await running.until.exit
-  is(code, 0, 'exit code is 0')
+  pipe.write('exit')
+  await Helper.untilClose(pipe)
 })
 
 test.hook('updates cleanup', rig.cleanup)
