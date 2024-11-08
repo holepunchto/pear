@@ -235,16 +235,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 
   const shell = require('../shell')(argv)
-
-  const { flags = {} } = shell ?? {}
-  global.LOG = new Logger({
-    level: flags.logLevel,
-    labels: flags.logLabels,
-    fields: flags.logFields,
-    stacks: flags.logStacks,
-    pretty: flags.log
-  })
-
+  global.LOG = Logger.getLogger(shell?.flags ?? {})
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
   run.argv = argv

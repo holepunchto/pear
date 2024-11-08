@@ -15,16 +15,7 @@ if (process.isMainFrame) {
   window[Symbol.for('pear.ipcRenderer')] = electron.ipcRenderer
   const state = JSON.parse(process.argv.slice(isWindows ? -2 : -1)[0])
   const { parentWcId, env, id, ...config } = state
-  
-  const { flags } = config
-  global.LOG = new Logger({
-    level: flags.logLevel,
-    labels: flags.logLabels,
-    fields: flags.logFields,
-    stacks: flags.logStacks,
-    pretty: flags.log
-  })
-
+  global.LOG = Logger.getLogger(config.flags)
   const isDecal = state.isDecal || false
   if (config.key?.type === 'Buffer') config.key = Buffer.from(config.key.data)
   const dir = config.dir

@@ -23,13 +23,7 @@ const registerUrlHandler = require('./url-handler')
 const gunk = require('./gunk')
 const { flags = {} } = require('./shell')(Bare.argv.slice(1))
 crasher('sidecar', SWAP)
-global.LOG = new Logger({
-  level: flags.logLevel,
-  labels: flags.logLabels,
-  fields: flags.logFields,
-  stacks: flags.logStacks,
-  pretty: flags.log
-})
+global.LOG = Logger.getLogger(flags)
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
   LOG.error('internal', 'Sidecar Boot Failed', err)

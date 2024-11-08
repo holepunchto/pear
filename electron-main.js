@@ -20,14 +20,7 @@ run.parse(argv)
 run.running?.catch(console.error)
 
 async function electronMain (cmd) {
-  const { flags } = cmd
-  global.LOG = new Logger({
-    level: flags.logLevel,
-    labels: flags.logLabels,
-    fields: flags.logFields,
-    stacks: flags.logStacks,
-    pretty: flags.log
-  })
+  global.LOG = Logger.getLogger(cmd.flags)
 
   const state = new State({
     link: cmd.args.link.replace('_||', '://'), // for Windows
