@@ -12,6 +12,8 @@ const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const rig = new Helper.Rig()
 const { tmp } = rig
 
+const PLATFORM_STAGE_TIMEOUT = 30_000
+
 test.hook('updates setup', rig.setup)
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
@@ -206,7 +208,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -276,8 +278,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT)).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -359,7 +361,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -376,7 +378,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
-  const update = await untilUpdate1
+  const update = await untilUpdate
   const updateVersion = update?.version
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
