@@ -17,6 +17,8 @@
 * Desktop - Decal run from disk bug fix
 * Desktop - Decal bar bug fix
 * CLI - Added --force flag to `dump`
+* Desktop - Fixed not found screen background
+* CLI - Fixed `pear --help` output
 
 ### Improvements
 
