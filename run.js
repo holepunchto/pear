@@ -53,6 +53,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   const stream = new Readable({ objectMode: true })
+  console.log('🚀 ~ run ~ detached:', detached)
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) {
@@ -91,8 +92,13 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
 
+  console.log('🚀 ~ run ~ ipc.start:', flags, ENV, dir, link, cwd, appArgs, cmdArgs)
   const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  console.log('🚀 ~ run ~ ipc.start ok:', startId, host, id, type, bundle, bail)
 
+  if (bail?.code === 'ERR_INVALID_APPLING') {
+    throw new ERR_INVALID_APPLING('Appling does not exist')
+  }
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
   }
@@ -138,6 +144,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
+    console.log('🚀 ~ run ~ desktop:', args, cwd)
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
       cwd,
