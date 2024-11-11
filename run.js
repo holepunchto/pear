@@ -157,11 +157,11 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     })
     if (!detach) {
       child.stdout.on('data', (data) => { 
-        console.log('🚀 ~ child.stdout.on ~ data:', data)
+        console.log('🚀 ~ child.stdout.on ~ data:', data.toString())
         stream.push({ tag: 'stdout', data }) 
       })
       child.stderr.on('data', (data) => {
-        console.log('🚀 ~ child.stderr.on ~ data:', data)
+        console.log('🚀 ~ child.stderr.on ~ data:', data.toString())
         const str = data.toString()
         const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
               str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
