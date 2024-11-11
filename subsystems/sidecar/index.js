@@ -567,7 +567,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        cmdArgs.splice(1,1)
+        // cmdArgs.splice(1,1)
 
         console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
         console.log('🚀 ~ Sidecar ~ restart ~ opts:', opts)
