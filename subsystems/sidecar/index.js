@@ -523,7 +523,8 @@ class Sidecar extends ReadyResource {
       console.log('🚀 ~ Sidecar ~ restart ~ client.userData.state:', client.userData.state)
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      // const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
       console.log('🚀 ~ Sidecar ~ restart ~ client.closed:', client.closed)
       if (!client.closed) {
         await new Promise((resolve) => {
@@ -561,7 +562,10 @@ class Sidecar extends ReadyResource {
 
         console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
         console.log('🚀 ~ Sidecar ~ restart ~ opts:', opts)
-        spawn(RUNTIME, cmdArgs, opts).unref()
+        const child = spawn(RUNTIME, cmdArgs, opts)
+        child.once('exit', console.log)
+        child.stdout.on('data', console.log)
+        child.stderr.on('data', console.log)
       }
 
       return
