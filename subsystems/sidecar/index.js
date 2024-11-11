@@ -1,4 +1,5 @@
 'use strict'
+const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
@@ -525,8 +526,10 @@ class Sidecar extends ReadyResource {
       const appling = client.userData.state.appling
       // const opts = { cwd, env, detached: true, stdio: 'ignore' }
       
-      const outStream = fs.createWriteStream(path.join(__dirname, 'child-stdout.log'));
-      const errStream = fs.createWriteStream(path.join(__dirname, 'child-stderr.log'));
+      const tempDir = os.tmpdir();
+      console.log('🚀 ~ Sidecar ~ restart ~ tempDir:', tempDir)
+      const outStream = fs.createWriteStream(path.join(tempDir, 'child-stdout.log'));
+      const errStream = fs.createWriteStream(path.join(tempDir, 'child-stderr.log'));
       const opts = { cwd, env, detached: true, stdio: ['ignore', outStream, errStream] }
 
       // const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
