@@ -524,7 +524,8 @@ class Sidecar extends ReadyResource {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       // const opts = { cwd, env, detached: true, stdio: 'ignore' }
-      const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
+      const opts = { cwd, env, detached: true, stdio: 'inherit' }
+      // const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
       console.log('🚀 ~ Sidecar ~ restart ~ client.closed:', client.closed)
       if (!client.closed) {
         await new Promise((resolve) => {
