@@ -568,10 +568,12 @@ class Sidecar extends ReadyResource {
 
         console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
         console.log('🚀 ~ Sidecar ~ restart ~ opts:', opts)
-        const child = spawn(RUNTIME, cmdArgs, opts)
-        child.once('exit', console.log)
-        child.stdout.on('data', console.log)
-        child.stderr.on('data', console.log)
+
+        outStream.on('open', () => {
+          errStream.on('open', () => {
+            spawn(RUNTIME, cmdArgs, opts).unref()
+          })
+        })
       }
 
       return
