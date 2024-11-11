@@ -137,7 +137,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     args = [constants.BOOT, ...args]
-    const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
+    const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
       cwd,
