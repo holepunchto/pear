@@ -524,9 +524,14 @@ class Sidecar extends ReadyResource {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       // const opts = { cwd, env, detached: true, stdio: 'ignore' }
-      const opts = { cwd, env, detached: true, stdio: 'inherit' }
+      
+      const outStream = fs.createWriteStream(path.join(__dirname, 'child-stdout.log'));
+      const errStream = fs.createWriteStream(path.join(__dirname, 'child-stderr.log'));
+      const opts = { cwd, env, detached: true, stdio: ['ignore', outStream, errStream] }
+
       // const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
       console.log('🚀 ~ Sidecar ~ restart ~ client.closed:', client.closed)
+
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
