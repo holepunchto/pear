@@ -520,9 +520,11 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
+      console.log('🚀 ~ Sidecar ~ restart ~ client.userData.state:', client.userData.state)
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      console.log('🚀 ~ Sidecar ~ restart ~ client.closed:', client.closed)
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -537,20 +539,26 @@ class Sidecar extends ReadyResource {
       }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
+        console.log('🚀 ~ Sidecar ~ restart ~ applingPath:', applingPath)
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
         const cmd = command('run', ...runDefinition)
         cmd.parse(cmdArgs.slice(1))
+        console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
 
         const linkIndex = cmd?.indices?.args?.link
+        console.log('🚀 ~ Sidecar ~ restart ~ linkIndex:', linkIndex)
         const link = cmd?.args?.link
+        console.log('🚀 ~ Sidecar ~ restart ~ link:', link)
         if (linkIndex !== undefined) {
           if (!link.startsWith('pear://') && !link.startsWith('file://')) cmdArgs[linkIndex + 1] = dir
         } else {
           cmdArgs.push(dir)
         }
 
+        console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
+        console.log('🚀 ~ Sidecar ~ restart ~ opts:', opts)
         spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
