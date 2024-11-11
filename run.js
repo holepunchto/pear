@@ -144,19 +144,24 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
-    console.log('🚀 ~ run ~ desktop:', args, cwd)
+    console.log('🚀 ~ run ~ desktop:', args, stdio, cwd)
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
       cwd,
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
     child.once('exit', (code) => {
+      console.log('🚀 ~ child.once ~ code:', code)
       stream.push({ tag: 'exit', data: { code } })
       ipc.close()
     })
     if (!detach) {
-      child.stdout.on('data', (data) => { stream.push({ tag: 'stdout', data }) })
+      child.stdout.on('data', (data) => { 
+        console.log('🚀 ~ child.stdout.on ~ data:', data)
+        stream.push({ tag: 'stdout', data }) 
+      })
       child.stderr.on('data', (data) => {
+        console.log('🚀 ~ child.stderr.on ~ data:', data)
         const str = data.toString()
         const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
               str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
