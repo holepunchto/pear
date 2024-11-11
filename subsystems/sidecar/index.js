@@ -541,7 +541,7 @@ class Sidecar extends ReadyResource {
         else spawn(applingPath, opts).unref()
       } else {
         const cmd = command('run', ...runDefinition)
-        cmd.parse(cmdArgs.slice(1))
+        cmd.parse(['--detached', ...cmdArgs.slice(1)])
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
