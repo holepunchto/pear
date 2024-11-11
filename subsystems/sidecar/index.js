@@ -540,7 +540,7 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        if (!cmdArgs.includes('--detached')) {
+        if (!cmdArgs.includes('--detach')) {
           cmdArgs.splice(1, 0, '--detached')
         }
 
