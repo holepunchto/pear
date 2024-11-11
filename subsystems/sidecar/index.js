@@ -540,8 +540,10 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
+        cmdArgs.splice(1, 0, '--detached')
+
         const cmd = command('run', ...runDefinition)
-        cmd.parse(['--detached', ...cmdArgs.slice(1)])
+        cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
