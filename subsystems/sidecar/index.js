@@ -528,8 +528,8 @@ class Sidecar extends ReadyResource {
       
       const tempDir = os.tmpdir();
       console.log('🚀 ~ Sidecar ~ restart ~ tempDir:', tempDir)
-      const outStream = fs.createWriteStream(path.join(tempDir, 'child-stdout.log'));
-      const errStream = fs.createWriteStream(path.join(tempDir, 'child-stderr.log'));
+      const outStream = fs.openSync(path.join(tempDir, 'child-stdout.log'), 'a');
+      const errStream = fs.openSync(path.join(tempDir, 'child-stderr.log'), 'a');
       const opts = { cwd, env, detached: true, stdio: ['ignore', outStream, errStream] }
 
       // const opts = { cwd, env, detached: false, stdio: ['ignore', 'pipe', 'pipe'] }
@@ -572,11 +572,7 @@ class Sidecar extends ReadyResource {
         console.log('🚀 ~ Sidecar ~ restart ~ cmdArgs:', cmdArgs)
         console.log('🚀 ~ Sidecar ~ restart ~ opts:', opts)
 
-        outStream.on('open', () => {
-          errStream.on('open', () => {
-            spawn(RUNTIME, cmdArgs, opts).unref()
-          })
-        })
+        spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
       return
