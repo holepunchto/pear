@@ -935,10 +935,10 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const knownNodes = (await db.findOne('@pear/dht'))?.nodes
+    const knownNodes = (await db.get('@pear/dht'))?.nodes
     const nodes = this.dhtBootstrap ? undefined : knownNodes
     if (nodes) {
-      LOG.info('sidecar', '- DHT known-nodes read from file ' + nodes.length + ' nodes')
+      LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
@@ -977,7 +977,7 @@ class Sidecar extends ReadyResource {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
           await db.insert('@pear/dht', { nodes: knownNodes })
-          LOG.info('sidecar', '- DHT known-nodes wrote to file ' + knownNodes.length + ' nodes')
+          LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
       }
