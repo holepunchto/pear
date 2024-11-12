@@ -22,7 +22,7 @@
       ]
     },
     {
-      "name": "dht-nodes",
+      "name": "dht",
       "namespace": "pear",
       "compact": false,
       "flagsPosition": 0,

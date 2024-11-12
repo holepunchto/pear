@@ -1,5 +1,5 @@
 const Hyperschema = require('hyperschema')
-const Builder = require('@holepunchto/hyperdb/builder')
+const Builder = require('hyperdb/builder')
 
 const SCHEMA_DIR = './spec/schema'
 const DB_DIR = './spec/db'
@@ -24,7 +24,7 @@ pearSchema.register({
 })
 
 pearSchema.register({
-  name: 'dht-nodes',
+  name: 'dht',
   fields: [
     {
       name: 'nodes',
@@ -99,8 +99,8 @@ const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
 
 pearDB.collections.register({
-  name: 'dht-nodes',
-  schema: '@pear/dht-nodes'
+  name: 'dht',
+  schema: '@pear/dht'
 })
 
 pearDB.collections.register({

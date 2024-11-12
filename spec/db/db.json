@@ -3,12 +3,12 @@
   "offset": 0,
   "schema": [
     {
-      "name": "dht-nodes",
+      "name": "dht",
       "namespace": "pear",
       "id": 0,
       "type": 1,
       "indexes": [],
-      "schema": "@pear/dht-nodes",
+      "schema": "@pear/dht",
       "derived": false,
       "key": [],
       "trigger": null

@@ -31,10 +31,10 @@ const encoding0 = {
   }
 }
 
-// @pear/dht-nodes.nodes
+// @pear/dht.nodes
 const encoding1_0 = c.frame(c.array(encoding0))
 
-// @pear/dht-nodes
+// @pear/dht
 const encoding1 = {
   preencode (state, m) {
     let flags = 0
@@ -264,7 +264,7 @@ const encoding10 = {
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
-    case '@pear/dht-nodes': return encoding1
+    case '@pear/dht': return encoding1
     case '@pear/encryption-keys': return encoding2
     case '@pear/permits': return encoding3
     case '@pear/identity': return encoding4

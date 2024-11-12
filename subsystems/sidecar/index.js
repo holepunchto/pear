@@ -20,7 +20,7 @@ const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
-const HyperDB = require('@holepunchto/hyperdb')
+const HyperDB = require('hyperdb')
 const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -40,7 +40,6 @@ const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const db = HyperDB.rocks(path.join(PLATFORM_DIR, 'hyperdb'), require('../../spec/db'))
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
-const knownNodes = new Store('dht')
 const SharedState = require('../../state')
 const State = require('./state')
 const { preferences } = State
@@ -936,7 +935,8 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
+    const knownNodes = (await db.findOne('@pear/dht'))?.nodes
+    const nodes = this.dhtBootstrap ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from file ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
@@ -974,13 +974,11 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) {
       if (!this.dhtBootstrap) {
-        const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-        if (nodes.length) {
-          await knownNodes.set('nodes', nodes)
-          await db.insert('@pear/dht-nodes', nodes)
-
-          LOG.info('sidecar', '- DHT known-nodes wrote to file ' + nodes.length + ' nodes')
-          LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
+        const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
+        if (knownNodes.length) {
+          await db.insert('@pear/dht', { nodes: knownNodes })
+          LOG.info('sidecar', '- DHT known-nodes wrote to file ' + knownNodes.length + ' nodes')
+          LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
       }
       await this.swarm.destroy()
