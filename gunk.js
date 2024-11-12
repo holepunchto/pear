@@ -18,9 +18,9 @@ const bmap = isBare
 
 const overrides = [
   'pear', 'electron',
-  'crc-universal', 'quickbit-universal', 'sodium-native', 'udx-native', 'rocksdb-native',
-  'fs-native-extensions', 'assert', 'console', 'events', 'fs', 'fs/promises', 'http', 'os',
-  'path', 'child_process', 'repl', 'url', 'tty', 'module', 'process', 'timers', 'inspector'
+  'crc-universal', 'quickbit-universal', 'sodium-native', 'udx-native', 'fs-native-extensions',
+  'assert', 'console', 'events', 'fs', 'fs/promises', 'http', 'os', 'path', 'child_process',
+  'repl', 'url', 'tty', 'module', 'process', 'timers', 'inspector'
 ]
 
 const builtins = {
@@ -34,7 +34,6 @@ const builtins = {
       case 'sodium-native': return require('sodium-native')
       case 'udx-native': return require('udx-native')
       case 'fs-native-extensions': return require('fs-native-extensions')
-      case 'rocksdb-native': return require('rocksdb-native')
       default: return Object.hasOwn(bmap, ns) ? require(bmap[ns]) : defaults.builtins.get(ns)
     }
   },
