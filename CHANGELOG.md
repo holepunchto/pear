@@ -1,5 +1,23 @@
 # Pear Runtime Changelog
 
+## v1.7.0
+
+### Features
+
+* CLI - `pear dump --dry-run` flag
+
+### Fixes
+
+Desktop - Fix Windows client restart
+CLI - Fix broken stdin after Ctrl-C
+Internal - Fix Pear-IPC unhandled error
+Internal - Fix worker close on parent end 
+
+### Improvements
+
+Internal - Removed `getMediaSourceId`
+Internal - Removed terminal app reload and restart
+
 ## v1.6.0
 
 ### Features
