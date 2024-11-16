@@ -1,6 +1,4 @@
 'use strict'
-const { spawn } = require('bare-subprocess')
-const { once } = require('bare-events')
 const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
@@ -12,38 +10,9 @@ const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
-const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED, ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
-  static async * trace (bundle, client) {
-    await bundle.ready()
-    const tracer = bundle.startTracing()
-    const sp = spawn(
-      DESKTOP_RUNTIME,
-      [BOOT, '--no-sandbox', `--trace=${client.id}`, '--swap', SWAP, 'pear://' + hypercoreid.encode(bundle.drive.key)]
-    )
-
-    const onclose = () => sp.kill()
-    client.on('close', onclose)
-
-    const closed = once(sp, 'exit')
-    client.off('close', onclose)
-
-    const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
-    for await (const { blocks } of tracer) yield { total, blocks }
-
-    const [status] = await closed
-
-    if (status) {
-      const err = ERR_TRACER_FAILED('Tracer Failed!')
-      err.exitCode = status
-      throw err
-    }
-
-    await bundle.finalizeTracing()
-  }
-
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
   async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
@@ -152,9 +121,7 @@ module.exports = class Stage extends Opstream {
       const reason = dryRun ? 'dry-run' : 'bare'
       this.push({ tag: 'skipping', data: { reason, success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      for await (const { blocks, total } of this.constructor.trace(bundle, client)) {
-        this.push({ tag: 'warming', data: { blocks, total } })
-      }
+      // TODO integrate static analysis here
       this.push({ tag: 'warming', data: { success: true } })
     } else {
       this.push({ tag: 'skipping', data: { reason: 'no changes', success: true } })

@@ -507,8 +507,8 @@ class App {
         this.appReady = true
       }
 
-      const { dev, devtools, trace, stage } = state
-      const show = (!trace && (dev || !stage))
+      const { dev, devtools, stage } = state
+      const show = (dev || !stage)
       const unfilteredGuiOptions = state.options.gui || state.options
 
       const guiOptions = {
@@ -584,17 +584,10 @@ class App {
         },
         afterNativeWindowClose: () => this.close(),
         afterNativeViewCreated: devtools && ((app) => {
-          if (trace) return
           app.view.webContents.openDevTools({ mode: 'detach' })
           if (app.state.chromeWebrtcInternals) PearGUI.chrome('webrtc-internals')
         }),
-        afterNativeViewLoaded: (trace
-          ? async () => {
-            await new Promise((resolve) => setTimeout(resolve, 750)) // time for final blocks to be received
-            this.close()
-            this.quit()
-          }
-          : (isLinux ? (app) => linuxViewSize(app) : null)),
+        afterNativeViewLoaded: isLinux ? (app) => linuxViewSize(app) : null,
         interload: async (app) => {
           state.update({ top: app.win })
           try {

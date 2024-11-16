@@ -5,20 +5,17 @@ const DriveBundler = require('drive-bundler')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
-const Tracer = require('./tracer')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
 const { SWAP } = require('../../../constants')
-const { ERR_TRACER_FAILED } = require('../../../errors')
 const noop = Function.prototype
 
 module.exports = class Bundle {
   platformVersion = null
-  warmup = { blocks: 0, total: 0 }
   constructor (opts = {}) {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
-      key, channel, trace = null, stage = false, status = noop, failure,
+      key, channel, stage = false, status = noop, failure,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
     this.checkout = checkout
@@ -30,11 +27,9 @@ module.exports = class Bundle {
     this.status = status
     this.failure = failure
     this.corestore = corestore
-    this.trace = trace
     this.stage = stage
     this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
     this.updatesDiff = updatesDiff
-    this.tracer = null
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
@@ -66,8 +61,6 @@ module.exports = class Bundle {
 
     this.initializing = this.#init()
 
-    this._onseq = this.trace ? this.trace.instrument() : null
-
     if (typeof updateNotify === 'function') this.#updates(updateNotify)
   }
 
@@ -95,18 +88,6 @@ module.exports = class Bundle {
     } finally {
       this.watchingUpdates = null
     }
-  }
-
-  startTracing () {
-    this.tracer = new Tracer()
-    return this.tracer
-  }
-
-  async finalizeTracing () {
-    if (this.opened === false) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle must be opened before warmup can commence')
-    if (!this.tracer) throw ERR_TRACER_FAILED('Internal Platform Error: Bundle critical called without a tracer present')
-    const ranges = this.tracer.deflate()
-    await this.drive.db.put('warmup', ranges)
   }
 
   async #init () {
@@ -160,7 +141,7 @@ module.exports = class Bundle {
   }
 
   entry (key) {
-    return this.drive.entry(key, { onseq: this._onseq })
+    return this.drive.entry(key)
   }
 
   compare (...args) {
@@ -170,9 +151,6 @@ module.exports = class Bundle {
   async get (key) {
     const entry = await this.entry(key)
     const result = await this.drive.get(entry)
-    if (this.trace && result !== null) {
-      if (entry.value.blob) this.trace.capture([entry.value.blob.blockLength, entry.value.blob.blockOffset])
-    }
     return result
   }
 
@@ -186,7 +164,6 @@ module.exports = class Bundle {
   }
 
   streamFrom (meta) {
-    if (this.trace && meta.value.blob) this.trace.capture([meta.value.blob.blockLength, meta.value.blob.blockOffset])
     const stream = this.drive.createReadStream(meta)
     return stream
   }
@@ -265,7 +242,7 @@ module.exports = class Bundle {
 
   async calibrate () {
     await this.ready()
-    if (this.stage === false && !this.trace) {
+    if (this.stage === false) {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
         if (this.release) this.drive = this.drive.checkout(this.release)
@@ -287,8 +264,8 @@ module.exports = class Bundle {
     const warmup = warmupNode?.value
 
     if (warmup) {
-      this.ranges = Tracer.inflate(warmup.meta, warmup.data)
-      this.prefetch(this.ranges)
+      // TODO replace with new analyzer
+      // this.prefetch(this.ranges)
     }
   }
 
@@ -318,8 +295,6 @@ module.exports = class Bundle {
     this.closed = true
     if (this.watchingUpdates) this.watchingUpdates.destroy()
     await this.leave()
-    if (this.trace) this.trace.push(null)
-    if (this.tracer) this.tracer.destroy()
     await this.drain()
     await this.drive.close()
   }

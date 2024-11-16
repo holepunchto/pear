@@ -779,14 +779,6 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    // if app is being staged, stage command sends over its client id, so tracer
-    // can get the bundle from that client for tracer data:
-    const trace = typeof state.trace !== 'undefined'
-      ? this.ipc.client(state.trace).userData.bundle.tracer
-      : null
-
-    if (LOG.INF && trace) LOG.info(LOG_RUN_LINK, id, 'tracer mode')
-
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
@@ -814,7 +806,6 @@ class Sidecar extends ReadyResource {
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
-      trace,
       drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) {
