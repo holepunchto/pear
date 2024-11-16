@@ -2,8 +2,8 @@ const path = require('bare-path')
 const Hyperschema = require('hyperschema')
 const Builder = require('hyperdb/builder')
 
-const SCHEMA_DIR = path.join(__dirname, '..', 'hyperdb', 'schema')
-const DB_DIR = path.join(__dirname, '..', 'hyperdb', 'db')
+const SCHEMA_DIR = path.join(__dirname, 'schema')
+const DB_DIR = path.join(__dirname, 'db')
 const schema = Hyperschema.from(SCHEMA_DIR)
 const pearSchema = schema.namespace('pear')
 
