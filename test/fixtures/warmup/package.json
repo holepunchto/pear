@@ -1,0 +1,11 @@
+{
+  "name": "warmup",
+  "main": "index.js",
+  "pear": {
+    "name": "warmup",
+    "type": "terminal",
+    "stage": {
+      "entrypoints": ["/entrypoint.js"]
+    }
+  }
+}
