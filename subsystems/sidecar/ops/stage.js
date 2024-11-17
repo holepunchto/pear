@@ -6,6 +6,7 @@ const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
+const PearBundleAnalyzer = require('pear-bundle-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
@@ -15,7 +16,7 @@ const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = re
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -69,7 +70,6 @@ module.exports = class Stage extends Opstream {
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const terminalBare = type === 'terminal'
-    if (terminalBare) bare = true
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
@@ -80,7 +80,7 @@ module.exports = class Stage extends Opstream {
     if (dryRun) this.push({ tag: 'dry' })
 
     const root = state.dir
-    const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
+    const src = new LocalDrive(root, { followLinks: !terminalBare, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
     const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
@@ -117,12 +117,16 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    if (dryRun || bare) {
-      const reason = dryRun ? 'dry-run' : 'bare'
-      this.push({ tag: 'skipping', data: { reason, success: true } })
+    if (dryRun) {
+      this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      // TODO integrate static analysis here
-      this.push({ tag: 'warming', data: { success: true } })
+      const bundleAnalyzer = new PearBundleAnalyzer(bundle.drive)
+      await bundleAnalyzer.ready()
+      const warmup = await bundleAnalyzer.generate(entrypoints)
+      await bundle.db.put('warmup', warmup)
+      const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
+      const blocks = warmup.meta.length + warmup.data.length
+      this.push({ tag: 'warming', data: { total, blocks, success: true } })
     } else {
       this.push({ tag: 'skipping', data: { reason: 'no changes', success: true } })
     }

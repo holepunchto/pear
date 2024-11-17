@@ -73,7 +73,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<channel|link>', 'Channel name or Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
-    flag('--bare|-b', 'File data only, no warmup optimization'),
     flag('--ignore <list>', 'Comma separated file path ignore list'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),

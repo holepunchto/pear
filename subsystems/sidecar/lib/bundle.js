@@ -8,6 +8,7 @@ const watch = require('watch-drive')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
 const { SWAP } = require('../../../constants')
+const PearBundleAnalyzer = require('pear-bundle-analyzer')
 const noop = Function.prototype
 
 module.exports = class Bundle {
@@ -264,8 +265,8 @@ module.exports = class Bundle {
     const warmup = warmupNode?.value
 
     if (warmup) {
-      // TODO replace with new analyzer
-      // this.prefetch(this.ranges)
+      const ranges = PearBundleAnalyzer.inflate(warmup.meta, warmup.data)
+      this.prefetch(ranges)
     }
   }
 

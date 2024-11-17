@@ -17,6 +17,9 @@
       "height": 500,
       "minWidth": 500,
       "backgroundColor": "#1F2430"
+    },
+    "stage": {
+      "entrypoints": ["/app.js"]
     }
   },
   "devDependencies": {
