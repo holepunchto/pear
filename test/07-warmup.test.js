@@ -5,7 +5,7 @@ const Helper = require('./helper')
 
 const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 
-test('app with assets in sub dep', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
