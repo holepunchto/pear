@@ -8,7 +8,7 @@ const watch = require('watch-drive')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
 const { SWAP } = require('../../../constants')
-const PearBundleAnalyzer = require('pear-bundle-analyzer')
+const DriveAnalyzer = require('drive-analyzer')
 const noop = Function.prototype
 
 module.exports = class Bundle {
@@ -265,7 +265,7 @@ module.exports = class Bundle {
     const warmup = warmupNode?.value
 
     if (warmup) {
-      const ranges = PearBundleAnalyzer.inflate(warmup.meta, warmup.data)
+      const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
       this.prefetch(ranges)
     }
   }

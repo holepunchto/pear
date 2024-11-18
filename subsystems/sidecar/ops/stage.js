@@ -6,7 +6,7 @@ const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const PearBundleAnalyzer = require('pear-bundle-analyzer')
+const DriveAnalyzer = require('drive-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
@@ -120,10 +120,10 @@ module.exports = class Stage extends Opstream {
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const bundleAnalyzer = new PearBundleAnalyzer(bundle.drive)
-      await bundleAnalyzer.ready()
+      const analyzer = new DriveAnalyzer(bundle.drive)
+      await analyzer.ready()
       const prefetch = state.manifest.pear?.stage?.prefetch || []
-      const warmup = await bundleAnalyzer.generate(entrypoints, prefetch)
+      const warmup = await analyzer.analyze(entrypoints, prefetch)
       await bundle.db.put('warmup', warmup)
       const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
       const blocks = warmup.meta.length + warmup.data.length
