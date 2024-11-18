@@ -69,7 +69,7 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
-    const terminalBare = type === 'terminal'
+    const isTerminal = type === 'terminal'
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
@@ -80,10 +80,10 @@ module.exports = class Stage extends Opstream {
     if (dryRun) this.push({ tag: 'dry' })
 
     const root = state.dir
-    const src = new LocalDrive(root, { followLinks: !terminalBare, metadata: new Map() })
+    const src = new LocalDrive(root, { followLinks: !isTerminal, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
-    const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
+    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
     const entrypoints = [...(state.manifest.main ? [state.main] : []), ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
     const mods = await linker.warmup(entrypoints)
