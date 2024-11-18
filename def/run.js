@@ -22,7 +22,6 @@ module.exports = [
   flag('--parent <id>').hide(),
   flag('--trusted').hide(),
   flag('--detach').hide(),
-  flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
   flag('--sandbox').hide(), // electron passthrough
   flag('--app-name <name>').hide(),
