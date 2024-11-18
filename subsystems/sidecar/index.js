@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn, spawnSync } = require('bare-subprocess')
+const { spawn } = require('bare-subprocess')
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -15,29 +15,27 @@ const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
-const pearLink = require('pear-link')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
+const rundef = require('pear-api/cmd/run')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
-const Http = require('./lib/http')
 const Session = require('./lib/session')
 const Model = require('./lib/model')
 const registerUrlHandler = require('../../url-handler')
-const parseLink = require('../../lib/parse-link')
-const runDefinition = require('../../def/run')
+const parseLink = require('pear-api/parse-link')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
-  DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT
-} = require('../../constants')
-const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const SharedState = require('../../state')
+  PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT,
+  APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
+  WAKEUP, SALT, KNOWN_NODES_LIMIT
+} = require('pear-api/constants')
+const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
@@ -47,9 +45,7 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  Reset: require('./ops/reset'),
-  Touch: require('./ops/touch'),
-  Data: require('./ops/data')
+  Touch: require('./ops/touch')
 }
 
 // ensure that we are registered as a link handler
@@ -67,7 +63,6 @@ class Sidecar extends ReadyResource {
   swarm = null
   keyPair = null
   discovery = null
-  electronVersion = null
 
   teardown () { global.Bare.exit() }
 
@@ -130,7 +125,6 @@ class Sidecar extends ReadyResource {
 
     this.applings = new Applings(APPLINGS_PATH)
 
-    this.http = new Http(this)
     this.running = new Map()
 
     const sidecar = this
@@ -296,8 +290,6 @@ class Sidecar extends ReadyResource {
   }
 
   async _open () {
-    await this.applings.set('runtime', DESKTOP_RUNTIME)
-    await this.http.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
   }
@@ -356,13 +348,7 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  get host () { return this.http?.host || null }
-  get port () { return this.http?.port || null }
-
-  async address () {
-    await this.http.ready()
-    return this.host
-  }
+  clientReady (params, client) { return client.ready() }
 
   async identify (params, client) {
     if (params.startId) {
@@ -372,8 +358,7 @@ class Sidecar extends ReadyResource {
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
     const id = client.userData.id
-    const host = await this.address()
-    return { host, id }
+    return { id }
   }
 
   seed (params, client) { return new ops.Seed(params, client, this) }
@@ -386,11 +371,7 @@ class Sidecar extends ReadyResource {
 
   info (params, client) { return new ops.Info(params, client, this) }
 
-  data (params, client) { return new ops.Data(params, client, this) }
-
   shift (params, client) { return new ops.Shift(params, client, this) }
-
-  reset (params, client) { return new ops.Reset(params, client, this) }
 
   gc (params, client) { return new ops.GC(params, client) }
 
@@ -409,13 +390,7 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
-    if (!this.electronVersion) {
-      const args = ['-p', 'global.process.versions.electron']
-      const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
-      if (!subprocess.error) this.electronVersion = subprocess.stdout.toString().trim()
-    }
-
-    const runtimes = { bare: Bare.versions.bare, pear: version, electron: this.electronVersion }
+    const runtimes = { bare: Bare.versions.bare, pear: version }
     return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
@@ -438,6 +413,16 @@ class Sidecar extends ReadyResource {
     return client.userData.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
   }
 
+  reported (params, client) {
+    if (!client.userData) return false
+    return client.userData.reported
+  }
+
+  minver (params, client) {
+    if (!client.userData) return null
+    return client.userData.minver()
+  }
+
   async config (params, client) {
     if (!client.userData) return
     const cfg = client.userData.state?.constructor.configFrom(client.userData.state)
@@ -457,6 +442,26 @@ class Sidecar extends ReadyResource {
   messages (pattern, client) {
     if (!client.userData) return
     return client.userData.messages(pattern)
+  }
+
+  exists (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.exists(params.key)
+  }
+
+  get (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.get(params.key)
+  }
+
+  entry (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.entry(params.key)
+  }
+
+  compare (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.drive.compare(params.keyA, params.keyB)
   }
 
   async permit (params) {
@@ -482,7 +487,9 @@ class Sidecar extends ReadyResource {
 
   async detached ({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
-    if (!storage) storage = State.storageFromLink(link)
+    if (!storage) {
+      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(key).toString('hex'))
+    }
 
     const wokeup = await this.wakeup({ args: [link, storage, appdev, false, null] })
 
@@ -493,6 +500,8 @@ class Sidecar extends ReadyResource {
   }
 
   shutdown (params, client) { return this.#shutdown(client) }
+
+  appClosed (params, client) { return client.userData?.closed ?? false }
 
   #teardownPipelines (client) {
     // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
@@ -545,7 +554,7 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        const cmd = command('run', ...runDefinition)
+        const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
@@ -583,10 +592,10 @@ class Sidecar extends ReadyResource {
         else spawn(applingPath, opts).unref()
       } else {
         const TARGET_RUNTIME = this.updater === null
-          ? (options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME)
-          : this.updater.swap + (options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
+          ? (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME)
+          : this.updater.swap + (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
 
-        const cmd = command('run', ...runDefinition)
+        const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
@@ -628,7 +637,7 @@ class Sidecar extends ReadyResource {
         for (const app of matches) {
           const pathname = parsed.pathname
           const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-          const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
+          const fragment = parsed.hash ? parsed.hash.slice(1) : (State.isKeetInvite(segment) ? segment : null)
           app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
         }
 
@@ -717,9 +726,7 @@ class Sidecar extends ReadyResource {
     await fs.promises.mkdir(appStorage, { recursive: true })
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
-    await this.model.setDhtNodes(dht.nodes)
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
-
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')
@@ -731,7 +738,7 @@ class Sidecar extends ReadyResource {
 
     if (state.key === null) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
-      const drive = new LocalDrive(state.dir, { followExternalLinks: true })
+      const drive = new LocalDrive(state.dir, { followExternalLinks: true, followLinks: state.followSymlinks })
       this.#updatePearInterface(drive)
       const appBundle = new Bundle({
         drive,
@@ -762,18 +769,11 @@ class Sidecar extends ReadyResource {
       }
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
-      if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
-      const type = entrypointIsJS ? 'terminal' : state.type
-      LOG.info(LOG_RUN_LINK, id, type, 'app')
-      const isTerminalApp = type === 'terminal'
-      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
-      if (entrypointIsJS) {
-        bundle.type = 'terminal'
-      }
+      if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
+      else LOG.info(LOG_RUN_LINK, id)
+      const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
+      return { id, startId, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
@@ -856,29 +856,20 @@ class Sidecar extends ReadyResource {
     }
     if (appBundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
-      const type = state.type
-      LOG.info(LOG_RUN_LINK, id, type, 'app')
-      const isTerminalApp = type === 'terminal'
-      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+      const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle, app: { name: state.appName } }
+      return { id, startId, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
     const updating = await app.minver()
-    if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-    // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
-    const type = entrypointIsJS ? 'terminal' : state.type
-    const isTerminalApp = type === 'terminal'
-    if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-    const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
-    if (entrypointIsJS) {
-      bundle.type = 'terminal'
-    }
+    if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
+    else LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+    const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
+    return { id, startId, bundle }
+    // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 
   async #updatePearInterface (drive) {
@@ -950,9 +941,7 @@ class Sidecar extends ReadyResource {
   async #close () {
     await this.applings.close()
     clearTimeout(this.lazySwarmTimeout)
-    clearTimeout(this.spindownt)
     if (this.replicator) await this.replicator.leave(this.swarm)
-    if (this.http) await this.http.close()
     if (this.swarm) {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
