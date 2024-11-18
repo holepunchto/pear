@@ -117,6 +117,12 @@ module.exports = class Stage extends Opstream {
     const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
     const entrypoints = [...(state.manifest.main ? [state.main] : []), ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+
+    for (const entrypoint of entrypoints) {
+      const entry = await src.entry(entrypoint)
+      if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
+    }
+
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     const mirror = new Mirror(src, dst, opts)
