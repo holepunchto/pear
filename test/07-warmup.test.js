@@ -5,7 +5,7 @@ const Helper = require('./helper')
 
 const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
-const assets = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-assets')
+const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -57,11 +57,11 @@ test('stage desktop app warmup with entrypoints', async function ({ ok, is, plan
   is(warming.success, true, 'Warmup completed')
 })
 
-test('stage warmup with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('stage warmup with prefetch', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
-  const dir = assets
+  const dir = prefetch
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

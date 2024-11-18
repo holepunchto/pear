@@ -122,8 +122,8 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const bundleAnalyzer = new PearBundleAnalyzer(bundle.drive)
       await bundleAnalyzer.ready()
-      const assets = state.manifest.pear?.stage?.assets || []
-      const warmup = await bundleAnalyzer.generate(entrypoints, assets)
+      const prefetch = state.manifest.pear?.stage?.prefetch || []
+      const warmup = await bundleAnalyzer.generate(entrypoints, prefetch)
       await bundle.db.put('warmup', warmup)
       const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
       const blocks = warmup.meta.length + warmup.data.length

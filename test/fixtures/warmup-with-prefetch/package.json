@@ -1,12 +1,12 @@
 {
-  "name": "warmup-with-assets",
+  "name": "warmup-with-prefetch",
   "main": "index.js",
   "pear": {
-    "name": "warmup-with-assets",
+    "name": "warmup-with-prefetch",
     "type": "terminal",
     "stage": {
       "entrypoints": ["/entrypoint.js"],
-      "assets": ["/assets", "/asset.txt"]
+      "prefetch": ["/assets", "/asset.txt"]
     }
   }
 }
