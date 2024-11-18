@@ -21,7 +21,6 @@ module.exports = [
   flag('--dht-bootstrap <nodes>', 'DHT boostrap').hide(),
   flag('--trusted').hide(),
   flag('--detach').hide(),
-  flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
   flag('--sandbox').hide(), // electron passthrough
   flag('--app-name <name>').hide()
