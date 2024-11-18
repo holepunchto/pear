@@ -6,9 +6,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
 const subsystem = require('./subsystem.js')
-const crasher = require('./lib/crasher')
-const teardown = require('./lib/teardown')
-const Logger = require('./lib/logger')
+const crasher = require('pear-api/crasher')
+const teardown = require('pear-api/teardown')
 const {
   SWAP,
   GC,
@@ -18,11 +17,12 @@ const {
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('./constants')
+} = require('pear-api/constants')
+const gunk = require('pear-api/gunk')
+const Logger = require('./logger')
 const registerUrlHandler = require('./url-handler')
-const gunk = require('./gunk')
-const { flags = {} } = require('./shell')(Bare.argv.slice(1))
-crasher('sidecar', SWAP, flags.log)
+const { flags = {} } = require('pear-api/shell')(Bare.argv.slice(1))
+crasher('sidecar', SWAP)
 global.LOG = new Logger({
   level: flags.logLevel,
   labels: flags.logLabels,

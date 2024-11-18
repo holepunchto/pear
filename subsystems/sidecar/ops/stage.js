@@ -54,8 +54,6 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ bundle, dryRun, name })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
-    const type = state.manifest.pear?.type || 'desktop'
-    const isTerminal = type === 'terminal'
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
@@ -69,7 +67,7 @@ module.exports = class Stage extends Opstream {
     const src = new LocalDrive(root, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
-    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
+    const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
