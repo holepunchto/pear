@@ -19,6 +19,7 @@ const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
+const rundef = require('pear-api/cmd-def/run')
 const reports = require('./lib/reports')
 const HyperDB = require('hyperdb')
 const Store = require('./lib/store')
@@ -29,13 +30,12 @@ const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
-const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, PLATFORM_HYPERDB, SOCKET_PATH, CHECKOUT,
   APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
-} = require('../../constants')
+} = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const definition = require('../../hyperdb/db')
 const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
@@ -542,7 +542,7 @@ class Sidecar extends ReadyResource {
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
         else spawn(applingPath, opts).unref()
       } else {
-        const cmd = command('run', ...runDefinition)
+        const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
@@ -580,10 +580,10 @@ class Sidecar extends ReadyResource {
         else spawn(applingPath, opts).unref()
       } else {
         const TARGET_RUNTIME = this.updater === null
-          ? (options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME)
-          : this.updater.swap + (options?.type === 'terminal' ? RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
+          ? (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME)
+          : this.updater.swap + (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
 
-        const cmd = command('run', ...runDefinition)
+        const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
 
         const linkIndex = cmd?.indices?.args?.link
@@ -759,13 +759,11 @@ class Sidecar extends ReadyResource {
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
       if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      const type = state.type
       LOG.info(LOG_RUN_LINK, id, type, 'app')
-      const isTerminalApp = type === 'terminal'
-      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
+      const hasUi = state.ui !== null
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, hasUi, bundle }
     }
 
     if (!flags.trusted) {
@@ -861,25 +859,23 @@ class Sidecar extends ReadyResource {
     }
     if (appBundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
-      const type = state.type
-      LOG.info(LOG_RUN_LINK, id, type, 'app')
-      const isTerminalApp = type === 'terminal'
-      if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-      const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+      const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
+      const hasUi = state.ui !== null
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, hasUi, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
     const updating = await app.minver()
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-    // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const type = state.type
-    const isTerminalApp = type === 'terminal'
-    if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
-    const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+    LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+    const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
+    
+    const hasUi = state.ui !== null
+    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, hasUi, bundle }
+    // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 
   async #updatePearInterface (drive) {

@@ -3,11 +3,11 @@ const { isBare, isWindows } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
-const url = isBare ? require('bare-url') : require('url')
+const { pathToFileURL } = require('url-file-url')
 const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const z32 = require('z32')
-const { PLATFORM_DIR, RUNTIME } = require('./constants')
+const { PLATFORM_DIR, MOUNT, RUNTIME } = require('pear-api/constants')
 const parseLink = require('./lib/parse-link')
 const CWD = isBare ? os.cwd() : process.cwd()
 const ENV = isBare ? require('bare-env') : process.env
@@ -36,13 +36,14 @@ module.exports = class State {
   entrypoints = null
   applink = null
   dht = null
+  ui = null
   static injestPackage (state, pkg, overrides = {}) {
     state.manifest = pkg
     state.main = pkg?.main || 'index.html'
-    state.options = pkg?.pear || pkg?.holepunch || {}
-    state.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
-    state.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(state.main) ? 'terminal' : 'desktop')
+    state.options = pkg?.pear || null
+    state.name = pkg?.pear?.name || pkg?.name || null
     state.links = pkg?.pear?.links || null
+    state.ui = pkg?.pear?.ui || null
     if (overrides.links) {
       const links = overrides.links.split(',').reduce((links, kv) => {
         const [key, value] = kv.split('=')
@@ -80,9 +81,10 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht } = state
+    const { id, key, links, alias, env, ui, options, checkpoint, checkout, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht } = state
     const pearDir = PLATFORM_DIR
-    return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir }
+    const mountDir = MOUNT
+    return { id, key, links, alias, env, ui, options, checkpoint, checkout, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir, mountDir }
   }
 
   static isKeetInvite (segment) {
@@ -138,7 +140,7 @@ module.exports = class State {
     this.fragment = fragment
     this.entrypoint = entrypoint
     this.linkData = segment
-    this.link = link ? (link.startsWith(protocol) ? link : url.pathToFileURL(link).toString()) : null
+    this.link = link ? (link.startsWith(protocol) ? link : pathToFileURL(link).toString()) : null
     this.key = key
     this.applink = key ? this.link.slice(0, -(~~(pathname?.length) + ~~(hash?.length))) : null
     this.alias = alias

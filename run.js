@@ -6,19 +6,20 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
-const { pathToFileURL } = require('bare-url')
+const { pathToFileURL } = require('url-file-url')
 const { Readable } = require('streamx')
-const { isMac, isWindows, isLinux } = require('which-runtime')
-const constants = require('./constants')
-const State = require('./state')
-const API = require('./lib/api')
+const { isMac, isWindows } = require('which-runtime')
+const API = require('pear-api')
+const constants = require('pear-api/constants')
+const teardown = require('pear-api/teardown')
+const parseLink = require('./lib/parse-link')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
 } = require('./errors')
-const parseLink = require('./lib/parse-link')
-const teardown = require('./lib/teardown')
+const State = require('./state')
+
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -78,94 +79,68 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       ipc.close().catch(console.error)
       throw ERR_INVALID_APPLING('Appling does not exist')
     }
+  
+    if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+    else spawn(applingApp, args, opts).unref()
 
-    if (link.startsWith('pear://runtime')) {
-      args = [constants.BOOT, '--appling', appling, '--run', ...args]
-      if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
-      spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
-    } else {
-      if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
-      else spawn(applingApp, args, opts).unref()
-    }
     ipc.close().catch(console.error)
     return stream
   }
 
-  const { startId, host, id, type = 'desktop', bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  const { startId, host, id, hasUi, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
   }
 
-  if (type === 'terminal') {
-    const state = new State({ flags, link, dir, cmdArgs, cwd })
+  const state = new State({ flags, link, dir, cmdArgs, cwd })
 
-    state.update({ host, id, type })
+  state.update({ host, id })
 
-    if (state.error) {
-      console.error(state.error)
-      global.process?.exit(1) || global.Bare.exit(1)
-    }
-
-    await ipc.ready()
-    const ipcConfig = await ipc.config()
-    state.update({ config: ipcConfig })
-
-    global.Pear = new API(ipc, state)
-
-    const protocol = new Module.Protocol({
-      exists (url) {
-        return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
-      },
-      read (url) {
-        return bundle.sources[url.href]
-      }
-    })
-
-    Module.load(new URL(bundle.entrypoint), {
-      protocol,
-      resolutions: bundle.resolutions
-    })
-
-    return stream
+  if (state.error) {
+    console.error(state.error)
+    global.process?.exit(1) || global.Bare.exit(1)
   }
 
+  await ipc.ready()
+  const ipcConfig = await ipc.config()
+  state.update({ config: ipcConfig })
+
+  
+  global.Pear = new API(ipc, state, { teardown })
+
+  const protocol = new Module.Protocol({
+    exists (url) {
+      return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
+    },
+    read (url) {
+      return bundle.sources[url.href]
+    }
+  })
+
+   Module.load(new URL(bundle.entrypoint), {
+    protocol,
+    resolutions: bundle.resolutions
+  })
+
+  if (hasUi === false) return stream
+
+  const spawnUI = Module.load(new URL(Pear.config.ui.provider + '/spawn.js'), {
+    protocol,
+    resolutions: bundle.resolutions
+  })
   args.unshift('--start-id=' + startId)
-  const detach = args.includes('--detach')
-  if (type === 'desktop') {
-    if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
-    args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
-    if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
-    args = [constants.BOOT, ...args]
-    const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
-    const child = spawn(constants.DESKTOP_RUNTIME, args, {
-      stdio,
-      cwd,
-      ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
-    })
-    child.once('exit', (code) => {
+  if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
+  const on = {
+    out (data) { stream.push({ tag: 'stdout', data }) },
+    err (data) { stream.push({ tag: 'stderr', data }) },
+    exit (code) {
       stream.push({ tag: 'exit', data: { code } })
       ipc.close()
-    })
-    if (!detach) {
-      child.stdout.on('data', (data) => { stream.push({ tag: 'stdout', data }) })
-      child.stderr.on('data', (data) => {
-        const str = data.toString()
-        const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
-              str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
-              str.indexOf('", source: devtools://devtools/') > -1 ||
-              str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1') > -1 ||
-              str.indexOf('dev.i915.perf_stream_paranoid=0') > -1 ||
-              str.indexOf('libva error: vaGetDriverNameByIndex() failed') > -1 ||
-              str.indexOf('GetVSyncParametersIfAvailable() failed') > -1 ||
-              (str.indexOf(':ERROR:') > -1 && /:ERROR:.+cache/.test(str))
-        if (ignore) return
-        stream.push({ tag: 'stderr', data })
-      })
     }
   }
-
-  if (global.Pear) global.Pear.teardown(() => ipc.close())
+  spawnUI({ args, indices, on })
+  global.Pear.teardown(() => ipc.close())
 
   return stream
 }
