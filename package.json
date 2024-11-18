@@ -104,6 +104,7 @@
     "mutexify": "^1.4.0",
     "paparam": "^1.8.3",
     "pear-changelog": "^1.0.1",
+    "pear-constants": "file:../pear-constants",
     "pear-interface": "^1.0.0",
     "pear-ipc": "^5.0.1",
     "pear-link": "^2.2.1",

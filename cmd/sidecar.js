@@ -10,7 +10,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   await ipc.shutdown()
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
-  const { CHECKOUT, RUNTIME } = require('../constants')
+  const { CHECKOUT, RUNTIME } = require('pear-api/constants')
   const KEY = CHECKOUT.key
 
   print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)
