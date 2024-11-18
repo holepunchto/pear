@@ -23,7 +23,6 @@ module.exports = [
   flag('--encryption-key <name>', 'Application encryption key').hide(),
   flag('--trusted').hide(),
   flag('--detach').hide(),
-  flag('--trace <n>').hide(),
   flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
   flag('--sandbox').hide() // electron passthrough
