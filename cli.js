@@ -1,10 +1,10 @@
 'use strict'
 const IPC = require('pear-ipc')
+const crasher = require('pear-api/crasher')
+const tryboot = require('pear-api/tryboot')
+const { PLATFORM_LOCK, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants.js')
 const cmd = require('./cmd')
-const crasher = require('./lib/crasher')
-const tryboot = require('./lib/tryboot')
-const { PLATFORM_LOCK, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants.js')
-crasher('cli', SWAP, Bare.argv.indexOf('--log') > -1)
+crasher('cli', SWAP)
 
 cli()
 

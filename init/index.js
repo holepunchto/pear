@@ -1,6 +1,6 @@
 'use strict'
 const { pipelinePromise, Readable } = require('streamx')
-const { pathToFileURL } = require('bare-url')
+const { pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const transform = require('../lib/transform')
 const Localdrive = require('localdrive')
