@@ -2,13 +2,13 @@
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
+const DriveAnalyzer = require('drive-analyzer')
+const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
-const watch = require('watch-drive')
+const { SWAP } = require('pear-api/constants')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
-const { SWAP } = require('../../../constants')
-const DriveAnalyzer = require('drive-analyzer')
 const noop = Function.prototype
 
 module.exports = class Bundle {

@@ -12,7 +12,8 @@
     "links": {
       "worker": "pear://456cup6hg5pwpekmygzhbxyxgtpknk66mbccohcuo795dj6biueo"
     },
-    "gui": {
+    "ui": {
+      "provider": "pear-electron",
       "width": 900,
       "height": 500,
       "minWidth": 500,
@@ -25,5 +26,8 @@
   "devDependencies": {
     "brittle": "^3.0.0",
     "pear-interface": "^1.0.0"
+  },
+  "dependencies": {
+    "pear-electron": "file:../../../pear-electron"
   }
 }
