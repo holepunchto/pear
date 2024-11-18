@@ -30,6 +30,8 @@ on:
           - false
           - true
 
+run-name: Build ${{ inputs.channel }}
+
 jobs:
   build:
     uses: holepunchto/actions/.github/workflows/keet-automation.yml@v1
