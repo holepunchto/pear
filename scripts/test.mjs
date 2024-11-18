@@ -1,5 +1,5 @@
 'use strict'
-import url from 'bare-url'
+import { fileURLToPath } from 'url-file-url'
 import path from 'bare-path'
 import { spawn, spawnSync } from 'bare-subprocess'
 import { RUNTIME } from '../constants'
@@ -7,7 +7,7 @@ import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
 import { isWindows } from 'which-runtime'
 
-const filename = url.fileURLToPath(import.meta.url)
+const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
