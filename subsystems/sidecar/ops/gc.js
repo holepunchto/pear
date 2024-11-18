@@ -5,7 +5,7 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const streamx = require('streamx')
-const { PLATFORM_DIR } = require('../../../../constants')
+const { PLATFORM_DIR } = require('pear-api/constants')
 const { ERR_INVALID_GC_RESOURCE } = require('../../../errors')
 
 module.exports = class GC extends streamx.Readable {
