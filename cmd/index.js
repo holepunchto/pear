@@ -156,8 +156,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
     flag('--mem', 'Memory mode: RAM corestore'),
-    ...def.pear,
     flag('--key <key>', 'Advanced. Switch release lines'),
+    flag('--dht-bootstrap <nodes>').hide(),
     runners.sidecar(ipc)
   )
 
