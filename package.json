@@ -114,7 +114,7 @@
     "redhat-overpass-font": "^1.0.0",
     "safety-catch": "^1.0.2",
     "script-linker": "^2.5.2",
-    "sodium-native": "^4.1.1",
+    "sodium-native": "^4.3.1",
     "streamx": "^2.16.1",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.14.1",
