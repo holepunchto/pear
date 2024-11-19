@@ -1,12 +1,12 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
-const parseLink = require('../../../lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
-const State = require('../state')
+const State = require('pear-api/state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {

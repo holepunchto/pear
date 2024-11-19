@@ -9,8 +9,8 @@ const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
-const State = require('../state')
-const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const State = require('pear-api/state')
+const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
