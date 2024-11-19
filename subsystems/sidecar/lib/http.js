@@ -6,7 +6,7 @@ const streamx = require('streamx')
 const listen = require('listen-async')
 const Mime = require('./mime')
 const transform = require('../../../lib/transform')
-const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('../../../errors')
+const { ERR_HTTP_BAD_REQUEST, ERR_HTTP_GONE, ERR_HTTP_NOT_FOUND } = require('pear-api/errors')
 const mime = new Mime()
 
 module.exports = class Http extends ReadyResource {

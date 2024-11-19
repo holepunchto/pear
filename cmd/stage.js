@@ -2,8 +2,8 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
-const parseLink = require('../lib/parse-link')
-const { ERR_INVALID_INPUT } = require('../errors')
+const parseLink = require('pear-api/parse-link')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { permit, isTTY } = require('./iface')
 
 let blocks = 0

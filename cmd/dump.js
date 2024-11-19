@@ -1,5 +1,5 @@
 'use strict'
-const { ERR_INVALID_INPUT } = require('../errors')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, permit, isTTY } = require('./iface')
 
