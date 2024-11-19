@@ -102,7 +102,7 @@ class Sidecar extends ReadyResource {
     this.corestore = corestore
     this.gunk = gunk
 
-    this.ipc = new IPC({
+    this.ipc = new IPC.Server({
       handlers: this,
       lock: PLATFORM_LOCK,
       socketPath: SOCKET_PATH
@@ -519,12 +519,12 @@ class Sidecar extends ReadyResource {
     return metadata
   }
 
-  async restart ({ platform = false, hard = true } = {}, client) {
-    LOG.info('sidecar', `${hard ? 'Hard' : 'Soft'} restarting ${platform ? 'platform' : 'client'}`)
+  async restart ({ platform = false } = {}, client) {
+    LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, detached: false, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -559,23 +559,12 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    if (!hard && this.hasClients) {
-      const seen = new Set()
-      for (const { userData: app } of this.clients) {
-        if (!app.state || seen.has(app.state.id)) continue
-        seen.add(app.state.id)
-        app.message({ type: 'pear/reload' })
-      }
-    }
-
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
     // shutdown successful, reset death clock
     this.deathClock()
-
-    if (!hard) return
 
     restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
@@ -792,14 +781,6 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    // if app is being staged, stage command sends over its client id, so tracer
-    // can get the bundle from that client for tracer data:
-    const trace = typeof state.trace !== 'undefined'
-      ? this.ipc.client(state.trace).userData.bundle.tracer
-      : null
-
-    if (LOG.INF && trace) LOG.info(LOG_RUN_LINK, id, 'tracer mode')
-
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
     const corestore = this._getCorestore(state.manifest?.name, state.channel)
     let drive
@@ -827,7 +808,6 @@ class Sidecar extends ReadyResource {
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
-      trace,
       drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) {

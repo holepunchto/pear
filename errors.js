@@ -14,7 +14,6 @@ class PearError extends Error {
   static ERR_UNSTAGED = ERR_UNSTAGED
   static ERR_DIR_NONEMPTY = ERR_DIR_NONEMPTY
   static ERR_OPERATION_FAILED = ERR_OPERATION_FAILED
-  static ERR_TRACER_FAILED = ERR_TRACER_FAILED
   static ERR_HTTP_GONE = ERR_HTTP_GONE
   static ERR_HTTP_BAD_REQUEST = ERR_HTTP_BAD_REQUEST
   static ERR_HTTP_NOT_FOUND = ERR_HTTP_NOT_FOUND
@@ -125,10 +124,6 @@ function ERR_DIR_NONEMPTY (msg) {
 
 function ERR_OPERATION_FAILED (msg) {
   return new PearError(msg, 'ERR_OPERATION_FAILED', ERR_OPERATION_FAILED)
-}
-
-function ERR_TRACER_FAILED (msg) {
-  return new PearError(msg, 'ERR_TRACER_FAILED', ERR_TRACER_FAILED)
 }
 
 function ERR_ASSERTION (msg) {

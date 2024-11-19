@@ -13,6 +13,7 @@ async function runTests () {
   await import('./04-encrypted.test.js')
   await import('./05-updates.test.js')
   await import('./06-shutdown.test.js')
+  await import('./07-warmup.test.js')
 
   test.resume()
 }

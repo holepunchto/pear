@@ -1,5 +1,45 @@
 # Pear Runtime Changelog
 
+## v1.7.0
+
+### Features
+
+* CLI - `pear dump --dry-run` flag
+
+### Fixes
+
+Desktop - Fix Windows client restart
+CLI - Fix broken stdin after Ctrl-C
+Internal - Fix Pear-IPC unhandled error
+Internal - Fix worker close on parent end 
+
+### Improvements
+
+Internal - Removed `getMediaSourceId`
+Internal - Removed terminal app reload and restart
+
+## v1.6.0
+
+### Features
+
+* Internal - Added sidecar logs
+* Performance - Added DHT persistent cache
+* CLI - `pear dump --dry-run` flag
+
+### Fixes
+
+* Desktop - Forced teardown fix for Pear Desktop apps that take longer than 15 seconds to close
+* Dependencies - udx-native updated to 1.13.3
+* Internal - Block of spindown while platform is updating
+* Desktop - Fix teardown of worker on app exit
+* Desktop - Decal run from disk bug fix
+* Desktop - Decal bar bug fix
+
+### Improvements
+
+* API - Removed deprecated preferences methods from Pear API
+* Internal - Added RocksDB native support
+
 ## v1.5.0
 
 ### Features

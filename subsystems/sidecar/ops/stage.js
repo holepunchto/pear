@@ -1,6 +1,4 @@
 'use strict'
-const { spawn } = require('bare-subprocess')
-const { once } = require('bare-events')
 const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
@@ -8,45 +6,17 @@ const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
+const DriveAnalyzer = require('drive-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Store = require('../lib/store')
-const { BOOT, SWAP, DESKTOP_RUNTIME } = require('../../../constants')
-const { ERR_TRACER_FAILED, ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
-  static async * trace (bundle, client) {
-    await bundle.ready()
-    const tracer = bundle.startTracing()
-    const sp = spawn(
-      DESKTOP_RUNTIME,
-      [BOOT, '--no-sandbox', `--trace=${client.id}`, '--swap', SWAP, 'pear://' + hypercoreid.encode(bundle.drive.key)]
-    )
-
-    const onclose = () => sp.kill()
-    client.on('close', onclose)
-
-    const closed = once(sp, 'exit')
-    client.off('close', onclose)
-
-    const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
-    for await (const { blocks } of tracer) yield { total, blocks }
-
-    const [status] = await closed
-
-    if (status) {
-      const err = ERR_TRACER_FAILED('Tracer Failed!')
-      err.exitCode = status
-      throw err
-    }
-
-    await bundle.finalizeTracing()
-  }
-
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, bare = false, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -99,8 +69,7 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
-    const terminalBare = type === 'terminal'
-    if (terminalBare) bare = true
+    const isTerminal = type === 'terminal'
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
@@ -111,13 +80,18 @@ module.exports = class Stage extends Opstream {
     if (dryRun) this.push({ tag: 'dry' })
 
     const root = state.dir
-    const main = unixPathResolve('/', state.main)
-    const src = new LocalDrive(root, { followLinks: bare === false, metadata: new Map() })
+    const src = new LocalDrive(root, { followLinks: !isTerminal, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
-    const builtins = terminalBare ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
+    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
-    const entrypoints = [main, ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+    const entrypoints = [...(state.manifest.main ? [state.main] : []), ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+
+    for (const entrypoint of entrypoints) {
+      const entry = await src.entry(entrypoint)
+      if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
+    }
+
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     const mirror = new Mirror(src, dst, opts)
@@ -149,14 +123,17 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    if (dryRun || bare) {
-      const reason = dryRun ? 'dry-run' : 'bare'
-      this.push({ tag: 'skipping', data: { reason, success: true } })
+    if (dryRun) {
+      this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      for await (const { blocks, total } of this.constructor.trace(bundle, client)) {
-        this.push({ tag: 'warming', data: { blocks, total } })
-      }
-      this.push({ tag: 'warming', data: { success: true } })
+      const analyzer = new DriveAnalyzer(bundle.drive)
+      await analyzer.ready()
+      const prefetch = state.manifest.pear?.stage?.prefetch || []
+      const warmup = await analyzer.analyze(entrypoints, prefetch)
+      await bundle.db.put('warmup', warmup)
+      const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
+      const blocks = warmup.meta.length + warmup.data.length
+      this.push({ tag: 'warming', data: { total, blocks, success: true } })
     } else {
       this.push({ tag: 'skipping', data: { reason: 'no changes', success: true } })
     }

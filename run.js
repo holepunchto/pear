@@ -19,8 +19,6 @@ const {
 } = require('./errors')
 const parseLink = require('./lib/parse-link')
 const teardown = require('./lib/teardown')
-const { PLATFORM_LOCK } = require('./constants')
-const fsext = require('fs-native-extensions')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
   const { drive, pathname } = parseLink(link)
@@ -113,26 +111,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     const ipcConfig = await ipc.config()
     state.update({ config: ipcConfig })
 
-    const pear = new API(ipc, state)
+    global.Pear = new API(ipc, state)
 
-    global.Pear = pear
-
-    const reloadSubscriber = ipc.messages({ type: 'pear/reload' })
-    reloadSubscriber.on('data', async () => {
-      ipc.stream.destroy()
-
-      const fd = await new Promise((resolve, reject) => fs.open(PLATFORM_LOCK, 'r+', (err, fd) => err ? reject(err) : resolve(fd)))
-      await fsext.waitForLock(fd)
-      await new Promise((resolve, reject) => fs.close(fd, (err) => err ? reject(err) : resolve(fd)))
-
-      await global.Pear.restart()
-    }).on('error', () => {})
-
-    global.Pear.teardown(async () => {
-      if (reloadSubscriber.destroyed) return
-      reloadSubscriber.end()
-      return new Promise((resolve) => reloadSubscriber.on('close', resolve))
-    })
     const protocol = new Module.Protocol({
       exists (url) {
         return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
@@ -157,7 +137,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     args = [constants.BOOT, ...args]
-    const stdio = detach ? 'ignore' : ['inherit', 'pipe', 'pipe']
+    const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
       stdio,
       cwd,

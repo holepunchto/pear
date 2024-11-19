@@ -5,23 +5,21 @@ const env = require('bare-env')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const fs = require('bare-fs')
-const ReadyResource = require('ready-resource')
 const { arch, platform, isWindows } = require('which-runtime')
-const { Session } = require('pear-inspect')
-const { Readable } = require('streamx')
-const NewlineDecoder = require('newline-decoder')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const { PLATFORM_DIR } = require('../constants')
+const constants = require('../constants')
+const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
+const program = global.Bare || global.process
 
 const rigPear = path.join(tmp, 'rig-pear')
 
@@ -101,7 +99,7 @@ class OperationError extends Error {
   }
 }
 
-class Helper extends IPC {
+class Helper extends IPC.Client {
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
@@ -143,47 +141,59 @@ class Helper extends IPC {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async open (link, { tags = [] } = {}, opts = {}) {
-    if (!link) throw new Error('Key is missing')
+  static async run ({ link, encryptionKey, platformDir, args = [] }) {
+    if (encryptionKey) program.argv.splice(2, 0, '--encryption-key', encryptionKey)
+    if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
 
-    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
-    const args = !opts.encryptionKey ? ['run', '--dht-bootstrap', dhtBootstrap, '-t', link] : ['run', '--dht-bootstrap', dhtBootstrap, '--encryption-key', opts.encryptionKey, '--no-ask', '-t', link]
-    if (this.log) args.push('--log')
+    const pipe = Pear.worker.run(link, args)
 
-    const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const subprocess = spawn(runtime, args, { stdio: ['pipe', 'pipe', 'inherit'] })
-    tags = ['inspector', ...tags].map((tag) => ({ tag }))
+    if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
+    if (encryptionKey) program.argv.splice(2, 2)
 
-    const stream = new Readable({ objectMode: true })
-    const lineout = opts.lineout ? new Readable({ objectMode: true }) : null
-    const onLine = (line) => {
-      if (line.indexOf('teardown') > -1) {
-        stream.push({ tag: 'teardown', data: line })
-        return
-      }
-      if (line.indexOf('"tag": "inspector"') > -1) {
-        stream.push(JSON.parse(line))
-        return
-      }
-      if (opts.lineout) lineout.push(line)
-      else console.log('# unexpected', line)
+    return { pipe }
+  }
+
+  static async untilResult (pipe, timeout = 5000, runFn) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      pipe.on('data', (data) => {
+        clearTimeout(timeoutId)
+        resolve(data.toString())
+      })
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        reject(new Error('unexpected closed'))
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        reject(new Error('unexpected ended'))
+      })
+    })
+    if (runFn) {
+      await runFn()
+    } else {
+      pipe.write('start')
     }
-    const decoder = new NewlineDecoder()
-    subprocess.stdout.on('data', (data) => {
-      for (const line of decoder.push(data)) onLine(line.toString().trim())
-    })
-    subprocess.once('exit', (code, signal) => {
-      for (const line of decoder.end()) onLine(line.toString().trim())
-      stream.push({ tag: 'exit', data: { code, signal } })
-    })
-    const until = await this.pick(stream, tags)
+    return res
+  }
 
-    const data = await until.inspector
-    const inspector = new Helper.Inspector(data.key)
-    await inspector.ready()
+  static async untilClose (pipe, timeout = 5000) {
+    // TODO: fix the "Error: RPC destroyed" when calling pipe.end() too fast, then remove this hack delay
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    return { inspector, until, subprocess, lineout }
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        resolve('closed')
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        resolve('ended')
+      })
+    })
+    pipe.end()
+    return res
   }
 
   static async pick (stream, ptn = {}, by = 'tag') {
@@ -261,54 +271,6 @@ class Helper extends IPC {
     if (NO_GC) return
 
     await fs.promises.rm(dir, { recursive: true }).catch(() => { })
-  }
-
-  static Inspector = class extends ReadyResource {
-    #session = null
-
-    constructor (key) {
-      super()
-      this.#session = new Session({ inspectorKey: Buffer.from(key, 'hex') })
-    }
-
-    async _open () {
-      this.#session.connect()
-    }
-
-    async _close () {
-      await this.evaluate('global.__PEAR_TEST__.inspector.disable()').catch(() => { })
-
-      this.#session.disconnect()
-      await this.#session.destroy()
-    }
-
-    async _unwrap () {
-      return new Promise((resolve, reject) => {
-        const handler = ({ result, error }) => {
-          if (error) reject(error)
-          else resolve(result?.result)
-
-          this.#session.off('message', handler)
-        }
-
-        this.#session.on('message', handler)
-      })
-    }
-
-    async evaluate (expression, { awaitPromise = false, returnByValue = true } = {}) {
-      const reply = this._unwrap()
-      this.#session.post({ method: 'Runtime.evaluate', params: { expression, awaitPromise, returnByValue } })
-
-      return reply
-    }
-
-    async awaitPromise (promiseObjectId, { returnByValue = true } = {}) {
-      const id = Math.floor(Math.random() * 10000)
-      const reply = this._unwrap(id)
-      this.#session.post({ method: 'Runtime.awaitPromise', params: { promiseObjectId, returnByValue } })
-
-      return reply
-    }
   }
 }
 
