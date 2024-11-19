@@ -18,6 +18,10 @@ function collection0_reconstruct (version, keyBuf, valueBuf) {
   const value = c.decode(resolveStruct('@pear/dht/value', version), valueBuf)
   return value
 }
+// '@pear/dht' key reconstruction function
+function collection0_reconstruct_key (keyBuf) {
+  return {}
+}
 
 // '@pear/dht'
 const collection0 = {
@@ -40,6 +44,7 @@ const collection0 = {
   },
   trigger: null,
   reconstruct: collection0_reconstruct,
+  reconstructKey: collection0_reconstruct_key,
   indexes: []
 }
 
