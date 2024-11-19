@@ -4,9 +4,9 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const parseLink = require('../../../lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
