@@ -1,7 +1,7 @@
 'use strict'
 const { outputter } = require('./iface')
-const parseLink = require('../lib/parse-link')
-const { ERR_INVALID_INPUT } = require('../errors')
+const parseLink = require('pear-api/parse-link')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const output = outputter('shift', {
   moving: ({ src, dst, force }) => `Shifting user application storage\n\nFrom: ${src}\nTo: ${dst}\n${force ? '\nForce flag used, overwriting existing application storage.' : ''}`,
