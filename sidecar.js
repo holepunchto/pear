@@ -5,7 +5,7 @@ const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
-const subsystem = require('./subsystem.js')
+const subsystem = require('./subsystem')
 const crasher = require('pear-api/crasher')
 const teardown = require('pear-api/teardown')
 const {
