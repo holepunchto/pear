@@ -1,7 +1,7 @@
 'use strict'
 const DriveBundler = require('drive-bundler')
 const Module = require('bare-module')
-const { MOUNT, SWAP } = require('./constants.js')
+const { MOUNT, SWAP } = require('pear-api/constants')
 
 module.exports = async function subsystem (drive, entrypoint) {
   const cache = require.cache
