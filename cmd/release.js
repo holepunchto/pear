@@ -2,8 +2,8 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('./iface')
-const { ERR_INVALID_INPUT } = require('../errors')
-const parseLink = require('../lib/parse-link')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const parseLink = require('pear-api/parse-link')
 
 const output = outputter('release', {
   releasing: ({ name, channel, link }) => `\n${ansi.pear} Releasing ${name} [ ${channel || link} ]\n`,
