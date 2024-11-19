@@ -1,6 +1,6 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_INPUT } = require('../../../errors')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
 const Store = require('../lib/store')
 const { SALT } = require('pear-api/constants')

@@ -3,9 +3,9 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('pear-api/errors')
+const SharedState = require('pear-api/state')
 const Store = require('./lib/store')
-const SharedState = require('../../state')
-const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
 const preferences = new Store('preferences')
 
 module.exports = class State extends SharedState {

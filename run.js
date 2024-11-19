@@ -12,13 +12,13 @@ const { isMac, isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
 const teardown = require('pear-api/teardown')
-const parseLink = require('./lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
-} = require('./errors')
-const State = require('./state')
+} = require('pear-api/errors')
+const State = require('pear-api/state')
 
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
@@ -125,7 +125,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
   if (hasUi === false) return stream
 
-  const spawnUI = Module.load(new URL(Pear.config.ui.provider + '/spawn.js'), {
+  const provider = Module.load(new URL(Pear.config.ui.provider), {
     protocol,
     resolutions: bundle.resolutions
   })
@@ -139,7 +139,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       ipc.close()
     }
   }
-  spawnUI({ args, indices, on })
+  provider({ args, indices, on })
   global.Pear.teardown(() => ipc.close())
 
   return stream

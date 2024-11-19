@@ -1,7 +1,7 @@
 'use strict'
 const crypto = require('hypercore-crypto')
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_INPUT } = require('../errors')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { outputter } = require('./iface')
 
 const output = outputter('encryption-key', {

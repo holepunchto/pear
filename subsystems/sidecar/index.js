@@ -29,20 +29,20 @@ const Replicator = require('./lib/replicator')
 const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
-const parseLink = require('../../lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const { version } = require('../../package.json')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, PLATFORM_HYPERDB, SOCKET_PATH, CHECKOUT,
   APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
-const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
+const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const definition = require('../../hyperdb/db')
 const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
-const SharedState = require('../../state')
-const State = require('./state')
+const SharedState = require('pear-api/state')
+const State = require('pear-api/state')
 const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
@@ -757,13 +757,13 @@ class Sidecar extends ReadyResource {
         if (err.code === 'ERR_CONNECTION') app.report({ err })
       }
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
-      const updating = await app.minver()
+      await app.minver()
       if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
       LOG.info(LOG_RUN_LINK, id, type, 'app')
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       const hasUi = state.ui !== null
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, hasUi, bundle }
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: false, hasUi, bundle }
     }
 
     if (!flags.trusted) {
@@ -867,14 +867,14 @@ class Sidecar extends ReadyResource {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
-    const updating = await app.minver()
+    await app.minver()
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
     LOG.info(LOG_RUN_LINK, id, 'app bundling..')
     const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     
     const hasUi = state.ui !== null
-    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, hasUi, bundle }
+    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: false, hasUi, bundle }
     // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 

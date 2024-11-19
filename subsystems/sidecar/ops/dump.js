@@ -5,9 +5,9 @@ const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Store = require('../lib/store')
 const Opstream = require('../lib/opstream')
-const parseLink = require('../../../lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 const hypercoreid = require('hypercore-id-encoding')
 
 module.exports = class Dump extends Opstream {
