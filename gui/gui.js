@@ -1519,6 +1519,9 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
+    electron.ipcMain.on('setBadgeCount', (evt, count) => {
+      electron.app.setBadgeCount(count)
+    })
   }
 
   async app () {

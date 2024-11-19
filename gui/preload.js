@@ -45,6 +45,10 @@ module.exports = class PearGUI extends ReadyResource {
           desktopSources: (options = {}) => ipc.desktopSources(options)
         }
 
+        this.setBadgeCount = (count) => {
+          electron.ipcRenderer.send('setBadgeCount', count)
+        }
+
         const kGuiCtrl = Symbol('gui:ctrl')
 
         class Parent extends EventEmitter {
