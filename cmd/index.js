@@ -2,7 +2,7 @@
 const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('pear-api/constants')
-const errors = require('../errors')
+const errors = require('pear-api/errors')
 const def = {
   run: require('pear-api/cmd-def/run'),
   pear: require('pear-api/cmd-def/pear')
