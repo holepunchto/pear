@@ -1,10 +1,10 @@
 'use strict'
 const Bundle = require('../lib/bundle')
-const State = require('../state')
+const State = require('pear-api/state')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Hyperdrive = require('hyperdrive')
 
 module.exports = class Seed extends Opstream {

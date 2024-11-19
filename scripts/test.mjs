@@ -2,7 +2,7 @@
 import { fileURLToPath } from 'url-file-url'
 import path from 'bare-path'
 import { spawn, spawnSync } from 'bare-subprocess'
-import { RUNTIME } from '../constants'
+import { RUNTIME } from 'pear-api/constants'
 import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
 import { isWindows } from 'which-runtime'

@@ -1,7 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_PROJECT_DIR } = require('../../../errors')
-const State = require('../state')
+const { ERR_INVALID_PROJECT_DIR } = require('pear-api/errors')
+const State = require('pear-api/state')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 
