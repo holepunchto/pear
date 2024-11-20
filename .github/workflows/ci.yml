@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - next
+      - bump-deps
   pull_request:
   repository_dispatch:
   workflow_dispatch:
