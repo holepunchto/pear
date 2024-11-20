@@ -157,6 +157,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     description(usage.descriptions.sidecar),
     flag('--mem', 'Memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
+    flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
+    flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
+    flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
+    flag('--log-stacks', 'Add a stack trace to each log message'),
+    flag('--log', 'Label:sidecar Level:2 Fields: h:level,h:label'),
     flag('--dht-bootstrap <nodes>').hide(),
     runners.sidecar(ipc)
   )
