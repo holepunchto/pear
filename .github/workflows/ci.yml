@@ -8,8 +8,14 @@ on:
       - next
       - bump-deps
   pull_request:
+    events:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
   repository_dispatch:
   workflow_dispatch:
+
 jobs:
   build:
     strategy:
