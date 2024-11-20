@@ -1487,6 +1487,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
+    electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1518,9 +1519,6 @@ class PearGUI extends ReadyResource {
         return
       }
       pipe.write(data)
-    })
-    electron.ipcMain.on('setBadgeCount', (evt, count) => {
-      electron.app.setBadgeCount(count)
     })
   }
 
@@ -1736,6 +1734,8 @@ class PearGUI extends ReadyResource {
   reports () { return this.ipc.reports() }
 
   permit (params) { return this.ipc.permit(params) }
+
+  badge (count) { return electron.app.setBadgeCount(count) }
 }
 
 class Freelist {
