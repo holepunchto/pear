@@ -18,7 +18,15 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  Bare.argv.splice(1, 0, '--log', ...Bare.argv.filter((arg) => arg.startsWith('--log')))
+  const logArgs = ['--log']
+  for (const [i, arg] of Bare.argv.entries()) {
+    if (arg.startsWith('--log-')) {
+      if (arg === '--log-stacks' || arg.includes('=')) logArgs.push(arg)
+      else if (i + 1 < Bare.argv.length) logArgs.push(arg, Bare.argv[i + 1])
+    }
+  }
+
+  Bare.argv.splice(1, 0, ...logArgs)
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
