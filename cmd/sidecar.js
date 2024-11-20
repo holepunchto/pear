@@ -19,7 +19,8 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print('\n========================= INIT ===================================\n')
 
   const logArgs = ['--log']
-  for (const [i, arg] of Bare.argv.entries()) {
+  const commandIndex = Bare.argv.indexOf('sidecar')
+  for (const [i, arg] of Bare.argv.slice(commandIndex + 1).entries()) {
     if (arg.startsWith('--log-')) {
       if (arg === '--log-stacks' || arg.includes('=')) logArgs.push(arg)
       else if (i + 1 < Bare.argv.length) logArgs.push(arg, Bare.argv[i + 1])
