@@ -18,7 +18,8 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  Bare.argv.splice(Bare.argv.indexOf('sidecar'), 1, '--sidecar')
+  Bare.argv.splice(Bare.argv.indexOf('sidecar'), 1)
+  Bare.argv.splice(1, 0, '--sidecar', '--log')
 
   require('../sidecar')
 
