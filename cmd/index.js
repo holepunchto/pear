@@ -161,7 +161,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
     flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
     flag('--log-stacks', 'Add a stack trace to each log message'),
-    flag('--log', 'Label:sidecar Level:2 Fields: h:level,h:label'),
     flag('--dht-bootstrap <nodes>').hide(),
     runners.sidecar(ipc)
   )
