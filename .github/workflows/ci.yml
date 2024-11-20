@@ -7,8 +7,10 @@ on:
       - main
       - next
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   repository_dispatch:
   workflow_dispatch:
+
 jobs:
   build:
     strategy:
