@@ -91,6 +91,7 @@
     "fs-native-extensions": "^1.2.7",
     "hypercore-crypto": "^3.4.1",
     "hypercore-id-encoding": "^1.3.0",
+    "hyperdb": "^4.0.2",
     "hyperdrive": "^11.8.1",
     "hyperswarm": "^4.7.14",
     "iambus": "^1.0.3",
@@ -130,6 +131,7 @@
     "@hyperswarm/testnet": "^3.1.4",
     "brittle": "^3.5.2",
     "graceful-goodbye": "^1.3.0",
+    "hyperschema": "^1.0.3",
     "standard": "^17.0.0"
   },
   "repository": {

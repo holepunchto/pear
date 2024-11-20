@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "schema": [
+    {
+      "name": "node",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "host",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "port",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "dht",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "nodes",
+          "array": true,
+          "type": "@pear/node",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}
