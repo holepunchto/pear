@@ -264,6 +264,7 @@ class IPC {
   checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
+  badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
