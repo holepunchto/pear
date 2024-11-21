@@ -17,6 +17,13 @@ Internal - Fix worker close on parent end
 
 Internal - Removed `getMediaSourceId`
 Internal - Removed terminal app reload and restart
+Internal - Updated Hypercore to version 10.38.1
+
+## v1.6.1
+
+### Fixes
+
+* Linux - Updated sodium-native to version 4.3.1
 
 ## v1.6.0
 
@@ -24,7 +31,6 @@ Internal - Removed terminal app reload and restart
 
 * Internal - Added sidecar logs
 * Performance - Added DHT persistent cache
-* CLI - `pear dump --dry-run` flag
 
 ### Fixes
 
