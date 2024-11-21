@@ -143,6 +143,7 @@ class Menu {
             visible: false,
             click (_, win) {
               const [view] = win.getBrowserViews()
+              if (!view) return
               view.webContents.openDevTools({ mode: 'detach' })
             }
           }])
