@@ -302,6 +302,10 @@ class IPC {
       write (data, cb) {
         electron.ipcRenderer.send('workerPipeWrite', id, data)
         cb()
+      },
+      final (cb) {
+        stream.push(null)
+        cb()
       }
     })
     electron.ipcRenderer.on('workerPipeError', (e, stack) => {
@@ -314,7 +318,7 @@ class IPC {
 
     electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
 
-    stream.on('finish', () => {
+    stream.on('end', () => {
       electron.ipcRenderer.send('workerPipeClose', id)
     })
 
