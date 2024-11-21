@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "schema": [
     {
       "name": "node",
@@ -32,6 +32,39 @@
           "array": true,
           "type": "@pear/node",
           "version": 1
+        }
+      ]
+    },
+    {
+      "name": "keyPair",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 1,
+      "fields": [
+        {
+          "name": "publicKey",
+          "required": true,
+          "type": "fixed32",
+          "version": 2
+        },
+        {
+          "name": "secretKey",
+          "required": false,
+          "type": "fixed32",
+          "version": 2
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "keyPair",
+          "type": "@pear/keyPair",
+          "version": 2
         }
       ]
     }

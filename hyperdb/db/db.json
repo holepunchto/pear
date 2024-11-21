@@ -12,6 +12,17 @@
       "derived": false,
       "key": [],
       "trigger": null
+    },
+    {
+      "name": "identity",
+      "namespace": "pear",
+      "id": 1,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/identity",
+      "derived": false,
+      "key": [],
+      "trigger": null
     }
   ]
 }
