@@ -44,6 +44,10 @@ module.exports = class PearGUI extends ReadyResource {
           },
           desktopSources: (options = {}) => ipc.desktopSources(options)
         }
+        this.badge = (count) => {
+          if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
+          return ipc.badge(count)
+        }
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
