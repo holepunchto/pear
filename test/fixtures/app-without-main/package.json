@@ -1,0 +1,7 @@
+{
+  "name": "app-without-main",
+  "pear": {
+    "name": "app-without-main",
+    "type": "desktop"
+  }
+}
