@@ -1515,7 +1515,7 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
-    electron.ipcMain.on('workerPipeClose', (evt, id) => {
+    electron.ipcMain.once('workerPipeClose', (evt, id) => {
       const pipe = this.pipes.from(id)
       if (!pipe) return
       pipe.destroy()

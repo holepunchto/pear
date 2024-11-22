@@ -321,7 +321,7 @@ class IPC {
     electron.ipcRenderer.on('workerPipeError', (e, stack) => {
       stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
     })
-    electron.ipcRenderer.on('workerPipeClose', () => { stream.destroy() })
+    electron.ipcRenderer.once('workerPipeClose', () => { stream.destroy() })
 
     return stream
   }
