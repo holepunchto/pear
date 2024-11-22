@@ -297,9 +297,7 @@ class IPC {
 
   workerRun (link) {
     const id = electron.ipcRenderer.sendSync('workerPipeId')
-
     electron.ipcRenderer.send('workerRun', link)
-
     const stream = new streamx.Duplex({
       write (data, cb) {
         electron.ipcRenderer.send('workerPipeWrite', id, data)
@@ -310,16 +308,15 @@ class IPC {
         cb()
       }
     })
+    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
+      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
+    })
+    electron.ipcRenderer.once('workerPipeClose', () => { stream.destroy() })
     stream.once('close', () => {
       electron.ipcRenderer.send('workerPipeClose', id)
     })
 
     electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
-    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
-      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
-    })
-    electron.ipcRenderer.once('workerPipeClose', () => { stream.destroy() })
-
     return stream
   }
 
