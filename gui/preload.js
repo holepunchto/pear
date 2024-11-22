@@ -304,7 +304,7 @@ class IPC {
         cb()
       },
       final (cb) {
-        stream.push(null)
+        electron.ipcRenderer.send('workerPipeEnd', id)
         cb()
       }
     })
