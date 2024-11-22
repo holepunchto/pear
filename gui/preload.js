@@ -310,9 +310,6 @@ class IPC {
         cb()
       }
     })
-    stream.on('end', () => {
-      electron.ipcRenderer.send('workerPipeClose', id)
-    })
     stream.once('close', () => {
       electron.ipcRenderer.send('workerPipeClose', id)
     })
