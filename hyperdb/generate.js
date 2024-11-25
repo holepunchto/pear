@@ -9,22 +9,7 @@ const DB_DIR = path.join(__dirname, 'db')
 const schema = Hyperschema.from(SCHEMA_DIR)
 const pearSchema = schema.namespace('pear')
 
-pearSchema.register({
-  name: 'keyPair',
-  fields: [
-    {
-      name: 'publicKey',
-      type: 'fixed32',
-      required: true
-    },
-    {
-      name: 'secretKey',
-      type: 'fixed32',
-      required: false
-    }
-  ]
-})
-
+// custom types
 pearSchema.register({
   name: 'node',
   fields: [
@@ -41,6 +26,12 @@ pearSchema.register({
   ]
 })
 
+// structs
+pearSchema.register({
+  name: 'bundle',
+  fields: []
+})
+
 pearSchema.register({
   name: 'dht',
   fields: [
@@ -52,16 +43,6 @@ pearSchema.register({
   ]
 })
 
-pearSchema.register({
-  name: 'identity',
-  fields: [
-    {
-      name: 'keyPair',
-      type: '@pear/keyPair'
-    }
-  ]
-})
-
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -69,13 +50,13 @@ const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
 
 pearDB.collections.register({
-  name: 'dht',
-  schema: '@pear/dht'
+  name: 'bundle',
+  schema: '@pear/bundle'
 })
 
 pearDB.collections.register({
-  name: 'identity',
-  schema: '@pear/identity'
+  name: 'dht',
+  schema: '@pear/dht'
 })
 
 Builder.toDisk(db)

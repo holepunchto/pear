@@ -3,23 +3,23 @@
   "offset": 0,
   "schema": [
     {
-      "name": "dht",
+      "name": "bundle",
       "namespace": "pear",
       "id": 0,
       "type": 1,
       "indexes": [],
-      "schema": "@pear/dht",
+      "schema": "@pear/bundle",
       "derived": false,
       "key": [],
       "trigger": null
     },
     {
-      "name": "identity",
+      "name": "dht",
       "namespace": "pear",
       "id": 1,
       "type": 1,
       "indexes": [],
-      "schema": "@pear/identity",
+      "schema": "@pear/dht",
       "derived": false,
       "key": [],
       "trigger": null
