@@ -196,22 +196,6 @@ class Helper extends IPC.Client {
     return res
   }
 
-  static async isRunning (pipe) {
-    try {
-      return process.kill(pipe.pid, 0)
-    } catch (err) {
-      return err.code === 'EPERM'
-    }
-  }
-
-  static async untilWorkerExit (pipe, timeout = 5000) {
-    const start = Date.now()
-    while (await this.isRunning(pipe)) {
-      if (Date.now() - start > timeout) throw new Error('timed out')
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
-  }
-
   static async pick (stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
