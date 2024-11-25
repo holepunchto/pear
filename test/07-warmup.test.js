@@ -3,9 +3,15 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 
+const Hyperswarm = require('hyperswarm')
+const Corestore = require('corestore')
+const RAM = require('random-access-memory')
+const Hyperdrive = require('hyperdrive')
+
 const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
 const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
+const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-without-main')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -80,4 +86,54 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   ok(warming.blocks > 0, 'Warmup contains some blocks')
   ok(warming.total > 0, 'Warmup total is correct')
   is(warming.success, true, 'Warmup completed')
+})
+
+test('staged bundle contains entries metadata', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  plan(2)
+
+  const dir = appWithoutMain
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+
+  const staged = await Helper.pick(staging, [{ tag: 'warming' }, { tag: 'final' }])
+  await staged.final
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const key = await until.key
+  await until.announced
+
+  const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
+  const store = new Corestore(RAM)
+  await store.ready()
+  const drive = new Hyperdrive(store, key)
+  await drive.ready()
+
+  teardown(() => swarm.destroy())
+
+  swarm.on('connection', (conn) => {
+    drive.corestore.replicate(conn)
+  })
+
+  swarm.join(drive.discoveryKey)
+
+  await new Promise((resolve) => setTimeout(resolve, 500))
+
+  comment('bundle entries should contain metadata')
+  for await (const file of drive.list()) {
+    if (file.key === '/app.js' || file.key === '/dep.js') {
+      const entry = await drive.entry(file.key)
+      ok(entry.value.metadata)
+    }
+  }
 })
