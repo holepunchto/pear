@@ -136,8 +136,9 @@ test('[terminal] worker exit when parent calls pipe.destroy()', async function (
 // test worker exit gracefully for desktop app
 //
 
-test.skip('[desktop] worker exit when child calls pipe.end()', async function () {
-
+test('[desktop] worker exit when child calls pipe.end()', async function () {
+  const { pipe } = await Helper.run({ link: workerParentDesktop, args: [workerChild] })
+  await Helper.untilClose(pipe)
 })
 
 test.skip('[desktop] worker exit when child calls pipe.destroy()', async function () {
