@@ -19,6 +19,12 @@ Internal - Removed `getMediaSourceId`
 Internal - Removed terminal app reload and restart
 Internal - Updated Hypercore to version 10.38.1
 
+## v1.6.2
+
+### Fixes
+
+* Internal - Fix process termination after unhandled error in sidecar
+
 ## v1.6.1
 
 ### Fixes
