@@ -123,13 +123,13 @@ test('[terminal] worker exit when child calls pipe.destroy()', async function ()
   await Helper.untilWorkerExit(pipe)
 })
 
-test.skip('[terminal] worker exit when parent calls pipe.end()', async function () {
+test('[terminal] worker exit when parent calls pipe.end()', async function () {
   const { pipe } = await Helper.run({ link: workerEndFromParent, args: [workerChild] })
   await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
 })
 
-test.skip('[terminal] worker exit when parent calls pipe.destroy()', async function () {
+test('[terminal] worker exit when parent calls pipe.destroy()', async function () {
   const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChild] })
   await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
