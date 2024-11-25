@@ -1,0 +1,5 @@
+{
+  "name": "worker-end-from-parent",
+  "main": "index.js",
+  "pear": {}
+}

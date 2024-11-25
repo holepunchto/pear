@@ -8,6 +8,13 @@ const helloWorld = path.join(Helper.localDir, 'test', 'fixtures', 'hello-world')
 const printArgs = path.join(Helper.localDir, 'test', 'fixtures', 'print-args')
 const workerRunner = path.join(Helper.localDir, 'test', 'fixtures', 'worker-runner')
 
+const workerParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent')
+const workerChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child')
+const workerEndFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-child')
+const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-child')
+const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
+const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
+
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
   const helper = new Helper()
@@ -98,4 +105,52 @@ test('worker should run as a link in a terminal app', async function ({ is, plan
   is(response, 'hello world', 'worker should send expected response')
 
   await Helper.untilClose(pipe)
+})
+
+//
+// test worker exit gracefully for terminal app
+//
+
+test('[terminal] worker exit when child calls pipe.end()', async function () {
+  const { pipe } = await Helper.run({ link: workerParent, args: [workerEndFromChild] })
+  await Helper.untilClose(pipe)
+  await Helper.untilWorkerExit(pipe)
+})
+
+test('[terminal] worker exit when child calls pipe.destroy()', async function () {
+  const { pipe } = await Helper.run({ link: workerParent, args: [workerDestroyFromChild] })
+  await Helper.untilClose(pipe)
+  await Helper.untilWorkerExit(pipe)
+})
+
+test.skip('[terminal] worker exit when parent calls pipe.end()', async function () {
+  const { pipe } = await Helper.run({ link: workerEndFromParent, args: [workerChild] })
+  await Helper.untilClose(pipe)
+  await Helper.untilWorkerExit(pipe)
+})
+
+test.skip('[terminal] worker exit when parent calls pipe.destroy()', async function () {
+  const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChild] })
+  await Helper.untilClose(pipe)
+  await Helper.untilWorkerExit(pipe)
+})
+
+//
+// test worker exit gracefully for desktop app
+//
+
+test.skip('[desktop] worker exit when child calls pipe.end()', async function () {
+
+})
+
+test.skip('[desktop] worker exit when child calls pipe.destroy()', async function () {
+
+})
+
+test.skip('[desktop] worker exit when parent calls pipe.end()', async function () {
+
+})
+
+test.skip('[desktop] worker exit when parent calls pipe.destroy()', async function () {
+
 })

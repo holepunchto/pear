@@ -1,0 +1,5 @@
+{
+  "name": "worker-destroy-from-parent",
+  "main": "index.js",
+  "pear": {}
+}
