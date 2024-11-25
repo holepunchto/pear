@@ -1,5 +1,6 @@
 {
   "name": "worker-destroy-from-parent",
   "main": "index.js",
+  "type": "module",
   "pear": {}
 }
