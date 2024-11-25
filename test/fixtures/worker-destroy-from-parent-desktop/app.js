@@ -1,4 +1,3 @@
-const pipeIn = Pear.worker.pipe()
 const link = Pear.config.args[Pear.config.args.length - 1]
 const pipe = Pear.worker.run(link)
 pipe.resume()
