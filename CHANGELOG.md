@@ -1,5 +1,17 @@
 # Pear Runtime Changelog
 
+## v1.6.2
+
+### Fixes
+
+* Internal - Fix process termination after unhandled error in sidecar
+
+## v1.6.1
+
+### Fixes
+
+* Linux - Updated sodium-native to version 4.3.1
+
 ## v1.6.0
 
 ### Features
