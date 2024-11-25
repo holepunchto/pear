@@ -1,0 +1,6 @@
+{
+  "name": "worker-parent-desktop",
+  "main": "index.html",
+  "type": "module",
+  "pear": {}
+}
