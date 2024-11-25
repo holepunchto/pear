@@ -1,5 +1,5 @@
 {
-  "name": "worker-parent-desktop",
+  "name": "worker-end-from-parent-desktop",
   "main": "index.html",
   "type": "module",
   "pear": {}
