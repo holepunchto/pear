@@ -130,7 +130,6 @@ class Sidecar extends ReadyResource {
 
     this.applings = new Applings(APPLINGS_PATH)
 
-    this.http = new Http(this)
     this.running = new Map()
 
     const sidecar = this
@@ -288,7 +287,6 @@ class Sidecar extends ReadyResource {
 
   async _open () {
     await this.applings.set('runtime', DESKTOP_RUNTIME)
-    await this.http.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
   }
@@ -338,14 +336,6 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  get host () { return this.http?.host || null }
-  get port () { return this.http?.port || null }
-
-  async address () {
-    await this.http.ready()
-    return this.host
-  }
-
   async identify (params, client) {
     if (params.startId) {
       const starting = this.running.get(params.startId)
@@ -354,8 +344,7 @@ class Sidecar extends ReadyResource {
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
     const id = client.userData.id
-    const host = await this.address()
-    return { host, id }
+    return { id }
   }
 
   seed (params, client) { return new ops.Seed(params, client, this) }
@@ -762,8 +751,7 @@ class Sidecar extends ReadyResource {
       LOG.info(LOG_RUN_LINK, id, type, 'app')
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      const hasUi = state.ui !== null
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: false, hasUi, bundle }
+      return { id, startId, bundle }
     }
 
     if (!flags.trusted) {
@@ -862,8 +850,7 @@ class Sidecar extends ReadyResource {
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      const hasUi = state.ui !== null
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, hasUi, bundle }
+      return { id, startId, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
@@ -872,9 +859,7 @@ class Sidecar extends ReadyResource {
     LOG.info(LOG_RUN_LINK, id, 'app bundling..')
     const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    
-    const hasUi = state.ui !== null
-    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: false, hasUi, bundle }
+    return { id, startId, bundle }
     // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 
@@ -948,7 +933,6 @@ class Sidecar extends ReadyResource {
     await this.applings.close()
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
-    if (this.http) await this.http.close()
     if (this.swarm) {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })

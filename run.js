@@ -21,7 +21,7 @@ const {
 const State = require('pear-api/state')
 
 
-module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
+module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   const { drive, pathname } = parseLink(link)
   const entry = isWindows ? path.normalize(pathname.slice(1)) : pathname
   const { key } = drive
@@ -53,13 +53,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   }
 
-  const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
-    if (wokeup) {
-      ipc.close().catch(console.error)
-      return stream
-    }
+    if (wokeup) return ipc.close().catch(console.error)
 
     args = args.filter((arg) => arg !== '--detached')
     const opts = { detached: true, stdio: 'ignore', cwd }
@@ -67,8 +63,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (!appling) {
       args.unshift('run', '--detach')
       spawn(constants.RUNTIME, args, opts).unref()
-      ipc.close().catch(console.error)
-      return stream
+      return ipc.close().catch(console.error)
     }
 
     const applingApp = isMac ? appling.split('.app')[0] + '.app' : appling
@@ -83,11 +78,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
     else spawn(applingApp, args, opts).unref()
 
-    ipc.close().catch(console.error)
-    return stream
+    return ipc.close().catch(console.error)
   }
 
-  const { startId, host, id, hasUi, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  const { startId, id, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
@@ -95,7 +89,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
   const state = new State({ flags, link, dir, cmdArgs, cwd })
 
-  state.update({ host, id })
+  state.update({ id, startId })
 
   if (state.error) {
     console.error(state.error)
@@ -103,10 +97,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   await ipc.ready()
-  const ipcConfig = await ipc.config()
-  state.update({ config: ipcConfig })
+  const config = await ipc.config()
+  state.update({ config })
 
-  
   global.Pear = new API(ipc, state, { teardown })
 
   const protocol = new Module.Protocol({
@@ -122,27 +115,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     protocol,
     resolutions: bundle.resolutions
   })
-
-  if (hasUi === false) return stream
-
-  const provider = Module.load(new URL(Pear.config.ui.provider), {
-    protocol,
-    resolutions: bundle.resolutions
-  })
-  args.unshift('--start-id=' + startId)
-  if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
-  const on = {
-    out (data) { stream.push({ tag: 'stdout', data }) },
-    err (data) { stream.push({ tag: 'stderr', data }) },
-    exit (code) {
-      stream.push({ tag: 'exit', data: { code } })
-      ipc.close()
-    }
-  }
-  provider({ args, indices, on })
-  global.Pear.teardown(() => ipc.close())
-
-  return stream
 }
 
 function project (dir, origin, cwd) {
