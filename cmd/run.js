@@ -1,7 +1,6 @@
 'use strict'
 const { permit, isTTY } = require('./iface')
 
-
 module.exports = (ipc) => async function run (cmd, devrun = false) {
   try {
     const { detached, store } = cmd.flags
