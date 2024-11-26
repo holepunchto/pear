@@ -12,6 +12,7 @@ Desktop - Fix Windows client restart
 CLI - Fix broken stdin after Ctrl-C
 Internal - Fix Pear-IPC unhandled error
 Internal - Fix worker close on parent end 
+Internal - Fix bundle metadata without `main` field
 
 ### Improvements
 
