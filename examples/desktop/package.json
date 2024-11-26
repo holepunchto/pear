@@ -21,7 +21,9 @@
       "backgroundColor": "#1F2430"
     },
     "stage": {
-      "entrypoints": ["/app.js"]
+      "entrypoints": [
+        "/app.js"
+      ]
     }
   },
   "devDependencies": {
@@ -29,6 +31,6 @@
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
-    "pear-electron": "file:../../../pear-electron"
+    "pear-electron": "github:holepunchto/pear-electron"
   }
 }
