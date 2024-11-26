@@ -85,7 +85,13 @@ module.exports = class Stage extends Opstream {
     const opts = { ignore, dryRun, batch: true }
     const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
-    const entrypoints = [...(state.manifest.main ? [state.main] : []), ...(state.manifest.pear?.stage?.entrypoints || [])].map((entry) => unixPathResolve('/', entry))
+
+    const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
+    const entrypoints = [
+      ...(mainExists ? [state.main] : []),
+      ...(state.manifest.pear?.stage?.entrypoints || [])
+    ]
+      .map(entrypoint => unixPathResolve('/', entrypoint))
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
