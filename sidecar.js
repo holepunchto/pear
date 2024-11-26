@@ -21,7 +21,7 @@ const {
 const gunk = require('pear-api/gunk')
 const Logger = require('./logger')
 const registerUrlHandler = require('./url-handler')
-const { flags = {} } = require('pear-api/shell')(Bare.argv.slice(1))
+const { flags = {} } = require('pear-api/cmd-def')(Bare.argv.slice(1))
 crasher('sidecar', SWAP)
 global.LOG = new Logger({
   level: flags.logLevel,

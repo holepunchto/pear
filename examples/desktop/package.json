@@ -2,18 +2,19 @@
   "name": "deskex",
   "version": "1.0.0",
   "description": "",
-  "main": "index.html",
+  "main": "index.js",
   "scripts": {
     "test": "brittle"
   },
   "type": "module",
   "pear": {
     "name": "deskex",
-    "links": {
-      "worker": "pear://456cup6hg5pwpekmygzhbxyxgtpknk66mbccohcuo795dj6biueo"
-    },
     "ui": {
-      "provider": "pear-electron",
+      "runtime": "pear-electron",
+      "preload": "preload.js",
+      "main": "index.html"
+    },
+    "gui": {
       "width": 900,
       "height": 500,
       "minWidth": 500,

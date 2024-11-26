@@ -2,9 +2,9 @@
 const { pipelinePromise, Readable } = require('streamx')
 const { pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
-const transform = require('../lib/transform')
 const Localdrive = require('localdrive')
 const Interact = require('../lib/interact')
+const transform = require('pear-api/transform')
 const parseLink = require('pear-api/parse-link')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
 async function init (link, dir, { ipc, header, autosubmit, defaults, force = false } = {}) {
