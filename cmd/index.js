@@ -247,7 +247,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     console.log(cmd.overview())
   }
 
-  const shell = require('pear-api/shell')(argv)
+  const shell = require('pear-api/cmd-def')(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
   run.argv = argv
