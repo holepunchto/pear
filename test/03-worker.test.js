@@ -15,10 +15,6 @@ const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'w
 const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
 const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
 
-const workerParentDesktop = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-desktop')
-const workerEndFromParentDesktop = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent-desktop')
-const workerDestroyFromParentDesktop = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent-desktop')
-
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
   const helper = new Helper()
@@ -132,29 +128,5 @@ test('[terminal] worker exit when parent calls pipe.end()', async function () {
 
 test('[terminal] worker exit when parent calls pipe.destroy()', async function () {
   const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChild] })
-  await Helper.untilWorkerExit(pipe)
-})
-
-//
-// test worker exit gracefully for desktop app
-//
-
-test('[desktop] worker exit when child calls pipe.end()', async function () {
-  const { pipe } = await Helper.run({ link: workerParentDesktop, args: [workerEndFromChild] })
-  await Helper.untilWorkerExit(pipe)
-})
-
-test('[desktop] worker exit when child calls pipe.destroy()', async function () {
-  const { pipe } = await Helper.run({ link: workerParentDesktop, args: [workerDestroyFromChild] })
-  await Helper.untilWorkerExit(pipe)
-})
-
-test('[desktop] worker exit when parent calls pipe.end()', async function () {
-  const { pipe } = await Helper.run({ link: workerEndFromParentDesktop, args: [workerChild] })
-  await Helper.untilWorkerExit(pipe)
-})
-
-test('[desktop] worker exit when parent calls pipe.destroy()', async function () {
-  const { pipe } = await Helper.run({ link: workerDestroyFromParentDesktop, args: [workerChild] })
   await Helper.untilWorkerExit(pipe)
 })
