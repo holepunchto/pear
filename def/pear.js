@@ -16,5 +16,5 @@ module.exports = [
   flag('--mem', 'Memory mode: RAM corestore').hide(),
   flag('--dht-bootstrap <nodes>').hide(),
   flag('--checkout json').hide(),
-  flag('--mountpoint url').hide(),
+  flag('--mountpoint url').hide()
 ]
