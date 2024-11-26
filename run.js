@@ -7,7 +7,6 @@ const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('url-file-url')
-const { Readable } = require('streamx')
 const { isMac, isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
@@ -19,7 +18,6 @@ const {
   ERR_INVALID_INPUT
 } = require('pear-api/errors')
 const State = require('pear-api/state')
-
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   const { drive, pathname } = parseLink(link)
@@ -74,7 +72,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       ipc.close().catch(console.error)
       throw ERR_INVALID_APPLING('Appling does not exist')
     }
-  
+
     if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
     else spawn(applingApp, args, opts).unref()
 
@@ -111,7 +109,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   })
 
-   Module.load(new URL(bundle.entrypoint), {
+  Module.load(new URL(bundle.entrypoint), {
     protocol,
     resolutions: bundle.resolutions
   })

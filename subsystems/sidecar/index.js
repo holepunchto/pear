@@ -26,7 +26,6 @@ const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
-const Http = require('./lib/http')
 const Session = require('./lib/session')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('pear-api/parse-link')
@@ -746,9 +745,9 @@ class Sidecar extends ReadyResource {
         if (err.code === 'ERR_CONNECTION') app.report({ err })
       }
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
-      await app.minver()
-      if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      LOG.info(LOG_RUN_LINK, id, type, 'app')
+      const updating = await app.minver()
+      if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
+      else LOG.info(LOG_RUN_LINK, id)
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
@@ -854,9 +853,9 @@ class Sidecar extends ReadyResource {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
-    await app.minver()
-    if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-    LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+    const updating = await app.minver()
+    if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
+    else LOG.info(LOG_RUN_LINK, id, 'app bundling..')
     const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { id, startId, bundle }
