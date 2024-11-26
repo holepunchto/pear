@@ -1,6 +1,0 @@
-{
-  "name": "worker-destroy-from-parent-desktop",
-  "main": "index.html",
-  "type": "module",
-  "pear": {}
-}

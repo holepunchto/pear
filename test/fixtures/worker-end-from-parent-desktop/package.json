@@ -1,6 +1,0 @@
-{
-  "name": "worker-end-from-parent-desktop",
-  "main": "index.html",
-  "type": "module",
-  "pear": {}
-}
