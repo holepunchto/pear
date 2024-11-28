@@ -78,12 +78,8 @@ function advise () {
 }
 
 async function download (key, all = false) {
-  for await (const output of downloader(key, all)) console.log(output)
-}
-
-async function * downloader (key, all) {
-  if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
-  else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
+  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + key)
+  else console.log('🍐 [ localdev ] - no local runtime: fetching runtime')
 
   const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
@@ -109,7 +105,7 @@ async function * downloader (key, all) {
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
-  yield `\n  Extracting platform runtime${all ? 's' : ''} to disk\n`
+  console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk\n`)
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
@@ -117,15 +113,23 @@ async function * downloader (key, all) {
 
   for await (const { op, key, bytesAdded } of runtime) {
     if (op === 'add') {
-      yield '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
+      if (bytesAdded > 0) {
+        const monitor = runtime.src.monitor(key)
+        await monitor.ready()
+        monitor.on('update', () => {
+          drawBar(monitor.downloadStats.percentage)
+          if (monitor.downloadStats.percentage === 100) process.stdout.clearLine()
+        })
+      }
     } else if (op === 'change') {
-      yield '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'remove') {
-      yield '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     }
   }
 
-  yield '\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n'
+  console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
 
   await runtimes.close()
   await swarm.destroy()
@@ -133,6 +137,23 @@ async function * downloader (key, all) {
 
   const tick = isWindows ? '^' : '✔'
 
-  if (all) yield '\x1B[32m' + tick + '\x1B[39m Download complete\n'
-  else yield '\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
+  if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
+  else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
+}
+
+const barWidth = 30;
+const barFilledChar = '#';
+const barEmptyChar = '.';
+
+function getBar (progress) {
+  const filledWidth = Math.floor(progress / 100 * barWidth);
+  const emptyWidth = barWidth - filledWidth;
+  const bar = barFilledChar.repeat(filledWidth) + barEmptyChar.repeat(emptyWidth);
+  return bar;
+}
+
+function drawBar (progress) {
+  process.stdout.clearLine();
+  process.stdout.cursorTo(0);
+  process.stdout.write(`Progress: ${getBar(progress)} ${progress}%`);
 }
