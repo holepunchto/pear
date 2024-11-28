@@ -14,6 +14,7 @@ const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
+const tty = require('bare-tty')
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
 
@@ -114,7 +115,7 @@ async function download (key, all = false) {
   for await (const { op, key, bytesAdded } of runtime) {
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
-      if (process.stdout.isTTY && bytesAdded > 0) {
+      if (tty.isTTY(0) && bytesAdded > 0) {
         const monitor = runtime.src.monitor(key)
         await monitor.ready()
         monitor.on('update', () => {
