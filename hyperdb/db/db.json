@@ -23,6 +23,32 @@
       "derived": false,
       "key": [],
       "trigger": null
+    },
+    {
+      "name": "permits",
+      "namespace": "pear",
+      "id": 2,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/permits",
+      "derived": false,
+      "key": [
+        "key"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "encryption-keys",
+      "namespace": "pear",
+      "id": 3,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/encryption-keys",
+      "derived": false,
+      "key": [
+        "key"
+      ],
+      "trigger": null
     }
   ]
 }

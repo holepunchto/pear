@@ -91,11 +91,119 @@ const collection1 = {
   indexes: []
 }
 
+// '@pear/permits' collection key
+const collection2_key = new IndexEncoder([
+  IndexEncoder.BUFFER
+], { prefix: 2 })
+
+function collection2_indexify (record) {
+  const a = record.key
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/permits' reconstruction function
+function collection2_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection2_key.decode(keyBuf)
+  const value = c.decode(resolveStruct('@pear/permits/value', version), valueBuf)
+  // TODO: This should be fully code generated
+  return {
+    key: key[0],
+    ...value
+  }
+}
+// '@pear/permits' key reconstruction function
+function collection2_reconstruct_key (keyBuf) {
+  const key = collection2_key.decode(keyBuf)
+  return {
+    key: key[0]
+  }
+}
+
+// '@pear/permits'
+const collection2 = {
+  name: '@pear/permits',
+  id: 2,
+  encodeKey (record) {
+    const key = [record.key]
+    return collection2_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection2_key.encodeRange({
+      gt: gt ? collection2_indexify(gt) : null,
+      lt: lt ? collection2_indexify(lt) : null,
+      gte: gte ? collection2_indexify(gte) : null,
+      lte: lte ? collection2_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    return c.encode(resolveStruct('@pear/permits/value', version), record)
+  },
+  trigger: null,
+  reconstruct: collection2_reconstruct,
+  reconstructKey: collection2_reconstruct_key,
+  indexes: []
+}
+
+// '@pear/encryption-keys' collection key
+const collection3_key = new IndexEncoder([
+  IndexEncoder.BUFFER
+], { prefix: 3 })
+
+function collection3_indexify (record) {
+  const a = record.key
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/encryption-keys' reconstruction function
+function collection3_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection3_key.decode(keyBuf)
+  const value = c.decode(resolveStruct('@pear/encryption-keys/value', version), valueBuf)
+  // TODO: This should be fully code generated
+  return {
+    key: key[0],
+    ...value
+  }
+}
+// '@pear/encryption-keys' key reconstruction function
+function collection3_reconstruct_key (keyBuf) {
+  const key = collection3_key.decode(keyBuf)
+  return {
+    key: key[0]
+  }
+}
+
+// '@pear/encryption-keys'
+const collection3 = {
+  name: '@pear/encryption-keys',
+  id: 3,
+  encodeKey (record) {
+    const key = [record.key]
+    return collection3_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection3_key.encodeRange({
+      gt: gt ? collection3_indexify(gt) : null,
+      lt: lt ? collection3_indexify(lt) : null,
+      gte: gte ? collection3_indexify(gte) : null,
+      lte: lte ? collection3_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    return c.encode(resolveStruct('@pear/encryption-keys/value', version), record)
+  },
+  trigger: null,
+  reconstruct: collection3_reconstruct,
+  reconstructKey: collection3_reconstruct_key,
+  indexes: []
+}
+
 module.exports = {
   version,
   collections: [
     collection0,
-    collection1
+    collection1,
+    collection2,
+    collection3
   ],
   indexes: [
   ],
@@ -107,6 +215,8 @@ function resolveCollection (name) {
   switch (name) {
     case '@pear/bundle': return collection0
     case '@pear/dht': return collection1
+    case '@pear/permits': return collection2
+    case '@pear/encryption-keys': return collection3
     default: return null
   }
 }

@@ -43,6 +43,33 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'permits',
+  fields: [
+    {
+      name: 'key',
+      type: 'fixed32',
+      required: true
+    }
+  ]
+})
+
+pearSchema.register({
+  name: 'encryption-keys',
+  fields: [
+    {
+      name: 'key',
+      type: 'fixed32',
+      required: true
+    },
+    {
+      name: 'encryptionKey',
+      type: 'string',
+      required: true
+    }
+  ]
+})
+
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -57,6 +84,18 @@ pearDB.collections.register({
 pearDB.collections.register({
   name: 'dht',
   schema: '@pear/dht'
+})
+
+pearDB.collections.register({
+  name: 'permits',
+  schema: '@pear/permits',
+  key: ['key']
+})
+
+pearDB.collections.register({
+  name: 'encryption-keys',
+  schema: '@pear/encryption-keys',
+  key: ['key']
 })
 
 Builder.toDisk(db)

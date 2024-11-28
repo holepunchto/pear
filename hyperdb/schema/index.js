@@ -78,11 +78,53 @@ const encoding2 = {
   }
 }
 
+// @pear/permits
+const encoding3 = {
+  preencode (state, m) {
+    c.fixed32.preencode(state, m.key)
+  },
+  encode (state, m) {
+    c.fixed32.encode(state, m.key)
+  },
+  decode (state) {
+    const res = {}
+    res.key = null
+
+    res.key = c.fixed32.decode(state)
+
+    return res
+  }
+}
+
+// @pear/encryption-keys
+const encoding4 = {
+  preencode (state, m) {
+    c.fixed32.preencode(state, m.key)
+    c.string.preencode(state, m.encryptionKey)
+  },
+  encode (state, m) {
+    c.fixed32.encode(state, m.key)
+    c.string.encode(state, m.encryptionKey)
+  },
+  decode (state) {
+    const res = {}
+    res.key = null
+    res.encryptionKey = null
+
+    res.key = c.fixed32.decode(state)
+    res.encryptionKey = c.string.decode(state)
+
+    return res
+  }
+}
+
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
     case '@pear/bundle': return encoding1
     case '@pear/dht': return encoding2
+    case '@pear/permits': return encoding3
+    case '@pear/encryption-keys': return encoding4
     default: throw new Error('Encoder not found ' + name)
   }
 }

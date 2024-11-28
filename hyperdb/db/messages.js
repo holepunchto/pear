@@ -78,8 +78,48 @@ const encoding2 = {
   }
 }
 
-// @pear/bundle/value
+// @pear/permits
 const encoding3 = {
+  preencode (state, m) {
+    c.fixed32.preencode(state, m.key)
+  },
+  encode (state, m) {
+    c.fixed32.encode(state, m.key)
+  },
+  decode (state) {
+    const res = {}
+    res.key = null
+
+    res.key = c.fixed32.decode(state)
+
+    return res
+  }
+}
+
+// @pear/encryption-keys
+const encoding4 = {
+  preencode (state, m) {
+    c.fixed32.preencode(state, m.key)
+    c.string.preencode(state, m.encryptionKey)
+  },
+  encode (state, m) {
+    c.fixed32.encode(state, m.key)
+    c.string.encode(state, m.encryptionKey)
+  },
+  decode (state) {
+    const res = {}
+    res.key = null
+    res.encryptionKey = null
+
+    res.key = c.fixed32.decode(state)
+    res.encryptionKey = c.string.decode(state)
+
+    return res
+  }
+}
+
+// @pear/bundle/value
+const encoding5 = {
   preencode (state, m) {
 
   },
@@ -94,17 +134,17 @@ const encoding3 = {
 }
 
 // @pear/dht/value.nodes
-const encoding4_0 = c.frame(c.array(encoding0))
+const encoding6_0 = c.frame(c.array(encoding0))
 
 // @pear/dht/value
-const encoding4 = {
+const encoding6 = {
   preencode (state, m) {
     let flags = 0
     if (m.nodes) flags |= 1
 
     c.uint.preencode(state, flags)
 
-    if (m.nodes) encoding4_0.preencode(state, m.nodes)
+    if (m.nodes) encoding6_0.preencode(state, m.nodes)
   },
   encode (state, m) {
     let flags = 0
@@ -112,14 +152,47 @@ const encoding4 = {
 
     c.uint.encode(state, flags)
 
-    if (m.nodes) encoding4_0.encode(state, m.nodes)
+    if (m.nodes) encoding6_0.encode(state, m.nodes)
   },
   decode (state) {
     const res = {}
     res.nodes = null
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res.nodes = encoding4_0.decode(state)
+    if ((flags & 1) !== 0) res.nodes = encoding6_0.decode(state)
+
+    return res
+  }
+}
+
+// @pear/permits/value
+const encoding7 = {
+  preencode (state, m) {
+
+  },
+  encode (state, m) {
+
+  },
+  decode (state) {
+    const res = {}
+
+    return res
+  }
+}
+
+// @pear/encryption-keys/value
+const encoding8 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.encryptionKey)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.encryptionKey)
+  },
+  decode (state) {
+    const res = {}
+    res.encryptionKey = null
+
+    res.encryptionKey = c.string.decode(state)
 
     return res
   }
@@ -130,8 +203,12 @@ function getStructByName (name) {
     case '@pear/node': return encoding0
     case '@pear/bundle': return encoding1
     case '@pear/dht': return encoding2
-    case '@pear/bundle/value': return encoding3
-    case '@pear/dht/value': return encoding4
+    case '@pear/permits': return encoding3
+    case '@pear/encryption-keys': return encoding4
+    case '@pear/bundle/value': return encoding5
+    case '@pear/dht/value': return encoding6
+    case '@pear/permits/value': return encoding7
+    case '@pear/encryption-keys/value': return encoding8
     default: throw new Error('Encoder not found ' + name)
   }
 }
