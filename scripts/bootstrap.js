@@ -119,7 +119,7 @@ async function download (key, all = false) {
         const monitor = runtime.src.monitor(key)
         await monitor.ready()
         monitor.on('update', () => {
-          drawBar(monitor.downloadStats.percentage)
+          drawBar(monitor.downloadStats.percentage, monitor.downloadSpeed())
           if (monitor.downloadStats.percentage === 100) {
             process.stdout.clearLine()
             process.stdout.cursorTo(0)
@@ -157,8 +157,8 @@ function getBar (progress) {
   return bar;
 }
 
-function drawBar (progress) {
+function drawBar (progress, speed) {
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
-  process.stdout.write(`Progress: ${getBar(progress)} ${progress}%`);
+  process.stdout.write(`Progress: ${getBar(progress)} ${progress}% - Speed: ${byteSize(speed)}/s`);
 }
