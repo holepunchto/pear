@@ -14,7 +14,7 @@ const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
-const isTTY = isBare ? require('bare-tty').isTTY : process.stdout.isTTY
+const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
 
