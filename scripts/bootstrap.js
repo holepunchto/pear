@@ -114,7 +114,7 @@ async function download (key, all = false) {
   for await (const { op, key, bytesAdded } of runtime) {
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
-      if (bytesAdded > 0) {
+      if (process.stdout.isTTY && bytesAdded > 0) {
         const monitor = runtime.src.monitor(key)
         await monitor.ready()
         monitor.on('update', () => {
