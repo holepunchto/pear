@@ -119,7 +119,11 @@ async function download (key, all = false) {
         await monitor.ready()
         monitor.on('update', () => {
           drawBar(monitor.downloadStats.percentage)
-          if (monitor.downloadStats.percentage === 100) process.stdout.clearLine()
+          if (monitor.downloadStats.percentage === 100) {
+            process.stdout.clearLine()
+            process.stdout.cursorTo(0)
+            runtime.src.closeMonitors()
+          }
         })
       }
     } else if (op === 'change') {
