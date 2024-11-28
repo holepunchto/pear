@@ -157,8 +157,8 @@ function getBar (progress) {
   return bar;
 }
 
-function drawBar (downloadStats, speed) {
+function drawBar (downloadStats, downloadSpeed, uploadStats, uploadSpeed) {
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
-  process.stdout.write(`Progress: ${getBar(downloadStats.percentage)} ${downloadStats.percentage}% [${byteSize(speed)}/s, ${downloadStats.peers} peers]`);
+  process.stdout.write(`Progress: ${getBar(downloadStats.percentage)} ${downloadStats.percentage}% [⬇ ${byteSize(downloadSpeed)}/s, ${downloadStats.peers} peers] [⬆ ${byteSize(uploadSpeed)}/s, ${uploadStats.peers} peers]`);
 }
