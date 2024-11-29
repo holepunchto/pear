@@ -112,27 +112,21 @@ async function download (key, all = false) {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
+  let unmonitor
   for await (const { op, key, bytesAdded } of runtime) {
+    if (unmonitor) unmonitor()
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
-      if (isTTY && bytesAdded > 0) {
-        const monitor = runtime.src.monitor(key)
-        await monitor.ready()
-        monitor.on('update', () => {
-          drawBar(monitor.downloadStats, monitor.downloadSpeed(), monitor.uploadStats, monitor.uploadSpeed())
-          if (monitor.downloadStats.percentage === 100) {
-            process.stdout.clearLine()
-            process.stdout.cursorTo(0)
-            runtime.src.closeMonitors()
-          }
-        })
-      }
     } else if (op === 'change') {
       console.log('\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'remove') {
       console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     }
+    if (isTTY && bytesAdded > 0) {
+      unmonitor = await monitor(runtime.src, key)
+    }
   }
+  if (unmonitor) unmonitor()
 
   console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
 
@@ -161,4 +155,18 @@ function drawBar (downloadStats, downloadSpeed, uploadStats, uploadSpeed) {
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
   process.stdout.write(`Progress: ${getBar(downloadStats.percentage)} ${downloadStats.percentage}% [⬇ ${byteSize(downloadSpeed)}/s, ${downloadStats.peers} peers] [⬆ ${byteSize(uploadSpeed)}/s, ${uploadStats.peers} peers]`);
+}
+
+async function monitor (drive, key) {
+  const mon = drive.monitor(key)
+  await mon.ready()
+  const interval = setInterval(() => {
+    drawBar(mon.downloadStats, mon.downloadSpeed(), mon.uploadStats, mon.uploadSpeed())
+  }, 500)
+  return () => {
+    clearInterval(interval)
+    mon.close()
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+  }
 }
