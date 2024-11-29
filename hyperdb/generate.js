@@ -29,7 +29,22 @@ pearSchema.register({
 // structs
 pearSchema.register({
   name: 'bundle',
-  fields: []
+  fields: [
+    {
+      name: 'key',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'encryption-key',
+      type: 'string'
+    },
+    {
+      name: 'tags',
+      type: 'string',
+      array: true
+    }
+  ]
 })
 
 pearSchema.register({
@@ -43,33 +58,6 @@ pearSchema.register({
   ]
 })
 
-pearSchema.register({
-  name: 'permits',
-  fields: [
-    {
-      name: 'key',
-      type: 'fixed32',
-      required: true
-    }
-  ]
-})
-
-pearSchema.register({
-  name: 'encryption-keys',
-  fields: [
-    {
-      name: 'key',
-      type: 'fixed32',
-      required: true
-    },
-    {
-      name: 'encryptionKey',
-      type: 'string',
-      required: true
-    }
-  ]
-})
-
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -78,24 +66,13 @@ const pearDB = db.namespace('pear')
 
 pearDB.collections.register({
   name: 'bundle',
-  schema: '@pear/bundle'
+  schema: '@pear/bundle',
+  key: ['key']
 })
 
 pearDB.collections.register({
   name: 'dht',
   schema: '@pear/dht'
-})
-
-pearDB.collections.register({
-  name: 'permits',
-  schema: '@pear/permits',
-  key: ['key']
-})
-
-pearDB.collections.register({
-  name: 'encryption-keys',
-  schema: '@pear/encryption-keys',
-  key: ['key']
 })
 
 Builder.toDisk(db)

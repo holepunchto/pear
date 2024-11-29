@@ -31,16 +31,44 @@ const encoding0 = {
   }
 }
 
+// @pear/bundle.tags
+const encoding1_2 = c.array(c.string)
+
 // @pear/bundle
 const encoding1 = {
   preencode (state, m) {
+    let flags = 0
+    if (m["encryption-key"]) flags |= 1
+    if (m.tags) flags |= 2
 
+    c.string.preencode(state, m.key)
+    c.uint.preencode(state, flags)
+
+    if (m["encryption-key"]) c.string.preencode(state, m["encryption-key"])
+    if (m.tags) encoding1_2.preencode(state, m.tags)
   },
   encode (state, m) {
+    let flags = 0
+    if (m["encryption-key"]) flags |= 1
+    if (m.tags) flags |= 2
 
+    c.string.encode(state, m.key)
+    c.uint.encode(state, flags)
+
+    if (m["encryption-key"]) c.string.encode(state, m["encryption-key"])
+    if (m.tags) encoding1_2.encode(state, m.tags)
   },
   decode (state) {
     const res = {}
+    res.key = null
+    res["encryption-key"] = null
+    res.tags = null
+
+    res.key = c.string.decode(state)
+
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res["encryption-key"] = c.string.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding1_2.decode(state)
 
     return res
   }
@@ -78,53 +106,11 @@ const encoding2 = {
   }
 }
 
-// @pear/permits
-const encoding3 = {
-  preencode (state, m) {
-    c.fixed32.preencode(state, m.key)
-  },
-  encode (state, m) {
-    c.fixed32.encode(state, m.key)
-  },
-  decode (state) {
-    const res = {}
-    res.key = null
-
-    res.key = c.fixed32.decode(state)
-
-    return res
-  }
-}
-
-// @pear/encryption-keys
-const encoding4 = {
-  preencode (state, m) {
-    c.fixed32.preencode(state, m.key)
-    c.string.preencode(state, m.encryptionKey)
-  },
-  encode (state, m) {
-    c.fixed32.encode(state, m.key)
-    c.string.encode(state, m.encryptionKey)
-  },
-  decode (state) {
-    const res = {}
-    res.key = null
-    res.encryptionKey = null
-
-    res.key = c.fixed32.decode(state)
-    res.encryptionKey = c.string.decode(state)
-
-    return res
-  }
-}
-
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
     case '@pear/bundle': return encoding1
     case '@pear/dht': return encoding2
-    case '@pear/permits': return encoding3
-    case '@pear/encryption-keys': return encoding4
     default: throw new Error('Encoder not found ' + name)
   }
 }
