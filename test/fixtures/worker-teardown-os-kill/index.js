@@ -5,4 +5,5 @@ Pear.teardown(async () => {
   await new Promise((resolve) => {
     pipe.write('teardown', resolve)
   })
+  pipe.end()
 })
