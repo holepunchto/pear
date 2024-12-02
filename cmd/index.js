@@ -15,6 +15,7 @@ const runners = {
   info: require('./info'),
   dump: require('./dump'),
   touch: require('./touch'),
+  delete: require('./delete'),
   shift: require('./shift'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
@@ -140,6 +141,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.touch(ipc)
   )
 
+  const del = command(
+    'delete',
+    summary('Clear Pear application'),
+    description(usage.descriptions.delete),
+    arg('<key>', 'Application key'),
+    flag('--clear-app-storage', 'Clear app storage'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.delete(ipc)
+  )
+
   const shift = command(
     'shift',
     summary('Advanced. Move storage between apps'),
@@ -205,6 +216,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     info,
     dump,
     touch,
+    del,
     shift,
     sidecar,
     gc,
