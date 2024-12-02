@@ -143,18 +143,28 @@ async function download (key, all = false) {
  */
 async function monitorDrive (drive) {
   const downloadSpeedometer = speedometer()
+  const uploadSpeedometer = speedometer()
   let downloadedBytes = 0
-  let speed = 0
+  let downloadSpeed = 0
+  let uploadedBytes = 0
+  let uploadSpeed = 0
+
   const blobs = await drive.getBlobs()
   blobs.core.on('download', (_index, bytes) => {
     downloadedBytes += bytes
-    speed = downloadSpeedometer(bytes)
+    downloadSpeed = downloadSpeedometer(bytes)
   })
+  blobs.core.on('upload', (_index, bytes) => {
+    uploadedBytes += bytes
+    uploadSpeed = uploadSpeedometer(bytes)
+  })
+
   const interval = setInterval(() => {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
-    process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)} - Speed: ${byteSize(speed)}/s`);
+    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeed)}/s] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeed)}/s]`);
   }, 500)
+  
   return () => {
     clearInterval(interval)
   }
