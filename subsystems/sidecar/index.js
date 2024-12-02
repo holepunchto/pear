@@ -448,21 +448,14 @@ class Sidecar extends ReadyResource {
   }
 
   async permit (params) {
-    if (params.password || params.encryptionKey) {
-      const key = hypercoreid.normalize(params.key)
-      const encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
-      await db.insert('@pear/bundle', { key, encryptionKey })
-    }
-    if (params.key !== null) {
-      const key = hypercoreid.encode(params.key)
-      await db.insert('@pear/bundle', { key })
-    }
-    return true
+    const key = hypercoreid.encode(params.key)
+    const encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
+    await db.insert('@pear/bundle', { key, encryptionKey })
   }
 
   async trusted (key) {
     const z32 = hypercoreid.encode(key)
-    return !!(await db.get('@pear/bundle', { key: z32 }))
+    return !!(await db.get('@pear/bundle', { key: z32 }) || await preferences.get(z32))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -680,21 +673,21 @@ class Sidecar extends ReadyResource {
     if (unsafeClearPreferences) {
       LOG.info(LOG_RUN_LINK, 'clearing preferences')
       await preferences.clear()
-      // await db.delete('@pear/bundle', { key })
+      for (const entry of await db.find('@pear/bundle').toArray()) await db.delete('@pear/bundle', { key: entry.key })
       await db.flush()
     }
 
     let encryptionKey
     if (flags.encryptionKey) {
       LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = await db.get('@pear/bundle', { encryptionKey: flags.encryptionKey })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { key: flags.encryptionKey })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey
       if (drive.key) {
         LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptedKey = await db.get('@pear/bundle', { encryptionKey: hypercoreid.normalize(drive.key) })?.encryptionKey
+        storedEncryptedKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(drive.key) })?.encryptionKey
       } else {
         storedEncryptedKey = null
       }
