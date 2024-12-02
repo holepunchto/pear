@@ -98,7 +98,7 @@ async function download (key, all = false) {
 
   await runtimes.ready()
   if (isTTY) {
-    monitorDriveKey(runtimes)
+    monitorDrive(runtimes)
   }
 
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
@@ -141,7 +141,7 @@ async function download (key, all = false) {
 /**
  * @param {Hyperdrive} drive
  */
-async function monitorDriveKey (drive) {
+async function monitorDrive (drive) {
   const downloadSpeedometer = speedometer()
   let downloadedBytes = 0
   const blobs = await drive.getBlobs()
