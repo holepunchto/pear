@@ -144,8 +144,10 @@ async function download (key, all = false) {
 async function monitorDrive (drive) {
   const downloadSpeedometer = speedometer()
   const uploadSpeedometer = speedometer()
+  let peers = 0
   let downloadedBytes = 0
   let downloadSpeed = 0
+  let uploadPeers = 0
   let uploadedBytes = 0
   let uploadSpeed = 0
 
@@ -158,11 +160,17 @@ async function monitorDrive (drive) {
     uploadedBytes += bytes
     uploadSpeed = uploadSpeedometer(bytes)
   })
+  blobs.core.on('peer-add', () => {
+    peers = blobs.core.peers.length
+  })
+  blobs.core.on('peer-remove', () => {
+    peers = blobs.core.peers.length
+  })
 
   const interval = setInterval(() => {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
-    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeed)}/s] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeed)}/s]`);
+    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeed)}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeed)}/s - ${peers} peers]`);
   }, 500)
   
   return () => {
