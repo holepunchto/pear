@@ -14,6 +14,7 @@ const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
+const speedometer = require('speedometer')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
@@ -96,6 +97,9 @@ async function download (key, all = false) {
   swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
 
   await runtimes.ready()
+  if (isTTY) {
+    monitorDriveKey(runtimes)
+  }
 
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
   const done = runtimes.corestore.findingPeers()
@@ -112,9 +116,7 @@ async function download (key, all = false) {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
-  let unmonitor
   for await (const { op, key, bytesAdded } of runtime) {
-    if (unmonitor) unmonitor()
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'change') {
@@ -122,11 +124,7 @@ async function download (key, all = false) {
     } else if (op === 'remove') {
       console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     }
-    if (isTTY && bytesAdded > 0) {
-      unmonitor = await monitor(runtime.src, key)
-    }
   }
-  if (unmonitor) unmonitor()
 
   console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
 
@@ -140,33 +138,18 @@ async function download (key, all = false) {
   else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
 }
 
-const barWidth = 30;
-const barFilledChar = '#';
-const barEmptyChar = '.';
-
-function getBar (progress) {
-  const filledWidth = Math.floor(progress / 100 * barWidth);
-  const emptyWidth = barWidth - filledWidth;
-  const bar = barFilledChar.repeat(filledWidth) + barEmptyChar.repeat(emptyWidth);
-  return bar;
-}
-
-function drawBar (downloadStats, downloadSpeed, uploadStats, uploadSpeed) {
-  process.stdout.clearLine();
-  process.stdout.cursorTo(0);
-  process.stdout.write(`Progress: ${getBar(downloadStats.percentage)} ${downloadStats.percentage}% [⬇ ${byteSize(downloadSpeed)}/s, ${downloadStats.peers} peers] [⬆ ${byteSize(uploadSpeed)}/s, ${uploadStats.peers} peers]`);
-}
-
-async function monitor (drive, key) {
-  const mon = drive.monitor(key)
-  await mon.ready()
-  const interval = setInterval(() => {
-    drawBar(mon.downloadStats, mon.downloadSpeed(), mon.uploadStats, mon.uploadSpeed())
-  }, 500)
-  return () => {
-    clearInterval(interval)
-    mon.close()
+/**
+ * @param {Hyperdrive} drive
+ */
+async function monitorDriveKey (drive) {
+  const downloadSpeedometer = speedometer()
+  let downloadedBytes = 0
+  const blobs = await drive.getBlobs()
+  blobs.core.on('download', (_index, bytes) => {
+    downloadedBytes += bytes
+    const speed = downloadSpeedometer(bytes)
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
-  }
+    process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)}. Speed: ${byteSize(speed)}/s`);
+  })
 }
