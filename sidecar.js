@@ -68,8 +68,6 @@ async function bootSidecar () {
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    monitorDrive(updateDrive)
-
     return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
   }
 
@@ -109,20 +107,4 @@ function getUpgradeTarget () {
     checkout: { key, length: 0, fork: 0 },
     swap: null
   }
-}
-
-/**
- * @param {Hyperdrive} drive
- */
-async function monitorDrive (drive) {
-  const downloadSpeedometer = speedometer()
-  let downloadedBytes = 0
-  const blobs = await drive.getBlobs()
-  blobs.core.on('download', (_index, bytes) => {
-    downloadedBytes += bytes
-    const speed = downloadSpeedometer(bytes)
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)} - Speed: ${byteSize(speed)}/s`);
-  })
 }
