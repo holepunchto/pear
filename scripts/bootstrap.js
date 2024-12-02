@@ -150,6 +150,6 @@ async function monitorDriveKey (drive) {
     const speed = downloadSpeedometer(bytes)
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
-    process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)}. Speed: ${byteSize(speed)}/s`);
+    process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)} - Speed: ${byteSize(speed)}/s`);
   })
 }
