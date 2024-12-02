@@ -21,8 +21,6 @@ const {
 } = require('./constants')
 const registerUrlHandler = require('./url-handler')
 const gunk = require('./gunk')
-const speedometer = require('speedometer')
-const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 const { flags = {} } = require('./shell')(Bare.argv.slice(1))
 crasher('sidecar', SWAP)
 global.LOG = new Logger({
