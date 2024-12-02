@@ -194,9 +194,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -263,9 +260,6 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -345,9 +339,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -416,9 +407,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
