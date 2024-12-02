@@ -147,7 +147,6 @@ async function monitorDrive (drive) {
   let peers = 0
   let downloadedBytes = 0
   let downloadSpeed = 0
-  let uploadPeers = 0
   let uploadedBytes = 0
   let uploadSpeed = 0
 
@@ -168,11 +167,11 @@ async function monitorDrive (drive) {
   })
 
   const interval = setInterval(() => {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeed)}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeed)}/s - ${peers} peers]`);
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeed)}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeed)}/s - ${peers} peers]`)
   }, 500)
-  
+
   return () => {
     clearInterval(interval)
   }
