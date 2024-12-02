@@ -144,12 +144,18 @@ async function download (key, all = false) {
 async function monitorDrive (drive) {
   const downloadSpeedometer = speedometer()
   let downloadedBytes = 0
+  let speed = 0
   const blobs = await drive.getBlobs()
   blobs.core.on('download', (_index, bytes) => {
     downloadedBytes += bytes
-    const speed = downloadSpeedometer(bytes)
+    speed = downloadSpeedometer(bytes)
+  })
+  const interval = setInterval(() => {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
     process.stdout.write(`Downloaded: ${byteSize(downloadedBytes)} - Speed: ${byteSize(speed)}/s`);
-  })
+  }, 500)
+  return () => {
+    clearInterval(interval)
+  }
 }
