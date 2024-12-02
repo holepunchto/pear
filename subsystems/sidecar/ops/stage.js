@@ -10,7 +10,8 @@ const DriveAnalyzer = require('drive-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const Store = require('../lib/store')
+const HyperDB = require('hyperdb')
+const { PLATFORM_HYPERDB } = require('../../../constants')
 const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
@@ -39,10 +40,11 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    const encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(params.encryptionKey)
+    let encryptionKey
+    const definition = require('../../../hyperdb/db')
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })

@@ -3,7 +3,8 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
-const Store = require('../lib/store')
+const HyperDB = require('hyperdb')
+const { PLATFORM_HYPERDB } = require('../../../constants')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
@@ -31,10 +32,10 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = (hypercoreid.isValid(key) && encryptionKeys[hypercoreid.normalize(key)]) || await secrets.get(encryptionKey)
+    const definition = require('../../../hyperdb/db')
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
     let drive = null
