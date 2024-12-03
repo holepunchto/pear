@@ -97,10 +97,9 @@ async function download (key, all = false) {
   swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
 
   await runtimes.ready()
-  if (isTTY) {
-    const monitor = monitorDrive(runtimes)
-    goodbye(() => monitor())
-  }
+
+  const unmonitor = await monitorDrive(runtimes)
+  goodbye(() => unmonitor())
 
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
   const done = runtimes.corestore.findingPeers()
@@ -137,12 +136,18 @@ async function download (key, all = false) {
 
   if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
   else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
+
+  unmonitor()
 }
 
 /**
  * @param {Hyperdrive} drive
  */
 async function monitorDrive (drive) {
+  if (!isTTY) {
+    return () => null
+  }
+
   const downloadSpeedometer = speedometer()
   const uploadSpeedometer = speedometer()
   let peers = 0
