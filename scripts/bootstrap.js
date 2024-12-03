@@ -145,9 +145,11 @@ async function download (key, all = false) {
  * @param {Hyperdrive} drive
  */
 function monitorDrive (drive) {
-  if (!isTTY) return {
-    clear: () => null,
-    stop: () => null
+  if (!isTTY) {
+    return {
+      clear: () => null,
+      stop: () => null
+    }
   }
 
   const downloadSpeedometer = speedometer()
