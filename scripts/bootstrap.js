@@ -98,9 +98,6 @@ async function download (key, all = false) {
 
   await runtimes.ready()
 
-  const unmonitor = monitorDrive(runtimes)
-  goodbye(() => unmonitor())
-
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
   const done = runtimes.corestore.findingPeers()
   swarm.flush().then(done, done)
@@ -116,8 +113,11 @@ async function download (key, all = false) {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
+  const monitor = monitorDrive(runtimes)
+  goodbye(() => monitor.stop())
+
   for await (const { op, key, bytesAdded } of runtime) {
-    console.log('\n')
+    if (isTTY) monitor.clear()
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'change') {
@@ -138,15 +138,16 @@ async function download (key, all = false) {
   if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
   else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
 
-  unmonitor()
+  monitor.stop()
 }
 
 /**
  * @param {Hyperdrive} drive
  */
 function monitorDrive (drive) {
-  if (!isTTY) {
-    return () => null
+  if (!isTTY) return {
+    clear: () => null,
+    stop: () => null
   }
 
   const downloadSpeedometer = speedometer()
@@ -174,16 +175,23 @@ function monitorDrive (drive) {
     // ignore
   })
 
-  const interval = setInterval(() => {
-    if (!downloadedBytes) return
+  const clear = () => {
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
+  }
+
+  const interval = setInterval(() => {
+    clear()
     process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
   }, 500)
 
-  return () => {
+  const stop = () => {
     clearInterval(interval)
-    process.stdout.clearLine()
-    process.stdout.cursorTo(0)
+    clear()
+  }
+
+  return {
+    clear,
+    stop
   }
 }
