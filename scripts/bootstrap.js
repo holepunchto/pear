@@ -127,6 +127,8 @@ async function download (key, all = false) {
     }
   }
 
+  monitor.stop()
+
   console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
 
   await runtimes.close()
@@ -137,8 +139,6 @@ async function download (key, all = false) {
 
   if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
   else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
-
-  monitor.stop()
 }
 
 /**
