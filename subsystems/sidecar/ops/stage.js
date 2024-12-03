@@ -43,7 +43,7 @@ module.exports = class Stage extends Opstream {
     let encryptionKey
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.['encryption-key']
+    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
     encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {

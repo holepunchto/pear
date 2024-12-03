@@ -34,7 +34,7 @@
           "version": 1
         },
         {
-          "name": "encryption-key",
+          "name": "encryptionKey",
           "type": "string",
           "version": 1
         },

@@ -38,36 +38,36 @@ const encoding1_2 = c.array(c.string)
 const encoding1 = {
   preencode (state, m) {
     let flags = 0
-    if (m["encryption-key"]) flags |= 1
+    if (m.encryptionKey) flags |= 1
     if (m.tags) flags |= 2
 
     c.string.preencode(state, m.key)
     c.uint.preencode(state, flags)
 
-    if (m["encryption-key"]) c.string.preencode(state, m["encryption-key"])
+    if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
     if (m.tags) encoding1_2.preencode(state, m.tags)
   },
   encode (state, m) {
     let flags = 0
-    if (m["encryption-key"]) flags |= 1
+    if (m.encryptionKey) flags |= 1
     if (m.tags) flags |= 2
 
     c.string.encode(state, m.key)
     c.uint.encode(state, flags)
 
-    if (m["encryption-key"]) c.string.encode(state, m["encryption-key"])
+    if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
     if (m.tags) encoding1_2.encode(state, m.tags)
   },
   decode (state) {
     const res = {}
     res.key = null
-    res["encryption-key"] = null
+    res.encryptionKey = null
     res.tags = null
 
     res.key = c.string.decode(state)
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res["encryption-key"] = c.string.decode(state)
+    if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
     if ((flags & 2) !== 0) res.tags = encoding1_2.decode(state)
 
     return res

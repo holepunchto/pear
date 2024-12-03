@@ -36,7 +36,7 @@ pearSchema.register({
       required: true
     },
     {
-      name: 'encryption-key',
+      name: 'encryptionKey',
       type: 'string'
     },
     {
