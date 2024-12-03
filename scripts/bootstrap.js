@@ -98,7 +98,7 @@ async function download (key, all = false) {
 
   await runtimes.ready()
 
-  const unmonitor = await monitorDrive(runtimes)
+  const unmonitor = monitorDrive(runtimes)
   goodbye(() => unmonitor())
 
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
@@ -143,7 +143,7 @@ async function download (key, all = false) {
 /**
  * @param {Hyperdrive} drive
  */
-async function monitorDrive (drive) {
+function monitorDrive (drive) {
   if (!isTTY) {
     return () => null
   }
@@ -154,20 +154,23 @@ async function monitorDrive (drive) {
   let downloadedBytes = 0
   let uploadedBytes = 0
 
-  const blobs = await drive.getBlobs()
-  blobs.core.on('download', (_index, bytes) => {
-    downloadedBytes += bytes
-    downloadSpeedometer(bytes)
-  })
-  blobs.core.on('upload', (_index, bytes) => {
-    uploadedBytes += bytes
-    uploadSpeedometer(bytes)
-  })
-  blobs.core.on('peer-add', () => {
-    peers = blobs.core.peers.length
-  })
-  blobs.core.on('peer-remove', () => {
-    peers = blobs.core.peers.length
+  drive.getBlobs().then(blobs => {
+    blobs.core.on('download', (_index, bytes) => {
+      downloadedBytes += bytes
+      downloadSpeedometer(bytes)
+    })
+    blobs.core.on('upload', (_index, bytes) => {
+      uploadedBytes += bytes
+      uploadSpeedometer(bytes)
+    })
+    blobs.core.on('peer-add', () => {
+      peers = blobs.core.peers.length
+    })
+    blobs.core.on('peer-remove', () => {
+      peers = blobs.core.peers.length
+    })
+  }).catch(() => {
+    // ignore
   })
 
   const interval = setInterval(() => {
