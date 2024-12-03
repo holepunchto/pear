@@ -98,7 +98,8 @@ async function download (key, all = false) {
 
   await runtimes.ready()
   if (isTTY) {
-    monitorDrive(runtimes)
+    const monitor = monitorDrive(runtimes)
+    goodbye(() => monitor())
   }
 
   swarm.join(runtimes.discoveryKey, { server: false, client: true })
