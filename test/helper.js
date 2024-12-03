@@ -277,9 +277,6 @@ class Helper extends IPC.Client {
   }
 
   static async bootstrap (key, dir) {
-    await Helper.gc(dir)
-    await fs.promises.mkdir(dir, { recursive: true })
-
     await updaterBootstrap(key, dir, { bootstrap: Pear.config.dht.bootstrap })
   }
 
