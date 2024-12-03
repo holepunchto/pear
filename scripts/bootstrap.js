@@ -173,5 +173,7 @@ async function monitorDrive (drive) {
 
   return () => {
     clearInterval(interval)
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
   }
 }
