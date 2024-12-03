@@ -110,13 +110,14 @@ async function download (key, all = false) {
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
-  console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk\n`)
+  console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
   for await (const { op, key, bytesAdded } of runtime) {
+    console.log('\n')
     if (op === 'add') {
       console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'change') {
