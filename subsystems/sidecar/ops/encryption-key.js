@@ -2,7 +2,8 @@
 const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_INPUT } = require('../../../errors')
 const Opstream = require('../lib/opstream')
-const Store = require('../lib/store')
+const HyperDB = require('hyperdb')
+const { PLATFORM_HYPERDB } = require('../../../constants')
 const { SALT } = require('../../../constants')
 const deriveEncryptionKey = require('pw-to-ek')
 
@@ -12,20 +13,21 @@ module.exports = class EncryptionKey extends Opstream {
       if (params.action === 'add') return this.#add(...args)
       if (params.action === 'remove') return this.#remove(...args)
     }, params, client)
-    this.store = new Store('encryption-keys')
+    const definition = require('../../../hyperdb/db')
+    this.db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
   }
 
   async #add ({ name, value }) {
     try { hypercoreid.decode(value) } catch { throw ERR_INVALID_INPUT('Invalid encryption key') }
-    const encryptionKey = await deriveEncryptionKey(value, SALT)
-    const result = await this.store.set(name, encryptionKey.toString('hex'))
+    const encryptionKey = await deriveEncryptionKey(value, SALT).toString('hex')
+    this.db.insert('@pear/bundle', { key: name, encryptionKey })
     this.push({ tag: 'added', data: { name } })
-    return result
+    return true
   }
 
   async #remove ({ name }) {
-    const result = await this.store.set(name, undefined)
+    await this.db.delete('@pear/bundle', { key: name })
     this.push({ tag: 'removed', data: { name } })
-    return result
+    return true
   }
 }
