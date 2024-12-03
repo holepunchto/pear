@@ -174,6 +174,7 @@ function monitorDrive (drive) {
   })
 
   const interval = setInterval(() => {
+    if (!downloadedBytes) return
     process.stdout.clearLine()
     process.stdout.cursorTo(0)
     process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
