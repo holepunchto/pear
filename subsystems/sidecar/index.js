@@ -448,9 +448,15 @@ class Sidecar extends ReadyResource {
   }
 
   async permit (params) {
-    const key = hypercoreid.encode(params.key)
-    const encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
-    await db.insert('@pear/bundle', { key, encryptionKey })
+    let encryptionKey
+    if (params.password || params.encryptionKey) {
+      encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
+    }
+    if (params.key !== null) {
+      const key = hypercoreid.encode(params.key)
+      await db.insert('@pear/bundle', { key, encryptionKey })
+      return true
+    }
   }
 
   async trusted (key) {
