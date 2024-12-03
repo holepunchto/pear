@@ -224,7 +224,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
-  teardown(() => rcv.close(), { order: Infinity })
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
@@ -309,7 +309,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
-  teardown(() => rcv.close(), { order: Infinity })
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
@@ -380,7 +380,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
-  teardown(() => rcv.close(), { order: Infinity })
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
@@ -470,7 +470,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
-  teardown(() => rcv.close(), { order: Infinity })
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
