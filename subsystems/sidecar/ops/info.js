@@ -29,7 +29,7 @@ module.exports = class Info extends Opstream {
 
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.['encryption-key']
     encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
 
     if (link || channel) {
