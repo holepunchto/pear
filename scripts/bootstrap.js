@@ -14,6 +14,8 @@ const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
+const speedometer = require('speedometer')
+const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
 const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
 
@@ -78,12 +80,8 @@ function advise () {
 }
 
 async function download (key, all = false) {
-  for await (const output of downloader(key, all)) console.log(output)
-}
-
-async function * downloader (key, all) {
-  if (all) yield '🍐 Fetching all runtimes from: \n   ' + key
-  else yield '🍐 [ localdev ] - no local runtime: fetching runtime'
+  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + key)
+  else console.log('🍐 [ localdev ] - no local runtime: fetching runtime')
 
   const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
@@ -109,23 +107,29 @@ async function * downloader (key, all) {
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
-  yield `\n  Extracting platform runtime${all ? 's' : ''} to disk\n`
+  console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
   })
 
+  const monitor = monitorDrive(runtimes)
+  goodbye(() => monitor.stop())
+
   for await (const { op, key, bytesAdded } of runtime) {
+    if (isTTY) monitor.clear()
     if (op === 'add') {
-      yield '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'change') {
-      yield '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'remove') {
-      yield '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     }
   }
 
-  yield '\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n'
+  monitor.stop()
+
+  console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
 
   await runtimes.close()
   await swarm.destroy()
@@ -133,6 +137,63 @@ async function * downloader (key, all) {
 
   const tick = isWindows ? '^' : '✔'
 
-  if (all) yield '\x1B[32m' + tick + '\x1B[39m Download complete\n'
-  else yield '\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
+  if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
+  else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
+}
+
+/**
+ * @param {Hyperdrive} drive
+ */
+function monitorDrive (drive) {
+  if (!isTTY) {
+    return {
+      clear: () => null,
+      stop: () => null
+    }
+  }
+
+  const downloadSpeedometer = speedometer()
+  const uploadSpeedometer = speedometer()
+  let peers = 0
+  let downloadedBytes = 0
+  let uploadedBytes = 0
+
+  drive.getBlobs().then(blobs => {
+    blobs.core.on('download', (_index, bytes) => {
+      downloadedBytes += bytes
+      downloadSpeedometer(bytes)
+    })
+    blobs.core.on('upload', (_index, bytes) => {
+      uploadedBytes += bytes
+      uploadSpeedometer(bytes)
+    })
+    blobs.core.on('peer-add', () => {
+      peers = blobs.core.peers.length
+    })
+    blobs.core.on('peer-remove', () => {
+      peers = blobs.core.peers.length
+    })
+  }).catch(() => {
+    // ignore
+  })
+
+  const clear = () => {
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+  }
+
+  const interval = setInterval(() => {
+    clear()
+    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
+  }, 500)
+
+  const stop = () => {
+    clearInterval(interval)
+    clear()
+  }
+
+  return {
+    clear,
+    stop
+  }
 }
