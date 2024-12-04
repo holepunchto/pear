@@ -34,8 +34,10 @@ module.exports = class Dump extends Opstream {
 
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
-    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    if (hypercoreid.isValid(key)) {
+      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    }
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
     let drive = null
@@ -43,7 +45,7 @@ module.exports = class Dump extends Opstream {
     if (corestore) {
       await corestore.ready()
       try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+        drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err

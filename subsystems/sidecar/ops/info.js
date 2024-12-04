@@ -29,12 +29,14 @@ module.exports = class Info extends Opstream {
 
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
-    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    if (hypercoreid.isValid(key)) {
+      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    }
 
     if (link || channel) {
       try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+        drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err

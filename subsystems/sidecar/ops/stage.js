@@ -43,8 +43,10 @@ module.exports = class Stage extends Opstream {
     let encryptionKey
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
-    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    if (hypercoreid.isValid(key)) {
+      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    }
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
@@ -61,7 +63,7 @@ module.exports = class Stage extends Opstream {
       channel,
       truncate,
       stage: true,
-      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+      encryptionKey
     })
     await session.add(bundle)
     client.userData = new sidecar.App({ state, bundle })

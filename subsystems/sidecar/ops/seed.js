@@ -34,10 +34,12 @@ module.exports = class Seed extends Opstream {
 
     const definition = require('../../../hyperdb/db')
     const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-    encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
-    encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    if (hypercoreid.isValid(key)) {
+      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    }
 
-    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey })
 
     try {
       await session.add(bundle)
