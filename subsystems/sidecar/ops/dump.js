@@ -18,9 +18,13 @@ module.exports = class Dump extends Opstream {
     await sidecar.ready()
 
     if (dir !== '-') {
-      const files = await fsp.readdir(dir)
-      const empty = files.length === 0
-      if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+      try {
+        const files = await fsp.readdir(dir)
+        const empty = files.length === 0
+        if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
+      }
     }
 
     const parsed = parseLink(link)
