@@ -194,9 +194,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -224,6 +221,10 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const updateVersion = update?.version
   const pearUpdateLength = updateVersion.length
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
+
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
@@ -263,9 +264,6 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -309,6 +307,10 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   is(pearUpdate2Key, rig.key, 'platform release update matches staging key')
   ok(pearUpdate2Length > pearUpdateLength, `platform version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
 
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
+
   await Helper.untilClose(pipe)
 })
 
@@ -345,9 +347,6 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -378,6 +377,10 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const updateVersion = update?.version
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
+
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
@@ -416,9 +419,6 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   comment('bootstrapping rcv platform...')
   const platformDirRcv = path.join(tmp, 'rcv-pear')
   await Helper.bootstrap(rig.key, platformDirRcv)
-  const prefs = 'preferences.json'
-  fs.writeFileSync(path.join(platformDirRcv, prefs), JSON.stringify({ trusted: [appKey] }))
-  teardown(() => { fs.unlinkSync(path.join(platformDirRcv, prefs)) }, { order: -Infinity })
   comment('rcv platform bootstrapped')
 
   comment('running app from rcv platform')
@@ -467,6 +467,10 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
   is(hypercoreid.normalize(update2Version?.key), hypercoreid.normalize(appKey), 'app release update matches staging key')
   ok(appUpdate2Length > appUpdateLength, `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`)
+
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
 
   await Helper.untilClose(pipe)
 })
