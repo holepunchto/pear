@@ -9,12 +9,16 @@ const printArgs = path.join(Helper.localDir, 'test', 'fixtures', 'print-args')
 const workerRunner = path.join(Helper.localDir, 'test', 'fixtures', 'worker-runner')
 
 const workerParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent')
-const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
-const workerChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child')
 const workerEndFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-child')
+
+const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
 const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-child')
+
 const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
+const workerChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child')
+
 const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
+const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child-error-handler')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -127,8 +131,7 @@ test('[terminal] worker exit when parent calls pipe.end()', async function () {
   await Helper.untilWorkerExit(pipe)
 })
 
-test.solo('[terminal] worker exit when parent calls pipe.destroy()', async function () {
-  const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChild] })
-  await Helper.streamClosed(pipe)
+test('[terminal] worker exit when parent calls pipe.destroy()', async function () {
+  const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChildErrorHandler] })
   await Helper.untilWorkerExit(pipe)
 })
