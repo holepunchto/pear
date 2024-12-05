@@ -25,6 +25,10 @@ test('worker pipe', async function ({ is, plan, teardown }) {
   const dir = worker
 
   const pipe = Pear.worker.run(dir)
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
 
   const messages = []
   const response = new Promise((resolve) => {
