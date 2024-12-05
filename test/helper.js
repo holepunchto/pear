@@ -196,6 +196,13 @@ class Helper extends IPC.Client {
     return res
   }
 
+  static async streamClosed (stream) {
+    return new Promise(resolve => {
+      if (stream.destroyed) return resolve()
+      stream.once('close', resolve)
+    })
+  }
+
   static async isRunning (pipe) {
     try {
       return process.kill(pipe.pid, 0)
