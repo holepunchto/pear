@@ -5,6 +5,7 @@ const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
 const HyperDB = require('hyperdb')
+const dbSpec = require('../../../hyperdb/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
@@ -27,10 +28,9 @@ module.exports = class Info extends Opstream {
 
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
-    const definition = require('../../../hyperdb/db')
-    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     if (hypercoreid.isValid(key)) {
-      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     }
 

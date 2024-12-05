@@ -31,7 +31,7 @@ pearSchema.register({
   name: 'bundle',
   fields: [
     {
-      name: 'key',
+      name: 'link',
       type: 'string',
       required: true
     },
@@ -67,7 +67,7 @@ const pearDB = db.namespace('pear')
 pearDB.collections.register({
   name: 'bundle',
   schema: '@pear/bundle',
-  key: ['key']
+  key: ['link']
 })
 
 pearDB.collections.register({

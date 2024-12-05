@@ -11,7 +11,7 @@ const collection0_key = new IndexEncoder([
 ], { prefix: 0 })
 
 function collection0_indexify (record) {
-  const a = record.key
+  const a = record.link
   return a === undefined ? [] : [a]
 }
 
@@ -21,7 +21,7 @@ function collection0_reconstruct (version, keyBuf, valueBuf) {
   const value = c.decode(resolveStruct('@pear/bundle/value', version), valueBuf)
   // TODO: This should be fully code generated
   return {
-    key: key[0],
+    link: key[0],
     ...value
   }
 }
@@ -29,7 +29,7 @@ function collection0_reconstruct (version, keyBuf, valueBuf) {
 function collection0_reconstruct_key (keyBuf) {
   const key = collection0_key.decode(keyBuf)
   return {
-    key: key[0]
+    link: key[0]
   }
 }
 
@@ -38,7 +38,7 @@ const collection0 = {
   name: '@pear/bundle',
   id: 0,
   encodeKey (record) {
-    const key = [record.key]
+    const key = [record.link]
     return collection0_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {

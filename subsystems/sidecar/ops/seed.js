@@ -6,6 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 const HyperDB = require('hyperdb')
+const dbSpec = require('../../../hyperdb/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 const Hyperdrive = require('hyperdrive')
 
@@ -32,10 +33,9 @@ module.exports = class Seed extends Opstream {
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const definition = require('../../../hyperdb/db')
-    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     if (hypercoreid.isValid(key)) {
-      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     }
 

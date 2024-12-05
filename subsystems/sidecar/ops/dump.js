@@ -4,6 +4,7 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const HyperDB = require('hyperdb')
+const dbSpec = require('../../../hyperdb/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
@@ -36,10 +37,9 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const definition = require('../../../hyperdb/db')
-    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     if (hypercoreid.isValid(key)) {
-      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     }
 

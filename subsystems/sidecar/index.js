@@ -21,7 +21,6 @@ const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const HyperDB = require('hyperdb')
-const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
@@ -37,12 +36,10 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const definition = require('../../hyperdb/db')
-const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-const identity = new Store('identity')
+const dbSpec = require('../../hyperdb/db')
+const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
 const SharedState = require('../../state')
 const State = require('./state')
-const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
   Release: require('./ops/release'),
@@ -416,27 +413,6 @@ class Sidecar extends ReadyResource {
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
-  async requestIdentity ({ publicKey }) {
-    let keyPair = await identity.get('keyPair')
-    if (keyPair) {
-      keyPair.publicKey = Buffer.from(Object.values(keyPair.publicKey))
-    } else {
-      keyPair = crypto.keyPair(publicKey.buffer)
-      await identity.set('keyPair', keyPair)
-    }
-    return keyPair.publicKey
-  }
-
-  async shareIdentity (params) {
-    const { publicKey, attestation } = params
-    await identity.set('publicKey', publicKey)
-    await identity.set('attestation', attestation)
-  }
-
-  async clearIdentity () {
-    return identity.clear()
-  }
-
   async message (params, client) {
     if (!client.userData) return
     return client.userData.message(params)
@@ -454,14 +430,14 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const key = hypercoreid.encode(params.key)
-      await db.insert('@pear/bundle', { key, encryptionKey })
+      await db.insert('@pear/bundle', { link: key, encryptionKey })
       return true
     }
   }
 
   async trusted (key) {
     const z32 = hypercoreid.encode(key)
-    return !!(await db.get('@pear/bundle', { key: z32 }) || await preferences.get(z32))
+    return !!(await db.get('@pear/bundle', { link: z32 }))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -675,25 +651,17 @@ class Sidecar extends ReadyResource {
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
-    const { unsafeClearPreferences } = flags
-    if (unsafeClearPreferences) {
-      LOG.info(LOG_RUN_LINK, 'clearing preferences')
-      await preferences.clear()
-      for (const entry of await db.find('@pear/bundle').toArray()) await db.delete('@pear/bundle', { key: entry.key })
-      await db.flush()
-    }
-
     let encryptionKey
     if (flags.encryptionKey) {
       LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = await db.get('@pear/bundle', { key: flags.encryptionKey })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { link: flags.encryptionKey })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey
       if (drive.key) {
         LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptedKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(drive.key) })?.encryptionKey
+        storedEncryptedKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) })?.encryptionKey
       } else {
         storedEncryptedKey = null
       }
@@ -758,7 +726,7 @@ class Sidecar extends ReadyResource {
     if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
       LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await db.get('@pear/bundle').toArray()).map(item => item.key))])
+      const trusted = new Set([...aliases, ...((await db.get('@pear/bundle').toArray()).map(item => item.link))])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })

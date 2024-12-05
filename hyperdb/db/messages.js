@@ -41,7 +41,7 @@ const encoding1 = {
     if (m.encryptionKey) flags |= 1
     if (m.tags) flags |= 2
 
-    c.string.preencode(state, m.key)
+    c.string.preencode(state, m.link)
     c.uint.preencode(state, flags)
 
     if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
@@ -52,7 +52,7 @@ const encoding1 = {
     if (m.encryptionKey) flags |= 1
     if (m.tags) flags |= 2
 
-    c.string.encode(state, m.key)
+    c.string.encode(state, m.link)
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
@@ -60,11 +60,11 @@ const encoding1 = {
   },
   decode (state) {
     const res = {}
-    res.key = null
+    res.link = null
     res.encryptionKey = null
     res.tags = null
 
-    res.key = c.string.decode(state)
+    res.link = c.string.decode(state)
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
     if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)

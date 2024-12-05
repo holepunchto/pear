@@ -14,7 +14,6 @@ module.exports = [
   flag('--links <kvs>', 'Override configured links with comma-separated key-values'),
   flag('--chrome-webrtc-internals', 'Enable chrome://webrtc-internals'),
   flag('--unsafe-clear-app-storage', 'Clear app storage'),
-  flag('--unsafe-clear-preferences', 'Clear preferences (such as trustlist)'),
   flag('--appling <path>', 'Set application shell path'),
   flag('--checkout <n|release|staged>', 'Run a checkout from version length'),
   flag('--detached', 'Wakeup existing app or run detached'),

@@ -11,6 +11,7 @@ const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const HyperDB = require('hyperdb')
+const dbSpec = require('../../../hyperdb/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
@@ -41,10 +42,9 @@ module.exports = class Stage extends Opstream {
     }
 
     let encryptionKey
-    const definition = require('../../../hyperdb/db')
-    const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
+    const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     if (hypercoreid.isValid(key)) {
-      encryptionKey = await db.get('@pear/bundle', { key: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     }
 
