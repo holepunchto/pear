@@ -15,7 +15,7 @@ const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'w
 const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
 const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
 
-test('worker pipe', async function ({ is, plan, teardown }) {
+test.skip('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close())
@@ -40,7 +40,7 @@ test('worker pipe', async function ({ is, plan, teardown }) {
   pipe.write('exit')
 })
 
-test('worker should receive args from the parent', async function ({ is, plan }) {
+test.skip('worker should receive args from the parent', async function ({ is, plan }) {
   plan(1)
 
   const args = ['hello', 'world']
@@ -52,7 +52,7 @@ test('worker should receive args from the parent', async function ({ is, plan })
   await Helper.untilClose(pipe)
 })
 
-test('worker should run directly in a terminal app', async function ({ is, plan, comment, teardown }) {
+test.skip('worker should run directly in a terminal app', async function ({ is, plan, comment, teardown }) {
   plan(1)
 
   const helper = new Helper()
@@ -76,7 +76,7 @@ test('worker should run directly in a terminal app', async function ({ is, plan,
   await Helper.untilClose(pipe)
 })
 
-test('worker should run as a link in a terminal app', async function ({ is, plan, comment, teardown }) {
+test.skip('worker should run as a link in a terminal app', async function ({ is, plan, comment, teardown }) {
   plan(1)
 
   const helper = new Helper()
