@@ -1,4 +1,4 @@
 const pipe = Pear.worker.pipe()
-pipe.resume()
+pipe.write(`${Bare.pid}`)
 await new Promise((resolve) => setTimeout(resolve, 1000))
 pipe.end()

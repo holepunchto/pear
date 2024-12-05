@@ -205,9 +205,9 @@ class Helper extends IPC.Client {
     }
   }
 
-  static async untilWorkerExit (pipe, timeout = 5000) {
+  static async untilWorkerExit (pid, timeout = 5000) {
     const start = Date.now()
-    while (await this.isRunning(pipe.pid)) {
+    while (await this.isRunning(pid)) {
       if (Date.now() - start > timeout) throw new Error('timed out')
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
