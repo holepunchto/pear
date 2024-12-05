@@ -7,6 +7,7 @@ const fs = require('bare-fs')
 const Rache = require('rache')
 const byteSize = require('tiny-byte-size')
 const speedometer = require('speedometer')
+const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
 const teardown = require('./lib/teardown')
@@ -120,6 +121,8 @@ function getUpgradeTarget () {
  * @param {Hyperdrive} drive
  */
 function monitorDrive (drive) {
+  if (!isTTY) return () => null
+
   const downloadSpeedometer = speedometer()
   const uploadSpeedometer = speedometer()
   let peers = 0
@@ -145,11 +148,18 @@ function monitorDrive (drive) {
     // ignore
   })
 
+  const clear = () => {
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+  }
+
   const interval = setInterval(() => {
-    LOG.info('sidecar', `[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
-  }, 10000)
+    clear()
+    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
+  }, 500)
 
   return () => {
     clearInterval(interval)
+    clear()
   }
 }
