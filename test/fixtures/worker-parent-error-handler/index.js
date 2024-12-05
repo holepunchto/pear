@@ -5,8 +5,6 @@ pipe.on('error', (err) => {
   throw err
 })
 pipe.resume()
-await new Promise((resolve) => setTimeout(resolve, 1000))
-pipe.destroy()
 await untilExit(pipe)
 
 async function untilExit (pipe, timeout = 5000) {
