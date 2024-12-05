@@ -9,15 +9,12 @@ const printArgs = path.join(Helper.localDir, 'test', 'fixtures', 'print-args')
 const workerRunner = path.join(Helper.localDir, 'test', 'fixtures', 'worker-runner')
 
 const workerParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent')
-const workerEndFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-child')
-
-const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
-const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-child')
-
-const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
 const workerChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child')
-
+const workerEndFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-child')
+const workerDestroyFromChild = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-child')
+const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-end-from-parent')
 const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
+const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
 const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child-error-handler')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
