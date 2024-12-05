@@ -1457,7 +1457,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
     electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
-    electron.ipcMain.handle('hide ', (evt, ...args) => this.hide(...args))
+    electron.ipcMain.handle('hide', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
     electron.ipcMain.handle('maximize', (evt, ...args) => this.maximize(...args))
     electron.ipcMain.handle('setMinimizable', (evt, ...args) => this.setMinimizable(...args))
