@@ -5,6 +5,7 @@ const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
+const speedometer = require('speedometer')
 const subsystem = require('./subsystem.js')
 const crasher = require('./lib/crasher')
 const teardown = require('./lib/teardown')
@@ -62,11 +63,18 @@ async function bootSidecar () {
     if (LOCALDEV) return null
 
     const { checkout, swap } = getUpgradeTarget()
-    const updateDrive = checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
+    const isSameKey = checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
+    const updateDrive = isSameKey
       ? drive
       : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
+    let onupdate
+    if (!isSameKey) {
+      const monitor = monitorDrive(updateDrive)
+      onupdate = () => monitor()
+    }
+
+    return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout, onupdate })
   }
 
   async function createPlatformDrive () {
@@ -104,5 +112,50 @@ function getUpgradeTarget () {
   return {
     checkout: { key, length: 0, fork: 0 },
     swap: null
+  }
+}
+
+/**
+ * @param {Hyperdrive} drive
+ */
+function monitorDrive (drive) {
+  if (!isTTY) {
+    return {
+      clear: () => null,
+      stop: () => null
+    }
+  }
+
+  const downloadSpeedometer = speedometer()
+  const uploadSpeedometer = speedometer()
+  let peers = 0
+  let downloadedBytes = 0
+  let uploadedBytes = 0
+
+  drive.getBlobs().then(blobs => {
+    blobs.core.on('download', (_index, bytes) => {
+      downloadedBytes += bytes
+      downloadSpeedometer(bytes)
+    })
+    blobs.core.on('upload', (_index, bytes) => {
+      uploadedBytes += bytes
+      uploadSpeedometer(bytes)
+    })
+    blobs.core.on('peer-add', () => {
+      peers = blobs.core.peers.length
+    })
+    blobs.core.on('peer-remove', () => {
+      peers = blobs.core.peers.length
+    })
+  }).catch(() => {
+    // ignore
+  })
+
+  const interval = setInterval(() => {
+    LOG.info('sidecar', `[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
+  }, 10000)
+
+  return () => {
+    clearInterval(interval)
   }
 }
