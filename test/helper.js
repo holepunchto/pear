@@ -206,6 +206,7 @@ class Helper extends IPC.Client {
   }
 
   static async untilWorkerExit (pid, timeout = 5000) {
+    if (!pid) throw new Error('Invalid pid')
     const start = Date.now()
     while (await this.isRunning(pid)) {
       if (Date.now() - start > timeout) throw new Error('timed out')

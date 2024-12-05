@@ -14,6 +14,7 @@ await untilWorkerExit(pid)
 pipeIn.end()
 
 async function untilWorkerExit (pid, timeout = 5000) {
+  if (!pid) throw new Error('Invalid pid')
   const start = Date.now()
   while (isRunning(pid)) {
     if (Date.now() - start > timeout) throw new Error('timed out')
