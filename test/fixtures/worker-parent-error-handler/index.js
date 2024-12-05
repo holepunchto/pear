@@ -1,6 +1,10 @@
 const link = Bare.argv[Bare.argv.length - 1]
 const pipe = Pear.worker.run(link)
 pipe.resume()
+pipe.on('error', (err) => {
+  if (err.code === 'ENOTCONN') return
+  throw err
+})
 await untilWorkerExit(pipe)
 Pear.worker.pipe().end() // TODO: v2 -> Pear.pipe.end()
 

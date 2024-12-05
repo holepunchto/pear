@@ -196,9 +196,10 @@ class Helper extends IPC.Client {
     return res
   }
 
-  static async isRunning (pipe) {
+  static async isRunning (pid) {
     try {
-      return process.kill(pipe.pid, 0)
+      // 0 is a signal that doesn't kill the process, just checks if it's running
+      return process.kill(pid, 0)
     } catch (err) {
       return err.code === 'EPERM'
     }
@@ -206,7 +207,7 @@ class Helper extends IPC.Client {
 
   static async untilWorkerExit (pipe, timeout = 5000) {
     const start = Date.now()
-    while (await this.isRunning(pipe)) {
+    while (await this.isRunning(pipe.pid)) {
       if (Date.now() - start > timeout) throw new Error('timed out')
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
