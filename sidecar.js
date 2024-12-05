@@ -119,13 +119,6 @@ function getUpgradeTarget () {
  * @param {Hyperdrive} drive
  */
 function monitorDrive (drive) {
-  if (!isTTY) {
-    return {
-      clear: () => null,
-      stop: () => null
-    }
-  }
-
   const downloadSpeedometer = speedometer()
   const uploadSpeedometer = speedometer()
   let peers = 0
