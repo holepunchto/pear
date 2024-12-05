@@ -118,21 +118,21 @@ test('worker should run as a link in a terminal app', async function ({ is, plan
 //
 
 test('[terminal] worker exit when child calls pipe.end()', async function () {
-  const { pipe } = await Helper.run({ link: workerParent, args: [workerEndFromChild] })
+  const { pipe } = await Pear.worker.run(workerParent, [workerEndFromChild])
   await Helper.untilWorkerExit(pipe)
 })
 
 test('[terminal] worker exit when child calls pipe.destroy()', async function () {
-  const { pipe } = await Helper.run({ link: workerParentErrorHandler, args: [workerDestroyFromChild] })
+  const { pipe } = await Pear.worker.run(workerParentErrorHandler, [workerDestroyFromChild])
   await Helper.untilWorkerExit(pipe)
 })
 
 test('[terminal] worker exit when parent calls pipe.end()', async function () {
-  const { pipe } = await Helper.run({ link: workerEndFromParent, args: [workerChild] })
+  const { pipe } = await Pear.worker.run(workerEndFromParent, [workerChild])
   await Helper.untilWorkerExit(pipe)
 })
 
 test('[terminal] worker exit when parent calls pipe.destroy()', async function () {
-  const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChildErrorHandler] })
+  const { pipe } = await Pear.worker.run(workerDestroyFromParent, [workerChildErrorHandler])
   await Helper.untilWorkerExit(pipe)
 })
