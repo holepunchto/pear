@@ -6,7 +6,7 @@ pipe.on('error', (err) => {
   throw err
 })
 await untilWorkerExit(pipe)
-Pear.worker.pipe().end()
+Pear.worker.pipe().end() // TODO: v2 -> Pear.pipe.end()
 
 async function untilWorkerExit (pipe, timeout = 5000) {
   const start = Date.now()

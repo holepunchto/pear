@@ -4,7 +4,7 @@ pipe.resume()
 await new Promise((resolve) => setTimeout(resolve, 1000))
 pipe.destroy()
 await untilWorkerExit(pipe)
-Pear.worker.pipe().end()
+Pear.worker.pipe().end() // TODO: v2 -> Pear.pipe.end()
 
 async function untilWorkerExit (pipe, timeout = 5000) {
   const start = Date.now()
