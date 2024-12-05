@@ -115,6 +115,10 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
 
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'worker pid is valid')
