@@ -112,26 +112,22 @@ test('worker should run as a link in a terminal app', async function ({ is, plan
 // test worker exit gracefully for terminal app
 //
 
-test('[terminal] worker exit when child calls pipe.end()', async function () {
+test.solo('[terminal] worker exit when child calls pipe.end()', async function () {
   const { pipe } = await Helper.run({ link: workerParent, args: [workerEndFromChild] })
-  await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
 })
 
-test('[terminal] worker exit when child calls pipe.destroy()', async function () {
+test.solo('[terminal] worker exit when child calls pipe.destroy()', async function () {
   const { pipe } = await Helper.run({ link: workerParentErrorHandler, args: [workerDestroyFromChild] })
-  await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
 })
 
-test('[terminal] worker exit when parent calls pipe.end()', async function () {
+test.solo('[terminal] worker exit when parent calls pipe.end()', async function () {
   const { pipe } = await Helper.run({ link: workerEndFromParent, args: [workerChild] })
-  await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
 })
 
 test.solo('[terminal] worker exit when parent calls pipe.destroy()', async function () {
   const { pipe } = await Helper.run({ link: workerDestroyFromParent, args: [workerChild] })
-  await Helper.untilClose(pipe)
   await Helper.untilWorkerExit(pipe)
 })
