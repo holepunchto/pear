@@ -3,11 +3,13 @@ pipeIn.write(`${Bare.pid}`)
 
 const link = Bare.argv[Bare.argv.length - 1]
 const pipe = Pear.worker.run(link)
+pipe.on('error', (err) => {
+  if (err.code === 'ENOTCONN') return
+  throw err
+})
 const pid = await new Promise((resolve) => {
   pipe.on('data', (data) => resolve(data.toString()))
 })
-await new Promise((resolve) => setTimeout(resolve, 1000))
-pipe.end()
 await untilWorkerExit(pid)
 pipeIn.end()
 
