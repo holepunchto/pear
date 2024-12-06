@@ -37,7 +37,6 @@ const {
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const dbSpec = require('../../hyperdb/db')
-const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
 const SharedState = require('../../state')
 const State = require('./state')
 const ops = {
@@ -73,6 +72,8 @@ class Sidecar extends ReadyResource {
 
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
+
+    this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -430,14 +431,14 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const key = hypercoreid.encode(params.key)
-      await db.insert('@pear/bundle', { link: key, encryptionKey })
+      await this.db.insert('@pear/bundle', { link: key, encryptionKey })
       return true
     }
   }
 
   async trusted (key) {
     const z32 = hypercoreid.encode(key)
-    return !!(await db.get('@pear/bundle', { link: z32 }))
+    return !!(await this.db.get('@pear/bundle', { link: z32 }))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -654,14 +655,14 @@ class Sidecar extends ReadyResource {
     let encryptionKey
     if (flags.encryptionKey) {
       LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = await db.get('@pear/bundle', { link: flags.encryptionKey })?.encryptionKey
+      encryptionKey = await this.db.get('@pear/bundle', { link: flags.encryptionKey })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey
       if (drive.key) {
         LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptedKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) })?.encryptionKey
+        storedEncryptedKey = await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) })?.encryptionKey
       } else {
         storedEncryptedKey = null
       }
@@ -726,7 +727,7 @@ class Sidecar extends ReadyResource {
     if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
       LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await db.get('@pear/bundle').toArray()).map(item => item.link))])
+      const trusted = new Set([...aliases, ...((await this.db.get('@pear/bundle').toArray()).map(item => item.link))])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
@@ -871,7 +872,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const knownNodes = (await db.get('@pear/dht'))?.nodes
+    const knownNodes = (await this.db.get('@pear/dht'))?.nodes
     const nodes = this.dhtBootstrap ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
@@ -912,7 +913,7 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await db.insert('@pear/dht', { nodes: knownNodes })
+          await this.db.insert('@pear/dht', { nodes: knownNodes })
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
@@ -920,8 +921,8 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     if (this.corestore) await this.corestore.close()
-    await db.flush()
-    await db.close()
+    await this.db.flush()
+    await this.db.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
