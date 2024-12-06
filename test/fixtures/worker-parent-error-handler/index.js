@@ -1,16 +1,22 @@
+const pipeIn = Pear.worker.pipe()
+pipeIn.write(`${Bare.pid}`)
+
 const link = Bare.argv[Bare.argv.length - 1]
 const pipe = Pear.worker.run(link)
-pipe.resume()
 pipe.on('error', (err) => {
   if (err.code === 'ENOTCONN') return
   throw err
 })
-await untilWorkerExit(pipe)
-Pear.worker.pipe().end() // TODO: v2 -> Pear.pipe.end()
+const pid = await new Promise((resolve) => {
+  pipe.on('data', (data) => resolve(data.toString()))
+})
+await untilWorkerExit(pid)
+pipeIn.end()
 
-async function untilWorkerExit (pipe, timeout = 5000) {
+async function untilWorkerExit (pid, timeout = 5000) {
+  if (!pid) throw new Error('Invalid pid')
   const start = Date.now()
-  while (isRunning(pipe.pid)) {
+  while (isRunning(pid)) {
     if (Date.now() - start > timeout) throw new Error('timed out')
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
