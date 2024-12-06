@@ -34,9 +34,8 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     if (hypercoreid.isValid(key)) {
-      encryptionKey = await db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
       encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
     }
 
