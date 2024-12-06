@@ -31,18 +31,61 @@ const encoding0 = {
   }
 }
 
+// @pear/bundle.tags
+const encoding1_2 = c.array(c.string)
+
+// @pear/bundle
+const encoding1 = {
+  preencode (state, m) {
+    let flags = 0
+    if (m.encryptionKey) flags |= 1
+    if (m.tags) flags |= 2
+
+    c.string.preencode(state, m.link)
+    c.uint.preencode(state, flags)
+
+    if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
+    if (m.tags) encoding1_2.preencode(state, m.tags)
+  },
+  encode (state, m) {
+    let flags = 0
+    if (m.encryptionKey) flags |= 1
+    if (m.tags) flags |= 2
+
+    c.string.encode(state, m.link)
+    c.uint.encode(state, flags)
+
+    if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
+    if (m.tags) encoding1_2.encode(state, m.tags)
+  },
+  decode (state) {
+    const res = {}
+    res.link = null
+    res.encryptionKey = null
+    res.tags = null
+
+    res.link = c.string.decode(state)
+
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding1_2.decode(state)
+
+    return res
+  }
+}
+
 // @pear/dht.nodes
-const encoding1_0 = c.frame(c.array(encoding0))
+const encoding2_0 = c.frame(c.array(encoding0))
 
 // @pear/dht
-const encoding1 = {
+const encoding2 = {
   preencode (state, m) {
     let flags = 0
     if (m.nodes) flags |= 1
 
     c.uint.preencode(state, flags)
 
-    if (m.nodes) encoding1_0.preencode(state, m.nodes)
+    if (m.nodes) encoding2_0.preencode(state, m.nodes)
   },
   encode (state, m) {
     let flags = 0
@@ -50,14 +93,14 @@ const encoding1 = {
 
     c.uint.encode(state, flags)
 
-    if (m.nodes) encoding1_0.encode(state, m.nodes)
+    if (m.nodes) encoding2_0.encode(state, m.nodes)
   },
   decode (state) {
     const res = {}
     res.nodes = null
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res.nodes = encoding1_0.decode(state)
+    if ((flags & 1) !== 0) res.nodes = encoding2_0.decode(state)
 
     return res
   }
@@ -66,7 +109,8 @@ const encoding1 = {
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
-    case '@pear/dht': return encoding1
+    case '@pear/bundle': return encoding1
+    case '@pear/dht': return encoding2
     default: throw new Error('Encoder not found ' + name)
   }
 }

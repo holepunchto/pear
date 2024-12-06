@@ -4,7 +4,6 @@ const clog = require('pear-changelog')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
-const Store = require('../lib/store')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
@@ -25,14 +24,15 @@ module.exports = class Info extends Opstream {
     const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
 
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(encryptionKey)
+
+    if (hypercoreid.isValid(key)) {
+      encryptionKey = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
+      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+    }
 
     if (link || channel) {
       try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+        drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
