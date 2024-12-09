@@ -38,7 +38,9 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+    const query =
+      await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) }) ||
+      await this.sidecar.db.get('@pear/bundle', { link: params.encryptionKey })
     const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
