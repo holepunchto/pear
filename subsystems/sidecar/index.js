@@ -361,7 +361,7 @@ class Sidecar extends ReadyResource {
 
   gc (params, client) { return new ops.GC(params, client) }
 
-  encryptionKey (params, client) { return new ops.EncryptionKey(params, client) }
+  encryptionKey (params, client) { return new ops.EncryptionKey(params, client, this) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
 

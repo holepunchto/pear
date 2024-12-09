@@ -6,11 +6,11 @@ const { SALT } = require('../../../constants')
 const deriveEncryptionKey = require('pw-to-ek')
 
 module.exports = class EncryptionKey extends Opstream {
-  constructor (params, client) {
+  constructor (params, client, sidecar) {
     super((...args) => {
       if (params.action === 'add') return this.#add(...args)
       if (params.action === 'remove') return this.#remove(...args)
-    }, params, client)
+    }, params, client, sidecar)
   }
 
   async #add ({ name, value }) {
