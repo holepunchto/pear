@@ -34,10 +34,8 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    if (hypercoreid.isValid(key)) {
-      encryptionKey = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
-      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
-    }
+    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+    encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
     let drive = null

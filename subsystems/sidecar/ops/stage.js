@@ -38,11 +38,8 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    let encryptionKey
-    if (hypercoreid.isValid(key)) {
-      encryptionKey = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
-      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
-    }
+    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+    const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })

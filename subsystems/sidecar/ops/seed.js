@@ -30,10 +30,8 @@ module.exports = class Seed extends Opstream {
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    if (hypercoreid.isValid(key)) {
-      encryptionKey = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })?.encryptionKey
-      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
-    }
+    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+    encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const bundle = new Bundle({ corestore, key, channel, status, encryptionKey })
 
