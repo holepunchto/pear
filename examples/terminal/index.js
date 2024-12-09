@@ -31,3 +31,5 @@ if (isWorker) {
     }
   })
 }
+
+console.log("change2")
