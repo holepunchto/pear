@@ -7,10 +7,12 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
+const deriveEncryptionKey = require('pw-to-ek')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { SALT } = require('../../../constants')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -38,18 +40,16 @@ module.exports = class Stage extends Opstream {
       throw err
     }
 
-    const query =
-      await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) }) ||
-      await this.sidecar.db.get('@pear/bundle', { link: params.encryptionKey })
-    const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    let encryptionKey = null
+    if (params.encryptionKey) {
+      encryptionKey = await deriveEncryptionKey(params.encryptionKey, SALT)
+    } else {
+      const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+      encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    }
 
     if (encrypted === true && !encryptionKey && !params.encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
-    }
-
-    if (encrypted === true && !encryptionKey) {
-      const err = ERR_SECRET_NOT_FOUND('Not found encryption key: ' + params.encryptionKey)
-      throw err
     }
 
     const bundle = new Bundle({

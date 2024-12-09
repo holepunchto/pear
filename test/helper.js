@@ -19,7 +19,6 @@ const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
-const program = global.Bare || global.process
 
 const rigPear = path.join(tmp, 'rig-pear')
 
@@ -142,13 +141,12 @@ class Helper extends IPC.Client {
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
   static async run ({ link, encryptionKey, platformDir, args = [] }) {
-    if (encryptionKey) program.argv.splice(2, 0, '--encryption-key', encryptionKey)
     if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+    const runArgs = encryptionKey ? ['--encryption-key', encryptionKey] : []
 
-    const pipe = Pear.worker.run(link, args)
+    const pipe = Pear.worker.run(link, args, runArgs)
 
     if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
-    if (encryptionKey) program.argv.splice(2, 2)
 
     return { pipe }
   }

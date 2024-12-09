@@ -655,14 +655,13 @@ class Sidecar extends ReadyResource {
     let encryptionKey
     if (flags.encryptionKey) {
       LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = await this.db.get('@pear/bundle', { link: flags.encryptionKey })?.encryptionKey
-      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+      encryptionKey = await deriveEncryptionKey(flags.encryptionKey, SALT)
     } else {
       const { drive } = parseLink(link)
       let storedEncryptedKey
       if (drive.key) {
         LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptedKey = await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) })?.encryptionKey
+        storedEncryptedKey = (await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) }))?.encryptionKey
       } else {
         storedEncryptedKey = null
       }
@@ -727,7 +726,7 @@ class Sidecar extends ReadyResource {
     if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
       LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await this.db.get('@pear/bundle').toArray()).map(item => item.link))])
+      const trusted = new Set([...aliases, ...((await this.db.find('@pear/bundle').toArray()).map(item => item.link))])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
