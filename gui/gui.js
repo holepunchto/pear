@@ -644,7 +644,7 @@ class App {
     })
     const pipes = [...this.gui.pipes]
     const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
-    const unloaders = [closingPipes, ...PearGUI.ctrls().map((ctrl) => {
+    const unloaders = [...closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
