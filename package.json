@@ -64,7 +64,6 @@
     ]
   },
   "dependencies": {
-    "@fontsource/open-sans": "^5.0.22",
     "@hyperswarm/seeders": "^1.1.6",
     "b4a": "^1.6.6",
     "bare-bundle": "^1.7.0",
@@ -113,7 +112,6 @@
     "quickbit-universal": "^2.2.0",
     "rache": "^1.0.0",
     "ready-resource": "^1.0.3",
-    "redhat-overpass-font": "^1.0.0",
     "rocksdb-native": "^2.6.2",
     "safety-catch": "^1.0.2",
     "script-linker": "^2.5.2",
