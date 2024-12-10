@@ -655,14 +655,14 @@ class Sidecar extends ReadyResource {
       encryptionKey = await deriveEncryptionKey(flags.encryptionKey, SALT)
     } else {
       const { drive } = parseLink(link)
-      let storedEncryptedKey
+      let storedEncryptionKey
       if (drive.key) {
         LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptedKey = (await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) }))?.encryptionKey
+        storedEncryptionKey = (await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) }))?.encryptionKey
       } else {
-        storedEncryptedKey = null
+        storedEncryptionKey = null
       }
-      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
+      encryptionKey = storedEncryptionKey ? Buffer.from(storedEncryptionKey, 'hex') : null
     }
 
     const applingPath = state.appling?.path
