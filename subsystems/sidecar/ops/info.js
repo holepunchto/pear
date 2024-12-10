@@ -9,6 +9,8 @@ const State = require('../state')
 const Opstream = require('../lib/opstream')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
+const CHANGELOG_MAX_LINES = 30
+
 module.exports = class Info extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
@@ -92,11 +94,24 @@ module.exports = class Info extends Opstream {
     const showChangelog = isEnabled(changelog) || full ? type : false
     const blank = '[ No Changelog ]'
     const parsed = showChangelog === 'latest'
-      ? (clog.parse(contents).at(0)?.[1]) || blank
+      ? getChangeLogTrimmed(contents) || blank
       : showChangelog === 'full'
         ? (clog.parse(contents).map(entry => entry[1]).join('\n\n')) || blank
         : blank
 
     if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
   }
+}
+
+function getChangeLogTrimmed (contents) {
+  const results = []
+  for (const item of clog.parse(contents)) {
+    if (results.length >= CHANGELOG_MAX_LINES) break
+    results.push('')
+    for (const line of item[1].split('\n')) {
+      if (results.length >= CHANGELOG_MAX_LINES) break
+      results.push(line)
+    }
+  }
+  return results.join('\n')
 }
