@@ -12,7 +12,7 @@ test.hook('encrypted setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
-  plan(7)
+  plan(6)
 
   const dir = encrypted
 
@@ -20,9 +20,13 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
+  const permitHelper = new Helper()
+  teardown(() => permitHelper.close(), { order: Infinity })
+  await permitHelper.ready()
+
   const id = Math.floor(Math.random() * 10000)
 
-  const preimage = hypercoreid.encode(crypto.randomBytes(32))
+  const password = hypercoreid.encode(crypto.randomBytes(32))
 
   comment('staging throws without encryption key')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
@@ -30,24 +34,26 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
+  const touch = await helper.touch({ dir, channel: `test-${id}` })
+  const { key } = await Helper.pick(touch, { tag: 'result' })
+  await helper.permit({ key: hypercoreid.decode(key), password })
+
   comment('staging with encryption key')
-  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, encryptionKey: preimage, bare: true })
+  const stagingB = helper.stage({ channel: `test-${id}`, dir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(stagingB))
   const final = await Helper.pick(stagingB, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding encrypted app')
-  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({ channel: `test-${id}`, name: 'encrypted', dir, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(seeding))
   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'app key is valid')
-
+  await permitHelper.permit({ key: hypercoreid.decode(key), password })
   const link = `pear://${key}`
-  const { pipe } = await Helper.run({ link, encryptionKey: preimage })
+  const { pipe } = await Helper.run({ link })
 
   const result = await Helper.untilResult(pipe)
   const versions = JSON.parse(result)
