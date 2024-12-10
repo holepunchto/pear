@@ -649,21 +649,11 @@ class Sidecar extends ReadyResource {
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
 
-    let encryptionKey
-    if (flags.encryptionKey) {
-      LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = await deriveEncryptionKey(flags.encryptionKey, SALT)
-    } else {
-      const { drive } = parseLink(link)
-      let storedEncryptionKey
-      if (drive.key) {
-        LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        storedEncryptionKey = (await this.db.get('@pear/bundle', { link: hypercoreid.normalize(drive.key) }))?.encryptionKey
-      } else {
-        storedEncryptionKey = null
-      }
-      encryptionKey = storedEncryptionKey ? Buffer.from(storedEncryptionKey, 'hex') : null
-    }
+    const parsedLink = parseLink(link)
+    LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
+
+    const query = parsedLink.drive.key ? await this.db.get('@pear/bundle', { link: hypercoreid.normalize(parsedLink.drive.key) }) : null
+    const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
