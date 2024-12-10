@@ -1,12 +1,14 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
+const deriveEncryptionKey = require('pw-to-ek')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { SALT } = require('../../../constants')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
@@ -25,8 +27,12 @@ module.exports = class Info extends Opstream {
 
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
-    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
-    encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    if (encryptionKey) {
+      encryptionKey = await deriveEncryptionKey(encryptionKey, SALT)
+    } else {
+      const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+      encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    }
 
     if (link || channel) {
       try {
