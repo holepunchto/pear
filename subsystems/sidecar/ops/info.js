@@ -109,8 +109,9 @@ function getChangeLogTrimmed (contents) {
   const results = changeLogs[0][1].split('\n') // always show the latest changelog
 
   for (const item of changeLogs.slice(1)) {
-    if (results.length >= CHANGELOG_MAX_LINES) break
-    results.push(...item[1].split('\n'))
+    const lines = item[1].split('\n')
+    if (results.length + lines.length > CHANGELOG_MAX_LINES) break
+    results.push(...lines)
   }
   return results.join('\n')
 }
