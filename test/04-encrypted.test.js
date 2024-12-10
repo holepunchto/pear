@@ -48,7 +48,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const link = `pear://${key}`
-  const { pipe } = await Helper.run({ link, encryptionKey: preimage, platformDir: rig.platformDir })
+  const { pipe } = await Helper.run({ link, encryptionKey: preimage })
 
   const result = await Helper.untilResult(pipe)
   const versions = JSON.parse(result)

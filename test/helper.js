@@ -140,11 +140,10 @@ class Helper extends IPC.Client {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async run ({ link, platformDir, args = [] }) {
+  static async run ({ link, platformDir, args = [], encryptionKey }) {
     if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
-    const runArgs = []
 
-    const pipe = Pear.worker.run(link, args, runArgs)
+    const pipe = Pear.worker.run(link, args, encryptionKey)
 
     if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
 

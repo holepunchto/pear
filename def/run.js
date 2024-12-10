@@ -19,6 +19,7 @@ module.exports = [
   flag('--detached', 'Wakeup existing app or run detached'),
   flag('--no-ask', 'Suppress permissions dialog'),
   flag('--dht-bootstrap <nodes>', 'DHT boostrap').hide(),
+  flag('--encryption-key <name>', 'Application encryption key').hide(),
   flag('--trusted').hide(),
   flag('--detach').hide(),
   flag('--swap <path>').hide(),
