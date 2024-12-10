@@ -22,7 +22,6 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
 
   const id = Math.floor(Math.random() * 10000)
 
-  const name = 'test-encryption-key'
   const preimage = hypercoreid.encode(crypto.randomBytes(32))
 
   comment('staging throws without encryption key')
