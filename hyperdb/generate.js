@@ -4,9 +4,12 @@ const Builder = require('hyperdb/builder')
 
 const SCHEMA_DIR = path.join(__dirname, 'schema')
 const DB_DIR = path.join(__dirname, 'db')
+
+// hyperdb/schema
 const schema = Hyperschema.from(SCHEMA_DIR)
 const pearSchema = schema.namespace('pear')
 
+// custom types
 pearSchema.register({
   name: 'node',
   fields: [
@@ -19,6 +22,27 @@ pearSchema.register({
       name: 'port',
       type: 'uint',
       required: true
+    }
+  ]
+})
+
+// structs
+pearSchema.register({
+  name: 'bundle',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'encryptionKey',
+      type: 'string'
+    },
+    {
+      name: 'tags',
+      type: 'string',
+      array: true
     }
   ]
 })
@@ -36,8 +60,15 @@ pearSchema.register({
 
 Hyperschema.toDisk(schema)
 
+// hyperdb/db
 const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
+
+pearDB.collections.register({
+  name: 'bundle',
+  schema: '@pear/bundle',
+  key: ['link']
+})
 
 pearDB.collections.register({
   name: 'dht',
