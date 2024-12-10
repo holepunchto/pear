@@ -61,6 +61,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.seed(ipc)
   )
 
@@ -76,6 +77,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.stage(ipc)
   )
 
@@ -110,6 +112,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--key', 'View key only'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.info(ipc)
   )
 
@@ -123,6 +126,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.dump(ipc)
   )
 
