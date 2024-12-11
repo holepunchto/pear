@@ -34,6 +34,12 @@ jobs:
       - name: Install w/ dev deps
         run: npm install
 
+      - name: Cache corestore
+        uses: actions/cache@v4
+        with:
+          path: /tmp/pear-archdump
+          key: ${{ matrix.os }}-corestore
+
       - name: Bootstrap
         run: npm run bootstrap -- --external-corestore
 
