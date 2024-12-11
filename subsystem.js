@@ -15,6 +15,7 @@ module.exports = async function subsystem (drive, entrypoint) {
 
   const protocol = new Module.Protocol({
     exists (url) {
+      if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
       return Object.hasOwn(res.sources, url.href) || Object.hasOwn(cache, url.href)
     },
     read (url) {
