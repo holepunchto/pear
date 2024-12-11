@@ -5,8 +5,8 @@ import Bridge from 'pear-bridge'
 const runtime = new Runtime()
 await runtime.ready()
 
-const server = new Bridge()
-await server.ready()
+const bridge = new Bridge()
+await bridge.ready()
 
-const pipe = runtime.start({ info: server.info() })
+const pipe = runtime.start(bridge.info())
 Pear.teardown(() => pipe.end())
