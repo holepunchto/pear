@@ -5,7 +5,7 @@ const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
 const Store = require('./lib/store')
 const SharedState = require('../../state')
-const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST, ERR_INVALID_CHANNEL_NAME } = require('../../errors')
 const preferences = new Store('preferences')
 
 module.exports = class State extends SharedState {
@@ -19,6 +19,7 @@ module.exports = class State extends SharedState {
   constructor (opts) {
     super(opts)
     this.reconfigure()
+    if (this.channel && !isValidChannel(this.channel)) throw new ERR_INVALID_CHANNEL_NAME('Invalid channel name')
   }
 
   reconfigure () {
@@ -83,4 +84,21 @@ module.exports = class State extends SharedState {
     }
     this.initialized = true
   }
+}
+
+function isValidChannel (channel) {
+  for (let i = 0; i < channel.length; i++) {
+    const char = channel[i]
+    if (
+      !(char >= 'a' && char <= 'z') &&
+      !(char >= 'A' && char <= 'Z') &&
+      !(char >= '0' && char <= '9') &&
+      char !== '.' &&
+      char !== '_' &&
+      char !== '-'
+    ) {
+      return false
+    }
+  }
+  return true
 }

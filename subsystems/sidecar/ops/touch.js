@@ -11,7 +11,7 @@ module.exports = class Touch extends Opstream {
   async #op ({ dir, channel }) {
     const { sidecar } = this
     await sidecar.ready()
-    const state = new State({ dir, flags: {} })
+    const state = new State({ dir, channel, flags: {} })
     if (!state.manifest) throw new ERR_INVALID_PROJECT_DIR(`"${state.pkgPath}" not found. Pear project must have a package.json`)
     const corestore = sidecar._getCorestore(state.manifest.name, channel)
     await corestore.ready()
