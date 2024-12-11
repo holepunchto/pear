@@ -115,6 +115,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     const protocol = new Module.Protocol({
       exists (url) {
+        if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
         return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
       },
       read (url) {
