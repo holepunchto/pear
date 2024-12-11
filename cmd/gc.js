@@ -14,17 +14,22 @@ class GC {
     this.ipc = ipc
   }
 
-  async releases (cmd) {
+  async #op (cmd, data = null) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)
+    const stream = this.ipc.gc({ resource: command.name, data }, this.ipc)
     await output(json, stream)
   }
 
+  releases (cmd) {
+    return this.#op(cmd)
+  }
+
   async sidecars (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const stream = this.ipc.gc({ pid: Bare.pid, resource: command.name }, this.ipc)
-    await output(json, stream)
+    return this.#op(cmd, { pid: Bare.pid })
+  }
+
+  async interfaces (cmd) {
+    return this.#op(cmd, { age: cmd.flags.age })
   }
 }

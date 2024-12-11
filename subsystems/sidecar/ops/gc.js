@@ -4,62 +4,64 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const streamx = require('streamx')
+const Opstream = require('../lib/opstream')
 const { PLATFORM_DIR } = require('pear-api/constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-api/errors')
 
-module.exports = class GC extends streamx.Readable {
-  constructor ({ pid, resource }, client) {
-    super()
-    this.client = client
-    if (resource === 'releases') this.releases({ resource })
-    else if (resource === 'sidecars') this.sidecars({ pid, resource })
-    else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
+module.exports = class GC extends Opstream {
+  constructor ({ data = {}, resource } = {}, client) {
+    super((params) => this.#op(params), data, client)
+    this.resource = resource
   }
 
   _destroy (cb) {
     cb(null)
   }
 
-  async releases ({ resource }) {
-    try {
-      let count = 0
-      const symlinkPath = path.join(PLATFORM_DIR, 'current')
-      const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
-
-      try { await fs.promises.stat(dkeyDir) } catch {
-        this.push({ tag: 'complete', data: { resource, count } })
-        this.push({ tag: 'final', data: { success: true } })
-        this.push(null)
-      }
-
-      const current = await fs.promises.readlink(symlinkPath)
-      const currentDirPath = path.dirname(current)
-      const currentDirName = path.basename(currentDirPath)
-
-      const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
-
-      const dirNames = dirs
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-
-      for (const dirName of dirNames) {
-        if (dirName !== currentDirName) {
-          const dirPath = path.join(dkeyDir, dirName)
-          await fs.promises.rm(dirPath, { recursive: true })
-          this.push({ tag: 'remove', data: { resource, id: dirName } })
-          count++
-        }
-      }
-      this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
-    } catch (error) {
-      this.#error(error)
-    }
+  #op (data) {
+    const { resource } = this
+    if (resource === 'releases') return this.releases(data)
+    if (resource === 'sidecars') return this.sidecars(data)
+    if (resource === 'interfaces') return this.interfaces(data)
+    throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
-  sidecars ({ pid, resource }) {
+  async releases () {
+    const { resource } = this
+    let count = 0
+    const symlinkPath = path.join(PLATFORM_DIR, 'current')
+    const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
+
+    try {
+      await fs.promises.stat(dkeyDir)
+    } catch {
+      this.push({ tag: 'complete', data: { resource, count } })
+      return
+    }
+
+    const current = await fs.promises.readlink(symlinkPath)
+    const currentDirPath = path.dirname(current)
+    const currentDirName = path.basename(currentDirPath)
+
+    const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
+
+    const dirNames = dirs
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name)
+
+    for (const dirName of dirNames) {
+      if (dirName !== currentDirName) {
+        const dirPath = path.join(dkeyDir, dirName)
+        await fs.promises.rm(dirPath, { recursive: true })
+        this.push({ tag: 'remove', data: { resource, id: dirName } })
+        count++
+      }
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
+  }
+
+  sidecars ({ pid }) {
+    const { resource } = this
     const name = 'pear-runtime'
     const flag = '--sidecar'
 
@@ -95,20 +97,45 @@ module.exports = class GC extends streamx.Readable {
       }
     })
 
-    sp.on('exit', (code, signal) => {
-      if (code !== 0 || signal) {
-        this.#error(new Error(`Process exited with code: ${code}, signal: ${signal}`))
-      }
-      this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
+    return new Promise((resolve, reject) => {
+      sp.on('exit', (code, signal) => {
+        if (code !== 0 || signal) {
+          reject(new Error(`Process exited with code: ${code}, signal: ${signal}`))
+          return
+        }
+        this.push({ tag: 'complete', data: { resource, count } })
+        resolve()
+      })
     })
   }
 
-  #error (err) {
-    const { stack, code, message } = err
-    this.push({ tag: 'error', data: { stack, code, message, success: false } })
-    this.push({ tag: 'final', data: { success: false } })
-    this.push(null)
+  async interfaces ({ age = 2.592e9 }) { // default age, 30 days
+    const interfaces = path.join(PLATFORM_DIR, 'interfaces')
+    await fs.promises.mkdir(interfaces, { recursive: true })
+
+    const runtimes = await fs.promises.opendir(interfaces)
+
+    const { resource } = this
+    const now = Date.now()
+
+    try {
+      for await (const runtime of runtimes) {
+        if (runtime.isDirectory() === false) continue
+        const semvers = await fs.promises.opendir(runtime)
+        for await (const entry of semvers) {
+          if (entry.isDirectory() === false) continue
+          const version = path.join(runtime, entry.name)
+          const stats = await fs.promises.stat(version)
+          const delta = now - stats.mtimeMs
+          if (delta > age) {
+            this.push({ tag: 'remove', data: { resource, id: version } })
+            await fs.promises.rm(version, { recursive: true, force: true })
+          }
+        }
+      }
+    } catch (err) {
+      if (err.code === 'ENOENT' || err.code === 'EBUSY') return
+      throw err
+    }
   }
 }
