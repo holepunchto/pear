@@ -43,11 +43,11 @@ jobs:
       - name: Bootstrap
         run: npm run bootstrap -- --external-corestore
 
-      # - name: Install Bare
-      #   run: npm i -g bare-runtime
+      - name: Install Bare
+        run: npm i -g bare-runtime
 
-      # - name: Test
-      #   run: npm test
+      - name: Test
+        run: npm test
 
-      # - name: Lint
-      #   run: npm run lint
+      - name: Lint
+        run: npm run lint
