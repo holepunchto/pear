@@ -13,7 +13,7 @@ const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
 configureElectron()
-crasher('electron-main', SWAP)
+crasher('electron-main', SWAP, argv.indexOf('--log') > -1)
 const run = command('run', ...runDefinition, electronMain)
 run.parse(argv)
 run.running?.catch(console.error)
