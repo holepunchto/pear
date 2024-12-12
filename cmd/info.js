@@ -55,7 +55,7 @@ const output = outputter('info', {
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey, encryptionKey } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
   const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
@@ -71,7 +71,6 @@ module.exports = (ipc) => async function info (cmd) {
     metadata,
     changelog,
     full,
-    encryptionKey,
     cmdArgs: Bare.argv.slice(1)
   }), { ask: cmd.flags.ask }, ipc)
 }

@@ -19,7 +19,6 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  encryptionKey: require('./encryption-key'),
   versions: require('./versions')
 }
 
@@ -62,7 +61,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
-    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.seed(ipc)
   )
 
@@ -78,7 +76,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.stage(ipc)
   )
 
@@ -113,7 +110,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--key', 'View key only'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.info(ipc)
   )
 
@@ -127,7 +123,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
-    flag('--encryption-key <name>', 'Application encryption key').hide(),
     runners.dump(ipc)
   )
 
@@ -186,13 +181,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     else console.log(cmd.overview({ full: true }))
   })
 
-  const encryptionKey = command(
-    'encryption-key',
-    command('add', arg('<name>'), arg('<secret>'), (cmd) => runners.encryptionKey(ipc).add(cmd)),
-    command('remove', arg('<name>'), (cmd) => runners.encryptionKey(ipc).remove(cmd)),
-    command('generate', (cmd) => runners.encryptionKey(ipc).generate(cmd))
-  ).hide()
-
   const cmd = command('pear',
     ...def.pear,
     header(usage.header),
@@ -208,7 +196,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     shift,
     sidecar,
     gc,
-    encryptionKey,
     versions,
     help,
     footer(usage.footer),
