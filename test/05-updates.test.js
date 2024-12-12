@@ -159,7 +159,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
+test.solo('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(5)
   timeout(60_000)

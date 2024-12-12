@@ -634,6 +634,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { return client.userData.unloading() }
 
   async start (params, client) {
+    console.log("WAAAA")
     const { flags, env, cwd, link, dir, args, cmdArgs } = params
     const LOG_RUN_LINK = ['run', link]
     if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
