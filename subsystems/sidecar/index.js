@@ -36,7 +36,7 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const dbSpec = require('../../hyperdb/db')
+const dbSpec = require('../../spec/db')
 const SharedState = require('../../state')
 const State = require('./state')
 const ops = {
