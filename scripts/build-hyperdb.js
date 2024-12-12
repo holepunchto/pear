@@ -2,8 +2,8 @@ const path = require('bare-path')
 const Hyperschema = require('hyperschema')
 const Builder = require('hyperdb/builder')
 
-const SCHEMA_DIR = path.join(__dirname, 'schema')
-const DB_DIR = path.join(__dirname, 'db')
+const SCHEMA_DIR = path.join(__dirname, '..', 'spec', 'schema')
+const DB_DIR = path.join(__dirname, '..', 'spec', 'db')
 
 // hyperdb/schema
 const schema = Hyperschema.from(SCHEMA_DIR)
@@ -32,6 +32,11 @@ pearSchema.register({
   fields: [
     {
       name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'appStorage',
       type: 'string',
       required: true
     },

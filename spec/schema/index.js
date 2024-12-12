@@ -32,7 +32,7 @@ const encoding0 = {
 }
 
 // @pear/bundle.tags
-const encoding1_2 = c.array(c.string)
+const encoding1_3 = c.array(c.string)
 
 // @pear/bundle
 const encoding1 = {
@@ -42,10 +42,11 @@ const encoding1 = {
     if (m.tags) flags |= 2
 
     c.string.preencode(state, m.link)
+    c.string.preencode(state, m.appStorage)
     c.uint.preencode(state, flags)
 
     if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
-    if (m.tags) encoding1_2.preencode(state, m.tags)
+    if (m.tags) encoding1_3.preencode(state, m.tags)
   },
   encode (state, m) {
     let flags = 0
@@ -53,22 +54,25 @@ const encoding1 = {
     if (m.tags) flags |= 2
 
     c.string.encode(state, m.link)
+    c.string.encode(state, m.appStorage)
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
-    if (m.tags) encoding1_2.encode(state, m.tags)
+    if (m.tags) encoding1_3.encode(state, m.tags)
   },
   decode (state) {
     const res = {}
     res.link = null
+    res.appStorage = null
     res.encryptionKey = null
     res.tags = null
 
     res.link = c.string.decode(state)
+    res.appStorage = c.string.decode(state)
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
     if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
-    if ((flags & 2) !== 0) res.tags = encoding1_2.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding1_3.decode(state)
 
     return res
   }

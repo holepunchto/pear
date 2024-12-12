@@ -25,10 +25,16 @@
       "name": "bundle",
       "namespace": "pear",
       "compact": false,
-      "flagsPosition": 1,
+      "flagsPosition": 2,
       "fields": [
         {
           "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "appStorage",
           "required": true,
           "type": "string",
           "version": 1
