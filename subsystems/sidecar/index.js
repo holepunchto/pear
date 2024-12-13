@@ -75,10 +75,10 @@ class Sidecar extends ReadyResource {
 
     this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
     this.lock = new DBLock({
-      enter () {
+      enter: () => {
         return this.db.transaction()
       },
-      exit (tx) {
+      exit: (tx) => {
         return tx.flush()
       },
       maxParallel: 1
@@ -431,6 +431,10 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
+  #initBundleEntry (link) {
+    return link // WIP -------------------------------------------------------
+  }
+
   async permit (params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {
@@ -439,7 +443,7 @@ class Sidecar extends ReadyResource {
     if (params.key !== null) {
       const key = hypercoreid.encode(params.key)
       const tx = await this.lock.enter()
-      await tx.insert('@pear/bundle', { link: key, encryptionKey })
+      await tx.insert('@pear/bundle', { link: key, appStorage: this.#initBundleEntry(key), encryptionKey })
       await this.lock.exit(tx)
       return true
     }
