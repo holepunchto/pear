@@ -6,18 +6,18 @@ const { IndexEncoder, c } = require('hyperdb/runtime')
 const { version, resolveStruct } = require('./messages.js')
 
 // '@pear/bundle' collection key
-const collection0_key = new IndexEncoder([
+const collection16_key = new IndexEncoder([
   IndexEncoder.STRING
-], { prefix: 0 })
+], { prefix: 16 })
 
-function collection0_indexify (record) {
+function collection16_indexify (record) {
   const a = record.link
   return a === undefined ? [] : [a]
 }
 
 // '@pear/bundle' reconstruction function
-function collection0_reconstruct (version, keyBuf, valueBuf) {
-  const key = collection0_key.decode(keyBuf)
+function collection16_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection16_key.decode(keyBuf)
   const value = c.decode(resolveStruct('@pear/bundle/value', version), valueBuf)
   // TODO: This should be fully code generated
   return {
@@ -26,86 +26,86 @@ function collection0_reconstruct (version, keyBuf, valueBuf) {
   }
 }
 // '@pear/bundle' key reconstruction function
-function collection0_reconstruct_key (keyBuf) {
-  const key = collection0_key.decode(keyBuf)
+function collection16_reconstruct_key (keyBuf) {
+  const key = collection16_key.decode(keyBuf)
   return {
     link: key[0]
   }
 }
 
 // '@pear/bundle'
-const collection0 = {
+const collection16 = {
   name: '@pear/bundle',
-  id: 0,
+  id: 16,
   encodeKey (record) {
     const key = [record.link]
-    return collection0_key.encode(key)
+    return collection16_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
-    return collection0_key.encodeRange({
-      gt: gt ? collection0_indexify(gt) : null,
-      lt: lt ? collection0_indexify(lt) : null,
-      gte: gte ? collection0_indexify(gte) : null,
-      lte: lte ? collection0_indexify(lte) : null
+    return collection16_key.encodeRange({
+      gt: gt ? collection16_indexify(gt) : null,
+      lt: lt ? collection16_indexify(lt) : null,
+      gte: gte ? collection16_indexify(gte) : null,
+      lte: lte ? collection16_indexify(lte) : null
     })
   },
   encodeValue (version, record) {
     return c.encode(resolveStruct('@pear/bundle/value', version), record)
   },
   trigger: null,
-  reconstruct: collection0_reconstruct,
-  reconstructKey: collection0_reconstruct_key,
+  reconstruct: collection16_reconstruct,
+  reconstructKey: collection16_reconstruct_key,
   indexes: []
 }
 
 // '@pear/dht' collection key
-const collection1_key = new IndexEncoder([
-], { prefix: 1 })
+const collection17_key = new IndexEncoder([
+], { prefix: 17 })
 
-function collection1_indexify (record) {
+function collection17_indexify (record) {
   return []
 }
 
 // '@pear/dht' reconstruction function
-function collection1_reconstruct (version, keyBuf, valueBuf) {
+function collection17_reconstruct (version, keyBuf, valueBuf) {
   const value = c.decode(resolveStruct('@pear/dht/value', version), valueBuf)
   return value
 }
 // '@pear/dht' key reconstruction function
-function collection1_reconstruct_key (keyBuf) {
+function collection17_reconstruct_key (keyBuf) {
   return {}
 }
 
 // '@pear/dht'
-const collection1 = {
+const collection17 = {
   name: '@pear/dht',
-  id: 1,
+  id: 17,
   encodeKey (record) {
     const key = []
-    return collection1_key.encode(key)
+    return collection17_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
-    return collection1_key.encodeRange({
-      gt: gt ? collection1_indexify(gt) : null,
-      lt: lt ? collection1_indexify(lt) : null,
-      gte: gte ? collection1_indexify(gte) : null,
-      lte: lte ? collection1_indexify(lte) : null
+    return collection17_key.encodeRange({
+      gt: gt ? collection17_indexify(gt) : null,
+      lt: lt ? collection17_indexify(lt) : null,
+      gte: gte ? collection17_indexify(gte) : null,
+      lte: lte ? collection17_indexify(lte) : null
     })
   },
   encodeValue (version, record) {
     return c.encode(resolveStruct('@pear/dht/value', version), record)
   },
   trigger: null,
-  reconstruct: collection1_reconstruct,
-  reconstructKey: collection1_reconstruct_key,
+  reconstruct: collection17_reconstruct,
+  reconstructKey: collection17_reconstruct_key,
   indexes: []
 }
 
 module.exports = {
   version,
   collections: [
-    collection0,
-    collection1
+    collection16,
+    collection17
   ],
   indexes: [
   ],
@@ -115,8 +115,8 @@ module.exports = {
 
 function resolveCollection (name) {
   switch (name) {
-    case '@pear/bundle': return collection0
-    case '@pear/dht': return collection1
+    case '@pear/bundle': return collection16
+    case '@pear/dht': return collection17
     default: return null
   }
 }
