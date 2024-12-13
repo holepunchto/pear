@@ -1,5 +1,28 @@
 # Pear Runtime Changelog
 
+## v1.8.0
+
+### Features
+
+* CLI - `stage` warmup map generated from bundle static analysis
+* Desktop - Exposed `badge` Electron method
+* Desktop - Supported `rocksdb-native` in GUI apps
+
+### Fixes
+
+* Worker - Depluplicated `--trusted` flag
+* Worker - Fixed worker arguments when executed with platform arguments
+* Desktop - Fixed `hide` Electron IPC call
+* CLI - `dump` creates dump directory by default
+* Terminal - Fixed exit for terminal apps without teardown
+
+### Improvements
+
+* CLI - Improved crash log
+* Internal - Bare version 1.12
+* Internal - Introduced unskipable platform versions
+* Internal - Introduced HyperDB in Sidecar 
+
 ## v1.7.0
 
 ### Features
