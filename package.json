@@ -84,6 +84,7 @@
     "compact-encoding": "^2.15.0",
     "corestore": "^6.18.3",
     "crc-universal": "^1.0.4",
+    "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
     "drive-analyzer": "^1.0.0",
     "drive-bundler": "^2.3.3",
