@@ -21,6 +21,7 @@ const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const HyperDB = require('hyperdb')
+const DBLock = require('db-lock')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
@@ -73,6 +74,15 @@ class Sidecar extends ReadyResource {
     super()
 
     this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
+    this.lock = new DBLock({
+      enter () {
+        return this.db.transaction()
+      },
+      exit (tx) {
+        return tx.flush()
+      },
+      maxParallel: 1
+    })
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -428,7 +438,9 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const key = hypercoreid.encode(params.key)
-      await this.db.insert('@pear/bundle', { link: key, encryptionKey })
+      const tx = await this.lock.enter()
+      await tx.insert('@pear/bundle', { link: key, encryptionKey })
+      await this.lock.exit(tx)
       return true
     }
   }
@@ -899,7 +911,9 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await this.db.insert('@pear/dht', { nodes: knownNodes })
+          const tx = await this.lock.enter()
+          await tx.insert('@pear/dht', { nodes: knownNodes })
+          await this.lock.exit(tx)
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
