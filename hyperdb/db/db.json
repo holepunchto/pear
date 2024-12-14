@@ -1,11 +1,11 @@
 {
   "version": 0,
-  "offset": 16,
+  "offset": 0,
   "schema": [
     {
       "name": "dht",
       "namespace": "pear",
-      "id": 16,
+      "id": 0,
       "type": 1,
       "indexes": [],
       "schema": "@pear/dht",
