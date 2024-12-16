@@ -1,11 +1,22 @@
 {
   "version": 0,
-  "offset": 16,
+  "offset": 0,
   "schema": [
+    {
+      "name": "dht",
+      "namespace": "pear",
+      "id": 0,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/dht",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    },
     {
       "name": "bundle",
       "namespace": "pear",
-      "id": 16,
+      "id": 1,
       "type": 1,
       "indexes": [],
       "schema": "@pear/bundle",
@@ -13,17 +24,6 @@
       "key": [
         "link"
       ],
-      "trigger": null
-    },
-    {
-      "name": "dht",
-      "namespace": "pear",
-      "id": 17,
-      "type": 1,
-      "indexes": [],
-      "schema": "@pear/dht",
-      "derived": false,
-      "key": [],
       "trigger": null
     }
   ]

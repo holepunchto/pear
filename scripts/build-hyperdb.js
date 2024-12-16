@@ -28,6 +28,17 @@ pearSchema.register({
 
 // structs
 pearSchema.register({
+  name: 'dht',
+  fields: [
+    {
+      name: 'nodes',
+      type: '@pear/node',
+      array: true
+    }
+  ]
+})
+
+pearSchema.register({
   name: 'bundle',
   fields: [
     {
@@ -52,17 +63,6 @@ pearSchema.register({
   ]
 })
 
-pearSchema.register({
-  name: 'dht',
-  fields: [
-    {
-      name: 'nodes',
-      type: '@pear/node',
-      array: true
-    }
-  ]
-})
-
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -70,14 +70,14 @@ const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
 
 pearDB.collections.register({
-  name: 'bundle',
-  schema: '@pear/bundle',
-  key: ['link']
+  name: 'dht',
+  schema: '@pear/dht'
 })
 
 pearDB.collections.register({
-  name: 'dht',
-  schema: '@pear/dht'
+  name: 'bundle',
+  schema: '@pear/bundle',
+  key: ['link']
 })
 
 Builder.toDisk(db)

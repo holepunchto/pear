@@ -31,11 +31,43 @@ const encoding0 = {
   }
 }
 
+// @pear/dht.nodes
+const encoding1_0 = c.frame(c.array(encoding0))
+
+// @pear/dht
+const encoding1 = {
+  preencode (state, m) {
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.preencode(state, flags)
+
+    if (m.nodes) encoding1_0.preencode(state, m.nodes)
+  },
+  encode (state, m) {
+    let flags = 0
+    if (m.nodes) flags |= 1
+
+    c.uint.encode(state, flags)
+
+    if (m.nodes) encoding1_0.encode(state, m.nodes)
+  },
+  decode (state) {
+    const res = {}
+    res.nodes = null
+
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res.nodes = encoding1_0.decode(state)
+
+    return res
+  }
+}
+
 // @pear/bundle.tags
-const encoding1_3 = c.array(c.string)
+const encoding2_3 = c.array(c.string)
 
 // @pear/bundle
-const encoding1 = {
+const encoding2 = {
   preencode (state, m) {
     let flags = 0
     if (m.encryptionKey) flags |= 1
@@ -46,7 +78,7 @@ const encoding1 = {
     c.uint.preencode(state, flags)
 
     if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
-    if (m.tags) encoding1_3.preencode(state, m.tags)
+    if (m.tags) encoding2_3.preencode(state, m.tags)
   },
   encode (state, m) {
     let flags = 0
@@ -58,7 +90,7 @@ const encoding1 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
-    if (m.tags) encoding1_3.encode(state, m.tags)
+    if (m.tags) encoding2_3.encode(state, m.tags)
   },
   decode (state) {
     const res = {}
@@ -72,24 +104,24 @@ const encoding1 = {
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
     if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
-    if ((flags & 2) !== 0) res.tags = encoding1_3.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding2_3.decode(state)
 
     return res
   }
 }
 
-// @pear/dht.nodes
-const encoding2_0 = c.frame(c.array(encoding0))
+// @pear/dht/value.nodes
+const encoding3_0 = c.frame(c.array(encoding0))
 
-// @pear/dht
-const encoding2 = {
+// @pear/dht/value
+const encoding3 = {
   preencode (state, m) {
     let flags = 0
     if (m.nodes) flags |= 1
 
     c.uint.preencode(state, flags)
 
-    if (m.nodes) encoding2_0.preencode(state, m.nodes)
+    if (m.nodes) encoding3_0.preencode(state, m.nodes)
   },
   encode (state, m) {
     let flags = 0
@@ -97,24 +129,24 @@ const encoding2 = {
 
     c.uint.encode(state, flags)
 
-    if (m.nodes) encoding2_0.encode(state, m.nodes)
+    if (m.nodes) encoding3_0.encode(state, m.nodes)
   },
   decode (state) {
     const res = {}
     res.nodes = null
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res.nodes = encoding2_0.decode(state)
+    if ((flags & 1) !== 0) res.nodes = encoding3_0.decode(state)
 
     return res
   }
 }
 
 // @pear/bundle/value.tags
-const encoding3_2 = c.array(c.string)
+const encoding4_2 = c.array(c.string)
 
 // @pear/bundle/value
-const encoding3 = {
+const encoding4 = {
   preencode (state, m) {
     let flags = 0
     if (m.encryptionKey) flags |= 1
@@ -124,7 +156,7 @@ const encoding3 = {
     c.uint.preencode(state, flags)
 
     if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
-    if (m.tags) encoding3_2.preencode(state, m.tags)
+    if (m.tags) encoding4_2.preencode(state, m.tags)
   },
   encode (state, m) {
     let flags = 0
@@ -135,7 +167,7 @@ const encoding3 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
-    if (m.tags) encoding3_2.encode(state, m.tags)
+    if (m.tags) encoding4_2.encode(state, m.tags)
   },
   decode (state) {
     const res = {}
@@ -147,39 +179,7 @@ const encoding3 = {
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
     if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
-    if ((flags & 2) !== 0) res.tags = encoding3_2.decode(state)
-
-    return res
-  }
-}
-
-// @pear/dht/value.nodes
-const encoding4_0 = c.frame(c.array(encoding0))
-
-// @pear/dht/value
-const encoding4 = {
-  preencode (state, m) {
-    let flags = 0
-    if (m.nodes) flags |= 1
-
-    c.uint.preencode(state, flags)
-
-    if (m.nodes) encoding4_0.preencode(state, m.nodes)
-  },
-  encode (state, m) {
-    let flags = 0
-    if (m.nodes) flags |= 1
-
-    c.uint.encode(state, flags)
-
-    if (m.nodes) encoding4_0.encode(state, m.nodes)
-  },
-  decode (state) {
-    const res = {}
-    res.nodes = null
-
-    const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res.nodes = encoding4_0.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding4_2.decode(state)
 
     return res
   }
@@ -188,10 +188,10 @@ const encoding4 = {
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
-    case '@pear/bundle': return encoding1
-    case '@pear/dht': return encoding2
-    case '@pear/bundle/value': return encoding3
-    case '@pear/dht/value': return encoding4
+    case '@pear/dht': return encoding1
+    case '@pear/bundle': return encoding2
+    case '@pear/dht/value': return encoding3
+    case '@pear/bundle/value': return encoding4
     default: throw new Error('Encoder not found ' + name)
   }
 }
