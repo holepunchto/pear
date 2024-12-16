@@ -36,6 +36,7 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
@@ -290,6 +291,7 @@ class Sidecar extends ReadyResource {
   }
 
   async _open () {
+    await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
   }
@@ -720,6 +722,7 @@ class Sidecar extends ReadyResource {
 
     link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : link.startsWith('file://') ? link : pathToFileURL(link).href)
     const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
+
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
@@ -727,6 +730,7 @@ class Sidecar extends ReadyResource {
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
+
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')
