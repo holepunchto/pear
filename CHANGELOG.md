@@ -21,7 +21,6 @@
 * CLI - Improved crash log
 * Internal - Bare version 1.12
 * Internal - Introduced unskipable platform versions
-* Internal - Introduced HyperDB in Sidecar 
 
 ## v1.7.0
 
