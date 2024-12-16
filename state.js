@@ -43,6 +43,7 @@ module.exports = class State {
     state.name = pkg?.pear?.name || pkg?.holepunch?.name || pkg?.name || null
     state.type = pkg?.pear?.type || (/\.(c|m)?js$/.test(state.main) ? 'terminal' : 'desktop')
     state.links = pkg?.pear?.links || null
+    state.userAgent = pkg?.pear?.userAgent
     if (overrides.links) {
       const links = overrides.links.split(',').reduce((links, kv) => {
         const [key, value] = kv.split('=')
