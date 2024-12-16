@@ -4,8 +4,8 @@ const { usage, print } = require('./iface')
 const { CHECKOUT } = require('pear-api/constants')
 const errors = require('pear-api/errors')
 const def = {
-  run: require('pear-api/cmd-def/run'),
-  pear: require('pear-api/cmd-def/pear')
+  run: require('pear-api/cmd/run'),
+  pear: require('pear-api/cmd/pear')
 }
 const runners = {
   init: require('./init'),
@@ -249,7 +249,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     console.log(cmd.overview())
   }
 
-  const shell = require('pear-api/cmd-def')(argv)
+  const shell = require('pear-api/cmd')(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
   run.argv = argv
