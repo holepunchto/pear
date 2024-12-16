@@ -1,5 +1,7 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
+class API { static CHECKOUT = require('./checkout'); config = {} }
+global.Pear = new API()
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 switch (getBootType()) {
