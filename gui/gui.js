@@ -657,11 +657,11 @@ class App {
     for (const pipe of pipes) pipe.end()
     const unloading = Promise.all(unloaders)
     unloading.then(clear, () => {
-      destroyPipes()
+      destroyPipes() // force close pipes on error
       return clear()
     })
     const result = await Promise.race([timeout, unloading])
-    if (result === true) destroyPipes()
+    if (result === true) destroyPipes() // force close pipes on timeout
     this.closed = true
     return result
   }
