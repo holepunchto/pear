@@ -642,7 +642,8 @@ class App {
         resolve(false)
       }
     })
-    const pipes = [...this.gui.pipes]
+    const pipes = this.gui.pipes.filter((pipe) => !pipe.destroyed)
+    const destroyPipes = () => pipes.forEach((pipe) => pipe.destroy())
     const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
     const unloaders = [...closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
@@ -655,8 +656,12 @@ class App {
     })]
     for (const pipe of pipes) pipe.end()
     const unloading = Promise.all(unloaders)
-    unloading.then(clear, clear)
+    unloading.then(clear, () => {
+      destroyPipes()
+      return clear()
+    })
     const result = await Promise.race([timeout, unloading])
+    if (result === true) destroyPipes()
     this.closed = true
     return result
   }
