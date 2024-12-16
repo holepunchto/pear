@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn, spawnSync } = require('bare-subprocess')
+const { spawn } = require('bare-subprocess')
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -20,7 +20,7 @@ const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
-const rundef = require('pear-api/cmd-def/run')
+const rundef = require('pear-api/cmd/run')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -64,7 +64,6 @@ class Sidecar extends ReadyResource {
   swarm = null
   keyPair = null
   discovery = null
-  electronVersion = null
 
   teardown () { global.Bare.exit() }
 
@@ -363,13 +362,7 @@ class Sidecar extends ReadyResource {
   }
 
   async versions (params, client) {
-    if (!this.electronVersion) {
-      const args = ['-p', 'global.process.versions.electron']
-      const subprocess = spawnSync(DESKTOP_RUNTIME, args, { env: { ELECTRON_RUN_AS_NODE: '1' } })
-      if (!subprocess.error) this.electronVersion = subprocess.stdout.toString().trim()
-    }
-
-    const runtimes = { bare: Bare.versions.bare, pear: version, electron: this.electronVersion }
+    const runtimes = { bare: Bare.versions.bare, pear: version }
     return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
