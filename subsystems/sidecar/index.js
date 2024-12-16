@@ -20,7 +20,6 @@ const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
-const HyperDB = require('hyperdb')
 const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -32,15 +31,14 @@ const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_DIR, PLATFORM_LOCK, PLATFORM_HYPERDB, SOCKET_PATH, CHECKOUT,
-  APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
-  WAKEUP, SALT, KNOWN_NODES_LIMIT
+  PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH,
+  SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP,
+  SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const definition = require('../../hyperdb/db')
-const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
 const identity = new Store('identity')
 const encryptionKeys = new Store('encryption-keys')
+const knownNodes = new Store('dht')
 const SharedState = require('../../state')
 const State = require('./state')
 const { preferences } = State
@@ -916,10 +914,9 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const knownNodes = (await db.get('@pear/dht'))?.nodes
-    const nodes = this.dhtBootstrap ? undefined : knownNodes
+    const nodes = this.dhtBootstrap ? undefined : await knownNodes.get('nodes')
     if (nodes) {
-      LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
+      LOG.info('sidecar', '- DHT known-nodes read from file ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
@@ -955,18 +952,16 @@ class Sidecar extends ReadyResource {
     if (this.http) await this.http.close()
     if (this.swarm) {
       if (!this.dhtBootstrap) {
-        const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
-        if (knownNodes.length) {
-          await db.insert('@pear/dht', { nodes: knownNodes })
-          LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
-          LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
+        const nodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
+        if (nodes.length) {
+          await knownNodes.set('nodes', nodes)
+          LOG.info('sidecar', '- DHT known-nodes wrote to file ' + nodes.length + ' nodes')
+          LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
       }
       await this.swarm.destroy()
     }
     if (this.corestore) await this.corestore.close()
-    await db.flush()
-    await db.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
