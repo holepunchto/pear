@@ -20,24 +20,21 @@ const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
-const HyperDB = require('hyperdb')
-const DBLock = require('db-lock')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
 const Http = require('./lib/http')
 const Session = require('./lib/session')
+const Model = require('./lib/model')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_DIR, PLATFORM_LOCK, PLATFORM_HYPERDB, SOCKET_PATH, CHECKOUT,
-  APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
-  WAKEUP, SALT, KNOWN_NODES_LIMIT
+  PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
+  DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const dbSpec = require('../../spec/db')
 const SharedState = require('../../state')
 const State = require('./state')
 const ops = {
@@ -73,16 +70,7 @@ class Sidecar extends ReadyResource {
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
 
-    this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
-    this.lock = new DBLock({
-      enter: () => {
-        return this.db.transaction()
-      },
-      exit: (tx) => {
-        return tx.flush()
-      },
-      maxParallel: 1
-    })
+    this.model = new Model()
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -431,27 +419,21 @@ class Sidecar extends ReadyResource {
     return client.userData.messages(pattern)
   }
 
-  #initBundleEntry (link) {
-    return link // WIP -------------------------------------------------------
-  }
-
   async permit (params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {
       encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
     }
     if (params.key !== null) {
-      const key = hypercoreid.encode(params.key)
-      const tx = await this.lock.enter()
-      await tx.insert('@pear/bundle', { link: key, appStorage: this.#initBundleEntry(key), encryptionKey })
-      await this.lock.exit(tx)
+      const link = hypercoreid.encode(params.key)
+      await this.model.addBundle(link, encryptionKey)
       return true
     }
   }
 
   async trusted (key) {
     const z32 = hypercoreid.encode(key)
-    return !!(await this.db.get('@pear/bundle', { link: z32 }))
+    return !!(await this.model.getBundle(z32))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -668,7 +650,7 @@ class Sidecar extends ReadyResource {
     const parsedLink = parseLink(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const query = parsedLink.drive.key ? await this.db.get('@pear/bundle', { link: hypercoreid.normalize(parsedLink.drive.key) }) : null
+    const query = parsedLink.drive.key ? await this.model.getBundle(hypercoreid.normalize(parsedLink.drive.key)) : null
     const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const applingPath = state.appling?.path
@@ -729,7 +711,7 @@ class Sidecar extends ReadyResource {
     if (!flags.trusted) {
       const aliases = Object.values(ALIASES).map(hypercoreid.encode)
       LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await this.db.find('@pear/bundle').toArray()).map(item => item.link))])
+      const trusted = new Set([...aliases, ...((await this.model.allBundles()).map(item => item.link))])
       const z32 = hypercoreid.encode(state.key)
       if (trusted.has(z32) === false) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
@@ -874,7 +856,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const knownNodes = (await this.db.get('@pear/dht'))?.nodes
+    const knownNodes = await this.model.getDhtNodes()
     const nodes = this.dhtBootstrap ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
@@ -915,9 +897,7 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          const tx = await this.lock.enter()
-          await tx.insert('@pear/dht', { nodes: knownNodes })
-          await this.lock.exit(tx)
+          this.model.setDhtNodes(knownNodes)
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
@@ -925,8 +905,7 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     if (this.corestore) await this.corestore.close()
-    await this.db.flush()
-    await this.db.close()
+    await this.model.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 

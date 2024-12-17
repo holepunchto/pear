@@ -32,7 +32,7 @@ module.exports = class Stage extends Opstream {
     key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-    const query = await this.sidecar.db.get('@pear/bundle', { link: hypercoreid.normalize(key) })
+    const query = await this.sidecar.model.getBundle(hypercoreid.normalize(key))
     const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     if (encrypted === true && !encryptionKey) {
