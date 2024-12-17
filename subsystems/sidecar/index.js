@@ -432,8 +432,7 @@ class Sidecar extends ReadyResource {
   }
 
   async trusted (key) {
-    const z32 = hypercoreid.encode(key)
-    return !!(await this.model.getBundle(z32))
+    return !!(await this.model.getBundle(key))
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -650,7 +649,7 @@ class Sidecar extends ReadyResource {
     const parsedLink = parseLink(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const query = parsedLink.drive.key ? await this.model.getBundle(hypercoreid.normalize(parsedLink.drive.key)) : null
+    const query = parsedLink.drive.key ? await this.model.getBundle(parsedLink.drive.key) : null
     const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const applingPath = state.appling?.path

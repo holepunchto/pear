@@ -1,6 +1,7 @@
 'use strict'
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
+const hypercoreid = require('hypercore-id-encoding')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 
@@ -20,6 +21,7 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
+    link = hypercoreid.normalize(link)
     return await this.db.get('@pear/bundle', { link })
   }
 

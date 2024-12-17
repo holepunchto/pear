@@ -7,7 +7,6 @@ const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
-const hypercoreid = require('hypercore-id-encoding')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -34,7 +33,7 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const query = await this.sidecar.model.getBundle(hypercoreid.normalize(key))
+    const query = await this.sidecar.model.getBundle(key)
     const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
