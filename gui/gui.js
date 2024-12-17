@@ -366,8 +366,6 @@ class ContextMenu {
   }
 }
 
-electron.app.userAgentFallback = 'Pear Platform'
-
 class App {
   menu = null
   sidecar = null
@@ -644,7 +642,7 @@ class App {
     })
     const pipes = [...this.gui.pipes]
     const closingPipes = pipes.map((pipe) => new Promise((resolve) => { pipe.once('close', resolve) }))
-    const unloaders = [closingPipes, ...PearGUI.ctrls().map((ctrl) => {
+    const unloaders = [...closingPipes, ...PearGUI.ctrls().map((ctrl) => {
       const closed = () => ctrl.closed
       if (!ctrl.unload) {
         if (ctrl.unloader) return ctrl.unloader.then(closed, closed)
@@ -980,9 +978,7 @@ class Window extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.state.id}`
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
-    session.setUserAgent(ua)
 
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
@@ -1077,6 +1073,13 @@ class Window extends GuiCtrl {
     }
     const onBeforeSendHeaders = (details, next) => {
       details.requestHeaders.Pragma = details.requestHeaders['Cache-Control'] = 'no-cache'
+      const sidecarURL = new URL(this.sidecar)
+      const requestURL = new URL(details.url)
+      if (requestURL.host === sidecarURL.host) {
+        details.requestHeaders['User-Agent'] = `Pear ${this.state.id}`
+      } else if (this.state.userAgent) {
+        details.requestHeaders['User-Agent'] = this.state.userAgent
+      }
       next({ requestHeaders: details.requestHeaders })
     }
 
@@ -1284,9 +1287,7 @@ class View extends GuiCtrl {
       this.state = await this.appkin
       this.appkin = null
     }
-    const ua = `Pear ${this.state.id}`
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
-    session.setUserAgent(ua)
 
     this.view = new BrowserView({
       ...(options?.view || options),
