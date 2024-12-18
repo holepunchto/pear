@@ -23,7 +23,7 @@ module.exports = class Model {
 
   async getBundle (link) {
     const { protocol, drive } = pearLink(link)
-    link = (protocol === 'pear:' && drive.key) ? hypercoreid.normalize(drive.key) : link
+    link = (protocol === 'pear:' && drive.key) ? hypercoreid.normalize(link) : link
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
