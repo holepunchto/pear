@@ -83,7 +83,6 @@ module.exports = class Model {
   }
 
   async close () {
-    await this.db.flush()
     await this.db.close()
   }
 }

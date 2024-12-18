@@ -10,7 +10,6 @@ const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
-const { randomBytes } = require('hypercore-crypto')
 const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
@@ -941,7 +940,7 @@ class Sidecar extends ReadyResource {
     const isPath = pathMatcher.test(bundleLink)
     const appStorage = path.join(PLATFORM_DIR, 'app-storage')
     return isPath
-      ? path.join(appStorage, 'by-random', randomBytes(16).toString('hex'))
+      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
       : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
   }
 
