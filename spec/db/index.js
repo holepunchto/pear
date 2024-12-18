@@ -5,6 +5,8 @@ const { IndexEncoder, c } = require('hyperdb/runtime')
 
 const { version, resolveStruct } = require('./messages.js')
 
+const helpers0 = require('../helpers.js')
+
 // '@pear/dht' collection key
 const collection0_key = new IndexEncoder([
 ], { prefix: 0 })
@@ -101,6 +103,51 @@ const collection1 = {
   indexes: []
 }
 
+// '@pear/bundle-by-tags' collection key
+const index2_key = new IndexEncoder([
+  IndexEncoder.STRING,
+  IndexEncoder.STRING
+], { prefix: 2 })
+
+// '@pear/bundle-by-tags' has the following schema defined key map
+const index2_map = helpers0.tags
+
+function index2_indexify (record) {
+  const a = record
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/bundle-by-tags'
+const index2 = {
+  name: '@pear/bundle-by-tags',
+  id: 2,
+  encodeKey (record) {
+    return index2_key.encode(index2_indexify(record))
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return index2_key.encodeRange({
+      gt: (gt || gt === '') ? index2_indexify(gt) : null,
+      lt: (lt || lt === '') ? index2_indexify(lt) : null,
+      gte: (gte || gte === '') ? index2_indexify(gte) : null,
+      lte: (lte || lte === '') ? index2_indexify(lte) : null
+    })
+  },
+  encodeValue: (doc) => index2.collection.encodeKey(doc),
+  encodeIndexKeys (record, context) {
+    const mapped = index2_map(record, context)
+    const keys = new Array(mapped.length)
+    for (let i = 0; i < mapped.length; i++) {
+      const mappedRecord = mapped[i]
+      keys[i] = index2_key.encode([mappedRecord, record.link])
+    }
+    return keys
+  },
+  reconstruct: (keyBuf, valueBuf) => valueBuf,
+  offset: collection1.indexes.length,
+  collection: collection1
+}
+collection1.indexes.push(index2)
+
 module.exports = {
   version,
   collections: [
@@ -108,6 +155,7 @@ module.exports = {
     collection1
   ],
   indexes: [
+    index2
   ],
   resolveCollection,
   resolveIndex
@@ -123,6 +171,7 @@ function resolveCollection (name) {
 
 function resolveIndex (name) {
   switch (name) {
+    case '@pear/bundle-by-tags': return index2
     default: return null
   }
 }

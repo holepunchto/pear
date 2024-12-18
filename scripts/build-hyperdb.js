@@ -68,6 +68,7 @@ Hyperschema.toDisk(schema)
 // hyperdb/db
 const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
+pearDB.require(path.join(__dirname, '..', 'spec', 'helpers.js'))
 
 pearDB.collections.register({
   name: 'dht',
@@ -78,6 +79,16 @@ pearDB.collections.register({
   name: 'bundle',
   schema: '@pear/bundle',
   key: ['link']
+})
+
+pearDB.indexes.register({
+  name: 'bundle-by-tags',
+  collection: '@pear/bundle',
+  unique: false,
+  key: {
+    type: 'string',
+    map: 'tags'
+  }
 })
 
 Builder.toDisk(db)

@@ -18,13 +18,27 @@
       "namespace": "pear",
       "id": 1,
       "type": 1,
-      "indexes": [],
+      "indexes": [
+        "@pear/bundle-by-tags"
+      ],
       "schema": "@pear/bundle",
       "derived": false,
       "key": [
         "link"
       ],
       "trigger": null
+    },
+    {
+      "name": "bundle-by-tags",
+      "namespace": "pear",
+      "id": 2,
+      "type": 2,
+      "collection": "@pear/bundle",
+      "unique": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
     }
   ]
 }
