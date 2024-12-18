@@ -29,9 +29,15 @@ module.exports = class Model {
     return await this.db.find('@pear/bundle').toArray()
   }
 
-  async addBundle (link, encryptionKey) {
+  async addBundle (link, appStorage) {
     const tx = await this.lock.enter()
-    await tx.insert('@pear/bundle', { link, appStorage: this.#appStorage(link), encryptionKey })
+    await tx.insert('@pear/bundle', { link, appStorage })
+    await this.lock.exit()
+  }
+
+  async setEncryptionKey (link, encryptionKey) {
+    const tx = await this.lock.enter()
+    await tx.update('@pear/bundle', { link, encryptionKey })
     await this.lock.exit()
   }
 
@@ -45,12 +51,18 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
+  async getTags (link) {
+    return (await this.db.get('@pear/bundle', { link }))?.tags || []
+  }
+
+  async setTags (link, tags) {
+    const tx = await this.lock.enter()
+    await tx.insert('@pear/bundle', { link, tags })
+    await this.lock.exit()
+  }
+
   async close () {
     await this.db.flush()
     await this.db.close()
-  }
-
-  #appStorage (link) {
-    return link
   }
 }

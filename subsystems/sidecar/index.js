@@ -426,7 +426,8 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = hypercoreid.encode(params.key)
-      await this.model.addBundle(link, encryptionKey)
+      await this.model.addBundle(link, link) // WIP
+      await this.model.setEncryptionKey(link, encryptionKey)
       return true
     }
   }
