@@ -939,7 +939,7 @@ class Sidecar extends ReadyResource {
     const appStorage = path.join(PLATFORM_DIR, 'app-storage')
     const { protocol, drive } = pearLink(bundleLink)
     return protocol === 'pear:' && drive.key
-      ? path.join(appStorage, 'by-dkey', crypto.discoveryKey(drive.key).toString('hex'))
+      ? path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
       : path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
   }
 
