@@ -1,5 +1,4 @@
 'use strict'
-const { isWindows } = require('which-runtime')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
