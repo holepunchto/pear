@@ -21,8 +21,9 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    link = hypercoreid.normalize(link)
-    return await this.db.get('@pear/bundle', { link })
+    link = hypercoreid.isValid(link) ? hypercoreid.normalize(link) : link // if not valid, it is a path
+    const bundle = await this.db.get('@pear/bundle', { link })
+    return bundle
   }
 
   async allBundles () {
@@ -30,15 +31,26 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
+    link = hypercoreid.isValid(link) ? hypercoreid.normalize(link) : link
     const tx = await this.lock.enter()
     await tx.insert('@pear/bundle', { link, appStorage })
     await this.lock.exit()
+    return { link, appStorage }
   }
 
-  async setEncryptionKey (link, encryptionKey) {
+  async updateEncryptionKey (link, encryptionKey) {
+    let result
     const tx = await this.lock.enter()
-    await tx.update('@pear/bundle', { link, encryptionKey })
+    const bundle = await tx.get('@pear/bundle', { link })
+    if (!bundle) {
+      result = null
+    } else {
+      const updatedBundle = { ...bundle, encryptionKey }
+      await tx.insert('@pear/bundle', updatedBundle)
+      result = updatedBundle
+    }
     await this.lock.exit()
+    return result
   }
 
   async getDhtNodes () {
@@ -55,10 +67,19 @@ module.exports = class Model {
     return (await this.db.get('@pear/bundle', { link }))?.tags || []
   }
 
-  async setTags (link, tags) {
+  async updateTags (link, tags) {
+    let result
     const tx = await this.lock.enter()
-    await tx.insert('@pear/bundle', { link, tags })
+    const bundle = await tx.get('@pear/bundle', { link })
+    if (!bundle) {
+      result = null
+    } else {
+      const updatedBundle = { ...bundle, tags }
+      await tx.insert('@pear/bundle', updatedBundle)
+      result = updatedBundle
+    }
     await this.lock.exit()
+    return result
   }
 
   async close () {

@@ -1,4 +1,5 @@
 'use strict'
+const { isWindows } = require('which-runtime')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
@@ -9,6 +10,7 @@ const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
+const { randomBytes } = require('hypercore-crypto')
 const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
@@ -426,9 +428,11 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = hypercoreid.encode(params.key)
-      await this.model.addBundle(link, link) // WIP
-      await this.model.setEncryptionKey(link, encryptionKey)
-      return true
+      const bundle = await this.model.getBundle(link)
+      if (!bundle) {
+        await this.model.addBundle(link, this._generateAppStorage(link))
+      }
+      return await this.model.updateEncryptionKey(link, encryptionKey)
     }
   }
 
@@ -644,14 +648,19 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
-
     const parsedLink = parseLink(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const query = parsedLink.drive.key ? await this.model.getBundle(parsedLink.drive.key) : null
-    const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    const bundleKey = parsedLink.drive.key || parsedLink.pathname
+
+    const persistedBundle = await this.model.getBundle(bundleKey) || await this.model.addBundle(bundleKey, this._generateAppStorage(bundleKey))
+    const encryptionKey = persistedBundle.encryptionKey ? Buffer.from(persistedBundle.encryptionKey, 'hex') : null
+    const appStorage = persistedBundle.appStorage
+
+    await fs.promises.mkdir(appStorage, { recursive: true })
+
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
+    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
@@ -925,6 +934,15 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
       }
     }
+  }
+
+  _generateAppStorage (bundleLink) {
+    const pathMatcher = isWindows ? /[/\\]/ : /\//
+    const isPath = pathMatcher.test(bundleLink)
+    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
+    return isPath
+      ? path.join(appStorage, 'by-random', randomBytes(16).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
   }
 
   deathClock (ms = 20000) {
