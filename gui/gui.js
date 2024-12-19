@@ -652,7 +652,7 @@ class App {
       return ctrl.unloader.then(closed, closed)
     })]
     for (const pipe of pipes) pipe.end()
-    const unloading = Promise.all(unloaders)
+    const unloading = Promise.allSettled(unloaders)
     unloading.then(clear, clear)
     const result = await Promise.race([timeout, unloading])
     this.closed = true
