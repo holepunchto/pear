@@ -1,0 +1,14 @@
+{
+  "name": "app-with-ignore",
+  "pear": {
+    "name": "app-with-ignore",
+    "type": "desktop",
+    "stage": {
+      "ignore": [
+        "ignore-file.js",
+        "ignore-dir1",
+        "ignore-dir2/"
+      ]
+    }
+  }
+}

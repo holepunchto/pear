@@ -12,6 +12,7 @@ const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
 const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
 const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-without-main')
+const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -136,4 +137,33 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
       ok(entry.value.metadata)
     }
   }
+})
+
+test('stage with ignore', async function ({ ok, is, plan, teardown }) {
+  const dir = appWithIgnore
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  is(stagingFiles.length, 4)
+  ok(stagingFiles.includes('/package.json'))
+  ok(stagingFiles.includes('/dep.js'))
+  ok(stagingFiles.includes('/app.js'))
+  ok(stagingFiles.includes('/index.html'))
 })
