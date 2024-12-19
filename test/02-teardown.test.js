@@ -22,7 +22,7 @@ test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
@@ -58,7 +58,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
@@ -97,7 +97,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')

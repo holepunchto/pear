@@ -6,7 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
-const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, bare: true, ignore: [] })
+const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const rig = new Helper.Rig()
@@ -171,7 +171,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
@@ -212,7 +212,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   teardown(() => { try { fs.unlinkSync(path.join(rig.artefactDir, file)) } catch { /* ignore */ } }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
@@ -241,7 +241,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
@@ -283,7 +283,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   teardown(() => { fs.unlinkSync(path.join(rig.artefactDir, file)) }, { order: -Infinity })
 
   comment('restaging rig platform')
-  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false, bare: true })
+  const staging = rig.local.stage({ channel: `test-${rig.id}`, name: `test-${rig.id}`, dir: rig.artefactDir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   await Helper.pick(staging, { tag: 'final' })
   comment('rig platform restaged')
@@ -325,7 +325,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
@@ -368,7 +368,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
@@ -397,7 +397,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const channel = 'test-fixture'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging = appStager.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
@@ -441,7 +441,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false, bare: true })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
