@@ -1,1 +1,1 @@
-exports.tags = (record) => record.tags
+exports.tags = (record) => record.tags || []

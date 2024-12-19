@@ -16,8 +16,7 @@ const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
-const pearLink = require('pear-link')
-const { isMac } = require('which-runtime')
+const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
@@ -936,11 +935,12 @@ class Sidecar extends ReadyResource {
   }
 
   _generateAppStorage (bundleLink) {
+    const pathMatcher = isWindows ? /[/\\]/ : /\//
+    const isPath = pathMatcher.test(bundleLink)
     const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-    const { protocol, drive } = pearLink(bundleLink)
-    return protocol === 'pear:' && drive.key
-      ? path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
-      : path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+    return isPath
+      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
   }
 
   deathClock (ms = 20000) {

@@ -2,7 +2,6 @@
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const hypercoreid = require('hypercore-id-encoding')
-const pearLink = require('pear-link')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 
@@ -22,8 +21,7 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    const { protocol, drive } = pearLink(link)
-    link = (protocol === 'pear:' && drive.key) ? hypercoreid.normalize(link) : link
+    link = hypercoreid.isValid(link) ? hypercoreid.normalize(link) : link // if not valid, it is a path
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
