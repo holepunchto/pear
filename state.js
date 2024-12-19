@@ -4,7 +4,6 @@ const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const url = isBare ? require('bare-url') : require('url')
-const hypercoreid = require('hypercore-id-encoding')
 const { discoveryKey, randomBytes } = require('hypercore-crypto')
 const z32 = require('z32')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
@@ -70,9 +69,7 @@ module.exports = class State {
       this.injestPackage(state, readPkg(path.join(state.dir, 'package.json')))
       return
     }
-    const { previewFor } = state.options
-    const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
-    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(state.key).toString('hex') : null)
+    const dkey = state.key ? discoveryKey(state.key).toString('hex') : null
     const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
     state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
     if (state.key === null && state.storage.startsWith(state.dir)) {
