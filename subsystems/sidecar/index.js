@@ -16,7 +16,7 @@ const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
-const { isMac, isWindows } = require('which-runtime')
+const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
@@ -422,20 +422,21 @@ class Sidecar extends ReadyResource {
   async permit (params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {
-      encryptionKey = (params.encryptionKey || await deriveEncryptionKey(params.password, SALT)).toString('hex')
+      encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
     }
     if (params.key !== null) {
-      const link = hypercoreid.encode(params.key)
+      const link = `pear://${hypercoreid.encode(params.key)}`
       const bundle = await this.model.getBundle(link)
       if (!bundle) {
-        await this.model.addBundle(link, this._generateAppStorage(link))
+        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
   }
 
-  async trusted (key) {
-    return !!(await this.model.getBundle(key))
+  async trusted (link) {
+    const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
+    return aliases.includes(link) || await this.model.getBundle(link) !== null
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -649,10 +650,20 @@ class Sidecar extends ReadyResource {
     const parsedLink = parseLink(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const bundleKey = parsedLink.drive.key || parsedLink.pathname
+    const key = parsedLink.drive?.key
 
-    const persistedBundle = await this.model.getBundle(bundleKey) || await this.model.addBundle(bundleKey, this._generateAppStorage(bundleKey))
-    const encryptionKey = persistedBundle.encryptionKey ? Buffer.from(persistedBundle.encryptionKey, 'hex') : null
+    if (key !== null && !flags.trusted) {
+      const trusted = await this.trusted(link)
+      if (!trusted) {
+        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
+        app.report({ err })
+        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
+        return { startId, bail: err }
+      }
+    }
+
+    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
+    const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
     await fs.promises.mkdir(appStorage, { recursive: true })
@@ -692,9 +703,6 @@ class Sidecar extends ReadyResource {
       app.linker = linker
       app.bundle = appBundle
 
-      // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
-      await this.permit({ key: state.key }, client) // TODO: do we still need this?
-
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
@@ -713,19 +721,6 @@ class Sidecar extends ReadyResource {
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
-    }
-
-    if (!flags.trusted) {
-      const aliases = Object.values(ALIASES).map(hypercoreid.encode)
-      LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await this.model.allBundles()).map(item => item.link))])
-      const z32 = hypercoreid.encode(state.key)
-      if (trusted.has(z32) === false) {
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
-        app.report({ err })
-        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
-        return { startId, bail: err }
-      }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
@@ -934,13 +929,11 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  _generateAppStorage (bundleLink) {
-    const pathMatcher = isWindows ? /[/\\]/ : /\//
-    const isPath = pathMatcher.test(bundleLink)
+  _generateAppStorage (parsedLink) {
     const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-    return isPath
+    return parsedLink.protocol !== 'pear:'
       ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
-      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(bundleLink)).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
   }
 
   deathClock (ms = 20000) {

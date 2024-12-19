@@ -32,8 +32,8 @@ module.exports = class Stage extends Opstream {
     key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-    const query = await this.sidecar.model.getBundle(key)
-    const encryptionKey = query?.encryptionKey ? Buffer.from(query.encryptionKey, 'hex') : null
+    const persistedBundle = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
+    const encryptionKey = persistedBundle?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })

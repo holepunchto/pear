@@ -53,7 +53,7 @@ pearSchema.register({
     },
     {
       name: 'encryptionKey',
-      type: 'string'
+      type: 'fixed32'
     },
     {
       name: 'tags',

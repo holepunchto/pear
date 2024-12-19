@@ -1,7 +1,6 @@
 'use strict'
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
-const hypercoreid = require('hypercore-id-encoding')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
 
@@ -21,7 +20,6 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    link = hypercoreid.isValid(link) ? hypercoreid.normalize(link) : link // if not valid, it is a path
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
@@ -31,7 +29,6 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
-    link = hypercoreid.isValid(link) ? hypercoreid.normalize(link) : link
     const tx = await this.lock.enter()
     await tx.insert('@pear/bundle', { link, appStorage })
     await this.lock.exit()

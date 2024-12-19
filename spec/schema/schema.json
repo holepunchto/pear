@@ -55,7 +55,7 @@
         },
         {
           "name": "encryptionKey",
-          "type": "string",
+          "type": "fixed32",
           "version": 1
         },
         {

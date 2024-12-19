@@ -77,7 +77,7 @@ const encoding2 = {
     c.string.preencode(state, m.appStorage)
     c.uint.preencode(state, flags)
 
-    if (m.encryptionKey) c.string.preencode(state, m.encryptionKey)
+    if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
     if (m.tags) encoding2_3.preencode(state, m.tags)
   },
   encode (state, m) {
@@ -89,7 +89,7 @@ const encoding2 = {
     c.string.encode(state, m.appStorage)
     c.uint.encode(state, flags)
 
-    if (m.encryptionKey) c.string.encode(state, m.encryptionKey)
+    if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
     if (m.tags) encoding2_3.encode(state, m.tags)
   },
   decode (state) {
@@ -103,7 +103,7 @@ const encoding2 = {
     res.appStorage = c.string.decode(state)
 
     const flags = state.start < state.end ? c.uint.decode(state) : 0
-    if ((flags & 1) !== 0) res.encryptionKey = c.string.decode(state)
+    if ((flags & 1) !== 0) res.encryptionKey = c.fixed32.decode(state)
     if ((flags & 2) !== 0) res.tags = encoding2_3.decode(state)
 
     return res
