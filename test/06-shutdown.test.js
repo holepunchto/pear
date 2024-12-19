@@ -67,7 +67,7 @@ test.hook('prepare low-spindown platform', async (t) => {
   t.teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
 
-  const patchedStager = rigHelper.stage({ channel: 'test-spindown-ls', name: 'test-spindown-ls', dir: patchedArtefactDir, dryRun: false, bare: true })
+  const patchedStager = rigHelper.stage({ channel: 'test-spindown-ls', name: 'test-spindown-ls', dir: patchedArtefactDir, dryRun: false })
   const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
   await patchedStagerUntil.final
 
@@ -149,7 +149,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
 
-  const patchedStager = rigHelper.stage({ channel: 'test-spindown-throttled', name: 'test-spindown-throttled', dir: patchedArtefactDir, dryRun: false, bare: true })
+  const patchedStager = rigHelper.stage({ channel: 'test-spindown-throttled', name: 'test-spindown-throttled', dir: patchedArtefactDir, dryRun: false })
   const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
   await patchedStagerUntil.final
 
@@ -175,7 +175,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   await rcvHelper.ready()
 
   t.comment('\tStaging platform using rcv')
-  const stager = rcvHelper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artefactDir, dryRun: false, bare: true })
+  const stager = rcvHelper.stage({ channel: 'test-spindown', name: 'test-spindown', dir: rig.artefactDir, dryRun: false })
   const stagerUntil = await Helper.pick(stager, [{ tag: 'addendum' }, { tag: 'final' }])
   const staged = await stagerUntil.addendum
   await stagerUntil.final

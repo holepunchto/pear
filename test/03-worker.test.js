@@ -67,7 +67,7 @@ test('worker should run directly in a terminal app', async function ({ is, plan,
 
   const testId = Math.floor(Math.random() * 100000)
   comment('Staging worker-runner...')
-  const staging = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerRunner, cmdArgs: [], dryRun: false, bare: true, ignore: [] })
+  const staging = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerRunner, cmdArgs: [], dryRun: false, ignore: [] })
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { link } = await until.staging
@@ -91,14 +91,14 @@ test('worker should run as a link in a terminal app', async function ({ is, plan
 
   const testId = Math.floor(Math.random() * 100000)
   comment('Staging worker-runner...')
-  const staging1 = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerRunner, cmdArgs: [], dryRun: false, bare: true, ignore: [] })
+  const staging1 = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerRunner, cmdArgs: [], dryRun: false, ignore: [] })
   teardown(() => Helper.teardownStream(staging1))
   const until1 = await Helper.pick(staging1, [{ tag: 'staging' }, { tag: 'final' }])
   const { link: runnerLink } = await until1.staging
   await until1.final
 
   comment('Staging worker...')
-  const staging2 = helper.stage({ channel: `test-worker-${testId}`, name: `test-worker-${testId}`, key: null, dir: helloWorld, cmdArgs: [], dryRun: false, bare: true, ignore: [] })
+  const staging2 = helper.stage({ channel: `test-worker-${testId}`, name: `test-worker-${testId}`, key: null, dir: helloWorld, cmdArgs: [], dryRun: false, ignore: [] })
   teardown(() => Helper.teardownStream(staging2))
   const until2 = await Helper.pick(staging2, [{ tag: 'staging' }, { tag: 'final' }])
   const { link: workerLink } = await until2.staging

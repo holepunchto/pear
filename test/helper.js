@@ -51,7 +51,7 @@ class Rig {
     comment('connected to sidecar')
 
     comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false, bare: true })
+    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
 
