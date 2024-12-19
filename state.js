@@ -4,8 +4,7 @@ const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const url = isBare ? require('bare-url') : require('url')
-const hypercoreid = require('hypercore-id-encoding')
-const { discoveryKey, randomBytes } = require('hypercore-crypto')
+const { randomBytes } = require('hypercore-crypto')
 const z32 = require('z32')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
 const parseLink = require('./lib/parse-link')
@@ -70,12 +69,9 @@ module.exports = class State {
       this.injestPackage(state, readPkg(path.join(state.dir, 'package.json')))
       return
     }
-    const { previewFor } = state.options
-    const previewKey = typeof previewFor === 'string' ? hypercoreid.decode(previewFor) : null
-    const dkey = previewKey ? discoveryKey(previewKey).toString('hex') : (state.key ? discoveryKey(state.key).toString('hex') : null)
-    const storeby = state.store ? null : (state.key ? ['by-dkey', dkey] : ['by-name', validateAppName(state.name)])
-    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : path.join(PLATFORM_DIR, 'app-storage', ...storeby)
-    if (state.key === null && state.storage.startsWith(state.dir)) {
+    validateAppName(state.name)
+    state.storage = state.store ? (path.isAbsolute(state.store) ? state.store : path.resolve(state.cwd, state.store)) : state.storage
+    if (state.key === null && state.storage && state.storage.startsWith(state.dir)) {
       throw ERR_INVALID_APP_STORAGE('Application Storage may not be inside the project directory. --store "' + state.storage + '" is invalid')
     }
   }
@@ -105,7 +101,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run } = params
+    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run, storage } = params
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, updates, updatesDiff,
@@ -130,6 +126,7 @@ module.exports = class State {
     this.dir = dir
     this.cwd = cwd
     this.run = run ?? flags.run
+    this.storage = storage
     this.flags = flags
     this.dev = dev
     this.devtools = this.dev || devtools

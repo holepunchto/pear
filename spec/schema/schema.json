@@ -34,6 +34,37 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "bundle",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 2,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "appStorage",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "encryptionKey",
+          "type": "fixed32",
+          "version": 1
+        },
+        {
+          "name": "tags",
+          "array": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
     }
   ]
 }

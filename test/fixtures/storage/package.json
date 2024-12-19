@@ -1,0 +1,8 @@
+{
+  "name": "storage",
+  "main": "index.js",
+  "pear": {
+    "name": "storage",
+    "type": "terminal"
+  }
+}
