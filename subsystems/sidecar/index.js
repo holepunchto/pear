@@ -14,11 +14,11 @@ const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
+const b4a = require('b4a')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
-const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -951,6 +951,14 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+async function deriveEncryptionKey (pwd, salt) {
+  const ops = sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE
+  const mem = sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE
+  const output = b4a.alloc(32)
+  await sodium.crypto_pwhash_scryptsalsa208sha256_async(output, b4a.from(pwd), salt, ops, mem)
+  return output
 }
 
 module.exports = Sidecar
