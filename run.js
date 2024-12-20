@@ -6,7 +6,6 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
-const { pathToFileURL } = require('bare-url')
 const { Readable } = require('streamx')
 const { isMac, isWindows, isLinux } = require('which-runtime')
 const constants = require('./constants')
@@ -48,7 +47,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       cwd = dir
     }
     if (isPath) {
-      link = pathToFileURL(path.join(dir, base.entrypoint || '/')).pathname
+      link = path.join(dir, base.entrypoint || '/')
     }
   }
 

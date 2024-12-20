@@ -14,36 +14,30 @@ const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
+const b4a = require('b4a')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
-const deriveEncryptionKey = require('pw-to-ek')
+const { pathToFileURL } = require('url-file-url')
 const reports = require('./lib/reports')
-const HyperDB = require('hyperdb')
-const Store = require('./lib/store')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
 const Http = require('./lib/http')
 const Session = require('./lib/session')
+const Model = require('./lib/model')
 const registerUrlHandler = require('../../url-handler')
 const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_DIR, PLATFORM_LOCK, PLATFORM_HYPERDB, SOCKET_PATH, CHECKOUT,
-  APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
-  WAKEUP, SALT, KNOWN_NODES_LIMIT
+  PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
+  DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
-const definition = require('../../hyperdb/db')
-const db = HyperDB.rocks(PLATFORM_HYPERDB, definition)
-const identity = new Store('identity')
-const encryptionKeys = new Store('encryption-keys')
 const SharedState = require('../../state')
 const State = require('./state')
-const { preferences } = State
 const ops = {
   GC: require('./ops/gc'),
   Release: require('./ops/release'),
@@ -52,17 +46,8 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  EncryptionKey: require('./ops/encryption-key'),
   Touch: require('./ops/touch')
 }
-
-class PermitStore extends Store {
-  async get (key) {
-    return await super.get(key) || await preferences.get(key)
-  }
-}
-
-const permits = new PermitStore('permits')
 
 // ensure that we are registered as a link handler
 registerUrlHandler(WAKEUP)
@@ -85,6 +70,8 @@ class Sidecar extends ReadyResource {
 
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
+
+    this.model = new Model()
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -372,8 +359,6 @@ class Sidecar extends ReadyResource {
 
   gc (params, client) { return new ops.GC(params, client) }
 
-  encryptionKey (params, client) { return new ops.EncryptionKey(params, client) }
-
   touch (params, client) { return new ops.Touch(params, client, this) }
 
   warmup (params, client) {
@@ -425,27 +410,6 @@ class Sidecar extends ReadyResource {
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
-  async requestIdentity ({ publicKey }) {
-    let keyPair = await identity.get('keyPair')
-    if (keyPair) {
-      keyPair.publicKey = Buffer.from(Object.values(keyPair.publicKey))
-    } else {
-      keyPair = crypto.keyPair(publicKey.buffer)
-      await identity.set('keyPair', keyPair)
-    }
-    return keyPair.publicKey
-  }
-
-  async shareIdentity (params) {
-    const { publicKey, attestation } = params
-    await identity.set('publicKey', publicKey)
-    await identity.set('attestation', attestation)
-  }
-
-  async clearIdentity () {
-    return identity.clear()
-  }
-
   async message (params, client) {
     if (!client.userData) return
     return client.userData.message(params)
@@ -457,24 +421,24 @@ class Sidecar extends ReadyResource {
   }
 
   async permit (params) {
+    let encryptionKey
     if (params.password || params.encryptionKey) {
-      const encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
-      const encryptionKeys = await permits.get('encryption-keys') || {}
-      encryptionKeys[hypercoreid.normalize(params.key)] = encryptionKey.toString('hex')
-      await permits.set('encryption-keys', encryptionKeys)
+      encryptionKey = params.encryptionKey || await deriveEncryptionKey(params.password, SALT)
     }
-    const trusted = new Set((await permits.get('trusted')) || [])
     if (params.key !== null) {
-      const z32 = hypercoreid.encode(params.key)
-      trusted.add(z32)
+      const link = `pear://${hypercoreid.encode(params.key)}`
+      const bundle = await this.model.getBundle(link)
+      if (!bundle) {
+        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
+      }
+      return await this.model.updateEncryptionKey(link, encryptionKey)
     }
-    return permits.set('trusted', Array.from(trusted))
   }
 
-  async trusted (key) {
-    const z32 = hypercoreid.encode(key)
-    const trusted = await permits.get('trusted') || []
-    return trusted.includes(z32)
+  async trusted (link) {
+    const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
+    const aliasesKeys = Object.values(ALIASES).map(e => `pear://${hypercoreid.encode(e)}`)
+    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(link) !== null
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -685,33 +649,32 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+    const parsedLink = parseLink(link)
+    LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const { unsafeClearPreferences } = flags
-    if (unsafeClearPreferences) {
-      LOG.info(LOG_RUN_LINK, 'clearing preferences')
-      await preferences.clear()
-      await permits.clear()
-    }
+    const key = parsedLink.drive?.key
 
-    let encryptionKey
-    if (flags.encryptionKey) {
-      LOG.info(LOG_RUN_LINK, id, 'getting encryption key per flag')
-      encryptionKey = (await encryptionKeys.get(flags.encryptionKey))
-      encryptionKey = encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
-    } else {
-      const { drive } = parseLink(link)
-      let storedEncryptedKey
-      if (drive.key) {
-        LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-        const encryptionKeys = await permits.get('encryption-keys') || {}
-        storedEncryptedKey = encryptionKeys[hypercoreid.normalize(drive.key)]
-      } else {
-        storedEncryptedKey = null
+    if (key !== null && !flags.trusted) {
+      const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
+      if (!trusted) {
+        const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+        app.state = state // needs to setup app state for decal trust dialog restart
+        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
+        app.report({ err })
+        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
+        return { startId, bail: err }
       }
-      encryptionKey = storedEncryptedKey ? Buffer.from(storedEncryptedKey, 'hex') : null
     }
+
+    link = link.startsWith('pear://') ? link : pathToFileURL(link).href
+    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
+    const encryptionKey = persistedBundle.encryptionKey
+    const appStorage = persistedBundle.appStorage
+
+    await fs.promises.mkdir(appStorage, { recursive: true })
+
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
+    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
@@ -745,9 +708,6 @@ class Sidecar extends ReadyResource {
       app.linker = linker
       app.bundle = appBundle
 
-      // app is locally run (therefore trusted), refresh trust for any updated configured link keys:
-      await this.permit({ key: state.key }, client) // TODO: do we still need this?
-
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
         await state.initialize({ bundle: appBundle, app, staging: true })
@@ -766,19 +726,6 @@ class Sidecar extends ReadyResource {
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
-    }
-
-    if (!flags.trusted) {
-      const aliases = Object.values(ALIASES).map(hypercoreid.encode)
-      LOG.info(LOG_RUN_LINK, id, 'loading trusted links')
-      const trusted = new Set([...aliases, ...((await permits.get('trusted')) || [])])
-      const z32 = hypercoreid.encode(state.key)
-      if (trusted.has(z32) === false) {
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key: state.key })
-        app.report({ err })
-        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
-        return { startId, bail: err }
-      }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
@@ -916,7 +863,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
-    const knownNodes = (await db.get('@pear/dht'))?.nodes
+    const knownNodes = await this.model.getDhtNodes()
     const nodes = this.dhtBootstrap ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
@@ -957,7 +904,7 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await db.insert('@pear/dht', { nodes: knownNodes })
+          this.model.setDhtNodes(knownNodes)
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
@@ -965,8 +912,7 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     if (this.corestore) await this.corestore.close()
-    await db.flush()
-    await db.close()
+    await this.model.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
@@ -988,6 +934,13 @@ class Sidecar extends ReadyResource {
     }
   }
 
+  _generateAppStorage (parsedLink) {
+    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
+    return parsedLink.protocol !== 'pear:'
+      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
+  }
+
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(() => {
@@ -1003,6 +956,14 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+async function deriveEncryptionKey (pwd, salt) {
+  const ops = sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE
+  const mem = sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE
+  const output = b4a.alloc(32)
+  await sodium.crypto_pwhash_scryptsalsa208sha256_async(output, b4a.from(pwd), salt, ops, mem)
+  return output
 }
 
 module.exports = Sidecar

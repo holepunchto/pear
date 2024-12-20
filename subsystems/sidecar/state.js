@@ -3,18 +3,14 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
-const Store = require('./lib/store')
 const SharedState = require('../../state')
 const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
-const preferences = new Store('preferences')
 
 module.exports = class State extends SharedState {
   initialized = false
   tier = null
   version = { key: null, length: 0, fork: 0 }
   checkpoint = null
-
-  static preferences = preferences
 
   constructor (opts) {
     super(opts)
@@ -71,7 +67,6 @@ module.exports = class State extends SharedState {
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
 
-    await fsp.mkdir(this.storage, { recursive: true })
     try { this.checkpoint = JSON.parse(await fsp.readFile(path.join(this.storage, 'checkpoint'))) } catch { /* ignore */ }
     if (app?.reported) return
     if (this.key) {

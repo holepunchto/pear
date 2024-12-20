@@ -10,8 +10,7 @@ const DriveAnalyzer = require('drive-analyzer')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const Store = require('../lib/store')
-const { ERR_INVALID_CONFIG, ERR_SECRET_NOT_FOUND, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -33,24 +32,11 @@ module.exports = class Stage extends Opstream {
     key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-
-    if (!encrypted && params.encryptionKey) {
-      const err = ERR_INVALID_CONFIG('pear.encrypted field is required in package.json')
-      throw err
-    }
-
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    const encryptionKey = encryptionKeys[hypercoreid.normalize(key)] || await secrets.get(params.encryptionKey)
-
-    if (encrypted === true && !encryptionKey && !params.encryptionKey) {
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
-    }
+    const persistedBundle = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
+    const encryptionKey = persistedBundle?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
-      const err = ERR_SECRET_NOT_FOUND('Not found encryption key: ' + params.encryptionKey)
-      throw err
+      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     const bundle = new Bundle({
@@ -59,7 +45,7 @@ module.exports = class Stage extends Opstream {
       channel,
       truncate,
       stage: true,
-      encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null
+      encryptionKey
     })
     await session.add(bundle)
     client.userData = new sidecar.App({ state, bundle })

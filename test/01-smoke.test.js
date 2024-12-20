@@ -5,12 +5,13 @@ const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
+const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(10)
+  plan(14)
 
   const testVersions = async () => {
     const dir = versionsDir
@@ -84,7 +85,47 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     ok(true, 'ended')
   }
 
-  await Promise.all([testVersions(), testDhtBootstrap()])
+  const testStorage = async () => {
+    const dir = storageDir
+
+    const testAppStorage = Pear.config.storage
+    ok(testAppStorage.includes('by-random'))
+
+    const helper = new Helper()
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
+
+    const id = Math.floor(Math.random() * 10000)
+
+    comment('staging')
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    teardown(() => Helper.teardownStream(staging))
+    const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+    const { key } = await staged.addendum
+    await staged.final
+
+    const link = `pear://${key}`
+    const run = await Helper.run({ link })
+
+    const result = await Helper.untilResult(run.pipe)
+    const appStorage = result
+
+    await Helper.untilClose(run.pipe)
+
+    const linkWithFragment = `pear://${key}/#fragment`
+    const runWithFragment = await Helper.run({ link: linkWithFragment })
+    const resultWithFragment = await Helper.untilResult(runWithFragment.pipe)
+    const appStorageWithFragment = resultWithFragment
+
+    await Helper.untilClose(runWithFragment.pipe)
+
+    ok(appStorage.includes('by-dkey'))
+    is(appStorage, appStorageWithFragment)
+
+    ok(true, 'ended')
+  }
+
+  await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
 })
 
 test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
