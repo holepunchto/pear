@@ -19,6 +19,7 @@ const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
+const { pathToFileURL } = require('url-file-url')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -662,6 +663,7 @@ class Sidecar extends ReadyResource {
       }
     }
 
+    link = link.startsWith('pear://') ? link : pathToFileURL(link).href
     const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
