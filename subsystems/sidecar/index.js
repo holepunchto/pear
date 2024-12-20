@@ -657,6 +657,8 @@ class Sidecar extends ReadyResource {
     if (key !== null && !flags.trusted) {
       const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
       if (!trusted) {
+        const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+        app.state = state // needs to setup app state for decal trust dialog restart
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
         app.report({ err })
         LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
