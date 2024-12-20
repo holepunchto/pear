@@ -70,7 +70,7 @@
     "bare-bundle": "^1.7.0",
     "bare-env": "^3.0.0",
     "bare-events": "^2.5.0",
-    "bare-fs": "^3.0.2",
+    "bare-fs": "^4.0.1",
     "bare-hrtime": "^2.0.9",
     "bare-http1": "^4.0.2",
     "bare-module": "^4.5.0",
