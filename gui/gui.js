@@ -1077,8 +1077,8 @@ class Window extends GuiCtrl {
       const requestURL = new URL(details.url)
       if (requestURL.host === sidecarURL.host) {
         details.requestHeaders['User-Agent'] = `Pear ${this.state.id}`
-      } else if (this.state.userAgent) {
-        details.requestHeaders['User-Agent'] = this.state.userAgent
+      } else if (this.state?.config?.options?.userAgent) {
+        details.requestHeaders['User-Agent'] = this.state.config.options.userAgent
       }
       next({ requestHeaders: details.requestHeaders })
     }
