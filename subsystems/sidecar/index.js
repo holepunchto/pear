@@ -437,7 +437,8 @@ class Sidecar extends ReadyResource {
 
   async trusted (link) {
     const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
-    return aliases.includes(link) || await this.model.getBundle(link) !== null
+    const aliasesKeys = Object.values(ALIASES).map(e => `pear://${hypercoreid.encode(e)}`)
+    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(link) !== null
   }
 
   async detached ({ link, key, storage, appdev }) {
