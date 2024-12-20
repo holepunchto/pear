@@ -654,7 +654,7 @@ class Sidecar extends ReadyResource {
     const key = parsedLink.drive?.key
 
     if (key !== null && !flags.trusted) {
-      const trusted = await this.trusted(link)
+      const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
       if (!trusted) {
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
         app.report({ err })

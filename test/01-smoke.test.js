@@ -11,7 +11,7 @@ const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(13)
+  plan(14)
 
   const testVersions = async () => {
     const dir = versionsDir
@@ -109,9 +109,19 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
 
     const result = await Helper.untilResult(run.pipe)
     const appStorage = result
-    ok(appStorage.includes('by-dkey'))
 
     await Helper.untilClose(run.pipe)
+
+    const linkWithFragment = `pear://${key}/#fragment`
+    const runWithFragment = await Helper.run({ link: linkWithFragment })
+    const resultWithFragment = await Helper.untilResult(runWithFragment.pipe)
+    const appStorageWithFragment = resultWithFragment
+
+    await Helper.untilClose(runWithFragment.pipe)
+
+    ok(appStorage.includes('by-dkey'))
+    is(appStorage, appStorageWithFragment)
+
     ok(true, 'ended')
   }
 
