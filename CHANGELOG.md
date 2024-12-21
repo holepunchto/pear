@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.8.1
+
+### Fixes
+
+* Desktop - Fixed `userAgent` configuration
+
 ## v1.8.0
 
 ### Features
