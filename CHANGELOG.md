@@ -16,7 +16,7 @@
 
 ### Fixes
 
-* Worker - Depluplicated `--trusted` flag
+* Worker - Deduplicated `--trusted` flag
 * Worker - Fixed worker arguments when executed with platform arguments
 * Desktop - Fixed `hide` Electron IPC call
 * CLI - `dump` creates dump directory by default
@@ -26,7 +26,7 @@
 
 * CLI - Improved crash log
 * Internal - Bare version 1.12
-* Internal - Introduced unskipable platform versions
+* Internal - Introduced unskippable platform versions
 
 ## v1.7.0
 
