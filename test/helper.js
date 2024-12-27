@@ -153,12 +153,17 @@ class Helper extends IPC.Client {
     return { pipe }
   }
 
-  static async untilResult (pipe, opts = { timeout: 5000 }) {
+  static async untilResult (pipe, opts = {}) {
+    const timeout = opts.timeout || 5000
     const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), opts.timeout)
+      let buffer = ''
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('data', (data) => {
-        clearTimeout(timeoutId)
-        resolve(data.toString())
+        buffer += data.toString()
+        if (buffer[buffer.length - 1] === '\n') {
+          clearTimeout(timeoutId)
+          resolve(buffer.trim())
+        }
       })
       pipe.on('close', () => {
         clearTimeout(timeoutId)
