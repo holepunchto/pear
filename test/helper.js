@@ -153,9 +153,9 @@ class Helper extends IPC.Client {
     return { pipe }
   }
 
-  static async untilResult (pipe, timeout = 5000, runFn) {
+  static async untilResult (pipe, opts = { timeout: 5000 }) {
     const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), opts.timeout)
       pipe.on('data', (data) => {
         clearTimeout(timeoutId)
         resolve(data.toString())
@@ -169,8 +169,8 @@ class Helper extends IPC.Client {
         reject(new Error('unexpected ended'))
       })
     })
-    if (runFn) {
-      await runFn()
+    if (opts.runFn) {
+      await opts.runFn()
     } else {
       pipe.write('start')
     }
