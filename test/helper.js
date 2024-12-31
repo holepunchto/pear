@@ -22,6 +22,7 @@ Error.stackTraceLimit = Infinity
 const program = global.Bare || global.process
 
 const rigPear = path.join(tmp, 'rig-pear')
+const STOP_CHAR = '\n'
 
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
@@ -160,7 +161,7 @@ class Helper extends IPC.Client {
       const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('data', (data) => {
         buffer += data.toString()
-        if (buffer[buffer.length - 1] === '\n') {
+        if (buffer[buffer.length - 1] === STOP_CHAR) {
           clearTimeout(timeoutId)
           resolve(buffer.trim())
         }
