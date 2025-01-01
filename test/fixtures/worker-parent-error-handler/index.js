@@ -1,5 +1,5 @@
 const pipeIn = Pear.worker.pipe()
-pipeIn.write(`${Bare.pid}`)
+pipeIn.write(`${Bare.pid}\n`)
 
 const link = Bare.argv[Bare.argv.length - 1]
 const pipe = Pear.worker.run(link)
