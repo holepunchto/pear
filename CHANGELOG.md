@@ -1,5 +1,14 @@
 # Pear Runtime Changelog
 
+## v1.9.0
+
+### Improvements
+
+* Desktop - Electron version 33.2.1
+* Internal - RocksDB-Native version 3.0.1
+* Internal - Udx-Native version 1.17.2
+* Internal - Node-Bare-Bundle version 1.4.2
+
 ## v1.8.1
 
 ### Fixes
