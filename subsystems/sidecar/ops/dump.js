@@ -3,17 +3,15 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
-const Store = require('../lib/store')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
-const hypercoreid = require('hypercore-id-encoding')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, encryptionKey, force }) {
+  async #op ({ link, dir, dryRun, checkout, force }) {
     const { session, sidecar } = this
     await sidecar.ready()
 
@@ -35,10 +33,8 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = (hypercoreid.isValid(key) && encryptionKeys[hypercoreid.normalize(key)]) || await secrets.get(encryptionKey)
+    const query = await this.sidecar.model.getBundle(link)
+    const encryptionKey = query?.encryptionKey
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
     let drive = null
@@ -46,7 +42,7 @@ module.exports = class Dump extends Opstream {
     if (corestore) {
       await corestore.ready()
       try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+        drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
