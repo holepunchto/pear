@@ -49,6 +49,11 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge(count)
         }
 
+        this.electron = {}
+        this.electron.getPathForFile = (file) => {
+          return electron.webUtils.getPathForFile(file)
+        }
+
         const kGuiCtrl = Symbol('gui:ctrl')
 
         class Parent extends EventEmitter {
