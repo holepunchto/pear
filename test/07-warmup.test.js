@@ -27,7 +27,7 @@ test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, t
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'warming' }, { tag: 'final' }])
@@ -52,7 +52,7 @@ test('stage desktop app warmup with entrypoints', async function ({ ok, is, plan
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'warming' }, { tag: 'final' }])
@@ -77,7 +77,7 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'warming' }, { tag: 'final' }])
@@ -101,7 +101,7 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'warming' }, { tag: 'final' }])
@@ -148,7 +148,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
 
   const id = Math.floor(Math.random() * 10000)
 
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []

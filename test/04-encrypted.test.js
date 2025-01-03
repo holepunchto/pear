@@ -29,7 +29,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const password = hypercoreid.encode(crypto.randomBytes(32))
 
   comment('staging throws without encryption key')
-  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingA))
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
@@ -39,7 +39,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   await helper.permit({ key: hypercoreid.decode(key), password })
 
   comment('staging with encryption key')
-  const stagingB = helper.stage({ channel: `test-${id}`, dir, dryRun: false, bare: true })
+  const stagingB = helper.stage({ channel: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingB))
   const final = await Helper.pick(stagingB, { tag: 'final' })
   ok(final.success, 'stage succeeded')
