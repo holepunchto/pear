@@ -19,11 +19,11 @@ const output = outputter('stage', {
 })
 
 module.exports = (ipc) => async function dump (cmd) {
-  const { dryRun, checkout, json, encryptionKey, ask, force } = cmd.flags
+  const { dryRun, checkout, json, ask, force } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
   if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
   if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
   dir = dir === '-' ? '-' : (isAbsolute(dir) ? dir : resolve('.', dir))
-  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, encryptionKey, force }), { ask }, ipc)
+  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, force }), { ask }, ipc)
 }

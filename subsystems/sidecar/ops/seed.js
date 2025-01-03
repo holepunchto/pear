@@ -5,13 +5,12 @@ const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('../../../errors')
-const Store = require('../lib/store')
 const Hyperdrive = require('hyperdrive')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ name, channel, link, verbose, seeders, dir, encryptionKey, cmdArgs } = {}) {
+  async #op ({ name, channel, link, verbose, seeders, dir, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
@@ -31,12 +30,10 @@ module.exports = class Seed extends Opstream {
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const permits = new Store('permits')
-    const secrets = new Store('encryption-keys')
-    const encryptionKeys = await permits.get('encryption-keys') || {}
-    encryptionKey = key ? encryptionKeys[hypercoreid.normalize(key)] : encryptionKey ? await secrets.get(encryptionKey) : null
+    const query = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
+    const encryptionKey = query?.encryptionKey
 
-    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey: encryptionKey ? Buffer.from(encryptionKey, 'hex') : null })
+    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey })
 
     try {
       await session.add(bundle)

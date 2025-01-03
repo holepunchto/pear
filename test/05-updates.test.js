@@ -203,7 +203,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe, { timeout: PLATFORM_STAGE_TIMEOUT }).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
@@ -273,8 +273,8 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
-  const untilUpdate1 = Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT).then((data) => JSON.parse(data))
-  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, PLATFORM_STAGE_TIMEOUT)).then((data) => JSON.parse(data))
+  const untilUpdate1 = Helper.untilResult(pipe, { timeout: PLATFORM_STAGE_TIMEOUT }).then((data) => JSON.parse(data))
+  const untilUpdate2 = untilUpdate1.then(() => Helper.untilResult(pipe, { timeout: PLATFORM_STAGE_TIMEOUT })).then((data) => JSON.parse(data))
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`

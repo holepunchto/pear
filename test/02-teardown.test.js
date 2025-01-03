@@ -41,7 +41,7 @@ test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan
   const run = await Helper.run({ link })
   const { pipe } = run
 
-  const td = await Helper.untilResult(pipe, 5000, () => pipe.end())
+  const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => pipe.end() })
   is(td, 'teardown', 'teardown executed')
 })
 
@@ -80,7 +80,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'worker pid is valid')
 
-  const td = await Helper.untilResult(pipe, 5000, () => os.kill(pid))
+  const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => os.kill(pid) })
   ok(td, 'teardown executed')
 })
 
@@ -131,7 +131,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
     })
   })
 
-  const td = await Helper.untilResult(pipe, 5000, () => os.kill(pid))
+  const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => os.kill(pid) })
   ok(td, 'teardown executed')
 
   const exitCode = await exitCodePromise

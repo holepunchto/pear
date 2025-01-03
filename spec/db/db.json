@@ -1,0 +1,44 @@
+{
+  "version": 0,
+  "offset": 0,
+  "schema": [
+    {
+      "name": "dht",
+      "namespace": "pear",
+      "id": 0,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/dht",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    },
+    {
+      "name": "bundle",
+      "namespace": "pear",
+      "id": 1,
+      "type": 1,
+      "indexes": [
+        "@pear/bundle-by-tags"
+      ],
+      "schema": "@pear/bundle",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "bundle-by-tags",
+      "namespace": "pear",
+      "id": 2,
+      "type": 2,
+      "collection": "@pear/bundle",
+      "unique": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
+    }
+  ]
+}

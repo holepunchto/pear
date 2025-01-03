@@ -63,10 +63,58 @@ const encoding1 = {
   }
 }
 
+// @pear/bundle.tags
+const encoding2_3 = c.array(c.string)
+
+// @pear/bundle
+const encoding2 = {
+  preencode (state, m) {
+    let flags = 0
+    if (m.encryptionKey) flags |= 1
+    if (m.tags) flags |= 2
+
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.appStorage)
+    c.uint.preencode(state, flags)
+
+    if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
+    if (m.tags) encoding2_3.preencode(state, m.tags)
+  },
+  encode (state, m) {
+    let flags = 0
+    if (m.encryptionKey) flags |= 1
+    if (m.tags) flags |= 2
+
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.appStorage)
+    c.uint.encode(state, flags)
+
+    if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
+    if (m.tags) encoding2_3.encode(state, m.tags)
+  },
+  decode (state) {
+    const res = {}
+    res.link = null
+    res.appStorage = null
+    res.encryptionKey = null
+    res.tags = null
+
+    res.link = c.string.decode(state)
+    res.appStorage = c.string.decode(state)
+
+    const flags = state.start < state.end ? c.uint.decode(state) : 0
+    if ((flags & 1) !== 0) res.encryptionKey = c.fixed32.decode(state)
+    if ((flags & 2) !== 0) res.tags = encoding2_3.decode(state)
+
+    return res
+  }
+}
+
 function getStructByName (name) {
   switch (name) {
     case '@pear/node': return encoding0
     case '@pear/dht': return encoding1
+    case '@pear/bundle': return encoding2
     default: throw new Error('Encoder not found ' + name)
   }
 }
