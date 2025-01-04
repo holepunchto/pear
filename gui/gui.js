@@ -1069,6 +1069,9 @@ class Window extends GuiCtrl {
       const url = new URL(details.url)
       const isAllowed = allowedHosts.some(({ protocol, hostname, port }) =>
         protocol === url.protocol && (hostname === '*' || hostname === url.hostname) && (port === '' || port === url.port))
+      if (!isAllowed) {
+        console.warn('Not allowed link in Pear configuration links:', details.url)
+      }
       respond({ cancel: isAllowed === false })
     }
     const onBeforeSendHeaders = (details, next) => {
