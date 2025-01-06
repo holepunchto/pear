@@ -147,7 +147,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
     const worker = new Worker()
     const pipe = worker.pipe()
-    if (pipe) {
+    if (pipe !== null) {
       pipe.on('end', () => child.kill())
       pipe.on('close', () => child.kill())
     }
@@ -155,6 +155,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     child.once('exit', (code) => {
       stream.push({ tag: 'exit', data: { code } })
       ipc.close()
+      if (pipe !== null) {
+        pipe.end()
+      }
     })
     if (!detach) {
       child.stdout.on('data', (data) => { stream.push({ tag: 'stdout', data }) })
