@@ -123,6 +123,7 @@ class Menu {
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
           for (const ctrl of PearGUI.ofSession(session)) {
+            ctrl.cmdQ = true
             await ctrl.close()
           }
         }
@@ -610,6 +611,10 @@ class App {
       })
       this.id = ctrl.id
       await this.starting
+
+      electron.app.on('activate', () => {
+        ctrl.show()
+      })
     } catch (err) {
       await this.report({ err })
       this.close()
@@ -1254,10 +1259,14 @@ class Window extends GuiCtrl {
   }
 
   async close () {
-    this.closing = true
-    const closed = await super.close()
-    this.closing = false
-    return closed
+    if (!isMac || (isMac && this.cmdQ)) {
+      this.closing = true
+      const closed = await super.close()
+      this.closing = false
+      return closed
+    } else {
+      this.hide()
+    }
   }
 }
 
