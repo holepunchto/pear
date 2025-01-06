@@ -322,6 +322,8 @@ class Sidecar extends ReadyResource {
     }
   }
 
+  clientReady (params, client) { return client.ready() }
+
   async identify (params, client) {
     if (params.startId) {
       const starting = this.running.get(params.startId)
@@ -381,6 +383,16 @@ class Sidecar extends ReadyResource {
     return client.userData.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
   }
 
+  reported (params, client) {
+    if (!client.userData) return false
+    return client.userData.reported
+  }
+
+  minver (params, client) {
+    if (!client.userData) return null
+    return client.userData.minver()
+  }
+
   async config (params, client) {
     if (!client.userData) return
     const cfg = client.userData.state.constructor.configFrom(client.userData.state)
@@ -438,7 +450,9 @@ class Sidecar extends ReadyResource {
   }
 
   shutdown (params, client) { return this.#shutdown(client) }
-
+  
+  appClosed (params, client) { return client.userData?.closed ?? false }
+  
   #teardownPipelines (client) {
     // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
     const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
