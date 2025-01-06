@@ -19,7 +19,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  list: require('./list')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -176,6 +177,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const list = command(
+    'list',
+    summary('View local database contents'),
+    flag('--bundle', 'View only the Bundle collection'),
+    runners.list(ipc)
+  )
+
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
     if (h.args.command) console.log(cmd.help(h.args.command))
     else console.log(cmd.overview({ full: true }))
@@ -197,6 +205,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    list,
     help,
     footer(usage.footer),
     bail(explain),
