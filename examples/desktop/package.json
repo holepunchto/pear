@@ -4,15 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "brittle"
+    "test": "brittle",
+    "bootstrap": "pear-electron",
+    "postinstall": "npm run bootstrap"
   },
   "type": "module",
   "pear": {
     "name": "deskex",
     "ui": {
-      "runtime": "pear-electron",
-      "preload": "preload.js",
-      "main": "index.html"
+      "main": "index.html",
+      "preload": "pear-bridge"
     },
     "gui": {
       "width": 900,
