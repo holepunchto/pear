@@ -46,7 +46,8 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  Touch: require('./ops/touch')
+  Touch: require('./ops/touch'),
+  List: require('./ops/list')
 }
 
 // ensure that we are registered as a link handler
@@ -354,6 +355,8 @@ class Sidecar extends ReadyResource {
   dump (params, client) { return new ops.Dump(params, client, this) }
 
   info (params, client) { return new ops.Info(params, client, this) }
+
+  list (params, client) { return new ops.List(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
 

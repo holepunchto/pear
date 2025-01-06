@@ -180,7 +180,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const list = command(
     'list',
     summary('View local database contents'),
-    flag('--bundle', 'View only the Bundle collection'),
+    flag('--bundles', 'View only the Bundle collection'),
     runners.list(ipc)
   )
 
