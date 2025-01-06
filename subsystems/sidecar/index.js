@@ -488,7 +488,7 @@ class Sidecar extends ReadyResource {
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: false, stdio: 'ignore' }
+      const opts = { cwd, env, detached: false, stdio: 'pipe' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -537,7 +537,7 @@ class Sidecar extends ReadyResource {
     await sidecarClosed
 
     for (const { cwd, dir, appling, cmdArgs, env, options } of restarts) {
-      const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, detached: true, stdio: 'pipe' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
