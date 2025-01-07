@@ -1,20 +1,22 @@
 'use strict'
 const Opstream = require('../lib/opstream')
+const Model = require('../lib/model')
 
-module.exports = class List extends Opstream {
+module.exports = class Data extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ bundles }) {
-    const all = await this.model.allBundles()
+  async #op () {
+    const model = new Model()
+    const bundles = await model.allBundles()
     this.push({
-      tag: bundles ? 'bundles' : 'all',
-      data: all.map(b => ({
-        link: b.link,
-        appStorage: b.appStorage,
-        encryptionKey: b.encryptionKey,
-        tags: b.tags
+      tag: 'bundle',
+      data: bundles.map(bundle => ({
+        link: bundle.link,
+        appStorage: bundle.appStorage,
+        encryptionKey: bundle.encryptionKey,
+        tags: bundle.tags
       }))
     })
   }
