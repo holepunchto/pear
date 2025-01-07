@@ -20,7 +20,7 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  list: require('./list')
+  data: require('./data')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -177,11 +177,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
-  const list = command(
-    'list',
-    summary('View local database contents'),
-    flag('--bundles', 'View only the Bundle collection'),
-    runners.list(ipc)
+  const data = command(
+    'data',
+    summary('View local content'),
+    runners.data(ipc)
   )
 
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
@@ -205,7 +204,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
-    list,
+    data,
     help,
     footer(usage.footer),
     bail(explain),

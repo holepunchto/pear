@@ -14,17 +14,17 @@ const bundles = (items) => {
 
 const all = (items) => bundles(items)
 
-const output = outputter('list', {
+const output = outputter('data', {
   bundles,
   all,
-  error: (err) => `List Error (code: ${err.code || 'none'}) ${err.stack}`,
+  error: (err) => `Data Error (code: ${err.code || 'none'}) ${err.stack}`,
   final: () => false
 })
 
-module.exports = (ipc) => async function list (cmd) {
-  const data = await ipc.list({ bundles: cmd.flags.bundles })
+module.exports = (ipc) => async function data (cmd) {
+  const result = await ipc.data({ bundles: cmd.flags.bundles })
   if (cmd.flags.bundles) {
-    return await output(false, data, { tag: 'bundles' }, ipc)
+    return await output(false, result, { tag: 'bundles' }, ipc)
   }
-  return await output(false, data, { tag: 'all' }, ipc)
+  return await output(false, result, { tag: 'all' }, ipc)
 }

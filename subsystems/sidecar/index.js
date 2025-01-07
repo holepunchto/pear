@@ -47,7 +47,7 @@ const ops = {
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
   Touch: require('./ops/touch'),
-  List: require('./ops/list')
+  Data: require('./ops/data')
 }
 
 // ensure that we are registered as a link handler
@@ -356,7 +356,7 @@ class Sidecar extends ReadyResource {
 
   info (params, client) { return new ops.Info(params, client, this) }
 
-  list (params, client) { return new ops.List(params, client, this) }
+  data (params, client) { return new ops.Data(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
 
