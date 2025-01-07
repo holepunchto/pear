@@ -44,8 +44,8 @@ class Rig {
     this.keepAlive = keepAlive
   }
 
-  setup = async ({ comment, timeout }) => {
-    timeout(180000)
+  setup = async ({ comment, timeout, ok }) => {
+    timeout(1000)
     comment('connecting to sidecar')
     await this.local.ready()
     comment('connected to sidecar')

@@ -10,7 +10,7 @@ const rig = new Helper.Rig()
 
 test.hook('encrypted setup', rig.setup)
 
-test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test.solo('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(6)
 
