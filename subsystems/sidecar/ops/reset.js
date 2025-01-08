@@ -3,6 +3,7 @@ const path = require('bare-path')
 const crypto = require('hypercore-crypto')
 const { PLATFORM_DIR } = require('../../../constants')
 const Opstream = require('../lib/opstream')
+const { pathToFileURL } = require('url-file-url')
 
 module.exports = class Reset extends Opstream {
   constructor (...args) {
@@ -10,9 +11,9 @@ module.exports = class Reset extends Opstream {
   }
 
   async #op ({ link }) {
-    this.push({ tag: 'reseting' })
+    this.push({ tag: 'reseting', link })
     link = link.startsWith('pear://') ? link : pathToFileURL(link).href
-    const persistedBundle = await this.sidecar.model.getBundle(link)
+    // const persistedBundle = await this.sidecar.model.getBundle(link) TODO add to gc
     const appStorage = path.join(PLATFORM_DIR, 'app-storage')
     // const oldAppStorage = persistedBundle.appStorage TODO add to gc
     const newAppStorage = path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))

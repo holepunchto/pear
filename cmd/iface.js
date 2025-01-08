@@ -33,6 +33,7 @@ const ansi = isWindows
 ansi.sep = isWindows ? '-' : ansi.dim(ansi.green('∞'))
 ansi.tick = isWindows ? '^' : ansi.green('✔')
 ansi.cross = isWindows ? 'x' : ansi.red('✖')
+ansi.warning = isWindows ? '!' : '⚠️'
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
 ansi.key = isWindows ? '>' : '🔑'
@@ -250,4 +251,25 @@ function permit (ipc, info, cmd) {
   }
 }
 
-module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }
+async function confirmReset (link) {
+  const dialog = ansi.warning + `  WARNING the storage of ${link} will be permanently deleted and cannot be recovered.\n\n To confirm type "RESET"\n\n`
+  const ask = `Reset ${link} storage`
+  const delim = '?'
+  const validation = (value) => value === 'RESET'
+  const msg = '\n' + ansi.cross + ' uppercase RESET to confirm\n'
+
+  const interact = new Interact(dialog, [
+    {
+      name: 'value',
+      default: '',
+      prompt: ask,
+      delim,
+      validation,
+      msg
+    }
+  ])
+
+  await interact.run()
+}
+
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY, confirmReset }
