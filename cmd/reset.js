@@ -4,10 +4,10 @@ const os = require('bare-os')
 const path = require('bare-path')
 
 const output = outputter('reset', {
-  reseting: ({ link }) => `Reseting storage of application ${link}}`,
-  complete: () => '\nReset Complete',
-  error: ({ code, stack, message }) => {
-    console.log(code, message, stack)
+  reseting: ({ link }) => `\nReseting storage of application ${link}`,
+  complete: () => 'Reset Complete\n',
+  error: ({ code, stack }) => {
+    return `Reset Error (code: ${code || 'none'}) ${stack}`
   }
 })
 

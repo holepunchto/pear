@@ -252,7 +252,7 @@ function permit (ipc, info, cmd) {
 }
 
 async function confirmReset (link) {
-  const dialog = ansi.warning + `  WARNING the storage of ${link} will be permanently deleted and cannot be recovered.\n\n To confirm type "RESET"\n\n`
+  const dialog = ansi.warning + `  ${ansi.bold('WARNING')} the storage of ${ansi.bold(link)} will be permanently deleted and cannot be recovered. To confirm type "RESET"\n\n`
   const ask = `Reset ${link} storage`
   const delim = '?'
   const validation = (value) => value === 'RESET'
