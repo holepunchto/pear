@@ -46,6 +46,7 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
+  Reset: require('./ops/reset'),
   Touch: require('./ops/touch')
 }
 
@@ -356,6 +357,8 @@ class Sidecar extends ReadyResource {
   info (params, client) { return new ops.Info(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
+
+  reset (params, client) { return new ops.Reset(params, client, this) }
 
   gc (params, client) { return new ops.GC(params, client) }
 

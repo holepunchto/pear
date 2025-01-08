@@ -50,6 +50,21 @@ module.exports = class Model {
     return result
   }
 
+  async updateAppStorage (link, appStorage) {
+    let result
+    const tx = await this.lock.enter()
+    const bundle = await tx.get('@pear/bundle', { link })
+    if (!bundle) {
+      result = null
+    } else {
+      const updatedBundle = { ...bundle, appStorage }
+      await tx.insert('@pear/bundle', updatedBundle)
+      result = updatedBundle
+    }
+    await this.lock.exit()
+    return result
+  }
+
   async getDhtNodes () {
     return (await this.db.get('@pear/dht'))?.nodes || []
   }
