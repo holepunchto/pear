@@ -123,7 +123,7 @@ class Menu {
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
           for (const ctrl of PearGUI.ofSession(session)) {
-            ctrl.quiting = true
+            ctrl.quitting = true
             await ctrl.close()
           }
         }
@@ -776,7 +776,7 @@ class GuiCtrl {
   unloaded = null
   #unloading = null
   appkin = null
-  quiting = false
+  quitting = false
   static height = 540
   static width = 720
   static [kCtrl] = null
@@ -1026,7 +1026,7 @@ class Window extends GuiCtrl {
     })
 
     this.win.on('close', (evt) => {
-      if (this.options.hideOnClose && this.quiting === false) {
+      if (this.options.hideOnClose && this.quitting === false) {
         evt.preventDefault()
         this.win.hide()
       } else {
