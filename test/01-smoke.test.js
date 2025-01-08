@@ -23,7 +23,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     const id = Math.floor(Math.random() * 10000)
 
     comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
     ok(staged.success, 'stage succeeded')
@@ -59,7 +59,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     const id = Math.floor(Math.random() * 10000)
 
     comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
     ok(staged.success, 'stage succeeded')
@@ -141,7 +141,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
@@ -179,7 +179,7 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   const id = Math.floor(Math.random() * 10000)
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')

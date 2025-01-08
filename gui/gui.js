@@ -206,6 +206,7 @@ class Menu {
         label: 'Reload',
         accelerator: 'CmdOrCtrl+R',
         click (_, win) {
+          if (!win) return
           const view = win.getBrowserViews()[0]
           const { webContents } = view || win
           refresh(webContents, app.state)
@@ -258,19 +259,12 @@ class Menu {
 
   devtoolsReloaderListen (wc) {
     if (this.devtoolsReloaderActive) return
-
     this.devtoolsReloaderActive = true
-    const listener = () => { refresh(wc, this.app.state) }
-    // ignore electron docs about register: it DOES NOT accept an array of accelerators, just the one string
-    electron.globalShortcut.register('CommandOrControl+R', listener)
-    electron.globalShortcut.register('F5', listener)
   }
 
   devtoolsReloaderUnlisten () {
     if (this.devtoolsReloaderActive === false) return
     this.devtoolsReloaderActive = false
-    electron.globalShortcut.unregister('CommandOrControl+R')
-    electron.globalShortcut.unregister('F5')
   }
 
   destroy () {
