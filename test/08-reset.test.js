@@ -2,13 +2,13 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const resetDir = path.join(Helper.localDir, 'test', 'fixtures', 'reset')
+const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
 test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
-  const dir = resetDir
+  const dir = storageDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

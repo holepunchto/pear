@@ -1,8 +1,0 @@
-{
-  "name": "reset",
-  "main": "index.js",
-  "pear": {
-    "name": "reset",
-    "type": "terminal"
-  }
-}
