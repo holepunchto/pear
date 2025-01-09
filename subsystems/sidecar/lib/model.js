@@ -104,7 +104,10 @@ module.exports = class Model {
     const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
     const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
 
-    if (!srcBundle || dstBundle) return null
+    if (!srcBundle || dstBundle) {
+      await this.lock.exit()
+      return null
+    }
 
     const updatedDstBundle = { ...dstBundle, appStorage: srcBundle }
     await tx.insert('@pear/bundle', updatedDstBundle)
