@@ -143,8 +143,9 @@ and then becomes the sidecar.`,
 
   dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`,
 
-  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.'
+  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.',
 
+  reset: 'Clears application storage for given application link”'
 }
 
 const usage = { header, version, banner, descriptions, footer }
@@ -251,13 +252,7 @@ function permit (ipc, info, cmd) {
   }
 }
 
-async function confirmReset (link) {
-  const dialog = ansi.warning + `  ${ansi.bold('WARNING')} the storage of ${ansi.bold(link)} will be permanently deleted and cannot be recovered. To confirm type "RESET"\n\n`
-  const ask = `Reset ${link} storage`
-  const delim = '?'
-  const validation = (value) => value === 'RESET'
-  const msg = '\n' + ansi.cross + ' uppercase RESET to confirm\n'
-
+async function confirm (dialog, ask, delim, validation, msg) {
   const interact = new Interact(dialog, [
     {
       name: 'value',
@@ -268,8 +263,7 @@ async function confirmReset (link) {
       msg
     }
   ])
-
   await interact.run()
 }
 
-module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY, confirmReset }
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY, confirm }
