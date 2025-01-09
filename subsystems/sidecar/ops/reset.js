@@ -18,9 +18,11 @@ module.exports = class Reset extends Opstream {
       throw ERR_INVALID_INPUT('Link was not found')
     }
     this.push({ tag: 'reseting', data: { link } })
-    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-    // const oldAppStorage = persistedBundle.appStorage TODO add to gc
-    const newAppStorage = path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+    const oldAppStorage = persistedBundle.appStorage
+    this.sidecar.model.addStorageGC(oldAppStorage)
+    console.log(await this.sidecar.model.getGC())
+    const appStoragePath = path.join(PLATFORM_DIR, 'app-storage')
+    const newAppStorage = path.join(appStoragePath, 'by-random', crypto.randomBytes(16).toString('hex'))
     await this.sidecar.model.updateAppStorage(link, newAppStorage)
     this.push({ tag: 'complete' })
   }

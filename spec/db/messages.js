@@ -95,17 +95,38 @@ const encoding2 = {
   }
 }
 
-// @pear/bundle/hyperdb#1.tags
-const encoding3_3 = c.array(c.string)
-
-// @pear/bundle/hyperdb#1
+// @pear/gc
 const encoding3 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.type)
+    c.string.preencode(state, m.value)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.type)
+    c.string.encode(state, m.value)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+
+    return {
+      type: r0,
+      value: r1
+    }
+  }
+}
+
+// @pear/bundle/hyperdb#2.tags
+const encoding4_3 = c.array(c.string)
+
+// @pear/bundle/hyperdb#2
+const encoding4 = {
   preencode (state, m) {
     c.string.preencode(state, m.appStorage)
     state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
-    if (m.tags) encoding3_3.preencode(state, m.tags)
+    if (m.tags) encoding4_3.preencode(state, m.tags)
   },
   encode (state, m) {
     const flags =
@@ -116,7 +137,7 @@ const encoding3 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
-    if (m.tags) encoding3_3.encode(state, m.tags)
+    if (m.tags) encoding4_3.encode(state, m.tags)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -126,7 +147,7 @@ const encoding3 = {
       link: null,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding3_3.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding4_3.decode(state) : null
     }
   }
 }
@@ -156,7 +177,8 @@ function getEncoding (name) {
     case '@pear/node': return encoding0
     case '@pear/dht': return encoding1
     case '@pear/bundle': return encoding2
-    case '@pear/bundle/hyperdb#1': return encoding3
+    case '@pear/gc': return encoding3
+    case '@pear/bundle/hyperdb#2': return encoding4
     default: throw new Error('Encoder not found ' + name)
   }
 }

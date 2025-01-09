@@ -75,6 +75,12 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
+  async addStorageGC (value) {
+    const tx = await this.lock.enter()
+    await tx.insert('@pear/gc', { type: 'storage', value })
+    await this.lock.exit()
+  }
+
   async getTags (link) {
     return (await this.db.get('@pear/bundle', { link }))?.tags || []
   }

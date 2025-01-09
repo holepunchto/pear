@@ -55,41 +55,34 @@ const collection0 = {
   indexes: []
 }
 
-// '@pear/bundle' collection key
+// '@pear/gc' collection key
 const collection1_key = new IndexEncoder([
-  IndexEncoder.STRING
 ], { prefix: 1 })
 
 function collection1_indexify (record) {
-  const a = record.link
-  return a === undefined ? [] : [a]
+  return []
 }
 
-// '@pear/bundle' value encoding
-const collection1_enc = getEncoding('@pear/bundle/hyperdb#1')
+// '@pear/gc' value encoding
+const collection1_enc = getEncoding('@pear/gc')
 
-// '@pear/bundle' reconstruction function
+// '@pear/gc' reconstruction function
 function collection1_reconstruct (version, keyBuf, valueBuf) {
-  const key = collection1_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection1_enc, valueBuf)
-  record.link = key[0]
   return record
 }
-// '@pear/bundle' key reconstruction function
+// '@pear/gc' key reconstruction function
 function collection1_reconstruct_key (keyBuf) {
-  const key = collection1_key.decode(keyBuf)
-  return {
-    link: key[0]
-  }
+  return {}
 }
 
-// '@pear/bundle'
+// '@pear/gc'
 const collection1 = {
-  name: '@pear/bundle',
+  name: '@pear/gc',
   id: 1,
   encodeKey (record) {
-    const key = [record.link]
+    const key = []
     return collection1_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
@@ -110,59 +103,115 @@ const collection1 = {
   indexes: []
 }
 
-// '@pear/bundle-by-tags' collection key
-const index2_key = new IndexEncoder([
-  IndexEncoder.STRING,
+// '@pear/bundle' collection key
+const collection2_key = new IndexEncoder([
   IndexEncoder.STRING
 ], { prefix: 2 })
 
-// '@pear/bundle-by-tags' has the following schema defined key map
-const index2_map = helpers0.tags
+function collection2_indexify (record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
 
-function index2_indexify (record) {
+// '@pear/bundle' value encoding
+const collection2_enc = getEncoding('@pear/bundle/hyperdb#2')
+
+// '@pear/bundle' reconstruction function
+function collection2_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection2_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection2_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/bundle' key reconstruction function
+function collection2_reconstruct_key (keyBuf) {
+  const key = collection2_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/bundle'
+const collection2 = {
+  name: '@pear/bundle',
+  id: 2,
+  encodeKey (record) {
+    const key = [record.link]
+    return collection2_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection2_key.encodeRange({
+      gt: gt ? collection2_indexify(gt) : null,
+      lt: lt ? collection2_indexify(lt) : null,
+      gte: gte ? collection2_indexify(gte) : null,
+      lte: lte ? collection2_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    setVersion(version)
+    return c.encode(collection2_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection2_reconstruct,
+  reconstructKey: collection2_reconstruct_key,
+  indexes: []
+}
+
+// '@pear/bundle-by-tags' collection key
+const index3_key = new IndexEncoder([
+  IndexEncoder.STRING,
+  IndexEncoder.STRING
+], { prefix: 3 })
+
+// '@pear/bundle-by-tags' has the following schema defined key map
+const index3_map = helpers0.tags
+
+function index3_indexify (record) {
   const a = record
   return a === undefined ? [] : [a]
 }
 
 // '@pear/bundle-by-tags'
-const index2 = {
+const index3 = {
   name: '@pear/bundle-by-tags',
-  id: 2,
+  id: 3,
   encodeKey (record) {
-    return index2_key.encode(index2_indexify(record))
+    return index3_key.encode(index3_indexify(record))
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
-    return index2_key.encodeRange({
-      gt: (gt || gt === '') ? index2_indexify(gt) : null,
-      lt: (lt || lt === '') ? index2_indexify(lt) : null,
-      gte: (gte || gte === '') ? index2_indexify(gte) : null,
-      lte: (lte || lte === '') ? index2_indexify(lte) : null
+    return index3_key.encodeRange({
+      gt: (gt || gt === '') ? index3_indexify(gt) : null,
+      lt: (lt || lt === '') ? index3_indexify(lt) : null,
+      gte: (gte || gte === '') ? index3_indexify(gte) : null,
+      lte: (lte || lte === '') ? index3_indexify(lte) : null
     })
   },
-  encodeValue: (doc) => index2.collection.encodeKey(doc),
+  encodeValue: (doc) => index3.collection.encodeKey(doc),
   encodeIndexKeys (record, context) {
-    const mapped = index2_map(record, context)
+    const mapped = index3_map(record, context)
     const keys = new Array(mapped.length)
     for (let i = 0; i < mapped.length; i++) {
       const mappedRecord = mapped[i]
-      keys[i] = index2_key.encode([mappedRecord, record.link])
+      keys[i] = index3_key.encode([mappedRecord, record.link])
     }
     return keys
   },
   reconstruct: (keyBuf, valueBuf) => valueBuf,
-  offset: collection1.indexes.length,
-  collection: collection1
+  offset: collection2.indexes.length,
+  collection: collection2
 }
-collection1.indexes.push(index2)
+collection2.indexes.push(index3)
 
 module.exports = {
   version,
   collections: [
     collection0,
-    collection1
+    collection1,
+    collection2
   ],
   indexes: [
-    index2
+    index3
   ],
   resolveCollection,
   resolveIndex
@@ -171,14 +220,15 @@ module.exports = {
 function resolveCollection (name) {
   switch (name) {
     case '@pear/dht': return collection0
-    case '@pear/bundle': return collection1
+    case '@pear/gc': return collection1
+    case '@pear/bundle': return collection2
     default: return null
   }
 }
 
 function resolveIndex (name) {
   switch (name) {
-    case '@pear/bundle-by-tags': return index2
+    case '@pear/bundle-by-tags': return index3
     default: return null
   }
 }
