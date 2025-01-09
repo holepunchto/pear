@@ -95,7 +95,7 @@
     "hyperswarm": "^4.7.14",
     "iambus": "^1.0.3",
     "listen-async": "^1.0.0",
-    "localdrive": "^1.11.4",
+    "localdrive": "^2.0.0",
     "localwatch": "^1.4.1",
     "mime-db": "^1.53.0",
     "mirror-drive": "^1.4.0",
