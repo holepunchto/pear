@@ -27,7 +27,6 @@ function collection0_reconstruct (version, keyBuf, valueBuf) {
 // '@pear/dht' key reconstruction function
 function collection0_reconstruct_key (keyBuf) {
   return {}
-
 }
 
 // '@pear/dht'
