@@ -29,7 +29,9 @@ test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
   const before = await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
 
-  await helper.reset({ link })
+  const reset = await helper.reset({ link })
+  const untilReset = await Helper.pick(reset, [{ tag: 'complete' }])
+  await untilReset.complete
 
   const runB = await Helper.run({ link })
   const after = await Helper.untilResult(runB.pipe)
