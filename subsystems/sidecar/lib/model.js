@@ -50,15 +50,16 @@ module.exports = class Model {
     return result
   }
 
-  async updateAppStorage (link, appStorage) {
+  async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
-      const updatedBundle = { ...bundle, appStorage }
+      const updatedBundle = { ...bundle, appStorage: newAppStorage }
       await tx.insert('@pear/bundle', updatedBundle)
+      await tx.insert('@pear/gc', { path: oldStorage })
       result = updatedBundle
     }
     await this.lock.exit()
@@ -72,12 +73,6 @@ module.exports = class Model {
   async setDhtNodes (nodes) {
     const tx = await this.lock.enter()
     await tx.insert('@pear/dht', { nodes })
-    await this.lock.exit()
-  }
-
-  async addStorageGC (value) {
-    const tx = await this.lock.enter()
-    await tx.insert('@pear/gc', { type: 'storage', value })
     await this.lock.exit()
   }
 

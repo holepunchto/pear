@@ -98,20 +98,16 @@ const encoding2 = {
 // @pear/gc
 const encoding3 = {
   preencode (state, m) {
-    c.string.preencode(state, m.type)
-    c.string.preencode(state, m.value)
+    c.string.preencode(state, m.path)
   },
   encode (state, m) {
-    c.string.encode(state, m.type)
-    c.string.encode(state, m.value)
+    c.string.encode(state, m.path)
   },
   decode (state) {
     const r0 = c.string.decode(state)
-    const r1 = c.string.decode(state)
 
     return {
-      type: r0,
-      value: r1
+      path: r0
     }
   }
 }

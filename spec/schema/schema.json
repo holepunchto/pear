@@ -73,13 +73,7 @@
       "flagsPosition": -1,
       "fields": [
         {
-          "name": "type",
-          "required": true,
-          "type": "string",
-          "version": 1
-        },
-        {
-          "name": "value",
+          "name": "path",
           "required": true,
           "type": "string",
           "version": 1

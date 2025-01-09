@@ -67,12 +67,7 @@ pearSchema.register({
   name: 'gc',
   fields: [
     {
-      name: 'type',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'value',
+      name: 'path',
       type: 'string',
       required: true
     }
