@@ -904,7 +904,7 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          this.model.setDhtNodes(knownNodes)
+          await this.model.setDhtNodes(knownNodes)
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
