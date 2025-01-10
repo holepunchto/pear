@@ -87,6 +87,7 @@ class Applings extends ReadyResource {
 
   async _open () {
     const parsedApplings = await readApplingsFile(this.path)
+    console.log('parsedApplings', parsedApplings)
     this._applings = parsedApplings.entries
     this._applingsVersion = parsedApplings.version
   }
@@ -141,6 +142,7 @@ class Applings extends ReadyResource {
     const writesPreFlush = this._writes
 
     try {
+      console.log('this._applings', this._applings)
       await writeApplings(this._applings, this.path)
     } catch (err) {
       LOG.error('internal', 'Could not flush applings file to disk', err)
