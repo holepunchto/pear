@@ -824,14 +824,16 @@ class GuiCtrl {
     this.view?.webContents.on('will-navigate', this.nav)
   }
 
-  async focus ({ steal = false } = {}) {
+  async focus ({ steal = false, restore = true } = {}) {
     if (this.closed) return false
     if (this.win.isFocused()) return true
     if (steal) electron.app.focus({ steal: true })
+    if (restore) await this.restore()
 
     const focused = once(this.win, 'focus')
     const result = this.win.focus()
     await focused
+
     return result
   }
 
