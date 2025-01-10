@@ -111,6 +111,7 @@
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^1.2.0",
     "protomux": "^3.6.0",
+    "pw-to-ek": "^1.1.0",
     "quickbit-universal": "^2.2.0",
     "rache": "^1.0.0",
     "ready-resource": "^1.0.3",
