@@ -5,7 +5,7 @@
 ### Improvements
 
 * Desktop - Electron version 33.2.1
-* Internal - RocksDB-Native version 3.1.1
+* Internal - RocksDB-Native version 3.1.2
 * Internal - Udx-Native version 1.17.2
 * Internal - Node-Bare-Bundle version 1.4.2
 * Internal - Bare 1.13.1
