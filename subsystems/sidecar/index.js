@@ -19,7 +19,6 @@ const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
-const deriveEncryptionKey = require('pw-to-ek')
 const rundef = require('pear-api/cmd/run')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
@@ -272,7 +271,6 @@ class Sidecar extends ReadyResource {
   }
 
   async _open () {
-    await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
   }
@@ -472,7 +470,7 @@ class Sidecar extends ReadyResource {
   shutdown (params, client) { return this.#shutdown(client) }
 
   appClosed (params, client) { return client.userData?.closed ?? false }
-  
+
   #teardownPipelines (client) {
     // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
     const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
