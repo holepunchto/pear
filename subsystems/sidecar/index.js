@@ -22,7 +22,6 @@ const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
-const deriveEncryptionKey = require('pw-to-ek')
 const rundef = require('pear-api/cmd/run')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
@@ -307,7 +306,6 @@ class Sidecar extends ReadyResource {
   }
 
   async _open () {
-    await this.applings.set('runtime', DESKTOP_RUNTIME)
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
   }
