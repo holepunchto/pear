@@ -17,12 +17,12 @@ module.exports = class Data extends Opstream {
 
     if (resource === 'link') {
       const bundle = await model.getBundle(link)
-      this.push({ tag: 'link', data: bundle ? [bundle] : [] })
+      this.push({ tag: 'link', data: bundle })
     }
 
     if (resource === 'dht') {
       const nodes = await model.getDhtNodes()
-      this.push({ tag: 'dht', data: { nodes } })
+      this.push({ tag: 'dht', data: nodes })
     }
 
     await model.close()

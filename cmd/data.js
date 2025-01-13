@@ -1,10 +1,10 @@
 'use strict'
 const parseLink = require('../lib/parse-link')
-const { outputter, isTTY, permit } = require('./iface')
+const { outputter } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const appsOut = (items) => {
-  let out = 'INSTALLED APPS\n'
+  let out = 'Installed apps:\n'
   for (const bundle of items) {
     out += `- link: ${bundle.link}\n`
     out += `    appStorage: ${bundle.appStorage}\n`
@@ -14,20 +14,18 @@ const appsOut = (items) => {
   return out
 }
 
-const linkOut = (items) => {
-  let out = 'PEAR LINK\n'
-  for (const bundle of items) {
-    out += `- link: ${bundle.link}\n`
-    out += `    appStorage: ${bundle.appStorage}\n`
-    out += `    encryptionKey: ${bundle.encryptionKey}\n`
-    out += `    tags: ${bundle.tags}\n`
-  }
+const linkOut = (item) => {
+  let out = 'Pear app:\n'
+  out += `- link: ${item.link}\n`
+  out += `    appStorage: ${item.appStorage}\n`
+  out += `    encryptionKey: ${item.encryptionKey}\n`
+  out += `    tags: ${item.tags}\n`
   return out
 }
 
 const dhtOut = (items) => {
-  let out = 'DHT NODES\n'
-  for (const node of items.nodes) {
+  let out = 'DHT known-nodes:\n'
+  for (const node of items) {
     out += `- ${node.host}:${node.port}\n`
   }
   return out
@@ -36,14 +34,7 @@ const dhtOut = (items) => {
 const output = outputter('data', {
   apps: (res) => appsOut(res),
   link: (res) => linkOut(res),
-  dht: (res) => dhtOut(res),
-  error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'data')
-    }
-    return `Data Error (code: ${err.code || 'none'}) ${err.stack}`
-  },
-  final: () => false
+  dht: (res) => dhtOut(res)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -54,28 +45,23 @@ class Data {
   }
 
   async apps (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const result = await this.ipc.data({ pid: Bare.pid, resource: 'apps' })
-    await output(json, result, { tag: 'apps' }, this.ipc)
+    const result = await this.ipc.data({ resource: 'apps' })
+    await output(false, result, { tag: 'apps' }, this.ipc)
   }
 
   async link (cmd) {
     const { command } = cmd
-    const { json } = command.parent.flags
     const link = command.args.link
     const parsed = parseLink(link)
     if (!parsed || !parsed.drive || !parsed.drive.key) {
       throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
-    const result = await this.ipc.data({ pid: Bare.pid, resource: 'link', link })
-    await output(json, result, { tag: 'link' }, this.ipc)
+    const result = await this.ipc.data({ resource: 'link', link })
+    await output(false, result, { tag: 'link' }, this.ipc)
   }
 
   async dht (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const result = await this.ipc.data({ pid: Bare.pid, resource: 'dht' })
-    await output(json, result, { tag: 'dht' }, this.ipc)
+    const result = await this.ipc.data({ resource: 'dht' })
+    await output(false, result, { tag: 'dht' }, this.ipc)
   }
 }
