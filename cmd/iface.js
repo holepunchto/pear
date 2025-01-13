@@ -33,6 +33,7 @@ const ansi = isWindows
 ansi.sep = isWindows ? '-' : ansi.dim(ansi.green('∞'))
 ansi.tick = isWindows ? '^' : ansi.green('✔')
 ansi.cross = isWindows ? 'x' : ansi.red('✖')
+ansi.warning = isWindows ? '!' : '⚠️'
 ansi.pear = isWindows ? '*' : '🍐'
 ansi.dot = isWindows ? '•' : 'o'
 ansi.key = isWindows ? '>' : '🔑'
@@ -142,8 +143,9 @@ and then becomes the sidecar.`,
 
   dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`,
 
-  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.'
+  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.',
 
+  reset: 'Clears application storage for given application link”'
 }
 
 const usage = { header, version, banner, descriptions, footer }
@@ -250,4 +252,18 @@ function permit (ipc, info, cmd) {
   }
 }
 
-module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY }
+async function confirm (dialog, ask, delim, validation, msg) {
+  const interact = new Interact(dialog, [
+    {
+      name: 'value',
+      default: '',
+      prompt: ask,
+      delim,
+      validation,
+      msg
+    }
+  ])
+  await interact.run()
+}
+
+module.exports = { usage, permit, stdio, ansi, indicator, status, print, byteDiff, diff, outputter, isTTY, confirm }

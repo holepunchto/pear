@@ -14,9 +14,20 @@
       "trigger": null
     },
     {
-      "name": "bundle",
+      "name": "gc",
       "namespace": "pear",
       "id": 1,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/gc",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    },
+    {
+      "name": "bundle",
+      "namespace": "pear",
+      "id": 2,
       "type": 1,
       "indexes": [
         "@pear/bundle-by-tags"
@@ -31,7 +42,7 @@
     {
       "name": "bundle-by-tags",
       "namespace": "pear",
-      "id": 2,
+      "id": 3,
       "type": 2,
       "collection": "@pear/bundle",
       "unique": false,

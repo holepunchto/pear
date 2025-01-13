@@ -63,6 +63,17 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'gc',
+  fields: [
+    {
+      name: 'path',
+      type: 'string',
+      required: true
+    }
+  ]
+})
+
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -73,6 +84,11 @@ pearDB.require(path.join(__dirname, '..', 'spec', 'helpers.js'))
 pearDB.collections.register({
   name: 'dht',
   schema: '@pear/dht'
+})
+
+pearDB.collections.register({
+  name: 'gc',
+  schema: '@pear/gc'
 })
 
 pearDB.collections.register({
