@@ -49,6 +49,10 @@ async function electronMain (cmd) {
 
   electron.ipcMain.on('send-to', (e, id, channel, message) => { electron.webContents.fromId(id)?.send(channel, message) })
 
+  if (cmd.flags.applicationName) {
+    electron.app.setName(capitalize(cmd.flags.applicationName))
+  }
+
   const app = await gui.app()
   app.unloading().then(async () => {
     await app.close()
@@ -109,4 +113,8 @@ function applingName () {
   }
 
   return null
+}
+
+function capitalize (str) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
