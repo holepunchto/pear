@@ -180,7 +180,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('View local content'),
-    runners.data(ipc)
+    command('apps', summary('Installed apps'), (cmd) => runners.data(ipc).apps(cmd)),
+    command('link', summary('App by link'), arg('<link>', 'Pear link'), (cmd) => runners.data(ipc).link(cmd)),
+    command('dht', summary('DHT cache'), (cmd) => runners.data(ipc).dht(cmd)),
+    () => { console.log(data.help()) }
   )
 
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
