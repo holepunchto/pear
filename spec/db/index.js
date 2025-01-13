@@ -3,7 +3,7 @@
 
 const { IndexEncoder, c } = require('hyperdb/runtime')
 
-const { version, resolveStruct } = require('./messages.js')
+const { version, getEncoding, setVersion } = require('./messages.js')
 
 const helpers0 = require('../helpers.js')
 
@@ -15,10 +15,14 @@ function collection0_indexify (record) {
   return []
 }
 
+// '@pear/dht' value encoding
+const collection0_enc = getEncoding('@pear/dht')
+
 // '@pear/dht' reconstruction function
 function collection0_reconstruct (version, keyBuf, valueBuf) {
-  const value = c.decode(resolveStruct('@pear/dht/value', version), valueBuf)
-  return value
+  setVersion(version)
+  const record = c.decode(collection0_enc, valueBuf)
+  return record
 }
 // '@pear/dht' key reconstruction function
 function collection0_reconstruct_key (keyBuf) {
@@ -42,7 +46,8 @@ const collection0 = {
     })
   },
   encodeValue (version, record) {
-    return c.encode(resolveStruct('@pear/dht/value', version), record)
+    setVersion(version)
+    return c.encode(collection0_enc, record)
   },
   trigger: null,
   reconstruct: collection0_reconstruct,
@@ -60,15 +65,16 @@ function collection1_indexify (record) {
   return a === undefined ? [] : [a]
 }
 
+// '@pear/bundle' value encoding
+const collection1_enc = getEncoding('@pear/bundle/hyperdb#1')
+
 // '@pear/bundle' reconstruction function
 function collection1_reconstruct (version, keyBuf, valueBuf) {
   const key = collection1_key.decode(keyBuf)
-  const value = c.decode(resolveStruct('@pear/bundle/value', version), valueBuf)
-  // TODO: This should be fully code generated
-  return {
-    link: key[0],
-    ...value
-  }
+  setVersion(version)
+  const record = c.decode(collection1_enc, valueBuf)
+  record.link = key[0]
+  return record
 }
 // '@pear/bundle' key reconstruction function
 function collection1_reconstruct_key (keyBuf) {
@@ -95,7 +101,8 @@ const collection1 = {
     })
   },
   encodeValue (version, record) {
-    return c.encode(resolveStruct('@pear/bundle/value', version), record)
+    setVersion(version)
+    return c.encode(collection1_enc, record)
   },
   trigger: null,
   reconstruct: collection1_reconstruct,

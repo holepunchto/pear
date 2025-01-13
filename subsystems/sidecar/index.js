@@ -14,12 +14,12 @@ const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
-const b4a = require('b4a')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
+const deriveEncryptionKey = require('pw-to-ek')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -491,7 +491,7 @@ class Sidecar extends ReadyResource {
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: false, stdio: 'ignore' }
+      const opts = { cwd, env, detached: false, stdio: 'pipe' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -907,7 +907,7 @@ class Sidecar extends ReadyResource {
       if (!this.dhtBootstrap) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          this.model.setDhtNodes(knownNodes)
+          await this.model.setDhtNodes(knownNodes)
           LOG.info('sidecar', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('sidecar', knownNodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
         }
@@ -959,14 +959,6 @@ function pickData () {
       cb(null, data)
     }
   })
-}
-
-async function deriveEncryptionKey (pwd, salt) {
-  const ops = sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE
-  const mem = sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE
-  const output = b4a.alloc(32)
-  await sodium.crypto_pwhash_scryptsalsa208sha256_async(output, b4a.from(pwd), salt, ops, mem)
-  return output
 }
 
 module.exports = Sidecar

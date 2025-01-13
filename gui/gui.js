@@ -123,6 +123,7 @@ class Menu {
           const view = win.getBrowserViews()[0]
           const session = view?.webContents.session || win.webContents.session
           for (const ctrl of PearGUI.ofSession(session)) {
+            ctrl.quitting = true
             await ctrl.close()
           }
         }
@@ -205,6 +206,7 @@ class Menu {
         label: 'Reload',
         accelerator: 'CmdOrCtrl+R',
         click (_, win) {
+          if (!win) return
           const view = win.getBrowserViews()[0]
           const { webContents } = view || win
           refresh(webContents, app.state)
@@ -257,19 +259,12 @@ class Menu {
 
   devtoolsReloaderListen (wc) {
     if (this.devtoolsReloaderActive) return
-
     this.devtoolsReloaderActive = true
-    const listener = () => { refresh(wc, this.app.state) }
-    // ignore electron docs about register: it DOES NOT accept an array of accelerators, just the one string
-    electron.globalShortcut.register('CommandOrControl+R', listener)
-    electron.globalShortcut.register('F5', listener)
   }
 
   devtoolsReloaderUnlisten () {
     if (this.devtoolsReloaderActive === false) return
     this.devtoolsReloaderActive = false
-    electron.globalShortcut.unregister('CommandOrControl+R')
-    electron.globalShortcut.unregister('F5')
   }
 
   destroy () {
@@ -535,7 +530,8 @@ class App {
         autoHideMenuBar: unfilteredGuiOptions.autoHideMenuBar,
         hasShadow: unfilteredGuiOptions.hasShadow,
         opacity: unfilteredGuiOptions.opacity,
-        transparent: unfilteredGuiOptions.transparent
+        transparent: unfilteredGuiOptions.transparent,
+        hideOnClose: unfilteredGuiOptions.hideOnClose ?? unfilteredGuiOptions[process.platform]?.hideOnClose ?? false
       }
 
       const decalSession = electron.session.fromPartition('persist:pear')
@@ -774,6 +770,7 @@ class GuiCtrl {
   unloaded = null
   #unloading = null
   appkin = null
+  quitting = false
   static height = 540
   static width = 720
   static [kCtrl] = null
@@ -827,14 +824,19 @@ class GuiCtrl {
     this.view?.webContents.on('will-navigate', this.nav)
   }
 
-  async focus ({ steal = false } = {}) {
+  async focus ({ steal = true } = {}) {
     if (this.closed) return false
     if (this.win.isFocused()) return true
-    if (steal) electron.app.focus({ steal: true })
+    if (steal) {
+      electron.app.focus({ steal: true })
+      await this.restore()
+      await this.show()
+    }
 
     const focused = once(this.win, 'focus')
     const result = this.win.focus()
     await focused
+
     return result
   }
 
@@ -879,14 +881,6 @@ class GuiCtrl {
     return this.closed
   }
 
-  async show () {
-    if (this.closed) return false
-  }
-
-  async hide () {
-    if (this.closed) return false
-  }
-
   async dimensions (opts = null) {
     if (this.closed) return null
     const item = this[kCtrl] === 'view' ? this.view : this.win
@@ -929,10 +923,12 @@ class GuiCtrl {
 
     const closeListener = (e) => {
       e.preventDefault()
+      if (this.options.hideOnClose) return
       if (this.unload) {
         this.unload({ type: 'close' })
       }
     }
+
     if (this.win) this.win.once('close', closeListener)
     this.unloader = new Promise((resolve) => { this.unloaded = resolve })
     const action = await until
@@ -963,6 +959,12 @@ class Window extends GuiCtrl {
   closing = false
   #viewInitialized = null
   #viewLoaded = null
+
+  #onactivate = () => {
+    if (this.closing || this.closed) return
+    this.show()
+  }
+
   async open (opts = {}) {
     if (this.win) return !this.closed
     this.opening = true
@@ -1014,8 +1016,13 @@ class Window extends GuiCtrl {
       if (this?.view?.webContents) this.view.webContents.focus()
     })
 
-    this.win.on('close', () => {
-      this.closing = true
+    this.win.on('close', (evt) => {
+      if (this.options.hideOnClose && this.quitting === false) {
+        evt.preventDefault()
+        this.win.hide()
+      } else {
+        this.closing = true
+      }
     })
 
     this.win.on('closed', () => {
@@ -1030,6 +1037,8 @@ class Window extends GuiCtrl {
         this.view = null
       }
     })
+
+    electron.app.on('activate', this.#onactivate)
 
     if (this.id === null) this.id = idify(this)
     this.constructor[kMap].set(this.id, this)
@@ -1255,6 +1264,7 @@ class Window extends GuiCtrl {
 
   async close () {
     this.closing = true
+    electron.app.off('activate', this.#onactivate)
     const closed = await super.close()
     this.closing = false
     return closed

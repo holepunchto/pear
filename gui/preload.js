@@ -42,16 +42,12 @@ module.exports = class PearGUI extends ReadyResource {
             camera: () => ipc.askForMediaAccess({ id, media: 'camera' }),
             screen: () => ipc.askForMediaAccess({ id, media: 'screen' })
           },
-          desktopSources: (options = {}) => ipc.desktopSources(options)
+          desktopSources: (options = {}) => ipc.desktopSources(options),
+          getPathForFile: (file) => electron.webUtils.getPathForFile(file)
         }
         this.badge = (count) => {
           if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
           return ipc.badge(count)
-        }
-
-        this.electron = {}
-        this.electron.getPathForFile = (file) => {
-          return electron.webUtils.getPathForFile(file)
         }
 
         const kGuiCtrl = Symbol('gui:ctrl')
