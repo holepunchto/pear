@@ -100,6 +100,18 @@ class Menu {
         }
       },
       { type: 'separator' },
+      ...(isMac
+        ? [{
+            get label () {
+              let name = app.state?.name
+              name = name || 'app'
+              name = name[0].toUpperCase() + name.slice(1)
+              return `Hide ${name}`
+            },
+            role: 'hide'
+          },
+          { type: 'separator' }]
+        : []),
       {
         get label () {
           let name = app.state?.name
