@@ -142,7 +142,9 @@ and then becomes the sidecar.`,
 
   dev: `Alias for: ${ansi.italic('pear run --dev <dir>')}`,
 
-  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.'
+  touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.',
+
+  data: 'Data stored in this device.'
 
 }
 

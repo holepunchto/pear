@@ -3,7 +3,7 @@ const parseLink = require('../lib/parse-link')
 const { outputter } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
-const appsOut = (items) => {
+const appsOutput = (items) => {
   let out = 'Installed apps:\n'
   for (const bundle of items) {
     out += `- link: ${bundle.link}\n`
@@ -14,7 +14,7 @@ const appsOut = (items) => {
   return out
 }
 
-const linkOut = (item) => {
+const linkOutput = (item) => {
   let out = 'Pear app:\n'
   out += `- link: ${item.link}\n`
   out += `    appStorage: ${item.appStorage}\n`
@@ -23,7 +23,7 @@ const linkOut = (item) => {
   return out
 }
 
-const dhtOut = (items) => {
+const dhtOutput = (items) => {
   let out = 'DHT known-nodes:\n'
   for (const node of items) {
     out += `- ${node.host}:${node.port}\n`
@@ -32,9 +32,9 @@ const dhtOut = (items) => {
 }
 
 const output = outputter('data', {
-  apps: (res) => appsOut(res),
-  link: (res) => linkOut(res),
-  dht: (res) => dhtOut(res)
+  apps: (res) => appsOutput(res),
+  link: (res) => linkOutput(res),
+  dht: (res) => dhtOutput(res)
 })
 
 module.exports = (ipc) => new Data(ipc)

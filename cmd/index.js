@@ -173,16 +173,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const versions = command(
     'versions',
     summary('View dependency versions'),
-    flag('--json', 'JSON output'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.versions(ipc)
   )
 
   const data = command(
     'data',
-    summary('View local content'),
+    summary('View database contents'),
+    description(usage.descriptions.data),
     command('apps', summary('Installed apps'), (cmd) => runners.data(ipc).apps(cmd)),
-    command('link', summary('App by link'), arg('<link>', 'Pear link'), (cmd) => runners.data(ipc).link(cmd)),
-    command('dht', summary('DHT cache'), (cmd) => runners.data(ipc).dht(cmd)),
+    command('link', summary('Fetch app by link'), arg('<link>', 'Link'), (cmd) => runners.data(ipc).link(cmd)),
+    command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
+    flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
   )
 
