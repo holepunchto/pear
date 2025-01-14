@@ -145,9 +145,9 @@ and then becomes the sidecar.`,
 
   touch: 'Creates a Pear Link using channel name if provided or else a randomly generated channel name.',
 
-  data: 'Data stored in this device.'
+  reset: 'Clears application storage for given application link”',
 
-  reset: 'Clears application storage for given application link”'
+  data: 'Local data stored in this device.'
 }
 
 const usage = { header, version, banner, descriptions, footer }
