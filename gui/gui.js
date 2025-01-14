@@ -110,7 +110,10 @@ class Menu {
             },
             role: 'hide'
           },
-          { type: 'separator' }]
+          { role: 'hideothers' },
+          { role: 'unhide' },
+          { type: 'separator' }
+          ]
         : []),
       {
         get label () {
