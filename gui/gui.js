@@ -531,7 +531,7 @@ class App {
         hasShadow: unfilteredGuiOptions.hasShadow,
         opacity: unfilteredGuiOptions.opacity,
         transparent: unfilteredGuiOptions.transparent,
-        hideOnClose: unfilteredGuiOptions.hideOnClose ?? unfilteredGuiOptions[process.platform]?.hideOnClose ?? false
+        hideable: unfilteredGuiOptions.hideable ?? unfilteredGuiOptions[process.platform]?.hideable ?? false
       }
 
       const decalSession = electron.session.fromPartition('persist:pear')
@@ -671,7 +671,13 @@ function linuxViewSize ({ win, view }) {
 
 function applyGuiOptions (win, opts) {
   for (const [key, value] of groupings(win, opts)) {
-    applyGuiOption(win, key, value)
+    if (key === process.platform) {
+      for (const [k, v] of groupings(win, value)) {
+        applyGuiOption(win, k, v)
+      }
+    } else {
+      applyGuiOption(win, key, value)
+    }
   }
 }
 
@@ -720,6 +726,7 @@ function applyGuiOption (win, key, value) {
       win.setSize(w, h, false)
       return value ? win.setBackgroundColor('#00000000') : win.setBackgroundColor('#000')
     }
+    case 'hideable': win.hideable = value
   }
 }
 
@@ -923,7 +930,7 @@ class GuiCtrl {
 
     const closeListener = (e) => {
       e.preventDefault()
-      if (this.options.hideOnClose) return
+      if (this.win.hideable) return
       if (this.unload) {
         this.unload({ type: 'close' })
       }
@@ -1017,7 +1024,7 @@ class Window extends GuiCtrl {
     })
 
     this.win.on('close', (evt) => {
-      if (this.options.hideOnClose && this.quitting === false) {
+      if (this.win.hideable && this.quitting === false) {
         evt.preventDefault()
         this.win.hide()
       } else {
