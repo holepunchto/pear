@@ -4,7 +4,7 @@ const { outputter } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const appsOutput = (bundles) => {
-  let out = 'Installed apps:\n\n'
+  let out = ''
   for (const bundle of bundles) {
     out += `- link: ${bundle.link}\n`
     out += `    appStorage: ${bundle.appStorage}\n`
@@ -14,17 +14,8 @@ const appsOutput = (bundles) => {
   return out
 }
 
-const linkOutput = (bundle) => {
-  let out = 'Pear app:\n\n'
-  out += `- link: ${bundle.link}\n`
-  out += `    appStorage: ${bundle.appStorage}\n`
-  out += `    encryptionKey: ${bundle.encryptionKey}\n`
-  out += `    tags: ${bundle.tags}\n`
-  return out
-}
-
 const dhtOutput = (nodes) => {
-  let out = 'DHT known-nodes:\n\n'
+  let out = ''
   for (const node of nodes) {
     out += `${node.host}:${node.port}\n`
   }
@@ -33,7 +24,7 @@ const dhtOutput = (nodes) => {
 
 const output = outputter('data', {
   apps: (data) => appsOutput(data),
-  link: (data) => linkOutput(data),
+  link: (data) => appsOutput([data]),
   dht: (data) => dhtOutput(data)
 })
 
@@ -47,20 +38,18 @@ class Data {
   async apps (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'apps' })
-    await output(json, result, { tag: 'apps' }, this.ipc)
-  }
-
-  async link (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
     const link = command.args.link
-    const parsed = parseLink(link)
-    if (!parsed || !parsed.drive || !parsed.drive.key) {
-      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    if (link) {
+      const parsed = parseLink(link)
+      if (!parsed || !parsed.drive || !parsed.drive.key) {
+        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      }
+      const result = await this.ipc.data({ resource: 'link', link })
+      await output(json, result, { tag: 'link' }, this.ipc)
+    } else {
+      const result = await this.ipc.data({ resource: 'apps' })
+      await output(json, result, { tag: 'apps' }, this.ipc)
     }
-    const result = await this.ipc.data({ resource: 'link', link })
-    await output(json, result, { tag: 'link' }, this.ipc)
   }
 
   async dht (cmd) {
