@@ -7,9 +7,9 @@ const appsOutput = (bundles) => {
   let out = ''
   for (const bundle of bundles) {
     out += `- link: ${bundle.link}\n`
-    out += `    appStorage: ${bundle.appStorage}\n`
-    out += `    encryptionKey: ${bundle.encryptionKey}\n`
-    out += `    tags: ${bundle.tags}\n`
+    out += `  appStorage: ${bundle.appStorage}\n`
+    out += `  encryptionKey: ${bundle.encryptionKey}\n`
+    out += `  tags: ${bundle.tags}\n\n`
   }
   return out
 }
@@ -41,9 +41,7 @@ class Data {
     const link = command.args.link
     if (link) {
       const parsed = parseLink(link)
-      if (!parsed || !parsed.drive || !parsed.drive.key) {
-        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      }
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
       const result = await this.ipc.data({ resource: 'link', link })
       await output(json, result, { tag: 'link' }, this.ipc)
     } else {
