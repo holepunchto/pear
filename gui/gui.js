@@ -109,7 +109,8 @@ class Menu {
               return `Hide ${name}`
             },
             role: 'hide'
-          }]
+          },
+          { type: 'separator' }]
         : []),
       {
         get label () {
