@@ -104,7 +104,7 @@ module.exports = class Model {
     const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
     const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
 
-    if (!srcBundle || dstBundle) {
+    if (!srcBundle || !dstBundle) {
       await this.lock.exit()
       return null
     }
