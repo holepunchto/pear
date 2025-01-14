@@ -109,7 +109,7 @@ module.exports = class Model {
       return null
     }
 
-    const updatedDstBundle = { ...dstBundle, appStorage: srcBundle }
+    const updatedDstBundle = { ...dstBundle, appStorage: srcBundle.appStorage }
     await tx.insert('@pear/bundle', updatedDstBundle)
     await tx.insert('@pear/gc', { path: dstBundle.appStorage })
 
