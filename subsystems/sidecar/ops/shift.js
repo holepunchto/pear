@@ -35,6 +35,6 @@ module.exports = class Shift extends Opstream {
     const newSrcAppStorage = path.join(path.join(PLATFORM_DIR, 'app-storage'), 'by-random', randomBytes(16).toString('hex'))
     await this.sidecar.model.shiftAppStorage(src, dst, newSrcAppStorage)
 
-    this.push({ tag: 'complete', data: { from: srcAppStorage, to: dstAppStorage, src, dst } })
+    this.push({ tag: 'complete', data: { oldDst: dstAppStorage, newDst: srcAppStorage, newSrc: newSrcAppStorage, src, dst } })
   }
 }
