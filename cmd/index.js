@@ -16,6 +16,7 @@ const runners = {
   dump: require('./dump'),
   touch: require('./touch'),
   shift: require('./shift'),
+  reset: require('./reset'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
@@ -146,6 +147,15 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.shift(ipc)
   )
 
+  const reset = command(
+    'reset',
+    summary('Advanced. Reset an application to initial state'),
+    description(usage.descriptions.reset),
+    arg('<link>', 'Application Pear link'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.reset(ipc)
+  )
+
   const sidecar = command(
     'sidecar',
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
@@ -206,6 +216,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     dump,
     touch,
     shift,
+    reset,
     sidecar,
     gc,
     versions,

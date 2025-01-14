@@ -65,6 +65,20 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "gc",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "path",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
     }
   ]
 }
