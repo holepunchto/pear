@@ -90,7 +90,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
 
-  const { startId, host, id, type = 'desktop', bundle, bail, name } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  const { startId, host, id, type = 'desktop', bundle, bail, app } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
@@ -136,7 +136,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
-    if (name) args.splice(indices.args.link, 0, '--application-name', name)
+    if (app.name) args.splice(indices.args.link, 0, '--app-name', app.name)
     args = [constants.BOOT, ...args]
     const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
     const child = spawn(constants.DESKTOP_RUNTIME, args, {
