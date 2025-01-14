@@ -1,5 +1,43 @@
 # Pear Runtime Changelog
 
+## v1.9.0
+
+### Improvements
+
+* Desktop - Electron version 33.2.1
+* Internal - RocksDB-Native version 3.1.2
+* Internal - Udx-Native version 1.17.2
+* Internal - Node-Bare-Bundle version 1.4.2
+* Internal - Bare 1.13.1
+
+## v1.8.1
+
+### Fixes
+
+* Desktop - Fixed `userAgent` configuration
+
+## v1.8.0
+
+### Features
+
+* CLI - `stage` warmup map generated from bundle static analysis
+* Desktop - Exposed `badge` Electron method
+* Desktop - Supported `rocksdb-native` in GUI apps
+
+### Fixes
+
+* Worker - Deduplicated `--trusted` flag
+* Worker - Fixed worker arguments when executed with platform arguments
+* Desktop - Fixed `hide` Electron IPC call
+* CLI - `dump` creates dump directory by default
+* Terminal - Fixed exit for terminal apps without teardown
+
+### Improvements
+
+* CLI - Improved crash log
+* Internal - Bare version 1.12
+* Internal - Introduced unskippable platform versions
+
 ## v1.7.0
 
 ### Features
