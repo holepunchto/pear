@@ -36,7 +36,6 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
-
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
