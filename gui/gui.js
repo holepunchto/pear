@@ -670,14 +670,8 @@ function linuxViewSize ({ win, view }) {
 }
 
 function applyGuiOptions (win, opts) {
-  let allOpts = opts
-
-  if (process.platform in opts) {
-    const { [process.platform]: optsPlat, ...rest } = opts
-    allOpts = { ...rest, ...optsPlat }
-  }
-
-  for (const [key, value] of groupings(win, allOpts)) {
+  const platformOpts = opts[process.platform] || {}
+  for (const [key, value] of groupings(win, { ...opts, ...platformOpts })) {
     applyGuiOption(win, key, value)
   }
 }
