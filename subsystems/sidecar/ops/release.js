@@ -1,10 +1,10 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
+const { ERR_UNSTAGED } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const State = require('pear-api/state')
-const { ERR_UNSTAGED } = require('pear-api/errors')
+const State = require('../state')
 
 module.exports = class Release extends Opstream {
   constructor (...args) {
