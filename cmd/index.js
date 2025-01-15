@@ -44,13 +44,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const dev = command(
     'dev',
-    summary('pear dev has been deprecated, use pear run --dev instead.'),
     sloppy({ args: true, flags: true }),
     () => {
       print('pear dev has been deprecated, use pear run --dev instead.', false)
       ipc.close()
     }
-  )
+  ).hide()
 
   const seed = command(
     'seed',
