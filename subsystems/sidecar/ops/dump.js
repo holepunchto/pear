@@ -2,11 +2,11 @@
 const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
+const Hyperdrive = require('hyperdrive')
+const parseLink = require('pear-api/parse-link')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const parseLink = require('pear-api/parse-link')
-const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }

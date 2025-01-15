@@ -7,10 +7,10 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
+const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
-const State = require('pear-api/state')
-const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const State = require('../state')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
