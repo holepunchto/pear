@@ -268,7 +268,6 @@ class IPC {
   message (...args) { return electron.ipcRenderer.invoke('message', ...args) }
   checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
-  data (...args) { return electron.ipcRenderer.invoke('data', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 

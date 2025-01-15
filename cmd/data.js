@@ -8,7 +8,7 @@ const appsOutput = (bundles) => {
   for (const bundle of bundles) {
     out += `- link: ${bundle.link}\n`
     out += `  appStorage: ${bundle.appStorage}\n`
-    out += `  encryptionKey: ${bundle.encryptionKey.toString('hex')}\n`
+    out += `  encryptionKey: ${bundle.encryptionKey?.toString('hex') ?? 'null'}\n`
     out += `  tags: ${bundle.tags}\n\n`
   }
   return out
