@@ -2,10 +2,10 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { randomBytes, discoveryKey } = require('hypercore-crypto')
-const Opstream = require('../lib/opstream')
 const parseLink = require('pear-api/parse-link')
 const { PLATFORM_DIR, GC } = require('pear-api/constants')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const Opstream = require('../lib/opstream')
 
 module.exports = class Shift extends Opstream {
   constructor (...args) {

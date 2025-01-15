@@ -35,7 +35,6 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
-const SharedState = require('pear-api/state')
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
@@ -580,7 +579,7 @@ class Sidecar extends ReadyResource {
       for (const app of matches) {
         const pathname = parsed.pathname
         const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-        const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
+        const fragment = parsed.hash ? parsed.hash.slice(1) : (State.isKeetInvite(segment) ? segment : null)
         app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
       }
 

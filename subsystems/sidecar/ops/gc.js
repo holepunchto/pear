@@ -4,9 +4,9 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const Opstream = require('../lib/opstream')
 const { PLATFORM_DIR } = require('pear-api/constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-api/errors')
+const Opstream = require('../lib/opstream')
 
 module.exports = class GC extends Opstream {
   constructor ({ data = {}, resource } = {}, client) {
