@@ -1,15 +1,16 @@
 'use strict'
 const parseLink = require('../lib/parse-link')
-const { outputter } = require('./iface')
+const { outputter, ansi } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const appsOutput = (bundles) => {
   let out = ''
   for (const bundle of bundles) {
-    out += `- link: ${bundle.link}\n`
-    out += `  appStorage: ${bundle.appStorage}\n`
-    out += `  encryptionKey: ${bundle.encryptionKey?.toString('hex') ?? 'null'}\n`
-    out += `  tags: ${bundle.tags}\n\n`
+    out += `- ${ansi.bold(bundle.link)}\n`
+    out += `      appStorage: ${ansi.dim(bundle.appStorage)}\n`
+    if (bundle.encryptionKey) out += `      encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
+    if (bundle.tags) out += `      tags: ${ansi.dim(bundle.tags)}\n`
+    out += '\n'
   }
   return out
 }
@@ -17,7 +18,7 @@ const appsOutput = (bundles) => {
 const dhtOutput = (nodes) => {
   let out = ''
   for (const node of nodes) {
-    out += `${node.host}:${node.port}\n`
+    out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
   }
   return out
 }
