@@ -1,9 +1,9 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_PROJECT_DIR } = require('pear-api/errors')
-const State = require('pear-api/state')
-const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
+const { ERR_INVALID_PROJECT_DIR } = require('pear-api/errors')
+const Opstream = require('../lib/opstream')
+const State = require('../state')
 
 module.exports = class Touch extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
