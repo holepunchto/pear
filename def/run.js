@@ -23,5 +23,6 @@ module.exports = [
   flag('--detach').hide(),
   flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
-  flag('--sandbox').hide() // electron passthrough
+  flag('--sandbox').hide(), // electron passthrough
+  flag('--app-name <name>').hide()
 ]

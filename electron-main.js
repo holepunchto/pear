@@ -49,6 +49,10 @@ async function electronMain (cmd) {
 
   electron.ipcMain.on('send-to', (e, id, channel, message) => { electron.webContents.fromId(id)?.send(channel, message) })
 
+  if (cmd.flags.appName) {
+    electron.app.setName(cmd.flags.appName)
+  }
+
   const app = await gui.app()
   app.unloading().then(async () => {
     await app.close()
