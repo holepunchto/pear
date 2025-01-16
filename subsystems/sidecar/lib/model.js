@@ -95,6 +95,32 @@ module.exports = class Model {
     return result
   }
 
+  async getAppStorage (link) {
+    return (await this.db.get('@pear/bundle', { link }))?.appStorage
+  }
+
+  async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
+    const tx = await this.lock.enter()
+    const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
+    const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
+
+    if (!srcBundle || !dstBundle) {
+      await this.lock.exit()
+      return null
+    }
+
+    const updatedDstBundle = { ...dstBundle, appStorage: srcBundle.appStorage }
+    await tx.insert('@pear/bundle', updatedDstBundle)
+    await tx.insert('@pear/gc', { path: dstBundle.appStorage })
+
+    const updatedSrcBundle = { ...srcBundle, appStorage: newSrcAppStorage }
+    await tx.insert('@pear/bundle', updatedSrcBundle)
+
+    await this.lock.exit()
+
+    return { srcBundle: updatedSrcBundle, dstBundle: updatedDstBundle }
+  }
+
   async close () {
     await this.db.close()
   }
