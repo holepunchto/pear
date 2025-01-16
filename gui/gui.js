@@ -959,8 +959,8 @@ class GuiCtrl {
     return action
   }
 
-  completeUnload (action, opts = {}) {
-    if (opts.quitting) this.quitting = true
+  completeUnload ({ action, quitting }) {
+    if (quitting) this.quitting = true
     this.unloaded()
     if (action.type === 'close') this.close()
   }
@@ -1728,10 +1728,10 @@ class PearGUI extends ReadyResource {
 
   unloading ({ id }) { return this.get(id).unloading() }
 
-  async completeUnload ({ id, action, opts }) {
+  async completeUnload ({ id, action, quitting }) {
     const instance = this.get(id)
     if (!instance) return
-    instance.completeUnload(action, opts)
+    instance.completeUnload({ action, quitting })
   }
 
   async attachMainView ({ id }) { this.get(id).attachMainView() }
