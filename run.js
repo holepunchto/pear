@@ -6,11 +6,11 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
-const { Readable } = require('streamx')
-const { isMac, isWindows, isLinux } = require('which-runtime')
-const constants = require('./constants')
-const State = require('./state')
-const API = require('./lib/api')
+const { isMac, isWindows } = require('which-runtime')
+const API = require('pear-api')
+const constants = require('pear-api/constants')
+const teardown = require('pear-api/teardown')
+const parseLink = require('pear-api/parse-link')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
@@ -20,7 +20,7 @@ const parseLink = require('./lib/parse-link')
 const pearLink = require('pear-link')
 const teardown = require('./lib/teardown')
 
-module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
+module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   const { drive, pathname } = parseLink(link)
   const entry = isWindows ? path.normalize(pathname.slice(1)) : pathname
   const { key } = drive
@@ -52,13 +52,9 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   }
 
-  const stream = new Readable({ objectMode: true })
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
-    if (wokeup) {
-      ipc.close().catch(console.error)
-      return stream
-    }
+    if (wokeup) return ipc.close().catch(console.error)
 
     args = args.filter((arg) => arg !== '--detached')
     const opts = { detached: true, stdio: 'ignore', cwd }
@@ -66,8 +62,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (!appling) {
       args.unshift('run', '--detach')
       spawn(constants.RUNTIME, args, opts).unref()
-      ipc.close().catch(console.error)
-      return stream
+      return ipc.close().catch(console.error)
     }
 
     const applingApp = isMac ? appling.split('.app')[0] + '.app' : appling
@@ -79,49 +74,39 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       throw ERR_INVALID_APPLING('Appling does not exist')
     }
 
-    if (link.startsWith('pear://runtime')) {
-      if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
-      args = [constants.BOOT, '--appling', appling, '--run', ...args]
-      spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
-    } else {
-      if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
-      else spawn(applingApp, args, opts).unref()
-    }
-    ipc.close().catch(console.error)
-    return stream
+    if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
+    else spawn(applingApp, args, opts).unref()
+
+    return ipc.close().catch(console.error)
   }
 
-  const { startId, host, id, type = 'desktop', bundle, bail, app } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+  const { startId, id, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
   }
 
-  if (type === 'terminal') {
-    const state = new State({ flags, link, dir, cmdArgs, cwd })
+  const state = new State({ flags, link, dir, cmdArgs, cwd })
 
-    state.update({ host, id, type })
+  state.update({ id, startId })
 
-    if (state.error) {
-      console.error(state.error)
-      global.process?.exit(1) || global.Bare.exit(1)
+  if (state.error) throw state.error
+
+  await ipc.ready()
+  const config = await ipc.config()
+  state.update({ config })
+
+  global.Pear = new API(ipc, state, { teardown })
+
+  const protocol = new Module.Protocol({
+    exists (url) {
+      if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
+      return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
+    },
+    read (url) {
+      return bundle.sources[url.href]
     }
-
-    await ipc.ready()
-    const ipcConfig = await ipc.config()
-    state.update({ config: ipcConfig })
-
-    global.Pear = new API(ipc, state)
-
-    const protocol = new Module.Protocol({
-      exists (url) {
-        if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
-        return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
-      },
-      read (url) {
-        return bundle.sources[url.href]
-      }
-    })
+  })
 
     // clear global handlers
     Bare.removeAllListeners('uncaughtException')
