@@ -1,6 +1,10 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
-class API { static CHECKOUT = require('./checkout'); config = {} }
+class API {
+  static CHECKOUT = require('./checkout')
+  static CONSTANTS = require('pear-api/constants')
+  config = {}
+}
 global.Pear = new API()
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
