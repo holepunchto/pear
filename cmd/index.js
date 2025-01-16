@@ -193,7 +193,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     description(usage.descriptions.data),
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
-    flag('--show-secrets', 'Show sensitive information such as encryption keys'),
+    flag('--secrets', 'Show sensitive information such as encryption keys'),
     flag('--json', 'Newline delimited JSON output. Including secrets!'),
     () => { console.log(data.help()) }
   )

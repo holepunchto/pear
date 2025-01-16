@@ -3,12 +3,12 @@ const parseLink = require('../lib/parse-link')
 const { outputter, ansi } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
-const appsOutput = (bundles, showSecrets) => {
+const appsOutput = (bundles, secrets) => {
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
     out += `      appStorage: ${ansi.dim(bundle.appStorage)}\n`
-    if (showSecrets && bundle.encryptionKey) {
+    if (secrets && bundle.encryptionKey) {
       out += `      encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
     if (bundle.tags) out += `      tags: ${ansi.dim(bundle.tags)}\n`
@@ -26,8 +26,8 @@ const dhtOutput = (nodes) => {
 }
 
 const output = outputter('data', {
-  apps: (data, options) => appsOutput(data, options.showSecrets),
-  link: (data, options) => appsOutput([data], options.showSecrets),
+  apps: (data, options) => appsOutput(data, options.secrets),
+  link: (data, options) => appsOutput([data], options.secrets),
   dht: (data) => dhtOutput(data)
 })
 
@@ -40,16 +40,16 @@ class Data {
 
   async apps (cmd) {
     const { command } = cmd
-    const { showSecrets, json } = command.parent.flags
+    const { secrets, json } = command.parent.flags
     const link = command.args.link
     if (link) {
       const parsed = parseLink(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
       const result = await this.ipc.data({ resource: 'link', link })
-      await output(json, result, { tag: 'link', showSecrets }, this.ipc)
+      await output(json, result, { tag: 'link', secrets }, this.ipc)
     } else {
       const result = await this.ipc.data({ resource: 'apps' })
-      await output(json, result, { tag: 'apps', showSecrets }, this.ipc)
+      await output(json, result, { tag: 'apps', secrets }, this.ipc)
     }
   }
 
