@@ -620,7 +620,7 @@ class App {
         }
       })
 
-      electron.app.once('before-quit', async (e) => {
+      electron.app.once('before-quit', async () => {
         ctrl.quitting = true
       })
 
