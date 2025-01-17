@@ -680,6 +680,7 @@ class Sidecar extends ReadyResource {
     await fs.promises.mkdir(appStorage, { recursive: true })
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
+    await this.model.setDhtNodes(dht.nodes)
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
 
     const applingPath = state.appling?.path
