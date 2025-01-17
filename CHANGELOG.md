@@ -1,5 +1,17 @@
 # Pear Runtime Changelog
 
+## v1.10.0
+
+### Improvements
+
+* Desktop - Added "hideable" GUI option
+* Desktop - Pear.gui options platform specific
+* Internal - Udx-Native version 1.17.3
+
+### Fixes
+
+* Internal - Parsing .resolve calls statically (Sloppy Module Parser 2.2.1 and ScriptLinker 2.5.4) 
+
 ## v1.9.0
 
 ### Improvements
