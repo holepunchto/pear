@@ -731,7 +731,7 @@ class Sidecar extends ReadyResource {
       if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
@@ -820,7 +820,7 @@ class Sidecar extends ReadyResource {
       if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle }
+      return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, type, bundle, app: { name: state.appName } }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking minver')
@@ -832,7 +832,7 @@ class Sidecar extends ReadyResource {
     if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
     const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle }
+    return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
   }
 
   async #updatePearInterface (drive) {

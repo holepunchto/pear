@@ -6,7 +6,7 @@ const SCHEMA_DIR = path.join(__dirname, '..', 'spec', 'schema')
 const DB_DIR = path.join(__dirname, '..', 'spec', 'db')
 
 // hyperdb/schema
-const schema = Hyperschema.from(SCHEMA_DIR)
+const schema = Hyperschema.from(SCHEMA_DIR, { versioned: false })
 const pearSchema = schema.namespace('pear')
 
 // custom types

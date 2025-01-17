@@ -546,7 +546,7 @@ class App {
         hasShadow: unfilteredGuiOptions.hasShadow,
         opacity: unfilteredGuiOptions.opacity,
         transparent: unfilteredGuiOptions.transparent,
-        hideOnClose: unfilteredGuiOptions.hideOnClose ?? unfilteredGuiOptions[process.platform]?.hideOnClose ?? false
+        hideable: unfilteredGuiOptions.hideable ?? unfilteredGuiOptions[process.platform]?.hideable ?? false
       }
 
       const decalSession = electron.session.fromPartition('persist:pear')
@@ -619,6 +619,11 @@ class App {
           }
         }
       })
+
+      electron.app.once('before-quit', () => {
+        ctrl.quitting = true
+      })
+
       this.id = ctrl.id
       await this.starting
     } catch (err) {
@@ -685,7 +690,8 @@ function linuxViewSize ({ win, view }) {
 }
 
 function applyGuiOptions (win, opts) {
-  for (const [key, value] of groupings(win, opts)) {
+  const platformOpts = opts[process.platform] || {}
+  for (const [key, value] of groupings(win, { ...opts, ...platformOpts })) {
     applyGuiOption(win, key, value)
   }
 }
@@ -735,6 +741,7 @@ function applyGuiOption (win, key, value) {
       win.setSize(w, h, false)
       return value ? win.setBackgroundColor('#00000000') : win.setBackgroundColor('#000')
     }
+    case 'hideable': win.hideable = value
   }
 }
 
@@ -938,7 +945,7 @@ class GuiCtrl {
 
     const closeListener = (e) => {
       e.preventDefault()
-      if (this.options.hideOnClose) return
+      if (this.win.hideable && this.quitting === false) return
       if (this.unload) {
         this.unload({ type: 'close' })
       }
@@ -953,6 +960,7 @@ class GuiCtrl {
   }
 
   completeUnload (action) {
+    this.quitting = true
     this.unloaded()
     if (action.type === 'close') this.close()
   }
@@ -1032,7 +1040,7 @@ class Window extends GuiCtrl {
     })
 
     this.win.on('close', (evt) => {
-      if (this.options.hideOnClose && this.quitting === false) {
+      if (this.win.hideable && this.quitting === false) {
         evt.preventDefault()
         this.win.hide()
       } else {
