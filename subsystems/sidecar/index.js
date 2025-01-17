@@ -901,6 +901,7 @@ class Sidecar extends ReadyResource {
   async #close () {
     await this.applings.close()
     clearTimeout(this.lazySwarmTimeout)
+    clearTimeout(this.spindownt)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.http) await this.http.close()
     if (this.swarm) {
