@@ -14,20 +14,20 @@ test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const id = Math.floor(Math.random() * 10000)
-  const password = hypercoreid.encode(crypto.randomBytes(32))
 
   comment('staging')
+  const id = Math.floor(Math.random() * 10000)
+  const password = hypercoreid.encode(crypto.randomBytes(32))
+  const touch = await helper.touch({ dir, channel: `test-${id}` })
+  const { key } = await Helper.pick(touch, { tag: 'result' })
+  await helper.permit({ key: hypercoreid.decode(key), password })
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { key } = await staged.addendum
   await staged.final
-  await helper.permit({ key: hypercoreid.decode(key), password })
 
   const link = `pear://${key}`
   const run = await Helper.run({ link })
-  await Helper.untilClose(run.pipe)
   let data = await helper.data({ resource: 'apps' })
 
   comment('pear data apps')
@@ -42,17 +42,17 @@ test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) 
   result = await Helper.pick(data, [{ tag: 'link' }])
   let bundle = await result.link
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
-  is(bundle.link, link, 'Link matches to the one just created')
+  is(bundle.link, link, 'Link matches the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data --secrets apps [link]')
-  data = await helper.data({ resource: 'link', link })
+  data = await helper.data({ resource: 'link', link, secrets: true })
   result = await Helper.pick(data, [{ tag: 'link' }])
   bundle = await result.link
-  ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
-  is(bundle.link, link, 'Link matches to the one just created')
-  is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
   is(bundle.encryptionKey, password.toString('hex'), 'Encryption key matches')
+  ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
+  is(bundle.link, link, 'Link matches the one just created')
+  is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data dht')
   data = await helper.data({ resource: 'dht' })
@@ -61,4 +61,7 @@ test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) 
   ok(dht.length > 0, 'DHT array exists')
   is(typeof dht[0].host, 'string', 'Field host is a string')
   is(typeof dht[0].port, 'number', 'Field port is a number')
+
+  await Helper.untilClose(run.pipe)
+  ok(true, 'ended')
 })
