@@ -107,7 +107,7 @@
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
     "pear-ipc": "^3.0.0",
-    "pear-link": "^2.0.1",
+    "pear-link": "^2.1.1",
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^1.2.0",
     "protomux": "^3.6.0",
