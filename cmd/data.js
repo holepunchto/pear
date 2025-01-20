@@ -3,15 +3,17 @@ const parseLink = require('../lib/parse-link')
 const { outputter, ansi } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
-const appsOutput = (bundles, secrets) => {
+const padding = '    '
+
+const appsOutput = (bundles) => {
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
-    out += `      appStorage: ${ansi.dim(bundle.appStorage)}\n`
-    if (secrets && bundle.encryptionKey) {
-      out += `      encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
+    out += `${padding}appStorage: ${ansi.dim(bundle.appStorage)}\n`
+    if (bundle.encryptionKey) {
+      out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
-    if (bundle.tags) out += `      tags: ${ansi.dim(bundle.tags)}\n`
+    if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
     out += '\n'
   }
   return out
@@ -26,8 +28,8 @@ const dhtOutput = (nodes) => {
 }
 
 const output = outputter('data', {
-  apps: (data, options) => appsOutput(data, options.secrets),
-  link: (data, options) => appsOutput([data], options.secrets),
+  apps: (data) => appsOutput(data),
+  link: (data) => appsOutput([data]),
   dht: (data) => dhtOutput(data)
 })
 
@@ -45,11 +47,11 @@ class Data {
     if (link) {
       const parsed = parseLink(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      const result = await this.ipc.data({ resource: 'link', link })
-      await output(json, result, { tag: 'link', secrets }, this.ipc)
+      const result = await this.ipc.data({ resource: 'link', secrets, link })
+      await output(json, result, { tag: 'link' }, this.ipc)
     } else {
-      const result = await this.ipc.data({ resource: 'apps' })
-      await output(json, result, { tag: 'apps', secrets }, this.ipc)
+      const result = await this.ipc.data({ resource: 'apps', secrets })
+      await output(json, result, { tag: 'apps' }, this.ipc)
     }
   }
 
