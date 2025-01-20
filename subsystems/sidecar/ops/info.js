@@ -1,6 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
+const pearLink = require('pear-link')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
@@ -25,7 +26,7 @@ module.exports = class Info extends Opstream {
 
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
-    const query = await this.sidecar.model.getBundle(link)
+    const query = await this.sidecar.model.getBundle(pearLink.normalize(link))
     const encryptionKey = query?.encryptionKey
 
     if (link || channel) {

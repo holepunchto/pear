@@ -6,6 +6,7 @@ const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const { PLATFORM_DIR } = require('../../../constants')
 const { ERR_INVALID_INPUT } = require('../../../errors')
+const pearLink = require('pear-link')
 
 const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
 
@@ -26,14 +27,14 @@ module.exports = class Shift extends Opstream {
     if (!parsedSrc?.drive?.key) throw ERR_INVALID_INPUT('Invalid source app key')
     if (!parsedDst?.drive?.key) throw ERR_INVALID_INPUT('Invalid destination app key')
 
-    const srcAppStorage = await this.sidecar.model.getAppStorage(src)
-    const dstAppStorage = await this.sidecar.model.getAppStorage(dst)
+    const srcAppStorage = await this.sidecar.model.getAppStorage(pearLink.normalize(src))
+    const dstAppStorage = await this.sidecar.model.getAppStorage(pearLink.normalize(dst))
 
     if (!srcAppStorage || !(await exists(srcAppStorage))) throw ERR_INVALID_INPUT(`No app storage found for ${src}`)
     if (dstAppStorage && !force) throw ERR_INVALID_INPUT(`App storage for ${dst} already exists. Use --force to overwrite`)
 
     const newSrcAppStorage = path.join(path.join(PLATFORM_DIR, 'app-storage'), 'by-random', randomBytes(16).toString('hex'))
-    await this.sidecar.model.shiftAppStorage(src, dst, newSrcAppStorage)
+    await this.sidecar.model.shiftAppStorage(pearLink.normalize(src), pearLink.normalize(dst), newSrcAppStorage)
 
     this.push({ tag: 'complete', data: { oldDst: dstAppStorage, newDst: srcAppStorage, newSrc: newSrcAppStorage, src, dst } })
   }

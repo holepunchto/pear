@@ -3,7 +3,6 @@ const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_HYPERDB } = require('../../../constants')
-const path = require('bare-path')
 
 module.exports = class Model {
   constructor () {
@@ -21,7 +20,7 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    const bundle = await this.db.get('@pear/bundle', { link: normalizeLink(link) })
+    const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
 
@@ -31,7 +30,7 @@ module.exports = class Model {
 
   async addBundle (link, appStorage) {
     const tx = await this.lock.enter()
-    await tx.insert('@pear/bundle', { link: normalizeLink(link), appStorage })
+    await tx.insert('@pear/bundle', { link, appStorage })
     await this.lock.exit()
     return { link, appStorage }
   }
@@ -39,7 +38,7 @@ module.exports = class Model {
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
-    const bundle = await tx.get('@pear/bundle', { link: normalizeLink(link) })
+    const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
@@ -54,7 +53,7 @@ module.exports = class Model {
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
-    const bundle = await tx.get('@pear/bundle', { link: normalizeLink(link) })
+    const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
@@ -78,13 +77,13 @@ module.exports = class Model {
   }
 
   async getTags (link) {
-    return (await this.db.get('@pear/bundle', { link: normalizeLink(link) }))?.tags || []
+    return (await this.db.get('@pear/bundle', { link }))?.tags || []
   }
 
   async updateTags (link, tags) {
     let result
     const tx = await this.lock.enter()
-    const bundle = await tx.get('@pear/bundle', { link: normalizeLink(link) })
+    const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
@@ -97,13 +96,13 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
-    return (await this.db.get('@pear/bundle', { link: normalizeLink(link) }))?.appStorage
+    return (await this.db.get('@pear/bundle', { link }))?.appStorage
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    const srcBundle = await tx.get('@pear/bundle', { link: normalizeLink(srcLink) })
-    const dstBundle = await tx.get('@pear/bundle', { link: normalizeLink(dstLink) })
+    const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
+    const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
 
     if (!srcBundle || !dstBundle) {
       await this.lock.exit()
@@ -125,8 +124,4 @@ module.exports = class Model {
   async close () {
     await this.db.close()
   }
-}
-
-const normalizeLink = (link) => {
-  return link.endsWith(path.sep) ? link.slice(0, -1) : link
 }

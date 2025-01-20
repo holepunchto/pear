@@ -15,6 +15,7 @@ const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
+const pearLink = require('pear-link')
 const IPC = require('pear-ipc')
 const { isMac } = require('which-runtime')
 const { command } = require('paparam')
@@ -430,18 +431,18 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = `pear://${hypercoreid.encode(params.key)}`
-      const bundle = await this.model.getBundle(link)
+      const bundle = await this.model.getBundle(pearLink.normalize(link))
       if (!bundle) {
-        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
+        await this.model.addBundle(pearLink.normalize(link), this._generateAppStorage(parseLink(link)))
       }
-      return await this.model.updateEncryptionKey(link, encryptionKey)
+      return await this.model.updateEncryptionKey(pearLink.normalize(link), encryptionKey)
     }
   }
 
   async trusted (link) {
     const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
     const aliasesKeys = Object.values(ALIASES).map(e => `pear://${hypercoreid.encode(e)}`)
-    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(link) !== null
+    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(pearLink.normalize(link)) !== null
   }
 
   async detached ({ link, key, storage, appdev }) {
@@ -670,7 +671,7 @@ class Sidecar extends ReadyResource {
     }
 
     link = link.startsWith('pear://') ? link : pathToFileURL(link).href
-    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
+    const persistedBundle = await this.model.getBundle(pearLink.normalize(link)) || await this.model.addBundle(pearLink.normalize(link), this._generateAppStorage(parsedLink))
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
