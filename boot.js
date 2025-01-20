@@ -2,7 +2,7 @@
 'use strict'
 class API {
   static CHECKOUT = require('./checkout')
-  static CONSTANTS = require('pear-api/constants')
+  static get CONSTANTS () { return require('pear-api/constants') }
   config = {}
 }
 global.Pear = new API()
