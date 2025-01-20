@@ -2,9 +2,9 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { randomBytes } = require('hypercore-crypto')
+const pearLink = require('pear-link')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
-const pearLink = require('pear-link')
 const { PLATFORM_DIR } = require('../../../constants')
 const { ERR_INVALID_INPUT } = require('../../../errors')
 
