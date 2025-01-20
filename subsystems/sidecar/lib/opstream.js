@@ -1,5 +1,6 @@
 'use strict'
 const streamx = require('streamx')
+const parseLink = require('pear-link')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
   constructor (op, params, client, sidecar = null) {
@@ -17,6 +18,7 @@ module.exports = class Opstream extends streamx.Readable {
           cb(null)
           return this.session.close()
         }
+        if (params.link) params.link = parseLink.normalize(params.link)
         op(params).catch(error).finally(close)
       }
     })

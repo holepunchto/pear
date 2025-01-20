@@ -4,7 +4,6 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const pearLink = require('pear-link')
 const parseLink = require('../../../lib/parse-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
@@ -34,7 +33,7 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = Number(checkout)
 
-    const query = await this.sidecar.model.getBundle(pearLink.normalize(link))
+    const query = await this.sidecar.model.getBundle(link)
     const encryptionKey = query?.encryptionKey
 
     const corestore = isFileLink ? null : sidecar._getCorestore(null, null)

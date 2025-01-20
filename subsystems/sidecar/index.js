@@ -431,18 +431,18 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = `pear://${hypercoreid.encode(params.key)}`
-      const bundle = await this.model.getBundle(pearLink.normalize(link))
+      const bundle = await this.model.getBundle(link)
       if (!bundle) {
-        await this.model.addBundle(pearLink.normalize(link), this._generateAppStorage(parseLink(link)))
+        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
       }
-      return await this.model.updateEncryptionKey(pearLink.normalize(link), encryptionKey)
+      return await this.model.updateEncryptionKey(link, encryptionKey)
     }
   }
 
   async trusted (link) {
     const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
     const aliasesKeys = Object.values(ALIASES).map(e => `pear://${hypercoreid.encode(e)}`)
-    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(pearLink.normalize(link)) !== null
+    return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(link) !== null
   }
 
   async detached ({ link, key, storage, appdev }) {

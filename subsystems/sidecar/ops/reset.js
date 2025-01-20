@@ -5,7 +5,6 @@ const { pathToFileURL } = require('url-file-url')
 const { PLATFORM_DIR } = require('../../../constants')
 const Opstream = require('../lib/opstream')
 const { ERR_INVALID_INPUT } = require('../../../errors')
-const pearLink = require('pear-link')
 
 module.exports = class Reset extends Opstream {
   constructor (...args) {
@@ -14,7 +13,7 @@ module.exports = class Reset extends Opstream {
 
   async #op ({ link }) {
     link = link.startsWith('pear://') ? link : pathToFileURL(link).href
-    const persistedBundle = await this.sidecar.model.getBundle(pearLink.normalize(link))
+    const persistedBundle = await this.sidecar.model.getBundle(link)
     if (!persistedBundle) {
       throw ERR_INVALID_INPUT('Link was not found')
     }
@@ -22,7 +21,7 @@ module.exports = class Reset extends Opstream {
     const oldAppStorage = persistedBundle.appStorage
     const appStoragePath = path.join(PLATFORM_DIR, 'app-storage')
     const newAppStorage = path.join(appStoragePath, 'by-random', crypto.randomBytes(16).toString('hex'))
-    await this.sidecar.model.updateAppStorage(pearLink.normalize(link), newAppStorage, oldAppStorage)
+    await this.sidecar.model.updateAppStorage(link, newAppStorage, oldAppStorage)
     this.push({ tag: 'complete' })
   }
 }
