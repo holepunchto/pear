@@ -20,7 +20,6 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    console.log('LINK', link)
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
