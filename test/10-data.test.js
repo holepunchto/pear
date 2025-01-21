@@ -1,36 +1,35 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
-const crypto = require('hypercore-crypto')
 const hypercoreid = require('hypercore-id-encoding')
+const crypto = require('hypercore-crypto')
 const Helper = require('./helper')
-const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
+const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
-test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('pear data', async function ({ ok, is, comment, timeout, teardown }) {
   timeout(180000)
-  plan(10)
 
-  const dir = storageDir
+  const dir = encrypted
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  comment('staging')
   const id = Math.floor(Math.random() * 10000)
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const touch = await helper.touch({ dir, channel: `test-${id}` })
   const { key } = await Helper.pick(touch, { tag: 'result' })
   await helper.permit({ key: hypercoreid.decode(key), password })
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.final
-
   const link = `pear://${key}`
-  const run = await Helper.run({ link })
-  let data = await helper.data({ resource: 'apps' })
+  const { pipe } = await Helper.run({ link })
+
+  comment('staging with encryption key')
+  const staging = helper.stage({ channel: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const final = await Helper.pick(staging, { tag: 'final' })
+  ok(final.success, 'stage succeeded')
 
   comment('pear data apps')
+  let data = await helper.data({ resource: 'apps' })
   let result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
   ok(bundles.length > 0, 'Bundle array exists')
@@ -41,17 +40,18 @@ test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) 
   data = await helper.data({ resource: 'link', link })
   result = await Helper.pick(data, [{ tag: 'link' }])
   let bundle = await result.link
+  ok(bundle.encryptionKey === undefined, 'Encryption key is hidden without --secrets')
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
-  is(bundle.link, link, 'Link matches the one just created')
+  is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data --secrets apps [link]')
   data = await helper.data({ resource: 'link', link, secrets: true })
   result = await Helper.pick(data, [{ tag: 'link' }])
   bundle = await result.link
-  is(bundle.encryptionKey, password.toString('hex'), 'Encryption key matches')
+  is(hypercoreid.encode(bundle.encryptionKey), password, 'Encryption key matches')
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
-  is(bundle.link, link, 'Link matches the one just created')
+  is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data dht')
@@ -62,6 +62,6 @@ test('pear data', async function ({ ok, is, plan, comment, teardown, timeout }) 
   is(typeof dht[0].host, 'string', 'Field host is a string')
   is(typeof dht[0].port, 'number', 'Field port is a number')
 
-  await Helper.untilClose(run.pipe)
+  await Helper.untilClose(pipe)
   ok(true, 'ended')
 })
