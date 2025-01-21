@@ -45,7 +45,7 @@ module.exports = class Info extends Opstream {
       await bundle.ready()
     }
 
-    console.log('🚀 ~ Info ~ #op ~ drive:', drive)
+    console.log('🚀 ~ Info ~ #op ~ drive:', key, drive)
     const z32 = hypercoreid.encode(key)
     if (isEnabled(showKey)) {
       const onlyShowKey = enabledFlags.size === 1
