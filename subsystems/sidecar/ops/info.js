@@ -6,6 +6,7 @@ const Hyperdrive = require('hyperdrive')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
+const { CHECKOUT } = require('../../../constants')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Info extends Opstream {
@@ -45,7 +46,7 @@ module.exports = class Info extends Opstream {
       await bundle.ready()
     }
 
-    const z32 = hypercoreid.encode(key)
+    const z32 = link ? hypercoreid.encode(key) : CHECKOUT.key
     if (isEnabled(showKey)) {
       const onlyShowKey = enabledFlags.size === 1
       this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
