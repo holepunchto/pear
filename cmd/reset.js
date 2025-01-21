@@ -23,5 +23,5 @@ module.exports = (ipc) => async function reset (cmd) {
   const msg = '\n' + ansi.cross + ' uppercase RESET to confirm\n'
   await confirm(dialog, ask, delim, validation, msg)
 
-  await output(json, ipc.reset({ link: isPear ? link : path.join(os.cwd(), link) }))
+  await output(json, ipc.reset({ link: isPear || path.isAbsolute(link) ? link : path.join(os.cwd(), link) }))
 }

@@ -2,6 +2,7 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { randomBytes } = require('hypercore-crypto')
+const pearLink = require('pear-link')
 const Opstream = require('../lib/opstream')
 const parseLink = require('../../../lib/parse-link')
 const { PLATFORM_DIR } = require('../../../constants')
@@ -16,6 +17,9 @@ module.exports = class Shift extends Opstream {
 
   async #op ({ src, dst, force }) {
     this.push({ tag: 'moving', data: { src, dst } })
+
+    src = pearLink.normalize(src)
+    dst = pearLink.normalize(dst)
 
     if (!src) throw ERR_INVALID_INPUT('src must be specified')
     if (!dst) throw ERR_INVALID_INPUT('dst must be specified')
