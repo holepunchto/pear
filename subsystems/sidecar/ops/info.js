@@ -45,7 +45,7 @@ module.exports = class Info extends Opstream {
       await bundle.ready()
     }
 
-    const z32 = hypercoreid.encode(key)
+    const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
     if (isEnabled(showKey)) {
       const onlyShowKey = enabledFlags.size === 1
       this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
