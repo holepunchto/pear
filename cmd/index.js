@@ -20,7 +20,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  data: require('./data')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -182,8 +183,19 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const versions = command(
     'versions',
     summary('View dependency versions'),
-    flag('--json', 'JSON output'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.versions(ipc)
+  )
+
+  const data = command(
+    'data',
+    summary('View database contents'),
+    description(usage.descriptions.data),
+    command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
+    command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
+    flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
+    flag('--json', 'Newline delimited JSON output'),
+    () => { console.log(data.help()) }
   )
 
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
@@ -208,6 +220,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    data,
     help,
     footer(usage.footer),
     bail(explain),
