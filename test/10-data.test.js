@@ -9,8 +9,9 @@ const { SALT } = require('../constants')
 
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
-test('pear data', async function ({ ok, is, comment, timeout, teardown }) {
+test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
+  plan(16)
 
   const dir = encrypted
   const helper = new Helper()
