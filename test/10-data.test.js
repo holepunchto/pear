@@ -4,6 +4,9 @@ const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const Helper = require('./helper')
+const deriveEncryptionKey = require('pw-to-ek')
+const { SALT } = require('../constants')
+
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 test('pear data', async function ({ ok, is, comment, timeout, teardown }) {
@@ -16,6 +19,8 @@ test('pear data', async function ({ ok, is, comment, timeout, teardown }) {
 
   const id = Math.floor(Math.random() * 10000)
   const password = hypercoreid.encode(crypto.randomBytes(32))
+  const ek = await deriveEncryptionKey(password, SALT)
+
   const touch = await helper.touch({ dir, channel: `test-${id}` })
   const { key } = await Helper.pick(touch, { tag: 'result' })
   await helper.permit({ key: hypercoreid.decode(key), password })
@@ -49,7 +54,7 @@ test('pear data', async function ({ ok, is, comment, timeout, teardown }) {
   data = await helper.data({ resource: 'link', link, secrets: true })
   result = await Helper.pick(data, [{ tag: 'link' }])
   bundle = await result.link
-  is(hypercoreid.encode(bundle.encryptionKey), password, 'Encryption key matches')
+  is(bundle.encryptionKey.toString('hex'), ek.toString('hex'), 'Encryption key from bundle matches')
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
   is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
