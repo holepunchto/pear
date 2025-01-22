@@ -1014,6 +1014,7 @@ class Window extends GuiCtrl {
       frame: false,
       ...(isMac && this.state.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
       ...(isMac && this.state?.alias === 'keet' && this.state?.appling?.path ? { icon: path.join(path.dirname(this.state.appling.path), 'resources', 'app', 'icon.ico') } : {}),
+      ...(isLinux && { icon: path.join(this.state.runtime, '../../../..', constants.DEFAULT_ICON) }),
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
@@ -1033,6 +1034,7 @@ class Window extends GuiCtrl {
       }
     })
     if (this.win.setWindowButtonVisibility) this.win.setWindowButtonVisibility(false) // configured by <pear-ctrl>
+
     this.hidden = !show
 
     this.win.on('focus', () => {
@@ -1776,7 +1778,24 @@ class PearGUI extends ReadyResource {
 
   permit (params) { return this.ipc.permit(params) }
 
-  badge (count) { return electron.app.setBadgeCount(count) }
+  badge ({ id, count }) {
+    if (!isLinux) {
+      return electron.app.setBadgeCount(count)
+    } else {
+      const badgeIcon = (n) => {
+        if (n < 1) {
+          return 'icon.png'
+        } else if (n < 10) {
+          return `icon-badge-${n}.png`
+        } else {
+          return 'icon-badge-more.png'
+        }
+      }
+
+      this.get(id).win.setIcon(path.join(this.state.runtime, '../../../..', constants.RESOURCES, badgeIcon(count)))
+      return true
+    }
+  }
 }
 
 class Freelist {
