@@ -68,9 +68,6 @@ exports.MOUNT = mount.href.slice(0, -1)
 exports.SOCKET_PATH = isWindows ? `\\\\.\\pipe\\${IPC_ID}-${pipeId(PLATFORM_DIR)}` : `${PLATFORM_DIR}/${IPC_ID}.sock`
 exports.BOOT = require.main?.filename
 
-exports.RESOURCES = BIN + 'pear-runtime-app/resources'
-exports.DEFAULT_ICON = BIN + 'pear-runtime-app/resources/icon.png'
-
 exports.CONNECT_TIMEOUT = 20_000
 exports.IDLE_TIMEOUT = 30_000
 exports.SPINDOWN_TIMEOUT = 60_000
