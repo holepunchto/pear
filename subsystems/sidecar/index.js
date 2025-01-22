@@ -681,7 +681,7 @@ class Sidecar extends ReadyResource {
 
     if (state.key === null) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
-      const drive = new LocalDrive(state.dir, { followExternalLinks: true })
+      const drive = new LocalDrive(state.dir, { followExternalLinks: true, followLinks: state.followSymlinks })
       this.#updatePearInterface(drive)
       const appBundle = new Bundle({
         drive,
