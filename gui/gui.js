@@ -550,6 +550,16 @@ class App {
         hideable: unfilteredGuiOptions.hideable ?? unfilteredGuiOptions[process.platform]?.hideable ?? false
       }
 
+      if (guiOptions.hideable) {
+        // TODO: get tray icon from config?
+        const tray = new electron.Tray(require('./icons/badge-more'))
+        const trayContextMenu = electron.Menu.buildFromTemplate([
+          { label: 'Quit', click: () => this.close() },
+        ])
+        tray.setContextMenu(trayContextMenu)
+      }
+
+
       const decalSession = electron.session.fromPartition('persist:pear')
 
       decalSession.setUserAgent('Pear Platform')
