@@ -551,8 +551,7 @@ class App {
       }
 
       if (guiOptions.hideable && unfilteredGuiOptions.trayIcon) {
-        const trayIcon = path.join(this.state.dir, unfilteredGuiOptions.trayIcon)
-        const tray = new electron.Tray(trayIcon)
+        const tray = new electron.Tray(unfilteredGuiOptions.trayIcon)
         const trayContextMenu = electron.Menu.buildFromTemplate([
           { label: 'Quit', click: () => this.close() }
         ])
