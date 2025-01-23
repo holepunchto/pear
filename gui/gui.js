@@ -911,6 +911,7 @@ class GuiCtrl {
   }
 
   async close () {
+    console.log('GuiCtrl close')
     if (this.closed) return true
     if (this.unload) {
       this.unload({ type: 'close' })
@@ -971,6 +972,7 @@ class GuiCtrl {
     })
 
     const closeListener = (e) => {
+      console.log('GuiCtrl closeListener', this.quitting)
       e.preventDefault()
       if (this.win.hideable && this.quitting === false) return
       if (this.unload) {
@@ -1068,6 +1070,7 @@ class Window extends GuiCtrl {
     })
 
     this.win.on('close', (evt) => {
+      console.log('Window on close', this.quitting)
       if (this.win.hideable && this.quitting === false) {
         evt.preventDefault()
         this.win.hide()
