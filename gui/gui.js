@@ -10,6 +10,7 @@ const IPC = require('pear-ipc')
 const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
 const constants = require('../constants')
+const linuxIcon = require('./icons/linux')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -1014,6 +1015,7 @@ class Window extends GuiCtrl {
       frame: false,
       ...(isMac && this.state.options.platform?.__legacyTitlebar ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 12, y: 16 }, titleBarOverlay: true } : (isMac ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 0, y: 0 }, titleBarOverlay: true } : {})),
       ...(isMac && this.state?.alias === 'keet' && this.state?.appling?.path ? { icon: path.join(path.dirname(this.state.appling.path), 'resources', 'app', 'icon.ico') } : {}),
+      ...(isLinux && { icon: linuxIcon }),
       show,
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
@@ -1776,7 +1778,14 @@ class PearGUI extends ReadyResource {
 
   permit (params) { return this.ipc.permit(params) }
 
-  badge (count) { return electron.app.setBadgeCount(count) }
+  badge ({ id, count }) {
+    if (!isLinux) {
+      return electron.app.setBadgeCount(count)
+    } else {
+      this.get(id).win.setIcon(linuxBadgeIcon(count))
+      return true
+    }
+  }
 }
 
 class Freelist {
@@ -1818,6 +1827,35 @@ function parseConfigNumber (value, field) {
   if (value === undefined || typeof value === 'number') return value
   if (typeof value === 'string' && Number.isFinite(+value)) return +value
   throw new Error(`The value of ${field} configuration field must be a number or numeric string, got: ${value}`)
+}
+
+function linuxBadgeIcon (n) {
+  if (n < 1) {
+    return require('./icons/linux')
+  } else {
+    switch (n) {
+      case 1:
+        return require('./icons/badge-1')
+      case 2:
+        return require('./icons/badge-2')
+      case 3:
+        return require('./icons/badge-3')
+      case 4:
+        return require('./icons/badge-4')
+      case 5:
+        return require('./icons/badge-5')
+      case 6:
+        return require('./icons/badge-6')
+      case 7:
+        return require('./icons/badge-7')
+      case 8:
+        return require('./icons/badge-8')
+      case 9:
+        return require('./icons/badge-9')
+      default:
+        return require('./icons/badge-more')
+    }
+  }
 }
 
 module.exports = PearGUI
