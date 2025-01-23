@@ -13,6 +13,8 @@
       "worker": "pear://456cup6hg5pwpekmygzhbxyxgtpknk66mbccohcuo795dj6biueo"
     },
     "gui": {
+      "hideable": true,
+      "trayIcon": "icon.png",
       "width": 900,
       "height": 500,
       "minWidth": 500,
