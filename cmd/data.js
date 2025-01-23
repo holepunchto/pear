@@ -27,10 +27,19 @@ const dhtOutput = (nodes) => {
   return out
 }
 
+const gcOutput = (records) => {
+  let out = ''
+  for (const gc of records) {
+    out += `${gc.path}\n`
+  }
+  return out
+}
+
 const output = outputter('data', {
-  apps: (data) => appsOutput(data),
-  link: (data) => appsOutput([data]),
-  dht: (data) => dhtOutput(data)
+  apps: (result) => appsOutput(result),
+  link: (result) => appsOutput([result]),
+  dht: (result) => dhtOutput(result),
+  gc: (result) => gcOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -60,5 +69,12 @@ class Data {
     const { json } = command.parent.flags
     const result = await this.ipc.data({ resource: 'dht' })
     await output(json, result, { tag: 'dht' }, this.ipc)
+  }
+
+  async gc (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    const result = await this.ipc.data({ resource: 'gc' })
+    await output(json, result, { tag: 'gc' }, this.ipc)
   }
 }

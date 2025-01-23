@@ -23,5 +23,10 @@ module.exports = class Data extends Opstream {
       const nodes = await this.sidecar.model.getDhtNodes()
       this.push({ tag: 'dht', data: nodes })
     }
+
+    if (resource === 'gc') {
+      const records = await this.sidecar.model.allGc()
+      this.push({ tag: 'gc', data: records })
+    }
   }
 }
