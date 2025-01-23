@@ -118,7 +118,7 @@ module.exports = class Stage extends Opstream {
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const analyzer = new DriveAnalyzer(bundle.drive)
+      const analyzer = new DriveAnalyzer(bundle.drive, { ignoreModuleNotFound: true })
       await analyzer.ready()
       const prefetch = state.manifest.pear?.stage?.prefetch || []
       const warmup = await analyzer.analyze(entrypoints, prefetch)
