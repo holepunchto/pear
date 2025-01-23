@@ -550,9 +550,8 @@ class App {
         hideable: unfilteredGuiOptions.hideable ?? unfilteredGuiOptions[process.platform]?.hideable ?? false
       }
 
-      if (guiOptions.hideable) {
-        // TODO: get tray icon from config?
-        const tray = new electron.Tray(require('./icons/badge-more'))
+      if (guiOptions.hideable && unfilteredGuiOptions.trayIcon) {
+        const tray = new electron.Tray(unfilteredGuiOptions.trayIcon)
         const trayContextMenu = electron.Menu.buildFromTemplate([
           { label: 'Quit', click: () => this.close() }
         ])
