@@ -14,9 +14,6 @@
     },
     "gui": {
       "hideable": true,
-      "tray": {
-        "icon": "icon.png"
-      },
       "width": 900,
       "height": 500,
       "minWidth": 500,
