@@ -550,14 +550,6 @@ class App {
         hideable: unfilteredGuiOptions.hideable ?? unfilteredGuiOptions[process.platform]?.hideable ?? false
       }
 
-      if (guiOptions.hideable && unfilteredGuiOptions.trayIcon) {
-        const tray = new electron.Tray(unfilteredGuiOptions.trayIcon)
-        const trayContextMenu = electron.Menu.buildFromTemplate([
-          { label: 'Quit', click: () => this.close() }
-        ])
-        tray.setContextMenu(trayContextMenu)
-      }
-
       const decalSession = electron.session.fromPartition('persist:pear')
 
       decalSession.setUserAgent('Pear Platform')
@@ -628,6 +620,21 @@ class App {
           }
         }
       })
+
+      if (guiOptions.hideable && unfilteredGuiOptions.trayIcon) {
+        const tray = new electron.Tray(unfilteredGuiOptions.trayIcon)
+        const trayContextMenu = electron.Menu.buildFromTemplate([
+          {
+            label: 'Show',
+            click: () => {
+              ctrl.show()
+              ctrl.focus({ steal: true })
+            }
+          },
+          { label: 'Quit', click: () => this.close() }
+        ])
+        tray.setContextMenu(trayContextMenu)
+      }
 
       electron.app.once('before-quit', () => {
         ctrl.quitting = true
