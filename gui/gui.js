@@ -627,7 +627,7 @@ class App {
         if (configGuiOptions.tray?.icon) {
           const nativeImage = electron.nativeImage.createFromDataURL(configGuiOptions.tray.icon)
           if (nativeImage.isEmpty()) {
-            console.warn('Tray icon is invalid, must be a base 64 encoded Data URL string, using default tray icon')
+            console.warn('Invalid tray icon, must be a base 64 encoded Data URL string')
           } else {
             trayIcon = nativeImage
           }
