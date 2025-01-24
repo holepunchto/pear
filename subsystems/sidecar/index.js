@@ -686,7 +686,6 @@ class Sidecar extends ReadyResource {
 
     link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : pathToFileURL(link).href)
     const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
-
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
@@ -694,7 +693,6 @@ class Sidecar extends ReadyResource {
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
-
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')
