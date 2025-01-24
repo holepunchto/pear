@@ -1303,6 +1303,7 @@ class Window extends GuiCtrl {
   }
 
   async close () {
+    if (this.win.hideable && this.quitting === false) return this.hide()
     this.closing = true
     electron.app.off('activate', this.#onactivate)
     const closed = await super.close()
