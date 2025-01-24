@@ -118,8 +118,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const dump = command(
     'dump',
     summary('Synchronize files from key to dir'),
-    arg('<link>', 'Pear link to dump from, supports pathname'),
-    arg('<dir>', 'Directory path to dump to, may be - for stdout'),
+    arg('<link>', 'Pear link to dump from, supports pathname. Pathname will always dump the the stdout'),
+    arg('<dir>', 'Directory path to dump to, may be - for stdout.'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--json', 'Newline delimited JSON output'),
