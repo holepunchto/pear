@@ -621,8 +621,10 @@ class App {
         }
       })
 
-      if (guiOptions.hideable && unfilteredGuiOptions.tray?.icon) {
-        const tray = new electron.Tray(unfilteredGuiOptions.tray?.icon)
+      const configGuiOptions = state.config.options.gui
+      if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
+        const trayIcon = configGuiOptions.tray?.icon ? electron.nativeImage.createFromDataURL(configGuiOptions.tray.icon) : require('./icons/tray')
+        const tray = new electron.Tray(trayIcon)
         const trayContextMenu = electron.Menu.buildFromTemplate([
           {
             label: 'Show',
