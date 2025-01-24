@@ -669,6 +669,7 @@ class App {
   unloading () { return this.ipc.unloading() }
 
   close (maxWait = 5500) {
+    console.log('App close')
     if (this.closing) return this.closing
     this.closing = this.#close(maxWait)
     return this.closing
@@ -1444,6 +1445,7 @@ class View extends GuiCtrl {
   }
 
   async close () {
+    console.log('View close')
     if (this.view && !this.closed) try { this.win.removeBrowserView(this.view) } catch {}
     this.win = null // detach from parent window
     return super.close()
