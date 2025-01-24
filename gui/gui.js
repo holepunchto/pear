@@ -621,7 +621,7 @@ class App {
         }
       })
 
-      const configGuiOptions = state.config.options.gui
+      const configGuiOptions = state.config.options.gui || state.config.options
       if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
         let trayIcon = require('./icons/tray')
         if (configGuiOptions.tray?.icon) {
