@@ -11,6 +11,7 @@ const { isMac, isWindows, isLinux } = require('which-runtime')
 const constants = require('./constants')
 const State = require('./state')
 const API = require('./lib/api')
+const Worker = require('./lib/worker')
 const {
   ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
@@ -144,9 +145,20 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       cwd,
       ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
     })
+
+    const worker = new Worker()
+    const pipe = worker.pipe()
+    if (pipe !== null) {
+      pipe.on('end', () => child.kill())
+      pipe.on('close', () => child.kill())
+    }
+
     child.once('exit', (code) => {
       stream.push({ tag: 'exit', data: { code } })
       ipc.close()
+      if (pipe !== null) {
+        pipe.end()
+      }
     })
     if (!detach) {
       child.stdout.on('data', (data) => { stream.push({ tag: 'stdout', data }) })
