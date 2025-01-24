@@ -632,18 +632,19 @@ class App {
             trayIcon = nativeImage
           }
         }
+
         const tray = new electron.Tray(trayIcon)
+        tray.on('click', () => showAndFocus())
         const trayContextMenu = electron.Menu.buildFromTemplate([
-          {
-            label: 'Show',
-            click: () => {
-              ctrl.show()
-              ctrl.focus({ steal: true })
-            }
-          },
+          { label: 'Show', click: () => showAndFocus() },
           { label: 'Quit', click: () => this.close() }
         ])
         tray.setContextMenu(trayContextMenu)
+
+        function showAndFocus () {
+          ctrl.show()
+          ctrl.focus({ steal: true })
+        }
       }
 
       electron.app.once('before-quit', () => {
