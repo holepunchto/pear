@@ -621,8 +621,8 @@ class App {
         }
       })
 
-      if (guiOptions.hideable && unfilteredGuiOptions.trayIcon) {
-        const tray = new electron.Tray(unfilteredGuiOptions.trayIcon)
+      if (guiOptions.hideable && unfilteredGuiOptions.tray?.icon) {
+        const tray = new electron.Tray(unfilteredGuiOptions.tray?.icon)
         const trayContextMenu = electron.Menu.buildFromTemplate([
           {
             label: 'Show',
