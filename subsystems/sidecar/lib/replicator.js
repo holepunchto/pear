@@ -63,7 +63,7 @@ module.exports = class Replicator extends EventEmitter {
   }
 
   async _join (swarm, { announceSeeds, server, client }) {
-    let done = () => {}
+    let done = noop
     try {
       await this.drive.ready()
       if (this.drive.core.length === 0) done = this.drive.findingPeers()
@@ -177,4 +177,7 @@ module.exports = class Replicator extends EventEmitter {
 
     return keyPair
   }
+}
+
+function noop () {
 }
