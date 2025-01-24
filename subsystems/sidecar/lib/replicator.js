@@ -63,9 +63,10 @@ module.exports = class Replicator extends EventEmitter {
   }
 
   async _join (swarm, { announceSeeds, server, client }) {
-    const done = this.drive.findingPeers()
+    let done = () => {}
     try {
       await this.drive.ready()
+      if (this.drive.core.length === 0) done = this.drive.findingPeers()
     } catch {
       done()
       return
