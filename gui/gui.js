@@ -623,7 +623,15 @@ class App {
 
       const configGuiOptions = state.config.options.gui
       if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
-        const trayIcon = configGuiOptions.tray?.icon ? electron.nativeImage.createFromDataURL(configGuiOptions.tray.icon) : require('./icons/tray')
+        let trayIcon = require('./icons/tray')
+        if (configGuiOptions.tray?.icon) {
+          const nativeImage = electron.nativeImage.createFromDataURL(configGuiOptions.tray.icon)
+          if (nativeImage.isEmpty()) {
+            console.warn('Tray icon is invalid, must be a base 64 encoded Data URL string, using default tray icon')
+          } else {
+            trayIcon = nativeImage
+          }
+        }
         const tray = new electron.Tray(trayIcon)
         const trayContextMenu = electron.Menu.buildFromTemplate([
           {
