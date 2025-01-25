@@ -627,6 +627,49 @@ class App {
 
       this.id = ctrl.id
       await this.starting
+
+      const configGuiOptions = state.config.options.gui || state.config.options
+      if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
+        const trayIcon = await getTrayIcon()
+        const tray = new electron.Tray(trayIcon)
+        tray.on('click', () => showAndFocus())
+        const trayContextMenu = electron.Menu.buildFromTemplate([
+          { label: 'Show', click: () => showAndFocus() },
+          { label: 'Quit', click: () => this.close() }
+        ])
+        tray.setContextMenu(trayContextMenu)
+
+        async function getTrayIcon () {
+          const defaultTrayIcon = require('./icons/tray')
+          try {
+            if (!configGuiOptions.tray?.icon) return defaultTrayIcon
+
+            const trayIconUrl = `${state.sidecar}/${configGuiOptions.tray.icon}`
+            const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${state.id}` } })
+            if (!res.ok) {
+              console.warn('Failed to fetch tray icon: ', await res.text())
+              return defaultTrayIcon
+            }
+
+            const trayIconBuffer = Buffer.from(await res.arrayBuffer())
+            const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
+            if (trayIcon.isEmpty()) {
+              console.warn('Failed to create tray icon: Invalid image, try PNG or JPEG')
+              return defaultTrayIcon
+            }
+
+            return trayIcon
+          } catch (err) {
+            console.warn('Failed to get tray icon: ', err)
+            return defaultTrayIcon
+          }
+        }
+
+        function showAndFocus () {
+          ctrl.show()
+          ctrl.focus({ steal: true })
+        }
+      }
     } catch (err) {
       await this.report({ err })
       this.close()
@@ -1288,6 +1331,7 @@ class Window extends GuiCtrl {
   }
 
   async close () {
+    if (this.win?.hideable && this.quitting === false) return this.hide()
     this.closing = true
     electron.app.off('activate', this.#onactivate)
     const closed = await super.close()
