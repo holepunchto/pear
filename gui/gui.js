@@ -1887,7 +1887,7 @@ async function setTray ({ icon, menu, os, state, ctrl }) {
   }
 
   const trayIcon = icon ? await getTrayIcon({ icon, state }) : defaultTrayIcon
-  const trayMenuTemplate = menu ? getTrayContextMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
+  const trayMenuTemplate = menu ? getTrayMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
 
   const tray = new electron.Tray(trayIcon)
   tray.on('click', () => {
@@ -1915,7 +1915,7 @@ async function getTrayIcon ({ icon, state }) {
   }
 }
 
-function getTrayContextMenuTemplate ({ menu, ctrl }) {
+function getTrayMenuTemplate ({ menu, ctrl }) {
   try {
     if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
     return menu.map(({ label, click }) => {
