@@ -2,7 +2,6 @@
 /* eslint-disable camelcase */
 
 const { IndexEncoder, c } = require('hyperdb/runtime')
-
 const { version, getEncoding, setVersion } = require('./messages.js')
 
 const helpers0 = require('../helpers.js')
@@ -57,24 +56,31 @@ const collection0 = {
 
 // '@pear/gc' collection key
 const collection1_key = new IndexEncoder([
+  IndexEncoder.STRING
 ], { prefix: 1 })
 
 function collection1_indexify (record) {
-  return []
+  const a = record.path
+  return a === undefined ? [] : [a]
 }
 
 // '@pear/gc' value encoding
-const collection1_enc = getEncoding('@pear/gc')
+const collection1_enc = getEncoding('@pear/gc/hyperdb#1')
 
 // '@pear/gc' reconstruction function
 function collection1_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection1_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection1_enc, valueBuf)
+  record.path = key[0]
   return record
 }
 // '@pear/gc' key reconstruction function
 function collection1_reconstruct_key (keyBuf) {
-  return {}
+  const key = collection1_key.decode(keyBuf)
+  return {
+    path: key[0]
+  }
 }
 
 // '@pear/gc'
@@ -82,7 +88,7 @@ const collection1 = {
   name: '@pear/gc',
   id: 1,
   encodeKey (record) {
-    const key = []
+    const key = [record.path]
     return collection1_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
@@ -203,19 +209,17 @@ const index3 = {
 }
 collection2.indexes.push(index3)
 
-module.exports = {
-  version,
-  collections: [
-    collection0,
-    collection1,
-    collection2
-  ],
-  indexes: [
-    index3
-  ],
-  resolveCollection,
-  resolveIndex
-}
+const collections = [
+  collection0,
+  collection1,
+  collection2
+]
+
+const indexes = [
+  index3
+]
+
+module.exports = { version, collections, indexes, resolveCollection, resolveIndex }
 
 function resolveCollection (name) {
   switch (name) {
