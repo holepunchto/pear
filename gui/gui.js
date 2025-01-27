@@ -14,6 +14,19 @@ const linuxIcon = require('./icons/linux')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
+const defaultTrayIcon = require('./icons/tray')
+const defaultTrayMenuTemplate = [
+  {
+    label: 'Show',
+    click: ({ ctrl }) => {
+      ctrl.show()
+      ctrl.focus({ steal: true })
+    }
+  },
+  { label: 'Quit', click: ({ ctrl }) => ctrl.close() }
+]
+const defaultTrayOs = { win32: true, linux: true, darwin: false }
+
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -627,49 +640,6 @@ class App {
 
       this.id = ctrl.id
       await this.starting
-
-      const configGuiOptions = state.config.options.gui || {}
-      if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
-        const trayIcon = await getTrayIcon()
-        const tray = new electron.Tray(trayIcon)
-        tray.on('click', () => showAndFocus())
-        const trayContextMenu = electron.Menu.buildFromTemplate([
-          { label: 'Show', click: () => showAndFocus() },
-          { label: 'Quit', click: () => this.close() }
-        ])
-        tray.setContextMenu(trayContextMenu)
-
-        async function getTrayIcon () {
-          const defaultTrayIcon = require('./icons/tray')
-          try {
-            if (!configGuiOptions.tray?.icon) return defaultTrayIcon
-
-            const trayIconUrl = `${state.sidecar}/${configGuiOptions.tray.icon}`
-            const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${state.id}` } })
-            if (!res.ok) {
-              console.warn('Failed to fetch tray icon: ', await res.text())
-              return defaultTrayIcon
-            }
-
-            const trayIconBuffer = Buffer.from(await res.arrayBuffer())
-            const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
-            if (trayIcon.isEmpty()) {
-              console.warn('Failed to create tray icon: Invalid image, try PNG or JPEG')
-              return defaultTrayIcon
-            }
-
-            return trayIcon
-          } catch (err) {
-            console.warn('Failed to get tray icon: ', err)
-            return defaultTrayIcon
-          }
-        }
-
-        function showAndFocus () {
-          ctrl.show()
-          ctrl.focus({ steal: true })
-        }
-      }
     } catch (err) {
       await this.report({ err })
       this.close()
@@ -1830,6 +1800,31 @@ class PearGUI extends ReadyResource {
       return true
     }
   }
+
+  async tray ({ id, icon, menu, os }) {
+    const trayOs = os ?? defaultTrayOs
+    if (!trayOs[process.platform]) return
+
+    const state = this.state
+    const guiOptions = state.options.gui ?? state.config.options.gui ?? {}
+    const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
+    if (!hideable) {
+      console.warn('hideable option must be enabled to use tray')
+      return
+    }
+
+    const ctrl = this.get(id)
+    const trayIcon = icon ? await getTrayIcon({ icon, state }) : defaultTrayIcon
+    const trayMenuTemplate = menu ? getTrayContextMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
+
+    const tray = new electron.Tray(trayIcon)
+    tray.on('click', () => {
+      ctrl.show()
+      ctrl.focus({ steal: true })
+    })
+    const trayMenu = electron.Menu.buildFromTemplate(trayMenuTemplate)
+    tray.setContextMenu(trayMenu)
+  }
 }
 
 class Freelist {
@@ -1899,6 +1894,37 @@ function linuxBadgeIcon (n) {
       default:
         return require('./icons/badge-more')
     }
+  }
+}
+
+async function getTrayIcon ({ icon, state }) {
+  try {
+    const trayIconUrl = `${state.sidecar}/${icon}`
+    const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${state.id}` } })
+    if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
+
+    const trayIconBuffer = Buffer.from(await res.arrayBuffer())
+    const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
+    if (trayIcon.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
+
+    return trayIcon
+  } catch (err) {
+    console.warn(err)
+    return defaultTrayIcon
+  }
+}
+
+function getTrayContextMenuTemplate ({ menu, ctrl }) {
+  try {
+    if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
+    return menu.map(({ label, click }) => {
+      if (typeof label !== 'string') throw new Error('Tray menu label must be a string')
+      if (typeof click !== 'function') throw new Error('Tray menu click handler must be a function')
+      return { label, click: () => click({ ctrl }) }
+    })
+  } catch (err) {
+    console.warn(err)
+    return defaultTrayMenuTemplate
   }
 }
 

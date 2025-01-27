@@ -49,6 +49,7 @@ module.exports = class PearGUI extends ReadyResource {
           if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
           return ipc.badge({ id, count })
         }
+        this.tray = (opts) => ipc.tray({ id, ...opts })
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
@@ -270,6 +271,7 @@ class IPC {
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
+  tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
