@@ -628,7 +628,7 @@ class App {
       this.id = ctrl.id
       await this.starting
 
-      const configGuiOptions = state.config.options.gui || state.config.options
+      const configGuiOptions = state.config.options.gui
       if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
         const trayIcon = await getTrayIcon()
         const tray = new electron.Tray(trayIcon)
