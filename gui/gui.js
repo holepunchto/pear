@@ -1539,6 +1539,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
+    electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
