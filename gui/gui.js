@@ -1802,30 +1802,7 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  async tray ({ id, icon, menu, os }) {
-    const trayOs = os ?? defaultTrayOs
-    if (!trayOs[process.platform]) return
-
-    const state = this.state
-    const guiOptions = state.options.gui ?? state.config.options.gui ?? {}
-    const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
-    if (!hideable) {
-      console.warn('hideable option must be enabled to use tray')
-      return
-    }
-
-    const ctrl = this.get(id)
-    const trayIcon = icon ? await getTrayIcon({ icon, state }) : defaultTrayIcon
-    const trayMenuTemplate = menu ? getTrayContextMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
-
-    const tray = new electron.Tray(trayIcon)
-    tray.on('click', () => {
-      ctrl.show()
-      ctrl.focus({ steal: true })
-    })
-    const trayMenu = electron.Menu.buildFromTemplate(trayMenuTemplate)
-    tray.setContextMenu(trayMenu)
-  }
+  tray (opts) { return setTray({ ...opts, state: this.state, ctrl: this.get(id) }) }
 }
 
 class Freelist {
@@ -1896,6 +1873,29 @@ function linuxBadgeIcon (n) {
         return require('./icons/badge-more')
     }
   }
+}
+
+async function setTray ({ icon, menu, os, state, ctrl }) {
+  const trayOs = os ?? defaultTrayOs
+  if (!trayOs[process.platform]) return
+
+  const guiOptions = state.options.gui ?? state.config.options.gui ?? {}
+  const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
+  if (!hideable) {
+    console.warn('hideable option must be enabled to use tray')
+    return
+  }
+
+  const trayIcon = icon ? await getTrayIcon({ icon, state }) : defaultTrayIcon
+  const trayMenuTemplate = menu ? getTrayContextMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
+
+  const tray = new electron.Tray(trayIcon)
+  tray.on('click', () => {
+    ctrl.show()
+    ctrl.focus({ steal: true })
+  })
+  const trayMenu = electron.Menu.buildFromTemplate(trayMenuTemplate)
+  tray.setContextMenu(trayMenu)
 }
 
 async function getTrayIcon ({ icon, state }) {
