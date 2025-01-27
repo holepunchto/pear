@@ -1802,7 +1802,7 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  tray (opts) { return setTray({ ...opts, state: this.state, ctrl: this.get(id) }) }
+  tray (opts) { return setTray({ ...opts, state: this.state, ctrl: this.get(opts.id) }) }
 }
 
 class Freelist {
