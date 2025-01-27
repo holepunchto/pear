@@ -1882,7 +1882,7 @@ async function setTray ({ icon, menu, os, state, ctrl }) {
   const guiOptions = state.options.gui ?? state.config.options.gui ?? {}
   const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
   if (!hideable) {
-    console.warn('hideable option must be enabled to use tray')
+    console.warn('hideable config must be enabled to use tray')
     return
   }
 
