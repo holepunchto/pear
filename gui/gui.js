@@ -11,6 +11,7 @@ const ReadyResource = require('ready-resource')
 const Worker = require('../lib/worker')
 const constants = require('../constants')
 const linuxIcon = require('./icons/linux')
+const defaultTrayIcon = require('./icons/tray')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
@@ -610,7 +611,7 @@ class App {
             const { bail } = await this.starting
             if (bail) return false
             state.update({ config: await this.ipc.config() })
-            applyGuiOptions(app.win, state.config.options.gui || state.config.options)
+            await applyGuiOptions(app.win, state.config.options.gui || state.config.options, this)
             if (app.closing) return false
             return true
           } catch (err) {
@@ -627,55 +628,50 @@ class App {
 
       this.id = ctrl.id
       await this.starting
-
-      const configGuiOptions = state.config.options.gui || state.config.options
-      if (configGuiOptions.hideable || configGuiOptions[process.platform]?.hideable) {
-        const trayIcon = await getTrayIcon()
-        const tray = new electron.Tray(trayIcon)
-        tray.on('click', () => showAndFocus())
-        const trayContextMenu = electron.Menu.buildFromTemplate([
-          { label: 'Show', click: () => showAndFocus() },
-          { label: 'Quit', click: () => this.close() }
-        ])
-        tray.setContextMenu(trayContextMenu)
-
-        async function getTrayIcon () {
-          const defaultTrayIcon = require('./icons/tray')
-          try {
-            if (!configGuiOptions.tray?.icon) return defaultTrayIcon
-
-            const trayIconUrl = `${state.sidecar}/${configGuiOptions.tray.icon}`
-            const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${state.id}` } })
-            if (!res.ok) {
-              console.warn('Failed to fetch tray icon: ', await res.text())
-              return defaultTrayIcon
-            }
-
-            const trayIconBuffer = Buffer.from(await res.arrayBuffer())
-            const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
-            if (trayIcon.isEmpty()) {
-              console.warn('Failed to create tray icon: Invalid image, try PNG or JPEG')
-              return defaultTrayIcon
-            }
-
-            return trayIcon
-          } catch (err) {
-            console.warn('Failed to get tray icon: ', err)
-            return defaultTrayIcon
-          }
-        }
-
-        function showAndFocus () {
-          ctrl.show()
-          ctrl.focus({ steal: true })
-        }
-      }
     } catch (err) {
       await this.report({ err })
       this.close()
     } finally {
       this.starting = null
     }
+  }
+
+  async _setTray ({ icon }, win) {
+    if (!icon) return
+
+    const showAndFocus = () => {
+      win.show()
+      win.focus({ steal: true })
+    }
+
+    const trayIcon = await this._getTrayIcon(this.state, icon) || defaultTrayIcon
+    const tray = new electron.Tray(trayIcon)
+
+    tray.on('click', showAndFocus)
+
+    const trayContextMenu = electron.Menu.buildFromTemplate([
+      { label: 'Show', click: showAndFocus },
+      { label: 'Quit', click: () => this.close() }
+    ])
+    tray.setContextMenu(trayContextMenu)
+  }
+
+  async _getTrayIcon (path) {
+    const trayIconUrl = `${this.state.sidecar}/${path}`
+    const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
+    if (!res.ok) {
+      console.warn(`Failed to fetch tray icon: ${this.state.sidecar}/${path} not found`)
+      return null
+    }
+
+    const trayIconBuffer = Buffer.from(await res.arrayBuffer())
+    const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
+    if (trayIcon.isEmpty()) {
+      console.warn('Failed to create tray icon: Invalid image, try PNG or JPEG')
+      return null
+    }
+
+    return trayIcon
   }
 
   async version () {
@@ -733,14 +729,14 @@ function linuxViewSize ({ win, view }) {
   })
 }
 
-function applyGuiOptions (win, opts) {
+async function applyGuiOptions (win, opts, app) {
   const platformOpts = opts[process.platform] || {}
   for (const [key, value] of groupings(win, { ...opts, ...platformOpts })) {
-    applyGuiOption(win, key, value)
+    await applyGuiOption(win, key, value, app)
   }
 }
 
-function applyGuiOption (win, key, value) {
+async function applyGuiOption (win, key, value, app) {
   switch (key) {
     case 'width:height': {
       const [currentWidth, currentHeight] = win.getSize()
@@ -785,7 +781,10 @@ function applyGuiOption (win, key, value) {
       win.setSize(w, h, false)
       return value ? win.setBackgroundColor('#00000000') : win.setBackgroundColor('#000')
     }
-    case 'hideable': win.hideable = value
+    case 'hideable':
+      win.hideable = value
+      break
+    case 'tray': return await app._setTray(value, win)
   }
 }
 
@@ -1682,8 +1681,8 @@ class PearGUI extends ReadyResource {
         isMaximized () { return false },
         isMinimized () { return false },
         isClosed () { return true },
-        unloading () { },
-        completeUnload () { }
+        unloading () {},
+        completeUnload () {}
       }
     }
     return instance
