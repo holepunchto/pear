@@ -31,7 +31,7 @@ const encoding0 = {
 }
 
 // @pear/dht.nodes
-const encoding1_0 = c.frame(c.array(encoding0))
+const encoding1_0 = c.array(c.frame(encoding0))
 
 // @pear/dht
 const encoding1 = {
@@ -112,17 +112,32 @@ const encoding3 = {
   }
 }
 
+// @pear/gc/hyperdb#1
+const encoding4 = {
+  preencode (state, m) {
+
+  },
+  encode (state, m) {
+
+  },
+  decode (state) {
+    return {
+      path: null
+    }
+  }
+}
+
 // @pear/bundle/hyperdb#2.tags
-const encoding4_3 = c.array(c.string)
+const encoding5_3 = encoding2_3
 
 // @pear/bundle/hyperdb#2
-const encoding4 = {
+const encoding5 = {
   preencode (state, m) {
     c.string.preencode(state, m.appStorage)
     state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
-    if (m.tags) encoding4_3.preencode(state, m.tags)
+    if (m.tags) encoding5_3.preencode(state, m.tags)
   },
   encode (state, m) {
     const flags =
@@ -133,7 +148,7 @@ const encoding4 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
-    if (m.tags) encoding4_3.encode(state, m.tags)
+    if (m.tags) encoding5_3.encode(state, m.tags)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -143,7 +158,7 @@ const encoding4 = {
       link: null,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding4_3.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding5_3.decode(state) : null
     }
   }
 }
@@ -174,7 +189,8 @@ function getEncoding (name) {
     case '@pear/dht': return encoding1
     case '@pear/bundle': return encoding2
     case '@pear/gc': return encoding3
-    case '@pear/bundle/hyperdb#2': return encoding4
+    case '@pear/gc/hyperdb#1': return encoding4
+    case '@pear/bundle/hyperdb#2': return encoding5
     default: throw new Error('Encoder not found ' + name)
   }
 }
@@ -197,4 +213,6 @@ function getStruct (name, v = VERSION) {
   }
 }
 
-module.exports = { resolveStruct: getStruct, getStruct, getEnum, getEncoding, encode, decode, setVersion, version }
+const resolveStruct = getStruct // compat
+
+module.exports = { resolveStruct, getStruct, getEnum, getEncoding, encode, decode, setVersion, version }

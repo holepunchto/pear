@@ -21,7 +21,9 @@
       "indexes": [],
       "schema": "@pear/gc",
       "derived": false,
-      "key": [],
+      "key": [
+        "path"
+      ],
       "trigger": null
     },
     {

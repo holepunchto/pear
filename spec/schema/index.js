@@ -31,7 +31,7 @@ const encoding0 = {
 }
 
 // @pear/dht.nodes
-const encoding1_0 = c.frame(c.array(encoding0))
+const encoding1_0 = c.array(c.frame(encoding0))
 
 // @pear/dht
 const encoding1 = {
@@ -160,4 +160,6 @@ function getStruct (name, v = VERSION) {
   }
 }
 
-module.exports = { resolveStruct: getStruct, getStruct, getEnum, getEncoding, encode, decode, setVersion, version }
+const resolveStruct = getStruct // compat
+
+module.exports = { resolveStruct, getStruct, getEnum, getEncoding, encode, decode, setVersion, version }

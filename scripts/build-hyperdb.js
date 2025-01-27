@@ -88,7 +88,8 @@ pearDB.collections.register({
 
 pearDB.collections.register({
   name: 'gc',
-  schema: '@pear/gc'
+  schema: '@pear/gc',
+  key: ['path']
 })
 
 pearDB.collections.register({
