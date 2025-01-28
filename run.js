@@ -52,7 +52,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   }
 
-  if (detached) {
+  if (detached) { // TODO: move into pear-electron
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) return ipc.close().catch(console.error)
 
@@ -108,60 +108,12 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   })
 
-    // clear global handlers
-    Bare.removeAllListeners('uncaughtException')
-    Bare.removeAllListeners('unhandledRejection')
+  Module.load(new URL(bundle.entrypoint), {
+    protocol,
+    resolutions: bundle.resolutions
+  })
 
-    // preserves uncaught exception (otherwise it becomes uncaught rejection)
-    setImmediate(() => {
-      Module.load(new URL(bundle.entrypoint), {
-        protocol,
-        resolutions: bundle.resolutions
-      })
-    })
-
-    return stream
-  }
-
-  args.unshift('--start-id=' + startId)
-  const detach = args.includes('--detach')
-  if (type === 'desktop') {
-    if (isPath) args[indices.args.link] = 'file://' + pearLink.normalize(base.origin) + (base.entrypoint || '/')
-    args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
-    if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
-    if (app?.name) args.splice(indices.args.link, 0, '--app-name', app.name)
-    args = [constants.BOOT, ...args]
-    const stdio = detach ? 'ignore' : ['ignore', 'pipe', 'pipe']
-    const child = spawn(constants.DESKTOP_RUNTIME, args, {
-      stdio,
-      cwd,
-      ...{ env: { ...ENV, NODE_PRESERVE_SYMLINKS: 1 } }
-    })
-    child.once('exit', (code) => {
-      stream.push({ tag: 'exit', data: { code } })
-      ipc.close()
-    })
-    if (!detach) {
-      child.stdout.on('data', (data) => { stream.push({ tag: 'stdout', data }) })
-      child.stderr.on('data', (data) => {
-        const str = data.toString()
-        const ignore = str.indexOf('DevTools listening on ws://') > -1 ||
-              str.indexOf('NSApplicationDelegate.applicationSupportsSecureRestorableState') > -1 ||
-              str.indexOf('", source: devtools://devtools/') > -1 ||
-              str.indexOf('sysctlbyname for kern.hv_vmm_present failed with status -1') > -1 ||
-              str.indexOf('dev.i915.perf_stream_paranoid=0') > -1 ||
-              str.indexOf('libva error: vaGetDriverNameByIndex() failed') > -1 ||
-              str.indexOf('GetVSyncParametersIfAvailable() failed') > -1 ||
-              (str.indexOf(':ERROR:') > -1 && /:ERROR:.+cache/.test(str))
-        if (ignore) return
-        stream.push({ tag: 'stderr', data })
-      })
-    }
-  }
-
-  if (global.Pear) global.Pear.teardown(() => ipc.close())
-
-  return stream
+  return new Promise((resolve) => global.Pear.teardown(resolve))
 }
 
 function project (dir, origin, cwd) {
