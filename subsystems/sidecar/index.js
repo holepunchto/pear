@@ -411,6 +411,22 @@ class Sidecar extends ReadyResource {
     if (!client.userData) return
     return client.userData.messages(pattern)
   }
+  
+  exists (params, client) {
+    if (!client.userData) return
+    console.log(client.userData)
+    return client.userData.bundle.exists(params.key)
+  }
+
+  get (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.get(params.key)
+  }
+
+  entry (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.entry(params.key)
+  }
 
   async permit (params) {
     let encryptionKey
