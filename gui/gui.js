@@ -18,12 +18,12 @@ const defaultTrayIcon = require('./icons/tray')
 const defaultTrayMenuTemplate = [
   {
     label: 'Show',
-    click: ({ ctrl }) => {
-      ctrl.show()
-      ctrl.focus({ steal: true })
+    click: ({ window }) => {
+      window.show()
+      window.focus({ steal: true })
     }
   },
-  { label: 'Quit', click: ({ ctrl }) => ctrl.close() }
+  { label: 'Quit', click: ({ window }) => window.close() }
 ]
 const defaultTrayOs = { win32: true, linux: true, darwin: false }
 
@@ -1931,7 +1931,7 @@ function getTrayMenuTemplate ({ menu, ctrl }) {
     return menu.map(({ label, click }) => {
       if (typeof label !== 'string') throw new Error('Tray menu label must be a string')
       if (typeof click !== 'function') throw new Error('Tray menu click handler must be a function')
-      return { label, click: () => click({ ctrl }) }
+      return { label, click: () => click({ window: ctrl }) }
     })
   } catch (err) {
     console.warn(err)
