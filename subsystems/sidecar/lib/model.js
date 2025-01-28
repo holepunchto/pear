@@ -121,7 +121,7 @@ module.exports = class Model {
     return { srcBundle: updatedSrcBundle, dstBundle: updatedDstBundle }
   }
 
-  async AllGc () {
+  async allGc () {
     return await this.db.find('@pear/gc').toArray()
   }
 
