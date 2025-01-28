@@ -228,11 +228,11 @@ module.exports = class PearGUI extends ReadyResource {
           if (key === 'click' || key === 'show') {
             this.Window.self.show()
             this.Window.self.focus({ steal: true })
-            return undefined
+            return
           }
           if (key === 'quit') {
             this.exit(0)
-            return undefined
+            return
           }
         })
 
