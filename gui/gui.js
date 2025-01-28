@@ -1804,7 +1804,7 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  tray (opts) { return setTray({ ...opts, state: this.state, ctrl: this.get(opts.id) }) }
+  tray (opts) { return new Tray({ ...opts, state: this.state, ctrl: this.get(opts.id) }) }
 }
 
 class Freelist {
@@ -1873,6 +1873,80 @@ function linuxBadgeIcon (n) {
         return require('./icons/badge-9')
       default:
         return require('./icons/badge-more')
+    }
+  }
+}
+
+class Tray {
+  constructor ({ icon, menu, os, state, ctrl }) {
+    this.tray = null
+    this.state = state
+    this.ctrl = ctrl
+    this.defaultTrayOs = { ...defaultTrayOs, ...os }
+    this.defaultTrayIcon = defaultTrayIcon
+    this.defaultTrayMenuTemplate = defaultTrayMenuTemplate
+
+    this.#setTray({ icon, menu })
+  }
+
+  #destroyTray () {
+    if (this.tray) {
+      this.tray.destroy()
+      this.tray = null
+    }
+  }
+
+  async #setTray ({ icon, menu }) {
+    if (!this.defaultTrayOs[process.platform]) return
+
+    const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
+    const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
+    if (!hideable) {
+      console.warn('hideable config must be enabled to use tray')
+      return
+    }
+
+    const trayIcon = icon ? await this.#getTrayIcon({ icon }) : this.defaultTrayIcon
+    const trayMenuTemplate = menu ? this.#getTrayMenuTemplate({ menu }) : this.defaultTrayMenuTemplate
+
+    this.#destroyTray()
+    this.tray = new electron.Tray(trayIcon)
+    this.tray.on('click', () => {
+      this.ctrl.show()
+      this.ctrl.focus({ steal: true })
+    })
+    const trayMenu = electron.Menu.buildFromTemplate(trayMenuTemplate)
+    this.tray.setContextMenu(trayMenu)
+  }
+
+  async #getTrayIcon ({ icon }) {
+    try {
+      const trayIconUrl = `${this.state.sidecar}/${icon}`
+      const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
+      if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
+
+      const trayIconBuffer = Buffer.from(await res.arrayBuffer())
+      const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
+      if (trayIcon.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
+
+      return trayIcon
+    } catch (err) {
+      console.warn(err)
+      return this.defaultTrayIcon
+    }
+  }
+
+  #getTrayMenuTemplate ({ menu }) {
+    try {
+      if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
+      return menu.map(({ label, click }) => {
+        if (typeof label !== 'string') throw new Error('Tray menu label must be a string')
+        if (typeof click !== 'function') throw new Error('Tray menu click handler must be a function')
+        return { label, click: () => click({ window: this.ctrl }) }
+      })
+    } catch (err) {
+      console.warn(err)
+      return this.defaultTrayMenuTemplate
     }
   }
 }
