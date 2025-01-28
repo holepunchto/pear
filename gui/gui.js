@@ -1888,11 +1888,11 @@ class Tray {
     this.ctrl = ctrl
     this.platform = process.platform
 
-    this.defaultTrayOs = { ...defaultTrayOs, ...os }
-    this.defaultTrayIcon = defaultTrayIcon
-    this.defaultTrayMenuTemplate = defaultTrayMenuTemplate
+    this.defaultOs = { ...defaultTrayOs, ...os }
+    this.defaultIcon = defaultTrayIcon
+    this.defaultMenuTemplate = defaultTrayMenuTemplate
 
-    this.#setTray({ icon, menu })
+    this.#set({ icon, menu })
   }
 
   destroy () {
@@ -1901,8 +1901,8 @@ class Tray {
     }
   }
 
-  async #setTray ({ icon, menu }) {
-    if (!this.defaultTrayOs[this.platform]) return
+  async #set ({ icon, menu }) {
+    if (!this.defaultOs[this.platform]) return
 
     const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
     const hideable = guiOptions.hideable ?? guiOptions[this.platform]?.hideable ?? false
@@ -1911,36 +1911,36 @@ class Tray {
       return
     }
 
-    const trayIcon = icon ? await this.#getTrayIcon({ icon }) : this.defaultTrayIcon
-    const trayMenuTemplate = menu ? this.#getTrayMenuTemplate({ menu }) : this.defaultTrayMenuTemplate
+    const iconNativeImg = icon ? await this.#getIcon({ icon }) : this.defaultIcon
+    const menuTemplate = menu ? this.#getMenuTemplate({ menu }) : this.defaultMenuTemplate
 
-    this.tray = new electron.Tray(trayIcon)
+    this.tray = new electron.Tray(iconNativeImg)
     this.tray.on('click', () => {
       this.ctrl.show()
       this.ctrl.focus({ steal: true })
     })
-    const trayMenu = electron.Menu.buildFromTemplate(trayMenuTemplate)
-    this.tray.setContextMenu(trayMenu)
+    const contextMenu = electron.Menu.buildFromTemplate(menuTemplate)
+    this.tray.setContextMenu(contextMenu)
   }
 
-  async #getTrayIcon ({ icon }) {
+  async #getIcon ({ icon }) {
     try {
-      const trayIconUrl = `${this.state.sidecar}/${icon}`
-      const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
+      const iconUrl = `${this.state.sidecar}/${icon}`
+      const res = await fetch(iconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
       if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
 
-      const trayIconBuffer = Buffer.from(await res.arrayBuffer())
-      const trayIcon = electron.nativeImage.createFromBuffer(trayIconBuffer)
-      if (trayIcon.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
+      const iconBuffer = Buffer.from(await res.arrayBuffer())
+      const icon = electron.nativeImage.createFromBuffer(iconBuffer)
+      if (icon.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
 
-      return trayIcon
+      return icon
     } catch (err) {
       console.warn(err)
-      return this.defaultTrayIcon
+      return this.defaultIcon
     }
   }
 
-  #getTrayMenuTemplate ({ menu }) {
+  #getMenuTemplate ({ menu }) {
     try {
       if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
       return menu.map(({ label, click }) => {
@@ -1950,7 +1950,7 @@ class Tray {
       })
     } catch (err) {
       console.warn(err)
-      return this.defaultTrayMenuTemplate
+      return this.defaultMenuTemplate
     }
   }
 }
