@@ -215,16 +215,16 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      tray (opts = {}, listener) {
+      tray (opts, listener) {
         const ipc = this[Symbol.for('pear.ipc')]
-        const finalOpts = {
+        opts = {
           ...opts,
           menu: opts.menu ?? {
             show: 'Show',
             quit: 'Quit'
           }
         }
-        const finalListener = listener ?? ((key) => {
+        listener = listener ?? ((key) => {
           if (key === 'click' || key === 'show') {
             this.Window.self.show()
             this.Window.self.focus({ steal: true })
@@ -236,8 +236,8 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts: finalOpts })
-        sub.on('data', (msg) => finalListener(msg.key, finalOpts))
+        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
+        sub.on('data', (msg) => listener(msg.key, opts))
         return sub
       }
 
