@@ -1911,8 +1911,8 @@ class Tray {
       return
     }
 
-    const iconNativeImg = icon ? await this.#getIconNativeImg({ icon }) : this.defaultIcon
-    const menuTemplate = menu ? this.#getMenuTemplate({ menu }) : this.defaultMenuTemplate
+    const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : this.defaultIcon
+    const menuTemplate = menu ? this.#getMenuTemplate(menu) : this.defaultMenuTemplate
 
     this.tray = new electron.Tray(iconNativeImg)
     this.tray.on('click', () => {
@@ -1923,7 +1923,7 @@ class Tray {
     this.tray.setContextMenu(contextMenu)
   }
 
-  async #getIconNativeImg ({ icon }) {
+  async #getIconNativeImg (icon) {
     try {
       const iconUrl = `${this.state.sidecar}/${icon}`
       const res = await fetch(iconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
@@ -1940,7 +1940,7 @@ class Tray {
     }
   }
 
-  #getMenuTemplate ({ menu }) {
+  #getMenuTemplate (menu) {
     try {
       if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
       return menu.map(({ label, click }) => {
