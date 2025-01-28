@@ -5,7 +5,7 @@ const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
 const tty = require('bare-tty')
 const Interact = require('../lib/interact')
-const { CHECKOUT, PLATFORM_DIR } = require('../constants')
+const { CHECKOUT } = require('../constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
@@ -108,7 +108,7 @@ const urls = ansi.link('https://pears.com', 'pears.com') + ' | ' + ansi.link('ht
 
 const footer = {
   overview: `  ${ansi.bold('Legend:')} [arg] = optional, <arg> = required, | = or \n  Run ${ansi.bold('pear help')} to output full help for all commands\n  For command help: ${ansi.bold('pear help [cmd]')} or ${ansi.bold('pear [cmd] -h')}\n
-${ansi.dim(`Platform Dir: ${PLATFORM_DIR}`)}\n${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}`,
+${ansi.pear + ' '}${version}\n${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}`,
   help: `${ansi.pear + ' '}${version}
 ${urls}\n${ansi.bold(ansi.dim('Pear'))} ~ ${ansi.dim('Welcome to the IoP')}
   `
