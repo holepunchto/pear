@@ -1885,7 +1885,7 @@ function destroyTray () {
 }
 
 async function setTray ({ icon, menu, os, state, ctrl }) {
-  const trayOs = os ?? defaultTrayOs
+  const trayOs = { ...defaultTrayOs, ...os }
   if (!trayOs[process.platform]) return
 
   const guiOptions = state.options.gui ?? state.config.options.gui ?? {}
