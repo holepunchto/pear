@@ -224,8 +224,8 @@ module.exports = class PearGUI extends ReadyResource {
             quit: 'Quit'
           }
         }
-        const finalListener = listener ?? ((msg) => {
-          switch (msg.key) {
+        const finalListener = listener ?? ((key, opts) => {
+          switch (key) {
             case 'click': return this.showAndFocus()
             case 'show': return this.showAndFocus()
             case 'quit': return this.exit(0)
@@ -234,7 +234,7 @@ module.exports = class PearGUI extends ReadyResource {
         })
 
         const sub = ipc.messages({ type: 'pear/gui/tray', id, opts: finalOpts })
-        sub.on('data', finalListener)
+        sub.on('data', (msg) => finalListener(msg.key, finalOpts, finalListener))
         return sub
       }
 
