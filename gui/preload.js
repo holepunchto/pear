@@ -225,7 +225,6 @@ module.exports = class PearGUI extends ReadyResource {
           }
         }
         const finalListener = listener ?? ((msg) => {
-          console.log('🚀 ~ extends ~ tray ~ msg:', msg)
           switch (msg.key) {
             case 'click': return this.showAndFocus()
             case 'show': return this.showAndFocus()
