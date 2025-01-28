@@ -1910,7 +1910,8 @@ async function setTray ({ icon, menu, os, state, ctrl }) {
 
 async function getTrayIcon ({ icon, state }) {
   try {
-    const trayIconUrl = `${state.sidecar}/${icon}`
+    const iconPath = typeof icon === 'string' ? icon : icon[state.platform]
+    const trayIconUrl = `${state.sidecar}/${iconPath}`
     const res = await fetch(trayIconUrl, { headers: { 'User-Agent': `Pear ${state.id}` } })
     if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
 
