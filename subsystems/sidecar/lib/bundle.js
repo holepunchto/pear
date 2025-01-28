@@ -147,14 +147,16 @@ module.exports = class Bundle {
   }
 
   async get (key) {
-    const entry = await this.entry(key)
-    const result = await this.drive.get(entry)
-    return result
+    return this.drive.get(key)
   }
 
-  async has (key) {
+  async has (key) { // TODO: remove has, use exists
     const meta = await this.entry(key)
     return meta !== null
+  }
+
+  async exists (key) {
+    return this.has(key) // TODO: use this.drive.exists when its on localdrive
   }
 
   async del (key) {
