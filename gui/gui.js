@@ -1484,7 +1484,7 @@ class PearGUI extends ReadyResource {
       if (pattern.type === 'pear/gui/tray') {
         if (tray) tray.destroy()
         tray = new Tray({
-          opts,
+          opts: pattern.opts,
           state: this.state,
           ctrl: this.get(pattern.id),
           onMenuClick: (data) => event.reply('messages', { ...pattern, data })
