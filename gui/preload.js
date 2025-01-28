@@ -232,7 +232,6 @@ module.exports = class PearGUI extends ReadyResource {
           }
           if (key === 'quit') {
             this.exit(0)
-            return
           }
         })
 
