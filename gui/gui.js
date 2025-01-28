@@ -1911,7 +1911,7 @@ class Tray {
       return
     }
 
-    const iconNativeImg = icon ? await this.#getIcon({ icon }) : this.defaultIcon
+    const iconNativeImg = icon ? await this.#getIconNativeImg({ icon }) : this.defaultIcon
     const menuTemplate = menu ? this.#getMenuTemplate({ menu }) : this.defaultMenuTemplate
 
     this.tray = new electron.Tray(iconNativeImg)
@@ -1923,7 +1923,7 @@ class Tray {
     this.tray.setContextMenu(contextMenu)
   }
 
-  async #getIcon ({ icon }) {
+  async #getIconNativeImg ({ icon }) {
     try {
       const iconUrl = `${this.state.sidecar}/${icon}`
       const res = await fetch(iconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
