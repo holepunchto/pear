@@ -30,7 +30,7 @@ const dhtOutput = (nodes) => {
 const gcOutput = (records) => {
   let out = ''
   for (const gc of records) {
-    out += `${gc.path}\n`
+    out += `- ${ansi.bold(gc.path)}\n`
   }
   return out
 }
