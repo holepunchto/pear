@@ -1484,7 +1484,7 @@ class PearGUI extends ReadyResource {
       if (pattern.type === 'pear/gui/tray') {
         if (tray) tray.destroy()
         tray = new Tray({
-          ...pattern.opts,
+          opts,
           state: this.state,
           ctrl: this.get(pattern.id),
           onMenuClick: (data) => event.reply('messages', { ...pattern, data })
@@ -1874,7 +1874,7 @@ function linuxBadgeIcon (n) {
 }
 
 class Tray {
-  constructor ({ icon, menu, os, state, ctrl, onMenuClick }) {
+  constructor ({ opts, state, ctrl, onMenuClick }) {
     this.tray = null
 
     this.platform = process.platform
@@ -1882,10 +1882,10 @@ class Tray {
     this.ctrl = ctrl
     this.onMenuClick = onMenuClick
 
-    this.defaultOs = { ...defaultTrayOs, ...os }
+    this.defaultOs = { ...defaultTrayOs, ...opts.os }
     this.defaultIcon = defaultTrayIcon
 
-    this.#set({ icon, menu })
+    this.#set(opts)
   }
 
   destroy () {
