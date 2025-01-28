@@ -27,7 +27,7 @@ const defaultTrayMenuTemplate = [
 ]
 const defaultTrayOs = { win32: true, linux: true, darwin: false }
 
-let globalTray = null
+let tray = null
 
 class Menu {
   static PEAR = 0
@@ -1804,7 +1804,10 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  tray (opts) { return Tray.create({ ...opts, state: this.state, ctrl: this.get(opts.id) }) }
+  tray (opts) {
+    if (tray) tray.destroy()
+    tray = new Tray({ ...opts, state: this.state, ctrl: this.get(opts.id) })
+  }
 }
 
 class Freelist {
@@ -1889,13 +1892,6 @@ class Tray {
     this.defaultTrayMenuTemplate = defaultTrayMenuTemplate
 
     this.#setTray({ icon, menu })
-  }
-
-  static create (opts) {
-    if (globalTray) {
-      globalTray.destroy()
-    }
-    globalTray = new Tray(opts)
   }
 
   destroy () {
