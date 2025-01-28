@@ -27,6 +27,8 @@ const defaultTrayMenuTemplate = [
 ]
 const defaultTrayOs = { win32: true, linux: true, darwin: false }
 
+let tray = null
+
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -1875,6 +1877,13 @@ function linuxBadgeIcon (n) {
   }
 }
 
+function destroyTray () {
+  if (tray) {
+    tray.destroy()
+    tray = null
+  }
+}
+
 async function setTray ({ icon, menu, os, state, ctrl }) {
   const trayOs = os ?? defaultTrayOs
   if (!trayOs[process.platform]) return
@@ -1889,7 +1898,8 @@ async function setTray ({ icon, menu, os, state, ctrl }) {
   const trayIcon = icon ? await getTrayIcon({ icon, state }) : defaultTrayIcon
   const trayMenuTemplate = menu ? getTrayMenuTemplate({ menu, ctrl }) : defaultTrayMenuTemplate
 
-  const tray = new electron.Tray(trayIcon)
+  destroyTray()
+  tray = new electron.Tray(trayIcon)
   tray.on('click', () => {
     ctrl.show()
     ctrl.focus({ steal: true })
