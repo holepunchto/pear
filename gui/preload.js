@@ -215,6 +215,31 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
+      tray = (opts = {}, listener) => {
+        const ipc = this[Symbol.for('pear.ipc')]
+        opts = {
+          ...opts,
+          menu: opts.menu ?? {
+            show: 'Show',
+            quit: 'Quit'
+          }
+        }
+        listener = listener ?? ((key) => {
+          if (key === 'click' || key === 'show') {
+            this.Window.self.show()
+            this.Window.self.focus({ steal: true })
+            return
+          }
+          if (key === 'quit') {
+            this.exit(0)
+          }
+        })
+
+        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
+        sub.on('data', (msg) => listener(msg.key, opts))
+        return sub
+      }
+
       exit = (code) => {
         process.exitCode = code
         electron.ipcRenderer.sendSync('exit', code)

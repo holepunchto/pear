@@ -14,6 +14,10 @@ const linuxIcon = require('./icons/linux')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
+const defaultTrayOs = { win32: true, linux: true, darwin: true }
+const defaultTrayIcon = require('./icons/tray')
+let tray = null
+
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -1288,6 +1292,7 @@ class Window extends GuiCtrl {
   }
 
   async close () {
+    if (this.win?.hideable && this.quitting === false) return this.hide()
     this.closing = true
     electron.app.off('activate', this.#onactivate)
     const closed = await super.close()
@@ -1476,6 +1481,16 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
+      if (pattern.type === 'pear/gui/tray') {
+        if (tray) tray.destroy()
+        tray = new Tray({
+          opts: pattern.opts,
+          state: this.state,
+          ctrl: this.get(pattern.id),
+          onMenuClick: (key) => event.reply('messages', { ...pattern, key })
+        })
+        return
+      }
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => {
@@ -1854,6 +1869,64 @@ function linuxBadgeIcon (n) {
         return require('./icons/badge-9')
       default:
         return require('./icons/badge-more')
+    }
+  }
+}
+
+class Tray {
+  constructor ({ opts, state, ctrl, onMenuClick }) {
+    this.tray = null
+
+    this.platform = process.platform
+    this.state = state
+    this.ctrl = ctrl
+    this.onMenuClick = onMenuClick
+
+    this.defaultOs = { ...defaultTrayOs, ...opts.os }
+    this.defaultIcon = defaultTrayIcon
+
+    this.#set(opts)
+  }
+
+  destroy () {
+    if (this.tray) {
+      this.tray.destroy()
+    }
+  }
+
+  async #set ({ icon, menu }) {
+    if (!this.defaultOs[this.platform]) return
+
+    const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
+    const hideable = guiOptions.hideable ?? guiOptions[this.platform]?.hideable ?? false
+    if (!hideable) {
+      console.warn('hideable config must be enabled to use tray')
+      return
+    }
+
+    const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : this.defaultIcon
+    const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
+
+    this.tray = new electron.Tray(iconNativeImg)
+    this.tray.on('click', () => this.onMenuClick('click'))
+    const contextMenu = electron.Menu.buildFromTemplate(menuTemplate)
+    this.tray.setContextMenu(contextMenu)
+  }
+
+  async #getIconNativeImg (icon) {
+    try {
+      const iconUrl = `${this.state.sidecar}/${icon}`
+      const res = await fetch(iconUrl, { headers: { 'User-Agent': `Pear ${this.state.id}` } })
+      if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
+
+      const iconBuffer = Buffer.from(await res.arrayBuffer())
+      const iconNativeImg = electron.nativeImage.createFromBuffer(iconBuffer)
+      if (iconNativeImg.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
+
+      return iconNativeImg
+    } catch (err) {
+      console.warn(err)
+      return this.defaultIcon
     }
   }
 }
