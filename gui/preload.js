@@ -224,23 +224,24 @@ module.exports = class PearGUI extends ReadyResource {
             quit: 'Quit'
           }
         }
-        const finalListener = listener ?? ((key, opts) => {
+        const finalListener = listener ?? ((key) => {
           switch (key) {
-            case 'click': return this.showAndFocus()
-            case 'show': return this.showAndFocus()
-            case 'quit': return this.exit(0)
-            default:
+            case 'click':
+            case 'show':{
+              this.Window.self.show()
+              this.Window.self.focus({ steal: true })
+              break
+            }
+            case 'quit': {
+              this.exit(0)
+              break
+            }
           }
         })
 
         const sub = ipc.messages({ type: 'pear/gui/tray', id, opts: finalOpts })
         sub.on('data', (msg) => finalListener(msg.key, finalOpts, finalListener))
         return sub
-      }
-
-      showAndFocus () {
-        this.Window.self.show()
-        this.Window.self.focus({ steal: true })
       }
 
       exit = (code) => {
