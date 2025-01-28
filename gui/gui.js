@@ -14,19 +14,8 @@ const linuxIcon = require('./icons/linux')
 const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
+const defaultTrayOs = { win32: true, linux: true, darwin: true }
 const defaultTrayIcon = require('./icons/tray')
-const defaultTrayMenuTemplate = [
-  {
-    label: 'Show',
-    click: (win) => {
-      win.show()
-      win.focus({ steal: true })
-    }
-  },
-  { label: 'Quit', click: (win) => win.close() }
-]
-const defaultTrayOs = { win32: true, linux: true, darwin: false }
-
 let tray = null
 
 class Menu {
@@ -1492,6 +1481,16 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
+      if (typeof pattern === 'object' && pattern.type === 'pear/gui/tray') {
+        if (tray) tray.destroy()
+        tray = new Tray({
+          ...pattern.opts,
+          state: this.state,
+          ctrl: this.get(pattern.id),
+          onMenuClick: (data) => event.reply('messages', { ...pattern, data })
+        })
+        return
+      }
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => {
@@ -1541,7 +1540,6 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
-    electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1803,11 +1801,6 @@ class PearGUI extends ReadyResource {
       return true
     }
   }
-
-  tray (opts) {
-    if (tray) tray.destroy()
-    tray = new Tray({ ...opts, state: this.state, ctrl: this.get(opts.id) })
-  }
 }
 
 class Freelist {
@@ -1881,16 +1874,16 @@ function linuxBadgeIcon (n) {
 }
 
 class Tray {
-  constructor ({ icon, menu, os, state, ctrl }) {
+  constructor ({ icon, menu, os, state, ctrl, onMenuClick }) {
     this.tray = null
 
+    this.platform = process.platform
     this.state = state
     this.ctrl = ctrl
-    this.platform = process.platform
+    this.onMenuClick = onMenuClick
 
     this.defaultOs = { ...defaultTrayOs, ...os }
     this.defaultIcon = defaultTrayIcon
-    this.defaultMenuTemplate = defaultTrayMenuTemplate
 
     this.#set({ icon, menu })
   }
@@ -1912,7 +1905,7 @@ class Tray {
     }
 
     const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : this.defaultIcon
-    const menuTemplate = menu ? this.#getMenuTemplate(menu) : this.defaultMenuTemplate
+    const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
     this.tray = new electron.Tray(iconNativeImg)
     this.tray.on('click', () => {
@@ -1937,20 +1930,6 @@ class Tray {
     } catch (err) {
       console.warn(err)
       return this.defaultIcon
-    }
-  }
-
-  #getMenuTemplate (menu) {
-    try {
-      if (!Array.isArray(menu)) throw new Error('Tray menu must be an array of labels and click handlers')
-      return menu.map(({ label, click }) => {
-        if (typeof label !== 'string') throw new Error('Tray menu label must be a string')
-        if (typeof click !== 'function') throw new Error('Tray menu click handler must be a function')
-        return { label, click: () => click(this.ctrl) }
-      })
-    } catch (err) {
-      console.warn(err)
-      return this.defaultMenuTemplate
     }
   }
 }
