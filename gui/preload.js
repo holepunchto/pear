@@ -227,7 +227,7 @@ module.exports = class PearGUI extends ReadyResource {
         const finalListener = listener ?? ((key) => {
           switch (key) {
             case 'click':
-            case 'show':{
+            case 'show': {
               this.Window.self.show()
               this.Window.self.focus({ steal: true })
               break
