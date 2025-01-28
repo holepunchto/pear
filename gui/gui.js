@@ -1487,7 +1487,7 @@ class PearGUI extends ReadyResource {
           opts: pattern.opts,
           state: this.state,
           ctrl: this.get(pattern.id),
-          onMenuClick: (data) => event.reply('messages', { ...pattern, data })
+          onMenuClick: (key) => event.reply('messages', { ...pattern, key })
         })
         return
       }
