@@ -215,7 +215,7 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      tray = (opts, listener) => {
+      tray = (opts = {}, listener) => {
         const ipc = this[Symbol.for('pear.ipc')]
         opts = {
           ...opts,
