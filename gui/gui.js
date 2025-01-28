@@ -1930,10 +1930,10 @@ class Tray {
       if (!res.ok) throw new Error(`Failed to fetch tray icon: ${await res.text()}`)
 
       const iconBuffer = Buffer.from(await res.arrayBuffer())
-      const icon = electron.nativeImage.createFromBuffer(iconBuffer)
-      if (icon.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
+      const iconNativeImg = electron.nativeImage.createFromBuffer(iconBuffer)
+      if (iconNativeImg.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
 
-      return icon
+      return iconNativeImg
     } catch (err) {
       console.warn(err)
       return this.defaultIcon
