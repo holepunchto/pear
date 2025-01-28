@@ -1886,6 +1886,7 @@ class Tray {
 
     this.state = state
     this.ctrl = ctrl
+    this.platform = process.platform
 
     this.defaultTrayOs = { ...defaultTrayOs, ...os }
     this.defaultTrayIcon = defaultTrayIcon
@@ -1901,10 +1902,10 @@ class Tray {
   }
 
   async #setTray ({ icon, menu }) {
-    if (!this.defaultTrayOs[process.platform]) return
+    if (!this.defaultTrayOs[this.platform]) return
 
     const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
-    const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
+    const hideable = guiOptions.hideable ?? guiOptions[this.platform]?.hideable ?? false
     if (!hideable) {
       console.warn('hideable config must be enabled to use tray')
       return
