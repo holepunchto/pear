@@ -1481,7 +1481,7 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
-      if (typeof pattern === 'object' && pattern.type === 'pear/gui/tray') {
+      if (pattern.type === 'pear/gui/tray') {
         if (tray) tray.destroy()
         tray = new Tray({
           ...pattern.opts,
