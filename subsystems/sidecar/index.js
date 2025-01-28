@@ -414,7 +414,6 @@ class Sidecar extends ReadyResource {
   
   exists (params, client) {
     if (!client.userData) return
-    console.log(client.userData)
     return client.userData.bundle.exists(params.key)
   }
 
