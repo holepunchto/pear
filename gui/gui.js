@@ -1908,10 +1908,7 @@ class Tray {
     const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
     this.tray = new electron.Tray(iconNativeImg)
-    this.tray.on('click', () => {
-      this.ctrl.show()
-      this.ctrl.focus({ steal: true })
-    })
+    this.tray.on('click', () => this.onMenuClick('click'))
     const contextMenu = electron.Menu.buildFromTemplate(menuTemplate)
     this.tray.setContextMenu(contextMenu)
   }
