@@ -50,7 +50,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
   }
 
-  if (detached) {
+  if (detached) { // TODO: move into pear-electron
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) return ipc.close().catch(console.error)
 
@@ -110,6 +110,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     protocol,
     resolutions: bundle.resolutions
   })
+
+  return new Promise((resolve) => global.Pear.teardown(resolve))
 }
 
 function project (dir, origin, cwd) {

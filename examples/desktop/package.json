@@ -11,11 +11,9 @@
   "type": "module",
   "pear": {
     "name": "deskex",
-    "ui": {
-      "main": "index.html",
-      "preload": "pear-bridge"
-    },
     "gui": {
+      "main": "index.html",
+      "preload": "/node_modules/pear-bridge/index.js",
       "width": 900,
       "height": 500,
       "minWidth": 500,
@@ -32,7 +30,9 @@
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
-    "pear-bridge": "github:holepunchto/pear-bridge",
-    "pear-electron": "github:holepunchto/pear-electron"
+    "pear-api": "~0.0.21",
+    "pear-bridge": "~0.0.2",
+    "pear-electron": "^0.1.0",
+    "pear-ipc": "github:holepunchto/pear-ipc#v2"
   }
 }
