@@ -237,7 +237,7 @@ module.exports = class PearGUI extends ReadyResource {
 
         const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
         sub.on('data', (msg) => listener(msg.key, opts))
-        return sub
+        return () => sub.destroy()
       }
 
       exit = (code) => {
