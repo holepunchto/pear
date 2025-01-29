@@ -50,6 +50,31 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge({ id, count })
         }
 
+        this.tray = (opts = {}, listener) => {
+          const ipc = this[Symbol.for('pear.ipc')]
+          opts = {
+            ...opts,
+            menu: opts.menu ?? {
+              show: 'Show',
+              quit: 'Quit'
+            }
+          }
+          listener = listener ?? ((key) => {
+            if (key === 'click' || key === 'show') {
+              this.Window.self.show()
+              this.Window.self.focus({ steal: true })
+              return
+            }
+            if (key === 'quit') {
+              this.exit(0)
+            }
+          })
+
+          const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
+          sub.on('data', (msg) => listener(msg.key, opts))
+          return () => sub.destroy()
+        }
+
         this.tray.scaleFactor = 1
         ipc.scaleFactor({ id }).then((res) => { this.tray.scaleFactor = res })
 
@@ -220,31 +245,6 @@ module.exports = class PearGUI extends ReadyResource {
 
         this.Window = Window
         this.View = View
-      }
-
-      tray = (opts = {}, listener) => {
-        const ipc = this[Symbol.for('pear.ipc')]
-        opts = {
-          ...opts,
-          menu: opts.menu ?? {
-            show: 'Show',
-            quit: 'Quit'
-          }
-        }
-        listener = listener ?? ((key) => {
-          if (key === 'click' || key === 'show') {
-            this.Window.self.show()
-            this.Window.self.focus({ steal: true })
-            return
-          }
-          if (key === 'quit') {
-            this.exit(0)
-          }
-        })
-
-        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
-        sub.on('data', (msg) => listener(msg.key, opts))
-        return () => sub.destroy()
       }
 
       exit = (code) => {
