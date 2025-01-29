@@ -50,7 +50,6 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge({ id, count })
         }
         this.scaleFactor = () => ipc.scaleFactor({ id })
-        this.screenDensity = (deviceDiagonalInches) => ipc.screenDensity({ id, deviceDiagonalInches })
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
@@ -298,7 +297,6 @@ class IPC {
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
   scaleFactor (...args) { return electron.ipcRenderer.invoke('scaleFactor', ...args) }
-  screenDensity (...args) { return electron.ipcRenderer.invoke('screenDensity', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
