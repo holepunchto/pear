@@ -156,8 +156,8 @@ async function trust (ipc, key, cmd) {
   const explain = {
     run: 'Be sure that software is trusted before running it\n' +
       '\nType "TRUST" to allow execution or anything else to exit\n\n',
-    init: 'This template is encrypted.\n' +
-      '\nEnter the password to init from the template.\n\n'
+    init: 'This template is not trusted.\n' +
+      '\nType "TRUST" to trust this template, or anything else to exit\n\n'
   }
 
   const act = {

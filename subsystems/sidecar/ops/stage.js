@@ -115,8 +115,11 @@ module.exports = class Stage extends Opstream {
       }
     })
 
+    const isTemplate = (await bundle.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
+    } else if (isTemplate) {
+      this.push({ tag: 'skipping', data: { reason: 'template', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()

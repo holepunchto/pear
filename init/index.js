@@ -20,8 +20,8 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
   let params = null
   if (isPear) {
-    const { drive } = parseLink(link)
-    if (await ipc.trusted(drive.key) === false) {
+    if (await ipc.trusted(link) === false) {
+      const { drive } = parseLink(link)
       throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
