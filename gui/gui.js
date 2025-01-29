@@ -18,6 +18,8 @@ const defaultTrayOs = { win32: true, linux: true, darwin: true }
 const defaultTrayIcon = require('./icons/tray')
 let tray = null
 
+let darkMode = false
+
 class Menu {
   static PEAR = 0
   static APP = 0
@@ -628,6 +630,9 @@ class App {
       electron.app.once('before-quit', () => {
         ctrl.quitting = true
       })
+
+      electron.nativeTheme.on('updated', setDarkMode)
+      setDarkMode()
 
       this.id = ctrl.id
       await this.starting
@@ -1541,6 +1546,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
     electron.ipcMain.handle('scaleFactor', (evt, ...args) => this.scaleFactor(...args))
+    electron.ipcMain.handle('darkMode', (evt, ...args) => this.darkMode(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1803,9 +1809,9 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  scaleFactor () {
-    return electron.screen.getPrimaryDisplay().scaleFactor
-  }
+  scaleFactor () { return electron.screen.getPrimaryDisplay().scaleFactor }
+
+  darkMode () { return darkMode }
 }
 
 class Freelist {
@@ -1933,6 +1939,17 @@ class Tray {
       console.warn(err)
       return this.defaultIcon
     }
+  }
+}
+
+function setDarkMode () {
+  const { shouldUseHighContrastColors, shouldUseInvertedColorScheme, shouldUseDarkColors } = electron.nativeTheme
+  if (shouldUseHighContrastColors) {
+    darkMode = true; 
+  } else if (shouldUseInvertedColorScheme) {
+    darkMode = !shouldUseDarkColors;
+  } else {
+    darkMode = shouldUseDarkColors;
   }
 }
 

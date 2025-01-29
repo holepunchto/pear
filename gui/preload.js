@@ -50,6 +50,7 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge({ id, count })
         }
         this.scaleFactor = () => ipc.scaleFactor({ id })
+        this.darkMode = () => ipc.darkMode({ id })
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
@@ -297,6 +298,7 @@ class IPC {
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
   scaleFactor (...args) { return electron.ipcRenderer.invoke('scaleFactor', ...args) }
+  darkMode (...args) { return electron.ipcRenderer.invoke('darkMode', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
