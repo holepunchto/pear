@@ -1540,6 +1540,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
+    electron.ipcMain.handle('scaleFactor', (evt, ...args) => this.scaleFactor(...args))
+    electron.ipcMain.handle('screenDensity', (evt, ...args) => this.screenDensity(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1800,6 +1802,20 @@ class PearGUI extends ReadyResource {
       this.get(id).win.setIcon(linuxBadgeIcon(count))
       return true
     }
+  }
+
+  scaleFactor () {
+    return electron.screen.getPrimaryDisplay().scaleFactor
+  }
+
+  screenDensity ({ deviceDiagonalInches }) {
+    const { height, width } = electron.screen.getPrimaryDisplay().workAreaSize
+    const scaleFactor = this.scaleFactor()
+    const scaledHeight = height * scaleFactor
+    const scaledWidth = width * scaleFactor
+    const diagonalPx = Math.sqrt(scaledHeight ** 2 + scaledWidth ** 2)
+    const dpi = diagonalPx / deviceDiagonalInches
+    return dpi
   }
 }
 
