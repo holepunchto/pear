@@ -1944,7 +1944,7 @@ function getDarkMode () {
   const { shouldUseHighContrastColors, shouldUseInvertedColorScheme, shouldUseDarkColors } = electron.nativeTheme
   if (shouldUseHighContrastColors) return true
   else if (shouldUseInvertedColorScheme) return !shouldUseDarkColors
-  else return shouldUseDarkColors
+  return shouldUseDarkColors
 }
 
 module.exports = PearGUI
