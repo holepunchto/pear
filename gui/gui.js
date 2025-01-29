@@ -1492,10 +1492,9 @@ class PearGUI extends ReadyResource {
         return
       }
       if (pattern.type === 'pear/gui/tray/darkMode') {
-        electron.nativeTheme.on('updated', () => {
-          event.reply('messages', { ...pattern, darkMode: getDarkMode() })
-        })
-        event.reply('messages', { ...pattern, darkMode: getDarkMode() })
+        const reply = () => event.reply('messages', { ...pattern, darkMode: getDarkMode() })
+        electron.nativeTheme.on('updated', reply)
+        reply()
         return
       }
       const messages = this.messages(pattern)
