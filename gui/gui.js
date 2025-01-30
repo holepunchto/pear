@@ -1127,13 +1127,18 @@ class Window extends GuiCtrl {
 
     if (this.closing) return false
 
+    const tray = {
+      scaleFactor: electron.screen.getPrimaryDisplay().scaleFactor,
+      darkMode: getDarkMode()
+    }
+
     this.view = new BrowserView({
       ...(options.view || options),
       backgroundColor: options.backgroundColor || DEF_BG,
       webPreferences: {
         preload: require.main.filename,
         session,
-        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true, tray })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1540,7 +1545,6 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
-    electron.ipcMain.handle('scaleFactor', (evt, ...args) => this.scaleFactor(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1582,6 +1586,7 @@ class PearGUI extends ReadyResource {
 
     electron.nativeTheme.on('updated', () => {
       defaultTrayIcon = getDefaultTrayIcon()
+      this.message({ type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() })
     })
   }
 
@@ -1805,10 +1810,6 @@ class PearGUI extends ReadyResource {
       this.get(id).win.setIcon(linuxBadgeIcon(count))
       return true
     }
-  }
-
-  scaleFactor () {
-    return electron.screen.getPrimaryDisplay().scaleFactor
   }
 }
 
