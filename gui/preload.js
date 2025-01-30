@@ -53,6 +53,10 @@ module.exports = class PearGUI extends ReadyResource {
         this.tray.scaleFactor = state.scaleFactor
         this.tray.darkMode = state.darkMode
 
+        ipc.messages({ type: 'pear/gui/tray/darkMode' }).on('data', (msg) => {
+          this.tray.darkMode = msg.darkMode
+        })
+
         const kGuiCtrl = Symbol('gui:ctrl')
 
         class Parent extends EventEmitter {
