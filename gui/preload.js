@@ -247,7 +247,6 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        console.log('🚀 ~ extends ~ tray', this._tray)
         if (this._tray.untray) await this._tray.untray()
 
         const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
