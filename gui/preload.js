@@ -50,8 +50,8 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge({ id, count })
         }
 
-        this.tray.scaleFactor = state.scaleFactor
-        this.tray.darkMode = state.darkMode
+        this.tray.scaleFactor = state.tray.scaleFactor
+        this.tray.darkMode = state.tray.darkMode
 
         ipc.messages({ type: 'pear/gui/tray/darkMode' }).on('data', (msg) => {
           this.tray.darkMode = msg.darkMode

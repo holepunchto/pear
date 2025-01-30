@@ -1127,8 +1127,10 @@ class Window extends GuiCtrl {
 
     if (this.closing) return false
 
-    const scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor
-    const darkMode = getDarkMode()
+    const tray = {
+      scaleFactor: electron.screen.getPrimaryDisplay().scaleFactor,
+      darkMode: getDarkMode()
+    }
 
     this.view = new BrowserView({
       ...(options.view || options),
@@ -1136,7 +1138,7 @@ class Window extends GuiCtrl {
       webPreferences: {
         preload: require.main.filename,
         session,
-        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true, scaleFactor, darkMode })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true, tray })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
