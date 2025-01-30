@@ -221,7 +221,7 @@ module.exports = class PearGUI extends ReadyResource {
         opts = {
           ...opts,
           menu: opts.menu ?? {
-            show: 'Show',
+            show: `Show ${state.name}`,
             quit: 'Quit'
           }
         }
