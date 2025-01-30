@@ -419,7 +419,6 @@ class Sidecar extends ReadyResource {
 
   get (params, client) {
     if (!client.userData) return
-    if (params.bundle === true) return client.userData.bundle.bundle(params.key)
     return client.userData.bundle.get(params.key)
   }
 
