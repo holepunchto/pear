@@ -27,7 +27,7 @@ module.exports = class PearGUI extends ReadyResource {
       else if (action.type === 'nav') location.href = action.url
     }
 
-    state.untray = null
+    state._untray = null
 
     API = class extends API {
       constructor (ipc, state, onteardown) {
@@ -245,18 +245,18 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        if (state.untray) await state.untray()
+        if (state._untray) await state._untray()
 
         const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
 
-        state.untray = async () => {
+        state._untray = async () => {
           await sub.destroy()
           await ipc.untray({ id })
         }
 
-        return state.untray
+        return state._untray
       }
 
       exit = (code) => {
