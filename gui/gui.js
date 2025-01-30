@@ -1531,6 +1531,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
     electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
+    electron.ipcMain.handle('untray', (evt, ...args) => this.untray(...args))
     electron.ipcMain.handle('scaleFactor', (evt, ...args) => this.scaleFactor(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
@@ -1795,13 +1796,16 @@ class PearGUI extends ReadyResource {
   }
 
   tray ({ id, opts }) {
-    if (tray) tray.destroy()
     tray = new Tray({
       opts,
       state: this.state,
       ctrl: this.get(id),
       onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
     })
+  }
+
+  untray () {
+    if (tray) tray.destroy()
   }
 
   scaleFactor () {

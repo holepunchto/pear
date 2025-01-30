@@ -7,6 +7,8 @@ const ReadyResource = require('ready-resource')
 const electron = require('electron')
 const Worker = require('../lib/worker')
 
+let traySub = null
+
 module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, state }) {
     super()
@@ -236,9 +238,13 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
-        sub.on('data', (msg) => listener(msg.key, opts))
+        if (traySub) traySub.destroy()
+        await ipc.untray({ id })
+
+        traySub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
+        traySub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
+
         return () => sub.destroy()
       }
 
@@ -298,6 +304,7 @@ class IPC {
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
   tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
+  untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
   scaleFactor (...args) { return electron.ipcRenderer.invoke('scaleFactor', ...args) }
 
   messages (pattern) {
