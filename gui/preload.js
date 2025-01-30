@@ -53,7 +53,39 @@ module.exports = class PearGUI extends ReadyResource {
           return ipc.badge({ id, count })
         }
 
-        this._tray = _tray
+        this.tray = async (opts = {}, listener) => {
+          const ipc = this[Symbol.for('pear.ipc')]
+          opts = {
+            ...opts,
+            menu: opts.menu ?? {
+              show: `Show ${state.name}`,
+              quit: 'Quit'
+            }
+          }
+          listener = listener ?? ((key) => {
+            if (key === 'click' || key === 'show') {
+              this.Window.self.show()
+              this.Window.self.focus({ steal: true })
+              return
+            }
+            if (key === 'quit') {
+              this.exit(0)
+            }
+          })
+  
+          if (_tray.untray) await _tray.untray()
+  
+          const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
+          sub.on('data', (msg) => listener(msg.key, opts))
+          await ipc.tray({ id, opts })
+  
+          _tray.untray = async () => {
+            await sub.destroy()
+            await ipc.untray({ id })
+          }
+  
+          return _tray.untray
+        }
 
         this.tray.scaleFactor = state.tray?.scaleFactor
         this.tray.darkMode = state.tray?.darkMode
@@ -225,40 +257,6 @@ module.exports = class PearGUI extends ReadyResource {
 
         this.Window = Window
         this.View = View
-      }
-
-      tray = async (opts = {}, listener) => {
-        const ipc = this[Symbol.for('pear.ipc')]
-        opts = {
-          ...opts,
-          menu: opts.menu ?? {
-            show: `Show ${state.name}`,
-            quit: 'Quit'
-          }
-        }
-        listener = listener ?? ((key) => {
-          if (key === 'click' || key === 'show') {
-            this.Window.self.show()
-            this.Window.self.focus({ steal: true })
-            return
-          }
-          if (key === 'quit') {
-            this.exit(0)
-          }
-        })
-
-        if (this._tray.untray) await this._tray.untray()
-
-        const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
-        sub.on('data', (msg) => listener(msg.key, opts))
-        await ipc.tray({ id, opts })
-
-        this._tray.untray = async () => {
-          await sub.destroy()
-          await ipc.untray({ id })
-        }
-
-        return this._tray.untray
       }
 
       exit = (code) => {
