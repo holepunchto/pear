@@ -7,8 +7,6 @@ const ReadyResource = require('ready-resource')
 const electron = require('electron')
 const Worker = require('../lib/worker')
 
-let traySub = null
-
 module.exports = class PearGUI extends ReadyResource {
   constructor ({ API, state }) {
     super()
@@ -28,6 +26,9 @@ module.exports = class PearGUI extends ReadyResource {
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
     }
+
+    state.untray = null
+
     API = class extends API {
       constructor (ipc, state, onteardown) {
         super(ipc, state, onteardown)
@@ -244,17 +245,18 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        if (traySub) await traySub.destroy()
-        await ipc.untray({ id })
+        if (state.untray) await state.untray()
 
-        traySub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
-        traySub.on('data', (msg) => listener(msg.key, opts))
+        const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
+        sub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
 
-        return async () => {
-          await traySub.destroy()
+        state.untray = async () => {
+          await sub.destroy()
           await ipc.untray({ id })
         }
+
+        return state.untray
       }
 
       exit = (code) => {
