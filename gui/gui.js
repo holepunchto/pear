@@ -1481,16 +1481,6 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
-      if (pattern.type === 'pear/gui/tray') {
-        if (tray) tray.destroy()
-        tray = new Tray({
-          opts: pattern.opts,
-          state: this.state,
-          ctrl: this.get(pattern.id),
-          onMenuClick: (key) => event.reply('messages', { ...pattern, key })
-        })
-        return
-      }
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => {
@@ -1540,6 +1530,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
+    electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
     electron.ipcMain.handle('scaleFactor', (evt, ...args) => this.scaleFactor(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
@@ -1801,6 +1792,16 @@ class PearGUI extends ReadyResource {
       this.get(id).win.setIcon(linuxBadgeIcon(count))
       return true
     }
+  }
+
+  tray ({ id, opts }) {
+    if (tray) tray.destroy()
+    tray = new Tray({
+      opts,
+      state: this.state,
+      ctrl: this.get(id),
+      onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
+    })
   }
 
   scaleFactor () {

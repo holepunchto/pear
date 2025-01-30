@@ -216,7 +216,7 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      tray = (opts = {}, listener) => {
+      tray = async (opts = {}, listener) => {
         const ipc = this[Symbol.for('pear.ipc')]
         opts = {
           ...opts,
@@ -236,8 +236,9 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
+        const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
+        await ipc.tray({ id, opts })
         return () => sub.destroy()
       }
 
@@ -296,6 +297,7 @@ class IPC {
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
+  tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
   scaleFactor (...args) { return electron.ipcRenderer.invoke('scaleFactor', ...args) }
 
   messages (pattern) {
