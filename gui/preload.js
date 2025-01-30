@@ -26,7 +26,6 @@ module.exports = class PearGUI extends ReadyResource {
       if (action.type === 'reload') location.reload()
       else if (action.type === 'nav') location.href = action.url
     }
-
     API = class extends API {
       #untray
 
