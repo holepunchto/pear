@@ -27,6 +27,8 @@ module.exports = class PearGUI extends ReadyResource {
       else if (action.type === 'nav') location.href = action.url
     }
     API = class extends API {
+      #untray
+
       constructor (ipc, state, onteardown) {
         super(ipc, state, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
@@ -222,12 +224,12 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      tray = (opts = {}, listener) => {
+      tray = async (opts = {}, listener) => {
         const ipc = this[Symbol.for('pear.ipc')]
         opts = {
           ...opts,
           menu: opts.menu ?? {
-            show: 'Show',
+            show: `Show ${state.name}`,
             quit: 'Quit'
           }
         }
@@ -242,9 +244,24 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        const sub = ipc.messages({ type: 'pear/gui/tray', id, opts })
+        if (this.#untray) {
+          await this.#untray()
+          this.#untray = null
+        }
+
+        const sub = ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
-        return () => sub.destroy()
+        await ipc.tray({ id, opts })
+
+        this.#untray = async () => {
+          sub.destroy()
+          await ipc.untray({ id })
+        }
+
+        return async () => {
+          await this.#untray()
+          this.#untray = null
+        }
       }
 
       exit = (code) => {
@@ -302,6 +319,8 @@ class IPC {
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
+  tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
+  untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
