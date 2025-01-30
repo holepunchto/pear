@@ -258,7 +258,10 @@ module.exports = class PearGUI extends ReadyResource {
           await ipc.untray({ id })
         }
 
-        return this.#untray
+        return async () => {
+          await this.#untray()
+          this.#untray = null
+        }
       }
 
       exit = (code) => {
