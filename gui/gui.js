@@ -1579,8 +1579,8 @@ class PearGUI extends ReadyResource {
     })
 
     electron.nativeTheme.on('updated', () => {
-      defaultTrayIcon = getDefaultTrayIcon()
       this.message({ type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() })
+      defaultTrayIcon = getDefaultTrayIcon()
     })
   }
 
