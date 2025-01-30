@@ -1942,7 +1942,7 @@ class Tray {
 
 function getDefaultTrayIcon () {
   if (isMac) return getDarkMode() ? require('./icons/tray-white') : require('./icons/tray-black')
-  return require('./icons/tray-color')
+  return require('./icons/tray')
 }
 
 function getDarkMode () {
