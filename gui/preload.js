@@ -51,7 +51,13 @@ module.exports = class PearGUI extends ReadyResource {
           if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
           return ipc.badge({ id, count })
         }
-        this.scaleFactor = () => ipc.scaleFactor({ id })
+
+        this.tray.scaleFactor = state.tray.scaleFactor
+        this.tray.darkMode = state.tray.darkMode
+
+        ipc.messages({ type: 'pear/gui/tray/darkMode' }).on('data', (msg) => {
+          this.tray.darkMode = msg.darkMode
+        })
 
         const kGuiCtrl = Symbol('gui:ctrl')
 
@@ -305,7 +311,6 @@ class IPC {
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
   tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
   untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
-  scaleFactor (...args) { return electron.ipcRenderer.invoke('scaleFactor', ...args) }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
