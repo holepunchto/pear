@@ -15,7 +15,7 @@ const kMap = Symbol('pear.gui.map')
 const kCtrl = Symbol('pear.gui.ctrl')
 
 const defaultTrayOs = { win32: true, linux: true, darwin: true }
-const defaultTrayIcon = require('./icons/tray')
+let defaultTrayIcon = require('./icons/tray')
 let tray = null
 
 class Menu {
@@ -1579,6 +1579,10 @@ class PearGUI extends ReadyResource {
       }
       pipe.write(data)
     })
+
+    electron.nativeTheme.on('updated', () => {
+      defaultTrayIcon = getDefaultTrayIcon()
+    })
   }
 
   async app () {
@@ -1934,6 +1938,18 @@ class Tray {
       return this.defaultIcon
     }
   }
+}
+
+function getDefaultTrayIcon () {
+  if (isMac) return getDarkMode() ? require('./icons/tray-white') : require('./icons/tray-black')
+  return require('./icons/tray-color')
+}
+
+function getDarkMode () {
+  const { shouldUseHighContrastColors, shouldUseInvertedColorScheme, shouldUseDarkColors } = electron.nativeTheme
+  if (shouldUseHighContrastColors) return true
+  else if (shouldUseInvertedColorScheme) return !shouldUseDarkColors
+  return shouldUseDarkColors
 }
 
 module.exports = PearGUI
