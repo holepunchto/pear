@@ -1432,6 +1432,9 @@ class View extends GuiCtrl {
 class PearGUI extends ReadyResource {
   static View = View
   static Window = Window
+
+  #untray
+
   constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
     this.state = state
@@ -1809,11 +1812,11 @@ class PearGUI extends ReadyResource {
       ctrl: this.get(id),
       onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
     })
-    this._untray = () => tray.destroy()
+    this.#untray = () => tray.destroy()
   }
 
   untray () {
-    if (this._untray) this._untray()
+    if (this.#untray) this.#untray()
   }
 }
 
