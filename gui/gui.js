@@ -16,7 +16,6 @@ const kCtrl = Symbol('pear.gui.ctrl')
 
 const defaultTrayOs = { win32: true, linux: true, darwin: true }
 const defaultTrayIcon = require('./icons/tray')
-let tray = null
 
 class Menu {
   static PEAR = 0
@@ -1804,16 +1803,17 @@ class PearGUI extends ReadyResource {
   }
 
   tray ({ id, opts }) {
-    tray = new Tray({
+    const tray = new Tray({
       opts,
       state: this.state,
       ctrl: this.get(id),
       onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
     })
+    this._untray = () => tray.destroy()
   }
 
   untray () {
-    if (tray) tray.destroy()
+    if (this._untray) this._untray()
   }
 }
 
