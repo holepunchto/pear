@@ -1433,7 +1433,7 @@ class PearGUI extends ReadyResource {
   static View = View
   static Window = Window
 
-  #untray
+  #tray
 
   constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
@@ -1812,11 +1812,14 @@ class PearGUI extends ReadyResource {
       ctrl: this.get(id),
       onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
     })
-    this.#untray = () => tray.destroy()
+    this.#tray = tray
   }
 
   untray () {
-    if (this.#untray) this.#untray()
+    if (this.#tray) {
+      this.#tray.destroy()
+      this.#tray = null
+    }
   }
 }
 
