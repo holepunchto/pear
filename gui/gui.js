@@ -16,7 +16,6 @@ const kCtrl = Symbol('pear.gui.ctrl')
 
 const defaultTrayOs = { win32: true, linux: true, darwin: true }
 let defaultTrayIcon = require('./icons/tray')
-let tray = null
 
 class Menu {
   static PEAR = 0
@@ -1433,6 +1432,9 @@ class View extends GuiCtrl {
 class PearGUI extends ReadyResource {
   static View = View
   static Window = Window
+
+  #tray
+
   constructor ({ socketPath, connectTimeout, tryboot, state }) {
     super()
     this.state = state
@@ -1486,16 +1488,6 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
-      if (pattern.type === 'pear/gui/tray') {
-        if (tray) tray.destroy()
-        tray = new Tray({
-          opts: pattern.opts,
-          state: this.state,
-          ctrl: this.get(pattern.id),
-          onMenuClick: (key) => event.reply('messages', { ...pattern, key })
-        })
-        return
-      }
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
       messages.on('end', () => {
@@ -1545,6 +1537,8 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
+    electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
+    electron.ipcMain.handle('untray', (evt, ...args) => this.untray(...args))
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1809,6 +1803,23 @@ class PearGUI extends ReadyResource {
     } else {
       this.get(id).win.setIcon(linuxBadgeIcon(count))
       return true
+    }
+  }
+
+  tray ({ id, opts }) {
+    const tray = new Tray({
+      opts,
+      state: this.state,
+      ctrl: this.get(id),
+      onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
+    })
+    this.#tray = tray
+  }
+
+  untray () {
+    if (this.#tray) {
+      this.#tray.destroy()
+      this.#tray = null
     }
   }
 }
