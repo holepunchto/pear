@@ -27,10 +27,10 @@ module.exports = class PearGUI extends ReadyResource {
       else if (action.type === 'nav') location.href = action.url
     }
 
-    this._tray = {}
-
     API = class extends API {
-      constructor (ipc, state, onteardown, _tray) {
+      #untray
+
+      constructor (ipc, state, onteardown) {
         super(ipc, state, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
         this.worker = new Worker({ ipc })
@@ -51,40 +51,6 @@ module.exports = class PearGUI extends ReadyResource {
         this.badge = (count) => {
           if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
           return ipc.badge({ id, count })
-        }
-
-        this.tray = async (opts = {}, listener) => {
-          const ipc = this[Symbol.for('pear.ipc')]
-          opts = {
-            ...opts,
-            menu: opts.menu ?? {
-              show: `Show ${state.name}`,
-              quit: 'Quit'
-            }
-          }
-          listener = listener ?? ((key) => {
-            if (key === 'click' || key === 'show') {
-              this.Window.self.show()
-              this.Window.self.focus({ steal: true })
-              return
-            }
-            if (key === 'quit') {
-              this.exit(0)
-            }
-          })
-
-          if (_tray.untray) await _tray.untray()
-
-          const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
-          sub.on('data', (msg) => listener(msg.key, opts))
-          await ipc.tray({ id, opts })
-
-          _tray.untray = async () => {
-            await sub.destroy()
-            await ipc.untray({ id })
-          }
-
-          return _tray.untray
         }
 
         this.tray.scaleFactor = state.tray?.scaleFactor
@@ -259,12 +225,46 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
+      tray = async (opts = {}, listener) => {
+        const ipc = this[Symbol.for('pear.ipc')]
+        opts = {
+          ...opts,
+          menu: opts.menu ?? {
+            show: `Show ${state.name}`,
+            quit: 'Quit'
+          }
+        }
+        listener = listener ?? ((key) => {
+          if (key === 'click' || key === 'show') {
+            this.Window.self.show()
+            this.Window.self.focus({ steal: true })
+            return
+          }
+          if (key === 'quit') {
+            this.exit(0)
+          }
+        })
+
+        if (this.#untray) await this.#untray()
+
+        const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
+        sub.on('data', (msg) => listener(msg.key, opts))
+        await ipc.tray({ id, opts })
+
+        this.#untray = async () => {
+          await sub.destroy()
+          await ipc.untray({ id })
+        }
+
+        return this.#untray
+      }
+
       exit = (code) => {
         process.exitCode = code
         electron.ipcRenderer.sendSync('exit', code)
       }
     }
-    this.api = new API(this.ipc, state, onteardown, this._tray)
+    this.api = new API(this.ipc, state, onteardown)
   }
 }
 
