@@ -20,16 +20,19 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})`)
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
   }
 
   async allBundles () {
+    LOG.trace('db', 'FIND (\'@pear/bundle\')')
     return await this.db.find('@pear/bundle').toArray()
   }
 
   async addBundle (link, appStorage) {
     const tx = await this.lock.enter()
+    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link, appStorage })})`)
     await tx.insert('@pear/bundle', { link, appStorage })
     await this.lock.exit()
     return { link, appStorage }
@@ -38,11 +41,13 @@ module.exports = class Model {
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })} })`)
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
       const updatedBundle = { ...bundle, encryptionKey }
+      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ ...bundle, encryptionKey })})`)
       await tx.insert('@pear/bundle', updatedBundle)
       result = updatedBundle
     }
@@ -53,12 +58,15 @@ module.exports = class Model {
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
       const updatedBundle = { ...bundle, appStorage: newAppStorage }
+      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
       await tx.insert('@pear/bundle', updatedBundle)
+      LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: oldStorage })})`)
       await tx.insert('@pear/gc', { path: oldStorage })
       result = updatedBundle
     }
@@ -67,27 +75,32 @@ module.exports = class Model {
   }
 
   async getDhtNodes () {
+    LOG.trace('db', 'GET (\'@pear/dht\')[nodes]')
     return (await this.db.get('@pear/dht'))?.nodes || []
   }
 
   async setDhtNodes (nodes) {
     const tx = await this.lock.enter()
+    LOG.trace('db', `INSERT ('@pear/dht', ${JSON.stringify(nodes)})`)
     await tx.insert('@pear/dht', { nodes })
     await this.lock.exit()
   }
 
   async getTags (link) {
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})[tags]`)
     return (await this.db.get('@pear/bundle', { link }))?.tags || []
   }
 
   async updateTags (link, tags) {
     let result
     const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
     } else {
       const updatedBundle = { ...bundle, tags }
+      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
       await tx.insert('@pear/bundle', updatedBundle)
       result = updatedBundle
     }
@@ -101,7 +114,9 @@ module.exports = class Model {
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${srcLink} })`)
     const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${dstLink} })`)
     const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
 
     if (!srcBundle || !dstBundle) {
@@ -110,10 +125,13 @@ module.exports = class Model {
     }
 
     const updatedDstBundle = { ...dstBundle, appStorage: srcBundle.appStorage }
+    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedDstBundle)})`)
     await tx.insert('@pear/bundle', updatedDstBundle)
+    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: dstBundle.appStorage })})`)
     await tx.insert('@pear/gc', { path: dstBundle.appStorage })
 
     const updatedSrcBundle = { ...srcBundle, appStorage: newSrcAppStorage }
+    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify(updatedSrcBundle)})`)
     await tx.insert('@pear/bundle', updatedSrcBundle)
 
     await this.lock.exit()
@@ -122,6 +140,7 @@ module.exports = class Model {
   }
 
   async allGc () {
+    LOG.trace('db', 'FIND (\'@pear/gc\')')
     return await this.db.find('@pear/gc').toArray()
   }
 
