@@ -1009,6 +1009,11 @@ class Window extends GuiCtrl {
     }
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
 
+    const tray = {
+      scaleFactor: electron.screen.getPrimaryDisplay().scaleFactor,
+      darkMode: getDarkMode()
+    }
+
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
     this.win = new BrowserWindow({
@@ -1025,7 +1030,7 @@ class Window extends GuiCtrl {
         preload: require.main.filename,
         ...(decal === false ? { session } : {}),
         partition: 'persist:pear',
-        additionalArguments: [JSON.stringify({ ...this.state.config, isDecal: true })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, isDecal: true, tray })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1125,11 +1130,6 @@ class Window extends GuiCtrl {
     session.webRequest.onBeforeSendHeaders(onBeforeSendHeaders)
 
     if (this.closing) return false
-
-    const tray = {
-      scaleFactor: electron.screen.getPrimaryDisplay().scaleFactor,
-      darkMode: getDarkMode()
-    }
 
     this.view = new BrowserView({
       ...(options.view || options),
