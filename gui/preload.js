@@ -27,10 +27,10 @@ module.exports = class PearGUI extends ReadyResource {
       else if (action.type === 'nav') location.href = action.url
     }
 
-    state._untray = null
+    this._tray = {}
 
     API = class extends API {
-      constructor (ipc, state, onteardown) {
+      constructor (ipc, state, onteardown, _tray) {
         super(ipc, state, onteardown)
         this[Symbol.for('pear.ipc')] = ipc
         this.worker = new Worker({ ipc })
@@ -52,6 +52,8 @@ module.exports = class PearGUI extends ReadyResource {
           if (!Number.isInteger(+count)) throw new Error('argument must be an integer')
           return ipc.badge({ id, count })
         }
+
+        this._tray = _tray
 
         this.tray.scaleFactor = state.tray?.scaleFactor
         this.tray.darkMode = state.tray?.darkMode
@@ -245,18 +247,19 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        if (state._untray) await state._untray()
+        console.log('🚀 ~ extends ~ tray', this._tray)
+        if (this._tray.untray) await this._tray.untray()
 
         const sub = await ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
 
-        state._untray = async () => {
+        this._tray.untray = async () => {
           await sub.destroy()
           await ipc.untray({ id })
         }
 
-        return state._untray
+        return this._tray.untray
       }
 
       exit = (code) => {
@@ -264,7 +267,7 @@ module.exports = class PearGUI extends ReadyResource {
         electron.ipcRenderer.sendSync('exit', code)
       }
     }
-    this.api = new API(this.ipc, state, onteardown)
+    this.api = new API(this.ipc, state, onteardown, this._tray)
   }
 }
 
