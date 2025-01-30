@@ -51,6 +51,7 @@ module.exports = class PearGUI extends ReadyResource {
         }
 
         this.tray.scaleFactor = state.scaleFactor
+        this.tray.darkMode = state.darkMode
 
         const kGuiCtrl = Symbol('gui:ctrl')
 

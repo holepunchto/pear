@@ -1128,6 +1128,7 @@ class Window extends GuiCtrl {
     if (this.closing) return false
 
     const scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor
+    const darkMode = getDarkMode()
 
     this.view = new BrowserView({
       ...(options.view || options),
@@ -1135,7 +1136,7 @@ class Window extends GuiCtrl {
       webPreferences: {
         preload: require.main.filename,
         session,
-        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true, scaleFactor })],
+        additionalArguments: [JSON.stringify({ ...this.state.config, parentWcId: this.win.webContents.id, decalled: true, scaleFactor, darkMode })],
         autoHideMenuBar: true,
         experimentalFeatures: true,
         nodeIntegration: true,
@@ -1931,6 +1932,13 @@ class Tray {
       return this.defaultIcon
     }
   }
+}
+
+function getDarkMode () {
+  const { shouldUseHighContrastColors, shouldUseInvertedColorScheme, shouldUseDarkColors } = electron.nativeTheme
+  if (shouldUseHighContrastColors) return true
+  else if (shouldUseInvertedColorScheme) return !shouldUseDarkColors
+  return shouldUseDarkColors
 }
 
 module.exports = PearGUI
