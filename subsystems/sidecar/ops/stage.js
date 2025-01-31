@@ -63,7 +63,7 @@ module.exports = class Stage extends Opstream {
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    const root = state.dir
+    const root = state.cwd
     const src = new LocalDrive(root, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
