@@ -86,7 +86,7 @@ test('dump should fail when dumping to existing dir', async function ({ absent, 
   await fs.promises.writeFile(path.join(dir, 'test.txt'), 'hello')
 
   teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir, force: false })
+  const dump = await helper.dump({ link, dir })
   teardown(() => Helper.teardownStream(dump))
   try {
     const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
