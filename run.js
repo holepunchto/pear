@@ -79,8 +79,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     }
 
     if (link.startsWith('pear://runtime')) {
-      args = [constants.BOOT, '--appling', appling, '--run', ...args]
       if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
+      args = [constants.BOOT, '--appling', appling, '--run', ...args]
       spawn(constants.DESKTOP_RUNTIME, args, opts).unref()
     } else {
       if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
