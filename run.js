@@ -30,7 +30,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
 
   let cwd = os.cwd()
-  const originalCwd = cwd
   let dir = cwd
   let base = null
   if (key === null) {
@@ -39,45 +38,22 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     } catch { /* ignore */ }
     base = project(dir, pathname, cwd)
     dir = base.dir
-    if (dir !== cwd) {
-      Bare.on('exit', () => os.chdir(originalCwd)) // TODO: remove this once Pear.shutdown is used to close
-      teardown(() => os.chdir(originalCwd))
-      os.chdir(dir)
-      cwd = dir
-    }
     if (isPath) {
       link = path.join(dir, base.entrypoint || '/')
     }
   }
 
-  if (detached) { // TODO: move into pear-electron
+  if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) return ipc.close().catch(console.error)
-
     args = args.filter((arg) => arg !== '--detached')
     const opts = { detached: true, stdio: 'ignore', cwd }
-
-    if (!appling) {
-      args.unshift('run', '--detach')
-      spawn(constants.RUNTIME, args, opts).unref()
-      return ipc.close().catch(console.error)
-    }
-
-    const applingApp = isMac ? appling.split('.app')[0] + '.app' : appling
-
-    try {
-      await fsp.stat(applingApp)
-    } catch {
-      ipc.close().catch(console.error)
-      throw ERR_INVALID_APPLING('Appling does not exist')
-    }
-
-    if (isMac) spawn('open', [applingApp, '--args', ...args], opts).unref()
-    else spawn(applingApp, args, opts).unref()
-
+    if (!appling) args.unshift('run', '--detach')
+    else args.unshift('run', '--appling', appling)
+    spawn(constants.RUNTIME, args, opts).unref()
     return ipc.close().catch(console.error)
   }
-
+  
   const { startId, id, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
