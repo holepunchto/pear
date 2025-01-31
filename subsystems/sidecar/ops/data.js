@@ -1,4 +1,5 @@
 'use strict'
+const { pathToFileURL } = require('url-file-url')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Data extends Opstream {
@@ -14,8 +15,9 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'link') {
-      const bundle = await this.sidecar.model.getBundle(link)
-      if (!secrets) bundle.encryptionKey = undefined
+      const isPearLink = link.startsWith('pear://')
+      const bundle = await this.sidecar.model.getBundle(isPearLink ? link : pathToFileURL(link).href)
+      if (bundle && !secrets) bundle.encryptionKey = undefined
       this.push({ tag: 'link', data: bundle })
     }
 
