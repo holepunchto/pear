@@ -35,7 +35,7 @@ test('dump should succeed', async function ({ ok, plan, teardown }) {
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
 })
 
-test('dump should succeed when dumping subdirectory', async function ({ ok, plan, teardown }) {
+test('dump should succeed when dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
   plan(4)
 
   const helper = new Helper()
@@ -59,14 +59,14 @@ test('dump should succeed when dumping subdirectory', async function ({ ok, plan
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
-  ok(!await exists(path.join(dir, 'index.js')), 'index.js should not exist')
-  ok(!await exists(path.join(dir, 'package.json')), 'package.json should not exist')
+  absent(await exists(path.join(dir, 'index.js')), 'index.js should not exist')
+  absent(await exists(path.join(dir, 'package.json')), 'package.json should not exist')
   ok(await exists(path.join(dir, 'lib', 'dump.js')), 'lib/dump.js should exist')
   ok(await exists(path.join(dir, 'lib', 'pear.js')), 'lib/pear.js should exist')
 })
 
-test('dump should fail when dumping to existing dir', async function ({ plan, teardown }) {
-  plan(2)
+test('dump should fail when dumping to existing dir', async function ({ absent, is, plan, teardown }) {
+  plan(3)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -83,15 +83,20 @@ test('dump should fail when dumping to existing dir', async function ({ plan, te
 
   const dir = path.join(Helper.tmp, 'pear-dump-test-3')
   await fs.promises.mkdir(dir)
+  await fs.promises.writeFile(path.join(dir, 'test.txt'), 'hello')
 
   teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  const dump = await helper.dump({ link, dir, force: false })
   teardown(() => Helper.teardownStream(dump))
-  const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
-  await untilDump.complete
+  try {
+    const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+    await untilDump.complete
+  } catch (e) {
+    is(e.code, 'ERR_DIR_NONEMPTY', 'should error with non-empty directory')
+  }
 
-  ok(!await exists(path.join(dir, 'index.js')), 'index.js should not exist')
-  ok(!await exists(path.join(dir, 'package.json')), 'package.json should not exist')
+  absent(await exists(path.join(dir, 'index.js')), 'index.js should not exist')
+  absent(await exists(path.join(dir, 'package.json')), 'package.json should not exist')
 })
 
 test('dump should succeed when dumping to existing dir with force', async function ({ ok, plan, teardown }) {
@@ -123,7 +128,7 @@ test('dump should succeed when dumping to existing dir with force', async functi
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
 })
 
-test('dump should succeed when dumping a single file', async function ({ ok, is, plan, teardown }) {
+test('dump should succeed when dumping a single file', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -149,7 +154,7 @@ test('dump should succeed when dumping a single file', async function ({ ok, is,
 
   ok(await exists(path.join(dir, 'index.js')), 'index.js should exist')
   is((await fs.promises.readdir(dir)).length, 1)
-  ok(!await exists(path.join(dir, 'package.json')), 'package.json should not exist')
+  absent(await exists(path.join(dir, 'package.json')), 'package.json should not exist')
 })
 
 test('dump should succeed when dumping a single file in a subdirectory', async function ({ ok, is, plan, teardown }) {
@@ -238,7 +243,7 @@ test('dump should succeed when dumping subdirectory to stdout', async function (
   ok(dumpedFiles.includes('/dump.js'), 'should print out lib/dump.js as /dump.js')
 })
 
-test('dump should succeed when dumping a single file to stdout', async function ({ ok, is, plan, teardown }) {
+test('dump should succeed when dumping a single file to stdout', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -264,10 +269,10 @@ test('dump should succeed when dumping a single file to stdout', async function 
 
   ok(dumpedFiles.includes('index.js'), 'should print out index.js')
   is(dumpedFiles.length, 1, 'should dump only one file')
-  ok(!dumpedFiles.includes('package.json'), 'should not print out package.json')
+  absent(dumpedFiles.includes('package.json'), 'should not print out package.json')
 })
 
-test('dump should succeed when dumping a single file in a subdirectory to stdout', async function ({ ok, is, plan, teardown }) {
+test('dump should succeed when dumping a single file in a subdirectory to stdout', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -293,5 +298,5 @@ test('dump should succeed when dumping a single file in a subdirectory to stdout
 
   ok(dumpedFiles.includes('pear.js'), 'should print out pear.js')
   is(dumpedFiles.length, 1, 'should dump only one file')
-  ok(!dumpedFiles.includes('index.js'), 'should not print out index.js')
+  absent(dumpedFiles.includes('index.js'), 'should not print out index.js')
 })
