@@ -80,9 +80,9 @@ module.exports = class Dump extends Opstream {
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname
+    const pathname = !isFileLink && parsed.pathname === '/' ? '' : prefix
+    const entry = pathname === '' ? null : await src.entry(localFile || pathname)
     if (dir === '-') {
-      const pathname = !isFileLink && parsed.pathname === '/' ? '' : prefix
-      const entry = pathname === '' ? null : await src.entry(localFile || pathname)
       if (entry !== null) {
         const value = await src.get(entry)
         const key = entry.key.split('/').pop()
@@ -100,7 +100,8 @@ module.exports = class Dump extends Opstream {
 
     const dst = new LocalDrive(dir)
 
-    const mirror = src.mirror(dst, { dryRun, prefix })
+    const extraOpts = entry !== null ? { filter: (key) => key === prefix } : { prefix }
+    const mirror = src.mirror(dst, { dryRun, ...extraOpts })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
