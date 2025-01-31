@@ -1,7 +1,7 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 class API {
-  static CHECKOUT = require('./checkout')
+  static RTI = { checkout: require('./checkout') }
   static get CONSTANTS () { return require('pear-api/constants') }
   config = {}
 }
