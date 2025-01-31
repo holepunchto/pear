@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "pear-bridge": "~0.0.6",
-    "pear-electron": "~0.2.3"
+    "pear-electron": "^0.2.6"
   }
 }
