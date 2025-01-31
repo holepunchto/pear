@@ -411,7 +411,7 @@ class Sidecar extends ReadyResource {
     if (!client.userData) return
     return client.userData.messages(pattern)
   }
-  
+
   exists (params, client) {
     if (!client.userData) return
     return client.userData.bundle.exists(params.key)
@@ -431,7 +431,6 @@ class Sidecar extends ReadyResource {
     if (!client.userData) return
     return client.userData.bundle.drive.compare(params.keyA, params.keyB)
   }
-
 
   async permit (params) {
     let encryptionKey
