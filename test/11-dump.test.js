@@ -49,7 +49,7 @@ test('dump should succeed when dumping subdirectory', async function ({ ok, not,
   const { key } = await staged.addendum
   await staged.final
 
-  const link = `pear://${key}`
+  const link = `pear://${key}/lib`
 
   const dir = path.join(Helper.tmp, 'pear-dump-test-2')
 
