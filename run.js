@@ -3,16 +3,14 @@ const Module = require('bare-module')
 const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
-const fsp = require('bare-fs/promises')
 const ENV = require('bare-env')
 const { spawn } = require('bare-subprocess')
-const { isMac, isWindows } = require('which-runtime')
+const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
 const teardown = require('pear-api/teardown')
 const parseLink = require('pear-api/parse-link')
 const {
-  ERR_INVALID_APPLING,
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_INPUT
 } = require('pear-api/errors')
@@ -29,7 +27,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
-  let cwd = os.cwd()
+  const cwd = os.cwd()
   let dir = cwd
   let base = null
   if (key === null) {
@@ -53,7 +51,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     spawn(constants.RUNTIME, args, opts).unref()
     return ipc.close().catch(console.error)
   }
-  
+
   const { startId, id, bundle, bail } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
