@@ -427,6 +427,12 @@ class Sidecar extends ReadyResource {
     return client.userData.bundle.entry(params.key)
   }
 
+  compare (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.drive.compare(params.keyA, params.keyB)
+  }
+
+
   async permit (params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {
