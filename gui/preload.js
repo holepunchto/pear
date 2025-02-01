@@ -313,7 +313,7 @@ class IPC {
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 
   tray (opts, listener) {
-    electron.ipcRenderer.on('tray', (e, data) => { listener(data, opts) })
+    electron.ipcRenderer.on('tray', (e, data) => { listener(data, opts, listener) })
     electron.ipcRenderer.send('tray', opts)
     return () => {
       electron.ipcRenderer.removeAllListeners('tray')
