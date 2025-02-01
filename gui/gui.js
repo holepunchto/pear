@@ -1910,8 +1910,8 @@ class Tray extends ReadyResource {
   async _open () {
     const { icon, menu, os } = this.opts
 
-    const trayOs = { ...defaultTrayOs, ...os }
-    if (!trayOs[process.platform]) {
+    const osEnabled = { ...defaultTrayOs, ...os }
+    if (!osEnabled[process.platform]) {
       console.warn(`Tray is not enabled on platform ${process.platform}`)
       return
     }
