@@ -1492,11 +1492,10 @@ class PearGUI extends ReadyResource {
       const messages = this.messages(pattern)
       const id = this.messagesList.alloc(messages)
       messages.on('data', (data) => event.reply('messages', data))
-      messages.on('end', () => messages.end())
+      messages.on('end', () => event.reply('messagesEnd'))
       messages.on('close', () => {
-        messages.destroy()
         this.messagesList.free(id)
-        event.reply('messages', null)
+        event.reply('messagesClose')
       })
       event.returnValue = id
       return event.returnValue

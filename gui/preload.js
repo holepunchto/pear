@@ -332,6 +332,8 @@ class IPC {
     const stream = bus.sub(pattern)
     stream.on('end', () => electron.ipcRenderer.send('messagesEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('messagesClose', id))
+    electron.ipcRenderer.on('messagesEnd', () => stream.end())
+    electron.ipcRenderer.on('messagesClose', () => stream.destroy())
     return stream
   }
 
