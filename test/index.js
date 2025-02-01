@@ -17,6 +17,7 @@ async function runTests () {
   await import('./08-reset.test.js')
   await import('./09-shift.test.js')
   await import('./10-data.test.js')
+  await import('./11-dump.test.js')
 
   test.resume()
 }

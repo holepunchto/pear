@@ -1,0 +1,8 @@
+{
+  "name": "dump",
+  "main": "index.js",
+  "pear": {
+    "name": "dump",
+    "type": "terminal"
+  }
+}
