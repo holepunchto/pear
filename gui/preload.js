@@ -244,24 +244,24 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        if (this.#untray) {
-          await this.#untray()
-          this.#untray = null
+        const untray = async () => {
+          if (this.#untray) {
+            await this.#untray()
+            this.#untray = null
+          }
         }
+        await untray()
 
         const sub = ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
 
         this.#untray = async () => {
-          sub.destroy()
+          sub.end()
           await ipc.untray({ id })
         }
 
-        return async () => {
-          await this.#untray()
-          this.#untray = null
-        }
+        return untray
       }
 
       exit = (code) => {
@@ -323,13 +323,16 @@ class IPC {
   untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
 
   messages (pattern) {
+    const id = electron.ipcRenderer.sendSync('messagesId')
     electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
-      if (msg === null) bus.end()
+      if (msg === null) bus.destroy()
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
+    stream.on('end', () => electron.ipcRenderer.send('messagesEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('messagesClose', id))
     return stream
   }
 

@@ -1456,6 +1456,7 @@ class PearGUI extends ReadyResource {
     })
     this.worker = new Worker()
     this.pipes = new Freelist()
+    this.messagesList = new Freelist()
     this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('exit', (e, code) => { process.exit(code) })
@@ -1489,11 +1490,29 @@ class PearGUI extends ReadyResource {
 
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
+      const id = this.messagesList.alloc(messages)
       messages.on('data', (data) => event.reply('messages', data))
-      messages.on('end', () => {
-        messages.end()
+      messages.on('end', () => messages.end())
+      messages.on('close', () => {
+        messages.destroy()
+        this.messagesList.free(id)
         event.reply('messages', null)
       })
+    })
+
+    electron.ipcMain.on('messagesId', (event) => {
+      event.returnValue = this.messagesList.nextId()
+      return event.returnValue
+    })
+
+    electron.ipcMain.on('messagesEnd', (event, id) => {
+      const messages = this.messagesList.from(id)
+      if (messages) messages.end()
+    })
+
+    electron.ipcMain.on('messagesClose', (event, id) => {
+      const messages = this.messagesList.from(id)
+      if (messages) messages.destroy()
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
