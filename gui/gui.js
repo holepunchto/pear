@@ -1912,12 +1912,15 @@ class Tray extends ReadyResource {
   }
 
   async _open () {
-    if (!this.defaultOs[this.platform]) return
+    if (!this.defaultOs[this.platform]) {
+      console.warn(`Tray is not enabled on platform ${this.platform}`)
+      return
+    }
 
     const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
     const hideable = guiOptions.hideable ?? guiOptions[this.platform]?.hideable ?? false
     if (!hideable) {
-      console.warn('hideable config must be enabled to use tray')
+      console.warn('hideable must be enabled to use tray')
       return
     }
 
