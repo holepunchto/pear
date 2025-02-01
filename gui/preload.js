@@ -244,24 +244,24 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        if (this.#untray) {
-          await this.#untray()
-          this.#untray = null
+        const untray = async () => {
+          if (this.#untray) {
+            await this.#untray()
+            this.#untray = null
+          }
         }
+        await untray()
 
         const sub = ipc.messages({ type: 'pear/gui/tray/menuClick' })
         sub.on('data', (msg) => listener(msg.key, opts))
         await ipc.tray({ id, opts })
 
         this.#untray = async () => {
-          sub.destroy()
+          sub.end()
           await ipc.untray({ id })
         }
 
-        return async () => {
-          await this.#untray()
-          this.#untray = null
-        }
+        return untray
       }
 
       exit = (code) => {
