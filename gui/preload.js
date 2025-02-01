@@ -316,7 +316,7 @@ class IPC {
     electron.ipcRenderer.on('tray', (e, data) => { listener(data, opts) })
     electron.ipcRenderer.send('tray', opts)
     return () => {
-      electron.ipcRenderer.removeAllListeners('trayMenuClick')
+      electron.ipcRenderer.removeAllListeners('tray')
       return electron.ipcRenderer.invoke('untray')
     }
   }
