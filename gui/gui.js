@@ -1537,14 +1537,20 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
-    electron.ipcMain.handle('untray', (evt, ...args) => this.untray(...args))
 
     electron.ipcMain.on('tray', (evt, opts) => {
-      this.tray({
+      const tray = new Tray({
         opts,
         state: this.state,
-        onMenuClick: (data) => evt.reply('trayMenuClick', data)
+        onMenuClick: (data) => evt.reply('tray', data)
       })
+      this.#tray = tray
+    })
+    electron.ipcMain.handle('untray', () => {
+      if (this.#tray) {
+        this.#tray.destroy()
+        this.#tray = null
+      }
     })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
@@ -1809,18 +1815,6 @@ class PearGUI extends ReadyResource {
     } else {
       this.get(id).win.setIcon(linuxBadgeIcon(count))
       return true
-    }
-  }
-
-  tray (args) {
-    const tray = new Tray(args)
-    this.#tray = tray
-  }
-
-  untray () {
-    if (this.#tray) {
-      this.#tray.destroy()
-      this.#tray = null
     }
   }
 }
