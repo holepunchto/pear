@@ -1814,7 +1814,7 @@ class PearGUI extends ReadyResource {
       opts,
       state: this.state,
       ctrl: this.get(id),
-      onMenuClick,
+      onMenuClick
     })
     this.#tray = tray
   }

@@ -315,7 +315,7 @@ class IPC {
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 
-  tray (id, opts) { 
+  tray (id, opts) {
     const stream = new streamx.Readable()
     stream.on('end', () => electron.ipcRenderer.send('trayEnd'))
     stream.on('close', () => electron.ipcRenderer.send('trayClose'))
