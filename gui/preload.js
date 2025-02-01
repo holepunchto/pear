@@ -323,8 +323,7 @@ class IPC {
   untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
 
   messages (pattern) {
-    const id = electron.ipcRenderer.sendSync('messagesId')
-    electron.ipcRenderer.send('messages', pattern)
+    const id = electron.ipcRenderer.sendSync('messages', pattern)
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
       if (msg === null) bus.destroy()
