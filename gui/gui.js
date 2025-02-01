@@ -1500,7 +1500,7 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('messagesId', (event) => {
-      event.returnValue = this.pipes.nextId()
+      event.returnValue = this.messagesList.nextId()
       return event.returnValue
     })
 
