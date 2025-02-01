@@ -1546,9 +1546,9 @@ class PearGUI extends ReadyResource {
       })
       this.#tray = tray
     })
-    electron.ipcMain.handle('untray', () => {
+    electron.ipcMain.handle('untray', async () => {
       if (this.#tray) {
-        this.#tray.destroy()
+        await this.#tray.close()
         this.#tray = null
       }
     })
@@ -1889,27 +1889,29 @@ function linuxBadgeIcon (n) {
   }
 }
 
-class Tray {
+class Tray extends ReadyResource {
   constructor ({ opts, state, onMenuClick }) {
+    super()
     this.tray = null
 
     this.platform = process.platform
+    this.opts = opts
     this.state = state
     this.onMenuClick = onMenuClick
 
     this.defaultOs = { ...defaultTrayOs, ...opts.os }
     this.defaultIcon = defaultTrayIcon
 
-    this.#set(opts)
+    this.ready()
   }
 
-  destroy () {
+  async _close () {
     if (this.tray) {
       this.tray.destroy()
     }
   }
 
-  async #set ({ icon, menu }) {
+  async _open () {
     if (!this.defaultOs[this.platform]) return
 
     const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
@@ -1919,6 +1921,7 @@ class Tray {
       return
     }
 
+    const { icon, menu } = this.opts
     const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : this.defaultIcon
     const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
