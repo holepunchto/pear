@@ -1905,7 +1905,7 @@ class Tray extends ReadyResource {
     this.ready()
   }
 
-  async _close () {
+  _close () {
     if (this.tray) {
       this.tray.destroy()
     }
