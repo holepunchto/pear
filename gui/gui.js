@@ -1539,8 +1539,12 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
     electron.ipcMain.handle('untray', (evt, ...args) => this.untray(...args))
 
-    electron.ipcMain.on('tray', (evt, id, opts) => {
-      this.tray(id, opts, (key) => evt.reply('trayMenuClick', key))
+    electron.ipcMain.on('tray', (evt, opts) => {
+      this.tray({
+        opts,
+        state: this.state,
+        onMenuClick: (key) => evt.reply('trayMenuClick', key)
+      })
     })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
@@ -1808,13 +1812,8 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  tray (id, opts, onMenuClick) {
-    const tray = new Tray({
-      opts,
-      state: this.state,
-      ctrl: this.get(id),
-      onMenuClick
-    })
+  tray (args) {
+    const tray = new Tray(args)
     this.#tray = tray
   }
 
@@ -1897,12 +1896,11 @@ function linuxBadgeIcon (n) {
 }
 
 class Tray {
-  constructor ({ opts, state, ctrl, onMenuClick }) {
+  constructor ({ opts, state, onMenuClick }) {
     this.tray = null
 
     this.platform = process.platform
     this.state = state
-    this.ctrl = ctrl
     this.onMenuClick = onMenuClick
 
     this.defaultOs = { ...defaultTrayOs, ...opts.os }

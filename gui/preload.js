@@ -252,7 +252,7 @@ module.exports = class PearGUI extends ReadyResource {
         }
         untray()
 
-        const sub = ipc.tray(id, opts)
+        const sub = ipc.tray(opts)
         sub.on('data', (msg) => listener(msg.key, opts))
         this.#untray = () => sub.end()
 
@@ -315,11 +315,11 @@ class IPC {
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 
-  tray (id, opts) {
+  tray (opts) {
     const stream = new streamx.Readable()
     stream.on('close', () => electron.ipcRenderer.invoke('untray'))
     electron.ipcRenderer.on('trayMenuClick', (e, data) => { stream.push(data) })
-    electron.ipcRenderer.send('tray', id, opts)
+    electron.ipcRenderer.send('tray', opts)
     return stream
   }
 
