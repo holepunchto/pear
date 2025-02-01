@@ -317,7 +317,7 @@ class IPC {
 
   tray (id, opts) {
     const stream = new streamx.Readable()
-    stream.on('close', () => electron.ipcRenderer.send('untray'))
+    stream.on('close', () => electron.ipcRenderer.invoke('untray'))
     electron.ipcRenderer.on('trayMenuClick', (e, data) => { stream.push(data) })
     electron.ipcRenderer.send('tray', id, opts)
     return stream
