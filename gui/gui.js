@@ -1537,8 +1537,12 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
-    electron.ipcMain.handle('tray', (evt, ...args) => this.tray(...args))
-    electron.ipcMain.handle('untray', (evt, ...args) => this.untray(...args))
+
+    electron.ipcMain.on('trayEnd', () => this.untray())
+    electron.ipcMain.on('trayClose', () => this.untray())
+    electron.ipcMain.on('tray', (evt, id, opts) => {
+      this.tray(id, opts, (key) => evt.reply('trayMenuClick', key))
+    })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
       const pipe = this.worker.run(link, args)
@@ -1805,12 +1809,12 @@ class PearGUI extends ReadyResource {
     }
   }
 
-  tray ({ id, opts }) {
+  tray (id, opts, onMenuClick) {
     const tray = new Tray({
       opts,
       state: this.state,
       ctrl: this.get(id),
-      onMenuClick: (key) => this.ipc.message({ type: 'pear/gui/tray/menuClick', key })
+      onMenuClick,
     })
     this.#tray = tray
   }

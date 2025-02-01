@@ -224,7 +224,7 @@ module.exports = class PearGUI extends ReadyResource {
         this.View = View
       }
 
-      tray = async (opts = {}, listener) => {
+      tray = (opts = {}, listener) => {
         const ipc = this[Symbol.for('pear.ipc')]
         opts = {
           ...opts,
@@ -244,22 +244,17 @@ module.exports = class PearGUI extends ReadyResource {
           }
         })
 
-        const untray = async () => {
+        const untray = () => {
           if (this.#untray) {
-            await this.#untray()
+            this.#untray()
             this.#untray = null
           }
         }
-        await untray()
+        untray()
 
-        const sub = ipc.messages({ type: 'pear/gui/tray/menuClick' })
+        const sub = ipc.tray(id, opts)
         sub.on('data', (msg) => listener(msg.key, opts))
-        await ipc.tray({ id, opts })
-
-        this.#untray = async () => {
-          sub.end()
-          await ipc.untray({ id })
-        }
+        this.#untray = () => sub.end()
 
         return untray
       }
@@ -319,8 +314,15 @@ class IPC {
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
-  tray (...args) { return electron.ipcRenderer.invoke('tray', ...args) }
-  untray (...args) { return electron.ipcRenderer.invoke('untray', ...args) }
+
+  tray (id, opts) { 
+    const stream = new streamx.Readable()
+    stream.on('end', () => electron.ipcRenderer.send('trayEnd'))
+    stream.on('close', () => electron.ipcRenderer.send('trayClose'))
+    electron.ipcRenderer.on('trayMenuClick', (e, data) => { stream.push(data) })
+    electron.ipcRenderer.send('tray', id, opts)
+    return stream
+  }
 
   messages (pattern) {
     electron.ipcRenderer.send('messages', pattern)
