@@ -253,8 +253,8 @@ module.exports = class PearGUI extends ReadyResource {
         untray()
 
         const sub = ipc.tray(opts)
-        sub.on('data', (msg) => listener(msg.key, opts))
-        this.#untray = () => sub.end()
+        sub.on('data', (data) => listener(data, opts))
+        this.#untray = () => sub.destroy()
 
         return untray
       }
