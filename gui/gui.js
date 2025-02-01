@@ -1543,7 +1543,7 @@ class PearGUI extends ReadyResource {
       this.tray({
         opts,
         state: this.state,
-        onMenuClick: (key) => evt.reply('trayMenuClick', key)
+        onMenuClick: (data) => evt.reply('trayMenuClick', data)
       })
     })
 
