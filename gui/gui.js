@@ -1894,13 +1894,9 @@ class Tray extends ReadyResource {
     super()
     this.tray = null
 
-    this.platform = process.platform
     this.opts = opts
     this.state = state
     this.onMenuClick = onMenuClick
-
-    this.defaultOs = { ...defaultTrayOs, ...opts.os }
-    this.defaultIcon = defaultTrayIcon
 
     this.ready()
   }
@@ -1912,20 +1908,22 @@ class Tray extends ReadyResource {
   }
 
   async _open () {
-    if (!this.defaultOs[this.platform]) {
-      console.warn(`Tray is not enabled on platform ${this.platform}`)
+    const { icon, menu, os } = this.opts
+
+    const trayOs = { ...defaultTrayOs, ...os }
+    if (!trayOs[process.platform]) {
+      console.warn(`Tray is not enabled on platform ${process.platform}`)
       return
     }
 
     const guiOptions = this.state.options.gui ?? this.state.config.options.gui ?? {}
-    const hideable = guiOptions.hideable ?? guiOptions[this.platform]?.hideable ?? false
+    const hideable = guiOptions.hideable ?? guiOptions[process.platform]?.hideable ?? false
     if (!hideable) {
       console.warn('hideable must be enabled to use tray')
       return
     }
 
-    const { icon, menu } = this.opts
-    const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : this.defaultIcon
+    const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : defaultTrayIcon
     const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
     this.tray = new electron.Tray(iconNativeImg)
@@ -1947,7 +1945,7 @@ class Tray extends ReadyResource {
       return iconNativeImg
     } catch (err) {
       console.warn(err)
-      return this.defaultIcon
+      return defaultTrayIcon
     }
   }
 }
