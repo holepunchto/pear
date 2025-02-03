@@ -346,7 +346,7 @@ class IPC {
   messages (pattern) {
     const bus = new Iambus()
     const stream = bus.sub(pattern)
-    const id = this.#relay(stream, bus.pub)
+    const id = this.#relay(stream, (data) => bus.pub(data))
     electron.ipcRenderer.send('messages', id, pattern)
     return stream
   }
@@ -395,7 +395,7 @@ class IPC {
     const id = crypto.randomUUID()
     this.#streams.set(id, {
       stream,
-      ondata: ondata ?? stream.push
+      ondata: ondata ?? ((data) => stream.push(data))
     })
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
