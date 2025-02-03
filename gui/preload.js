@@ -321,19 +321,19 @@ class IPC {
     }
   }
 
-  #relay (stream, id) {
-    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
-    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
-    electron.ipcRenderer.on('streamEnd', (e, msg) => {
-      if (id === msg) stream.end()
+  #relay (stream, streamId) {
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', streamId))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', streamId))
+    electron.ipcRenderer.on('streamEnd', (e, id) => {
+      if (streamId === id) stream.end()
     })
-    electron.ipcRenderer.on('streamClose', (e, msg) => {
-      if (id === msg) stream.destroy()
+    electron.ipcRenderer.on('streamClose', (e, id) => {
+      if (streamId === id) stream.destroy()
     })
   }
 
   messages (pattern) {
-    const id = electron.ipcRenderer.sendSync('streamId')
+    const streamId = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
@@ -341,24 +341,24 @@ class IPC {
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
-    this.#relay(stream, id)
+    this.#relay(stream, streamId)
     return stream
   }
 
   warming () {
-    const id = electron.ipcRenderer.sendSync('streamId')
+    const streamId = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('warming')
     const stream = new streamx.Readable()
-    this.#relay(stream, id)
+    this.#relay(stream, streamId)
     electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
     return stream
   }
 
   reports () {
-    const id = electron.ipcRenderer.sendSync('streamId')
+    const streamId = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
-    this.#relay(stream, id)
+    this.#relay(stream, streamId)
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
     return stream
   }
