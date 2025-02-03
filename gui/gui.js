@@ -1723,7 +1723,7 @@ class PearGUI extends ReadyResource {
       this.streams.delete(id)
       reply('streamClose', id)
     })
-    stream.on('data', (data) => reply('streamData', data))
+    stream.on('data', (data) => reply('streamData', id, data))
   }
 
   open ({ id, options }) { return this.get(id).open(options) }
