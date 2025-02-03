@@ -1488,7 +1488,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('warming', (event) => {
       const warming = this.warming()
       warming.on('data', (data) => event.reply('warming', data))
-      this.#trackStream({
+      this.#relay({
         stream: warming,
         onEnd: () => event.reply('warmingEnd'),
         onClose: () => event.reply('warmingClose')
@@ -1498,7 +1498,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('reports', (event) => {
       const reports = this.reports()
       reports.on('data', (data) => event.reply('reports', data))
-      this.#trackStream({
+      this.#relay({
         stream: reports,
         onEnd: () => event.reply('reportsEnd'),
         onClose: () => event.reply('reportsClose')
@@ -1508,7 +1508,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
-      this.#trackStream({
+      this.#relay({
         stream: messages,
         onEnd: () => event.reply('messagesEnd'),
         onClose: () => event.reply('messagesClose')
@@ -1739,7 +1739,7 @@ class PearGUI extends ReadyResource {
     if (act === 'isFullscreen') return instance.isFullscreen()
   }
 
-  #trackStream ({ stream, onEnd, onClose }) {
+  #relay ({ stream, onEnd, onClose }) {
     const id = this.streams.alloc(stream)
     stream.on('end', () => onEnd())
     stream.on('close', () => {
