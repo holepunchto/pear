@@ -283,7 +283,7 @@ class IPC {
     })
     electron.ipcRenderer.on('streamData', (e, id, data) => {
       const item = this.#streams.get(id)
-      if (item) item.onData(data)
+      if (item) item.ondata(data)
     })
   }
 
@@ -390,11 +390,11 @@ class IPC {
     return stream
   }
 
-  #relay (stream, onData) {
+  #relay (stream, ondata) {
     const id = '' // TODO: generate a unique id
     this.#streams.set(id, {
       stream,
-      onData: onData ?? stream.push
+      ondata: ondata ?? stream.push
     })
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
