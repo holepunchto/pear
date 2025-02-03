@@ -322,15 +322,10 @@ class IPC {
   }
 
   #relay (stream) {
-    const streamId = electron.ipcRenderer.sendSync('streamId')
-    stream.on('end', () => electron.ipcRenderer.send('streamEnd', streamId))
-    stream.on('close', () => electron.ipcRenderer.send('streamClose', streamId))
-    electron.ipcRenderer.on('streamEnd', (e, id) => {
-      if (streamId === id) stream.end()
-    })
-    electron.ipcRenderer.on('streamClose', (e, id) => {
-      if (streamId === id) stream.destroy()
-    })
+    const id = electron.ipcRenderer.sendSync('streamId')
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    return id
   }
 
   messages (pattern) {
@@ -340,14 +335,26 @@ class IPC {
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
-    this.#relay(stream)
+    const streamId = this.#relay(stream)
+    electron.ipcRenderer.once('streamEnd', (e, id) => {
+      if (streamId === id) stream.end()
+    })
+    electron.ipcRenderer.once('streamClose', (e, id) => {
+      if (streamId === id) stream.destroy()
+    })
     electron.ipcRenderer.send('messages', pattern)
     return stream
   }
 
   warming () {
     const stream = new streamx.Readable()
-    this.#relay(stream)
+    const streamId = this.#relay(stream)
+    electron.ipcRenderer.once('streamEnd', (e, id) => {
+      if (streamId === id) stream.end()
+    })
+    electron.ipcRenderer.once('streamClose', (e, id) => {
+      if (streamId === id) stream.destroy()
+    })
     electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
     electron.ipcRenderer.send('warming')
     return stream
@@ -355,7 +362,13 @@ class IPC {
 
   reports () {
     const stream = new streamx.Readable()
-    this.#relay(stream)
+    const streamId = this.#relay(stream)
+    electron.ipcRenderer.once('streamEnd', (e, id) => {
+      if (streamId === id) stream.end()
+    })
+    electron.ipcRenderer.once('streamClose', (e, id) => {
+      if (streamId === id) stream.destroy()
+    })
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
     electron.ipcRenderer.send('reports')
     return stream
