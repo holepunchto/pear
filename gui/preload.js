@@ -394,7 +394,7 @@ class IPC {
     electron.ipcRenderer.once('streamId', (e, id) => {
       this.#streams.set(id, {
         stream,
-        ondata: ondata ?? ((data) => stream.push(data))
+        ondata: ondata ?? stream.push
       })
       stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
       stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
