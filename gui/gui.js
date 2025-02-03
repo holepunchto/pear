@@ -1724,7 +1724,7 @@ class PearGUI extends ReadyResource {
 
   #relay (stream, reply) {
     const id = this.streams.alloc(stream)
-    reply('streamAlloced', id)
+    reply('streamId', id)
     stream.on('end', () => reply('streamEnd', id))
     stream.on('close', () => {
       this.streams.free(id)
