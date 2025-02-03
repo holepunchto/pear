@@ -324,10 +324,10 @@ class IPC {
   #relay (stream, id) {
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
-    electron.ipcRenderer.on('messagesEnd', (data) => {
+    electron.ipcRenderer.on('streamEnd', (data) => {
       if (id === data) stream.end()
     })
-    electron.ipcRenderer.on('messagesClose', (data) => {
+    electron.ipcRenderer.on('streamClose', (data) => {
       if (id === data) stream.destroy()
     })
   }
