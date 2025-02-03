@@ -283,7 +283,7 @@ class IPC {
     })
     electron.ipcRenderer.on('streamData', (e, id, data) => {
       const item = this.#streams.get(id)
-      if (item) item.onData(data)
+      if (item) item.ondata(data)
     })
   }
 
@@ -347,7 +347,7 @@ class IPC {
     const stream = bus.sub(pattern)
     this.#relay({
       stream,
-      onData: (data) => { bus.pub(data) },
+      ondata: (data) => { bus.pub(data) },
       send: (id) => electron.ipcRenderer.send('messages', id, pattern)
     })
     return stream
@@ -357,7 +357,6 @@ class IPC {
     const stream = new streamx.Readable()
     this.#relay({
       stream,
-      onData: (data) => { stream.push(data) },
       send: (id) => electron.ipcRenderer.send('warming', id)
     })
     return stream
@@ -367,7 +366,6 @@ class IPC {
     const stream = new streamx.Readable()
     this.#relay({
       stream,
-      onData: (data) => { stream.push(data) },
       send: (id) => electron.ipcRenderer.send('reports', id)
     })
     return stream
@@ -399,9 +397,12 @@ class IPC {
     return stream
   }
 
-  #relay ({ stream, onData, send }) {
+  #relay ({ stream, ondata, send }) {
     electron.ipcRenderer.once('streamId', (e, id) => {
-      this.#streams.set(id, { stream, onData })
+      this.#streams.set(id, {
+        stream,
+        ondata: ondata ?? ((data) => stream.push(data))
+      })
       stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
       stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
       send(id)
