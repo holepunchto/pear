@@ -321,7 +321,8 @@ class IPC {
     }
   }
 
-  #relay (stream, streamId) {
+  #relay (stream) {
+    const streamId = electron.ipcRenderer.sendSync('streamId')
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', streamId))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', streamId))
     electron.ipcRenderer.on('streamEnd', (e, id) => {
@@ -333,33 +334,30 @@ class IPC {
   }
 
   messages (pattern) {
-    const streamId = electron.ipcRenderer.sendSync('streamId')
-    electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
       if (msg === null) bus.destroy()
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
-    this.#relay(stream, streamId)
+    this.#relay(stream)
+    electron.ipcRenderer.send('messages', pattern)
     return stream
   }
 
   warming () {
-    const streamId = electron.ipcRenderer.sendSync('streamId')
-    electron.ipcRenderer.send('warming')
     const stream = new streamx.Readable()
-    this.#relay(stream, streamId)
+    this.#relay(stream)
     electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
+    electron.ipcRenderer.send('warming')
     return stream
   }
 
   reports () {
-    const streamId = electron.ipcRenderer.sendSync('streamId')
-    electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
-    this.#relay(stream, streamId)
+    this.#relay(stream)
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    electron.ipcRenderer.send('reports')
     return stream
   }
 
