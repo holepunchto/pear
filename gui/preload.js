@@ -266,6 +266,23 @@ module.exports = class PearGUI extends ReadyResource {
 }
 
 class IPC {
+  #streams
+
+  constructor () {
+    this.#streams = {}
+    electron.ipcRenderer.on('streamEnd', (e, id) => {
+      const stream = this.#streams[id]
+      if (stream) stream.end()
+    })
+    electron.ipcRenderer.on('streamClose', (e, id) => {
+      const stream = this.#streams[id]
+      if (stream) {
+        stream.destroy()
+        delete this.#streams[id]
+      }
+    })
+  }
+
   getMediaAccessStatus (...args) { return electron.ipcRenderer.invoke('getMediaAccessStatus', ...args) }
   askForMediaAccess (...args) { return electron.ipcRenderer.invoke('askForMediaAccess', ...args) }
   desktopSources (...args) { return electron.ipcRenderer.invoke('desktopSources', ...args) }
@@ -323,9 +340,9 @@ class IPC {
 
   #relay (stream) {
     const id = electron.ipcRenderer.sendSync('streamId')
+    this.#streams[id] = stream
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
-    return id
   }
 
   messages (pattern) {
@@ -335,26 +352,14 @@ class IPC {
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
-    const streamId = this.#relay(stream)
-    electron.ipcRenderer.once('streamEnd', (e, id) => {
-      if (streamId === id) stream.end()
-    })
-    electron.ipcRenderer.once('streamClose', (e, id) => {
-      if (streamId === id) stream.destroy()
-    })
+    this.#relay(stream)
     electron.ipcRenderer.send('messages', pattern)
     return stream
   }
 
   warming () {
     const stream = new streamx.Readable()
-    const streamId = this.#relay(stream)
-    electron.ipcRenderer.once('streamEnd', (e, id) => {
-      if (streamId === id) stream.end()
-    })
-    electron.ipcRenderer.once('streamClose', (e, id) => {
-      if (streamId === id) stream.destroy()
-    })
+    this.#relay(stream)
     electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
     electron.ipcRenderer.send('warming')
     return stream
@@ -362,13 +367,7 @@ class IPC {
 
   reports () {
     const stream = new streamx.Readable()
-    const streamId = this.#relay(stream)
-    electron.ipcRenderer.once('streamEnd', (e, id) => {
-      if (streamId === id) stream.end()
-    })
-    electron.ipcRenderer.once('streamClose', (e, id) => {
-      if (streamId === id) stream.destroy()
-    })
+    this.#relay(stream)
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
     electron.ipcRenderer.send('reports')
     return stream
@@ -402,4 +401,39 @@ class IPC {
 
   ref () {}
   unref () {}
+}
+
+class Freelist {
+  alloced = []
+  freed = []
+
+  nextId () {
+    return this.freed.length === 0 ? this.alloced.length : this.freed[this.freed.length - 1]
+  }
+
+  alloc (item) {
+    const id = this.freed.length === 0 ? this.alloced.push(null) - 1 : this.freed.pop()
+    this.alloced[id] = item
+    return id
+  }
+
+  free (id) {
+    this.freed.push(id)
+    this.alloced[id] = null
+  }
+
+  from (id) {
+    return id < this.alloced.length ? this.alloced[id] : null
+  }
+
+  emptied () {
+    return this.freed.length === this.alloced.length
+  }
+
+  * [Symbol.iterator] () {
+    for (const item of this.alloced) {
+      if (item === null) continue
+      yield item
+    }
+  }
 }
