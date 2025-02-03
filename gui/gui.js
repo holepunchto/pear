@@ -1470,11 +1470,6 @@ class PearGUI extends ReadyResource {
       return (event.returnValue = instance.parentId)
     })
 
-    electron.ipcMain.on('streamId', (event) => {
-      event.returnValue = this.streams.nextId()
-      return event.returnValue
-    })
-
     electron.ipcMain.on('streamEnd', (event, id) => {
       const stream = this.streams.from(id)
       if (stream) stream.end()
@@ -1729,6 +1724,7 @@ class PearGUI extends ReadyResource {
 
   #relay (stream, reply) {
     const id = this.streams.alloc(stream)
+    reply('streamAlloced', id)
     stream.on('end', () => reply('streamEnd', id))
     stream.on('close', () => {
       this.streams.free(id)
