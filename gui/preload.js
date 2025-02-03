@@ -338,13 +338,6 @@ class IPC {
     }
   }
 
-  #relay (stream) {
-    const id = electron.ipcRenderer.sendSync('streamId')
-    this.#streams[id] = stream
-    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
-    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
-  }
-
   messages (pattern) {
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
@@ -397,6 +390,13 @@ class IPC {
 
     electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
+  }
+
+  #relay (stream) {
+    const id = electron.ipcRenderer.sendSync('streamId')
+    this.#streams[id] = stream
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
   }
 
   ref () {}
