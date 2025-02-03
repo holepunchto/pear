@@ -342,7 +342,7 @@ class IPC {
     const bus = new Iambus()
     const stream = bus.sub(pattern)
     this.#relay(stream)
-    electron.ipcRenderer.on('messages', (e, msg) => bus.pub(msg))
+    electron.ipcRenderer.on('messages', (e, msg) => { bus.pub(msg) })
     electron.ipcRenderer.send('messages', pattern)
     return stream
   }
