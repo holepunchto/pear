@@ -338,15 +338,25 @@ class IPC {
   }
 
   warming () {
+    const id = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('warming')
     const stream = new streamx.Readable()
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    electron.ipcRenderer.on('warmingEnd', () => stream.end())
+    electron.ipcRenderer.on('warmingClose', () => stream.destroy())
     electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
     return stream
   }
 
   reports () {
+    const id = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    electron.ipcRenderer.on('reportsEnd', () => stream.end())
+    electron.ipcRenderer.on('reportsClose', () => stream.destroy())
     electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
     return stream
   }
