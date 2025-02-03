@@ -1456,7 +1456,7 @@ class PearGUI extends ReadyResource {
     })
     this.worker = new Worker()
     this.pipes = new Freelist()
-    this.streams = new Freelist()
+    this.streams = new Map()
     this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('exit', (e, code) => { process.exit(code) })
@@ -1471,31 +1471,25 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('streamEnd', (event, id) => {
-      const stream = this.streams.from(id)
+      const stream = this.streams.get(id)
       if (stream) stream.end()
     })
 
     electron.ipcMain.on('streamClose', (event, id) => {
-      const stream = this.streams.from(id)
+      const stream = this.streams.get(id)
       if (stream) stream.destroy()
     })
 
-    electron.ipcMain.on('warming', (event) => {
-      const warming = this.warming()
-      warming.on('data', (data) => event.reply('warming', data))
-      this.#relay(warming, event.reply)
+    electron.ipcMain.on('warming', (event, id) => {
+      this.#relay(this.warming(), id, event.reply)
     })
 
-    electron.ipcMain.on('reports', (event) => {
-      const reports = this.reports()
-      reports.on('data', (data) => event.reply('reports', data))
-      this.#relay(reports, event.reply)
+    electron.ipcMain.on('reports', (event, id) => {
+      this.#relay(this.reports(), id, event.reply)
     })
 
-    electron.ipcMain.on('messages', (event, pattern) => {
-      const messages = this.messages(pattern)
-      messages.on('data', (data) => event.reply('messages', data))
-      this.#relay(messages, event.reply)
+    electron.ipcMain.on('messages', (event, id, pattern) => {
+      this.#relay(this.messages(pattern), id, event.reply)
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
@@ -1722,14 +1716,14 @@ class PearGUI extends ReadyResource {
     if (act === 'isFullscreen') return instance.isFullscreen()
   }
 
-  #relay (stream, reply) {
-    const id = this.streams.alloc(stream)
-    reply('streamAlloced', id)
+  #relay (stream, id, reply) {
+    this.streams.set(id, stream)
     stream.on('end', () => reply('streamEnd', id))
     stream.on('close', () => {
-      this.streams.free(id)
+      this.streams.delete(id)
       reply('streamClose', id)
     })
+    stream.on('data', (data) => reply('streamData', data))
   }
 
   open ({ id, options }) { return this.get(id).open(options) }

@@ -271,15 +271,19 @@ class IPC {
   constructor () {
     this.#streams = new Map()
     electron.ipcRenderer.on('streamEnd', (e, id) => {
-      const stream = this.#streams.get(id)
+      const { stream } = this.#streams.get(id)
       if (stream) stream.end()
     })
     electron.ipcRenderer.on('streamClose', (e, id) => {
-      const stream = this.#streams.get(id)
+      const { stream } = this.#streams.get(id)
       if (stream) {
         stream.destroy()
         this.#streams.delete(id)
       }
+    })
+    electron.ipcRenderer.on('streamData', (e, id, data) => {
+      const { stream, onData } = this.#streams.get(id)
+      if (stream) onData(data)
     })
   }
 
@@ -341,25 +345,22 @@ class IPC {
   messages (pattern) {
     const bus = new Iambus()
     const stream = bus.sub(pattern)
-    this.#relay(stream)
-    electron.ipcRenderer.on('messages', (e, msg) => { bus.pub(msg) })
-    electron.ipcRenderer.send('messages', pattern)
+    const id = this.#relay(stream, (data) => { bus.pub(data) })
+    electron.ipcRenderer.send('messages', id, pattern)
     return stream
   }
 
   warming () {
     const stream = new streamx.Readable()
-    this.#relay(stream)
-    electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
-    electron.ipcRenderer.send('warming')
+    const id = this.#relay(stream)
+    electron.ipcRenderer.send('warming', id)
     return stream
   }
 
   reports () {
     const stream = new streamx.Readable()
-    this.#relay(stream)
-    electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
-    electron.ipcRenderer.send('reports')
+    const id = this.#relay(stream)
+    electron.ipcRenderer.send('reports', id)
     return stream
   }
 
@@ -389,12 +390,15 @@ class IPC {
     return stream
   }
 
-  #relay (stream) {
-    electron.ipcRenderer.once('streamAlloced', (e, id) => {
-      this.#streams.set(id, stream)
-      stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
-      stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+  #relay (stream, onData) {
+    const id = '' // TODO: generate a unique id
+    this.#streams.set(id, {
+      stream,
+      onData: onData ?? ((data) => { stream.push(data) })
     })
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    return id
   }
 
   ref () {}
