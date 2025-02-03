@@ -269,16 +269,16 @@ class IPC {
   #streams
 
   constructor () {
-    this.#streams = {}
+    this.#streams = new Map
     electron.ipcRenderer.on('streamEnd', (e, id) => {
-      const stream = this.#streams[id]
+      const stream = this.#streams.get(id)
       if (stream) stream.end()
     })
     electron.ipcRenderer.on('streamClose', (e, id) => {
-      const stream = this.#streams[id]
+      const stream = this.#streams.get(id)
       if (stream) {
         stream.destroy()
-        delete this.#streams[id]
+        this.#streams.delete(id)
       }
     })
   }
@@ -391,7 +391,7 @@ class IPC {
 
   #relay (stream) {
     const id = electron.ipcRenderer.sendSync('streamId')
-    this.#streams[id] = stream
+    this.#streams.set(id, stream)
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
   }
