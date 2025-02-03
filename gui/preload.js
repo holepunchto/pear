@@ -1,5 +1,6 @@
 /* eslint-env browser */
 'use strict'
+const crypto = require('crypto')
 const streamx = require('streamx')
 const { EventEmitter } = require('events')
 const Iambus = require('iambus')
@@ -391,7 +392,7 @@ class IPC {
   }
 
   #relay (stream, ondata) {
-    const id = '' // TODO: generate a unique id
+    const id = crypto.randomUUID()
     this.#streams.set(id, {
       stream,
       ondata: ondata ?? stream.push
