@@ -269,7 +269,7 @@ class IPC {
   #streams
 
   constructor () {
-    this.#streams = new Map
+    this.#streams = new Map()
     electron.ipcRenderer.on('streamEnd', (e, id) => {
       const stream = this.#streams.get(id)
       if (stream) stream.end()
