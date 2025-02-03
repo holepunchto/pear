@@ -390,7 +390,7 @@ class IPC {
   }
 
   #relay (stream) {
-    electron.ipcRenderer.on('streamAlloced', (e, id) => {
+    electron.ipcRenderer.once('streamAlloced', (e, id) => {
       this.#streams.set(id, stream)
       stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
       stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
