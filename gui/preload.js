@@ -271,19 +271,19 @@ class IPC {
   constructor () {
     this.#streams = new Map()
     electron.ipcRenderer.on('streamEnd', (e, id) => {
-      const { stream } = this.#streams.get(id)
-      if (stream) stream.end()
+      const item = this.#streams.get(id)
+      if (item) item.stream.end()
     })
     electron.ipcRenderer.on('streamClose', (e, id) => {
-      const { stream } = this.#streams.get(id)
-      if (stream) {
-        stream.destroy()
+      const item = this.#streams.get(id)
+      if (item) {
+        item.stream.destroy()
         this.#streams.delete(id)
       }
     })
     electron.ipcRenderer.on('streamData', (e, id, data) => {
-      const { stream, onData } = this.#streams.get(id)
-      if (stream) onData(data)
+      const item = this.#streams.get(id)
+      if (item) item.onData(data)
     })
   }
 
