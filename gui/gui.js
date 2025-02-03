@@ -1481,21 +1481,15 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('warming', (event) => {
-      const warming = this.warming()
-      warming.on('data', (data) => event.reply('warming', data))
-      this.#relay(warming, event.reply)
+      this.#relay(this.warming(), event.reply)
     })
 
     electron.ipcMain.on('reports', (event) => {
-      const reports = this.reports()
-      reports.on('data', (data) => event.reply('reports', data))
-      this.#relay(reports, event.reply)
+      this.#relay(this.reports(), event.reply)
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
-      const messages = this.messages(pattern)
-      messages.on('data', (data) => event.reply('messages', data))
-      this.#relay(messages, event.reply)
+      this.#relay(this.messages(pattern), event.reply)
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
@@ -1730,6 +1724,7 @@ class PearGUI extends ReadyResource {
       this.streams.free(id)
       reply('streamClose', id)
     })
+    stream.on('data', (data) => reply('streamData', id, data))
   }
 
   open ({ id, options }) { return this.get(id).open(options) }

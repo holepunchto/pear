@@ -347,27 +347,23 @@ class IPC {
     const stream = bus.sub(pattern)
     this.#relay({
       stream,
-      ondata: (data) => { bus.pub(data) },
-      send: (id) => electron.ipcRenderer.send('messages', id, pattern)
+      ondata: (data) => { bus.pub(data) }
     })
+    electron.ipcRenderer.send('messages', pattern)
     return stream
   }
 
   warming () {
     const stream = new streamx.Readable()
-    this.#relay({
-      stream,
-      send: (id) => electron.ipcRenderer.send('warming', id)
-    })
+    this.#relay({ stream })
+    electron.ipcRenderer.send('warming')
     return stream
   }
 
   reports () {
     const stream = new streamx.Readable()
-    this.#relay({
-      stream,
-      send: (id) => electron.ipcRenderer.send('reports', id)
-    })
+    this.#relay({ stream })
+    electron.ipcRenderer.send('reports')
     return stream
   }
 
@@ -397,7 +393,7 @@ class IPC {
     return stream
   }
 
-  #relay ({ stream, ondata, send }) {
+  #relay ({ stream, ondata }) {
     electron.ipcRenderer.once('streamId', (e, id) => {
       this.#streams.set(id, {
         stream,
@@ -405,7 +401,6 @@ class IPC {
       })
       stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
       stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
-      send(id)
     })
   }
 
