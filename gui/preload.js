@@ -345,21 +345,24 @@ class IPC {
   messages (pattern) {
     const bus = new Iambus()
     const stream = bus.sub(pattern)
-    const id = this.#relay(stream, (data) => { bus.pub(data) })
+    const id = this.#relay({
+      stream,
+      onData: (data) => { bus.pub(data) }
+    })
     electron.ipcRenderer.send('messages', id, pattern)
     return stream
   }
 
   warming () {
     const stream = new streamx.Readable()
-    const id = this.#relay(stream)
+    const id = this.#relay({ stream })
     electron.ipcRenderer.send('warming', id)
     return stream
   }
 
   reports () {
     const stream = new streamx.Readable()
-    const id = this.#relay(stream)
+    const id = this.#relay({ stream })
     electron.ipcRenderer.send('reports', id)
     return stream
   }
@@ -390,7 +393,7 @@ class IPC {
     return stream
   }
 
-  #relay (stream, onData) {
+  #relay ({ stream, onData }) {
     const id = '' // TODO: generate a unique id
     this.#streams.set(id, {
       stream,
