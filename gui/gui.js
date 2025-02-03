@@ -1456,7 +1456,7 @@ class PearGUI extends ReadyResource {
     })
     this.worker = new Worker()
     this.pipes = new Freelist()
-    this.messagesList = new Freelist()
+    this.streams = new Freelist()
     this.ipc.once('close', () => this.close())
 
     electron.ipcMain.on('exit', (e, code) => { process.exit(code) })
@@ -1468,6 +1468,21 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('parentId', (event) => {
       const instance = this.get(event.sender.id)
       return (event.returnValue = instance.parentId)
+    })
+
+    electron.ipcMain.on('streamId', (event) => {
+      event.returnValue = this.streams.nextId()
+      return event.returnValue
+    })
+
+    electron.ipcMain.on('streamEnd', (event, id) => {
+      const stream = this.streams.from(id)
+      if (stream) stream.end()
+    })
+
+    electron.ipcMain.on('streamClose', (event, id) => {
+      const stream = this.streams.from(id)
+      if (stream) stream.destroy()
     })
 
     electron.ipcMain.on('warming', (event) => {
@@ -1490,28 +1505,12 @@ class PearGUI extends ReadyResource {
 
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
-      const id = this.messagesList.alloc(messages)
       messages.on('data', (data) => event.reply('messages', data))
-      messages.on('end', () => event.reply('messagesEnd'))
-      messages.on('close', () => {
-        this.messagesList.free(id)
-        event.reply('messagesClose')
+      this.#trackStream({
+        stream: messages,
+        onEnd: () => event.reply('messagesEnd'),
+        onClose: () => event.reply('messagesClose')
       })
-    })
-
-    electron.ipcMain.on('messagesId', (event) => {
-      event.returnValue = this.messagesList.nextId()
-      return event.returnValue
-    })
-
-    electron.ipcMain.on('messagesEnd', (event, id) => {
-      const messages = this.messagesList.from(id)
-      if (messages) messages.end()
-    })
-
-    electron.ipcMain.on('messagesClose', (event, id) => {
-      const messages = this.messagesList.from(id)
-      if (messages) messages.destroy()
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
@@ -1736,6 +1735,15 @@ class PearGUI extends ReadyResource {
     if (act === 'isMinimized') return instance.isMinimized()
     if (act === 'isMaximized') return instance.isMaximized()
     if (act === 'isFullscreen') return instance.isFullscreen()
+  }
+
+  #trackStream ({ stream, onEnd, onClose }) {
+    const id = this.streams.alloc(stream)
+    stream.on('end', () => onEnd())
+    stream.on('close', () => {
+      this.streams.free(id)
+      onClose()
+    })
   }
 
   open ({ id, options }) { return this.get(id).open(options) }

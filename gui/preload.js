@@ -322,7 +322,7 @@ class IPC {
   }
 
   messages (pattern) {
-    const id = electron.ipcRenderer.sendSync('messagesId')
+    const id = electron.ipcRenderer.sendSync('streamId')
     electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
     electron.ipcRenderer.on('messages', (e, msg) => {
@@ -330,8 +330,8 @@ class IPC {
       else bus.pub(msg)
     })
     const stream = bus.sub(pattern)
-    stream.on('end', () => electron.ipcRenderer.send('messagesEnd', id))
-    stream.on('close', () => electron.ipcRenderer.send('messagesClose', id))
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
     electron.ipcRenderer.on('messagesEnd', () => stream.end())
     electron.ipcRenderer.on('messagesClose', () => stream.destroy())
     return stream
