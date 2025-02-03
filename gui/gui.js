@@ -1488,31 +1488,19 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.on('warming', (event) => {
       const warming = this.warming()
       warming.on('data', (data) => event.reply('warming', data))
-      this.#relay({
-        stream: warming,
-        onEnd: () => event.reply('warmingEnd'),
-        onClose: () => event.reply('warmingClose')
-      })
+      this.#relay(warming, event.reply)
     })
 
     electron.ipcMain.on('reports', (event) => {
       const reports = this.reports()
       reports.on('data', (data) => event.reply('reports', data))
-      this.#relay({
-        stream: reports,
-        onEnd: () => event.reply('reportsEnd'),
-        onClose: () => event.reply('reportsClose')
-      })
+      this.#relay(reports, event.reply)
     })
 
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
-      this.#relay({
-        stream: messages,
-        onEnd: () => event.reply('messagesEnd'),
-        onClose: () => event.reply('messagesClose')
-      })
+      this.#relay(messages, event.reply)
     })
 
     electron.ipcMain.handle('getMediaAccessStatus', (evt, ...args) => this.getMediaAccessStatus(...args))
@@ -1739,12 +1727,12 @@ class PearGUI extends ReadyResource {
     if (act === 'isFullscreen') return instance.isFullscreen()
   }
 
-  #relay ({ stream, onEnd, onClose }) {
+  #relay (stream, reply) {
     const id = this.streams.alloc(stream)
-    stream.on('end', () => onEnd())
+    stream.on('end', () => reply('streamEnd', id))
     stream.on('close', () => {
       this.streams.free(id)
-      onClose()
+      reply('streamClose', id)
     })
   }
 
