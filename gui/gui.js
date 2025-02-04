@@ -1724,6 +1724,7 @@ class PearGUI extends ReadyResource {
       reply('streamClose', id)
     })
     stream.on('data', (data) => reply('streamData', id, data))
+    stream.on('error', (err) => reply('streamError', id, err.stack))
   }
 
   open ({ id, options }) { return this.get(id).open(options) }

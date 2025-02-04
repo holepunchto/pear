@@ -286,6 +286,10 @@ class IPC {
       const item = this.#streams.get(id)
       if (item) item.ondata(data)
     })
+    electron.ipcRenderer.on('streamError', (e, id, stack) => {
+      const item = this.#streams.get(id)
+      if (item) item.onerror(stack)
+    })
   }
 
   getMediaAccessStatus (...args) { return electron.ipcRenderer.invoke('getMediaAccessStatus', ...args) }
@@ -391,11 +395,12 @@ class IPC {
     return stream
   }
 
-  #relay (stream, ondata) {
+  #relay (stream, ondata, onerror) {
     const id = crypto.randomUUID()
     this.#streams.set(id, {
       stream,
-      ondata: ondata ?? ((data) => stream.push(data))
+      ondata: ondata ?? ((data) => stream.push(data)),
+      onerror: onerror ?? ((stack) => stream.emit('error', new Error('IPC Error: ' + stack)))
     })
     stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
     stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
