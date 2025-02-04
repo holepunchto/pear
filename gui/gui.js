@@ -1554,42 +1554,8 @@ class PearGUI extends ReadyResource {
       }
     })
 
-    electron.ipcMain.on('workerRun', (evt, link, args) => {
-      const pipe = this.worker.run(link, args)
-      const id = this.pipes.alloc(pipe)
-      pipe.on('close', () => {
-        this.pipes.free(id)
-        evt.reply('workerPipeClose')
-      })
-      pipe.on('data', (data) => { evt.reply('workerPipeData', data) })
-      pipe.on('end', () => { evt.reply('workerPipeEnd') })
-      pipe.on('error', (err) => { evt.reply('workerPipeError', err.stack) })
-    })
-
-    electron.ipcMain.on('workerPipeId', (evt) => {
-      evt.returnValue = this.pipes.nextId()
-      return evt.returnValue
-    })
-
-    electron.ipcMain.on('workerPipeEnd', (evt, id) => {
-      const pipe = this.pipes.from(id)
-      if (!pipe) return
-      pipe.end()
-    })
-
-    electron.ipcMain.on('workerPipeClose', (evt, id) => {
-      const pipe = this.pipes.from(id)
-      if (!pipe) return
-      pipe.destroy()
-    })
-
-    electron.ipcMain.on('workerPipeWrite', (evt, id, data) => {
-      const pipe = this.pipes.from(id)
-      if (!pipe) {
-        console.error('Unexpected workerPipe error (unknown id)')
-        return
-      }
-      pipe.write(data)
+    electron.ipcMain.on('workerRun', (evt, id, link, args) => {
+      this.#relay({ id, stream: this.worker.run(link, args), reply: evt.reply })
     })
 
     electron.nativeTheme.on('updated', () => {

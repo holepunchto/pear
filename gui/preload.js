@@ -370,28 +370,19 @@ class IPC {
   }
 
   workerRun (link, args) {
-    const id = electron.ipcRenderer.sendSync('workerPipeId')
-    electron.ipcRenderer.send('workerRun', link, args)
+    const id = crypto.randomUUID()
     const stream = new streamx.Duplex({
       write (data, cb) {
-        electron.ipcRenderer.send('workerPipeWrite', id, data)
+        electron.ipcRenderer.send('streamWrite', id, data)
         cb()
       },
       final (cb) {
-        electron.ipcRenderer.send('workerPipeEnd', id)
+        electron.ipcRenderer.send('streamEnd', id)
         cb()
       }
     })
-    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
-      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
-    })
-    electron.ipcRenderer.on('workerPipeClose', () => { stream.destroy() })
-    electron.ipcRenderer.on('workerPipeEnd', () => { stream.end() })
-    stream.once('close', () => {
-      electron.ipcRenderer.send('workerPipeClose', id)
-    })
-
-    electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
+    this.#relay({ id, stream })
+    electron.ipcRenderer.send('workerRun', id, link, args)
     return stream
   }
 
