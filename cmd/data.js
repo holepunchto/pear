@@ -1,7 +1,7 @@
 'use strict'
-const parseLink = require('../lib/parse-link')
+const parseLink = require('pear-api/parse-link')
 const { outputter, ansi } = require('./iface')
-const { ERR_INVALID_INPUT } = require('../errors')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const padding = '    '
 
