@@ -3,9 +3,10 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
-const Helper = require('./helper')
 const deriveEncryptionKey = require('pw-to-ek')
-const { SALT } = require('../constants')
+const { SALT } = require('pear-api/constants')
+const Helper = require('./helper')
+
 
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
