@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 pipe.on('data', () => pipe.write(`${Bare.pid}\n`))
 
 Pear.teardown(async () => {

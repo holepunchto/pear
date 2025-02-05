@@ -1,7 +1,7 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 
 const [workerPath] = Pear.config.args
-const workerPipe = Pear.worker.run(workerPath)
+const workerPipe = Pear.run(workerPath)
 workerPipe.on('data', (data) => {
   pipe.write(data)
   workerPipe.end()
