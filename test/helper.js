@@ -142,11 +142,11 @@ class Helper extends IPC.Client {
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
   static async run ({ link, platformDir, args = [] }) {
-    if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+    if (platformDir) Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
 
-    const pipe = Pear.worker.run(link, args)
+    const pipe = Pear.run(link, args)
 
-    if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
+    if (platformDir) Pear.constructor.RUNTIME = RUNTIME
 
     return { pipe }
   }
