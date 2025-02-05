@@ -15,7 +15,7 @@ const State = require('../state')
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store' }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -59,12 +59,11 @@ module.exports = class Stage extends Opstream {
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
-    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release } })
+    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release, dir: dir } })
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    const root = state.cwd
-    const src = new LocalDrive(root, { followExternalLinks: true, metadata: new Map() })
+    const src = new LocalDrive(dir, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
     const builtins = sidecar.gunk.bareBuiltins
