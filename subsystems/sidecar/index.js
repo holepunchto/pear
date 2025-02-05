@@ -386,11 +386,6 @@ class Sidecar extends ReadyResource {
     return client.userData.reported
   }
 
-  minver (params, client) {
-    if (!client.userData) return null
-    return client.userData.minver()
-  }
-
   async config (params, client) {
     if (!client.userData) return
     const cfg = client.userData.state.constructor.configFrom(client.userData.state)
