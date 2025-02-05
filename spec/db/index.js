@@ -209,10 +209,59 @@ const index3 = {
 }
 collection2.indexes.push(index3)
 
+// '@pear/version' collection key
+const collection4_key = new IndexEncoder([
+], { prefix: 4 })
+
+function collection4_indexify (record) {
+  return []
+}
+
+// '@pear/version' value encoding
+const collection4_enc = getEncoding('@pear/version')
+
+// '@pear/version' reconstruction function
+function collection4_reconstruct (version, keyBuf, valueBuf) {
+  setVersion(version)
+  const record = c.decode(collection4_enc, valueBuf)
+  return record
+}
+// '@pear/version' key reconstruction function
+function collection4_reconstruct_key (keyBuf) {
+  return {}
+}
+
+// '@pear/version'
+const collection4 = {
+  name: '@pear/version',
+  id: 4,
+  encodeKey (record) {
+    const key = []
+    return collection4_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection4_key.encodeRange({
+      gt: gt ? collection4_indexify(gt) : null,
+      lt: lt ? collection4_indexify(lt) : null,
+      gte: gte ? collection4_indexify(gte) : null,
+      lte: lte ? collection4_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    setVersion(version)
+    return c.encode(collection4_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection4_reconstruct,
+  reconstructKey: collection4_reconstruct_key,
+  indexes: []
+}
+
 const collections = [
   collection0,
   collection1,
-  collection2
+  collection2,
+  collection4
 ]
 
 const indexes = [
@@ -226,6 +275,7 @@ function resolveCollection (name) {
     case '@pear/dht': return collection0
     case '@pear/gc': return collection1
     case '@pear/bundle': return collection2
+    case '@pear/version': return collection4
     default: return null
   }
 }

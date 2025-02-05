@@ -27,6 +27,18 @@ pearSchema.register({
 })
 
 // structs
+
+pearSchema.register({
+  name: 'version',
+  fields: [
+    {
+      name: 'version',
+      type: 'uint',
+      required: true
+    }
+  ]
+})
+
 pearSchema.register({
   name: 'dht',
   fields: [
@@ -106,6 +118,11 @@ pearDB.indexes.register({
     type: 'string',
     map: 'tags'
   }
+})
+
+pearDB.collections.register({
+  name: 'version',
+  schema: '@pear/version'
 })
 
 Builder.toDisk(db)

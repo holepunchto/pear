@@ -22,6 +22,20 @@
       ]
     },
     {
+      "name": "version",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "version",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
       "name": "dht",
       "namespace": "pear",
       "compact": false,

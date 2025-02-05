@@ -52,6 +52,17 @@
         "type": "string",
         "map": "tags"
       }
+    },
+    {
+      "name": "version",
+      "namespace": "pear",
+      "id": 4,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/version",
+      "derived": false,
+      "key": [],
+      "trigger": null
     }
   ]
 }
