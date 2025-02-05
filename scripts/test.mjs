@@ -35,6 +35,7 @@ const testnet = await createTestnet(10)
 const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
 
 const logging = Bare.argv.filter((arg) => arg.startsWith('--log'))
+spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit'} )
 const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'], { cwd: root, stdio: 'inherit' })
 
 tests.on('exit', async (code) => {
