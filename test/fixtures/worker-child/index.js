@@ -1,2 +1,2 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 pipe.write(`${Bare.pid}\n`)

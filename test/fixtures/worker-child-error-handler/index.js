@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 pipe.on('error', (err) => {
   if (err.code === 'ENOTCONN') return
   throw err

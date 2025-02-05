@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 
 Pear.teardown(async () => {
   await new Promise((resolve) => {
