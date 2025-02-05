@@ -143,7 +143,6 @@ class Helper extends IPC.Client {
 
   static async run ({ link, platformDir, args = [] }) {
     if (platformDir) Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
-
     const pipe = Pear.run(link, args)
 
     if (platformDir) Pear.constructor.RUNTIME = RUNTIME
