@@ -1,5 +1,39 @@
 # Pear Runtime Changelog
 
+## v1.11.0
+
+### Features
+
+* Internal - HyperDB integration
+* CLI - Added `data` command
+* CLI - Added `reset` command
+* Desktop - Added Pear.tray
+
+### Improvements
+
+* Desktop - Set Electron application name on boot
+* Desktop - Added default Linux icon and badges
+* Internal - Faster offline boot
+* CLI - Improved `dump` for single file or folder
+
+### Fixes
+
+* Sidecar - Fixed teardown without clients
+* Templates - Skipped warmup creation for template stage
+* Pear Runtime - Fixed detached run mode for pear://runtime
+
+## v1.10.0
+
+### Improvements
+
+* Desktop - Added "hideable" GUI option
+* Desktop - Pear.gui options platform specific
+* Internal - Udx-Native version 1.17.3
+
+### Fixes
+
+* Internal - Parsing .resolve calls statically (Sloppy Module Parser 2.2.1 and ScriptLinker 2.5.4) 
+
 ## v1.9.0
 
 ### Improvements
