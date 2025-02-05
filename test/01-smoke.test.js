@@ -12,123 +12,126 @@ const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 
-test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
+test('dht bootstrap', async function ({ ok, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(14)
+  plan(5)
 
-  const testVersions = async () => {
-    const dir = versionsDir
+  const dir = dhtBootstrapDir
 
-    const helper = new Helper()
-    teardown(() => helper.close(), { order: Infinity })
-    await helper.ready()
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+  const id = Math.floor(Math.random() * 10000)
 
-    comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, { tag: 'final' })
-    ok(staged.success, 'stage succeeded')
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
 
-    comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const announced = await until.announced
-    ok(announced, 'seeding is announced')
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
 
-    const key = await until.key
-    ok(hypercoreid.isValid(key), 'app key is valid')
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
-    const run = await Helper.run({ link })
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
 
-    const result = await Helper.untilResult(run.pipe)
-    const versions = JSON.parse(result)
-    is(versions.app.key, key, 'app version matches staged key')
+  const result = await Helper.untilResult(run.pipe)
+  const dhtBootstrap = JSON.parse(result)
+  alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
 
-    await Helper.untilClose(run.pipe)
-    ok(true, 'ended')
-  }
+  await Helper.untilClose(run.pipe)
+  ok(true, 'ended')
+})
 
-  const testDhtBootstrap = async () => {
-    const dir = dhtBootstrapDir
+test.solo('storage', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(5)
 
-    const helper = new Helper()
-    teardown(() => helper.close(), { order: Infinity })
-    await helper.ready()
+  const dir = storageDir
 
-    const id = Math.floor(Math.random() * 10000)
+  const testAppStorage = Pear.config.storage
+  console.log('tas', testAppStorage)
+  ok(testAppStorage.includes('by-random'))
 
-    comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, { tag: 'final' })
-    ok(staged.success, 'stage succeeded')
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
 
-    comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const announced = await until.announced
-    ok(announced, 'seeding is announced')
+  const id = Math.floor(Math.random() * 10000)
 
-    const key = await until.key
-    ok(hypercoreid.isValid(key), 'app key is valid')
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
 
-    const link = `pear://${key}`
-    const run = await Helper.run({ link })
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
 
-    const result = await Helper.untilResult(run.pipe)
-    const dhtBootstrap = JSON.parse(result)
-    alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
+  const result = await Helper.untilResult(run.pipe)
+  const appStorage = result
 
-    await Helper.untilClose(run.pipe)
-    ok(true, 'ended')
-  }
+  await Helper.untilClose(run.pipe)
 
-  const testStorage = async () => {
-    const dir = storageDir
+  const linkWithFragment = `pear://${key}/#fragment`
+  const runWithFragment = await Helper.run({ link: linkWithFragment })
+  const resultWithFragment = await Helper.untilResult(runWithFragment.pipe)
+  const appStorageWithFragment = resultWithFragment
 
-    const testAppStorage = Pear.config.storage
-    ok(testAppStorage.includes('by-random'))
+  await Helper.untilClose(runWithFragment.pipe)
 
-    const helper = new Helper()
-    teardown(() => helper.close(), { order: Infinity })
-    await helper.ready()
+  ok(appStorage.includes('by-dkey'))
+  is(appStorage, appStorageWithFragment)
 
-    const id = Math.floor(Math.random() * 10000)
+  ok(true, 'ended')
+})
 
-    comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-    const { key } = await staged.addendum
-    await staged.final
+test('versions', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(5)
 
-    const link = `pear://${key}`
-    const run = await Helper.run({ link })
+  const dir = versionsDir
 
-    const result = await Helper.untilResult(run.pipe)
-    const appStorage = result
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
 
-    await Helper.untilClose(run.pipe)
+  const id = Math.floor(Math.random() * 10000)
 
-    const linkWithFragment = `pear://${key}/#fragment`
-    const runWithFragment = await Helper.run({ link: linkWithFragment })
-    const resultWithFragment = await Helper.untilResult(runWithFragment.pipe)
-    const appStorageWithFragment = resultWithFragment
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
 
-    await Helper.untilClose(runWithFragment.pipe)
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
 
-    ok(appStorage.includes('by-dkey'))
-    is(appStorage, appStorageWithFragment)
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
 
-    ok(true, 'ended')
-  }
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
 
-  await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
+  const result = await Helper.untilResult(run.pipe)
+  const versions = JSON.parse(result)
+  is(versions.app.key, key, 'app version matches staged key')
+
+  await Helper.untilClose(run.pipe)
+  ok(true, 'ended')
 })
 
 test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
