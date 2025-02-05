@@ -52,14 +52,13 @@ test('dht bootstrap', async function ({ ok, alike, plan, comment, teardown, time
   ok(true, 'ended')
 })
 
-test.solo('storage', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('storage', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(5)
+  plan(4)
 
   const dir = storageDir
 
   const testAppStorage = Pear.config.storage
-  console.log('tas', testAppStorage)
   ok(testAppStorage.includes('by-random'))
 
   const helper = new Helper()
