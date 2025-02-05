@@ -22,7 +22,7 @@
       ]
     },
     {
-      "name": "version",
+      "name": "manifest",
       "namespace": "pear",
       "compact": false,
       "flagsPosition": -1,

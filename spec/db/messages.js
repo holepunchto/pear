@@ -30,7 +30,7 @@ const encoding0 = {
   }
 }
 
-// @pear/version
+// @pear/manifest
 const encoding1 = {
   preencode (state, m) {
     c.uint.preencode(state, m.version)
@@ -129,7 +129,7 @@ const encoding4 = {
   }
 }
 
-// @pear/gc/hyperdb#1
+// @pear/gc/hyperdb#2
 const encoding5 = {
   preencode (state, m) {
 
@@ -144,10 +144,10 @@ const encoding5 = {
   }
 }
 
-// @pear/bundle/hyperdb#2.tags
+// @pear/bundle/hyperdb#3.tags
 const encoding6_3 = encoding3_3
 
-// @pear/bundle/hyperdb#2
+// @pear/bundle/hyperdb#3
 const encoding6 = {
   preencode (state, m) {
     c.string.preencode(state, m.appStorage)
@@ -203,12 +203,12 @@ function getEnum (name) {
 function getEncoding (name) {
   switch (name) {
     case '@pear/node': return encoding0
-    case '@pear/version': return encoding1
+    case '@pear/manifest': return encoding1
     case '@pear/dht': return encoding2
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
-    case '@pear/gc/hyperdb#1': return encoding5
-    case '@pear/bundle/hyperdb#2': return encoding6
+    case '@pear/gc/hyperdb#2': return encoding5
+    case '@pear/bundle/hyperdb#3': return encoding6
     default: throw new Error('Encoder not found ' + name)
   }
 }

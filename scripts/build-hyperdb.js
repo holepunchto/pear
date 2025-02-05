@@ -29,7 +29,7 @@ pearSchema.register({
 // structs
 
 pearSchema.register({
-  name: 'version',
+  name: 'manifest',
   fields: [
     {
       name: 'version',
@@ -94,6 +94,11 @@ const pearDB = db.namespace('pear')
 pearDB.require(path.join(__dirname, '..', 'spec', 'helpers.js'))
 
 pearDB.collections.register({
+  name: 'manifest',
+  schema: '@pear/manifest'
+})
+
+pearDB.collections.register({
   name: 'dht',
   schema: '@pear/dht'
 })
@@ -118,11 +123,6 @@ pearDB.indexes.register({
     type: 'string',
     map: 'tags'
   }
-})
-
-pearDB.collections.register({
-  name: 'version',
-  schema: '@pear/version'
 })
 
 Builder.toDisk(db)

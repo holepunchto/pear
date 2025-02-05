@@ -30,7 +30,7 @@ const encoding0 = {
   }
 }
 
-// @pear/version
+// @pear/manifest
 const encoding1 = {
   preencode (state, m) {
     c.uint.preencode(state, m.version)
@@ -152,7 +152,7 @@ function getEnum (name) {
 function getEncoding (name) {
   switch (name) {
     case '@pear/node': return encoding0
-    case '@pear/version': return encoding1
+    case '@pear/manifest': return encoding1
     case '@pear/dht': return encoding2
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
