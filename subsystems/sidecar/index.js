@@ -84,7 +84,15 @@ class Sidecar extends ReadyResource {
     this.version = CHECKOUT
 
     this.updater = updater
-    if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    if (this.updater) {
+      this.updater.on('updating', ({ key, length }) => {
+        LOG.info('sidecar', key === this.version.key
+          ? `- Updating to length ${length}...`
+          : `- Switching to key ${key} with length ${length}...`
+        )
+      })
+      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    }
 
     this.#spindownCountdown()
 
