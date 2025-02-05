@@ -189,7 +189,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const data = command(
     'data',
-    summary('View local database contents'),
+    summary('View database contents'),
     description(usage.descriptions.data),
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
