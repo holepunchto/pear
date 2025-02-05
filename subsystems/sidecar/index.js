@@ -444,7 +444,7 @@ class Sidecar extends ReadyResource {
       const link = `pear://${hypercoreid.encode(params.key)}`
       const bundle = await this.model.getBundle(link)
       if (!bundle) {
-        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
+        await this.model.addBundle(link, State.storageFromLink(link))
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
@@ -458,9 +458,7 @@ class Sidecar extends ReadyResource {
 
   async detached ({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
-    if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(key).toString('hex'))
-    }
+    if (!storage) storage = State.storageFromLink(link)
 
     const wokeup = await this.wakeup({ args: [link, storage, appdev, false] })
 
@@ -682,7 +680,7 @@ class Sidecar extends ReadyResource {
     }
 
     link = pearLink.normalize(link.startsWith('pear://') ? link : pathToFileURL(link).href)
-    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
+    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
@@ -949,13 +947,6 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
       }
     }
-  }
-
-  _generateAppStorage (parsedLink) {
-    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-    return parsedLink.protocol !== 'pear:'
-      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
-      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
   }
 
   deathClock (ms = 20000) {
