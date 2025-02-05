@@ -251,6 +251,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const shell = require('pear-api/cmd')(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
+
+  // support for `#!/usr/bin/env pear` in npm bin:
+  const [ positional ] = shell.positionals
+  if (positional?.includes('/node_modules/.bin/')) {
+    argv[0] = 'run'
+    argv.push('-f', positional)
+  }
   run.argv = argv
 
   const program = cmd.parse(argv)
