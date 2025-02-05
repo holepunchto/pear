@@ -4,7 +4,7 @@ const crasher = require('pear-api/crasher')
 const tryboot = require('pear-api/tryboot')
 const { PLATFORM_LOCK, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants')
 const cmd = require('./cmd')
-crasher('cli', SWAP)
+crasher('cli', SWAP, Bare.argv.indexOf('--log') > -1)
 
 cli()
 
