@@ -5,7 +5,7 @@ const { isWindows } = require('which-runtime')
 const stdio = require('../lib/stdio')
 const tty = require('bare-tty')
 const Interact = require('../lib/interact')
-const { CHECKOUT } = require('../constants')
+const { CHECKOUT, PLATFORM_DIR } = require('../constants')
 const ADD = 1
 const REMOVE = -1
 const CHANGE = 0
@@ -147,7 +147,7 @@ and then becomes the sidecar.`,
 
   reset: 'Clears application storage for given application link”',
 
-  data: 'Local data stored in this device.'
+  data: `${ansi.bold('Directory')}: ${ansi.dim(PLATFORM_DIR)}`
 }
 
 const usage = { header, version, banner, descriptions, footer }
