@@ -85,7 +85,7 @@ class Sidecar extends ReadyResource {
 
     this.updater = updater
     if (this.updater) {
-      this.updater.on('updating', ({ key, length }) => LOG.info('sidecar', key === CHECKOUT.key
+      this.updater.on('updating', ({ key, length }) => LOG.info('sidecar', key === this.version.key
         ? `- Updating to length ${length}...`
         : `- Switching to key ${key} with length ${length}...`
       ))
