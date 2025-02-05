@@ -59,7 +59,7 @@ module.exports = class Stage extends Opstream {
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
-    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release, dir: dir } })
+    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release, dir } })
 
     if (dryRun) this.push({ tag: 'dry' })
 
