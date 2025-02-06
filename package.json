@@ -76,10 +76,8 @@
     "bare-module": "^4.5.0",
     "bare-os": "^3.2.0",
     "bare-pipe": "^3.3.7",
-    "bare-readline": "^1.0.6",
     "bare-signals": "^3.0.1",
     "bare-subprocess": "^4.0.2",
-    "bare-tty": "^4.0.1",
     "compact-encoding": "^2.15.0",
     "corestore": "^6.18.3",
     "crc-universal": "^1.0.4",
@@ -102,7 +100,7 @@
     "mirror-drive": "^1.4.0",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.0",
-    "pear-api": "^1.2.0",
+    "pear-api": "^1.2.1",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
     "pear-ipc": "^3.2.0",
@@ -119,7 +117,6 @@
     "script-linker": "^2.5.2",
     "sodium-native": "^4.1.1",
     "streamx": "^2.16.1",
-    "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.8.9",
     "unix-path-resolve": "^1.0.2",
     "url-file-url": "^1.0.2",
@@ -134,7 +131,8 @@
     "hyperschema": "^1.0.3",
     "random-access-memory": "^6.2.1",
     "standard": "^17.0.0",
-    "test-tmp": "^1.4.0"
+    "test-tmp": "^1.4.0",
+    "tiny-byte-size": "^1.1.0"
   },
   "repository": {
     "type": "git",
