@@ -1,7 +1,10 @@
 'use strict'
 const path = require('bare-path')
-const { print, ansi, stdio } = require('pear-api/terminal')
+const teardown = require('pear-api/teardown')
+const { isWindows } = require('which-runtime')
+const { print, ansi, stdio, isTTY } = require('pear-api/terminal')
 module.exports = (ipc) => async function sidecar (cmd) {
+  if (!isWindows && isTTY) teardown(() => { stdio.out.write('\x1B[1K\x1B[G') })
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
