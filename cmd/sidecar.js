@@ -1,6 +1,6 @@
 'use strict'
 const path = require('bare-path')
-const { print, ansi, stdio } = require('./iface')
+const { print, ansi, stdio } = require('pear-api/terminal')
 module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.command.name === 'inspect') {
     const inspectorKey = await ipc.inspect()
