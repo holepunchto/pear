@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const parseLink = require('pear-api/parse-link')
-const { outputter, ansi, permit, isTTY } = require('./iface')
+const { outputter, ansi, permit, isTTY } = require('pear-api/terminal')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
