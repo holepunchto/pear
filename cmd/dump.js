@@ -3,7 +3,7 @@ const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, permit, isTTY } = require('pear-api/terminal')
 
-const output = outputter('stage', {
+const output = outputter('dump', {
   dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => { return dryRun ? '\nDumping dry run complete!\n' : '\nDumping complete!\n' },
