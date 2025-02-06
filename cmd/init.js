@@ -2,7 +2,7 @@
 const fsp = require('bare-fs/promises')
 const os = require('bare-os')
 const { basename, resolve } = require('bare-path')
-const { ansi, outputter, permit } = require('./iface')
+const { ansi, outputter, permit } = require('pear-api/terminal')
 
 const output = outputter('init', {
   writing: () => '',
