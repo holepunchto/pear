@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, ansi } = require('./iface')
+const { outputter, ansi } = require('pear-api/terminal')
 const { dependencies } = require('../package.json')
 
 const output = outputter('versions', {
