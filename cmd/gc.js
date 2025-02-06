@@ -1,5 +1,5 @@
 'use strict'
-const { outputter } = require('./iface')
+const { outputter } = require('pear-api/terminal')
 
 const output = outputter('gc', {
   remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,

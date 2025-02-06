@@ -1,5 +1,5 @@
 'use strict'
-const { permit, isTTY } = require('./iface')
+const { permit, isTTY } = require('pear-api/terminal')
 
 module.exports = (ipc) => async function run (cmd, devrun = false) {
   try {
