@@ -1730,7 +1730,7 @@ class PearGUI extends ReadyResource {
 
   // guiClose because ReadyResource needs close (affects internal naming only)
   guiClose ({ id }) { return this.get(id).close() }
-  
+
   quit ({ id }) { return this.get(id).quit() }
 
   show ({ id }) { return this.get(id).show() }
