@@ -1,6 +1,6 @@
 'use strict'
 const path = require('bare-path')
-const { print, ansi, stdio } = require('./iface')
+const { print, ansi, stdio } = require('pear-api/terminal')
 module.exports = (ipc) => async function sidecar (cmd) {
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
