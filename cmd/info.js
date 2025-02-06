@@ -1,10 +1,10 @@
 'use strict'
 const parseLink = require('pear-api/parse-link')
-const { outputter } = require('./iface')
+const { outputter } = require('pear-api/terminal')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { permit, isTTY } = require('./iface')
+const { permit, isTTY } = require('pear-api/terminal')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex

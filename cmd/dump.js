@@ -1,7 +1,7 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, isTTY } = require('./iface')
+const { outputter, permit, isTTY } = require('pear-api/terminal')
 
 const output = outputter('stage', {
   dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,

@@ -1,5 +1,5 @@
 'use strict'
-const { outputter } = require('./iface')
+const { outputter } = require('pear-api/terminal')
 const parseLink = require('pear-api/parse-link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
