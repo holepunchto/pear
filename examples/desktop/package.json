@@ -2,28 +2,34 @@
   "name": "deskex",
   "version": "1.0.0",
   "description": "",
-  "main": "index.html",
+  "main": "index.js",
   "scripts": {
-    "test": "brittle"
+    "test": "brittle",
+    "bootstrap": "pear-electron",
+    "postinstall": "npm run bootstrap"
   },
   "type": "module",
   "pear": {
     "name": "deskex",
-    "links": {
-      "worker": "pear://456cup6hg5pwpekmygzhbxyxgtpknk66mbccohcuo795dj6biueo"
-    },
     "gui": {
+      "main": "index.html",
       "width": 900,
       "height": 500,
       "minWidth": 500,
       "backgroundColor": "#1F2430"
     },
     "stage": {
-      "entrypoints": ["/app.js"]
+      "entrypoints": [
+        "/app.js"
+      ]
     }
   },
   "devDependencies": {
     "brittle": "^3.0.0",
     "pear-interface": "^1.0.0"
+  },
+  "dependencies": {
+    "pear-bridge": "^1.0.0",
+    "pear-electron": "^1.0.0"
   }
 }

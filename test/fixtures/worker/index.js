@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 
 let i = 0
 let interval = null

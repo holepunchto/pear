@@ -1,11 +1,11 @@
 'use strict'
 const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
-const { usage, print } = require('./iface')
-const { CHECKOUT } = require('../constants')
-const errors = require('../errors')
+const { usage, print, ansi } = require('pear-api/terminal')
+const { CHECKOUT } = require('pear-api/constants')
+const errors = require('pear-api/errors')
 const def = {
-  run: require('../def/run'),
-  pear: require('../def/pear')
+  run: require('pear-api/cmd/run'),
+  pear: require('pear-api/cmd/pear')
 }
 const runners = {
   init: require('./init'),
@@ -32,7 +32,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'init',
     summary('Create initial project files'),
     description('Template Types: desktop, terminal, terminal-node'),
-    arg('<link|type=desktop>', 'Template link or type to init from.'),
+    arg('<link|type=desktop>', 'Link or type to init from.'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
     flag('--type|-t <type>', 'Template type. Overrides <link|type>'),
@@ -44,18 +44,21 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const dev = command(
     'dev',
-    summary('pear dev has been deprecated, use pear run --dev instead.'),
     sloppy({ args: true, flags: true }),
     () => {
       print('pear dev has been deprecated, use pear run --dev instead.', false)
       ipc.close()
     }
-  )
+  ).hide()
 
   const seed = command(
     'seed',
     summary('Seed or reseed a project'),
-    description(usage.descriptions.seed),
+    description `
+      Specify channel or key to seed a project.
+
+      Specify a remote key to reseed.
+    `,
     arg('<channel|link>', 'Channel name or Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
@@ -69,7 +72,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const stage = command(
     'stage',
     summary('Synchronize local changes to key'),
-    description(usage.descriptions.stage),
+    description `
+      Channel name must be specified on first stage,
+      in order to generate the initial key.
+
+      Outputs diff information and project key.
+    `,
     arg('<channel|link>', 'Channel name or Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
@@ -84,7 +92,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const release = command(
     'release',
     summary('Set production release version'),
-    description(usage.descriptions.release),
+    description `
+      Set the release pointer against a version (default latest).
+
+      Use this to indicate production release points.
+    `,
     arg('<channel|link>', 'Channel name or Pear link to release'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
@@ -95,17 +107,24 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const run = command(
     'run',
     summary('Run an application from a key or dir'),
-    description(usage.descriptions.run),
+    description `
+      ${ansi.bold('link')}   pear://<key> | pear://<alias>
+      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
+    `,
     ...def.run,
     runners.run(ipc)
   )
 
   const info = command(
     'info',
-    summary('Read project information'),
+    summary('View project information'),
+    description `
+      Supply a key or channel to view application information.
+
+      Supply no argument to view platform information.
+    `,
     arg('[link|channel]', 'Pear link or channel name to view info for'),
     arg('[dir]', 'Project directory path (default: .)'),
-    description(usage.descriptions.info),
     flag('--changelog', 'View changelog only'),
     flag('--full-changelog', 'Full record of changes'),
     flag('--metadata', 'View metadata only'),
@@ -118,7 +137,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const dump = command(
     'dump',
     summary('Synchronize files from key to dir'),
-    arg('<link>', 'Pear link to dump from, supports pathname'),
+    arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
@@ -130,9 +149,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Create Pear link'),
-    description(usage.descriptions.touch),
-    arg('[channel]', 'Channel name'),
+    summary('Ensure Pear link'),
+    description(`Initialize a project Pear link if it doesn't already exist.`),
+    arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
     runners.touch(ipc)
   )
@@ -150,17 +169,23 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const reset = command(
     'reset',
     summary('Advanced. Reset an application to initial state'),
-    description(usage.descriptions.reset),
-    arg('<link>', 'Application Pear link'),
+    description('Clear application storage for supplied link.'),
+    arg('<link>', 'Application link'),
     flag('--json', 'Newline delimited JSON output'),
     runners.reset(ipc)
   )
 
   const sidecar = command(
     'sidecar',
-    command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
     summary('Advanced. Run sidecar in terminal'),
-    description(usage.descriptions.sidecar),
+    description `
+      The Pear Sidecar is a local-running HTTP and IPC server which
+      provides access to corestores.
+
+      This command instructs any existing sidecar process to shutdown
+      and then becomes the sidecar.
+    `,
+    command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
     flag('--mem', 'Memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
@@ -176,6 +201,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Clear dangling resources'),
     command('releases', summary('Clear inactive releases'), (cmd) => runners.gc(ipc).releases(cmd)),
     command('sidecars', summary('Clear running sidecars'), (cmd) => runners.gc(ipc).sidecars(cmd)),
+    command('interfaces', flag('--age ms', 'GC if mtime exceeds. Default 2.592e9ms (30 days)'), summary('Clear unused interfaces'), (cmd) => runners.gc(ipc).interfaces(cmd)),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(gc.help()) }
   )
@@ -189,9 +215,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const data = command(
     'data',
-    summary('View database contents'),
-    description(usage.descriptions.data),
-    command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
+    summary('Explore platform database'),
+    command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
@@ -216,12 +241,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     info,
     dump,
     touch,
+    data,
     shift,
     reset,
     sidecar,
     gc,
     versions,
-    data,
     help,
     footer(usage.footer),
     bail(explain),
@@ -248,9 +273,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     console.log(cmd.overview())
   }
 
-  const shell = require('../shell')(argv)
+  const shell = require('pear-api/cmd')(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
+
+  // support for `#!/usr/bin/env pear` in npm bin:
+  const [ positional ] = shell.positionals
+  if (positional?.includes('/node_modules/.bin/')) {
+    argv[0] = 'run'
+    argv.push('-f', positional)
+  }
   run.argv = argv
 
   const program = cmd.parse(argv)

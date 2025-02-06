@@ -1,8 +1,8 @@
-const pipeIn = Pear.worker.pipe()
+const pipeIn = Pear.pipe
 pipeIn.write(`${Bare.pid}\n`)
 
 const link = Bare.argv[Bare.argv.length - 1]
-const pipe = Pear.worker.run(link)
+const pipe = Pear.run(link)
 const pid = await new Promise((resolve) => {
   pipe.on('data', (data) => resolve(data.toString()))
 })

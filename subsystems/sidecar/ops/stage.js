@@ -7,15 +7,15 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
+const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store' }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -54,22 +54,19 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ bundle, dryRun, name })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
-    const type = state.manifest.pear?.type || 'desktop'
-    const isTerminal = type === 'terminal'
     if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
-    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release } })
+    this.push({ tag: 'staging', data: { name: state.name, channel: bundle.channel, key: z32, link, current: currentVersion, release, dir } })
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    const root = state.dir
-    const src = new LocalDrive(root, { followExternalLinks: true, metadata: new Map() })
+    const src = new LocalDrive(dir, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
     const opts = { ignore, dryRun, batch: true }
-    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
+    const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
