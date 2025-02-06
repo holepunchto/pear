@@ -32,7 +32,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'init',
     summary('Create initial project files'),
     description('Template Types: desktop, terminal, terminal-node'),
-    arg('<link|type=desktop>', 'Template link or type to init from.'),
+    arg('<link|type=desktop>', 'Link or type to init from.'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
     flag('--type|-t <type>', 'Template type. Overrides <link|type>'),
@@ -59,7 +59,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Specify a remote key to reseed.
     `,
-    arg('<channel|link>', 'Channel name or Pear Link to seed'),
+    arg('<channel|link>', 'Channel name or Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
     flag('--seeders|-s ', 'Additional public keys to seed from'),
@@ -78,7 +78,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Outputs diff information and project key.
     `,
-    arg('<channel|link>', 'Channel name or Pear Link to stage'),
+    arg('<channel|link>', 'Channel name or Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <list>', 'Comma separated file path ignore list'),
@@ -97,7 +97,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Use this to indicate production release points.
     `,
-    arg('<channel|link>', 'Channel name or Pear Link to release'),
+    arg('<channel|link>', 'Channel name or Pear link to release'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
@@ -123,7 +123,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Supply no argument to view platform information.
     `,
-    arg('[link|channel]', 'Pear Link or channel name to view info for'),
+    arg('[link|channel]', 'Pear link or channel name to view info for'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--changelog', 'View changelog only'),
     flag('--full-changelog', 'Full record of changes'),
@@ -137,7 +137,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const dump = command(
     'dump',
     summary('Synchronize files from key to dir'),
-    arg('<link>', 'Pear Link to dump from, supports pathname'),
+    arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
@@ -149,8 +149,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Ensure Pear Link'),
-    description(`Initialize a project Pear Link if it doesn't already exist.`),
+    summary('Ensure Pear link'),
+    description(`Initialize a project Pear link if it doesn't already exist.`),
     arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
     runners.touch(ipc)
@@ -159,8 +159,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const shift = command(
     'shift',
     summary('Advanced. Move storage between apps'),
-    arg('<source>', 'Source application Pear Link'),
-    arg('<destination>', 'Destination application Pear Link'),
+    arg('<source>', 'Source application Pear link'),
+    arg('<destination>', 'Destination application Pear link'),
     flag('--force', 'Overwrite existing application storage if present'),
     flag('--json', 'Newline delimited JSON output'),
     runners.shift(ipc)
@@ -169,8 +169,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const reset = command(
     'reset',
     summary('Advanced. Reset an application to initial state'),
-    description('Clear application storage for supplied Pear Link.'),
-    arg('<link>', 'Application Pear Link'),
+    description('Clear application storage for supplied link.'),
+    arg('<link>', 'Application link'),
     flag('--json', 'Newline delimited JSON output'),
     runners.reset(ipc)
   )
@@ -216,7 +216,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear Link'), (cmd) => runners.data(ipc).apps(cmd)),
+    command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
