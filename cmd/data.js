@@ -77,4 +77,7 @@ class Data {
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
   }
+
+  async reset (cmd) {
+  }
 }
