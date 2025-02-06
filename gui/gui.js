@@ -1303,6 +1303,11 @@ class Window extends GuiCtrl {
     this.closing = false
     return closed
   }
+
+  async quit () {
+    this.quitting = true
+    return this.close()
+  }
 }
 
 class View extends GuiCtrl {
@@ -1504,6 +1509,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
     electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
+    electron.ipcMain.handle('quit', (evt, ...args) => this.quit(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
@@ -1724,6 +1730,8 @@ class PearGUI extends ReadyResource {
 
   // guiClose because ReadyResource needs close (affects internal naming only)
   guiClose ({ id }) { return this.get(id).close() }
+
+  quit ({ id }) { return this.get(id).quit() }
 
   show ({ id }) { return this.get(id).show() }
 
