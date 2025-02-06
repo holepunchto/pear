@@ -8,7 +8,6 @@ const deriveEncryptionKey = require('pw-to-ek')
 const { SALT } = require('pear-api/constants')
 const Helper = require('./helper')
 
-
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 

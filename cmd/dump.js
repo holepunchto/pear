@@ -1,12 +1,20 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, isTTY } = require('pear-api/terminal')
+const { outputter, permit, isTTY, byteSize } = require('pear-api/terminal')
 
 const output = outputter('dump', {
   dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
-  complete: ({ dryRun }) => { return dryRun ? '\nDumping dry run complete!\n' : '\nDumping complete!\n' },
+  complete: ({ dryRun }) => { return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n' },
+  stats ({ upload, download, peers }) {
+    const dl = download.total + download.speed === 0 ? '' : `[${ansi.down} ${byteSize(download.total)} - ${byteSize(download.speed)}/s ] `
+    const ul = upload.total + upload.speed === 0 ? '' : `[${ansi.up} ${byteSize(upload.total)} - ${byteSize(upload.speed)}/s ] `
+    return {
+      output: 'status',
+      message: `[ Peers: ${peers} ] ${dl}${ul}`
+    }
+  },
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'dump')
