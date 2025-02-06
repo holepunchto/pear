@@ -54,7 +54,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const seed = command(
     'seed',
     summary('Seed or reseed a project'),
-    description `
+    description`
       Specify channel or key to seed a project.
 
       Specify a remote key to reseed.
@@ -72,7 +72,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const stage = command(
     'stage',
     summary('Synchronize local changes to key'),
-    description `
+    description`
       Channel name must be specified on first stage,
       in order to generate the initial key.
 
@@ -92,7 +92,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const release = command(
     'release',
     summary('Set production release version'),
-    description `
+    description`
       Set the release pointer against a version (default latest).
 
       Use this to indicate production release points.
@@ -107,7 +107,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const run = command(
     'run',
     summary('Run an application from a key or dir'),
-    description `
+    description`
       ${ansi.bold('link')}   pear://<key> | pear://<alias>
       ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     `,
@@ -118,7 +118,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const info = command(
     'info',
     summary('View project information'),
-    description `
+    description`
       Supply a key or channel to view application information.
 
       Supply no argument to view platform information.
@@ -150,7 +150,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const touch = command(
     'touch',
     summary('Ensure Pear link'),
-    description(`Initialize a project Pear link if it doesn't already exist.`),
+    description('Initialize a project Pear link if it doesn\'t already exist.'),
     arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
     runners.touch(ipc)
@@ -178,7 +178,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const sidecar = command(
     'sidecar',
     summary('Advanced. Run sidecar in terminal'),
-    description `
+    description`
       The Pear Sidecar is a local-running HTTP and IPC server which
       provides access to corestores.
 
@@ -278,7 +278,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 
   // support for `#!/usr/bin/env pear` in npm bin:
-  const [ positional ] = shell.positionals
+  const [positional] = shell.positionals
   if (positional?.includes('/node_modules/.bin/')) {
     argv[0] = 'run'
     argv.push('-f', positional)
