@@ -7,6 +7,7 @@ const parseLink = require('pear-api/parse-link')
 const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
+const DriveMonitor = require('../lib/drive-monitor')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -14,7 +15,6 @@ module.exports = class Dump extends Opstream {
   async #op ({ link, dir, dryRun, checkout, force }) {
     const { session, sidecar } = this
     await sidecar.ready()
-
     if (dir !== '-') {
       try {
         const files = await fsp.readdir(dir)
@@ -61,7 +61,13 @@ module.exports = class Dump extends Opstream {
 
     await session.add(bundle)
 
-    if (sidecar.swarm && !isFileLink) bundle.join(sidecar.swarm)
+    if (sidecar.swarm && !isFileLink) {
+      bundle.join(sidecar.swarm)
+      const monitor = new DriveMonitor(bundle.drive)
+      this.on('end', () => monitor.destroy())
+      monitor.on('error', (err) => this.push({ tag: 'stats-error', data: { err } }))
+      monitor.on('data', (stats) => this.push({ tag: 'stats', data: stats }))
+    }
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
