@@ -103,7 +103,7 @@
     "mirror-drive": "^1.5.1",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.0",
-    "pear-api": "^1.2.0",
+    "pear-api": "^1.2.1",
     "pear-changelog": "^1.0.1",
     "pear-inspect": "^1.2.5",
     "pear-interface": "^1.1.0",
@@ -131,7 +131,7 @@
   },
   "devDependencies": {
     "@hyperswarm/testnet": "^3.1.4",
-    "brittle": "^3.13.1",
+    "brittle": "^3.5.2",
     "graceful-goodbye": "^1.3.3",
     "hyperschema": "^1.10.4",
     "standard": "^17.1.2",
