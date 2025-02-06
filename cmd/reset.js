@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, confirm, ansi } = require('./iface')
+const { outputter, confirm, ansi } = require('pear-api/terminal')
 const os = require('bare-os')
 const path = require('bare-path')
 

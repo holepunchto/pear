@@ -1,10 +1,10 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('./iface')
+const { outputter, ansi } = require('pear-api/terminal')
 const parseLink = require('pear-api/parse-link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { permit, isTTY } = require('./iface')
+const { permit, isTTY } = require('pear-api/terminal')
 
 let blocks = 0
 let total = 0
