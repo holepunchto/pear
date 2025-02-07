@@ -1008,6 +1008,7 @@ class Window extends GuiCtrl {
       this.appkin = null
     }
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
+    session.setUserAgent(`Pear ${this.state.id}`)
 
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
@@ -1112,7 +1113,7 @@ class Window extends GuiCtrl {
       details.requestHeaders.Pragma = details.requestHeaders['Cache-Control'] = 'no-cache'
       const sidecarURL = new URL(this.sidecar)
       const requestURL = new URL(details.url)
-      if (requestURL.host === sidecarURL.host) {
+      if (requestURL.host === sidecarURL.host || requestURL.host === 'devtools') {
         details.requestHeaders['User-Agent'] = `Pear ${this.state.id}`
       } else if (this.state?.config?.options?.userAgent) {
         details.requestHeaders['User-Agent'] = this.state.config.options.userAgent
