@@ -277,10 +277,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 
   // support for `#!/usr/bin/env pear` in npm bin:
-  const [positional] = shell.positionals
-  if (positional?.includes('/node_modules/.bin/')) {
+  if (shell?.positionals?.[0]?.includes('/node_modules/.bin/')) {
     argv[0] = 'run'
-    argv.push('-f', positional)
+    argv.push('-f', shell.positionals[0])
   }
   run.argv = argv
 
