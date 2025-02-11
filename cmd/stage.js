@@ -32,7 +32,7 @@ const output = outputter('stage', {
 })
 
 module.exports = (ipc) => async function stage (cmd) {
-  const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
+  const { dryRun, bare, json, ignore, name, truncate, only } = cmd.flags
   const isKey = cmd.args.channel && parseLink(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
@@ -40,5 +40,5 @@ module.exports = (ipc) => async function stage (cmd) {
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
+  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, only, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
 }
