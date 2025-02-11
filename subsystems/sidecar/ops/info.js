@@ -34,7 +34,7 @@ module.exports = class Info extends Opstream {
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     } else {
       drive = this.sidecar.drive
@@ -73,7 +73,7 @@ module.exports = class Info extends Opstream {
         drive.db.get('release'),
         drive.db.get('manifest')
       ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR') throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        if (error.code === 'DECODING_ERROR') throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       })
 
       const name = manifest?.value?.pear?.name || manifest?.value?.holepunch?.name || manifest?.value?.name
