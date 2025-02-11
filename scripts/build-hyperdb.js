@@ -118,7 +118,6 @@ pearDB.collections.register({
 pearDB.indexes.register({
   name: 'bundle-by-tags',
   collection: '@pear/bundle',
-  unique: false,
   key: {
     type: 'string',
     map: 'tags'
