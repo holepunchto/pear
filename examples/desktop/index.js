@@ -7,5 +7,5 @@ const runtime = new Runtime()
 const bridge = new Bridge()
 await bridge.ready()
 
-const pipe = runtime.start({ bridge })
+const pipe = await runtime.start({ bridge })
 Pear.teardown(() => pipe.end())

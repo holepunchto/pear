@@ -22,7 +22,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   if (isPear) {
     if (await ipc.trusted(link) === false) {
       const { drive } = parseLink(link)
-      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
+      throw ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
 
@@ -34,7 +34,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
-      throw new ERR_PERMISSION_REQUIRED(data.message, data.info)
+      throw ERR_PERMISSION_REQUIRED(data.message, data.info)
     }
     if (tag !== 'file') continue
     try {
@@ -49,7 +49,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     }
     break
   }
-  if (params === null) throw new ERR_INVALID_TEMPLATE('Invalid Template')
+  if (params === null) throw ERR_INVALID_TEMPLATE('Invalid Template')
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -59,7 +59,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
         break
       }
     }
-    if (empty === false) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    if (empty === false) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
@@ -68,7 +68,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
     if (tag === 'error') {
-      throw new ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
+      throw ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
     }
     if (tag !== 'file') continue
     const { key, value = null } = data
