@@ -41,7 +41,7 @@ module.exports = class Seed extends Opstream {
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (!link && bundle.drive.core.length === 0) {
@@ -54,7 +54,7 @@ module.exports = class Seed extends Opstream {
       await bundle.drive.get('/package.json')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (verbose) {
