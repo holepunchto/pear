@@ -1,7 +1,7 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, isTTY, byteSize } = require('pear-api/terminal')
+const { outputter, permit, ansi, isTTY, byteSize } = require('pear-api/terminal')
 
 const output = outputter('dump', {
   dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,
@@ -27,11 +27,11 @@ const output = outputter('dump', {
 })
 
 module.exports = (ipc) => async function dump (cmd) {
-  const { dryRun, checkout, json, ask, force } = cmd.flags
+  const { dryRun, checkout, json, ask, only, force } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
   if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
   if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
   dir = dir === '-' ? '-' : (isAbsolute(dir) ? dir : resolve('.', dir))
-  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, force }), { ask }, ipc)
+  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, only, force }), { ask }, ipc)
 }
