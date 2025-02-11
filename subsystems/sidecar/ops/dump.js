@@ -19,7 +19,7 @@ module.exports = class Dump extends Opstream {
       try {
         const files = await fsp.readdir(dir)
         const empty = files.length === 0
-        if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+        if (empty === false && !force) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
       } catch (err) {
         if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
       }
@@ -27,9 +27,8 @@ module.exports = class Dump extends Opstream {
 
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
-    const localFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
-      ? path.basename(parsed.pathname)
-      : null
+    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+
     const key = parsed.drive.key
     checkout = Number(checkout)
 
@@ -46,15 +45,13 @@ module.exports = class Dump extends Opstream {
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     }
-
+    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
     const bundle = new Bundle({
       corestore,
-      drive: isFileLink
-        ? new LocalDrive(localFile ? path.dirname(parsed.pathname) : parsed.pathname, { followLinks: true })
-        : drive,
+      drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
       key,
       checkout
     })
@@ -86,8 +83,10 @@ module.exports = class Dump extends Opstream {
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname
-    const pathname = !isFileLink && parsed.pathname === '/' ? '' : prefix
-    const entry = pathname === '' ? null : await src.entry(localFile || pathname)
+    const pathname = !isFileLink && parsed.pathname === '/'
+      ? ''
+      : (isFile ? path.basename(parsed.pathname) : prefix)
+    const entry = pathname === '' ? null : await src.entry(pathname)
     if (dir === '-') {
       if (entry !== null) {
         const value = await src.get(entry)
