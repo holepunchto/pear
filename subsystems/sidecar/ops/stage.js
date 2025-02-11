@@ -15,7 +15,7 @@ const State = require('../state')
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store' }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', only }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -36,7 +36,7 @@ module.exports = class Stage extends Opstream {
     const encryptionKey = persistedBundle?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     const bundle = new Bundle({
@@ -54,8 +54,12 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ bundle, dryRun, name })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
-    if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
+    if (state.options?.stage?.ignore) ignore = state.options.stage?.ignore
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
+
+    if (state.options?.stage?.only) only = state.options?.stage?.only
+    else only = only?.split(',').map((s) => s.trim())
+
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
@@ -65,16 +69,19 @@ module.exports = class Stage extends Opstream {
 
     const src = new LocalDrive(dir, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
-    const opts = { ignore, dryRun, batch: true }
+    const select = only
+      ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+      : null
+
+    const opts = { ignore, dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
     const entrypoints = [
       ...(mainExists ? [state.main] : []),
-      ...(state.manifest.pear?.stage?.entrypoints || [])
-    ]
-      .map(entrypoint => unixPathResolve('/', entrypoint))
+      ...(state.options?.stage?.entrypoints || [])
+    ].map(entrypoint => unixPathResolve('/', entrypoint))
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
@@ -115,12 +122,14 @@ module.exports = class Stage extends Opstream {
     const isTemplate = (await bundle.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
+    } else if (state.options?.stage?.skipWarmup) {
+      this.push({ tag: 'skipping', data: { reason: 'configured', success: true } })
     } else if (isTemplate) {
       this.push({ tag: 'skipping', data: { reason: 'template', success: true } })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
-      const prefetch = state.manifest.pear?.stage?.prefetch || []
+      const prefetch = state.options?.stage?.prefetch || []
       const warmup = await analyzer.analyze(entrypoints, prefetch)
       await bundle.db.put('warmup', warmup)
       const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
