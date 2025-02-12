@@ -12,7 +12,7 @@ const DriveMonitor = require('../lib/drive-monitor')
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, only, force }) {
+  async #op ({ link, dir, dryRun, checkout, only, force, prune = !only }) {
     const { session, sidecar } = this
     await sidecar.ready()
     if (dir !== '-') {
@@ -106,11 +106,11 @@ module.exports = class Dump extends Opstream {
     const dst = new LocalDrive(dir)
     let select = null
     if (only) {
-      only = only.split(',').map((s) => s.trim())
+      only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())
       select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
     }
     const extraOpts = entry === null ? { prefix, filter: select } : { filter: select || ((key) => key === prefix) }
-    const mirror = src.mirror(dst, { dryRun, ...extraOpts })
+    const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
