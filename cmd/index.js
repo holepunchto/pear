@@ -142,9 +142,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to, may be - for stdout'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
-    flag('--only <paths>', 'Filter by paths. Comma-separated'),
+    flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-prune', 'Prevent removal of existing paths'),
     flag('--json', 'Newline delimited JSON output'),
     runners.dump(ipc)
   )
