@@ -58,7 +58,7 @@ module.exports = class Stage extends Opstream {
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
-    else only = only?.split(',').map((s) => s.trim())
+    else only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
 
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
