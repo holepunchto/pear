@@ -85,8 +85,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
-    flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.stage(ipc)
   )
 
@@ -130,8 +130,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--full-changelog', 'Full record of changes'),
     flag('--metadata', 'View metadata only'),
     flag('--key', 'View key only'),
-    flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.info(ipc)
   )
 
@@ -143,9 +143,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
-    flag('--json', 'Newline delimited JSON output'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.dump(ipc)
   )
 
