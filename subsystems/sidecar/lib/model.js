@@ -158,7 +158,7 @@ module.exports = class Model {
 
   async reset () {
     await this.close()
-    fs.rmSync(PLATFORM_HYPERDB, { recursive: true, force: true })
+    await fs.rm(PLATFORM_HYPERDB, { recursive: true, force: true })
     this.init()
   }
 }

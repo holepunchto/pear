@@ -50,7 +50,7 @@ const ops = {
   Reset: require('./ops/reset'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  ResetData: require('./ops/data/reset')
+  DataReset: require('./ops/data/reset')
 }
 
 // ensure that we are registered as a link handler
@@ -369,7 +369,7 @@ class Sidecar extends ReadyResource {
 
   data (params, client) { return new ops.Data(params, client, this) }
 
-  dataReset (params, client) { return new ops.ResetData(params, client, this) }
+  dataReset (params, client) { return new ops.DataReset(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
 
