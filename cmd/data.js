@@ -1,9 +1,7 @@
 'use strict'
-const fs = require('bare-fs')
 const parseLink = require('../lib/parse-link')
 const { outputter, ansi, confirm, status } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
-const { PLATFORM_HYPERDB } = require('../constants')
 
 const padding = '    '
 
@@ -81,13 +79,18 @@ class Data {
   }
 
   async reset () {
-    const dialog = `${ansi.cross} Deleting database directory: ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
+    const result = await this.ipc.info()
+    const platformHyperdb = result.platformHyperdb
+
+    const dialog = `${ansi.cross} Clearing Database: ${ansi.bold(platformHyperdb)}\n\n`
     const ask = 'Type DELETE to confirm'
     const delim = ':'
     const validation = (val) => val === 'DELETE'
     const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
-    fs.rmSync(PLATFORM_HYPERDB, { recursive: true, force: true })
+
+    const reset = this.ipc.dataReset()
+    await reset.complete
     status('Success\n', true)
   }
 }

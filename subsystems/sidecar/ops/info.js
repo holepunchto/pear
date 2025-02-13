@@ -7,6 +7,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const { PLATFORM_HYPERDB } = require('../constants')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
@@ -96,5 +97,7 @@ module.exports = class Info extends Opstream {
         : blank
 
     if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+
+    this.push({ tag: 'platformHyperdb', data: PLATFORM_HYPERDB })
   }
 }
