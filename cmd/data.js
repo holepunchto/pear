@@ -1,6 +1,6 @@
 'use strict'
 const parseLink = require('../lib/parse-link')
-const { outputter, ansi } = require('./iface')
+const { outputter, ansi, confirm, status } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const padding = '    '
@@ -76,5 +76,25 @@ class Data {
     const { json } = command.parent.flags
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
+  }
+
+  async reset () {
+    const result = this.ipc.info()
+    const platformHyperdb = await result.platformHyperdb
+    if (!platformHyperdb) {
+      status('Failure\n', false)
+      return
+    }
+
+    const dialog = `${ansi.cross} Clearing Database: ${ansi.bold(platformHyperdb)}\n\n`
+    const ask = 'Type DELETE to confirm'
+    const delim = ':'
+    const validation = (val) => val === 'DELETE'
+    const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
+    await confirm(dialog, ask, delim, validation, msg)
+
+    const reset = this.ipc.dataReset()
+    await reset.complete
+    status('Success\n', true)
   }
 }
