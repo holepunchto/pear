@@ -152,7 +152,6 @@ module.exports = class Model {
 
   async close () {
     LOG.trace('db', 'CLOSE ()')
-    await this.lock.flush()
     await this.db.close()
   }
 
