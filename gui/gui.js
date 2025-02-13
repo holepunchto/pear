@@ -1008,6 +1008,7 @@ class Window extends GuiCtrl {
       this.appkin = null
     }
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
+    session.setUserAgent(`Pear ${this.state.id}`)
 
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
@@ -1112,7 +1113,7 @@ class Window extends GuiCtrl {
       details.requestHeaders.Pragma = details.requestHeaders['Cache-Control'] = 'no-cache'
       const sidecarURL = new URL(this.sidecar)
       const requestURL = new URL(details.url)
-      if (requestURL.host === sidecarURL.host) {
+      if (requestURL.host === sidecarURL.host || requestURL.host === 'devtools') {
         details.requestHeaders['User-Agent'] = `Pear ${this.state.id}`
       } else if (this.state?.config?.options?.userAgent) {
         details.requestHeaders['User-Agent'] = this.state.config.options.userAgent
@@ -1302,6 +1303,11 @@ class Window extends GuiCtrl {
     const closed = await super.close()
     this.closing = false
     return closed
+  }
+
+  async quit () {
+    this.quitting = true
+    return this.close()
   }
 }
 
@@ -1504,6 +1510,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
     electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
+    electron.ipcMain.handle('quit', (evt, ...args) => this.quit(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
@@ -1592,7 +1599,12 @@ class PearGUI extends ReadyResource {
     })
 
     electron.nativeTheme.on('updated', () => {
-      this.message({ type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() })
+      const message = { type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() }
+      if (this.ipc.opened) {
+        this.message(message)
+      } else {
+        this.ipc.ready().then(() => this.message(message), noop)
+      }
     })
   }
 
@@ -1724,6 +1736,8 @@ class PearGUI extends ReadyResource {
 
   // guiClose because ReadyResource needs close (affects internal naming only)
   guiClose ({ id }) { return this.get(id).close() }
+
+  quit ({ id }) { return this.get(id).quit() }
 
   show ({ id }) { return this.get(id).show() }
 

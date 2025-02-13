@@ -4,7 +4,7 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
-const CHECKOUT = require('./checkout')
+const CHECKOUT = require('./checkout.js')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
@@ -59,7 +59,7 @@ exports.EOLS = EOLS
 exports.SWAP = swapPath
 exports.PLATFORM_DIR = PLATFORM_DIR
 exports.PLATFORM_LOCK = PLATFORM_LOCK
-exports.PLATFORM_HYPERDB = toPath(new URL('hyperdb', PLATFORM_URL))
+exports.PLATFORM_HYPERDB = toPath(new URL('db', PLATFORM_URL))
 exports.GC = toPath(new URL('gc', PLATFORM_URL))
 exports.PLATFORM_CORESTORE = toPath(new URL('corestores/platform', PLATFORM_URL))
 exports.UPGRADE_LOCK = toPath(new URL('lock', PLATFORM_URL))

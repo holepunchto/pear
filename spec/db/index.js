@@ -6,7 +6,7 @@ const { version, getEncoding, setVersion } = require('./messages.js')
 
 const helpers0 = require('../helpers.js')
 
-// '@pear/dht' collection key
+// '@pear/manifest' collection key
 const collection0_key = new IndexEncoder([
 ], { prefix: 0 })
 
@@ -14,23 +14,23 @@ function collection0_indexify (record) {
   return []
 }
 
-// '@pear/dht' value encoding
-const collection0_enc = getEncoding('@pear/dht')
+// '@pear/manifest' value encoding
+const collection0_enc = getEncoding('@pear/manifest')
 
-// '@pear/dht' reconstruction function
+// '@pear/manifest' reconstruction function
 function collection0_reconstruct (version, keyBuf, valueBuf) {
   setVersion(version)
   const record = c.decode(collection0_enc, valueBuf)
   return record
 }
-// '@pear/dht' key reconstruction function
+// '@pear/manifest' key reconstruction function
 function collection0_reconstruct_key (keyBuf) {
   return {}
 }
 
-// '@pear/dht'
+// '@pear/manifest'
 const collection0 = {
-  name: '@pear/dht',
+  name: '@pear/manifest',
   id: 0,
   encodeKey (record) {
     const key = []
@@ -54,41 +54,34 @@ const collection0 = {
   indexes: []
 }
 
-// '@pear/gc' collection key
+// '@pear/dht' collection key
 const collection1_key = new IndexEncoder([
-  IndexEncoder.STRING
 ], { prefix: 1 })
 
 function collection1_indexify (record) {
-  const a = record.path
-  return a === undefined ? [] : [a]
+  return []
 }
 
-// '@pear/gc' value encoding
-const collection1_enc = getEncoding('@pear/gc/hyperdb#1')
+// '@pear/dht' value encoding
+const collection1_enc = getEncoding('@pear/dht')
 
-// '@pear/gc' reconstruction function
+// '@pear/dht' reconstruction function
 function collection1_reconstruct (version, keyBuf, valueBuf) {
-  const key = collection1_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection1_enc, valueBuf)
-  record.path = key[0]
   return record
 }
-// '@pear/gc' key reconstruction function
+// '@pear/dht' key reconstruction function
 function collection1_reconstruct_key (keyBuf) {
-  const key = collection1_key.decode(keyBuf)
-  return {
-    path: key[0]
-  }
+  return {}
 }
 
-// '@pear/gc'
+// '@pear/dht'
 const collection1 = {
-  name: '@pear/gc',
+  name: '@pear/dht',
   id: 1,
   encodeKey (record) {
-    const key = [record.path]
+    const key = []
     return collection1_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
@@ -109,41 +102,41 @@ const collection1 = {
   indexes: []
 }
 
-// '@pear/bundle' collection key
+// '@pear/gc' collection key
 const collection2_key = new IndexEncoder([
   IndexEncoder.STRING
 ], { prefix: 2 })
 
 function collection2_indexify (record) {
-  const a = record.link
+  const a = record.path
   return a === undefined ? [] : [a]
 }
 
-// '@pear/bundle' value encoding
-const collection2_enc = getEncoding('@pear/bundle/hyperdb#2')
+// '@pear/gc' value encoding
+const collection2_enc = getEncoding('@pear/gc/hyperdb#2')
 
-// '@pear/bundle' reconstruction function
+// '@pear/gc' reconstruction function
 function collection2_reconstruct (version, keyBuf, valueBuf) {
   const key = collection2_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection2_enc, valueBuf)
-  record.link = key[0]
+  record.path = key[0]
   return record
 }
-// '@pear/bundle' key reconstruction function
+// '@pear/gc' key reconstruction function
 function collection2_reconstruct_key (keyBuf) {
   const key = collection2_key.decode(keyBuf)
   return {
-    link: key[0]
+    path: key[0]
   }
 }
 
-// '@pear/bundle'
+// '@pear/gc'
 const collection2 = {
-  name: '@pear/bundle',
+  name: '@pear/gc',
   id: 2,
   encodeKey (record) {
-    const key = [record.link]
+    const key = [record.path]
     return collection2_key.encode(key)
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
@@ -164,75 +157,132 @@ const collection2 = {
   indexes: []
 }
 
-// '@pear/bundle-by-tags' collection key
-const index3_key = new IndexEncoder([
-  IndexEncoder.STRING,
+// '@pear/bundle' collection key
+const collection3_key = new IndexEncoder([
   IndexEncoder.STRING
 ], { prefix: 3 })
 
-// '@pear/bundle-by-tags' has the following schema defined key map
-const index3_map = helpers0.tags
+function collection3_indexify (record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
 
-function index3_indexify (record) {
+// '@pear/bundle' value encoding
+const collection3_enc = getEncoding('@pear/bundle/hyperdb#3')
+
+// '@pear/bundle' reconstruction function
+function collection3_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection3_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection3_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/bundle' key reconstruction function
+function collection3_reconstruct_key (keyBuf) {
+  const key = collection3_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/bundle'
+const collection3 = {
+  name: '@pear/bundle',
+  id: 3,
+  encodeKey (record) {
+    const key = [record.link]
+    return collection3_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection3_key.encodeRange({
+      gt: gt ? collection3_indexify(gt) : null,
+      lt: lt ? collection3_indexify(lt) : null,
+      gte: gte ? collection3_indexify(gte) : null,
+      lte: lte ? collection3_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    setVersion(version)
+    return c.encode(collection3_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection3_reconstruct,
+  reconstructKey: collection3_reconstruct_key,
+  indexes: []
+}
+
+// '@pear/bundle-by-tags' collection key
+const index4_key = new IndexEncoder([
+  IndexEncoder.STRING,
+  IndexEncoder.STRING
+], { prefix: 4 })
+
+// '@pear/bundle-by-tags' has the following schema defined key map
+const index4_map = helpers0.tags
+
+function index4_indexify (record) {
   const a = record
   return a === undefined ? [] : [a]
 }
 
 // '@pear/bundle-by-tags'
-const index3 = {
+const index4 = {
   name: '@pear/bundle-by-tags',
-  id: 3,
+  id: 4,
   encodeKey (record) {
-    return index3_key.encode(index3_indexify(record))
+    return index4_key.encode(index4_indexify(record))
   },
   encodeKeyRange ({ gt, lt, gte, lte } = {}) {
-    return index3_key.encodeRange({
-      gt: (gt || gt === '') ? index3_indexify(gt) : null,
-      lt: (lt || lt === '') ? index3_indexify(lt) : null,
-      gte: (gte || gte === '') ? index3_indexify(gte) : null,
-      lte: (lte || lte === '') ? index3_indexify(lte) : null
+    return index4_key.encodeRange({
+      gt: (gt || gt === '') ? index4_indexify(gt) : null,
+      lt: (lt || lt === '') ? index4_indexify(lt) : null,
+      gte: (gte || gte === '') ? index4_indexify(gte) : null,
+      lte: (lte || lte === '') ? index4_indexify(lte) : null
     })
   },
-  encodeValue: (doc) => index3.collection.encodeKey(doc),
+  encodeValue: (doc) => index4.collection.encodeKey(doc),
   encodeIndexKeys (record, context) {
-    const mapped = index3_map(record, context)
+    const mapped = index4_map(record, context)
     const keys = new Array(mapped.length)
     for (let i = 0; i < mapped.length; i++) {
       const mappedRecord = mapped[i]
-      keys[i] = index3_key.encode([mappedRecord, record.link])
+      keys[i] = index4_key.encode([mappedRecord, record.link])
     }
     return keys
   },
   reconstruct: (keyBuf, valueBuf) => valueBuf,
-  offset: collection2.indexes.length,
-  collection: collection2
+  offset: collection3.indexes.length,
+  collection: collection3
 }
-collection2.indexes.push(index3)
+collection3.indexes.push(index4)
 
 const collections = [
   collection0,
   collection1,
-  collection2
+  collection2,
+  collection3
 ]
 
 const indexes = [
-  index3
+  index4
 ]
 
 module.exports = { version, collections, indexes, resolveCollection, resolveIndex }
 
 function resolveCollection (name) {
   switch (name) {
-    case '@pear/dht': return collection0
-    case '@pear/gc': return collection1
-    case '@pear/bundle': return collection2
+    case '@pear/manifest': return collection0
+    case '@pear/dht': return collection1
+    case '@pear/gc': return collection2
+    case '@pear/bundle': return collection3
     default: return null
   }
 }
 
 function resolveIndex (name) {
   switch (name) {
-    case '@pear/bundle-by-tags': return index3
+    case '@pear/bundle-by-tags': return index4
     default: return null
   }
 }

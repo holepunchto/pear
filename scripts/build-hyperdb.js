@@ -27,6 +27,18 @@ pearSchema.register({
 })
 
 // structs
+
+pearSchema.register({
+  name: 'manifest',
+  fields: [
+    {
+      name: 'version',
+      type: 'uint',
+      required: true
+    }
+  ]
+})
+
 pearSchema.register({
   name: 'dht',
   fields: [
@@ -80,6 +92,11 @@ Hyperschema.toDisk(schema)
 const db = Builder.from(SCHEMA_DIR, DB_DIR)
 const pearDB = db.namespace('pear')
 pearDB.require(path.join(__dirname, '..', 'spec', 'helpers.js'))
+
+pearDB.collections.register({
+  name: 'manifest',
+  schema: '@pear/manifest'
+})
 
 pearDB.collections.register({
   name: 'dht',

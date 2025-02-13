@@ -4,7 +4,8 @@ const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const url = isBare ? require('bare-url') : require('url')
-const { randomBytes } = require('hypercore-crypto')
+const crypto = require('hypercore-crypto')
+const hypercoreid = require('hypercore-id-encoding')
 const pearLink = require('pear-link')
 const z32 = require('z32')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
@@ -66,6 +67,14 @@ module.exports = class State {
     try { this.storage(state) } catch (err) { state.error = err }
   }
 
+  static storageFromLink (link) {
+    const parsedLink = typeof link === 'string' ? parseLink(link) : link
+    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
+    return parsedLink.protocol !== 'pear:'
+      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
+  }
+
   static storage (state) {
     if (!state.key && !state.name) { // uninited local case
       this.injestPackage(state, readPkg(path.join(state.dir, 'package.json')))
@@ -116,7 +125,7 @@ module.exports = class State {
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
-    const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
+    const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
     this.dht = dht
