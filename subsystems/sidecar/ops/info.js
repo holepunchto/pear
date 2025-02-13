@@ -7,7 +7,7 @@ const Bundle = require('../lib/bundle')
 const State = require('../state')
 const Opstream = require('../lib/opstream')
 const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
-const { PLATFORM_HYPERDB } = require('../constants')
+const { PLATFORM_HYPERDB } = require('../../../constants')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
