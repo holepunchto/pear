@@ -79,8 +79,12 @@ class Data {
   }
 
   async reset () {
-    const result = await this.ipc.info()
-    const platformHyperdb = result.platformHyperdb
+    const result = this.ipc.info()
+    const platformHyperdb = await result.platformHyperdb
+    if (!platformHyperdb) {
+      status('Failure\n', false)
+      return
+    }
 
     const dialog = `${ansi.cross} Clearing Database: ${ansi.bold(platformHyperdb)}\n\n`
     const ask = 'Type DELETE to confirm'
