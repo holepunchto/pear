@@ -2,7 +2,7 @@
 
 const Opstream = require('../../lib/opstream')
 
-module.exports = class Reset extends Opstream {
+module.exports = class DataReset extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
   }
