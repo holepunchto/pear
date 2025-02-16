@@ -1,5 +1,4 @@
 'use strict'
-
 const Opstream = require('../../lib/opstream')
 
 module.exports = class DataReset extends Opstream {
