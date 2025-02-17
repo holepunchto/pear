@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
+const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest } = require('paparam')
 const { usage, print } = require('./iface')
 const { CHECKOUT } = require('../constants')
 const errors = require('../errors')
@@ -199,8 +199,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     () => { console.log(data.help()) }
   )
 
-  const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
-    if (h.args.command) console.log(cmd.help(h.args.command))
+  const help = command('help', rest('[command]'), summary('View help for command'), (h) => {
+    if (h.rest) console.log(cmd.help(...h.rest))
     else console.log(cmd.overview({ full: true }))
   })
 
