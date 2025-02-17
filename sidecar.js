@@ -19,15 +19,14 @@ const {
   WAKEUP
 } = require('pear-api/constants')
 const gunk = require('pear-api/gunk')
-const { flags = {} } = require('pear-api/cmd')(Bare.argv.slice(1))
 const registerUrlHandler = require('./url-handler')
-const Logger = require('./lib/logger')
+const Logger = require('pear-api/logger')
 crasher('sidecar', SWAP)
+const { flags = {} } = require('pear-api/cmd')(Bare.argv.slice(1))
+const logLabels = (flags.log ? 'internal,sidecar' : 'internal')
 global.LOG = new Logger({
-  level: flags.logLevel,
-  labels: flags.logLabels,
-  fields: flags.logFields,
-  stacks: flags.logStacks,
+  level: flags.log && flags.logLevel < 2 ? 2 : flags.logLevel,
+  labels: logLabels + (flags.logLabels ? ',' + flags.logLabels : ''),
   pretty: flags.log
 })
 LOG.info('sidecar', '- Sidecar Booting')
