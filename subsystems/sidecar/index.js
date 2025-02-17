@@ -16,7 +16,7 @@ const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
-const { isMac } = require('which-runtime')
+const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
@@ -52,6 +52,7 @@ const ops = {
 registerUrlHandler(WAKEUP)
 
 const SWARM_DELAY = 5000
+const CHECKMARK = isWindows ? '^' : '✔'
 
 class Sidecar extends ReadyResource {
   static Updater = Updater
@@ -914,7 +915,7 @@ class Sidecar extends ReadyResource {
     }
     await this.model.close()
     if (this.corestore) await this.corestore.close()
-    LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
+    LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
 
   async _close () {
@@ -930,7 +931,7 @@ class Sidecar extends ReadyResource {
 
     if (this.updater) {
       if (await this.updater.applyUpdate() !== null) {
-        LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
+        LOG.info('sidecar', CHECKMARK + ' Applied update')
       }
     }
   }
