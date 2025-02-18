@@ -12,11 +12,10 @@ const teardown = require('pear-api/teardown')
 const parseLink = require('pear-api/parse-link')
 const {
   ERR_PERMISSION_REQUIRED,
-  ERR_INVALID_INPUT
-} = require('./errors')
-const parseLink = require('./lib/parse-link')
-const pearLink = require('pear-link')
-const teardown = require('./lib/teardown')
+  ERR_INVALID_INPUT,
+  ERR_LEGACY
+} = require('pear-api/errors')
+const State = require('pear-api/state')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
   const { drive, pathname } = parseLink(link)
