@@ -83,14 +83,10 @@ class Data {
     const { yes } = command.flags
 
     if (!yes) {
-      const info = await this.ipc.info()
-      let platformHyperdb
-      for await (const chunk of info) {
-        if (chunk.tag === 'platformHyperdb') platformHyperdb = chunk.data
-      }
-      if (!platformHyperdb) return status('Failure (info)\n', false)
+      const { PLATFORM_HYPERDB } = await pick(this.ipc.info(), tag => tag === 'constants')
+      if (!PLATFORM_HYPERDB) return status('Failure (ipc.info)\n', false)
 
-      const dialog = `${ansi.warning} Clearing database ${ansi.bold(platformHyperdb)}\n\n`
+      const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
       const ask = 'Type DELETE to confirm'
       const delim = '?'
       const validation = (val) => val === 'DELETE'
@@ -98,11 +94,19 @@ class Data {
       await confirm(dialog, ask, delim, validation, msg)
     }
 
-    const dataReset = await this.ipc.dataReset()
-    let complete
-    for await (const chunk of dataReset) {
-      if (chunk.tag === 'complete') complete = chunk.data
-    }
-    complete ? status('Success\n', true) : status('Failure (dataReset)\n', false)
+    const complete = await pick(this.ipc.dataReset(), (tag) => tag === 'complete')
+    complete ? status('Success\n', true) : status('Failure (ipc.dataReset)\n', false)
   }
+}
+
+function pick (stream, predicate) {
+  return new Promise((resolve, reject) => {
+    stream.on('error', reject)
+    const listener = ({ tag, data }) => {
+      if (!predicate(tag)) return
+      resolve(data)
+      stream.off('data', listener)
+    }
+    stream.on('data', listener)
+  })
 }

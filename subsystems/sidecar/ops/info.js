@@ -98,6 +98,6 @@ module.exports = class Info extends Opstream {
 
     if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
 
-    this.push({ tag: 'platformHyperdb', data: PLATFORM_HYPERDB })
+    this.push({ tag: 'constants', data: { PLATFORM_HYPERDB } })
   }
 }
