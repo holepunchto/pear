@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.11.1
+
+### Fixes
+
+* Windows - Fixed VCRUNTIME error
+
 ## v1.11.0
 
 ### Features
