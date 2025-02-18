@@ -12,7 +12,8 @@ const teardown = require('pear-api/teardown')
 const parseLink = require('pear-api/parse-link')
 const {
   ERR_PERMISSION_REQUIRED,
-  ERR_INVALID_INPUT
+  ERR_INVALID_INPUT,
+  ERR_LEGACY
 } = require('pear-api/errors')
 const State = require('pear-api/state')
 
@@ -79,6 +80,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       return bundle.sources[url.href]
     }
   })
+
+  if (bundle.entrypoint.endsWith('.html')) {
+    throw ERR_LEGACY('[ LEGACY ] No longer booting app from HTML entrypoints\n  Solution: pear://runtime/documentation/migration')
+  }
 
   Module.load(new URL(bundle.entrypoint), {
     protocol,
