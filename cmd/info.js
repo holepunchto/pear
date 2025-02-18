@@ -36,6 +36,12 @@ const changelog = ({ changelog, full }) => `
  ${changelog}
 `
 
+const constants = data => `
+ constants
+-------------------------------------------------------------------------------
+ ${Object.entries(data).map(([key, value]) => `${key}: ${value}`).join('\n')}
+`
+
 const output = outputter('info', {
   retrieving: ({ z32, onlyShowKey }, info) => {
     info.onlyShowKey = onlyShowKey
@@ -44,6 +50,7 @@ const output = outputter('info', {
   keys,
   info,
   changelog,
+  constants,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'info')
@@ -55,7 +62,7 @@ const output = outputter('info', {
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, constants: showConstants } = cmd.flags
   const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
@@ -68,6 +75,7 @@ module.exports = (ipc) => async function info (cmd) {
     channel,
     dir,
     showKey,
+    showConstants,
     metadata,
     changelog,
     full,

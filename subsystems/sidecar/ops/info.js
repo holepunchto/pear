@@ -14,11 +14,11 @@ module.exports = class Info extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link, channel, dir, showKey, metadata, changelog, full, cmdArgs } = {}) {
+  async #op ({ link, channel, dir, showKey, showConstants, metadata, changelog, full, cmdArgs } = {}) {
     const { session } = this
     let bundle = null
     let drive = null
-    const enabledFlags = new Set([changelog, full, metadata, showKey].filter((value) => value === true))
+    const enabledFlags = new Set([changelog, full, metadata, showKey, showConstants].filter((value) => value === true))
     const isEnabled = (flag) => enabledFlags.size > 0 ? !!flag : !flag
 
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
@@ -51,6 +51,8 @@ module.exports = class Info extends Opstream {
       const onlyShowKey = enabledFlags.size === 1
       this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
     }
+
+    if (isEnabled(showConstants)) this.push({ tag: 'constants', data: { PLATFORM_HYPERDB } })
 
     await this.sidecar.ready()
     if (bundle) {
@@ -97,7 +99,5 @@ module.exports = class Info extends Opstream {
         : blank
 
     if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
-
-    this.push({ tag: 'constants', data: { PLATFORM_HYPERDB } })
   }
 }
