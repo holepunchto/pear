@@ -310,7 +310,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
     const reason = bail.reason === 'UNKNOWN_FLAG'
       ? 'Unrecognized Flag: --' + bail.flag.name
-      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value' + bail.arg.value : bail.reason)
+      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value : bail.reason)
 
     print(reason, false)
     if (code === 'ERR_LEGACY') return
