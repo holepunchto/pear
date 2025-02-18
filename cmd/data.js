@@ -78,26 +78,31 @@ class Data {
     await output(json, result, { tag: 'gc' }, this.ipc)
   }
 
-  async reset () {
-    const info = await this.ipc.info()
-    let platformHyperdb
-    for await (const chunk of info) {
-      if (chunk.tag === 'platformHyperdb') platformHyperdb = chunk.data
-    }
-    if (!platformHyperdb) return status('Failure\n', false)
+  async reset (cmd) {
+    const { command } = cmd
+    const { yes } = command.flags
 
-    const dialog = `${ansi.warning} Clearing database ${ansi.bold(platformHyperdb)}\n\n`
-    const ask = 'Type DELETE to confirm'
-    const delim = '?'
-    const validation = (val) => val === 'DELETE'
-    const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
-    await confirm(dialog, ask, delim, validation, msg)
+    if (!yes) {
+      const info = await this.ipc.info()
+      let platformHyperdb
+      for await (const chunk of info) {
+        if (chunk.tag === 'platformHyperdb') platformHyperdb = chunk.data
+      }
+      if (!platformHyperdb) return status('Failure (info)\n', false)
+
+      const dialog = `${ansi.warning} Clearing database ${ansi.bold(platformHyperdb)}\n\n`
+      const ask = 'Type DELETE to confirm'
+      const delim = '?'
+      const validation = (val) => val === 'DELETE'
+      const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
+      await confirm(dialog, ask, delim, validation, msg)
+    }
 
     const dataReset = await this.ipc.dataReset()
     let complete
     for await (const chunk of dataReset) {
       if (chunk.tag === 'complete') complete = chunk.data
     }
-    complete ? status('Success\n', true) : status('Failure\n', false)
+    complete ? status('Success\n', true) : status('Failure (dataReset)\n', false)
   }
 }
