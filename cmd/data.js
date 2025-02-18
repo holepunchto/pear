@@ -99,7 +99,7 @@ class Data {
     let complete
     for await (const chunk of dataReset) {
       if (chunk.tag === 'complete') {
-        complete = chunk.data
+        complete = true
         status('Success\n', true)
       }
     }
