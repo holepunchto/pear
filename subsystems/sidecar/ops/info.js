@@ -52,8 +52,6 @@ module.exports = class Info extends Opstream {
       this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
     }
 
-    if (isEnabled(showConstants)) this.push({ tag: 'constants', data: { PLATFORM_HYPERDB } })
-
     await this.sidecar.ready()
     if (bundle) {
       await session.add(bundle)
@@ -99,5 +97,6 @@ module.exports = class Info extends Opstream {
         : blank
 
     if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+    if (isEnabled(showConstants)) this.push({ tag: 'constants', data: { PLATFORM_HYPERDB } })
   }
 }
