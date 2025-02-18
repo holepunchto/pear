@@ -82,15 +82,13 @@ class Data {
     const info = await this.ipc.info()
     let platformHyperdb
     for await (const chunk of info) {
-      if (chunk.tag === 'platformHyperdb') {
-        platformHyperdb = chunk.data
-      }
+      if (chunk.tag === 'platformHyperdb') platformHyperdb = chunk.data
     }
     if (!platformHyperdb) return status('Failure\n', false)
 
-    const dialog = `Clearing database ${ansi.bold(platformHyperdb)}\n\n`
+    const dialog = `${ansi.warning} Clearing database ${ansi.bold(platformHyperdb)}\n\n`
     const ask = 'Type DELETE to confirm'
-    const delim = ':'
+    const delim = '?'
     const validation = (val) => val === 'DELETE'
     const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
@@ -98,11 +96,8 @@ class Data {
     const dataReset = await this.ipc.dataReset()
     let complete
     for await (const chunk of dataReset) {
-      if (chunk.tag === 'complete') {
-        complete = true
-        status('Success\n', true)
-      }
+      if (chunk.tag === 'complete') complete = chunk.data
     }
-    if (!complete) status('Failure\n', false)
+    complete ? status('Success\n', true) : status('Failure\n', false)
   }
 }
