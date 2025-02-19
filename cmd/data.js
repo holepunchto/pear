@@ -2,6 +2,7 @@
 const parseLink = require('../lib/parse-link')
 const { outputter, ansi, confirm, status } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
+const { PLATFORM_HYPERDB } = require('../constants')
 
 const padding = '    '
 const noResults = '[ No results ]\n'
@@ -87,9 +88,6 @@ class Data {
     const { yes } = command.flags
 
     if (!yes) {
-      const { PLATFORM_HYPERDB } = await pick(this.ipc.info(), tag => tag === 'constants')
-      if (!PLATFORM_HYPERDB) return status('Failure (ipc.info)\n', false)
-
       const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
       const ask = 'Type DELETE to confirm'
       const delim = '?'
