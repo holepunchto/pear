@@ -151,7 +151,7 @@ module.exports = class Model {
   }
 
   async close () {
-    LOG.trace('db', 'CLOSE ()')
+    LOG.trace('db', 'CLOSE')
     await this.db.close()
   }
 
