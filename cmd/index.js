@@ -110,7 +110,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--full-changelog', 'Full record of changes'),
     flag('--metadata', 'View metadata only'),
     flag('--key', 'View key only'),
-    flag('--constants', 'View constants only'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     runners.info(ipc)
