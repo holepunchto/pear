@@ -5,10 +5,10 @@ const { ERR_INVALID_INPUT } = require('../errors')
 const { PLATFORM_HYPERDB } = require('../constants')
 
 const padding = '    '
-const noResults = '[ No results ]\n'
+const placeholder = '[ No results ]\n'
 
 const appsOutput = (bundles) => {
-  if (!bundles?.length) return noResults
+  if (!bundles?.length) return placeholder
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
@@ -23,7 +23,7 @@ const appsOutput = (bundles) => {
 }
 
 const dhtOutput = (nodes) => {
-  if (!nodes?.length) return noResults
+  if (!nodes?.length) return placeholder
   let out = ''
   for (const node of nodes) {
     out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
@@ -32,7 +32,7 @@ const dhtOutput = (nodes) => {
 }
 
 const gcOutput = (records) => {
-  if (!records?.length) return noResults
+  if (!records?.length) return placeholder
   let out = ''
   for (const gc of records) {
     out += `- ${ansi.bold(gc.path)}\n`
