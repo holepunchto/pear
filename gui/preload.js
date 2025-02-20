@@ -237,12 +237,12 @@ module.exports = class PearGUI extends ReadyResource {
         }
         listener = listener ?? (async (key) => {
           if (key === 'click' && isWindows) {
-            const isVisible = await Pear.Window.self.isVisible()
+            const isVisible = await this.Window.self.isVisible()
             if (isVisible) {
-              await Pear.Window.self.hide()
+              await this.Window.self.hide()
             } else {
-              await Pear.Window.self.show()
-              await Pear.Window.self.focus({ steal: true })
+              await this.Window.self.show()
+              await this.Window.self.focus({ steal: true })
             }
             return
           }
