@@ -1940,6 +1940,10 @@ class Tray extends ReadyResource {
     const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : defaultTrayIcon
     const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
+    if (isMac) {
+      iconNativeImg.setTemplateImage(true)
+    }
+
     this.tray = new electron.Tray(iconNativeImg)
     this.tray.on('click', () => this.onMenuClick('click'))
     const contextMenu = electron.Menu.buildFromTemplate(menuTemplate)
