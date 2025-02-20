@@ -1956,7 +1956,8 @@ class Tray extends ReadyResource {
       const iconNativeImg = electron.nativeImage.createFromBuffer(iconBuffer)
       if (iconNativeImg.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
 
-      return iconNativeImg
+      const trayIconSize = isWindows ? { width: 16, height: 16 } : { width: 22, height: 22 }
+      return iconNativeImg.resize(trayIconSize)
     } catch (err) {
       console.warn(err)
       return defaultTrayIcon
