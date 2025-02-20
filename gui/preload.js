@@ -5,6 +5,7 @@ const { EventEmitter } = require('events')
 const Iambus = require('iambus')
 const ReadyResource = require('ready-resource')
 const electron = require('electron')
+const { isWindows } = require('which-runtime')
 const Worker = require('../lib/worker')
 
 module.exports = class PearGUI extends ReadyResource {
@@ -234,14 +235,24 @@ module.exports = class PearGUI extends ReadyResource {
             quit: 'Quit'
           }
         }
-        listener = listener ?? ((key) => {
-          if (key === 'click' || key === 'show') {
-            this.Window.self.show()
-            this.Window.self.focus({ steal: true })
+        listener = listener ?? (async (key) => {
+          if (key === 'click' && isWindows) {
+            const isVisible = await Pear.Window.self.isVisible()
+            if (isVisible) {
+              await Pear.Window.self.hide()
+            } else {
+              await Pear.Window.self.show()
+              await Pear.Window.self.focus({ steal: true })
+            }
+            return
+          }
+          if (key === 'show') {
+            await this.Window.self.show()
+            await this.Window.self.focus({ steal: true })
             return
           }
           if (key === 'quit') {
-            this.Window.self.quit()
+            await this.Window.self.quit()
           }
         })
 
