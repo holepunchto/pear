@@ -61,10 +61,10 @@ class Data {
     if (link) {
       const parsed = parseLink(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      const result = await this.ipc.data({ resource: 'link', secrets, link })
+      const result = this.ipc.data({ resource: 'link', secrets, link })
       await output(json, result, { tag: 'link' }, this.ipc)
     } else {
-      const result = await this.ipc.data({ resource: 'apps', secrets })
+      const result = this.ipc.data({ resource: 'apps', secrets })
       await output(json, result, { tag: 'apps' }, this.ipc)
     }
   }
@@ -72,14 +72,14 @@ class Data {
   async dht (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'dht' })
+    const result = this.ipc.data({ resource: 'dht' })
     await output(json, result, { tag: 'dht' }, this.ipc)
   }
 
   async gc (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'gc' })
+    const result = this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
   }
 
