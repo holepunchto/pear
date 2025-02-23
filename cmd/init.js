@@ -31,7 +31,7 @@ module.exports = (ipc) => async function init (cmd) {
   const name = cfg?.name || pkg?.name || basename(dir)
   const link = wither(type, w) || cmd.args.link || 'desktop'
 
-  const defaults = { height, width, name }
+  const defaults = { height, width, name: name.toLowerCase() }
 
   const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
   let header = `\n${banner}${ansi.dim('›')}\n\n`
