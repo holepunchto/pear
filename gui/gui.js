@@ -58,7 +58,6 @@ class Menu {
     }
   ]
 
-  devtoolsReloaderActive = false
   constructor (app, renderEvents = ['app-register', 'app-deregister', 'app-focus']) {
     this.app = app
     const rerender = () => { this.render() }
@@ -276,16 +275,6 @@ class Menu {
     electron.Menu.setApplicationMenu(this.menu)
   }
 
-  devtoolsReloaderListen (wc) {
-    if (this.devtoolsReloaderActive) return
-    this.devtoolsReloaderActive = true
-  }
-
-  devtoolsReloaderUnlisten () {
-    if (this.devtoolsReloaderActive === false) return
-    this.devtoolsReloaderActive = false
-  }
-
   destroy () {
     this.menu = null
     this.app = null
@@ -398,7 +387,6 @@ class App {
     this.state = state
     this.ipc = ipc
     this.contextMenu = null
-    electron.app.on('browser-window-focus', () => { this.menu.devtoolsReloaderUnlisten() })
 
     electron.app.on('child-process-gone', (e, details) => {
       if (details.reason === 'killed') return
@@ -408,27 +396,11 @@ class App {
     electron.app.on('web-contents-created', (e, wc) => {
       this.menu.render()
 
-      wc.on('devtools-focused', () => {
-        this.menu.devtoolsReloaderListen(wc)
-      })
-
-      // electron has absolutely no functioning blur event of any kind
-      // there is NO WAY in electron to react to devtools blur, so now this is happening:
-      let devtoolsBlurPolling = null
-      wc.on('devtools-opened', () => {
-        devtoolsBlurPolling = setInterval(() => {
-          if (this.menu.globalReloaderActive === false) return
-          if (wc.isDevToolsFocused() === false) this.menu.devtoolsReloaderUnlisten()
-        }, 150)
-      })
       wc.on('destroyed', () => {
         this.menu.render()
-        clearInterval(devtoolsBlurPolling)
       })
-      wc.on('devtools-closed', () => {
-        this.menu.devtoolsReloaderUnlisten()
-        clearInterval(devtoolsBlurPolling)
-        devtoolsBlurPolling = null
+      wc.on('devtools-reload-page', () => {
+        refresh(wc, this.state)
       })
 
       wc.on('context-menu', (e, params) => {
