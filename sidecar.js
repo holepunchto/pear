@@ -22,12 +22,9 @@ const gunk = require('pear-api/gunk')
 const registerUrlHandler = require('./url-handler')
 const Logger = require('pear-api/logger')
 crasher('sidecar', SWAP)
-const { flags = {} } = require('pear-api/cmd')(Bare.argv.slice(1))
-const logLabels = (flags.log ? 'internal,sidecar' : 'internal')
 global.LOG = new Logger({
-  level: flags.log && flags.logLevel < 2 ? 2 : flags.logLevel,
-  labels: logLabels + (flags.logLabels ? ',' + flags.logLabels : ''),
-  pretty: flags.log
+  labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
+  pretty: Logger.switches.log
 })
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
@@ -51,7 +48,7 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk, flags })
+  const sidecar = new Sidecar({ updater, drive, corestore, gunk })
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
