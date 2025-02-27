@@ -29,6 +29,11 @@ const {
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const DHT_BOOTSTRAP = require('pear-api/cmd')(Bare.argv.slice(1)).flags.dhtBootstrap
+  .split(',')
+  .map(e => ({
+    host: e.split(':')[0],
+    port: Number(e.split(':')[1])
+  }))
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -73,8 +78,6 @@ class Sidecar extends ReadyResource {
     super()
 
     this.model = new Model()
-
-    this.dhtBootstrap = DHT_BOOTSTRAP.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
 
     this.bus = new Iambus()
     this.version = CHECKOUT
@@ -684,7 +687,7 @@ class Sidecar extends ReadyResource {
 
     await fs.promises.mkdir(appStorage, { recursive: true })
 
-    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
+    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: DHT_BOOTSTRAP }
     await this.model.setDhtNodes(dht.nodes)
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
     const applingPath = state.appling?.path
@@ -865,14 +868,14 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    if (this.dhtBootstrap) LOG.info('sidecar', 'DHT bootstrap set', this.dhtBootstrap)
+    if (DHT_BOOTSTRAP) LOG.info('sidecar', 'DHT bootstrap set', DHT_BOOTSTRAP)
     const knownNodes = await this.model.getDhtNodes()
-    const nodes = this.dhtBootstrap ? undefined : knownNodes
+    const nodes = DHT_BOOTSTRAP ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: DHT_BOOTSTRAP, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
@@ -903,7 +906,7 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.swarm) {
-      if (!this.dhtBootstrap) {
+      if (!DHT_BOOTSTRAP) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
           await this.model.setDhtNodes(knownNodes)
