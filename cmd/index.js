@@ -299,10 +299,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   return program
 
   function explain (bail) {
-    const code = bail.err.code
     if (bail.err) {
       const known = errors.known()
-      if (known.includes(code) === false) {
+      if (known.includes(bail.err.code) === false) {
         print(bail.reason, false)
         print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
         Bare.exit(1)
@@ -313,7 +312,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value : bail.reason)
 
     print(reason, false)
-    if (code === 'ERR_LEGACY') return
+    if (bail.err?.code === 'ERR_LEGACY') return
     print('\n' + bail.command.usage())
   }
 }
