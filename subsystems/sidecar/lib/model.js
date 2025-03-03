@@ -1,11 +1,17 @@
 'use strict'
+const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB } = require('pear-api/constants')
+const { PLATFORM_HYPERDB } = require('../../../constants')
 
 module.exports = class Model {
   constructor () {
+    this.init()
+  }
+
+  init () {
+    LOG.trace('db', `ROCKS ('${PLATFORM_HYPERDB}')`)
     this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
 
     this.lock = new DBLock({
@@ -145,6 +151,13 @@ module.exports = class Model {
   }
 
   async close () {
+    LOG.trace('db', 'CLOSE')
     await this.db.close()
+  }
+
+  async reset () {
+    await this.close()
+    await fs.promises.rm(PLATFORM_HYPERDB, { recursive: true, force: true })
+    this.init()
   }
 }
