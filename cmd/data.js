@@ -44,7 +44,8 @@ const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result)
+  gc: (result) => gcOutput(result),
+  dataReset: () => 'Database cleared'
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -61,32 +62,28 @@ class Data {
     if (link) {
       const parsed = parseLink(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      const result = this.ipc.data({ resource: 'link', secrets, link })
-      await output(json, result, { tag: 'link' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
     } else {
-      const result = this.ipc.data({ resource: 'apps', secrets })
-      await output(json, result, { tag: 'apps' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'apps', secrets }), { tag: 'apps' }, this.ipc)
     }
   }
 
   async dht (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = this.ipc.data({ resource: 'dht' })
-    await output(json, result, { tag: 'dht' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' }, this.ipc)
   }
 
   async gc (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = this.ipc.data({ resource: 'gc' })
-    await output(json, result, { tag: 'gc' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
   }
 
   async reset (cmd) {
     const { command } = cmd
+    const { json } = command.parent.flags
     const { yes } = command.flags
-
     if (!yes) {
       const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
       const ask = 'Type DELETE to confirm'
@@ -95,20 +92,6 @@ class Data {
       const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
       await confirm(dialog, ask, delim, validation, msg)
     }
-
-    const complete = await pick(this.ipc.dataReset(), (tag) => tag === 'complete')
-    complete ? status('Success\n', true) : status('Failure (ipc.dataReset)\n', false)
+    await output(json, this.ipc.dataReset(), { tag: 'dataReset' }, this.ipc)
   }
-}
-
-function pick (stream, predicate) {
-  return new Promise((resolve, reject) => {
-    stream.on('error', reject)
-    const listener = ({ tag, data }) => {
-      if (!predicate(tag)) return
-      resolve(data)
-      stream.off('data', listener)
-    }
-    stream.on('data', listener)
-  })
 }
