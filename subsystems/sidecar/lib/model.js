@@ -3,7 +3,7 @@ const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB } = require('../../../constants')
+const { PLATFORM_HYPERDB } = require('pear-api/constants')
 
 module.exports = class Model {
   constructor () {
