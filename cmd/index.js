@@ -302,7 +302,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     if (bail.err) {
       const known = errors.known()
       if (known.includes(bail.err.code) === false) {
-        print(bail.reason, false)
         print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
         Bare.exit(1)
       }
