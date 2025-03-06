@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.11.2
+
+### Fixes
+
+* Windows - Updated native dependencies
+
 ## v1.11.1
 
 ### Fixes
