@@ -15,10 +15,10 @@ cli()
 function checkRoot () {
   if (isWindows) return
 
-  const ownerIsRoot = fs.statSync(PLATFORM_DIR).uid === 0
-  const currentUserIsRoot = process.env.USER === 'root' // replace with process.getuid() if/when it's available
+  const isOwnerRoot = fs.statSync(PLATFORM_DIR).uid === 0
+  const isUserRoot = process.env.USER === 'root' // replace with process.getuid() if/when it's available
 
-  if (currentUserIsRoot && !ownerIsRoot) {
+  if (isUserRoot && !isOwnerRoot) {
     throw new Error('Running as root is not allowed when the Pear directory is not owned by root. Please run without root privileges.')
   }
 }
