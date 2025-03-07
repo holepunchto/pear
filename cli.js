@@ -5,6 +5,7 @@ const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { PLATFORM_LOCK, PLATFORM_DIR, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants.js')
 const { isWindows } = require('which-runtime')
+const process = require('bare-process')
 const fs = require('bare-fs')
 crasher('cli', SWAP, Bare.argv.indexOf('--log') > -1)
 
