@@ -2,11 +2,10 @@
 const IPC = require('pear-ipc')
 const crasher = require('pear-api/crasher')
 const tryboot = require('pear-api/tryboot')
-const { PLATFORM_LOCK, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants')
+const { PLATFORM_LOCK, PLATFORM_DIR, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants')
 const cmd = require('./cmd')
 const { isWindows } = require('which-runtime')
 const fs = require('bare-fs')
-const { PLATFORM_DIR } = require('./constants')
 crasher('cli', SWAP)
 
 checkRoot()
