@@ -4,9 +4,24 @@ const crasher = require('pear-api/crasher')
 const tryboot = require('pear-api/tryboot')
 const { PLATFORM_LOCK, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants')
 const cmd = require('./cmd')
+const { isWindows } = require('which-runtime')
+const fs = require('bare-fs')
+const { PLATFORM_DIR } = require('./constants')
 crasher('cli', SWAP)
 
+checkRoot()
 cli()
+
+function checkRoot () {
+  if (isWindows) return
+
+  const ownerIsRoot = fs.statSync(PLATFORM_DIR).uid === 0
+  const currentUserIsRoot = process.env.USER === 'root' // replace with process.getuid() if/when it's available
+
+  if (currentUserIsRoot && !ownerIsRoot) {
+    throw new Error('The current user is root, but the platform directory is not owned by root.')
+  }
+}
 
 async function cli () {
   const ipc = new IPC.Client({
