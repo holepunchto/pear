@@ -5,6 +5,7 @@ const tryboot = require('pear-api/tryboot')
 const { PLATFORM_LOCK, PLATFORM_DIR, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('pear-api/constants')
 const cmd = require('./cmd')
 const { isWindows } = require('which-runtime')
+const process = require('bare-process')
 const fs = require('bare-fs')
 crasher('cli', SWAP)
 
