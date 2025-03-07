@@ -5,7 +5,7 @@ const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
 const { PLATFORM_LOCK, PLATFORM_DIR, SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants.js')
 const { isWindows } = require('which-runtime')
-const process = require('bare-process')
+const os = require('bare-os')
 const fs = require('bare-fs')
 crasher('cli', SWAP, Bare.argv.indexOf('--log') > -1)
 
@@ -16,7 +16,7 @@ function checkRoot () {
   if (isWindows) return
 
   const isOwnerRoot = fs.statSync(PLATFORM_DIR).uid === 0
-  const isUserRoot = process.env.USER === 'root' // replace with process.getuid() if/when it's available
+  const isUserRoot = os.getEnv('USER') === 'root' // replace with process.getuid() if/when it's available
 
   if (isUserRoot && !isOwnerRoot) {
     throw new Error('Running as root is not allowed when the Pear directory is not owned by root. Please run without root privileges.')
