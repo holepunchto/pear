@@ -19,7 +19,7 @@ function checkRoot () {
   const isUserRoot = os.getEnv('USER') === 'root' // replace with process.getuid() if/when it's available
 
   if (isUserRoot && !isOwnerRoot) {
-    throw new Error('Running as root is not allowed when the Pear directory is not owned by root. Please run without root privileges.')
+    throw new Error('Running as root is not allowed when the Pear platform directory is not owned by root. Please run without root privileges.')
   }
 }
 
