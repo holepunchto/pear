@@ -5,6 +5,7 @@
 ### Fixes
 
 * Windows - Updated native dependencies
+* Internal - Updated sloppy-module-parser to version 2.2.3
 
 ## v1.11.1
 
