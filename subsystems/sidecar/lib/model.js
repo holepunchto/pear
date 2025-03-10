@@ -1,4 +1,5 @@
 'use strict'
+const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const pearLink = require('pear-link')
@@ -148,6 +149,13 @@ module.exports = class Model {
   }
 
   async close () {
+    LOG.trace('db', 'CLOSE')
     await this.db.close()
+  }
+
+  async reset () {
+    await this.close()
+    await fs.promises.rm(PLATFORM_HYPERDB, { recursive: true, force: true })
+    this.init()
   }
 }

@@ -1,5 +1,6 @@
 'use strict'
-const Opstream = require('../lib/opstream')
+const { pathToFileURL } = require('url-file-url')
+const Opstream = require('../../lib/opstream')
 
 module.exports = class Data extends Opstream {
   constructor (...args) {
