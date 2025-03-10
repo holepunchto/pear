@@ -48,7 +48,6 @@ module.exports = class Stage extends Opstream {
       encryptionKey
     })
     await session.add(bundle)
-    client.userData = new sidecar.App({ state, bundle })
 
     const currentVersion = bundle.version
     await state.initialize({ bundle, dryRun, name })
