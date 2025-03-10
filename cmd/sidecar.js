@@ -29,30 +29,29 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)
   print(ansi.gray('Version: ' + JSON.stringify(CHECKOUT, 0, 4).slice(0, -1) + '  }'), 0)
-  if (restarts.length > 0) {
+  const commands = restarts.filter(({ id = null }) => id !== null)
+  if (commands.length > 0) {
     print('Restart Commands:', 0)
-    for (const { id = null, dir, cmdArgs: cmdsig = [] } of restarts) {
-      if (id !== null) continue
-      let runix = cmdsig.indexOf('--run')
-      if (runix === -1) runix = cmdsig.indexOf('--launch') // legacy alias
-      const devix = cmdsig.indexOf('--dev')
+    for (const { dir, cmdArgs = [] } of commands) {
+      const runix = cmdArgs.indexOf('--run')
+      const devix = cmdArgs.indexOf('--dev')
       if (runix > -1) {
-        const key = cmdsig[runix + 1]
-        cmdsig.splice(runix, 2)
-        cmdsig.unshift('run', key)
+        const key = cmdArgs[runix + 1]
+        cmdArgs.splice(runix, 2)
+        cmdArgs.unshift('run', key)
       } else if (devix > -1) {
-        cmdsig[devix] = 'dev'
-        if (cmdsig[devix + 1][0] !== '/' && cmdsig[devix + 1][0] !== '.') {
-          cmdsig.splice(devix + 1, 0, dir)
+        cmdArgs[devix] = 'dev'
+        if (cmdArgs[devix + 1][0] !== '/' && cmdArgs[devix + 1][0] !== '.') {
+          cmdArgs.splice(devix + 1, 0, dir)
         }
-        const insix = cmdsig.indexOf('--inspector-port')
-        cmdsig.splice(insix, 2)
+        const insix = cmdArgs.indexOf('--inspector-port')
+        cmdArgs.splice(insix, 2)
       }
-      const swapix = cmdsig.indexOf('--swap')
-      if (swapix > -1) cmdsig.splice(swapix, 2)
+      const swapix = cmdArgs.indexOf('--swap')
+      if (swapix > -1) cmdArgs.splice(swapix, 2)
       stdio.out.write('  ')
-      if (cmdsig[0] === 'seed' && cmdsig.some(([ch]) => ch === '/' || ch === '.') === false) cmdsig[cmdsig.length] = dir
-      print(ansi.gray('pear ' + cmdsig.join(' ')), 0)
+      if (cmdArgs[0] === 'seed' && cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false) cmdArgs[cmdArgs.length] = dir
+      print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
   }
 
