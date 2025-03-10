@@ -18,7 +18,9 @@ module.exports = class Seed extends Opstream {
       dir,
       cmdArgs
     })
-    client.userData = new this.sidecar.App({ state, session })
+
+    // not an app but a long running process, setting userData for restart recognition:
+    client.userData = { state }
 
     this.push({ tag: 'seeding', data: { key: link, name, channel } })
     await this.sidecar.ready()
