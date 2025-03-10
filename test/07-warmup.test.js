@@ -5,8 +5,8 @@ const Helper = require('./helper')
 
 const Hyperswarm = require('hyperswarm')
 const Corestore = require('corestore')
-const RAM = require('random-access-memory')
 const Hyperdrive = require('hyperdrive')
+const tmp = require('test-tmp')
 
 const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
@@ -115,7 +115,8 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
   await until.announced
 
   const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
-  const store = new Corestore(RAM)
+  const tmpdir = await tmp()
+  const store = new Corestore(tmpdir)
   await store.ready()
   const drive = new Hyperdrive(store, key)
   await drive.ready()
