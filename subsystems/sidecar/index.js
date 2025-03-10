@@ -287,7 +287,7 @@ class Sidecar extends ReadyResource {
   get hasClients () { return this.ipc?.hasClients || false }
 
   get apps () {
-    return Array.from(new Set(this.ipc.clients.map(({ userData }) => userData).filter(Boolean)))
+    return Array.from(new Set(this.ipc.clients.filter(({ userData }) => userData instanceof this.App)))
   }
 
   #spindownCountdown () {
@@ -361,12 +361,12 @@ class Sidecar extends ReadyResource {
   touch (params, client) { return new ops.Touch(params, client, this) }
 
   warmup (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.warmup(params)
   }
 
   warming (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     const stream = new streamx.PassThrough({ objectMode: true })
     streamx.pipeline(client.userData.warming, pickData(), stream)
     return stream
@@ -378,14 +378,14 @@ class Sidecar extends ReadyResource {
   }
 
   reports (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     const stream = new streamx.PassThrough({ objectMode: true })
     streamx.pipeline(client.userData.reporter, pickData(), stream)
     return stream
   }
 
   createReport (err, client) {
-    if (!client.userData) {
+    if (client.userData instanceof this.App === false) {
       console.trace('REPORT', err)
       return
     }
@@ -393,48 +393,48 @@ class Sidecar extends ReadyResource {
   }
 
   reported (params, client) {
-    if (!client.userData) return false
+    if (client.userData instanceof this.App === false) return false
     return client.userData.reported
   }
 
   async config (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     const cfg = client.userData.state.constructor.configFrom(client.userData.state)
     return cfg
   }
 
   async checkpoint (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
   async message (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.message(params)
   }
 
   messages (pattern, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.messages(pattern)
   }
 
   exists (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.bundle.exists(params.key)
   }
 
   get (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.bundle.get(params.key)
   }
 
   entry (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.bundle.entry(params.key)
   }
 
   compare (params, client) {
-    if (!client.userData) return
+    if (client.userData instanceof this.App === false) return
     return client.userData.bundle.drive.compare(params.keyA, params.keyB)
   }
 
@@ -491,19 +491,20 @@ class Sidecar extends ReadyResource {
     const metadata = []
     const seen = new Set()
     for (const client of this.clients) {
-      const app = client.userData
       if (!params.inclusive && client === originClient) {
         continue
       }
-      if (!app || !app.state) {
+      if (!client.userData || !client.userData.state) { // user & stateless ipc clients
+        metadata.push({}) // count the client close
         this.#endRPCStreams(client).then(() => client.close())
         continue
       }
-      if (seen.has(app.state.id)) continue
-      seen.add(app.state.id)
-      const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
-      const tearingDown = app.teardown()
+      if (seen.has(client.userData.state.id)) continue
+      seen.add(client.userData.state.id)
+      const isApp = client.userData instanceof this.App
+      const { id, cmdArgs, cwd, dir, appling, env, options } = client.userData.state
+      metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
+      const tearingDown = isApp && client.userData.teardown()
       if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
     }
     return metadata
@@ -512,6 +513,10 @@ class Sidecar extends ReadyResource {
   async restart ({ platform = false } = {}, client) {
     LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
     if (platform === false) {
+      if (client.userData instanceof this.App === false) {
+        LOG.info('sidecar', 'Invalid restart request from non-app client')
+        return
+      }
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { cwd, env, detached: false, stdio: 'pipe' }
@@ -522,8 +527,7 @@ class Sidecar extends ReadyResource {
             return
           }
           client.once('close', resolve)
-          const app = client.userData
-          const tearingDown = !!app && app.teardown()
+          const tearingDown = client.userData instanceof this.App && client.userData.teardown()
           if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
         })
       }
@@ -556,7 +560,7 @@ class Sidecar extends ReadyResource {
     // shutdown successful, reset death clock
     this.deathClock()
 
-    restarts = restarts.filter(({ run }) => run)
+    restarts = restarts.filter(({ isApp }) => isApp)
     if (restarts.length === 0) return
     LOG.info('sidecar', 'Restarting', restarts.length, 'apps')
 
@@ -602,7 +606,7 @@ class Sidecar extends ReadyResource {
         return
       }
       const matches = [...this.apps].filter((app) => {
-        if (!app || !app.state) return false
+        if (!app || !app.state) return false // TODO: probably safe to remove this line, check & remove
         return app.state.storage === storage && (appdev
           ? app.state.dir === appdev
           : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
@@ -621,7 +625,10 @@ class Sidecar extends ReadyResource {
     })
   }
 
-  unloading (params, client) { return client.userData.unloading() }
+  unloading (params, client) {
+    if (client.userData instanceof this.App === false) return
+    return client.userData.unloading()
+  }
 
   async start (params, client) {
     const { flags, env, cwd, link, dir, args, cmdArgs } = params
@@ -899,8 +906,7 @@ class Sidecar extends ReadyResource {
 
   async #shutdown (client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
-    const app = client.userData
-    const tearingDown = !!app && app.teardown()
+    const tearingDown = client.userData instanceof this.App && client.userData.teardown()
     if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
 
     this.spindownms = 0
