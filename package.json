@@ -109,7 +109,7 @@
     "pear-ipc": "^3.1.0",
     "pear-link": "^2.1.1",
     "pear-updater": "^3.4.3",
-    "pear-updater-bootstrap": "^1.2.0",
+    "pear-updater-bootstrap": "github:holepunchto/pear-updater-bootstrap#hypercore-11-migration",
     "protomux": "^3.6.0",
     "pw-to-ek": "^1.1.0",
     "quickbit-universal": "^2.2.0",

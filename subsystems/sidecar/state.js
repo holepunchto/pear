@@ -33,6 +33,9 @@ module.exports = class State extends SharedState {
     this.applink = bundle.link
 
     if (this.key) {
+      if (bundle.drive.core.length === 0) {
+        await bundle.drive.core.update()
+      }
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
