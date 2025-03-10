@@ -46,7 +46,8 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  Touch: require('./ops/touch')
+  Touch: require('./ops/touch'),
+  Data: require('./ops/data')
 }
 
 // ensure that we are registered as a link handler
@@ -340,6 +341,8 @@ class Sidecar extends ReadyResource {
   dump (params, client) { return new ops.Dump(params, client, this) }
 
   info (params, client) { return new ops.Info(params, client, this) }
+
+  data (params, client) { return new ops.Data(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
 
@@ -683,6 +686,7 @@ class Sidecar extends ReadyResource {
     await fs.promises.mkdir(appStorage, { recursive: true })
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: DHT_BOOTSTRAP }
+    await this.model.setDhtNodes(dht.nodes)
     const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
