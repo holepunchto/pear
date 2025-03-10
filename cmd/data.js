@@ -1,11 +1,14 @@
 'use strict'
 const parseLink = require('pear-api/parse-link')
-const { outputter, ansi } = require('pear-api/terminal')
+const { outputter, ansi, confirm } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const { PLATFORM_HYPERDB } = require('pear-api/constants')
 
 const padding = '    '
+const placeholder = '[ No results ]\n'
 
 const appsOutput = (bundles) => {
+  if (!bundles.length) return placeholder
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
@@ -20,6 +23,7 @@ const appsOutput = (bundles) => {
 }
 
 const dhtOutput = (nodes) => {
+  if (!nodes.length) return placeholder
   let out = ''
   for (const node of nodes) {
     out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
@@ -28,6 +32,7 @@ const dhtOutput = (nodes) => {
 }
 
 const gcOutput = (records) => {
+  if (!records.length) return placeholder
   let out = ''
   for (const gc of records) {
     out += `- ${ansi.bold(gc.path)}\n`
@@ -39,7 +44,8 @@ const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result)
+  gc: (result) => gcOutput(result),
+  dataReset: () => 'Database cleared'
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -56,25 +62,36 @@ class Data {
     if (link) {
       const parsed = parseLink(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      const result = await this.ipc.data({ resource: 'link', secrets, link })
-      await output(json, result, { tag: 'link' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
     } else {
-      const result = await this.ipc.data({ resource: 'apps', secrets })
-      await output(json, result, { tag: 'apps' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'apps', secrets }), { tag: 'apps' }, this.ipc)
     }
   }
 
   async dht (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'dht' })
-    await output(json, result, { tag: 'dht' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' }, this.ipc)
   }
 
   async gc (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'gc' })
-    await output(json, result, { tag: 'gc' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
+  }
+
+  async reset (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    const { yes } = command.flags
+    if (!yes) {
+      const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
+      const ask = 'Type DELETE to confirm'
+      const delim = '?'
+      const validation = (val) => val === 'DELETE'
+      const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
+      await confirm(dialog, ask, delim, validation, msg)
+    }
+    await output(json, this.ipc.dataReset(), { tag: 'dataReset' }, this.ipc)
   }
 }
