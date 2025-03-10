@@ -28,7 +28,14 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
-const DHT_BOOTSTRAP = require('pear-api/cmd')(Bare.argv.slice(1)).flags.dhtBootstrap
+const DHT_BOOTSTRAP = require('pear-api/cmd')(Bare.argv.slice(1))
+  .flags.dhtBootstrap?.split(',')
+  .map((hostPort) => {
+    const [host, portStr] = hostPort.split(':')
+    const port = Number(portStr)
+    if (Number.isNaN(port)) throw new Error(`Invalid port: ${portStr}`)
+    return { host, port }
+  })
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
