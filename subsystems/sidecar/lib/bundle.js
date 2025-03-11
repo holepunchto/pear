@@ -243,6 +243,11 @@ module.exports = class Bundle {
 
   async calibrate () {
     await this.ready()
+
+    if (this.drive.core.length === 0) {
+      await this.drive.core.update()
+    }
+
     if (this.stage === false) {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
