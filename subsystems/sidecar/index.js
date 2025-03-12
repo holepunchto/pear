@@ -33,8 +33,9 @@ const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
-  DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT
+  SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
+  DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT,
+  UPGRADE_LOCK
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
 const SharedState = require('../../state')
@@ -102,7 +103,7 @@ class Sidecar extends ReadyResource {
 
     this.ipc = new IPC.Server({
       handlers: this,
-      lock: PLATFORM_LOCK,
+      lock: UPGRADE_LOCK,
       socketPath: SOCKET_PATH
     })
 
