@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
-test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('reset', async function ({ ok, not, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
@@ -25,13 +25,19 @@ test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   const link = `pear://${key}`
 
+  comment('running')
+
   const run = await Helper.run({ link })
   const before = await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
 
-  const reset = await helper.reset({ link })
+  comment('resetting')
+
+  const reset = helper.reset({ link })
   const untilReset = await Helper.pick(reset, [{ tag: 'complete' }])
   await untilReset.complete
+
+  comment('running')
 
   const runB = await Helper.run({ link })
   const after = await Helper.untilResult(runB.pipe)
@@ -39,5 +45,5 @@ test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
 
   ok(before)
   ok(after)
-  ok(before !== after)
+  not(before, after)
 })
