@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
-test('shift should succeed', async function ({ not, is, plan, comment, teardown }) {
+test.solo('shift', async function ({ not, is, plan, comment, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -35,14 +35,14 @@ test('shift should succeed', async function ({ not, is, plan, comment, teardown 
 
   const dst = `pear://${key2}`
 
-  const shift = await helper.shift({ src, dst, force: true })
+  const shift = helper.shift({ src, dst, force: true })
   const untilShift = await Helper.pick(shift, [{ tag: 'complete' }])
   await untilShift.complete
 
   const run2 = await Helper.run({ link: dst })
   const newDst = await Helper.untilResult(run2.pipe)
   await Helper.untilClose(run2.pipe)
-
+  console.log(oldSrc, newDst)
   is(oldSrc, newDst, 'dst app storage should be the same as old src app storage')
 
   const run3 = await Helper.run({ link: src })
@@ -69,7 +69,7 @@ test('shift should fail with invalid src', async function ({ absent, plan, comme
 
   const dst = `pear://${key1}`
 
-  const shift = await helper.shift({ src: 'pear://', dst, force: true })
+  const shift = helper.shift({ src: 'pear://', dst, force: true })
   const untilShift = await Helper.pick(shift, [{ tag: 'error' }])
   const error = await untilShift.error
 
@@ -93,7 +93,7 @@ test('shift should fail with invalid dst', async function ({ absent, plan, comme
 
   const src = `pear://${key1}`
 
-  const shift = await helper.shift({ src, dst: 'pear://', force: true })
+  const shift = helper.shift({ src, dst: 'pear://', force: true })
   const untilShift = await Helper.pick(shift, [{ tag: 'error' }])
   const error = await untilShift.error
 
@@ -117,7 +117,7 @@ test('shift should fail when src app storage does not exist', async function ({ 
 
   const src = `pear://${key1}`
 
-  const shift = await helper.shift({ src, dst: 'pear://', force: true })
+  const shift = helper.shift({ src, dst: 'pear://', force: true })
   const untilShift = await Helper.pick(shift, [{ tag: 'error' }])
   const error = await untilShift.error
 
@@ -154,7 +154,7 @@ test('shift should fail when dst app storage already exists without force', asyn
   await Helper.untilResult(run1.pipe)
   await Helper.untilClose(run1.pipe)
 
-  const shift = await helper.shift({ src, dst, force: false })
+  const shift = helper.shift({ src, dst, force: false })
   const untilShift = await Helper.pick(shift, [{ tag: 'error' }])
   const error = await untilShift.error
 
