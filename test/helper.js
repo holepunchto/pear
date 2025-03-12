@@ -19,7 +19,6 @@ const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
-
 const rigPear = path.join(tmp, 'rig-pear')
 const STOP_CHAR = '\n'
 
