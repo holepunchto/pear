@@ -287,7 +287,7 @@ class Sidecar extends ReadyResource {
   get hasClients () { return this.ipc?.hasClients || false }
 
   get apps () {
-    return Array.from(new Set(this.ipc.clients.filter(({ userData }) => userData instanceof this.App)))
+    return Array.from(new Set(this.ipc.clients.map(({ userData }) => userData).filter((userData) => userData instanceof this.App)))
   }
 
   #spindownCountdown () {
