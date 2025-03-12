@@ -42,7 +42,7 @@ test.solo('shift', async function ({ not, is, plan, comment, teardown }) {
   const run2 = await Helper.run({ link: dst })
   const newDst = await Helper.untilResult(run2.pipe)
   await Helper.untilClose(run2.pipe)
-  console.log(oldSrc, newDst)
+
   is(oldSrc, newDst, 'dst app storage should be the same as old src app storage')
 
   const run3 = await Helper.run({ link: src })
