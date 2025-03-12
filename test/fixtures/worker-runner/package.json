@@ -1,8 +1,0 @@
-{
-  "name": "worker-runner",
-  "main": "index.js",
-  "pear": {
-    "name": "worker-runner",
-    "type": "terminal"
-  }
-}
