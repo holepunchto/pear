@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
-test.solo('shift', async function ({ not, is, plan, comment, teardown }) {
+test('shift', async function ({ not, is, plan, comment, teardown }) {
   plan(2)
 
   const helper = new Helper()
