@@ -27,14 +27,15 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   const touch = await helper.touch({ dir, channel: `test-${id}` })
   const { key } = await Helper.pick(touch, { tag: 'result' })
   await helper.permit({ key: hypercoreid.decode(key), password })
-  const link = `pear://${key}`
-  const { pipe } = await Helper.run({ link })
 
   comment('staging with encryption key')
   const staging = helper.stage({ channel: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
+
+  const link = `pear://${key}`
+  const { pipe } = await Helper.run({ link })
 
   comment('pear data apps')
   let data = await helper.data({ resource: 'apps' })
