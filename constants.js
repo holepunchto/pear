@@ -23,6 +23,7 @@ const swapPath = toPath(swapURL)
 const IPC_ID = 'pear'
 const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../../', swapURL)
 const PLATFORM_DIR = toPath(PLATFORM_URL)
+const PLATFORM_LOCK = toPath(new URL('corestores/platform/LOCK', PLATFORM_URL))
 
 const DESKTOP_EXEC = isWindows
   ? 'pear-runtime-app/Pear Runtime.exe'
@@ -57,6 +58,7 @@ exports.EOLS = EOLS
 
 exports.SWAP = swapPath
 exports.PLATFORM_DIR = PLATFORM_DIR
+exports.PLATFORM_LOCK = PLATFORM_LOCK
 exports.PLATFORM_HYPERDB = toPath(new URL('db', PLATFORM_URL))
 exports.GC = toPath(new URL('gc', PLATFORM_URL))
 exports.PLATFORM_CORESTORE = toPath(new URL('corestores/platform', PLATFORM_URL))
