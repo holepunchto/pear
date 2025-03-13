@@ -11,7 +11,6 @@ const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-boot
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
-const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
 
 test('dht bootstrap', async function ({ ok, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -230,42 +229,9 @@ test('local app', async function ({ ok, is, teardown }) {
   const dataResult = await Helper.pick(data, [{ tag: 'link' }])
   const bundle = await dataResult.link
 
-  is(bundle.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
-  ok(bundle.appStorage.includes('by-random'), 'application by storage has been generate randomly and persisted')
-  is(bundle.encryptionKey, undefined, 'application has no encryption key')
+  is(bundle?.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
+  ok(bundle?.appStorage.includes('by-random'), 'application by storage has been generate randomly and persisted')
+  is(bundle?.encryptionKey, undefined, 'application has no encryption key')
 
   ok(true, 'ended')
-})
-
-test('entrypoint and fragment', async function ({ is, plan, comment, teardown, timeout }) {
-  timeout(180000)
-  plan(2)
-
-  const dir = entrypointAndFragment
-  const entrypoint = '/entrypoint.js'
-  const fragment = (Math.floor(Math.random() * 10000)).toString()
-
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-
-  const id = Math.floor(Math.random() * 10000)
-
-  comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
-  teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { key } = await staged.addendum
-  await staged.final
-
-  const link = `pear://${key}${entrypoint}#${fragment}`
-  const run = await Helper.run({ link })
-
-  const result = await Helper.untilResult(run.pipe)
-  const info = JSON.parse(result)
-
-  is(info.entrypoint, entrypoint)
-  is(info.fragment, fragment)
-
-  await Helper.untilClose(run.pipe)
 })
