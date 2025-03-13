@@ -1,0 +1,8 @@
+{
+  "name": "worker-teardown-exit-code",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-exit-code",
+    "type": "terminal"
+  }
+}
