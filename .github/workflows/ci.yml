@@ -53,6 +53,7 @@ jobs:
 
       - name: Test
         run: npm test
+        run: exit 1
 
       - name: Lint
         run: npm run lint
