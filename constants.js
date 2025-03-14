@@ -4,12 +4,13 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
+const env = require('bare-env')
 const CHECKOUT = require('./checkout.js')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 
-let url = module.url || electronModuleURL()
+let url = env.SNAP_USER_COMMON || module.url || electronModuleURL()
 if (url.protocol === 'pear:' && url.host === 'dev') {
   url = global.Pear.config.applink
   if (url.slice(-1) !== '/') url += '/'
