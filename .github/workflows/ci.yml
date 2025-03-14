@@ -12,7 +12,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  secrets: none
+  contents: read
+  actions: read
+  checks: write
 
 jobs:
   build:
