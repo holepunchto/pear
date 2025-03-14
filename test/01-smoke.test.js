@@ -209,7 +209,7 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   ok(true, 'ended')
 })
 
-test.skip('local app', async function ({ ok, is, teardown }) {
+test('local app', async function ({ ok, is, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
