@@ -11,6 +11,9 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+permissions:
+  secrets: none
+
 jobs:
   build:
     strategy:
