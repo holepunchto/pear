@@ -1,6 +1,4 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
-import child_process from 'child_process'
-console.log(child_process)
 const { versions, config, updates, wakeups, Window } = Pear
 console.log('link', config.link)
 console.log('linkData', config.linkData)
