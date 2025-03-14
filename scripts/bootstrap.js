@@ -30,8 +30,13 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+<<<<<<< HEAD
+const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'dhpc5npmqkansx38uh18h3uwpdp6g9ukozrqyc4irbhwriedyeho'
 const CORESTORE = cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
+=======
+const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'fgz638ebqypjj6xt6n61qf1qefiosjhkch6c9tt7xjm66nof5xuo'
+const CORESTORE = cmd.flags.externalCorestore && `/tmp/pear-archdump/${RUNTIMES_DRIVE_KEY}`
+>>>>>>> 59043ebe (bootstrap electronless runtimes)
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
