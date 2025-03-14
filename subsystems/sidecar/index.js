@@ -707,7 +707,7 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    link = pearLink.normalize(link.startsWith('pear://') ? link : pathToFileURL(link).href)
+    link = pearLink.normalize((link.startsWith('pear:') || link.startsWith('file:')) ? link : pathToFileURL(link).href)
 
     const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
 
