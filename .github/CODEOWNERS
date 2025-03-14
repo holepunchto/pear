@@ -1,0 +1,2 @@
+# Require approval only for GitHub Actions workflows
+.github/workflows/* @davidmarkclements @mafintosh
