@@ -52,7 +52,7 @@ jobs:
         run: npm i -g bare-runtime
 
       - name: Test
-        run: npm test && exit 1
+        run: npm test
 
       - name: Lint
         run: npm run lint
