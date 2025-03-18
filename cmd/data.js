@@ -8,7 +8,7 @@ const padding = '    '
 const placeholder = '[ No results ]\n'
 
 const appsOutput = (bundles) => {
-  if (!bundles.length) return placeholder
+  if (!bundles.length || !bundles[0]) return placeholder
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
