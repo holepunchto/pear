@@ -481,15 +481,6 @@ class Sidecar extends ReadyResource {
 
   appClosed (params, client) { return client.userData?.closed ?? false }
 
-  #endRPCStreams (client) {
-    // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
-    const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
-    return Promise.all(streams.map((stream) => new Promise((resolve) => {
-      stream.once('close', resolve)
-      stream.end()
-    })))
-  }
-
   closeClients (params = {}, originClient) {
     if (this.hasClients === false) return []
     const metadata = []
@@ -500,7 +491,7 @@ class Sidecar extends ReadyResource {
       }
       if (!client.userData || !client.userData.state) { // user & stateless ipc clients
         metadata.push({}) // count the client close
-        this.#endRPCStreams(client).then(() => client.close())
+        client.close()
         continue
       }
       if (seen.has(client.userData.state.id)) continue
@@ -509,7 +500,7 @@ class Sidecar extends ReadyResource {
       const { id, cmdArgs, cwd, dir, appling, env, options } = client.userData.state
       metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
       const tearingDown = isApp && client.userData.teardown()
-      if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
+      if (tearingDown === false) client.close()
     }
     return metadata
   }
@@ -532,7 +523,7 @@ class Sidecar extends ReadyResource {
           }
           client.once('close', resolve)
           const tearingDown = client.userData instanceof this.App && client.userData.teardown()
-          if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
+          if (tearingDown === false) client.close()
         })
       }
       if (appling) {
@@ -911,7 +902,7 @@ class Sidecar extends ReadyResource {
   async #shutdown (client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const tearingDown = client.userData instanceof this.App && client.userData.teardown()
-    if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
+    if (tearingDown === false) client.close()
 
     this.spindownms = 0
     const restarts = this.closeClients()
@@ -945,7 +936,6 @@ class Sidecar extends ReadyResource {
   async _close () {
     if (this.decomissioned) return
     this.decomissioned = true
-    for (const client of this.clients) await this.#endRPCStreams(client)
     // point of no return, death-march ensues
     this.deathClock()
     const closing = this.#close()
