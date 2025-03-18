@@ -103,7 +103,7 @@
     "pear-api": "^1.6.16",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
-    "pear-ipc": "^3.3.0",
+    "pear-ipc": "github:holepunchto/pear-ipc#end-rpc-streams",
     "pear-link": "^2.1.1",
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^1.2.0",
