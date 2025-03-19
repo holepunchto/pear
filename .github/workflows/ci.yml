@@ -11,6 +11,11 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
 jobs:
   build:
     strategy:

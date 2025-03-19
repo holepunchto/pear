@@ -33,7 +33,18 @@ on:
 run-name: Build ${{ inputs.channel }}
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block PR Builds
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "PRs may not trigger builds"
+            exit 1
+          fi
+
   build:
+    needs: check
     uses: holepunchto/actions/.github/workflows/keet-automation.yml@v1
     secrets: inherit
     with:
