@@ -2,11 +2,10 @@
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB } = require('../../../constants')
 
 module.exports = class Model {
-  constructor () {
-    this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
+  constructor (corestore) {
+    this.db = HyperDB.rocks(corestore.storage.rocks, dbSpec)
 
     this.lock = new DBLock({
       enter: () => {

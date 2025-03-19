@@ -74,7 +74,7 @@ class Sidecar extends ReadyResource {
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
 
-    this.model = new Model()
+    this.model = new Model(corestore.session())
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -926,8 +926,8 @@ class Sidecar extends ReadyResource {
       }
       await this.swarm.destroy()
     }
-    if (this.corestore) await this.corestore.close()
     await this.model.close()
+    if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
