@@ -82,7 +82,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   })
 
   if (bundle.entrypoint.endsWith('.html')) {
-    throw ERR_LEGACY('[ LEGACY ] No longer booting app from HTML entrypoints\n  Solution: pear://runtime/documentation/migration')
+    throw ERR_LEGACY('[ LEGACY ] No longer booting app from HTML entrypoints\n  Solution: pear run pear://runtime/documentation/migration')
   }
 
   Module.load(new URL(bundle.entrypoint), {
