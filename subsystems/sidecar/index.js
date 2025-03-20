@@ -584,7 +584,7 @@ class Sidecar extends ReadyResource {
     await sidecarClosed
 
     for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, detached: true, stdio: 'pipe' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
