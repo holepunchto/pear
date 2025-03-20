@@ -23,7 +23,7 @@ const swapPath = toPath(swapURL)
 const IPC_ID = 'pear'
 const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../../', swapURL)
 const PLATFORM_DIR = toPath(PLATFORM_URL)
-const PLATFORM_LOCK = toPath(new URL('corestores/platform/LOCK', PLATFORM_URL))
+const PLATFORM_LOCK = toPath(new URL('corestores/platform/db/LOCK', PLATFORM_URL))
 
 const DESKTOP_EXEC = isWindows
   ? 'pear-runtime-app/Pear Runtime.exe'
