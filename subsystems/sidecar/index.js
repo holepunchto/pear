@@ -588,9 +588,11 @@ class Sidecar extends ReadyResource {
         resolve(false)
         return
       }
-      const matches = [...this.apps].filter((app) => {
+      const matches = [...this.apps].filter(async (app) => {
         if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev
+        const appLink = link.substring(0, link.length - parsed.pathname.length)
+        const appStorage = storage || await this.model.getAppStorage(appLink)
+        return app.state.storage === appStorage && (appdev
           ? app.state.dir === appdev
           : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
         )
