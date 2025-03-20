@@ -5,15 +5,15 @@ const path = require('bare-path')
 const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const workerTeardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown')
-const workerTeardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-os-kill')
-const workerTeardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-exit-code')
+const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
+const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
+const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
 test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
-  const dir = workerTeardownDir
+  const dir = teardownDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -49,7 +49,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   timeout(180000)
   plan(5)
 
-  const dir = workerTeardownOsKillDir
+  const dir = teardownOsKillDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -88,7 +88,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   timeout(180000)
   plan(6)
 
-  const dir = workerTeardownExitCodeDir
+  const dir = teardownExitCodeDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

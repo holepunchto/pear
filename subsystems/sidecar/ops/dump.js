@@ -2,24 +2,24 @@
 const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
+const Hyperdrive = require('hyperdrive')
+const parseLink = require('pear-api/parse-link')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const parseLink = require('../../../lib/parse-link')
-const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
+const DriveMonitor = require('../lib/drive-monitor')
 
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, force }) {
+  async #op ({ link, dir, dryRun, checkout, only, force, prune = !only }) {
     const { session, sidecar } = this
     await sidecar.ready()
-
     if (dir !== '-') {
       try {
         const files = await fsp.readdir(dir)
         const empty = files.length === 0
-        if (empty === false && !force) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+        if (empty === false && !force) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
       } catch (err) {
         if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
       }
@@ -27,9 +27,8 @@ module.exports = class Dump extends Opstream {
 
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
-    const localFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
-      ? path.basename(parsed.pathname)
-      : null
+    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+
     const key = parsed.drive.key
     checkout = Number(checkout)
 
@@ -46,22 +45,26 @@ module.exports = class Dump extends Opstream {
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     }
-
+    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
     const bundle = new Bundle({
       corestore,
-      drive: isFileLink
-        ? new LocalDrive(localFile ? path.dirname(parsed.pathname) : parsed.pathname, { followLinks: true })
-        : drive,
+      drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
       key,
       checkout
     })
 
     await session.add(bundle)
 
-    if (sidecar.swarm && !isFileLink) bundle.join(sidecar.swarm)
+    if (sidecar.swarm && !isFileLink) {
+      bundle.join(sidecar.swarm)
+      const monitor = new DriveMonitor(bundle.drive)
+      this.on('end', () => monitor.destroy())
+      monitor.on('error', (err) => this.push({ tag: 'stats-error', data: { err } }))
+      monitor.on('data', (stats) => this.push({ tag: 'stats', data: stats }))
+    }
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
@@ -80,8 +83,10 @@ module.exports = class Dump extends Opstream {
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname
-    const pathname = !isFileLink && parsed.pathname === '/' ? '' : prefix
-    const entry = pathname === '' ? null : await src.entry(localFile || pathname)
+    const pathname = !isFileLink && parsed.pathname === '/'
+      ? ''
+      : (isFile ? path.basename(parsed.pathname) : prefix)
+    const entry = pathname === '' ? null : await src.entry(pathname)
     if (dir === '-') {
       if (entry !== null) {
         const value = await src.get(entry)
@@ -99,9 +104,13 @@ module.exports = class Dump extends Opstream {
     }
 
     const dst = new LocalDrive(dir)
-
-    const extraOpts = entry !== null ? { filter: (key) => key === prefix } : { prefix }
-    const mirror = src.mirror(dst, { dryRun, ...extraOpts })
+    let select = null
+    if (only) {
+      only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())
+      select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+    }
+    const extraOpts = entry === null ? { prefix, filter: select } : { filter: select || ((key) => key === prefix) }
+    const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
