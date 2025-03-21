@@ -106,7 +106,7 @@
     "paparam": "^1.6.0",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.0.0",
-    "pear-ipc": "^4.0.0",
+    "pear-ipc": "^4.0.1",
     "pear-link": "^2.1.1",
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^2.0.0",

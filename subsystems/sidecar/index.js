@@ -460,7 +460,7 @@ class Sidecar extends ReadyResource {
     if (!key) return false // ignore bad requests
     if (!storage) storage = State.storageFromLink(link)
 
-    const wokeup = await this.wakeup({ args: [link, storage, appdev, false] })
+    const wokeup = await this.wakeup({ args: [link, storage, appdev, false, null] })
 
     if (wokeup) return { wokeup, appling: null }
     const appling = (await this.applings.get(key.toString('hex'))) || null
@@ -577,34 +577,38 @@ class Sidecar extends ReadyResource {
   }
 
   wakeup (params = {}) {
-    const [link, storage, appdev = null, selfwake = true] = params.args
-    return new Promise((resolve) => {
-      if (this.hasClients === false) {
-        resolve(false)
-        return
-      }
-      const parsed = parseLink(link)
-      if (parsed.drive.key === null && appdev === null) {
-        resolve(false)
-        return
-      }
-      const matches = [...this.apps].filter((app) => {
-        if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev
-          ? app.state.dir === appdev
-          : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
-        )
+    const [link, storage, appdev = null, selfwake = true, startId] = params.args
+    const parsed = parseLink(link)
+    const appLink = link.substring(0, link.length - parsed.pathname.length)
+    return this.model.getAppStorage(appLink).then((appStorage) => {
+      return new Promise((resolve) => {
+        if (this.hasClients === false) {
+          resolve(false)
+          return
+        }
+        if (parsed.drive.key === null && appdev === null) {
+          resolve(false)
+          return
+        }
+        const matches = [...this.apps].filter((app) => {
+          if (!app || !app.state) return false
+          if (startId === app.startId) return false
+          return app.state.storage === (storage || appStorage) && (appdev
+            ? app.state.dir === appdev
+            : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
+          )
+        })
+
+        for (const app of matches) {
+          const pathname = parsed.pathname
+          const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+          const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
+          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
+        }
+
+        const min = selfwake ? 1 : 0
+        resolve(matches.length > min)
       })
-
-      for (const app of matches) {
-        const pathname = parsed.pathname
-        const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-        const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
-        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
-      }
-
-      const min = selfwake ? 1 : 0
-      resolve(matches.length > min)
     })
   }
 
