@@ -25,7 +25,7 @@ const parseLink = require('pear-api/parse-link')
 const rundef = require('pear-api/cmd/run')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT,
-  APPLINGS_PATH, SWAP, RUNTIME, DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
+  APPLINGS_PATH, SWAP, RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
@@ -88,7 +88,15 @@ class Sidecar extends ReadyResource {
     this.version = CHECKOUT
 
     this.updater = updater
-    if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    if (this.updater) {
+      this.updater.on('updating', ({ key, length }) => {
+        LOG.info('sidecar', key === this.version.key
+          ? `- Updating to length ${length}...`
+          : `- Switching to key ${key} with length ${length}...`
+        )
+      })
+      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    }
 
     this.#spindownCountdown()
 
@@ -570,7 +578,7 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { cwd, dir, appling, cmdArgs, env, options } of restarts) {
+    for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
       const opts = { cwd, env, detached: true, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
@@ -578,8 +586,8 @@ class Sidecar extends ReadyResource {
         else spawn(applingPath, opts).unref()
       } else {
         const TARGET_RUNTIME = this.updater === null
-          ? (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME)
-          : this.updater.swap + (options?.ui === null ? RUNTIME : DESKTOP_RUNTIME).slice(SWAP.length)
+          ? RUNTIME
+          : this.updater.swap + RUNTIME.slice(SWAP.length)
 
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
