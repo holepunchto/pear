@@ -630,9 +630,9 @@ class Sidecar extends ReadyResource {
 
         for (const app of matches) {
           const pathname = parsed.pathname
-          const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-          const fragment = parsed.hash ? parsed.hash.slice(1) : (State.isKeetInvite(segment) ? segment : null)
-          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
+          const fragment = parsed.hash ? parsed.hash.slice(1) : null
+          const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData })
         }
 
         const min = selfwake ? 1 : 0
