@@ -5,7 +5,7 @@ const dbSpec = require('../../../spec/db')
 
 module.exports = class Model {
   constructor (corestore) {
-    this.db = HyperDB.rocks(corestore.storage.rocks, dbSpec)
+    this.db = HyperDB.rocks(corestore.storage.rocks.session(), dbSpec)
 
     this.lock = new DBLock({
       enter: () => {
