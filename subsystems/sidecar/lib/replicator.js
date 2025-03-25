@@ -38,7 +38,6 @@ module.exports = class Replicator extends EventEmitter {
       return
     }
 
-    console.log('yo?')
     let called = false
     const fin = () => {
       if (called) return
@@ -49,7 +48,13 @@ module.exports = class Replicator extends EventEmitter {
     const topic = swarm.join(this.drive.discoveryKey, { server, client })
 
     this.fullySwarming = true
-    await topic.flushed()
+
+    try {
+      await topic.flushed()
+    } catch {
+      fin()
+      return
+    }
 
     // if good network join as server always
     if (!this.appling && (swarm.dht.port > 0 && swarm.dht.host)) await swarm.join(this.drive.discoveryKey, { client: true, server: true }).flushed()
