@@ -86,6 +86,10 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
+    for await ( const file of opts.ignore){
+      const exists = await dst.exists(file)
+      if (exists) await dst.del(file)
+    }
     const mirror = new Mirror(src, dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
