@@ -1,8 +1,6 @@
 'use strict'
 const { EventEmitter } = require('bare-events')
 
-const SEED_LINGER = 60 * 1000
-
 module.exports = class Replicator extends EventEmitter {
   constructor (drive, opts) {
     super()
