@@ -26,7 +26,7 @@ module.exports = class Replicator extends EventEmitter {
     swarm.leave(this.drive.discoveryKey)
   }
 
-  async _join (swarm, { announceSeeds, server, client }) {
+  async _join (swarm, { server, client }) {
     let done = noop
     try {
       await this.drive.ready()
