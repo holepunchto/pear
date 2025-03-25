@@ -27,7 +27,7 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    link = pearLink.root(link)
+    link = pearLink.origin(link)
     LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})`)
     const bundle = await this.db.get('@pear/bundle', { link })
     return bundle
@@ -39,7 +39,7 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
-    link = pearLink.root(link)
+    link = pearLink.origin(link)
     const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link, appStorage })})`)
     await tx.insert('@pear/bundle', { link, appStorage })
