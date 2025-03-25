@@ -8,7 +8,6 @@ module.exports = class Replicator extends EventEmitter {
     this.appling = !!(opts && opts.appling)
     this.swarm = null
     this.announcing = null
-    this.fullySwarming = false
   }
 
   join (swarm, opts) {
@@ -21,7 +20,6 @@ module.exports = class Replicator extends EventEmitter {
     this.swarm = null
     if (!this.announcing) return
     await this.announcing
-    this.fullySwarming = false
     this.announcing = null
     swarm.leave(this.drive.discoveryKey)
   }
@@ -44,8 +42,6 @@ module.exports = class Replicator extends EventEmitter {
     }
 
     const topic = swarm.join(this.drive.discoveryKey, { server, client })
-
-    this.fullySwarming = true
 
     try {
       await topic.flushed()
