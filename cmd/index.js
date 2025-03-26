@@ -78,6 +78,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--json', 'Newline delimited JSON output'),
     flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--purge', 'Remove ignore files if present in previous stage'),
     runners.stage(ipc)
   )
 

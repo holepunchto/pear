@@ -15,7 +15,7 @@ const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', purge, ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -86,17 +86,18 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    // remove ignore files
-    for await (const ignore of opts.ignore){
-      const exists = await dst.exists(ignore)
-      if (exists) await dst.del(ignore)
-      else {
-        const stream = await dst.list(ignore + '/')
-        stream.on('data', async (data) =>{
-          const file =  data.key
-          const exists = await dst.exists(file)
-          if (exists) await dst.del(file)
-        })
+    if (!dryRun && purge){
+      for await (const ignore of opts.ignore){
+        const exists = await dst.exists(ignore)
+        if (exists) await dst.del(ignore)
+        else {
+          const stream = await dst.list(ignore + '/')
+          stream.on('data', async (data) =>{
+            const file =  data.key
+            const exists = await dst.exists(file)
+            if (exists) await dst.del(file)
+          })
+        }
       }
     }
     const mirror = new Mirror(src, dst, opts)
