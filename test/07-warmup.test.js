@@ -210,7 +210,7 @@ test('stage with purge', async function ({ ok, is, plan, teardown }) {
 
   let dump = await helper.dump({ link, dir: dumpDir, force: true })
   teardown(() => Helper.teardownStream(dump))
-  
+
   let untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
