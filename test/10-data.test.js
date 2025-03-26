@@ -8,6 +8,7 @@ const deriveEncryptionKey = require('pw-to-ek')
 const { SALT } = require('../constants')
 
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
+const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
 test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
@@ -70,4 +71,39 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
 
   await Helper.untilClose(pipe)
   ok(true, 'ended')
+})
+
+test('no duplicated bundle', async function ({ is, comment, teardown }) {
+  const dir = versionsDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const runA = await Helper.run({ link: `pear://${key}` })
+  await Helper.untilClose(runA.pipe)
+
+  const runB = await Helper.run({ link: `pear://${key}/#fragment` })
+  await Helper.untilClose(runB.pipe)
+
+  const runC = await Helper.run({ link: `pear://${key}/xeb7mugj8sbaytkf5qqu9z1snegtibqneysssdqu35em4zw3ou9wcmz8ha4er6e759tams9eeebo6j6ueifyb4oaeohnijbyxfzessxjneaqs8ux` })
+  await Helper.untilClose(runC.pipe)
+
+  comment('pear data apps')
+  const data = await helper.data({ resource: 'apps' })
+  const result = await Helper.pick(data, [{ tag: 'apps' }])
+  const bundles = await result.apps
+
+  const persistedBundles = bundles.filter(e => e.link.startsWith(`pear://${key}`))
+  is(persistedBundles.length, 1, 'single bundle persisted')
+  is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
 })
