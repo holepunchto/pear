@@ -4,14 +4,16 @@ const { outputter, ansi } = require('./iface')
 const { ERR_INVALID_INPUT } = require('../errors')
 
 const padding = '    '
+const placeholder = '[ No results ]\n'
 
 const appsOutput = (bundles) => {
+  if (!bundles.length || !bundles[0]) return placeholder
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
-    out += `${padding}appStorage: ${ansi.dim(bundle.appStorage)}\n`
+    out += `${padding}storage: ${ansi.dim(bundle.appStorage)}\n`
     if (bundle.encryptionKey) {
-      out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
+      out += `${padding}encryption: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
     if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
     out += '\n'
@@ -20,6 +22,7 @@ const appsOutput = (bundles) => {
 }
 
 const dhtOutput = (nodes) => {
+  if (!nodes.length) return placeholder
   let out = ''
   for (const node of nodes) {
     out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
@@ -28,6 +31,7 @@ const dhtOutput = (nodes) => {
 }
 
 const gcOutput = (records) => {
+  if (!records.length) return placeholder
   let out = ''
   for (const gc of records) {
     out += `- ${ansi.bold(gc.path)}\n`
