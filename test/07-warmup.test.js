@@ -13,6 +13,7 @@ const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
 const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
 const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-without-main')
 const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
+const appWithPurge = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -167,4 +168,60 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/app.js'))
   ok(stagingFiles.includes('/index.html'))
+})
+
+test('stage with purge', async function ({ ok, is, plan, teardown }) {
+  const dir = appWithPurge
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  // normal stage
+  let id = Math.floor(Math.random() * 10000)
+
+  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  let staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  is(stagingFiles.length, 8)
+  ok(stagingFiles.includes('/package.json'))
+  ok(stagingFiles.includes('/dep.js'))
+  ok(stagingFiles.includes('/app.js'))
+  ok(stagingFiles.includes('/index.html'))
+  ok(stagingFiles.includes('/purge-file.js'))
+  ok(stagingFiles.includes('/purge-dir1/purge-dir1-file.js'))
+  ok(stagingFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'))
+  ok(stagingFiles.includes('/purge-dir2/purge-dir2-file.js'))
+
+  // now purge
+  id = Math.floor(Math.random() * 10000)
+
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: true })
+  teardown(() => Helper.teardownStream(staging))
+
+  const remainingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      remainingFiles.push(data.data.message)
+    }
+  })
+
+  staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  is(remainingFiles.length, 4)
+  ok(remainingFiles.includes('/package.json'))
+  ok(remainingFiles.includes('/dep.js'))
+  ok(remainingFiles.includes('/app.js'))
+  ok(remainingFiles.includes('/index.html'))
 })

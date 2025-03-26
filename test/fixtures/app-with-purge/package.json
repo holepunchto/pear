@@ -1,0 +1,7 @@
+{
+  "name": "app-with-purge",
+  "pear": {
+    "name": "app-with-purge",
+    "type": "desktop"
+  }
+}
