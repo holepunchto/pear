@@ -3,8 +3,8 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
-const SharedState = require('../../state')
-const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('../../errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('pear-api/errors')
+const SharedState = require('pear-api/state')
 
 module.exports = class State extends SharedState {
   initialized = false
@@ -61,7 +61,7 @@ module.exports = class State extends SharedState {
     if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${this.pkgPath}" not found. Pear project must have a package.json`)
 
     const { dependencies } = this.manifest
-    const options = this.manifest.pear || this.manifest.holepunch || {}
+    const options = this.manifest.pear || {}
     if (!name) name = options.name || this.manifest.name
     const { channel, release } = bundle
     const { main = 'index.html' } = this.manifest

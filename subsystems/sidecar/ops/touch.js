@@ -1,9 +1,9 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_PROJECT_DIR } = require('../../../errors')
-const State = require('../state')
-const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
+const { ERR_INVALID_PROJECT_DIR } = require('pear-api/errors')
+const Opstream = require('../lib/opstream')
+const State = require('../state')
 
 module.exports = class Touch extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -12,7 +12,7 @@ module.exports = class Touch extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
     const state = new State({ dir, flags: {} })
-    if (!state.manifest) throw new ERR_INVALID_PROJECT_DIR(`"${state.pkgPath}" not found. Pear project must have a package.json`)
+    if (!state.manifest) throw ERR_INVALID_PROJECT_DIR(`"${state.pkgPath}" not found. Pear project must have a package.json`)
     const corestore = sidecar._getCorestore(state.manifest.name, channel)
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)

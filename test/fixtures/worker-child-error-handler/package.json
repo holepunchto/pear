@@ -1,6 +1,0 @@
-{
-  "name": "worker-child-error-handler",
-  "main": "index.js",
-  "type": "module",
-  "pear": {}
-}
