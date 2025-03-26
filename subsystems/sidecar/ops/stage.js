@@ -86,17 +86,11 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    if (!dryRun && purge) {
-      for await (const ignore of opts.ignore) {
-        const exists = await dst.exists(ignore)
-        if (exists) await dst.del(ignore)
-        else {
-          const stream = await dst.list(ignore + '/')
-          stream.on('data', async (data) => {
-            const file = data.key
-            const exists = await dst.exists(file)
-            if (exists) await dst.del(file)
-          })
+    if (purge) {
+      for await (const entry of dst) {
+        if (ignore.some(e => entry.key.startsWith('/' + e))) {
+          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+          if (!dryRun) await dst.del(entry.key)
         }
       }
     }
