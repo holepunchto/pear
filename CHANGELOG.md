@@ -1,5 +1,34 @@
 # Pear Runtime Changelog
 
+## v1.12
+
+### Fixes
+
+* Tray Icon - Corrected tray icon size
+* Tray Icon (Mac) - Set tray icon as image template
+* Desktop - Fixed application wake-up
+* Windows - Platform add-ons now linked with vcruntime 
+
+### Improvements
+
+* Internal - Migrated platform Corestore to Hypercore 11
+* CLI - Improved "Unknown Argument" error message
+* Bare - Update Bare runtime to v1.16.2
+* Internal - single storage for platform database and Corestore
+
+## v1.11.2
+
+### Fixes
+
+* Windows - Updated native dependencies
+* Internal - Updated sloppy-module-parser to version 2.2.3
+
+## v1.11.1
+
+### Fixes
+
+* Windows - Fixed VCRUNTIME error
+
 ## v1.11.0
 
 ### Features
