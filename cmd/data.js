@@ -8,13 +8,13 @@ const padding = '    '
 const placeholder = '[ No results ]\n'
 
 const appsOutput = (bundles) => {
-  if (!bundles.length) return placeholder
+  if (!bundles.length || !bundles[0]) return placeholder
   let out = ''
   for (const bundle of bundles) {
     out += `- ${ansi.bold(bundle.link)}\n`
-    out += `${padding}appStorage: ${ansi.dim(bundle.appStorage)}\n`
+    out += `${padding}storage: ${ansi.dim(bundle.appStorage)}\n`
     if (bundle.encryptionKey) {
-      out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
+      out += `${padding}encryption: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
     if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
     out += '\n'
