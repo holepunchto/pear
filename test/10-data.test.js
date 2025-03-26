@@ -125,7 +125,8 @@ test('no duplicated bundle local app', async function ({ is, comment, teardown }
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
 
-  const persistedBundles = bundles.filter(e => e.link.startsWith(`file://${versionsDir}`))
+  const key = isWindows ? `file:///${versionsDir.replaceAll('\\', '/')}` : `file://${versionsDir}`
+  const persistedBundles = bundles.filter(e => e.link.startsWith(key))
   is(persistedBundles.length, 1, 'single bundle persisted')
-  is(persistedBundles[0].link, isWindows ? 'file:///{versionsDir}' : `file://${versionsDir}`, 'bundle key is origin key')
+  is(persistedBundles[0].link, key, 'bundle key is origin key')
 })
