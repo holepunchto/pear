@@ -3,6 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
+const { isWindows } = require('which-runtime')
 const Helper = require('./helper')
 const deriveEncryptionKey = require('pw-to-ek')
 const { SALT } = require('../constants')
@@ -98,7 +99,6 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   const runC = await Helper.run({ link: `pear://${key}/xeb7mugj8sbaytkf5qqu9z1snegtibqneysssdqu35em4zw3ou9wcmz8ha4er6e759tams9eeebo6j6ueifyb4oaeohnijbyxfzessxjneaqs8ux` })
   await Helper.untilClose(runC.pipe)
 
-  comment('pear data apps')
   const data = await helper.data({ resource: 'apps' })
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
@@ -106,4 +106,26 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   const persistedBundles = bundles.filter(e => e.link.startsWith(`pear://${key}`))
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
+})
+
+test('no duplicated bundle local app', async function ({ is, comment, teardown }) {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  comment(`running ${versionsDir}`)
+  const runA = await Helper.run({ link: versionsDir })
+  await Helper.untilClose(runA.pipe)
+
+  comment(`running ${versionsDir}#fragment`)
+  const runB = await Helper.run({ link: versionsDir + '#fragment' })
+  await Helper.untilClose(runB.pipe)
+
+  const data = await helper.data({ resource: 'apps' })
+  const result = await Helper.pick(data, [{ tag: 'apps' }])
+  const bundles = await result.apps
+
+  const persistedBundles = bundles.filter(e => e.link.startsWith(`file://${versionsDir}`))
+  is(persistedBundles.length, 1, 'single bundle persisted')
+  is(persistedBundles[0].link, isWindows ? 'file:///{versionsDir}' : `file://${versionsDir}`, 'bundle key is origin key')
 })
