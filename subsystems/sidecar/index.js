@@ -577,7 +577,7 @@ class Sidecar extends ReadyResource {
     // shutdown successful, reset death clock
     this.deathClock()
 
-    restarts = restarts.filter(({ isApp, cmdArgs }) => isApp && !cmdArgs.includes('--rti'))
+    restarts = restarts.filter(({ isApp }) => isApp)
     if (restarts.length === 0) return
     LOG.info('sidecar', 'Restarting', restarts.length, 'apps')
 
