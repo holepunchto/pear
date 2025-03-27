@@ -13,7 +13,7 @@ const appsOutput = (bundles) => {
     out += `- ${ansi.bold(bundle.link)}\n`
     out += `${padding}storage: ${ansi.dim(bundle.appStorage)}\n`
     if (bundle.encryptionKey) {
-      out += `${padding}encryption: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
+      out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
     if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
     out += '\n'
