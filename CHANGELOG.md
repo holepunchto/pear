@@ -16,6 +16,10 @@
 * Bare - Update Bare runtime to v1.16.2
 * Internal - single storage for platform database and Corestore
 
+### Features
+
+* CLI - Removed `--seeders` flag from `pear seed` command
+
 ## v1.11.2
 
 ### Fixes
