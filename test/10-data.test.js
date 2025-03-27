@@ -108,6 +108,34 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
 })
 
+test('bundle persisted with z32 encoded key', async function ({ is, comment, teardown }) {
+  const dir = versionsDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const run = await Helper.run({ link: `pear://${hypercoreid.decode(key).toString('hex')}` })
+  await Helper.untilClose(run.pipe)
+
+  const data = await helper.data({ resource: 'apps' })
+  const result = await Helper.pick(data, [{ tag: 'apps' }])
+  const bundles = await result.apps
+
+  const persistedBundles = bundles.filter(e => e.link.startsWith(`pear://${key}`))
+  is(persistedBundles.length, 1, 'bundle persisted')
+  is(persistedBundles[0].link, `pear://${key}`, 'encoded key persisted')
+})
+
 test('no duplicated bundle local app', async function ({ is, comment, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
