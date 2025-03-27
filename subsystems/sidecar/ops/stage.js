@@ -86,12 +86,10 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    if (!dryRun) {
-      for await (const entry of dst) {
-        if (ignore.some(e => entry.key.startsWith('/' + e))) {
-          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
-          await dst.del(entry.key)
-        }
+    for await (const entry of dst) {
+      if (ignore.some(e => entry.key.startsWith('/' + e))) {
+        this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+        if (!dryRun) await dst.del(entry.key)
       }
     }
     const mirror = new Mirror(src, dst, opts)

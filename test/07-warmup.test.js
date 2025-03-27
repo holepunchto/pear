@@ -171,7 +171,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/index.html'))
 })
 
-test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
+test('stage with new ignore', async function ({ ok, is, plan, comment, teardown }) {
   const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
   const dir = appWithPurge
 
@@ -179,7 +179,7 @@ test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  // normal stage
+  comment('stage')
   const id = Math.floor(Math.random() * 10000)
 
   let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -203,7 +203,7 @@ test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should exist')
   ok(stagingFiles.includes('/purge-dir2/purge-dir2-file.js'), 'purge-dir2/purge-dir2-file.js should exist')
 
-  // dump
+  comment('dumping...')
   const { key } = await staged.addendum
   const link = `pear://${key}`
   const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
@@ -221,23 +221,23 @@ test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
   ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'dump should have purge-dir1/purge-subdir/purge-subdir-file.js')
   ok(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'dump should have purge-dir2/purge-dir2-file.js')
 
-  // check dry-run doesnt purge
+  comment('stage with new ignore dry-run')
   staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: true, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
   teardown(() => Helper.teardownStream(staging))
 
-  const stagedFiles = []
+  let purgedFiles
   staging.on('data', async (data) => {
-    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
-      stagedFiles.push(data.data.message)
+    if (data?.tag === 'summary') {
+      purgedFiles = data.data.remove
     }
   })
 
   staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
-  is(stagedFiles.length, 0, 'dry-run ignore should remove 0 files')
+  is(purgedFiles, 0, 'dry-run ignore should NOT remove files')
 
-  // now purge
+  comment('stage with new ignore')
   staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
   teardown(() => Helper.teardownStream(staging))
 
@@ -257,7 +257,7 @@ test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
   ok(removedFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should be purged')
   ok(removedFiles.includes('/purge-dir2/purge-dir2-file.js'), 'purge-dir2/purge-dir2-file.js should be purged')
 
-  // dump again
+  comment('dumping...')
   dump = await helper.dump({ link, dir: dumpDir, force: true })
   teardown(() => Helper.teardownStream(dump))
   untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
