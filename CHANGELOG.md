@@ -14,7 +14,8 @@
 * Internal - Migrated platform Corestore to Hypercore 11
 * CLI - Improved "Unknown Argument" error message
 * Bare - Update Bare runtime to v1.16.2
-* Internal - single storage for platform database and Corestore
+* Internal - Single storage for platform database and Corestore
+* Internal - Fixed internal database keys duplication
 
 ### Features
 
