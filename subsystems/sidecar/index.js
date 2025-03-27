@@ -275,6 +275,7 @@ class Sidecar extends ReadyResource {
         this.warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id })
         this.reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id })
         this.startId = startId
+        this.clients = new Set()
       }
 
       get closed () { return this.session.closed }
@@ -342,7 +343,11 @@ class Sidecar extends ReadyResource {
   async identify (params, client) {
     if (params.startId) {
       const starting = this.running.get(params.startId)
-      if (starting) client.userData = starting.client.userData
+      if (starting) {
+        client.userData = starting.client.userData
+        client.userData.clients.add(client)
+        if (params.startWait) await starting.running
+      }
       else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
@@ -692,6 +697,7 @@ class Sidecar extends ReadyResource {
   async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
+    app.clients.add(client)
     const LOG_RUN_LINK = ['run', link]
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
     LOG.info(LOG_RUN_LINK, 'ensuring sidecar ready')
@@ -706,7 +712,7 @@ class Sidecar extends ReadyResource {
     if (key !== null && !flags.trusted) {
       const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
       if (!trusted) {
-        const state = new State({ id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
+        const state = new State({ startId, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
         app.state = state // needs to setup app state for decal trust dialog restart
         const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
         app.report({ err })
@@ -722,7 +728,7 @@ class Sidecar extends ReadyResource {
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: DHT_BOOTSTRAP }
     await this.model.setDhtNodes(dht.nodes)
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
+    const state = new State({ startId, id, dht, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')

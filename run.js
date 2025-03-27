@@ -59,9 +59,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
   }
 
-  const state = new State({ flags, link, dir, cmdArgs, cwd })
-
-  state.update({ id, startId })
+  const state = new State({ startId, id, flags, link, dir, cmdArgs, cwd })
 
   if (state.error) throw state.error
 
