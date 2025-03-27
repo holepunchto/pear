@@ -564,11 +564,6 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        const rtiIndex = cmd?.indices?.flags?.rti
-        if (rtiIndex !== undefined) cmdArgs.splice(rtiIndex, cmdArgs[rtiIndex].includes('=') ? 1 : 2)
-
-        cmdArgs[0] = 'run'
-
         spawn(RUNTIME, cmdArgs, opts).unref()
       }
 
