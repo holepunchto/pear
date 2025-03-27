@@ -2,7 +2,6 @@
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
-const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
 const Replicator = require('./replicator')
@@ -222,11 +221,10 @@ module.exports = class Bundle {
     return promise
   }
 
-  async join (swarm, { seeders, server = false, client = true } = {}) {
+  async join (swarm, { server = false, client = true } = {}) {
     if (this.announcing) return this.announcing
-    const announceSeeds = seeders ? seeders.split(',').map((s) => hypercoreid.decode(s)) : null
     this.swarm = swarm
-    this.announcing = this.replicator.join(swarm, { announceSeeds, server, client })
+    this.announcing = this.replicator.join(swarm, { server, client })
     this.announcing.then(() => { this.leaving = null })
     this.announcing.catch(err => this.fatal(err))
     return this.announcing

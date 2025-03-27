@@ -24,7 +24,7 @@ const output = outputter('seed', {
 })
 
 module.exports = (ipc) => async function seed (cmd) {
-  const { json, verbose, seeders, ask } = cmd.flags
+  const { json, verbose, ask } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const isKey = parseLink(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
@@ -36,5 +36,5 @@ module.exports = (ipc) => async function seed (cmd) {
   }
   const id = Bare.pid
 
-  await output(json, ipc.seed({ id, name, channel, link, verbose, seeders, dir, cmdArgs: Bare.argv.slice(1) }), { ask }, ipc)
+  await output(json, ipc.seed({ id, name, channel, link, verbose, dir, cmdArgs: Bare.argv.slice(1) }), { ask }, ipc)
 }
