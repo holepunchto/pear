@@ -7,7 +7,7 @@ module.exports = class Data extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ resource, secrets, link }) {
+  async #op ({ resource, secrets, link, preset }) {
     if (resource === 'apps') {
       let bundles = await this.sidecar.model.allBundles()
       if (!secrets) bundles = bundles.map(({ encryptionKey, ...rest }) => rest)
@@ -29,6 +29,12 @@ module.exports = class Data extends Opstream {
     if (resource === 'gc') {
       const records = await this.sidecar.model.allGc()
       this.push({ tag: 'gc', data: records })
+    }
+
+    if (resource === 'presets') {
+      const record = await this.sidecar.model.updateAppPreset(link, preset)
+      console.log('!!!!', record)
+      this.push({ tag: 'presets', data: record })
     }
   }
 }
