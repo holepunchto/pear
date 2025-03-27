@@ -15,7 +15,7 @@ const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', purge, ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -86,11 +86,11 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    if (purge) {
+    if (!dryRun) {
       for await (const entry of dst) {
         if (ignore.some(e => entry.key.startsWith('/' + e))) {
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
-          if (!dryRun) await dst.del(entry.key)
+          await dst.del(entry.key)
         }
       }
     }

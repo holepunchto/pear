@@ -171,7 +171,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/index.html'))
 })
 
-test('stage with purge', async function ({ ok, is, plan, teardown }) {
+test('stage with new ignore', async function ({ ok, is, plan, teardown }) {
   const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
   const dir = appWithPurge
 
@@ -203,8 +203,26 @@ test('stage with purge', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should exist')
   ok(stagingFiles.includes('/purge-dir2/purge-dir2-file.js'), 'purge-dir2/purge-dir2-file.js should exist')
 
-  // check ignore doesnt purge
-  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: false })
+  // dump
+  const { key } = await staged.addendum
+  const link = `pear://${key}`
+  const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
+
+  let dump = await helper.dump({ link, dir: dumpDir, force: true })
+  teardown(() => Helper.teardownStream(dump))
+
+  let untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+  await untilDump.complete
+
+  ok(await exists(path.join(dumpDir, 'package.json')), 'dump should have package.json')
+  ok(await exists(path.join(dumpDir, 'index.js')), 'dump should have index.js')
+  ok(await exists(path.join(dumpDir, 'purge-file.js')), 'dump should have purge-file.js')
+  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'dump should have purge-dir1/purge-dir1-file.js')
+  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'dump should have purge-dir1/purge-subdir/purge-subdir-file.js')
+  ok(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'dump should have purge-dir2/purge-dir2-file.js')
+
+  // check dry-run doesnt purge
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: true, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
@@ -217,28 +235,10 @@ test('stage with purge', async function ({ ok, is, plan, teardown }) {
   staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
-  is(stagedFiles.length, 0, 'should remove 0 files')
-
-  // dump
-  const { key } = await staged.addendum
-  const link = `pear://${key}`
-  const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
-
-  let dump = await helper.dump({ link, dir: dumpDir, force: true })
-  teardown(() => Helper.teardownStream(dump))
-
-  let untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
-  await untilDump.complete
-
-  ok(await exists(path.join(dumpDir, 'package.json')), 'package.json should exist')
-  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
-  ok(await exists(path.join(dumpDir, 'purge-file.js')), 'purge-file.js should exist')
-  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'purge-dir1/purge-dir1-file.js should exist')
-  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'purge-dir1/purge-subdir/purge-subdir-file.js should exist')
-  ok(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'purge-dir2/purge-dir2-file.js should exist')
+  is(stagedFiles.length, 0, 'dry-run ignore should remove 0 files')
 
   // now purge
-  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: true })
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
   teardown(() => Helper.teardownStream(staging))
 
   const removedFiles = []
@@ -251,7 +251,7 @@ test('stage with purge', async function ({ ok, is, plan, teardown }) {
   staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
-  is(removedFiles.length, 4, 'should remove 4 files')
+  is(removedFiles.length, 4, 'adding ignore without dry-run should purge 4 files')
   ok(removedFiles.includes('/purge-file.js'), 'purge-file.js should be purged')
   ok(removedFiles.includes('/purge-dir1/purge-dir1-file.js'), 'purge-dir1/purge-dir1-file.js should be purged')
   ok(removedFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should be purged')
@@ -263,10 +263,10 @@ test('stage with purge', async function ({ ok, is, plan, teardown }) {
   untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
-  ok(await exists(path.join(dumpDir, 'package.json')), 'package.json should exist')
-  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
-  ok(!await exists(path.join(dumpDir, 'purge-file.js')), 'purge-file.js should NOT exist')
-  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'purge-dir1/purge-dir1-file.js should NOT exist')
-  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'purge-dir1/purge-subdir/purge-subdir-file.js should NOT exist')
-  ok(!await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'purge-dir2/purge-dir2-file.js should NOT exist')
+  ok(await exists(path.join(dumpDir, 'package.json')), 'dump should have package.json')
+  ok(await exists(path.join(dumpDir, 'index.js')), 'dump should have index.js')
+  ok(!await exists(path.join(dumpDir, 'purge-file.js')), 'dump should NOT have purge-file.js')
+  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'dump should NOT have purge-dir1/purge-dir1-file.js')
+  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'dump should NOT have purge-dir1/purge-subdir/purge-subdir-file.js')
+  ok(!await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'dump should NOT have purge-dir2/purge-dir2-file.js')
 })
