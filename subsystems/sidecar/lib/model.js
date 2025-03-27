@@ -77,6 +77,22 @@ module.exports = class Model {
     return result
   }
 
+  async updateAppPreset (link, preset) {
+    let result
+    const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
+    const bundle = await tx.get('@pear/bundle', { link })
+    if (!bundle) {
+      result = null
+    } else {
+      const updatedBundle = { ...bundle, preset: { run: preset } }
+      await tx.insert('@pear/bundle', updatedBundle)
+      result = updatedBundle
+    }
+    await this.lock.exit()
+    return result
+  }
+
   async getDhtNodes () {
     LOG.trace('db', 'GET (\'@pear/dht\')[nodes]')
     return (await this.db.get('@pear/dht'))?.nodes || []

@@ -186,6 +186,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const presets = command(
+    'presets',
+    summary('Define default configuration'),
+    arg('<link>', 'Target application link'),
+    sloppy({ flags: true }),
+    (cmd) => runners.data(ipc).presets(cmd)
+  )
+
   const data = command(
     'data',
     summary('View database contents'),
@@ -193,6 +201,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
+    presets,
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
