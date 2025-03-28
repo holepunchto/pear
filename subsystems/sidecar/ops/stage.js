@@ -15,7 +15,7 @@ const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -56,8 +56,9 @@ module.exports = class Stage extends Opstream {
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const type = state.manifest.pear?.type || 'desktop'
     const isTerminal = type === 'terminal'
-    if (state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
-    else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
+    if (!ignore && state.manifest.pear?.stage?.ignore) ignore = state.manifest.pear.stage?.ignore
+    else if (!ignore) ignore = '.git,.github,.DS_Store'
+    ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
@@ -86,6 +87,15 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
+    if (!purge && state.manifest.pear?.stage?.purge) purge = state.manifest.pear?.stage?.purge
+    if (purge) {
+      for await (const entry of dst) {
+        if (ignore.some(e => entry.key.startsWith('/' + e))) {
+          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+          if (!dryRun) await dst.del(entry.key)
+        }
+      }
+    }
     const mirror = new Mirror(src, dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
