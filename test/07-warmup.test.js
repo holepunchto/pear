@@ -15,6 +15,7 @@ const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-pre
 const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-without-main')
 const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
 const appWithPurge = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge')
+const appWithPurgeConfig = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge-config')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -171,7 +172,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/index.html'))
 })
 
-test('stage with new ignore', async function ({ ok, is, plan, comment, teardown }) {
+test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
   const dir = appWithPurge
 
@@ -179,7 +180,7 @@ test('stage with new ignore', async function ({ ok, is, plan, comment, teardown 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  comment('stage')
+  comment('normal stage')
   const id = Math.floor(Math.random() * 10000)
 
   let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -203,7 +204,39 @@ test('stage with new ignore', async function ({ ok, is, plan, comment, teardown 
   ok(stagingFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should exist')
   ok(stagingFiles.includes('/purge-dir2/purge-dir2-file.js'), 'purge-dir2/purge-dir2-file.js should exist')
 
-  comment('dumping...')
+  comment('check dry-run purge doesnt purge')
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: true, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: true })
+  teardown(() => Helper.teardownStream(staging))
+
+  let removed
+  staging.on('data', async (data) => {
+    if (data?.tag === 'summary') {
+      removed = data.data.remove
+    }
+  })
+
+  staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  await staged.final
+
+  is(removed, 0, 'dry-run purge should NOT remove files')
+
+  comment('check ignore doesnt purge')
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
+      stagedFiles.push(data.data.message)
+    }
+  })
+
+  staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  await staged.final
+
+  is(stagedFiles.length, 0, 'ignore should NOT purge files')
+
+  comment('check dump')
   const { key } = await staged.addendum
   const link = `pear://${key}`
   const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
@@ -214,31 +247,15 @@ test('stage with new ignore', async function ({ ok, is, plan, comment, teardown 
   let untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
-  ok(await exists(path.join(dumpDir, 'package.json')), 'dump should have package.json')
-  ok(await exists(path.join(dumpDir, 'index.js')), 'dump should have index.js')
-  ok(await exists(path.join(dumpDir, 'purge-file.js')), 'dump should have purge-file.js')
-  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'dump should have purge-dir1/purge-dir1-file.js')
-  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'dump should have purge-dir1/purge-subdir/purge-subdir-file.js')
-  ok(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'dump should have purge-dir2/purge-dir2-file.js')
+  ok(await exists(path.join(dumpDir, 'package.json')), 'package.json should exist')
+  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
+  ok(await exists(path.join(dumpDir, 'purge-file.js')), 'purge-file.js should exist')
+  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'purge-dir1/purge-dir1-file.js should exist')
+  ok(await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'purge-dir1/purge-subdir/purge-subdir-file.js should exist')
+  ok(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'purge-dir2/purge-dir2-file.js should exist')
 
-  comment('stage with new ignore dry-run')
-  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: true, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
-  teardown(() => Helper.teardownStream(staging))
-
-  let purgedFiles
-  staging.on('data', async (data) => {
-    if (data?.tag === 'summary') {
-      purgedFiles = data.data.remove
-    }
-  })
-
-  staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.final
-
-  is(purgedFiles, 0, 'dry-run ignore should NOT remove files')
-
-  comment('stage with new ignore')
-  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2' })
+  comment('purge')
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'purge-file.js,purge-dir1,purge-dir2', purge: true })
   teardown(() => Helper.teardownStream(staging))
 
   const removedFiles = []
@@ -257,16 +274,63 @@ test('stage with new ignore', async function ({ ok, is, plan, comment, teardown 
   ok(removedFiles.includes('/purge-dir1/purge-subdir/purge-subdir-file.js'), 'purge-dir1/purge-subdir/purge-subdir-file.js should be purged')
   ok(removedFiles.includes('/purge-dir2/purge-dir2-file.js'), 'purge-dir2/purge-dir2-file.js should be purged')
 
-  comment('dumping...')
+  comment('check dump after purge')
   dump = await helper.dump({ link, dir: dumpDir, force: true })
   teardown(() => Helper.teardownStream(dump))
   untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
-  ok(await exists(path.join(dumpDir, 'package.json')), 'dump should have package.json')
-  ok(await exists(path.join(dumpDir, 'index.js')), 'dump should have index.js')
-  ok(!await exists(path.join(dumpDir, 'purge-file.js')), 'dump should NOT have purge-file.js')
-  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'dump should NOT have purge-dir1/purge-dir1-file.js')
-  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'dump should NOT have purge-dir1/purge-subdir/purge-subdir-file.js')
-  ok(!await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'dump should NOT have purge-dir2/purge-dir2-file.js')
+  ok(await exists(path.join(dumpDir, 'package.json')), 'package.json should exist')
+  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
+  ok(!await exists(path.join(dumpDir, 'purge-file.js')), 'purge-file.js should NOT exist')
+  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')), 'purge-dir1/purge-dir1-file.js should NOT exist')
+  ok(!await exists(path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')), 'purge-dir1/purge-subdir/purge-subdir-file.js should NOT exist')
+  ok(!await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')), 'purge-dir2/purge-dir2-file.js should NOT exist')
+})
+
+test('stage with purge config', async function ({ ok, is, plan, comment, teardown }) {
+  const dir = appWithPurgeConfig
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  comment('normal stage')
+  const id = Math.floor(Math.random() * 10000)
+
+  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  let staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  await staged.final
+
+  is(stagingFiles.length, 4, 'should stage 4 files')
+  ok(stagingFiles.includes('/package.json'), 'package.json should exists')
+  ok(stagingFiles.includes('/index.js'), 'index.js should exist')
+  ok(stagingFiles.includes('/not-purged.js'), 'not-purged.js should exist')
+  ok(stagingFiles.includes('/config-purge-file.js'), 'config-purge-file.js should exist')
+
+  comment('purge')
+  staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: 'ignored-from-start.js,config-purge-file.js,.git,.github,.DS_Store' })
+  teardown(() => Helper.teardownStream(staging))
+
+  const removedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
+      removedFiles.push(data.data.message)
+    }
+  })
+
+  staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  await staged.final
+
+  is(removedFiles.length, 1, 'should remove only 1 files')
+  ok(removedFiles.includes('/config-purge-file.js'), 'config-purge-file.js should be purged')
 })
