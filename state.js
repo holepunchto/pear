@@ -123,7 +123,7 @@ module.exports = class State {
     const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
     const fragment = hash ? hash.slice(1) : (this.constructor.isKeetInvite(segment) ? segment : null)
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
-    const pkgPath = path.join(dir, 'package.json')
+    const pkgPath = path.join(dir, flags.module || '', 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
     const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate

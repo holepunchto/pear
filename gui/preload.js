@@ -348,9 +348,9 @@ class IPC {
     return stream
   }
 
-  workerRun (link, args) {
+  workerRun (link, args, runArgs) {
     const id = electron.ipcRenderer.sendSync('workerPipeId')
-    electron.ipcRenderer.send('workerRun', link, args)
+    electron.ipcRenderer.send('workerRun', link, args, runArgs)
     const stream = new streamx.Duplex({
       write (data, cb) {
         electron.ipcRenderer.send('workerPipeWrite', id, data)

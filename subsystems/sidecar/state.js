@@ -36,18 +36,19 @@ module.exports = class State extends SharedState {
       if (bundle.drive.core.length === 0) {
         await bundle.drive.core.update()
       }
-      const result = await bundle.db.get('manifest')
+      const manifestPath = this.flags.module ? path.join(this.flags.module, 'package.json') : null
+      const result = !manifestPath ? (await bundle.db.get('manifest'))?.value : JSON.parse((await bundle.drive.get(manifestPath))?.toString())
       if (app?.reported) return
       if (result === null) {
         throw ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
       }
-      if (result.value === null) {
+      if (result === null) {
         throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
       }
-      this.constructor.injestPackage(this, result.value)
+      this.constructor.injestPackage(this, result)
     } else if (this.stage) {
       const result = await bundle.db.get('manifest')
-      if (!result || !sameData(result.value, this.manifest)) {
+      if (!result || !sameData(result, this.manifest)) {
         if (dryRun === false && this.manifest) {
           await bundle.db.put('manifest', this.manifest)
         }
