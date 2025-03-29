@@ -81,12 +81,4 @@ class Data {
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
   }
-
-  async presets (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const { link, preset } = command.args
-    const result = await this.ipc.data({ resource: 'presets', link, preset })
-    await output(json, result, { tag: 'presets' }, this.ipc)
-  }
 }
