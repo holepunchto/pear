@@ -19,6 +19,10 @@ run.parse(argv)
 run.running?.catch(console.error)
 
 async function electronMain (cmd) {
+  // TODO update flags with ipc.presets call
+  // flags in db are default flags + preset flags
+  // overwrite db flags with command flags
+
   const state = new State({
     link: cmd.args.link.replace('_||', '://'), // for Windows
     flags: cmd.flags,

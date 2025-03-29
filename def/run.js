@@ -1,9 +1,7 @@
 'use strict'
 const { flag, arg, rest } = require('paparam')
 
-module.exports = [
-  arg('<link|dir>', 'Pear link, alias or directory to run app from'),
-  rest('[...app-args]', 'Application arguments'),
+const flags = [
   flag('--dev|-d', 'Enable --devtools & --updates-diff'),
   flag('--devtools', 'Open devtools with application [Desktop]'),
   flag('--updates-diff', 'Enable diff computation for Pear.updates'),
@@ -26,3 +24,11 @@ module.exports = [
   flag('--sandbox').hide(), // electron passthrough
   flag('--app-name <name>').hide()
 ]
+
+module.exports = [
+  arg('<link|dir>', 'Pear link, alias or directory to run app from'),
+  rest('[...app-args]', 'Application arguments'),
+  ...flags
+]
+
+module.exports.flags = flags
