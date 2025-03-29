@@ -1,0 +1,8 @@
+{
+  "name": "entrypoint-and-fragment",
+  "main": "index.js",
+  "pear": {
+    "name": "entrypoint-and-fragment",
+    "type": "terminal"
+  }
+}
