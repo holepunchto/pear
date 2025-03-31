@@ -9,10 +9,10 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 crasher('cli', SWAP)
 
-checkRoot()
+checkUser()
 cli()
 
-function checkRoot () {
+function checkUser () {
   if (isWindows) return
 
   const ownerUid = fs.statSync(PLATFORM_DIR).uid
