@@ -12,6 +12,7 @@ const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
+const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'worker-from-same-bundle')
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -266,4 +267,41 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
   is(info.fragment, fragment)
 
   await Helper.untilClose(run.pipe)
+})
+
+test('desktop worker', async function ({ is, plan, comment, teardown, timeout }) {
+  const dir = workerFromSameBundle
+  const entrypoint = '/worker/index.js'
+  
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  comment('testing with pear link')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}/worker/index.js`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+
+  is(info.entrypoint, entrypoint, 'desktop worker entrypoint should work with pear link')
+  await Helper.untilClose(run.pipe)
+
+  comment('testing with file path')
+  const fileLink = path.join(dir, 'worker', 'index.js')
+  const fileRun = await Helper.run({ link: fileLink })
+
+  const fileResult = await Helper.untilResult(fileRun.pipe)
+  const fileInfo = JSON.parse(fileResult)
+
+  is(fileInfo.entrypoint, entrypoint, 'desktop worker entrypoint should work with path')
+  await Helper.untilClose(fileRun.pipe)
 })
