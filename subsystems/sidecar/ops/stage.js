@@ -89,6 +89,15 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
+    if (!purge && state.manifest.pear?.stage?.purge) purge = state.manifest.pear?.stage?.purge
+    if (purge) {
+      for await (const entry of dst) {
+        if (ignore.some(e => entry.key.startsWith('/' + e))) {
+          if (!dryRun) await dst.del(entry.key)
+          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+        }
+      }
+    }
     const mirror = new Mirror(src, dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
