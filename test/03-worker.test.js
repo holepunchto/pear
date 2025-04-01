@@ -142,7 +142,7 @@ test('worker exit when parent calls pipe.destroy()', async function () {
   await Helper.untilWorkerExit(pid)
 })
 
-test('desktop worker', async function ({ is, comment, teardown }) {
+test('worker in desktop app', async function ({ is, teardown }) {
   const dir = workerFromSameBundle
   const entrypoint = '/worker/index.js'
 
