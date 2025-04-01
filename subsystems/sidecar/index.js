@@ -737,11 +737,15 @@ class Sidecar extends ReadyResource {
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
       if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      const type = state.type
+      const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
+      const type = entrypointIsJS ? 'terminal' : state.type
       LOG.info(LOG_RUN_LINK, id, type, 'app')
       const isTerminalApp = type === 'terminal'
       if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      if (entrypointIsJS) {
+        bundle.type = 'terminal'
+      }
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
     }
@@ -839,10 +843,14 @@ class Sidecar extends ReadyResource {
     const updating = await app.minver()
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
     // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const type = state.type
+    const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
+    const type = entrypointIsJS ? 'terminal' : state.type
     const isTerminalApp = type === 'terminal'
     if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
     const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+    if (entrypointIsJS) {
+      bundle.type = 'terminal'
+    }
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
   }
