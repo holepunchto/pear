@@ -54,7 +54,7 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     if (!ignore && state.options?.stage?.ignore) ignore = state.options.stage?.ignore
-    if (!ignore) ignore = '.git,.github,.DS_Store'
+    else if (!ignore) ignore = '.git,.github,.DS_Store'
     ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
