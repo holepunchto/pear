@@ -152,7 +152,6 @@ test('desktop worker', async function ({ is, comment, teardown }) {
 
   const id = Math.floor(Math.random() * 10000)
 
-  comment('testing with pear link')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
