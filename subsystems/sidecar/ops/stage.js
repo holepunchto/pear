@@ -15,7 +15,7 @@ const State = require('../state')
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', only }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -54,6 +54,7 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     if (state.options?.stage?.ignore) ignore = state.options.stage?.ignore
+    else if (!ignore) ignore = '.git,.github,.DS_Store'
     else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
@@ -89,7 +90,7 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    if (!purge && state.manifest.pear?.stage?.purge) purge = state.manifest.pear?.stage?.purge
+    if (!purge && state.pear?.stage?.purge) purge = state.pear?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
         if (ignore.some(e => entry.key.startsWith('/' + e))) {

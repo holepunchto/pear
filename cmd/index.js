@@ -82,6 +82,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
+    flag('--purge', 'Remove ignore files if present in previous stage'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
