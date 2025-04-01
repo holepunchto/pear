@@ -8,6 +8,7 @@
 * Tray Icon (Mac) - Set tray icon as image template
 * Desktop - Fixed application wake-up
 * Windows - Platform add-ons now linked with vcruntime 
+* Desktop - Added `crypto` to Nodejs available builtin modules
 
 ### Improvements
 
