@@ -272,7 +272,7 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
 test('desktop worker', async function ({ is, plan, comment, teardown, timeout }) {
   const dir = workerFromSameBundle
   const entrypoint = '/worker/index.js'
-  
+
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
