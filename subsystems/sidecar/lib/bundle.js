@@ -2,7 +2,9 @@
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
+const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
+const watch = require('watch-drive')
 const { SWAP } = require('pear-api/constants')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
