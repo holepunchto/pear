@@ -9,17 +9,17 @@ class API {
 }
 
 global.Pear = new API()
-const { PLATFORM_DIR } = require('pear-api/constants')
 
 if (isWindows === false) {
   const fs = require('bare-fs')
   const os = require('bare-os')
+  const { PLATFORM_DIR } = API.CONSTANTS
 
   const ownerUid = fs.statSync(PLATFORM_DIR).uid
   const userUid = os.userInfo().uid
 
   if (ownerUid !== userUid) {
-    const err = new Error(`Current user does not own pear platform directory at ${PLATFORM_DIR}`)
+    const err = new Error(`${PLATFORM_DIR} is not owned by the current user`)
     err.name = 'User Permissions Error'
     throw err
   }
