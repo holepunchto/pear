@@ -7,7 +7,6 @@ class API {
   static get CONSTANTS () { return require('pear-api/constants') }
   config = {}
 }
-
 global.Pear = new API()
 
 if (isWindows === false) {
