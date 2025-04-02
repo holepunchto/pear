@@ -309,9 +309,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         Bare.exit(1)
       }
     }
-    const reason = bail.reason === 'UNKNOWN_FLAG'
-      ? 'Unrecognized Flag: --' + bail.flag.name
-      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value : bail.reason)
+    const message = (bail) => bail.err.message
+    const codemap = new Map([
+      ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
+      ['UNKNOWN_ARG', (bail) => 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value],
+      ['ERR_INVALID_INPUT', message],
+      ['ERR_LEGACY', message]
+    ])
+    const reason = codemap.has(bail.reason) ? codemap.get(bail.reason)(bail) : (codemap.has(bail.err.code) ? codemap.get(bail.err.code)(bail) : bail.reason)
 
     print(reason, false)
     if (bail.err?.code === 'ERR_LEGACY') return
