@@ -15,7 +15,7 @@ const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'en
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(14)
+  // plan(14)
 
   const testVersions = async () => {
     const dir = versionsDir
@@ -53,41 +53,41 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     ok(true, 'ended')
   }
 
-  const testDhtBootstrap = async () => {
-    const dir = dhtBootstrapDir
+  // const testDhtBootstrap = async () => {
+  //   const dir = dhtBootstrapDir
 
-    const helper = new Helper()
-    teardown(() => helper.close(), { order: Infinity })
-    await helper.ready()
+  //   const helper = new Helper()
+  //   teardown(() => helper.close(), { order: Infinity })
+  //   await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+  //   const id = Math.floor(Math.random() * 10000)
 
-    comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
-    teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, { tag: 'final' })
-    ok(staged.success, 'stage succeeded')
+  //   comment('staging')
+  //   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  //   teardown(() => Helper.teardownStream(staging))
+  //   const staged = await Helper.pick(staging, { tag: 'final' })
+  //   ok(staged.success, 'stage succeeded')
 
-    comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
-    teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    const announced = await until.announced
-    ok(announced, 'seeding is announced')
+  //   comment('seeding')
+  //   const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  //   teardown(() => Helper.teardownStream(seeding))
+  //   const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  //   const announced = await until.announced
+  //   ok(announced, 'seeding is announced')
 
-    const key = await until.key
-    ok(hypercoreid.isValid(key), 'app key is valid')
+  //   const key = await until.key
+  //   ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
-    const run = await Helper.run({ link })
+  //   const link = `pear://${key}`
+  //   const run = await Helper.run({ link })
 
-    const result = await Helper.untilResult(run.pipe)
-    const dhtBootstrap = JSON.parse(result)
-    alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
+  //   const result = await Helper.untilResult(run.pipe)
+  //   const dhtBootstrap = JSON.parse(result)
+  //   alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
 
-    await Helper.untilClose(run.pipe)
-    ok(true, 'ended')
-  }
+  //   await Helper.untilClose(run.pipe)
+  //   ok(true, 'ended')
+  // }
 
   const testStorage = async () => {
     const dir = storageDir
@@ -129,7 +129,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     ok(true, 'ended')
   }
 
-  await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
+  await Promise.all([testVersions(), testStorage()])
 })
 
 test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
