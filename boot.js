@@ -1,11 +1,17 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
+
 class API {
   static RTI = { checkout: require('./checkout') }
   static get CONSTANTS () { return require('pear-api/constants') }
   config = {}
 }
+
 global.Pear = new API()
+const { checkUser } = require('./subsystems/sidecar/lib/uid')
+
+checkUser()
+
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 switch (getBootType()) {
