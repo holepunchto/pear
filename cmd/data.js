@@ -1,8 +1,7 @@
 'use strict'
 const parseLink = require('pear-api/parse-link')
-const { outputter, ansi, confirm } = require('pear-api/terminal')
+const { outputter, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { PLATFORM_HYPERDB } = require('pear-api/constants')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
