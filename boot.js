@@ -4,21 +4,23 @@ const { isWindows } = require('which-runtime')
 
 class API {
   static RTI = { checkout: require('./checkout') }
-  static get CONSTANTS () { return require('pear-api/constants') }
+  static CONSTANTS = null
   config = {}
 }
 global.Pear = new API()
 
+const constants = require('pear-api/constants')
+API.CONSTANTS = constants
+
 if (isWindows === false) {
   const fs = require('bare-fs')
   const os = require('bare-os')
-  const { PLATFORM_DIR } = API.CONSTANTS
 
-  const ownerUid = fs.statSync(PLATFORM_DIR).uid
+  const ownerUid = fs.statSync(constants.PLATFORM_DIR).uid
   const userUid = os.userInfo().uid
 
   if (ownerUid !== userUid) {
-    const err = new Error(`Current user does not own ${PLATFORM_DIR}`)
+    const err = new Error(`Current user does not own ${constants.PLATFORM_DIR}`)
     err.name = 'User Permissions Error'
     throw err
   }
