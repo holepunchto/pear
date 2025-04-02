@@ -108,8 +108,8 @@ class Helper extends IPC.Client {
     const log = global.Pear.config.args.includes('--log')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
-    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
+    // const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const args = ['--sidecar']
     if (log) args.push('--log')
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)

@@ -114,7 +114,7 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
   const key = await until.key
   await until.announced
 
-  const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
+  const swarm = new Hyperswarm()
   const tmpdir = await tmp()
   const store = new Corestore(tmpdir)
   await store.ready()
@@ -128,8 +128,9 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
   })
 
   swarm.join(drive.discoveryKey)
+  await swarm.flush()
 
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 2000))
 
   comment('bundle entries should contain metadata')
   for await (const file of drive.list()) {
