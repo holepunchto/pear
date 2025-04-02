@@ -15,7 +15,8 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'link') {
-      const bundle = await this.sidecar.model.getBundle(link)
+      const isPearLink = link.startsWith('pear://')
+      const bundle = await this.sidecar.model.getBundle(isPearLink ? link : pathToFileURL(link).href)
       if (bundle && !secrets) bundle.encryptionKey = undefined
       this.push({ tag: 'link', data: bundle })
     }
