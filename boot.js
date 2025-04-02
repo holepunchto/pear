@@ -19,7 +19,7 @@ if (isWindows === false) {
   const userUid = os.userInfo().uid
 
   if (ownerUid !== userUid) {
-    const err = new Error(`${PLATFORM_DIR} is not owned by the current user`)
+    const err = new Error(`Current user does not own ${PLATFORM_DIR}`)
     err.name = 'User Permissions Error'
     throw err
   }
