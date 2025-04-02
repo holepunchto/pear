@@ -40,11 +40,17 @@ const gcOutput = (records) => {
   return out
 }
 
+const manifestOutput = (manifest) => {
+  if (!manifest) return placeholder
+  return `manifest: ${ansi.bold(manifest.version)}\n`
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
+  manifest: (result) => manifestOutput(result),
   dataReset: () => 'Database cleared'
 })
 
@@ -80,18 +86,9 @@ class Data {
     await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
   }
 
-  async reset (cmd) {
+  async manifest (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const { yes } = command.flags
-    if (!yes) {
-      const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
-      const ask = 'Type DELETE to confirm'
-      const delim = '?'
-      const validation = (val) => val === 'DELETE'
-      const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
-      await confirm(dialog, ask, delim, validation, msg)
-    }
-    await output(json, this.ipc.dataReset(), { tag: 'dataReset' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
   }
 }

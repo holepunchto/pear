@@ -30,5 +30,10 @@ module.exports = class Data extends Opstream {
       const records = await this.sidecar.model.allGc()
       this.push({ tag: 'gc', data: records })
     }
+
+    if (resource === 'manifest') {
+      const manifest = await this.sidecar.model.getManifest()
+      this.push({ tag: 'manifest', data: manifest })
+    }
   }
 }

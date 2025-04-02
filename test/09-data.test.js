@@ -11,7 +11,7 @@ const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
-  plan(16)
+  plan(18)
 
   const dir = encrypted
   const helper = new Helper()
@@ -68,6 +68,13 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   ok(dht.length > 0, 'DHT array exists')
   is(typeof dht[0].host, 'string', 'Field host is a string')
   is(typeof dht[0].port, 'number', 'Field port is a number')
+
+  comment('pear data manifest')
+  data = await helper.data({ resource: 'manifest' })
+  result = await Helper.pick(data, [{ tag: 'manifest' }])
+  const manifest = await result.manifest
+  is(manifest, null, 'Manifest does not exist')
+  is(manifest?.version, undefined, 'Manifest version is undefined')
 
   await Helper.untilClose(pipe)
   ok(true, 'ended')
