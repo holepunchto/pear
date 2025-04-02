@@ -1,5 +1,6 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
+const { isWindows } = require('which-runtime')
 
 class API {
   static RTI = { checkout: require('./checkout') }
@@ -8,9 +9,21 @@ class API {
 }
 
 global.Pear = new API()
-const { checkUser } = require('./subsystems/sidecar/lib/uid')
+const { PLATFORM_DIR } = require('pear-api/constants')
 
-checkUser()
+if (isWindows === false) {
+  const fs = require('bare-fs')
+  const os = require('bare-os')
+
+  const ownerUid = fs.statSync(PLATFORM_DIR).uid
+  const userUid = os.userInfo().uid
+
+  if (ownerUid !== userUid) {
+    const err = new Error(`Current user does not own pear platform directory at ${PLATFORM_DIR}`)
+    err.name = 'User Permissions Error'
+    throw err
+  }
+}
 
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
