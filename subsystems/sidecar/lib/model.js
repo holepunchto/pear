@@ -5,7 +5,7 @@ const DBLock = require('db-lock')
 const pearLink = require('pear-link')
 const LocalDrive = require('localdrive')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB } = require('pear-api/constants')
+const { PLATFORM_HYPERDB, ALIASES } = require('pear-api/constants')
 
 module.exports = class Model {
   constructor (corestore) {
