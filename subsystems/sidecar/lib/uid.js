@@ -10,7 +10,9 @@ function checkUser () {
   const userUid = os.userInfo().uid
 
   if (ownerUid !== userUid) {
-    throw new Error('Running is not allowed when the pear platform directory is not owned by the current user. Please ensure that you are running as the correct user.')
+    const e = new Error(`The pear platform directory at ${PLATFORM_DIR} is not owned by the user that is running pear. Ensure that you are running as the correct user.`)
+    e.name = 'User Permissions Error'
+    throw e
   }
 }
 
