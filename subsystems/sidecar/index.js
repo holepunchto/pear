@@ -347,8 +347,7 @@ class Sidecar extends ReadyResource {
         client.userData = starting.client.userData
         client.userData.clients.add(client)
         if (params.startWait) await starting.running
-      }
-      else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
+      } else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
     const id = client.userData.id
