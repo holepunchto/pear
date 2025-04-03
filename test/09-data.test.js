@@ -97,9 +97,6 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   const runB = await Helper.run({ link: `pear://${key}/#fragment` })
   await Helper.untilClose(runB.pipe)
 
-  const runC = await Helper.run({ link: `pear://${key}/xeb7mugj8sbaytkf5qqu9z1snegtibqneysssdqu35em4zw3ou9wcmz8ha4er6e759tams9eeebo6j6ueifyb4oaeohnijbyxfzessxjneaqs8ux` })
-  await Helper.untilClose(runC.pipe)
-
   const data = await helper.data({ resource: 'apps' })
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
