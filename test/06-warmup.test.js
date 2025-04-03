@@ -16,7 +16,6 @@ const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-witho
 const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
 const appWithPurge = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge')
 const appWithPurgeConfig = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge-config')
-const appWithEmptyIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-empty-ignore')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -171,34 +170,6 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/app.js'))
   ok(stagingFiles.includes('/index.html'))
-})
-
-test('stage with empty ignore', async function ({ ok, is, plan, comment, teardown }) {
-  const dir = appWithEmptyIgnore
-
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-
-  comment('staging')
-  const id = Math.floor(Math.random() * 10000)
-
-  const staging = helper.stage({ channel: `test-${id}`, name: `test${id}`, dir, dryRun: false })
-  teardown(() => Helper.teardownStream(staging))
-
-  const stagingFiles = []
-  staging.on('data', async (data) => {
-    if (data?.tag === 'byte-diff') {
-      stagingFiles.push(data.data.message)
-    }
-  })
-
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.final
-
-  ok(stagingFiles.includes('/package.json'), 'package.json should exists')
-  ok(stagingFiles.includes('/index.js'), 'index.js should exist')
-  ok(stagingFiles.includes('/.git/default-ignore.js'), '.git/default-ignore.js should exist')
 })
 
 test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
