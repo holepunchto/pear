@@ -171,11 +171,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const reset = command(
     'reset',
-    summary('Advanced. Reset an application to initial state'),
-    description('Clear application storage for supplied link.'),
-    arg('<link>', 'Application link'),
-    flag('--json', 'Newline delimited JSON output'),
-    runners.reset(ipc)
+    summary('Clear database and storages'),
+    command('app', summary('Advanced. Reset an application to initial state'),
+      description('Clear application storage for supplied link.'),
+      arg('<link>', 'Application link'),
+      flag('--json', 'Newline delimited JSON output'),
+      runners.reset(ipc)
+    ),
+    command('data', summary('Advanced. Clear local database'),
+      flag('--yes', 'Skip confirmation prompt'),
+      (cmd) => runners.data(ipc).reset(cmd)
+    ),
+    () => { console.log(reset.help()) }
   )
 
   const sidecar = command(
@@ -222,9 +229,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
-    command('reset', summary('Advanced. Clear local database'),
-      flag('--yes', 'Skip confirmation prompt'), (cmd) => runners.data(ipc).reset(cmd)
-    ),
+    command('manifest', summary('database internal version'), (cmd) => runners.data(ipc).manifest(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
