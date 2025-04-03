@@ -15,7 +15,7 @@ const State = require('../state')
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', only }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -53,8 +53,9 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ bundle, dryRun, name })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
-    if (state.options?.stage?.ignore) ignore = state.options.stage?.ignore
-    else ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
+    if (!ignore && state.options?.stage?.ignore) ignore = state.options.stage?.ignore
+    else if (!ignore) ignore = '.git,.github,.DS_Store'
+    ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
     else only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
@@ -89,6 +90,15 @@ module.exports = class Stage extends Opstream {
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
+    if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
+    if (purge) {
+      for await (const entry of dst) {
+        if (ignore.some(e => entry.key.startsWith('/' + e))) {
+          if (!dryRun) await dst.del(entry.key)
+          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+        }
+      }
+    }
     const mirror = new Mirror(src, dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
