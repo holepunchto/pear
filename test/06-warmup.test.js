@@ -173,17 +173,17 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/index.html'))
 })
 
-test('stage with empty ignore', async function ({ok, is, plan, comment, teardown}) {
+test('stage with empty ignore', async function ({ ok, is, plan, comment, teardown }) {
   const dir = appWithEmptyIgnore
 
   const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity})
+  teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
   comment('staging')
   const id = Math.floor(Math.random() * 10000)
 
-  let staging = helper.stage({ channel: `test-${id}`, name: `test${id}`, dir, dryRun: false })
+  const staging = helper.stage({ channel: `test-${id}`, name: `test${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []
