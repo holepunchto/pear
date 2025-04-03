@@ -18,7 +18,7 @@ module.exports = class Bundle {
       key, channel, stage = false, status = noop, failure,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
-    this.checkout = checkout
+    this.checkout = checkout ?? null
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
