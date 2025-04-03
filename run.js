@@ -122,14 +122,11 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       }
     })
 
-    // cleanup handlers to avoid invading the app execution context
-
+    // clear global handlers
     Bare.removeAllListeners('uncaughtException')
     Bare.removeAllListeners('unhandledRejection')
 
-    // bundle will execute outside this function promise else
-    // any app uncaught exception would actually by an unhandled rejection
-
+    // preserves uncaught exception (otherwise it becomes uncaught rejection)
     setImmediate(() => {
       Module.load(new URL(bundle.entrypoint), {
         protocol,
