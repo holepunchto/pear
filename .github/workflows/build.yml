@@ -18,6 +18,7 @@ on:
           - dev
           - stage
           - rc
+          - next
       custom-commit:
         type: string
         description: Custom commit
