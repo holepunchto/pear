@@ -8,7 +8,7 @@
       ],
       "purge": true
     },
-    "name": "app-with-purge",
+    "name": "app-with-purge-config",
     "type": "terminal"
   }
 }

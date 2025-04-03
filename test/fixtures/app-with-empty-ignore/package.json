@@ -1,0 +1,11 @@
+{
+  "name": "app-with-empty-ignore",
+  "main": "index.js",
+  "pear": {
+    "stage": {
+      "ignore": []
+    },
+    "name": "app-with-empty-ignore",
+    "type": "terminal"
+  }
+}
