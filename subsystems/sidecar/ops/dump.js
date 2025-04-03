@@ -30,7 +30,7 @@ module.exports = class Dump extends Opstream {
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
     const key = parsed.drive.key
-    checkout = checkout ? Number(checkout) : parsed.drive.length
+    checkout = (checkout || checkout === 0) ? Number(checkout) : parsed.drive.length
 
     const query = await this.sidecar.model.getBundle(link)
     const encryptionKey = query?.encryptionKey
