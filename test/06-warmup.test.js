@@ -14,8 +14,8 @@ const desktop = path.join(Helper.localDir, 'test', 'fixtures', 'desktop-warmup')
 const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
 const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-without-main')
 const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
+const appWithSubdir = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-subdir')
 const appWithPurge = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge')
-const appWithPurgeConfig = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge-config')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -174,7 +174,7 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
 
 test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
-  const dir = appWithPurge
+  const dir = appWithSubdir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -289,7 +289,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
 })
 
 test('stage with purge config', async function ({ ok, is, plan, comment, teardown }) {
-  const dir = appWithPurgeConfig
+  const dir = appWithPurge
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

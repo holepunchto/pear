@@ -1,0 +1,8 @@
+{
+  "name": "app-with-purge",
+  "main": "index.js",
+  "pear": {
+    "name": "app-with-purge",
+    "type": "terminal"
+  }
+}

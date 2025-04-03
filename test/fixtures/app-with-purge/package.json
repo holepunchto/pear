@@ -1,8 +1,14 @@
 {
-  "name": "app-with-purge",
+  "name": "app-with-purge-config",
   "main": "index.js",
   "pear": {
-    "name": "app-with-purge",
+    "stage": {
+      "ignore": [
+        "ignored-from-start.js"
+      ],
+      "purge": true
+    },
+    "name": "app-with-purge-config",
     "type": "terminal"
   }
 }
