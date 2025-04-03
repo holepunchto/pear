@@ -94,8 +94,13 @@ module.exports = class Stage extends Opstream {
     if (purge) {
       for await (const entry of dst) {
         if (ignore.some(e => entry.key.startsWith('/' + e))) {
-          if (!dryRun) await dst.del(entry.key)
-          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+          try {
+            if (!dryRun) await dst.del(entry.key)
+          } catch (err) {
+            throw err
+          } finally {
+            this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+          }
         }
       }
     }
