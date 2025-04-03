@@ -7,7 +7,7 @@ const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'dump')
 
 const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
 
-test('dump should succeed', async function ({ ok, plan, teardown }) {
+test('pear dump', async function ({ ok, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -35,7 +35,7 @@ test('dump should succeed', async function ({ ok, plan, teardown }) {
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
 })
 
-test('dump should succeed when dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
+test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
   plan(4)
 
   const helper = new Helper()
@@ -65,7 +65,7 @@ test('dump should succeed when dumping subdirectory', async function ({ ok, abse
   ok(await exists(path.join(dir, 'lib', 'pear.js')), 'lib/pear.js should exist')
 })
 
-test('dump should fail when dumping to existing dir', async function ({ absent, is, plan, teardown }) {
+test('pear dump dumping to existing dir', async function ({ absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -99,7 +99,7 @@ test('dump should fail when dumping to existing dir', async function ({ absent, 
   absent(await exists(path.join(dir, 'package.json')), 'package.json should not exist')
 })
 
-test('dump should succeed when dumping to existing dir with force', async function ({ ok, plan, teardown }) {
+test('pear dump dumping to existing dir with force', async function ({ ok, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -128,7 +128,7 @@ test('dump should succeed when dumping to existing dir with force', async functi
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
 })
 
-test('dump should succeed when dumping a single file', async function ({ ok, absent, is, plan, teardown }) {
+test('pear dump dumping a single file', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -157,7 +157,7 @@ test('dump should succeed when dumping a single file', async function ({ ok, abs
   absent(await exists(path.join(dir, 'package.json')), 'package.json should not exist')
 })
 
-test('dump should succeed when dumping a single file in a subdirectory', async function ({ ok, is, plan, teardown }) {
+test('pear dump dumping a single file in a subdirectory', async function ({ ok, is, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -185,7 +185,7 @@ test('dump should succeed when dumping a single file in a subdirectory', async f
   is((await fs.promises.readdir(path.join(dir, 'lib'))).length, 1, 'should have only one file in the lib directory')
 })
 
-test('dump should succeed when dumping to stdout', async function ({ ok, plan, teardown }) {
+test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   plan(4)
 
   const helper = new Helper()
@@ -215,7 +215,7 @@ test('dump should succeed when dumping to stdout', async function ({ ok, plan, t
   ok(dumpedFiles.includes('/lib/dump.js'), 'should print out lib/dump.js')
 })
 
-test('dump should succeed when dumping subdirectory to stdout', async function ({ ok, plan, teardown }) {
+test('pear dump dumping subdirectory to stdout', async function ({ ok, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -243,7 +243,7 @@ test('dump should succeed when dumping subdirectory to stdout', async function (
   ok(dumpedFiles.includes('/dump.js'), 'should print out lib/dump.js as /dump.js')
 })
 
-test('dump should succeed when dumping a single file to stdout', async function ({ ok, absent, is, plan, teardown }) {
+test('pear dump dumping a single file to stdout', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -272,7 +272,7 @@ test('dump should succeed when dumping a single file to stdout', async function 
   absent(dumpedFiles.includes('package.json'), 'should not print out package.json')
 })
 
-test('dump should succeed when dumping a single file in a subdirectory to stdout', async function ({ ok, absent, is, plan, teardown }) {
+test('pear dump dumping a single file in a subdirectory to stdout', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
