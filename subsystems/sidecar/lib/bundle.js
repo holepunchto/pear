@@ -252,7 +252,7 @@ module.exports = class Bundle {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
         if (this.release) this.drive = this.drive.checkout(this.release)
-      } else if (Number.isInteger(+this.checkout)) {
+      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       }
     }
