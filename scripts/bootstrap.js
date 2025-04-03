@@ -29,7 +29,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || '3oh9mxcft8rsq3mocxzi7s8hhb7zw8s55nuca95ffsqzd6oyy4zo'
+const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || '46fbd4tfa7mnjs14r3mgcaua5fbddfoenrc4d485hic14px7ytiy'
 const CORESTORE = cmd.flags.externalCorestore && `/tmp/pear-archdump/${RUNTIMES_DRIVE_KEY}`
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
