@@ -7,7 +7,16 @@ async function runTests () {
 
   test.pause()
 
+  await import('./01-smoke.test.js')
+  await import('./02-teardown.test.js')
+  await import('./03-encrypted.test.js')
+  await import('./04-updates.test.js')
+  await import('./05-shutdown.test.js')
   await import('./06-warmup.test.js')
+  await import('./07-reset.test.js')
+  await import('./08-shift.test.js')
+  await import('./09-data.test.js')
+  await import('./10-dump.test.js')
 
   test.resume()
 }
