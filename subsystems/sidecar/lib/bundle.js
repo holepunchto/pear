@@ -258,7 +258,7 @@ module.exports = class Bundle {
             ? this.drive.checkout(this.initLength)
             : this.drive.checkout(this.drive.core.length)
         }
-      } else if (Number.isInteger(+this.checkout)) {
+      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       } else {
         this.drive = this.initLength > 0
