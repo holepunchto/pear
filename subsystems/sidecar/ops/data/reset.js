@@ -7,7 +7,6 @@ module.exports = class DataReset extends Opstream {
   }
 
   async #op () {
-    await this.sidecar.model.reset()
     this.push({ tag: 'dataReset' })
   }
 }

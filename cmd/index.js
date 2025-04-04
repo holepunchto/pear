@@ -221,9 +221,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
-    command('reset', summary('Advanced. Clear local database'),
-      flag('--yes', 'Skip confirmation prompt'), (cmd) => runners.data(ipc).reset(cmd)
-    ),
+    command('manifest', summary('database internal versioning'), (cmd) => runners.data(ipc).manifest(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
