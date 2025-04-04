@@ -165,11 +165,13 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 4)
+  is(stagingFiles.length, 6)
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/app.js'))
   ok(stagingFiles.includes('/index.html'))
+  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
+  ok(stagingFiles.includes('/ignore-dir1/other-dont-ignore.js'))
 })
 
 test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }) {
@@ -181,7 +183,7 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
 
   const id = Math.floor(Math.random() * 10000)
 
-  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '!ignore-file.js,!ignore-dir1' })
+  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '!ignore-file.js,!ignore-dir1/*.js,!ignore-dir2/*.txt' })
   teardown(() => Helper.teardownStream(staging))
 
   let stagingFiles = []
@@ -194,15 +196,18 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
   let staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 6, 'should stage 6 files')
+  is(stagingFiles.length, 10, 'should stage 10 files')
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/app.js'))
   ok(stagingFiles.includes('/index.html'))
   ok(stagingFiles.includes('/ignore-file.js'))
   ok(stagingFiles.includes('/ignore-dir1/ignore-dir1-file.js'))
+  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
+  ok(stagingFiles.includes('/ignore-dir1/other-dont-ignore.js'))
+  ok(stagingFiles.includes('/ignore-dir2/other-file.txt'))
+  ok(stagingFiles.includes('/ignore-dir2/other-other-file.txt'))
 
-  comment('negate all with "!*"')
   staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, purge: false, ignore: '!*' })
   teardown(() => Helper.teardownStream(staging))
 
@@ -216,8 +221,9 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
   staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 1, 'should stage one more file')
+  is(stagingFiles.length, 2, 'should stage one more file')
   ok(stagingFiles.includes('/ignore-dir2/ignore-dir2-file.js'))
+  ok(stagingFiles.includes('/ignore-dir1/ignore-file.txt'))
 })
 
 test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
