@@ -223,7 +223,7 @@ class Menu {
     item.submenu = [
       {
         label: 'Reload',
-        accelerator: 'CmdOrCtrl+R',
+        // accelerator: 'CmdOrCtrl+R',
         click (_, win) {
           if (!win) return
           const view = win.getBrowserViews()[0]
