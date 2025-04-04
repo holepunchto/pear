@@ -24,7 +24,7 @@ test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, t
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -49,7 +49,7 @@ test('stage desktop app warmup with entrypoints', async function ({ ok, is, plan
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -74,7 +74,7 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -98,7 +98,7 @@ test('staged bundle contains entries metadata', async function ({ ok, is, plan, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -147,7 +147,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))

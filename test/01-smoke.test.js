@@ -22,7 +22,7 @@ test('dht bootstrap', async function ({ ok, alike, plan, comment, teardown, time
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -64,7 +64,7 @@ test('storage', async function ({ ok, is, plan, comment, teardown, timeout }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
@@ -104,7 +104,7 @@ test('versions', async function ({ ok, is, plan, comment, teardown, timeout }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -143,7 +143,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -181,7 +181,7 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })

@@ -14,7 +14,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -42,7 +42,7 @@ test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teard
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -72,7 +72,7 @@ test('pear dump dumping to existing dir', async function ({ absent, is, plan, te
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -106,7 +106,7 @@ test('pear dump dumping to existing dir with force', async function ({ ok, plan,
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -135,7 +135,7 @@ test('pear dump dumping a single file', async function ({ ok, absent, is, plan, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -164,7 +164,7 @@ test('pear dump dumping a single file in a subdirectory', async function ({ ok, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -192,7 +192,7 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -222,7 +222,7 @@ test('pear dump dumping subdirectory to stdout', async function ({ ok, plan, tea
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -250,7 +250,7 @@ test('pear dump dumping a single file to stdout', async function ({ ok, absent, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -279,7 +279,7 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])

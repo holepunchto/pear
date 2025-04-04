@@ -24,7 +24,7 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   teardown(() => permitHelper.close(), { order: Infinity })
   await permitHelper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   const password = hypercoreid.encode(crypto.randomBytes(32))
 
