@@ -21,7 +21,8 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  data: require('./data')
+  data: require('./data'),
+  presets: require('./presets')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -186,6 +187,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const presets = command(
+    'presets',
+    summary('Set default application flags'),
+    arg('<link>', 'Target application link'),
+    ...def.run.flags,
+    runners.presets(ipc)
+  )
+
   const data = command(
     'data',
     summary('View database contents'),
@@ -221,6 +230,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     gc,
     versions,
     data,
+    presets,
     help,
     footer(usage.footer),
     bail(explain),
