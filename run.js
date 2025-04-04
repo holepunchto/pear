@@ -122,9 +122,16 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
       }
     })
 
-    Module.load(new URL(bundle.entrypoint), {
-      protocol,
-      resolutions: bundle.resolutions
+    // clear global handlers
+    Bare.removeAllListeners('uncaughtException')
+    Bare.removeAllListeners('unhandledRejection')
+
+    // preserves uncaught exception (otherwise it becomes uncaught rejection)
+    setImmediate(() => {
+      Module.load(new URL(bundle.entrypoint), {
+        protocol,
+        resolutions: bundle.resolutions
+      })
     })
 
     return stream

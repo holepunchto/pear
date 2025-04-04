@@ -1,0 +1,9 @@
+{
+  "name": "worker-exception-handler",
+  "main": "index.js",
+  "type": "module",
+  "pear": {
+    "name": "worker",
+    "type": "terminal"
+  }
+}

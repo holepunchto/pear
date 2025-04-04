@@ -17,6 +17,7 @@ const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', '
 const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
 const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child-error-handler')
 const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'worker-from-same-bundle')
+const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -175,4 +176,19 @@ test('worker in desktop app', async function ({ is, teardown }) {
 
   is(fileInfo.entrypoint, entrypoint, 'path entrypoint should work with local app')
   await Helper.untilClose(fileRun.pipe)
+})
+
+test('worker can set uncaughtException handler', async function ({ is, teardown }) {
+  const dir = workerExceptionHandler
+  const expected = 'HANDLED-ERROR'
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const run = await Helper.run({ link: dir })
+  const result = await Helper.untilResult(run.pipe)
+
+  is(result, expected, 'uncaughtException handler in worker works')
+  await Helper.untilClose(run.pipe)
 })
