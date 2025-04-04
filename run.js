@@ -30,8 +30,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
 
-  // TODO override flags
-
   let cwd = os.cwd()
   const originalCwd = cwd
   let dir = cwd
