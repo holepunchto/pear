@@ -1617,6 +1617,18 @@ class PearGUI extends ReadyResource {
 
   async _open () {
     await this.ipc.ready()
+
+    const appDataStream = (await this.ipc.data({ resource: 'link', link: this.state.link }))
+    const { data } = await new Promise((resolve) => appDataStream.on('data', resolve))
+    const preset = data?.preset?.run ? JSON.parse(data?.preset?.run) : null
+
+    if (preset) {
+      for (const [key] of Object.entries(this.state.flags)) {
+        if (this.state.indices.flags[key] !== null && this.state.indices.flags[key] !== undefined) continue // manual flags override preset flags
+        this.state.flags[key] = preset[key]
+      }
+    }
+    this.state.setFlags(this.state.flags)
   }
 
   async _close () {

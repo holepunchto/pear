@@ -112,12 +112,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run, storage } = params
-    const {
-      startId, appling, channel, devtools, checkout, links,
-      dev = false, stage, updates, updatesDiff,
-      unsafeClearAppStorage, chromeWebrtcInternals
-    } = flags
+    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run, storage, indices } = params
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
     const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
@@ -125,25 +120,15 @@ module.exports = class State {
     const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
-    const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
+    this.setFlags(flags)
     this.#onupdate = onupdate
-    this.startId = startId || null
     this.dht = dht
-    this.store = store
     this.args = args
-    this.appling = appling
-    this.channel = channel || null
-    this.checkout = checkout
     this.dir = dir
     this.cwd = cwd
     this.run = run ?? flags.run
     this.storage = storage
     this.flags = flags
-    this.dev = dev
-    this.devtools = this.dev || devtools
-    this.updatesDiff = this.dev || updatesDiff
-    this.updates = updates
-    this.stage = stage
     this.fragment = fragment
     this.entrypoint = entrypoint
     this.linkData = segment
@@ -153,14 +138,42 @@ module.exports = class State {
     this.alias = alias
     this.manifest = pkg
     this.cmdArgs = cmdArgs
+    this.indices = indices
     this.pkgPath = pkgPath
     this.id = id
-    this.clearAppStorage = unsafeClearAppStorage
-    this.chromeWebrtcInternals = chromeWebrtcInternals
     this.env = { ...env }
     if (this.stage || (this.run && this.dev === false)) {
       this.env.NODE_ENV = this.env.NODE_ENV || 'production'
     }
-    this.constructor.injestPackage(this, pkg, { links })
+    this.constructor.injestPackage(this, pkg, { links: flags.links })
+  }
+
+  setFlags (flags) {
+    const {
+      startId, appling, channel, devtools, checkout, links,
+      dev = false, stage, updates, updatesDiff,
+      unsafeClearAppStorage, chromeWebrtcInternals
+    } = flags
+    const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
+    this.store = store
+    this.startId = startId || null //
+    this.appling = appling //
+    this.channel = channel || null //
+    this.checkout = checkout //
+    this.dev = dev //
+    this.devtools = this.dev || devtools //
+    this.updatesDiff = this.dev || updatesDiff //
+    this.updates = updates //
+    this.stage = stage //
+    this.clearAppStorage = unsafeClearAppStorage //
+    this.chromeWebrtcInternals = chromeWebrtcInternals //
+    if (links) {
+      const overrides = links.split(',').reduce((links, kv) => {
+        const [key, value] = kv.split('=')
+        links[key] = value
+        return links
+      }, {})
+      this.links = { ...(this.links || {}), ...overrides }
+    }
   }
 }
