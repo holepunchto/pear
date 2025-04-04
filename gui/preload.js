@@ -267,6 +267,27 @@ module.exports = class PearGUI extends ReadyResource {
 }
 
 class IPC {
+  #streams
+
+  constructor () {
+    this.#streams = new Map()
+    electron.ipcRenderer.on('streamEnd', (e, id) => {
+      const item = this.#streams.get(id)
+      if (item) item.stream.end()
+    })
+    electron.ipcRenderer.on('streamClose', (e, id) => {
+      const item = this.#streams.get(id)
+      if (item) {
+        item.stream.destroy()
+        this.#streams.delete(id)
+      }
+    })
+    electron.ipcRenderer.on('streamData', (e, id, data) => {
+      const item = this.#streams.get(id)
+      if (item) item.ondata(data)
+    })
+  }
+
   getMediaAccessStatus (...args) { return electron.ipcRenderer.invoke('getMediaAccessStatus', ...args) }
   askForMediaAccess (...args) { return electron.ipcRenderer.invoke('askForMediaAccess', ...args) }
   desktopSources (...args) { return electron.ipcRenderer.invoke('desktopSources', ...args) }
@@ -324,27 +345,24 @@ class IPC {
   }
 
   messages (pattern) {
-    electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
-    electron.ipcRenderer.on('messages', (e, msg) => {
-      if (msg === null) bus.end()
-      else bus.pub(msg)
-    })
     const stream = bus.sub(pattern)
+    this.#relay(stream, (data) => bus.pub(data))
+    electron.ipcRenderer.send('messages', pattern)
     return stream
   }
 
   warming () {
-    electron.ipcRenderer.send('warming')
     const stream = new streamx.Readable()
-    electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
+    this.#relay(stream)
+    electron.ipcRenderer.send('warming')
     return stream
   }
 
   reports () {
-    electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
-    electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    this.#relay(stream)
+    electron.ipcRenderer.send('reports')
     return stream
   }
 
@@ -372,6 +390,17 @@ class IPC {
 
     electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
     return stream
+  }
+
+  #relay (stream, ondata) {
+    electron.ipcRenderer.once('streamId', (e, id) => {
+      this.#streams.set(id, {
+        stream,
+        ondata: ondata ?? ((data) => stream.push(data))
+      })
+      stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+      stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    })
   }
 
   ref () {}
