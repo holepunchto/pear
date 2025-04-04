@@ -172,6 +172,37 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/index.html'))
 })
 
+test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }) {
+  const dir = appWithIgnore
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Math.floor(Math.random() * 10000)
+
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '!ignore-file.js,!ignore-dir1' })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  is(stagingFiles.length, 6)
+  ok(stagingFiles.includes('/package.json'))
+  ok(stagingFiles.includes('/dep.js'))
+  ok(stagingFiles.includes('/app.js'))
+  ok(stagingFiles.includes('/index.html'))
+  ok(stagingFiles.includes('/ignore-file.js'))
+  ok(stagingFiles.includes('/ignore-dir1/ignore-dir1-file.js'))
+})
+
 test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
   const dir = appWithSubdir

@@ -57,7 +57,16 @@ module.exports = class Stage extends Opstream {
     if (ignore) ignore = (Array.isArray(ignore) ? ignore : ignore.split(','))
     else ignore = []
     if (state.options?.stage?.ignore) ignore.push(...state.options.stage?.ignore)
-    ignore.push(...defaultIgnore)
+    ignore = [...new Set([...defaultIgnore, ...ignore])]
+
+    const negatedIgnores = new Set(
+      ignore.filter(item => item.startsWith('!')).map(item => item.slice(1))
+    );
+    ignore = ignore.filter(item => {
+      const base = item.startsWith('!') ? item.slice(1) : item;
+      return !negatedIgnores.has(base);
+    });
+    
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
     else only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
