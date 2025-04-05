@@ -166,53 +166,51 @@ module.exports = class Stage extends Opstream {
   }
 }
 
-async function resolveGlobsIntoPaths(drive, ignore) {
-  const isGlob = (str) => /[*?[\]{}()]/.test(str);
-  const normalizePath = (p) => p.replace(/^\/+/, '').replace(/\/+$/, ''); // remove leading/trailing slashes
+async function resolveGlobsIntoPaths (drive, ignore) {
+  const isGlob = (str) => /[*?[\]{}()]/.test(str)
+  const normalizePath = (p) => p.replace(/^\/+/, '').replace(/\/+$/, '') // remove leading/trailing slashes
 
   const globToRegex = (glob) => {
-    const normalized = normalizePath(glob);
+    const normalized = normalizePath(glob)
     const regexStr = normalized
       .replace(/\./g, '\\.')
       .replace(/\*\*/g, '.*')
-      .replace(/\*/g, '[^/]*');
-    return new RegExp(`^${regexStr}$`);
-  };
+      .replace(/\*/g, '[^/]*')
+    return new RegExp(`^${regexStr}$`)
+  }
 
-  const expandedIgnores = [];
-  const globs = [];
+  const expandedIgnores = []
+  const globs = []
 
   for (const item of ignore) {
     if (isGlob(item)) {
-      globs.push(item);
+      globs.push(item)
     } else {
-      const normalized = normalizePath(item);
-      const isNegated = normalized.startsWith('!');
-      const clean = normalizePath(isNegated ? normalized.slice(1) : normalized);
+      const normalized = normalizePath(item)
+      const isNegated = normalized.startsWith('!')
+      const clean = normalizePath(isNegated ? normalized.slice(1) : normalized)
 
       for await (const entry of drive.list({ recursive: true })) {
-        const key = normalizePath(entry.key);
+        const key = normalizePath(entry.key)
         if (key === clean || key.startsWith(`${clean}/`)) {
-          expandedIgnores.push(isNegated ? `!${key}` : key);
+          expandedIgnores.push(isNegated ? `!${key}` : key)
         }
       }
     }
   }
 
   for (const pattern of globs) {
-    const isNegated = pattern.startsWith('!');
-    const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern);
-    const matcher = globToRegex(cleanPattern);
+    const isNegated = pattern.startsWith('!')
+    const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern)
+    const matcher = globToRegex(cleanPattern)
 
     for await (const entry of drive.list({ recursive: true })) {
-      const key = normalizePath(entry.key);
+      const key = normalizePath(entry.key)
       if (matcher.test(key)) {
-        expandedIgnores.push(isNegated ? `!${key}` : key);
+        expandedIgnores.push(isNegated ? `!${key}` : key)
       }
     }
   }
 
-  return expandedIgnores;
+  return expandedIgnores
 }
-
-
