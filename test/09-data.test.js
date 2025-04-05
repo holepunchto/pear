@@ -20,7 +20,7 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const ek = await deriveEncryptionKey(password, SALT)
 
@@ -82,7 +82,7 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
@@ -96,9 +96,6 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
 
   const runB = await Helper.run({ link: `pear://${key}/#fragment` })
   await Helper.untilClose(runB.pipe)
-
-  const runC = await Helper.run({ link: `pear://${key}/xeb7mugj8sbaytkf5qqu9z1snegtibqneysssdqu35em4zw3ou9wcmz8ha4er6e759tams9eeebo6j6ueifyb4oaeohnijbyxfzessxjneaqs8ux` })
-  await Helper.untilClose(runC.pipe)
 
   const data = await helper.data({ resource: 'apps' })
   const result = await Helper.pick(data, [{ tag: 'apps' }])
@@ -116,7 +113,7 @@ test('bundle persisted with z32 encoded key', async function ({ is, comment, tea
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })

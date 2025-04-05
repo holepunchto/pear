@@ -18,7 +18,7 @@ module.exports = class Bundle {
       key, channel, stage = false, status = noop, failure,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
-    this.checkout = checkout
+    this.checkout = checkout ?? null
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
@@ -252,7 +252,7 @@ module.exports = class Bundle {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
         if (this.release) this.drive = this.drive.checkout(this.release)
-      } else if (Number.isInteger(+this.checkout)) {
+      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       }
     }
