@@ -181,7 +181,7 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '!ignore-file.js,!ignore-dir1/*.js,!ignore-dir2/*.txt' })
   teardown(() => Helper.teardownStream(staging))
@@ -235,7 +235,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   await helper.ready()
 
   comment('normal stage')
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
@@ -350,7 +350,7 @@ test('stage with purge config', async function ({ ok, is, plan, comment, teardow
   await helper.ready()
 
   comment('normal stage')
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))

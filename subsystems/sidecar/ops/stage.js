@@ -74,7 +74,6 @@ module.exports = class Stage extends Opstream {
     const select = only
       ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
       : null
-    console.log(ignore)
     if (ignore.some((item) => item === '!*' || item === '!/*')) ignore = []
     else ignore = await resolveGlobsIntoPaths(src, ignore)
     const negatedIgnores = new Set(ignore.filter(item => item.startsWith('!')).map(item => item.slice(1)))
@@ -82,7 +81,6 @@ module.exports = class Stage extends Opstream {
       const base = item.startsWith('!') ? item.slice(1) : item
       return !negatedIgnores.has(base)
     })
-    console.log(ignore)
 
     const opts = { ignore, dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
