@@ -132,6 +132,12 @@ class Helper extends IPC.Client {
     this.log = log
   }
 
+  static getRandomId () {
+    const buf = Buffer.alloc(32)
+    sodium.randombytes_buf(buf)
+    return buf.toString('hex')
+  }
+
   static async teardownStream (stream) {
     if (stream.destroyed) return
     stream.end()

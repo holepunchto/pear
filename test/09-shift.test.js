@@ -12,7 +12,7 @@ test('shift should succeed', async function ({ not, is, plan, comment, teardown 
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Math.floor(Math.random() * 10000)
+  const id1 = Helper.getRandomId()
   const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging1))
   const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -60,7 +60,7 @@ test('shift should fail with invalid src', async function ({ absent, plan, comme
   await helper.ready()
 
   comment('staging dst app')
-  const id1 = Math.floor(Math.random() * 10000)
+  const id1 = Helper.getRandomId()
   const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging1))
   const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -84,7 +84,7 @@ test('shift should fail with invalid dst', async function ({ absent, plan, comme
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Math.floor(Math.random() * 10000)
+  const id1 = Helper.getRandomId()
   const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging1))
   const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -108,7 +108,7 @@ test('shift should fail when src app storage does not exist', async function ({ 
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Math.floor(Math.random() * 10000)
+  const id1 = Helper.getRandomId()
   const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging1))
   const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -132,7 +132,7 @@ test('shift should fail when dst app storage already exists without force', asyn
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Math.floor(Math.random() * 10000)
+  const id1 = Helper.getRandomId()
   const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging1))
   const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])

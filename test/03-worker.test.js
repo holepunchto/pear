@@ -151,7 +151,7 @@ test('worker in desktop app', async function ({ is, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
   teardown(() => Helper.teardownStream(staging))
