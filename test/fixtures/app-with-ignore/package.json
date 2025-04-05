@@ -6,7 +6,7 @@
     "stage": {
       "ignore": [
         "ignore-file.js",
-        "ignore-dir1",
+        "ignore-dir1/*-file.*",
         "ignore-dir2/"
       ]
     }
