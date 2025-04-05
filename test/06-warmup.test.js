@@ -174,6 +174,36 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/ignore-dir1/other-dont-ignore.js'))
 })
 
+test('stage with deeply nested glob ignores', async function ({ ok, is, plan, comment, teardown }) {
+  const dir = appWithIgnore
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '/**/*.js' })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  is(stagingFiles.length, 5)
+  ok(stagingFiles.includes('/package.json'))
+  ok(stagingFiles.includes('/dep.js'))
+  ok(stagingFiles.includes('/app.js'))
+  ok(stagingFiles.includes('/index.html'))
+  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
+})
+
 test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }) {
   const dir = appWithIgnore
 
