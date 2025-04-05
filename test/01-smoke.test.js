@@ -24,7 +24,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -60,7 +60,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -99,7 +99,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
@@ -142,7 +142,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -180,7 +180,7 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -241,13 +241,13 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
 
   const dir = entrypointAndFragment
   const entrypoint = '/entrypoint.js'
-  const fragment = (Math.floor(Math.random() * 10000)).toString()
+  const fragment = (Helper.getRandomId()).toString()
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })

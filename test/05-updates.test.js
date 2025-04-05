@@ -19,7 +19,7 @@ test.hook('updates setup', rig.setup)
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
   plan(7)
 
-  const testId = Math.floor(Math.random() * 100000)
+  const testId = Helper.getRandomId()
   const stager1 = new Helper(rig)
   teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
@@ -88,7 +88,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   const { ok, is, plan, comment, teardown } = t
   plan(7)
 
-  const testId = Math.floor(Math.random() * 100000)
+  const testId = Helper.getRandomId()
 
   comment('1. Stage and run app')
 
