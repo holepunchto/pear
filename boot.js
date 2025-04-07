@@ -8,19 +8,17 @@ class API {
   config = {}
 }
 global.Pear = new API()
-
-const constants = require('pear-api/constants')
-API.CONSTANTS = constants
+API.CONSTANTS = require('pear-api/constants')
 
 if (isWindows === false) {
   const fs = require('bare-fs')
   const os = require('bare-os')
 
-  const ownerUid = fs.statSync(constants.PLATFORM_DIR).uid
-  const userUid = os.userInfo().uid
+  const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
+  const user = os.userInfo()
 
-  if (ownerUid !== userUid) {
-    const err = new Error(`Current user does not own ${constants.PLATFORM_DIR}`)
+  if (stat.uid !== user.uid) {
+    const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
     err.name = 'User Permissions Error'
     throw err
   }
