@@ -18,6 +18,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     if (preset) {
       for (const [key] of Object.entries(flags)) {
         if (cmd.indices.flags[key] !== null && cmd.indices.flags[key] !== undefined) continue // manual flags override preset flags
+        if (key === 'detached' && flags.detach) continue // avoids recursive --detach flag
         flags[key] = preset[key]
       }
     }
