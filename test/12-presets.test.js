@@ -36,4 +36,12 @@ test('basic preset', async function (t) {
   t.ok(defaultFlags.dev === false)
   t.ok(presetFlags.tmpStore !== false)
   t.ok(presetFlags.dev === true)
+
+  const presetsInfo = await helper.presets({ link: `pear://${key}`})
+  t.teardown(() => Helper.teardownStream(presetsInfo))
+  const untilInfo = await Helper.pick(presetsInfo, [{ tag: 'info' }])
+  const infoResult = await untilInfo.info
+
+  t.ok(infoResult.tmpStore !== undefined)
+  t.ok(infoResult.dev === true)
 })
