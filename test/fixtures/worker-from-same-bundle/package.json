@@ -1,7 +1,0 @@
-{
-  "name": "worker-from-same-bundle",
-  "pear": {
-    "name": "worker-from-same-bundle",
-    "type": "desktop"
-  }
-}
