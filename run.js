@@ -83,9 +83,16 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     throw ERR_LEGACY('[ LEGACY ] No longer booting app from HTML entrypoints\n  Solution: pear run pear://runtime/documentation/migration')
   }
 
-  Module.load(new URL(bundle.entrypoint), {
-    protocol,
-    resolutions: bundle.resolutions
+  // clear global handlers
+  Bare.removeAllListeners('uncaughtException')
+  Bare.removeAllListeners('unhandledRejection')
+
+  // preserves uncaught exceptions (otherwise they become unhandled rejections)
+  setImmediate(() => {
+    Module.load(new URL(bundle.entrypoint), {
+      protocol,
+      resolutions: bundle.resolutions
+    })
   })
 
   return new Promise((resolve) => global.Pear.teardown(resolve))
