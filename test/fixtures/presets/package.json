@@ -1,0 +1,8 @@
+{
+  "name": "presets",
+  "main": "index.js",
+  "pear": {
+    "name": "presets",
+    "type": "terminal"
+  }
+}
