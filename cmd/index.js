@@ -150,8 +150,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const reset = command(
     'reset',
     summary('Advanced. Reset an application to initial state'),
+    command('app', summary('Reset application storage'), arg('<link>', 'Application Pear link'), runners.reset(ipc)),
+    command('presets', summary('Reset application default configuration'), arg('[link]', 'Pear link'), runners.reset(ipc)),
     description(usage.descriptions.reset),
-    arg('<link>', 'Application Pear link'),
     flag('--json', 'Newline delimited JSON output'),
     runners.reset(ipc)
   )

@@ -1,7 +1,7 @@
 const test = require('brittle')
 const path = require('bare-path')
-const Helper = require('./helper')
 const tmp = require('test-tmp')
+const Helper = require('./helper')
 
 const presetsDir = path.join(Helper.localDir, 'test', 'fixtures', 'presets')
 
@@ -26,22 +26,23 @@ test('basic preset', async function (t) {
   const tmpdir = await tmp()
   const presets = await helper.presets({ link: `pear://${key}`, flags: { tmpStore: tmpdir, dev: true } })
   t.teardown(() => Helper.teardownStream(presets))
-  await Helper.pick(presets, [{ tag: 'info' }])
+  const untilUpdated = await Helper.pick(presets, [{ tag: 'updated' }])
+  await untilUpdated.updated
 
   const runB = await Helper.run({ link: `pear://${key}` })
   const presetFlags = JSON.parse(await Helper.untilResult(runB.pipe))
   await Helper.untilClose(runB.pipe)
 
-  t.ok(defaultFlags.tmpStore === false)
-  t.ok(defaultFlags.dev === false)
-  t.ok(presetFlags.tmpStore !== false)
-  t.ok(presetFlags.dev === true)
+  t.ok(defaultFlags.tmpStore === false, 'default tmpStore is false')
+  t.ok(defaultFlags.dev === false, 'default dev flag is false')
+  t.ok(presetFlags.tmpStore !== false, 'tmpStore flag is not false after setting preset')
+  t.ok(presetFlags.dev === true, 'dev flag is not false after setting preset')
 
   const presetsInfo = await helper.presets({ link: `pear://${key}` })
   t.teardown(() => Helper.teardownStream(presetsInfo))
   const untilInfo = await Helper.pick(presetsInfo, [{ tag: 'info' }])
   const infoResult = await untilInfo.info
 
-  t.ok(infoResult.tmpStore !== undefined)
-  t.ok(infoResult.dev === true)
+  t.ok(infoResult.tmpStore !== undefined, 'preset info returned')
+  t.ok(infoResult.dev === true, 'dev flag is correct in preset info')
 })

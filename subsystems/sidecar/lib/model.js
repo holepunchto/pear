@@ -86,6 +86,24 @@ module.exports = class Model {
       result = null
     } else {
       const updatedBundle = { ...bundle, preset: { run: preset } }
+      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
+      await tx.insert('@pear/bundle', updatedBundle)
+      result = updatedBundle
+    }
+    await this.lock.exit()
+    return result
+  }
+
+  async resetPreset (link) {
+    let result
+    const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
+    const bundle = await tx.get('@pear/bundle', { link })
+    if (!bundle) {
+      result = null
+    } else {
+      const updatedBundle = { ...bundle, preset: undefined }
+      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
       await tx.insert('@pear/bundle', updatedBundle)
       result = updatedBundle
     }
