@@ -1,6 +1,12 @@
 # Pear Runtime Changelog
 
-## v1.12
+## v1.12.1
+
+### Fixes
+
+* Internal - Updated device-file to 1.2.6
+
+## v1.12.0
 
 ### Fixes
 
