@@ -22,7 +22,8 @@ async function electronMain (cmd) {
   const state = new State({
     link: cmd.args.link.replace('_||', '://'), // for Windows
     flags: cmd.flags,
-    args: cmd.rest
+    args: cmd.rest,
+    indices: cmd.indices
   })
   State.storage(state)
 

@@ -49,7 +49,8 @@ const ops = {
   Shift: require('./ops/shift'),
   Reset: require('./ops/reset'),
   Touch: require('./ops/touch'),
-  Data: require('./ops/data')
+  Data: require('./ops/data'),
+  Presets: require('./ops/presets')
 }
 
 // ensure that we are registered as a link handler
@@ -375,6 +376,8 @@ class Sidecar extends ReadyResource {
   gc (params, client) { return new ops.GC(params, client) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
+
+  presets (params, client) { return new ops.Presets(params, client, this) }
 
   warmup (params, client) {
     if (!client.userData) return

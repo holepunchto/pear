@@ -77,6 +77,11 @@
           "array": true,
           "type": "string",
           "version": 1
+        },
+        {
+          "name": "preset",
+          "type": "@pear/preset",
+          "version": 1
         }
       ]
     },
@@ -89,6 +94,29 @@
         {
           "name": "path",
           "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "preset",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 0,
+      "fields": [
+        {
+          "name": "stage",
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "run",
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "seed",
           "type": "string",
           "version": 1
         }
