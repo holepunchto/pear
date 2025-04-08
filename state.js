@@ -156,17 +156,17 @@ module.exports = class State {
     } = flags
     const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
     this.store = store
-    this.startId = startId || null //
-    this.appling = appling //
-    this.channel = channel || null //
-    this.checkout = checkout //
-    this.dev = dev //
-    this.devtools = this.dev || devtools //
-    this.updatesDiff = this.dev || updatesDiff //
-    this.updates = updates //
-    this.stage = stage //
-    this.clearAppStorage = unsafeClearAppStorage //
-    this.chromeWebrtcInternals = chromeWebrtcInternals //
+    this.startId = startId || null
+    this.appling = appling
+    this.channel = channel || null
+    this.checkout = checkout
+    this.dev = dev
+    this.devtools = this.dev || devtools
+    this.updatesDiff = this.dev || updatesDiff
+    this.updates = updates
+    this.stage = stage
+    this.clearAppStorage = unsafeClearAppStorage
+    this.chromeWebrtcInternals = chromeWebrtcInternals
     if (links) {
       const overrides = links.split(',').reduce((links, kv) => {
         const [key, value] = kv.split('=')
