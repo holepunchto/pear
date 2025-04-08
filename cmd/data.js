@@ -1,8 +1,7 @@
 'use strict'
 const parseLink = require('pear-api/parse-link')
-const { outputter, ansi, confirm } = require('pear-api/terminal')
+const { outputter, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { PLATFORM_HYPERDB } = require('pear-api/constants')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -78,20 +77,5 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
-  }
-
-  async reset (cmd) {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const { yes } = command.flags
-    if (!yes) {
-      const dialog = `${ansi.warning} Clearing database ${ansi.bold(PLATFORM_HYPERDB)}\n\n`
-      const ask = 'Type DELETE to confirm'
-      const delim = '?'
-      const validation = (val) => val === 'DELETE'
-      const msg = '\n' + ansi.cross + ' uppercase DELETE to confirm\n'
-      await confirm(dialog, ask, delim, validation, msg)
-    }
-    await output(json, this.ipc.dataReset(), { tag: 'dataReset' }, this.ipc)
   }
 }
