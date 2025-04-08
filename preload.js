@@ -149,8 +149,8 @@ if (process.isMainFrame) {
     }
 
     async #maclights (visible) {
-      console.trace('#maclights')
       await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible })
+      if (visible === false) return
       await new Promise((resolve) => requestAnimationFrame(resolve))
       const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
       await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
@@ -218,7 +218,8 @@ if (process.isMainFrame) {
       if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
-        this.#closing = gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
+        this.resizes.disconnect()
+        this.#closing = this.#maclights(false)
         return
       }
 
