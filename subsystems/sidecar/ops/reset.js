@@ -2,9 +2,9 @@
 const path = require('bare-path')
 const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
-const { PLATFORM_DIR } = require('../../../constants')
+const { PLATFORM_DIR } = require('pear-api/constants')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
-const { ERR_INVALID_INPUT } = require('../../../errors')
 
 module.exports = class Reset extends Opstream {
   constructor (...args) {

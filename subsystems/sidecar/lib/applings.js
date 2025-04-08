@@ -3,7 +3,7 @@ const cenc = require('compact-encoding')
 const fsp = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')
 const ReadyResource = require('ready-resource')
-const constants = require('../../../constants')
+const constants = require('pear-api/constants')
 
 const APPLINGS_STORAGE_VERSION = 0
 
