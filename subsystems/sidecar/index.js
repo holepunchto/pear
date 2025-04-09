@@ -318,9 +318,7 @@ class Sidecar extends ReadyResource {
   async updateStateNotify (state, checkout = null) {
     const messaged = new Set()
     for await (const app of this.apps) {
-      if (!app || app.minvering === true) continue
-
-      if (messaged.has(app)) continue
+      if (!app || app.minvering === true || messaged.has(app)) continue
       messaged.add(app)
 
       app.message({ type: `pear/${state}`, ...(checkout ? { checkout } : {}) })
