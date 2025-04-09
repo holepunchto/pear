@@ -92,7 +92,7 @@ class Sidecar extends ReadyResource {
           ? `- Updating to length ${length}...`
           : `- Switching to key ${key} with length ${length}...`
         )
-        this.updateStateNotify('updating', checkout)
+        this.updatingNotify(checkout)
       })
       this.updater.on('update', (checkout) => this.updateNotify(checkout))
     }
@@ -312,13 +312,13 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
-  async updateStateNotify (state, checkout = null) {
+  async updatingNotify (checkout = null) {
     const messaged = new Set()
     for await (const app of this.apps) {
       if (!app || app.minvering === true || messaged.has(app)) continue
       messaged.add(app)
 
-      app.message({ type: 'pear/updates', app: false, version: checkout, [state]: true })
+      app.message({ type: 'pear/updates', app: false, version: checkout, updating: true })
     }
   }
 
@@ -344,7 +344,7 @@ class Sidecar extends ReadyResource {
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null, updated: true })
+      app.message({ type: 'pear/updates', app: false, version, diff: null })
     }
   }
 
