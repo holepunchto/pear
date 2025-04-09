@@ -321,7 +321,7 @@ class Sidecar extends ReadyResource {
       if (!app || app.minvering === true || messaged.has(app)) continue
       messaged.add(app)
 
-      app.message({ type: `pear/${state}`, ...(checkout ? { checkout } : {}) })
+      app.message({ type: 'pear/updates', app: false, version: checkout, [state]: true })
     }
   }
 
@@ -664,7 +664,7 @@ class Sidecar extends ReadyResource {
         LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
         client.userData.message({ type: 'pear/updates', version, diff: info.diff })
       }
-      if (this.updater?.updating) client.userData.message({ type: 'pear/updating' })
+      if (this.updater?.updating) client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true })
       return info
     } catch (err) {
       await session.close()
