@@ -68,7 +68,6 @@ class Sidecar extends ReadyResource {
   keyPair = null
   discovery = null
   electronVersion = null
-  updating = false
 
   teardown () { global.Bare.exit() }
 
