@@ -443,7 +443,13 @@ class Sidecar extends ReadyResource {
 
   messages (pattern, client) {
     if (!client.userData) return
-    return client.userData.messages(pattern)
+    const messages = client.userData.messages(pattern)
+
+    if (pattern?.type === 'pear/updates' && this.updater?.updating) {
+      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true })
+    }
+
+    return messages
   }
 
   async permit (params) {
@@ -660,7 +666,6 @@ class Sidecar extends ReadyResource {
         LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
         client.userData.message({ type: 'pear/updates', version, diff: info.diff })
       }
-      if (this.updater?.updating) client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true })
       return info
     } catch (err) {
       await session.close()
