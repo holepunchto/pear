@@ -68,6 +68,7 @@ class Sidecar extends ReadyResource {
   keyPair = null
   discovery = null
   electronVersion = null
+  updating = false
 
   teardown () { global.Bare.exit() }
 
@@ -85,13 +86,18 @@ class Sidecar extends ReadyResource {
 
     this.updater = updater
     if (this.updater) {
-      this.updater.on('updating', ({ key, length }) => {
+      this.updater.on('updating', (checkout) => {
+        const { key, length } = checkout
         LOG.info('sidecar', key === this.version.key
           ? `- Updating to length ${length}...`
           : `- Switching to key ${key} with length ${length}...`
         )
+        this.updateStateNotify('updating', checkout)
       })
-      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+      this.updater.on('update', (checkout) => {
+        this.updateNotify(checkout)
+        this.updateStateNotify('updated', checkout)
+      })
     }
 
     this.#spindownCountdown()
@@ -307,6 +313,18 @@ class Sidecar extends ReadyResource {
       if (this.hasClients || this.updater?.updating) return
       this.close().catch((err) => { LOG.error('internal', 'Failed to Close Sidecar', err) })
     }, this.spindownms)
+  }
+
+  async updateStateNotify (state, checkout = null) {
+    const messaged = new Set()
+    for await (const app of this.apps) {
+      if (!app || app.minvering === true) continue
+
+      if (messaged.has(app)) continue
+      messaged.add(app)
+
+      app.message({ type: `pear/${state}`, ...(checkout ? { checkout } : {}) })
+    }
   }
 
   async updateNotify (version, info = {}) {
