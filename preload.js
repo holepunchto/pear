@@ -150,6 +150,8 @@ if (process.isMainFrame) {
 
     async #maclights (visible) {
       await gui.ipc.setWindowButtonVisibility({ id: gui.id, visible })
+      if (visible === false) return
+      await new Promise((resolve) => requestAnimationFrame(resolve))
       const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
       await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
     }
@@ -157,16 +159,16 @@ if (process.isMainFrame) {
     connectedCallback () {
       this.dataset.platform = platform
       if (isMac) {
-        this.#maclights(true).catch(console.error)
-        this.mutations = new MutationObserver(async () => {
-          const { x, y } = this.root.querySelector('#ctrl').getBoundingClientRect()
-          await gui.ipc.setWindowButtonPosition({ id: gui.id, point: { x, y: y - 6 } })
-        })
+        this.#maclights(true)
+        this.resizes = new ResizeObserver(() => { this.#maclights(true) })
+        this.resizes.observe(this.root.querySelector('#ctrl'))
+
+        this.mutations = new MutationObserver(() => { this.#maclights(true) })
         this.mutations.observe(this, { attributes: true })
 
         this.intesections = new IntersectionObserver(([element]) => this.#maclights(element.isIntersecting), { threshold: 0 })
-
         this.intesections.observe(this)
+
         this.#setCtrl()
         return
       }
@@ -216,7 +218,8 @@ if (process.isMainFrame) {
       if (isMac) {
         this.mutations.disconnect()
         this.intesections.disconnect()
-        this.#closing = gui.ipc.setWindowButtonVisibility({ id: gui.id, visible: false })
+        this.resizes.disconnect()
+        this.#closing = this.#maclights(false)
         return
       }
 
