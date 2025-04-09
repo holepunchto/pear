@@ -343,7 +343,7 @@ class Sidecar extends ReadyResource {
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null })
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updated: true })
     }
   }
 
