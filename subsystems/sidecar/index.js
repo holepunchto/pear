@@ -310,7 +310,6 @@ class Sidecar extends ReadyResource {
   }
 
   async updateNotify (version, info = {}) {
-    this.spindownms = 0
     this.updateAvailable = { version, info }
 
     if (info.link) LOG.info('sidecar', 'Application update available:')
