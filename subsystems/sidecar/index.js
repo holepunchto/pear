@@ -94,10 +94,7 @@ class Sidecar extends ReadyResource {
         )
         this.updateStateNotify('updating', checkout)
       })
-      this.updater.on('update', (checkout) => {
-        this.updateNotify(checkout)
-        this.updateStateNotify('updated', checkout)
-      })
+      this.updater.on('update', (checkout) => this.updateNotify(checkout))
     }
 
     this.#spindownCountdown()
@@ -347,7 +344,7 @@ class Sidecar extends ReadyResource {
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null })
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updated: true })
     }
   }
 
