@@ -147,6 +147,10 @@ test('no duplicated bundle local app', async function ({ is, comment, teardown }
   const runB = await Helper.run({ link: versionsDir + '#fragment' })
   await Helper.untilClose(runB.pipe)
 
+  comment(`running file://${versionsDir}`)
+  const runC = await Helper.run({ link: 'file://' + versionsDir })
+  await Helper.untilClose(runC.pipe)
+
   const data = await helper.data({ resource: 'apps' })
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps

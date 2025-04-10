@@ -769,7 +769,13 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : pathToFileURL(link).href)
+    if (link.startsWith('pear://')) {
+      link = `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}`
+    } else if (!link.startsWith('file://')) {
+      link = pathToFileURL(link).href
+    }
+    link = pearLink.normalize(link)
+
     const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
 
     await fs.promises.mkdir(appStorage, { recursive: true })
