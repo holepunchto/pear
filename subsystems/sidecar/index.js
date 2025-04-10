@@ -85,11 +85,13 @@ class Sidecar extends ReadyResource {
 
     this.updater = updater
     if (this.updater) {
-      this.updater.on('updating', ({ key, length }) => {
+      this.updater.on('updating', (checkout) => {
+        const { key, length } = checkout
         LOG.info('sidecar', key === this.version.key
           ? `- Updating to length ${length}...`
           : `- Switching to key ${key} with length ${length}...`
         )
+        this.updatingNotify(checkout)
       })
       this.updater.on('update', (checkout) => this.updateNotify(checkout))
     }
@@ -309,6 +311,16 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
+  async updatingNotify (checkout = null) {
+    const messaged = new Set()
+    for await (const app of this.apps) {
+      if (!app || app.minvering === true || messaged.has(app)) continue
+      messaged.add(app)
+
+      app.message({ type: 'pear/updates', app: false, version: checkout, updating: true, updated: false })
+    }
+  }
+
   async updateNotify (version, info = {}) {
     this.updateAvailable = { version, info }
 
@@ -331,7 +343,7 @@ class Sidecar extends ReadyResource {
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null })
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true })
     }
   }
 
@@ -431,7 +443,13 @@ class Sidecar extends ReadyResource {
 
   messages (pattern, client) {
     if (!client.userData) return
-    return client.userData.messages(pattern)
+    const messages = client.userData.messages(pattern)
+
+    if (pattern?.type === 'pear/updates' && this.updater?.updating) {
+      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true, updated: false })
+    }
+
+    return messages
   }
 
   async permit (params) {
