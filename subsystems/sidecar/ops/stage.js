@@ -203,8 +203,8 @@ async function resolveGlobsIntoPaths (drive, ignore) {
     const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern)
     const matcher = globToRegex(cleanPattern)
 
-    const idx = cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*');
-    const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern;
+    const idx = cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*')
+    const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern
 
     for await (const entry of drive.list(dir, { recursive: isRecursive })) {
       const key = normalizePath(entry.key)
