@@ -317,7 +317,7 @@ class Sidecar extends ReadyResource {
       if (!app || app.minvering === true || messaged.has(app)) continue
       messaged.add(app)
 
-      app.message({ type: 'pear/updates', app: false, version: checkout, updating: true })
+      app.message({ type: 'pear/updates', app: false, version: checkout, updating: true, updated: false })
     }
   }
 
@@ -343,7 +343,7 @@ class Sidecar extends ReadyResource {
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null, updated: true })
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true })
     }
   }
 
@@ -446,7 +446,7 @@ class Sidecar extends ReadyResource {
     const messages = client.userData.messages(pattern)
 
     if (pattern?.type === 'pear/updates' && this.updater?.updating) {
-      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true })
+      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true, updated: false })
     }
 
     return messages
