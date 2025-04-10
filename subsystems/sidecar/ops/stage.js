@@ -75,12 +75,10 @@ module.exports = class Stage extends Opstream {
       ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
       : null
     if (ignore.some((item) => item === '!*' || item === '!/*')) ignore = []
-    else ignore = await resolveGlobsIntoPaths(src, ignore)
-    const negatedIgnores = new Set(ignore.filter(item => item.startsWith('!')).map(item => item.slice(1)))
-    ignore = ignore.filter(item => {
-      const base = item.startsWith('!') ? item.slice(1) : item
-      return !negatedIgnores.has(base)
-    })
+    else {
+      ignore = await resolveGlobsIntoPaths(src, ignore)
+      ignore = toIgnoreFunction(ignore)
+    }
 
     const opts = { ignore, dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
@@ -102,7 +100,7 @@ module.exports = class Stage extends Opstream {
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (ignore.some(e => entry.key.startsWith('/' + e))) {
+        if (ignore(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
@@ -166,6 +164,14 @@ module.exports = class Stage extends Opstream {
   }
 }
 
+function toIgnoreFunction (arr) {
+  const ignore = arr.filter(e => !e.startsWith('!')).map(e => unixPathResolve('/', e))
+  const unignore = arr.filter(e => e.startsWith('!')).map(e => unixPathResolve('/', e.slice(1)))
+  return function (key) {
+    return ignore.some(e => key.startsWith(e) && !unignore.includes(key))
+  }
+}
+
 async function resolveGlobsIntoPaths (drive, ignore) {
   const isGlob = (str) => /[*?[\]{}()]/.test(str)
   const normalizePath = (p) => p.replace(/^\/+/, '').replace(/\/+$/, '') // remove leading/trailing slashes
@@ -179,7 +185,7 @@ async function resolveGlobsIntoPaths (drive, ignore) {
     return new RegExp(`^${regexStr}$`)
   }
 
-  const expandedIgnores = []
+  const expandedIgnores = new Set()
   const globs = []
 
   for (const item of ignore) {
@@ -187,30 +193,26 @@ async function resolveGlobsIntoPaths (drive, ignore) {
       globs.push(item)
     } else {
       const normalized = normalizePath(item)
-      const isNegated = normalized.startsWith('!')
-      const clean = normalizePath(isNegated ? normalized.slice(1) : normalized)
-
-      for await (const entry of drive.list({ recursive: true })) {
-        const key = normalizePath(entry.key)
-        if (key === clean || key.startsWith(`${clean}/`)) {
-          expandedIgnores.push(isNegated ? `!${key}` : key)
-        }
-      }
+      expandedIgnores.add(normalized)
     }
   }
 
   for (const pattern of globs) {
     const isNegated = pattern.startsWith('!')
+    const isRecursive = pattern.includes('**')
     const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern)
     const matcher = globToRegex(cleanPattern)
 
-    for await (const entry of drive.list({ recursive: true })) {
+    const idx = cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*');
+    const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern;
+
+    for await (const entry of drive.list(dir, { recursive: isRecursive })) {
       const key = normalizePath(entry.key)
       if (matcher.test(key)) {
-        expandedIgnores.push(isNegated ? `!${key}` : key)
+        expandedIgnores.add(isNegated ? `!${key}` : key)
       }
     }
   }
 
-  return expandedIgnores
+  return [...expandedIgnores]
 }
