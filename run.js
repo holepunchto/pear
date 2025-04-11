@@ -4,7 +4,7 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const ENV = require('bare-env')
-const { spawn } = require('bare-subprocess')
+const { spawn } = require('bare-daemon')
 const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
@@ -46,9 +46,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) return ipc.close().catch(console.error)
     args = args.filter((arg) => arg !== '--detached')
-    const opts = { detached: true, stdio: 'ignore', cwd }
+    const opts = { stdio: 'ignore', cwd }
     if (!appling) args.unshift('run', '--detach')
     else args.unshift('run', '--appling', appling)
+    
     spawn(constants.RUNTIME, args, opts).unref()
     return ipc.close().catch(console.error)
   }

@@ -2,6 +2,7 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
+const { spawn: spawnDaemon } = require('bare-daemon');
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -583,11 +584,11 @@ class Sidecar extends ReadyResource {
     await sidecarClosed
 
     for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd, env, detached: true, stdio: 'ignore' }
+      const opts = { cwd, env, stdio: 'ignore' }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
-        else spawn(applingPath, opts).unref()
+        if (isMac) spawnDaemon('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
+        else spawnDaemon(applingPath, opts).unref()
       } else {
         const TARGET_RUNTIME = this.updater === null
           ? RUNTIME
@@ -604,7 +605,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        spawn(TARGET_RUNTIME, cmdArgs, opts).unref()
+        spawnDaemon(TARGET_RUNTIME, cmdArgs, opts).unref()
       }
     }
   }

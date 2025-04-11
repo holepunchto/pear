@@ -4,6 +4,7 @@ const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
+const { spawn: spawnDaemon } = require('bare-daemon');
 const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
@@ -121,10 +122,17 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          const sc = spawn(runtime, args, {
-            detached: !log,
-            stdio: log ? 'inherit' : 'ignore'
-          })
+        let sc
+          if (log){
+            sc = spawn(runtime, args, {
+              detached: !log,
+              stdio: log ? 'inherit' : 'ignore'
+            })
+          } else {
+            sc = spawnDaemon(runtime, args, {
+              stdio: log ? 'inherit' : 'ignore'
+            })
+          }
           sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
