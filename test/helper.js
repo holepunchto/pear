@@ -123,17 +123,17 @@ class Helper extends IPC.Client {
       ? true
       : () => {
         let sc
-          if (log){
-            sc = spawn(runtime, args, {
-              detached: !log,
-              stdio: log ? 'inherit' : 'ignore'
-            })
-          } else {
-            sc = spawnDaemon(runtime, args, {
-              stdio: log ? 'inherit' : 'ignore'
-            })
-          }
-          sc.unref()
+        if (!log){
+          sc = spawn(runtime, args, {
+            detached: !log,
+            stdio: log ? 'inherit' : 'ignore'
+          })
+        } else {
+          sc = spawnDaemon(runtime, args, {
+            stdio: log ? 'inherit' : 'ignore'
+          })
+        }
+        sc.unref()
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
