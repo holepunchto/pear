@@ -317,7 +317,7 @@ class Sidecar extends ReadyResource {
       if (!app || app.minvering === true || messaged.has(app)) continue
       messaged.add(app)
 
-      app.message({ type: 'pear/updates', app: false, version: checkout, updating: true, updated: false })
+      app.message({ type: 'pear/updates', app: false, version: checkout, diff: null, updating: true, updated: false })
     }
   }
 
@@ -339,7 +339,7 @@ class Sidecar extends ReadyResource {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle?.link) {
-        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
         continue
       }
       if (info.link) continue
@@ -446,7 +446,7 @@ class Sidecar extends ReadyResource {
     const messages = client.userData.messages(pattern)
 
     if (pattern?.type === 'pear/updates' && this.updater?.updating) {
-      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, updating: true, updated: false })
+      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, info: null, updating: true, updated: false })
     }
 
     return messages
@@ -664,7 +664,7 @@ class Sidecar extends ReadyResource {
       if (this.updateAvailable !== null) {
         const { version, info } = this.updateAvailable
         LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
-        client.userData.message({ type: 'pear/updates', version, diff: info.diff })
+        client.userData.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
       }
       return info
     } catch (err) {
