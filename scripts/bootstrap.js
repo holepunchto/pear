@@ -2,6 +2,7 @@
 'use strict'
 
 const { platform, arch, isWindows, isBare } = require('which-runtime')
+const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const { command, flag, rest } = require('paparam')
@@ -30,7 +31,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
 const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'dhpc5npmqkansx38uh18h3uwpdp6g9ukozrqyc4irbhwriedyeho'
-const CORESTORE = cmd.flags.externalCorestore && `/tmp/pear-archdump/${RUNTIMES_DRIVE_KEY}`
+const CORESTORE = cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
