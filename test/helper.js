@@ -128,8 +128,8 @@ class Helper extends IPC.Client {
               detached: false,
               stdio: 'inherit'
             })
-          } else sc = spawnDaemon(runtime, args)
           sc.unref()
+          } else sc = spawnDaemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
