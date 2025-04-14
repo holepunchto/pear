@@ -4,7 +4,7 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const ENV = require('bare-env')
-const { spawn } = require('bare-daemon')
+const { spawn: daemon } = require('bare-daemon')
 const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
@@ -50,7 +50,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     if (!appling) args.unshift('run', '--detach')
     else args.unshift('run', '--appling', appling)
 
-    spawn(constants.RUNTIME, args, opts).unref()
+    daemon(constants.RUNTIME, args, opts)
     return ipc.close().catch(console.error)
   }
 
