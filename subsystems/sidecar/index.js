@@ -2,7 +2,7 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const { spawn: spawnDaemon } = require('bare-daemon');
+const { spawn: spawnDaemon } = require('bare-daemon')
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -584,7 +584,7 @@ class Sidecar extends ReadyResource {
     await sidecarClosed
 
     for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd, env, stdio: 'ignore' }
+      const opts = { cwd, env }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) spawnDaemon('open', [applingPath.split('.app')[0] + '.app'], opts).unref()

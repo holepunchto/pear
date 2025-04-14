@@ -46,10 +46,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: key === null ? dir : null })
     if (wokeup) return ipc.close().catch(console.error)
     args = args.filter((arg) => arg !== '--detached')
-    const opts = { stdio: 'ignore', cwd }
+    const opts = { cwd }
     if (!appling) args.unshift('run', '--detach')
     else args.unshift('run', '--appling', appling)
-    
+
     spawn(constants.RUNTIME, args, opts).unref()
     return ipc.close().catch(console.error)
   }
