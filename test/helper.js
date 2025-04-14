@@ -122,13 +122,8 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          let sc
-          if (log) {
-            sc = spawn(runtime, args, {
-              stdio: 'inherit'
-            })
-            sc.unref()
-          } else sc = daemon(runtime, args)
+          if (log) spawn(runtime, args, { stdio: 'inherit'})
+          else daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log

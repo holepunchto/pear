@@ -536,7 +536,7 @@ class Sidecar extends ReadyResource {
       }
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: false, stdio: 'pipe' }
+      const opts = { cwd, env, detached: false }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -550,8 +550,8 @@ class Sidecar extends ReadyResource {
       }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts).unref()
-        else spawn(applingPath, opts).unref()
+        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+        else spawn(applingPath, opts)
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -564,7 +564,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        spawn(RUNTIME, cmdArgs, opts).unref()
+        spawn(RUNTIME, cmdArgs, opts)
       }
 
       return
