@@ -312,10 +312,8 @@ class Sidecar extends ReadyResource {
   }
 
   async updatingNotify (checkout = null) {
-    const messaged = new Set()
     for await (const app of this.apps) {
-      if (!app || app.minvering === true || messaged.has(app)) continue
-      messaged.add(app)
+      if (!app || app.minvering === true) continue
 
       app.message({ type: 'pear/updates', app: false, version: checkout, diff: null, updating: true, updated: false })
     }
