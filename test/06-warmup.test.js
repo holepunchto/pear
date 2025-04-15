@@ -16,6 +16,7 @@ const appWithoutMain = path.join(Helper.localDir, 'test', 'fixtures', 'app-witho
 const appWithIgnore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-ignore')
 const appWithSubdir = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-subdir')
 const appWithPurge = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-purge')
+const appWithUnignore = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-unignore')
 
 test('stage warmup with entrypoints', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -171,10 +172,10 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/app.js'))
   ok(stagingFiles.includes('/index.html'))
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
-  ok(stagingFiles.includes('/ignore-dir1/other-dont-ignore.js'))
+  ok(stagingFiles.includes('/ignore-dir1/deep-glob-ignore.js'))
 })
 
-test('stage with deeply nested glob ignores', async function ({ ok, is, plan, comment, teardown }) {
+test('stage with glob ignores', async function ({ ok, is, plan, comment, teardown }) {
   const dir = appWithIgnore
 
   const helper = new Helper()
@@ -204,8 +205,8 @@ test('stage with deeply nested glob ignores', async function ({ ok, is, plan, co
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
 })
 
-test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }) {
-  const dir = appWithIgnore
+test('stage with ignore and unignore', async function ({ ok, is, plan, comment, teardown }) {
+  const dir = appWithUnignore
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -213,7 +214,7 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
 
   const id = Helper.getRandomId()
 
-  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, ignore: '!ignore-file.js,!ignore-dir1/*.js,!ignore-dir2/*.txt' })
+  let staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   let stagingFiles = []
@@ -226,17 +227,15 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
   let staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 10, 'should stage 10 files')
+  is(stagingFiles.length, 8, 'should stage 8 files')
   ok(stagingFiles.includes('/package.json'))
-  ok(stagingFiles.includes('/dep.js'))
-  ok(stagingFiles.includes('/app.js'))
-  ok(stagingFiles.includes('/index.html'))
-  ok(stagingFiles.includes('/ignore-file.js'))
-  ok(stagingFiles.includes('/ignore-dir1/ignore-dir1-file.js'))
-  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
-  ok(stagingFiles.includes('/ignore-dir1/other-dont-ignore.js'))
-  ok(stagingFiles.includes('/ignore-dir2/other-file.txt'))
-  ok(stagingFiles.includes('/ignore-dir2/other-other-file.txt'))
+  ok(stagingFiles.includes('/index.js'))
+  ok(stagingFiles.includes('/modules/prebuilds/file.js'))
+  ok(stagingFiles.includes('/modules/dir1/prebuilds/dir1-file1.js'))
+  ok(stagingFiles.includes('/modules/dir1/prebuilds/dir1-file1.js'))
+  ok(stagingFiles.includes('/modules/dir2/other/other.js'))
+  ok(stagingFiles.includes('/modules/dir3/other.js'))
+  ok(stagingFiles.includes('/modules/dir4/subdir/other.js'))
 
   staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, purge: false, ignore: '!*' })
   teardown(() => Helper.teardownStream(staging))
@@ -251,9 +250,12 @@ test('stage negated ignore', async function ({ ok, is, plan, comment, teardown }
   staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 2, 'should stage one more file')
-  ok(stagingFiles.includes('/ignore-dir2/ignore-dir2-file.js'))
-  ok(stagingFiles.includes('/ignore-dir1/ignore-file.txt'))
+  is(stagingFiles.length, 5, 'should stage 5 more files')
+  ok(stagingFiles.includes('/modules/dir2/prebuilds/dir2-file1.js'))
+  ok(stagingFiles.includes('/modules/dir2/prebuilds/dir2-file2.js'))
+  ok(stagingFiles.includes('/modules/dir3/prebuilds/dir3-file1.js'))
+  ok(stagingFiles.includes('/modules/dir3/prebuilds/dir3-file2.js'))
+  ok(stagingFiles.includes('/modules/dir4/subdir/prebuilds/file.js'))
 })
 
 test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {

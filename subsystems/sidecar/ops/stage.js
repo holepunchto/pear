@@ -76,8 +76,8 @@ module.exports = class Stage extends Opstream {
       : null
     if (ignore.some((item) => item === '!*' || item === '!/*')) ignore = []
     else {
-      ignore = await resolveGlobsIntoPaths(src, ignore)
-      ignore = toIgnoreFunction(ignore)
+      const { ignores, unignores } = await resolveGlobsIntoPaths(src, ignore)
+      ignore = toIgnoreFunction(ignores, unignores)
     }
 
     const opts = { ignore, dryRun, batch: true, filter: select }
@@ -164,11 +164,20 @@ module.exports = class Stage extends Opstream {
   }
 }
 
-function toIgnoreFunction (arr) {
-  const ignore = arr.filter(e => !e.startsWith('!')).map(e => unixPathResolve('/', e))
-  const unignore = arr.filter(e => e.startsWith('!')).map(e => unixPathResolve('/', e.slice(1)))
+function toIgnoreFunction (ignores, unignores) {
   return function (key) {
-    return ignore.some(e => key.startsWith(e) && !unignore.includes(key))
+    for (const u of unignores) {
+      const path = unixPathResolve('/', u)
+      if (path === key) return false
+      if (path.startsWith(key + '/')) return false
+      if (key.startsWith(path + '/')) return false
+    }
+    for (const i of ignores) {
+      const path = unixPathResolve('/', i)
+      if (path === key) return true
+      if (key.startsWith(path + '/')) return true
+    }
+    return false
   }
 }
 
@@ -178,14 +187,17 @@ async function resolveGlobsIntoPaths (drive, ignore) {
 
   const globToRegex = (glob) => {
     const normalized = normalizePath(glob)
+    const placeholder = '__DOUBLE_STAR__'
     const regexStr = normalized
+      .replace(/\*\*/g, placeholder)
       .replace(/\./g, '\\.')
-      .replace(/\*\*/g, '.*')
-      .replace(/\*/g, '[^/]*')
-    return new RegExp(`^${regexStr}$`)
+      .replace(/\*/g, '[^/]+')
+      .replace(placeholder, '.*')
+    return new RegExp(`^${regexStr}(?:/.*)?$`)
   }
 
-  const expandedIgnores = new Set()
+  const ignores = new Set()
+  const unignores = new Set()
   const globs = []
 
   for (const item of ignore) {
@@ -193,7 +205,8 @@ async function resolveGlobsIntoPaths (drive, ignore) {
       globs.push(item)
     } else {
       const normalized = normalizePath(item)
-      expandedIgnores.add(normalized)
+      if (normalized.startsWith('!')) unignores.add(normalized.slice(1))
+      else ignores.add(normalized)
     }
   }
 
@@ -209,10 +222,11 @@ async function resolveGlobsIntoPaths (drive, ignore) {
     for await (const entry of drive.list(dir, { recursive: isRecursive })) {
       const key = normalizePath(entry.key)
       if (matcher.test(key)) {
-        expandedIgnores.add(isNegated ? `!${key}` : key)
+        if (isNegated) unignores.add(key)
+        else ignores.add(key)
       }
     }
   }
 
-  return [...expandedIgnores]
+  return { ignores: [...ignores], unignores: [...unignores] }
 }
