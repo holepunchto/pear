@@ -76,7 +76,7 @@ module.exports = class Info extends Opstream {
         if (error.code === 'DECODING_ERROR') throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       })
 
-      const name = manifest?.value?.pear?.name || manifest?.value?.holepunch?.name || manifest?.value?.name
+      const name = manifest?.value?.pear?.name || manifest?.value?.name
       const length = drive.core.length
       const byteLength = drive.core.byteLength
       const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
