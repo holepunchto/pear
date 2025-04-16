@@ -34,7 +34,6 @@
         "test",
         "examples",
         "todo",
-        "pear.js",
         "scripts",
         "sidecar.crash.log",
         "electron-main.crash.log",
@@ -57,7 +56,6 @@
       "LOG"
     ],
     "ignore": [
-      "__snapshots__",
       "test/fixtures",
       "init/templates",
       "pear",
@@ -103,7 +101,7 @@
     "mirror-drive": "^1.5.1",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.3",
-    "pear-api": "^1.6.23",
+    "pear-api": "^1.7.0",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.1.0",
     "pear-ipc": "^5.2.1",
