@@ -5,8 +5,9 @@
     "type": "desktop",
     "stage": {
       "ignore": [
+        "**all-ignore.js",
         "ignore-file.js",
-        "ignore-dir1",
+        "ignore-dir1/*-file.*",
         "ignore-dir2/"
       ]
     }
