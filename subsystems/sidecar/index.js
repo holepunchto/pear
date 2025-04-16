@@ -161,6 +161,12 @@ class Sidecar extends ReadyResource {
         return reports.generic(...args)
       }
 
+      #updatingTrigger () {
+        if (this.sidecar.updater?.updating) {
+          this.message({ type: 'pear/updates', app: false, version: this.updater.checkout, info: null, updating: true, updated: false })
+        }
+      }
+
       async _loadUnsafeAddon (drive, input, output) {
         try {
           const buf = await drive.get(output)
@@ -248,6 +254,9 @@ class Sidecar extends ReadyResource {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
         streamx.pipeline(subscriber, pickData(), stream)
+
+        if (ptn?.type === 'pear/updates') this.#updatingTrigger()
+
         return stream
       }
 
@@ -441,13 +450,7 @@ class Sidecar extends ReadyResource {
 
   messages (pattern, client) {
     if (!client.userData) return
-    const messages = client.userData.messages(pattern)
-
-    if (pattern?.type === 'pear/updates' && this.updater?.updating) {
-      client.userData.message({ type: 'pear/updates', app: false, version: this.updater.checkout, info: null, updating: true, updated: false })
-    }
-
-    return messages
+    return client.userData.messages(pattern)
   }
 
   async permit (params) {
