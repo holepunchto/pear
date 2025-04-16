@@ -163,7 +163,7 @@ class Sidecar extends ReadyResource {
 
       #updatingTrigger () {
         if (this.sidecar.updater?.updating) {
-          this.message({ type: 'pear/updates', app: false, version: this.updater.checkout, info: null, updating: true, updated: false })
+          this.message({ type: 'pear/updates', app: false, version: this.sidecar.updater.checkout, info: null, updating: true, updated: false })
         }
       }
 
