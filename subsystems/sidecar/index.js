@@ -85,11 +85,13 @@ class Sidecar extends ReadyResource {
 
     this.updater = updater
     if (this.updater) {
-      this.updater.on('updating', ({ key, length }) => {
+      this.updater.on('updating', (checkout) => {
+        const { key, length } = checkout
         LOG.info('sidecar', key === this.version.key
           ? `- Updating to length ${length}...`
           : `- Switching to key ${key} with length ${length}...`
         )
+        this.updatingNotify(checkout)
       })
       this.updater.on('update', (checkout) => this.updateNotify(checkout))
     }
@@ -157,6 +159,12 @@ class Sidecar extends ReadyResource {
         if (report.err?.code === 'ERR_OPEN') return reports.dev(...args)
         if (report.err?.code === 'ERR_CRASH') return reports.crash(...args)
         return reports.generic(...args)
+      }
+
+      #updatingTrigger () {
+        if (this.sidecar.updater?.updating) {
+          this.message({ type: 'pear/updates', app: false, version: this.sidecar.updater.checkout, info: null, updating: true, updated: false })
+        }
       }
 
       async _loadUnsafeAddon (drive, input, output) {
@@ -246,6 +254,9 @@ class Sidecar extends ReadyResource {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
         streamx.pipeline(subscriber, pickData(), stream)
+
+        if (ptn?.type === 'pear/updates') this.#updatingTrigger()
+
         return stream
       }
 
@@ -309,6 +320,14 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
+  async updatingNotify (checkout = null) {
+    for await (const app of this.apps) {
+      if (!app || app.minvering === true) continue
+
+      app.message({ type: 'pear/updates', app: false, version: checkout, diff: null, updating: true, updated: false })
+    }
+  }
+
   async updateNotify (version, info = {}) {
     this.updateAvailable = { version, info }
 
@@ -327,11 +346,11 @@ class Sidecar extends ReadyResource {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle?.link) {
-        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null })
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true })
     }
   }
 
@@ -646,7 +665,7 @@ class Sidecar extends ReadyResource {
       if (this.updateAvailable !== null) {
         const { version, info } = this.updateAvailable
         LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
-        client.userData.message({ type: 'pear/updates', version, diff: info.diff })
+        client.userData.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
       }
       return info
     } catch (err) {
