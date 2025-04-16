@@ -800,7 +800,7 @@ class Sidecar extends ReadyResource {
 
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
-        await state.initialize({ bundle: appBundle, app, staging: true })
+        await state.initialize({ bundle: appBundle, app })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
