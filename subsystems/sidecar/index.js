@@ -58,7 +58,8 @@ const ops = {
   Reset: require('./ops/reset'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  DataReset: require('./ops/data/reset')
+  DataReset: require('./ops/data/reset'),
+  Presets: require('./ops/presets')
 }
 
 // ensure that we are registered as a link handler
@@ -375,6 +376,8 @@ class Sidecar extends ReadyResource {
   gc (params, client) { return new ops.GC(params, client) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
+
+  presets (params, client) { return new ops.Presets(params, client, this) }
 
   warmup (params, client) {
     if (client.userData instanceof this.App === false) return

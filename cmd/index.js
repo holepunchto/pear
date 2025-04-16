@@ -21,7 +21,8 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  data: require('./data')
+  data: require('./data'),
+  presets: require('./presets')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -172,7 +173,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'reset',
     summary('Advanced. Reset an application to initial state'),
     description('Clear application storage for supplied link.'),
-    arg('<link>', 'Application link'),
+    command('app', summary('Reset application storage'), arg('<link>', 'Application Pear link'), runners.reset(ipc)),
+    command('presets', summary('Reset application default configuration'), arg('<link>', ' Application Pear link'), runners.reset(ipc)),
     flag('--json', 'Newline delimited JSON output'),
     runners.reset(ipc)
   )
@@ -215,6 +217,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const presets = command(
+    'presets',
+    summary('Set default application flags'),
+    arg('<link>', 'Target application link'),
+    ...def.run.flags,
+    runners.presets(ipc)
+  )
+
   const data = command(
     'data',
     summary('Explore platform database'),
@@ -252,6 +262,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    presets,
     help,
     footer(usage.footer),
     bail(explain),

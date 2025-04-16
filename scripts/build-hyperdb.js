@@ -26,6 +26,24 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'preset',
+  fields: [
+    {
+      name: 'stage',
+      type: 'string'
+    },
+    {
+      name: 'run',
+      type: 'string'
+    },
+    {
+      name: 'seed',
+      type: 'string'
+    }
+  ]
+})
+
 // structs
 
 pearSchema.register({
@@ -71,6 +89,10 @@ pearSchema.register({
       name: 'tags',
       type: 'string',
       array: true
+    },
+    {
+      name: 'preset',
+      type: '@pear/preset'
     }
   ]
 })

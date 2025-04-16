@@ -11,17 +11,22 @@ module.exports = class Reset extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link }) {
+  async #op ({ link, preset }) {
     link = link.startsWith('pear://') ? link : pathToFileURL(link).href
     const persistedBundle = await this.sidecar.model.getBundle(link)
     if (!persistedBundle) {
       throw ERR_INVALID_INPUT('Link was not found')
     }
-    this.push({ tag: 'reseting', data: { link } })
-    const oldAppStorage = persistedBundle.appStorage
-    const appStoragePath = path.join(PLATFORM_DIR, 'app-storage')
-    const newAppStorage = path.join(appStoragePath, 'by-random', crypto.randomBytes(16).toString('hex'))
-    await this.sidecar.model.updateAppStorage(link, newAppStorage, oldAppStorage)
-    this.push({ tag: 'complete' })
+    if (!preset) {
+      this.push({ tag: 'reseting', data: { link } })
+      const oldAppStorage = persistedBundle.appStorage
+      const appStoragePath = path.join(PLATFORM_DIR, 'app-storage')
+      const newAppStorage = path.join(appStoragePath, 'by-random', crypto.randomBytes(16).toString('hex'))
+      await this.sidecar.model.updateAppStorage(link, newAppStorage, oldAppStorage)
+      this.push({ tag: 'complete' })
+    } else {
+      await this.sidecar.model.resetPreset(link)
+      this.push({ tag: 'complete' })
+    }
   }
 }
