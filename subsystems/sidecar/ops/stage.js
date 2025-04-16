@@ -18,6 +18,7 @@ module.exports = class Stage extends Opstream {
 
   async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only }) {
     const { client, session, sidecar } = this
+
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
       flags: { channel, stage: true },
@@ -26,6 +27,8 @@ module.exports = class Stage extends Opstream {
     })
 
     await sidecar.ready()
+
+    await state.constructor.build(state)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
     await corestore.ready()
