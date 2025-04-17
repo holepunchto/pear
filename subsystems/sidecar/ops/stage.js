@@ -78,7 +78,7 @@ module.exports = class Stage extends Opstream {
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
 
-    const opts = { ignore: glob.getIgnorer(), dryRun, batch: true, filter: select }
+    const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
@@ -222,7 +222,7 @@ class GlobDrive extends ReadyResource {
     this.unignores = unignores
   }
 
-  getIgnorer () {
+  ignorer () {
     if (this.ignore) return this.ignore
     this.ignore = (key) => {
       for (const u of this.unignores) {
