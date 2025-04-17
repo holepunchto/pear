@@ -318,7 +318,7 @@ class Sidecar extends ReadyResource {
 
     if (info.link) LOG.info('sidecar', 'Application update available:')
     else if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
-    else LOG.info('sidecar', 'Platform update Available. Restart to update to:')
+    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
     LOG.info('sidecar', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
     this.#spindownCountdown()
@@ -775,7 +775,7 @@ class Sidecar extends ReadyResource {
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
-        if (err.code === 'ERR_CONNECTION') app.report({ err })
+        if (err.code === 'ERR_CONNECTION' || err.code === 'ERR_INVALID_CONFIG') app.report({ err })
       }
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
