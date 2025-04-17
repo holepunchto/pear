@@ -11,9 +11,9 @@ module.exports = class Touch extends Opstream {
   async #op ({ dir, channel }) {
     const { sidecar } = this
     await sidecar.ready()
-    const state = new State({ dir, flags: {} })
-    if (!state.manifest) throw ERR_INVALID_PROJECT_DIR(`"${state.pkgPath}" not found. Pear project must have a package.json`)
-    const corestore = sidecar._getCorestore(state.manifest.name, channel)
+    const def = await State.localDef(dir)
+    if (def === null) throw ERR_INVALID_PROJECT_DIR('Pear project must have a valid package.json')
+    const corestore = sidecar._getCorestore(State.name(def), channel)
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)
     this.push({ tag: 'result', data: { key: hypercoreid.normalize(key), channel } })

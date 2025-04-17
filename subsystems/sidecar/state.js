@@ -14,11 +14,23 @@ module.exports = class State extends SharedState {
   checkpoint = null
   options = null
   manifest = null
+  static async localDef (dir) {
+    try {
+      return JSON.parse(await fsp.readFile(path.join(dir, 'package.json')))
+    } catch {
+      return null
+    }
+  }
+
+  static name (pkg) {
+    return pkg.pear.name ?? pkg.name ?? null
+  }
+
   static async build (state, pkg = null) {
-    if (pkg === null && state.key === null) pkg = JSON.parse(await fsp.readFile(path.join(state.dir, 'package.json')))
+    if (pkg === null && state.key === null) pkg = await this.localDef(state.dir)
     state.pkg = pkg
     state.options = pkg.pear ?? {}
-    state.name = state.options.name ?? state.pkg.name ?? null
+    state.name = this.name(pkg)
     state.main = state.options.main ?? pkg.main ?? 'index.js'
     if (state.options.via && !state.link?.includes('/node_modules/.bin/')) {
       state.via = Array.isArray(state.options.via) ? state.options.via : [state.options.via]

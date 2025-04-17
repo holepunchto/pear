@@ -12,6 +12,7 @@ const teardown = require('pear-api/teardown')
 const parseLink = require('pear-api/parse-link')
 const {
   ERR_PERMISSION_REQUIRED,
+  ERR_INVALID_PROJECT_DIR,
   ERR_INVALID_INPUT,
   ERR_LEGACY
 } = require('pear-api/errors')
@@ -112,7 +113,7 @@ function project (dir, origin, cwd) {
     const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
     const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
     const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
-    throw ERR_INVALID_INPUT(`A valid package.json file with pear field must exist ${condition}`)
+    throw ERR_INVALID_PROJECT_DIR(`A valid package.json file with pear field must exist ${condition}`)
   }
   return project(parent, origin, cwd)
 }
