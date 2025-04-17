@@ -221,7 +221,6 @@ test('stage with ignore and unignore', async function ({ ok, is, plan, comment, 
   staging.on('data', async (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
-      console.log(data.data.message)
     }
   })
 
@@ -246,7 +245,6 @@ test('stage with ignore and unignore', async function ({ ok, is, plan, comment, 
   staging.on('data', async (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
-      console.log(data.data.message)
     }
   })
 

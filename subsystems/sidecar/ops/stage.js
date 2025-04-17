@@ -11,6 +11,7 @@ const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-api/errors
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
+const ReadyResource = require('ready-resource')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -74,10 +75,10 @@ module.exports = class Stage extends Opstream {
     const select = only
       ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
       : null
-    const { ignores, unignores } = await resolveGlobsIntoPaths(src, ignore)
-    ignore = toIgnoreFunction(ignores, unignores)
+    const globs = new GlobDrive(src, ignore)
+    await globs.ready()
 
-    const opts = { ignore, dryRun, batch: true, filter: select }
+    const opts = { ignore: globs.ignore, dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
@@ -97,7 +98,7 @@ module.exports = class Stage extends Opstream {
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (ignore(entry.key)) {
+        if (globs.ignore(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
@@ -161,69 +162,78 @@ module.exports = class Stage extends Opstream {
   }
 }
 
-function toIgnoreFunction (ignores, unignores) {
-  return function (key) {
-    for (const u of unignores) {
-      const path = unixPathResolve('/', u)
-      if (path === key) return false
-      if (path.startsWith(key + '/')) return false
-      if (key.startsWith(path + '/')) return false
-    }
-    for (const i of ignores) {
-      const path = unixPathResolve('/', i)
-      if (path === key) return true
-      if (key.startsWith(path + '/')) return true
-    }
-    return false
-  }
-}
-
-async function resolveGlobsIntoPaths (drive, ignore) {
-  const isGlob = (str) => /[*?[\]{}()]/.test(str)
-  const normalizePath = (p) => p.replace(/^\/+/, '').replace(/\/+$/, '') // remove leading/trailing slashes
-
-  const globToRegex = (glob) => {
-    const normalized = normalizePath(glob)
-    const placeholder = '__DOUBLE_STAR__'
-    const regexStr = normalized
-      .replace(/\*\*/g, placeholder)
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '[^/]+')
-      .replace(placeholder, '.*')
-    return new RegExp(`^${regexStr}(?:/.*)?$`)
+class GlobDrive extends ReadyResource {
+  constructor(drive, globs){
+    super()
+    this.drive = drive
+    this.globs = globs
+    this.ignores = null
+    this.unignores = null
+    this.ignore = null
+    this.ready()
   }
 
-  const ignores = new Set()
-  const unignores = new Set()
-  const globs = []
+  async _open () {
+    const isGlob = (str) => /[*?[\]{}()]/.test(str)
+    const normalizePath = (p) => p.replace(/^\/+/, '').replace(/\/+$/, '') // remove leading/trailing slashes
 
-  for (const item of ignore) {
-    if (isGlob(item)) {
-      globs.push(item)
-    } else {
-      const normalized = normalizePath(item)
-      if (normalized.startsWith('!')) unignores.add(normalized.slice(1))
-      else ignores.add(normalized)
+    const globToRegex = (glob) => {
+      const normalized = normalizePath(glob)
+      const placeholder = '__DOUBLE_STAR__'
+      const regexStr = normalized
+        .replace(/\*\*/g, placeholder)
+        .replace(/\./g, '\\.')
+        .replace(/\*/g, '[^/]+')
+        .replace(placeholder, '.*')
+      return new RegExp(`^${regexStr}(?:/.*)?$`)
     }
-  }
 
-  for (const pattern of globs) {
-    const isNegated = pattern.startsWith('!')
-    const isRecursive = pattern.includes('**')
-    const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern)
-    const matcher = globToRegex(cleanPattern)
+    const ignores = new Set()
+    const unignores = new Set()
+    const globs = []
 
-    const idx = cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*')
-    const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern
-
-    for await (const entry of drive.list(dir, { recursive: isRecursive })) {
-      const key = normalizePath(entry.key)
-      if (matcher.test(key)) {
-        if (isNegated) unignores.add(key)
-        else ignores.add(key)
+    for (const item of this.globs) {
+      if (isGlob(item)) {
+        globs.push(item)
+      } else {
+        const normalized = normalizePath(item)
+        if (normalized.startsWith('!')) unignores.add(normalized.slice(1))
+        else ignores.add(normalized)
       }
     }
-  }
 
-  return { ignores: [...ignores], unignores: [...unignores] }
+    for (const pattern of globs) {
+      const isNegated = pattern.startsWith('!')
+      const isRecursive = pattern.includes('**')
+      const cleanPattern = normalizePath(isNegated ? pattern.slice(1) : pattern)
+      const matcher = globToRegex(cleanPattern)
+
+      const idx = cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*')
+      const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern
+
+      for await (const entry of this.drive.list(dir, { recursive: isRecursive })) {
+        const key = normalizePath(entry.key)
+        if (matcher.test(key)) {
+          if (isNegated) unignores.add(key)
+          else ignores.add(key)
+        }
+      }
+    }
+    this.ignores = ignores
+    this.unignores = unignores
+    this.ignore = function (key) {
+      for (const u of unignores) {
+        const path = unixPathResolve('/', u)
+        if (path === key) return false
+        if (path.startsWith(key + '/')) return false
+        if (key.startsWith(path + '/')) return false
+      }
+      for (const i of ignores) {
+        const path = unixPathResolve('/', i)
+        if (path === key) return true
+        if (key.startsWith(path + '/')) return true
+      }
+      return false
+    }
+  }
 }
