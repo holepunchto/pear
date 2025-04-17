@@ -163,7 +163,7 @@ module.exports = class Stage extends Opstream {
 }
 
 class GlobDrive extends ReadyResource {
-  constructor(drive, globs){
+  constructor (drive, globs) {
     super()
     this.drive = drive
     this.globs = globs
