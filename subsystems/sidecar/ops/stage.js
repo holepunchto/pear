@@ -75,10 +75,10 @@ module.exports = class Stage extends Opstream {
     const select = only
       ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
       : null
-    const globs = new GlobDrive(src, ignore)
-    await globs.ready()
+    const glob = new GlobDrive(src, ignore)
+    await glob.ready()
 
-    const opts = { ignore: globs.ignore, dryRun, batch: true, filter: select }
+    const opts = { ignore: glob.ignore, dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
@@ -98,7 +98,7 @@ module.exports = class Stage extends Opstream {
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (globs.ignore(entry.key)) {
+        if (glob.ignore(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
