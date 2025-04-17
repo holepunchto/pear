@@ -39,7 +39,7 @@ module.exports = class Stage extends Opstream {
     const encryptionKey = persistedBundle?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     const bundle = new Bundle({
