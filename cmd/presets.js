@@ -1,5 +1,5 @@
 'use strict'
-const { outputter } = require('./iface')
+const { outputter } = require('pear-api/terminal')
 
 const output = outputter('presets', {
   updated: (result, info) => {
