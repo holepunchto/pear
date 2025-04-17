@@ -10,6 +10,7 @@
   },
   "type": "module",
   "pear": {
+    "via": "pear-electron",
     "name": "deskex",
     "gui": {
       "main": "index.html",
@@ -17,11 +18,6 @@
       "height": 500,
       "minWidth": 500,
       "backgroundColor": "#1F2430"
-    },
-    "stage": {
-      "entrypoints": [
-        "/app.js"
-      ]
     }
   },
   "devDependencies": {
@@ -30,6 +26,6 @@
   },
   "dependencies": {
     "pear-bridge": "^1.0.0",
-    "pear-electron": "^1.0.15"
+    "pear-electron": "^1.2.0"
   }
 }
