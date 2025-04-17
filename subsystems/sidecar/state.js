@@ -1,11 +1,12 @@
 'use strict'
 const path = require('bare-path')
 const fsp = require('bare-fs/promises')
+const { spawn } = require('bare-subprocess')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST, ERR_INVALID_CONFIG, ERR_INVALID_APP_NAME } = require('pear-api/errors')
+const { RUNTIME } = require('pear-api/constants')
 const SharedState = require('pear-api/state')
-const Worker = require('pear-api/worker')
 
 module.exports = class State extends SharedState {
   initialized = false
@@ -20,13 +21,12 @@ module.exports = class State extends SharedState {
     state.name = state.options.name ?? state.pkg.name ?? null
     state.main = state.options.main ?? pkg.main ?? 'index.js'
     if (state.options.via && !state.link?.includes('/node_modules/.bin/')) {
-      const worker = new Worker()
       state.via = Array.isArray(state.options.via) ? state.options.via : [state.options.via]
       for (const name of state.via) {
-        const base = new URL(state.dir + '/', 'file:')
+        const base = new URL(state.dir, 'file:')
         const link = new URL('node_modules/.bin/' + name, base).toString()
         if (state.link === link) continue
-        state.options = await via(worker, link, state.options)
+        state.options = await via(state, link)
       }
       state.options.via = null
     }
@@ -84,6 +84,7 @@ module.exports = class State extends SharedState {
         throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
       }
       this.manifest = await this.constructor.build(this, result.value)
+      if (app?.reported) return
     } else {
       this.manifest = await this.constructor.build(this)
       if (app?.reported) return
@@ -123,19 +124,38 @@ module.exports = class State extends SharedState {
   }
 }
 
-async function via (worker, link, options) {
-  const pipe = worker.run(['--follow-symlinks', link])
+async function via (state, link) {
+  const options = state.options
+  const sp = spawn(RUNTIME, ['run', '--trusted', '--follow-symlinks', link], {
+    stdio: ['ignore', 'ignore', 'ignore', 'overlapped'],
+    windowsHide: true,
+    cwd: state.cwd
+  })
+  const IDLE_TIMEOUT = 5_000
+  const pipe = sp.stdio[3]
   const promise = new Promise((resolve, reject) => {
     const onend = () => {
+      clearTimeout(timeout)
       pipe.end()
+      pipe.destroy()
       reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" ended unexpectedly'))
     }
+    const timeout = setTimeout(() => {
+      pipe.end()
+      pipe.destroy()
+      reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" did not respond with data in time'))
+    }, IDLE_TIMEOUT)
     pipe.once('end', onend)
     pipe.once('data', (options) => {
+      clearTimeout(timeout)
       pipe.removeListener('end', onend)
       try {
         resolve(JSON.parse(options))
-      } catch (err) { reject(err) }
+      } catch (err) {
+        reject(err)
+      } finally {
+        pipe.end()
+      }
     })
   })
   pipe.write(JSON.stringify(options))
