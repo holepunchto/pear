@@ -1,1 +1,1 @@
-const dep = require('./dep')
+// dummy 
