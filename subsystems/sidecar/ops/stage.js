@@ -78,7 +78,7 @@ module.exports = class Stage extends Opstream {
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
 
-    const opts = { ignore: glob.ignore, dryRun, batch: true, filter: select }
+    const opts = { ignore: glob.getIgnorer(), dryRun, batch: true, filter: select }
     const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
@@ -98,7 +98,7 @@ module.exports = class Stage extends Opstream {
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (glob.ignore(entry.key)) {
+        if (glob.getIgnorer()(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
@@ -170,7 +170,6 @@ class GlobDrive extends ReadyResource {
     this.ignores = null
     this.unignores = null
     this.ignore = null
-    this.ready()
   }
 
   async _open () {
@@ -221,19 +220,24 @@ class GlobDrive extends ReadyResource {
     }
     this.ignores = ignores
     this.unignores = unignores
-    this.ignore = function (key) {
-      for (const u of unignores) {
+  }
+
+  getIgnorer () {
+    if (this.ignore) return this.ignore
+    this.ignore = (key) => {
+      for (const u of this.unignores) {
         const path = unixPathResolve('/', u)
         if (path === key) return false
         if (path.startsWith(key + '/')) return false
         if (key.startsWith(path + '/')) return false
       }
-      for (const i of ignores) {
+      for (const i of this.ignores) {
         const path = unixPathResolve('/', i)
         if (path === key) return true
         if (key.startsWith(path + '/')) return true
       }
       return false
     }
+    return this.ignore
   }
 }
