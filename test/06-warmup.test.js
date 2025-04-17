@@ -61,7 +61,7 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   is(warming.success, true, 'Warmup completed')
 })
 
-test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
+test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   const dir = appWithIgnore
 
   const helper = new Helper()
