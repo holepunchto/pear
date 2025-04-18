@@ -87,7 +87,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/index.js'))
-  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt')) 
+  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
   ok(stagingFiles.includes('/ignore-dir1/deep-glob-ignore.js'))
 })
 
