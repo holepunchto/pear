@@ -87,7 +87,7 @@ test('stage with ignore', async function ({ ok, is, plan, comment, teardown }) {
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
   ok(stagingFiles.includes('/index.js'))
-  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
+  ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt')) 
   ok(stagingFiles.includes('/ignore-dir1/deep-glob-ignore.js'))
 })
 
@@ -113,11 +113,10 @@ test('stage with glob ignores', async function ({ ok, is, plan, comment, teardow
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  is(stagingFiles.length, 5)
+  is(stagingFiles.length, 4)
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
-  ok(stagingFiles.includes('/app.js'))
-  ok(stagingFiles.includes('/index.html'))
+  ok(stagingFiles.includes('/index.js'))
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
 })
 

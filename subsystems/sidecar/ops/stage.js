@@ -98,7 +98,7 @@ module.exports = class Stage extends Opstream {
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (glob.getIgnorer()(entry.key)) {
+        if (glob.ignorer()(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
