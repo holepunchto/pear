@@ -35,7 +35,7 @@ module.exports = class State extends SharedState {
     if (state.options.via && !state.link?.includes('/node_modules/.bin/')) {
       state.via = Array.isArray(state.options.via) ? state.options.via : [state.options.via]
       for (const name of state.via) {
-        const base = new URL(state.dir, 'file:')
+        const base = new URL(state.dir + '/', 'file:')
         const link = new URL('node_modules/.bin/' + name, base).toString()
         if (state.link === link) continue
         state.options = await via(state, link)
