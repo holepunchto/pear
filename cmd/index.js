@@ -222,6 +222,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'presets',
     summary('Set default application flags'),
     arg('<link>', 'Target application link'),
+    flag('--json', 'Newline delimited JSON output'),
     ...def.run.flags,
     runners.presets(ipc)
   )

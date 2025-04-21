@@ -21,7 +21,7 @@ const output = outputter('presets', {
 
 module.exports = (ipc) => async function presets (cmd) {
   const { command } = cmd
-  const { json } = command.parent.flags
+  const { json } = command.flags
   const { link } = command.args
   const flags = command.flags
   const isPrint = Object.keys(command.indices.flags).length === 0
