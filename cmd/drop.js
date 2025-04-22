@@ -3,7 +3,7 @@ const { outputter, confirm, ansi } = require('pear-api/terminal')
 const os = require('bare-os')
 const path = require('bare-path')
 
-const output = outputter('reset', {
+const output = outputter('drop', {
   reseting: ({ link }) => `\nReseting storage of application ${link}`,
   complete: () => 'Reset Complete\n',
   error: ({ code, stack }) => {
@@ -11,7 +11,7 @@ const output = outputter('reset', {
   }
 })
 
-module.exports = (ipc) => async function reset (cmd) {
+module.exports = (ipc) => async function drop (cmd) {
   const { json } = cmd.flags
   const link = cmd.args.link
   const isPear = link.startsWith('pear://')
@@ -23,5 +23,5 @@ module.exports = (ipc) => async function reset (cmd) {
   const msg = '\n' + ansi.cross + ' uppercase RESET to confirm\n'
   await confirm(dialog, ask, delim, validation, msg)
 
-  await output(json, ipc.reset({ link: isPear || path.isAbsolute(link) ? link : path.join(os.cwd(), link) }))
+  await output(json, ipc.drop({ link: isPear || path.isAbsolute(link) ? link : path.join(os.cwd(), link) }))
 }

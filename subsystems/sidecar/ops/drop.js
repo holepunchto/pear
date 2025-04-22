@@ -6,7 +6,7 @@ const { PLATFORM_DIR } = require('pear-api/constants')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
 
-module.exports = class Reset extends Opstream {
+module.exports = class Drop extends Opstream {
   constructor (...args) {
     super((...args) => this.#op(...args), ...args)
   }
