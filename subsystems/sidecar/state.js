@@ -14,24 +14,31 @@ module.exports = class State extends SharedState {
   checkpoint = null
   options = null
   manifest = null
-  static async localDef (dir) {
+  static async localDef (state) {
+    let pkg
     try {
-      return JSON.parse(await fsp.readFile(path.join(dir, 'package.json')))
+      pkg = await fsp.readFile(path.join(state.dir, 'package.json'))
     } catch {
-      return null
+      const parent = path.dirname(state.dir)
+      if (parent === state.dir || path.resolve(state.dir) === path.resolve(parent)) {
+        throw ERR_INVALID_PROJECT_DIR('A valid package.json file with pear field must exist in the project')
+      }
+      state.dir = parent
+      return this.localDef(state)
     }
+    return JSON.parse(pkg)
   }
 
   static name (pkg) {
-    return pkg.pear.name ?? pkg.name ?? null
+    return pkg?.pear?.name ?? pkg?.name ?? null
   }
 
   static async build (state, pkg = null) {
-    if (pkg === null && state.key === null) pkg = await this.localDef(state.dir)
+    if (pkg === null && state.key === null) pkg = await this.localDef(state)
     state.pkg = pkg
-    state.options = pkg.pear ?? {}
+    state.options = pkg?.pear ?? {}
     state.name = this.name(pkg)
-    state.main = state.options.main ?? pkg.main ?? 'index.js'
+    state.main = state.options.main ?? pkg?.main ?? 'index.js'
     if (state.options.via && !state.link?.includes('/node_modules/.bin/')) {
       state.via = Array.isArray(state.options.via) ? state.options.via : [state.options.via]
       for (const name of state.via) {
@@ -143,14 +150,14 @@ async function via (state, link) {
     windowsHide: true,
     cwd: state.cwd
   })
-  const IDLE_TIMEOUT = 5_000
+  const IDLE_TIMEOUT = 5000
   const pipe = sp.stdio[3]
   const promise = new Promise((resolve, reject) => {
     const onend = () => {
       clearTimeout(timeout)
       pipe.end()
       pipe.destroy()
-      reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" ended unexpectedly'))
+      reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" ended unexpectedly.'))
     }
     const timeout = setTimeout(() => {
       pipe.end()
