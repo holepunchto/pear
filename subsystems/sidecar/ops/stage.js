@@ -73,7 +73,7 @@ module.exports = class Stage extends Opstream {
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    const src = new LocalDrive(dir, { followExternalLinks: true, metadata: new Map() })
+    const src = new LocalDrive(state.dir, { followExternalLinks: true, metadata: new Map() })
     const dst = bundle.drive
     const select = only
       ? (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
