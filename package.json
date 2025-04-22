@@ -104,7 +104,7 @@
     "pear-api": "^1.7.0",
     "pear-changelog": "^1.0.1",
     "pear-interface": "^1.1.0",
-    "pear-ipc": "^5.1.0",
+    "pear-ipc": "github:holepunchto/pear-ipc#dataReset-remove",
     "pear-link": "^2.2.2",
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^2.0.0",
