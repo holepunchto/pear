@@ -109,11 +109,8 @@ function project (dir, origin, cwd) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
-  if (parent === dir || parent.startsWith(cwd) === false) {
-    const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
-    const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
-    const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
-    throw ERR_INVALID_PROJECT_DIR(`A valid package.json file with pear field must exist ${condition}`)
+  if (parent === dir || path.resolve(dir) === path.resolve(parent)) {
+    throw ERR_INVALID_PROJECT_DIR('A valid package.json file with pear field must exist in the project')
   }
   return project(parent, origin, cwd)
 }
