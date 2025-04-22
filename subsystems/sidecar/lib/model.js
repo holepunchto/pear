@@ -4,6 +4,7 @@ const DBLock = require('db-lock')
 const pearLink = require('pear-link')
 const dbSpec = require('../../../spec/db')
 const { ALIASES } = require('pear-api/constants')
+const { pathToFileURL } = require('url-file-url')
 
 module.exports = class Model {
   constructor (corestore) {
@@ -21,6 +22,9 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
+    const isPearLink = link.startsWith('pear://')
+    const isFileUrl = link.startsWith('file://')
+    link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
     const { origin } = pearLink(ALIASES)(link)
     LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link: origin })})`)
     const bundle = await this.db.get('@pear/bundle', { link: origin })

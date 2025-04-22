@@ -1,7 +1,6 @@
 'use strict'
 const path = require('bare-path')
 const crypto = require('hypercore-crypto')
-const { pathToFileURL } = require('url-file-url')
 const { PLATFORM_DIR } = require('pear-api/constants')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
@@ -12,7 +11,6 @@ module.exports = class Drop extends Opstream {
   }
 
   async #op ({ link }) {
-    link = link.startsWith('pear://') ? link : pathToFileURL(link).href
     const persistedBundle = await this.sidecar.model.getBundle(link)
     if (!persistedBundle) {
       throw ERR_INVALID_INPUT('Link was not found')
