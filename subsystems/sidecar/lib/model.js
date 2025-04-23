@@ -1,10 +1,10 @@
 'use strict'
-const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const pearLink = require('pear-link')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB, ALIASES } = require('pear-api/constants')
+const { ALIASES } = require('pear-api/constants')
+const { pathToFileURL } = require('url-file-url')
 
 module.exports = class Model {
   constructor (corestore) {
@@ -22,6 +22,9 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
+    const isPearLink = link.startsWith('pear://')
+    const isFileUrl = link.startsWith('file://')
+    link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
     const { origin } = pearLink(ALIASES)(link)
     LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link: origin })})`)
     const bundle = await this.db.get('@pear/bundle', { link: origin })
@@ -148,14 +151,21 @@ module.exports = class Model {
     return await this.db.find('@pear/gc').toArray()
   }
 
+  async getManifest () {
+    LOG.trace('db', 'GET (\'@pear/manifest\')')
+    return await this.db.get('@pear/manifest')
+  }
+
+  async setManifest (version) {
+    const manifest = { version }
+    const tx = await this.lock.enter()
+    LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
+    await tx.insert('@pear/manifest', manifest)
+    await this.lock.exit()
+  }
+
   async close () {
     LOG.trace('db', 'CLOSE')
     await this.db.close()
-  }
-
-  async reset () {
-    await this.close()
-    await fs.promises.rm(PLATFORM_HYPERDB, { recursive: true, force: true })
-    this.init()
   }
 }
