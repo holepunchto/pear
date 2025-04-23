@@ -157,9 +157,10 @@ module.exports = class Model {
   }
 
   async setManifest (version) {
+    const manifest = { version }
     const tx = await this.lock.enter()
-    LOG.trace('db', `INSERT ('@pear/manifest', ${JSON.stringify({ version })})`)
-    await tx.insert('@pear/manifest', { version })
+    LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
+    await tx.insert('@pear/manifest', manifest)
     await this.lock.exit()
   }
 

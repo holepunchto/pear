@@ -75,8 +75,7 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   data = await helper.data({ resource: 'manifest' })
   result = await Helper.pick(data, [{ tag: 'manifest' }])
   const manifest = await result.manifest
-  is(manifest, null, 'Manifest does not exist')
-  is(manifest?.version, undefined, 'Manifest version is undefined')
+  is(manifest, null, 'Manifest does not exist yet')
 
   await Helper.untilClose(pipe)
   ok(true, 'ended')
