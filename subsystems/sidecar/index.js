@@ -56,10 +56,9 @@ const ops = {
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
-  Reset: require('./ops/reset'),
+  Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
-  Data: require('./ops/data'),
-  DataReset: require('./ops/data/reset')
+  Data: require('./ops/data')
 }
 
 // ensure that we are registered as a link handler
@@ -399,11 +398,9 @@ class Sidecar extends ReadyResource {
 
   data (params, client) { return new ops.Data(params, client, this) }
 
-  dataReset (params, client) { return new ops.DataReset(params, client, this) }
-
   shift (params, client) { return new ops.Shift(params, client, this) }
 
-  reset (params, client) { return new ops.Reset(params, client, this) }
+  drop (params, client) { return new ops.Drop(params, client, this) }
 
   gc (params, client) { return new ops.GC(params, client) }
 
