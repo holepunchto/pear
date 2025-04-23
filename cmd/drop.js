@@ -19,8 +19,6 @@ module.exports = (ipc) => async function drop (cmd) {
   if (link) {
     const parsed = parseLink(link)
     if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-  } else {
-    throw ERR_INVALID_INPUT('Link is required')
   }
   const isPear = link.startsWith('pear://')
 
