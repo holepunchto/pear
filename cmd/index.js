@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, arg, summary, description, bail, sloppy } = require('paparam')
+const { header, footer, command, flag, arg, summary, description, bail, sloppy, hiddenCommand } = require('paparam')
 const { usage, print, ansi } = require('pear-api/terminal')
 const { CHECKOUT } = require('pear-api/constants')
 const errors = require('pear-api/errors')
@@ -181,6 +181,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     () => { console.log(drop.help()) }
   )
 
+  const reset = hiddenCommand(
+    'reset',
+    () => {
+      console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
+      console.log(drop.help())
+    }
+  )
+
   const sidecar = command(
     'sidecar',
     summary('Advanced. Run sidecar in terminal'),
@@ -251,6 +259,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     data,
     shift,
     drop,
+    reset,
     sidecar,
     gc,
     versions,
