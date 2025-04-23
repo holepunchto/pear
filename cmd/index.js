@@ -186,6 +186,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     () => {
       console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
       console.log(drop.help())
+      Bare.exit(1)
     }
   )
 
