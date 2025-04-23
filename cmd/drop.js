@@ -6,7 +6,7 @@ const os = require('bare-os')
 const path = require('bare-path')
 
 const output = outputter('drop', {
-  reseting: ({ link }) => `\nReseting storage of application ${link}`,
+  resetting: ({ link }) => `\nResetting storage of application ${link}`,
   complete: () => 'Reset Complete\n',
   error: ({ code, stack }) => {
     return `Reset Error (code: ${code || 'none'}) ${stack}`
