@@ -13,7 +13,7 @@ const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
 test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
-  plan(18)
+  plan(17)
 
   const dir = encrypted
   const helper = new Helper()
