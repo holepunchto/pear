@@ -41,7 +41,7 @@ const gcOutput = (records) => {
 
 const manifestOutput = (manifest) => {
   if (!manifest) return placeholder
-  return `manifest: ${ansi.bold(manifest.version)}\n`
+  return `version: ${ansi.bold(manifest.version)}\n`
 }
 
 const output = outputter('data', {
