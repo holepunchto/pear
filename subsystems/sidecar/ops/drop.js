@@ -15,7 +15,7 @@ module.exports = class Drop extends Opstream {
     if (!persistedBundle) {
       throw ERR_INVALID_INPUT('Link was not found')
     }
-    this.push({ tag: 'reseting', data: { link } })
+    this.push({ tag: 'resetting', data: { link } })
     const oldAppStorage = persistedBundle.appStorage
     const appStoragePath = path.join(PLATFORM_DIR, 'app-storage')
     const newAppStorage = path.join(appStoragePath, 'by-random', crypto.randomBytes(16).toString('hex'))
