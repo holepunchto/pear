@@ -279,5 +279,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
     print(reason, false)
     print('\n' + bail.command.usage())
+    Bare.exit(1)
   }
 }
