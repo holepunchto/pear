@@ -2,7 +2,9 @@
   "params": [
     {
       "name": "name",
-      "prompt": "name"
+      "prompt": "name",
+      "validation": "(name) => /^[@/a-z0-9-_]+$/.test(name)",
+      "msg": "name must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@)"
     },
     {
       "name": "main",
