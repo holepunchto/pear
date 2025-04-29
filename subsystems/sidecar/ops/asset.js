@@ -4,33 +4,30 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const parseLink = require('pear-api/parse-link')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
+const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const DriveMonitor = require('../lib/drive-monitor')
 
-module.exports = class Dump extends Opstream {
+module.exports = class Asset extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, only, force, prune = !only }) {
+  async #op ({ link, dryRun, only, prune = !only, force = false }) {
     const { session, sidecar } = this
+    const { model } = sidecar
     await sidecar.ready()
-    if (dir !== '-') {
-      try {
-        const files = await fsp.readdir(dir)
-        const empty = files.length === 0
-        if (empty === false && !force) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
-      } catch (err) {
-        if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
-      }
-    }
-
+    const unlock = model.lock.manual()
+    session.teardown(unlock)
+    const asset = await model.touchAsset(link)
+    asset.forced = force
+    this.final = asset
+    if (asset.forced === false && asset.inserted === false) return
     const parsed = parseLink(link)
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
     const key = parsed.drive.key
-    checkout = (checkout || checkout === 0) ? Number(checkout) : parsed.drive.length
+    const checkout = parsed.drive.length
 
     const query = await this.sidecar.model.getBundle(link)
     const encryptionKey = query?.encryptionKey
@@ -66,6 +63,8 @@ module.exports = class Dump extends Opstream {
       monitor.on('data', (stats) => this.push({ tag: 'stats', data: stats }))
     }
 
+    const dir = asset.path
+
     this.push({ tag: 'dumping', data: { link, dir } })
 
     if (dryRun) this.push({ tag: 'dry' })
@@ -87,24 +86,8 @@ module.exports = class Dump extends Opstream {
       ? ''
       : (isFile ? path.basename(parsed.pathname) : prefix)
     const entry = pathname === '' ? null : await src.entry(pathname)
-    if (dir === '-') {
-      if (entry !== null) {
-        const value = await src.get(entry)
-        const key = entry.key.split('/').pop()
-        this.push({ tag: 'file', data: { key, value } })
-        return
-      }
-
-      for await (const entry of src.list(pathname)) {
-        const value = await src.get(entry)
-        const key = isFileLink ? entry.key : entry.key.slice(prefix.length)
-        this.push({ tag: 'file', data: { key, value } })
-      }
-      return
-    }
 
     const dst = new LocalDrive(dir)
-
     let select = null
     if (only) {
       only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())

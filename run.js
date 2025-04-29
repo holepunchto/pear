@@ -67,6 +67,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
   await ipc.ready()
   const config = await ipc.config()
+
   state.update({ config })
 
   global.Pear = new API(ipc, state, { teardown })
