@@ -4,7 +4,7 @@ const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-api/terminal')
 const parseLink = require('pear-api/parse-link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { permit, isTTY } = require('pear-api/terminal')
+const { permit, isTTY, byteDiff } = require('pear-api/terminal')
 
 let blocks = 0
 let total = 0
@@ -28,7 +28,8 @@ const output = outputter('stage', {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`
+  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`,
+  byteDiff
 })
 
 module.exports = (ipc) => async function stage (cmd) {
