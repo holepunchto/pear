@@ -116,7 +116,7 @@ module.exports = class State {
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, updates, updatesDiff,
-      unsafeClearAppStorage, chromeWebrtcInternals
+      unsafeClearAppStorage, chromeWebrtcInternals, parent
     } = flags
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
@@ -157,6 +157,7 @@ module.exports = class State {
     this.id = id
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
+    this.parent = parent
     this.env = { ...env }
     if (this.stage || (this.run && this.dev === false)) {
       this.env.NODE_ENV = this.env.NODE_ENV || 'production'

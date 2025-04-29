@@ -488,7 +488,9 @@ class Sidecar extends ReadyResource {
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      if (!app.state.parent) { // do not restart worker processes
+        metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      }
       const tearingDown = app.teardown()
       if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }
@@ -542,7 +544,7 @@ class Sidecar extends ReadyResource {
     // shutdown successful, reset death clock
     this.deathClock()
 
-    restarts = restarts.filter(({ run }) => run).filter(r => !r.cmdArgs.includes('--worker'))
+    restarts = restarts.filter(({ run }) => run)
     if (restarts.length === 0) return
     LOG.info('sidecar', 'Restarting', restarts.length, 'apps')
 
