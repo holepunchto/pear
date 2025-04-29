@@ -1,10 +1,10 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, ansi, isTTY, byteSize } = require('pear-api/terminal')
+const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-api/terminal')
 
 const output = outputter('dump', {
-  dumping: ({ link, dir, list }) => list > -1 ? '' : `\n🍐 Dumping ${link} into ${dir}`,
+  dumping: ({ link, dir }) => `\n🍐 Dumping ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => { return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n' },
   stats ({ upload, download, peers }) {
@@ -23,7 +23,8 @@ const output = outputter('dump', {
       return 'Dir is not empty. To overwrite: --force'
     }
     return `Dumping Error (code: ${err.code || 'none'}) ${err.stack}`
-  }
+  },
+  byteDiff
 })
 
 module.exports = (ipc) => async function dump (cmd) {
