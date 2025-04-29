@@ -1,25 +1,41 @@
 'use strict'
+const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const pearLink = require('pear-link')
 const LocalDrive = require('localdrive')
 const dbSpec = require('../../../spec/db')
-const { ALIASES } = require('pear-api/constants')
+const { ALIASES, PLATFORM_DIR } = require('pear-api/constants')
 const { pathToFileURL } = require('url-file-url')
+const { randomBytes } = require('hypercore-crypto')
+
+class Lock extends DBLock {
+  #manual = false
+  constructor (db) {
+    super({
+      enter: () => db.transaction(),
+      exit: (tx) => tx.flush(),
+      maxParallel: 1
+    })
+  }
+
+  exit () {
+    if (this.#manual) return Promise.resolve()
+    return super.exit()
+  }
+
+  manual () {
+    this.#manual = true
+    return async () => {
+      try { await super.exit() } finally { this.#manual = false }
+    }
+  }
+}
 
 module.exports = class Model {
   constructor (corestore) {
     this.db = HyperDB.rocks(corestore.storage.rocks.session(), dbSpec)
-
-    this.lock = new DBLock({
-      enter: () => {
-        return this.db.transaction()
-      },
-      exit: tx => {
-        return tx.flush()
-      },
-      maxParallel: 1
-    })
+    this.lock = new Lock(this.db)
   }
 
   async getBundle (link) {
@@ -80,6 +96,20 @@ module.exports = class Model {
     }
     await this.lock.exit()
     return result
+  }
+
+  async touchAsset (link) {
+    const tx = await this.lock.enter()
+    const asset = await tx.get('@pear/asset', { link }) ?? { link }
+    if (!asset.path) {
+      asset.path = path.join(PLATFORM_DIR, randomBytes(16).toString('hex'))
+      await tx.insert('@pear/asset', asset)
+      asset.inserted = true
+    } else {
+      asset.inserted = false
+    }
+    await this.lock.exit()
+    return asset
   }
 
   async getDhtNodes () {

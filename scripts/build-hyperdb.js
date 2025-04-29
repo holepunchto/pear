@@ -156,6 +156,12 @@ pearDB.collections.register({
   key: ['link']
 })
 
+pearDB.collections.register({
+  name: 'asset',
+  schema: '@pear/asset',
+  key: ['link']
+})
+
 pearDB.indexes.register({
   name: 'bundle-by-tags',
   collection: '@pear/bundle',
