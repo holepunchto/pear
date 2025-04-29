@@ -177,6 +177,57 @@ const encoding5 = {
   }
 }
 
+// @pear/checkout
+const encoding6 = {
+  preencode (state, m) {
+    c.uint.preencode(state, m.fork)
+    c.uint.preencode(state, m.length)
+  },
+  encode (state, m) {
+    c.uint.encode(state, m.fork)
+    c.uint.encode(state, m.length)
+  },
+  decode (state) {
+    const r0 = c.uint.decode(state)
+    const r1 = c.uint.decode(state)
+
+    return {
+      fork: r0,
+      length: r1
+    }
+  }
+}
+
+// @pear/current.checkout
+const encoding7_1 = c.frame(encoding6)
+
+// @pear/current
+const encoding7 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    state.end++ // max flag is 1 so always one byte
+
+    if (m.checkout) encoding7_1.preencode(state, m.checkout)
+  },
+  encode (state, m) {
+    const flags = m.checkout ? 1 : 0
+
+    c.string.encode(state, m.link)
+    c.uint.encode(state, flags)
+
+    if (m.checkout) encoding7_1.encode(state, m.checkout)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: r0,
+      checkout: (flags & 1) !== 0 ? encoding7_1.decode(state) : null
+    }
+  }
+}
+
 function setVersion (v) {
   version = v
 }
@@ -205,6 +256,8 @@ function getEncoding (name) {
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
     case '@pear/assets': return encoding5
+    case '@pear/checkout': return encoding6
+    case '@pear/current': return encoding7
     default: throw new Error('Encoder not found ' + name)
   }
 }
