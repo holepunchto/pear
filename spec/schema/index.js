@@ -129,6 +129,27 @@ const encoding4 = {
   }
 }
 
+// @pear/asset
+const encoding5 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.path)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.path)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+
+    return {
+      link: r0,
+      path: r1
+    }
+  }
+}
+
 function setVersion (v) {
   version = v
 }
@@ -156,6 +177,7 @@ function getEncoding (name) {
     case '@pear/dht': return encoding2
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
+    case '@pear/asset': return encoding5
     default: throw new Error('Encoder not found ' + name)
   }
 }
