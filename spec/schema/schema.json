@@ -93,6 +93,26 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "asset",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "path",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
     }
   ]
 }

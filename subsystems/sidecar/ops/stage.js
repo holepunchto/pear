@@ -103,7 +103,7 @@ module.exports = class Stage extends Opstream {
       for await (const entry of dst) {
         if (glob.ignorer()(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
-          this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
+          this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-entry.value.blob.byteLength], message: entry.key } })
         }
       }
     }
@@ -111,11 +111,11 @@ module.exports = class Stage extends Opstream {
     const mirror = new Mirror(src, dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
-        this.push({ tag: 'byte-diff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
+        this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
       } else if (diff.op === 'change') {
-        this.push({ tag: 'byte-diff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
+        this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
       } else if (diff.op === 'remove') {
-        this.push({ tag: 'byte-diff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
+        this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
       }
     }
     this.push({

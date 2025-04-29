@@ -145,8 +145,9 @@ module.exports = class State extends SharedState {
 
 async function via (state, link) {
   const options = state.options
+  console.log(RUNTIME, ['run', '--trusted', '--follow-symlinks', link].join(' '))
   const sp = spawn(RUNTIME, ['run', '--trusted', '--follow-symlinks', link], {
-    stdio: ['ignore', 'ignore', 'ignore', 'overlapped'],
+    stdio: ['ignore', 'inherit', 'inherit', 'overlapped'],
     windowsHide: true,
     cwd: state.cwd
   })
