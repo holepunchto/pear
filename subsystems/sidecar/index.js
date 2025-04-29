@@ -54,6 +54,7 @@ const ops = {
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
   Dump: require('./ops/dump'),
+  Asset: require('./ops/asset'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
@@ -394,6 +395,8 @@ class Sidecar extends ReadyResource {
 
   dump (params, client) { return new ops.Dump(params, client, this) }
 
+  asset (params, client) { return new ops.Asset(params, client, this) }
+
   info (params, client) { return new ops.Info(params, client, this) }
 
   data (params, client) { return new ops.Data(params, client, this) }
@@ -662,7 +665,7 @@ class Sidecar extends ReadyResource {
           if (startId === app.startId) return false
           return app.state.storage === (storage || appStorage) && (appdev
             ? app.state.dir === appdev
-            : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
+            : app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
           )
         })
 
@@ -672,7 +675,6 @@ class Sidecar extends ReadyResource {
           const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
           app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData })
         }
-
         const min = selfwake ? 1 : 0
         resolve(matches.length > min)
       })

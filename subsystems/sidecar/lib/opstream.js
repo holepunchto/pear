@@ -3,6 +3,7 @@ const streamx = require('streamx')
 const parseLink = require('pear-link')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
+  final = {}
   constructor (op, params, client, sidecar = null) {
     super({
       read (cb) {
@@ -13,13 +14,14 @@ module.exports = class Opstream extends streamx.Readable {
           this.push({ tag: 'error', data: { stack, code, message, success, info } })
         }
         const close = () => {
-          this.push({ tag: 'final', data: { success } })
+          this.push({ tag: 'final', data: { success, ...this.final } })
           this.push(null)
           cb(null)
           return this.session.close()
         }
         if (params.link) params.link = parseLink.normalize(params.link)
-        op(params).catch(error).finally(close)
+
+        op(params).catch(error).finally((close))
       }
     })
     this.client = client
