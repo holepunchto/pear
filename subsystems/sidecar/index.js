@@ -507,7 +507,9 @@ class Sidecar extends ReadyResource {
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      if (!app.state.parent) { // do not restart worker processes
+        metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      }
       const tearingDown = app.teardown()
       if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }
