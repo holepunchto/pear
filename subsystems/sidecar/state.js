@@ -42,7 +42,7 @@ module.exports = class State extends SharedState {
     if (state.options.via && !state.link?.includes('/node_modules/.bin/')) {
       state.via = Array.isArray(state.options.via) ? state.options.via : [state.options.via]
       for (const name of state.via) {
-        const base = new URL(state.dir + '/', 'file:')
+        const base = new URL(state.dir, 'file:')
         const link = new URL('node_modules/.bin/' + name, base).toString()
         if (state.link === link) continue
         state.options = await via(state, link)
@@ -145,7 +145,6 @@ module.exports = class State extends SharedState {
 
 async function via (state, link) {
   const options = state.options
-  console.log(RUNTIME, ['run', '--trusted', '--follow-symlinks', link].join(' '))
   const sp = spawn(RUNTIME, ['run', '--trusted', '--follow-symlinks', link], {
     stdio: ['ignore', 'inherit', 'inherit', 'overlapped'],
     windowsHide: true,
@@ -157,7 +156,7 @@ async function via (state, link) {
     const onend = () => {
       clearTimeout(timeout)
       pipe.end()
-      pipe.destroy()
+      pipe.destroy()~
       reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" ended unexpectedly.'))
     }
     const timeout = setTimeout(() => {
