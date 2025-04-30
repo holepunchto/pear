@@ -5,6 +5,7 @@
 ### Fixes
 
 * Internal - Restart does not restart worker processes
+* Desktop - Fixed main entrypoint
 
 ## v1.13.0
 
