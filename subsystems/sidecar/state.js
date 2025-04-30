@@ -156,7 +156,7 @@ async function via (state, link) {
     const onend = () => {
       clearTimeout(timeout)
       pipe.end()
-      pipe.destroy()~
+      pipe.destroy()
       reject(new ERR_INVALID_CONFIG('pear.via "' + link + '" ended unexpectedly.'))
     }
     const timeout = setTimeout(() => {
