@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.13.1
+
+### Fixes
+
+* Internal - Restart does not restart worker processes
+
 ## v1.13.0
 
 ### Features
