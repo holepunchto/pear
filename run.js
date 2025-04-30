@@ -17,6 +17,7 @@ const {
   ERR_INVALID_INPUT
 } = require('./errors')
 const parseLink = require('./lib/parse-link')
+const pearLink = require('pear-link')
 const teardown = require('./lib/teardown')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs, indices }) {
@@ -140,7 +141,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   args.unshift('--start-id=' + startId)
   const detach = args.includes('--detach')
   if (type === 'desktop') {
-    if (isPath) args[indices.args.link] = 'file://' + (base.entrypoint || '/')
+    if (isPath) args[indices.args.link] = 'file://' + pearLink.normalize(base.origin) + (base.entrypoint || '/')
     args[indices.args.link] = args[indices.args.link].replace('://', '_||') // for Windows
     if ((isLinux || isWindows) && !flags.sandbox) args.splice(indices.args.link, 0, '--no-sandbox')
     if (app?.name) args.splice(indices.args.link, 0, '--app-name', app.name)
