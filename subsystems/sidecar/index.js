@@ -344,6 +344,7 @@ class Sidecar extends ReadyResource {
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
     LOG.info('sidecar', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
+    if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
     const messaged = new Set()
 
