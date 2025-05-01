@@ -6,6 +6,7 @@
 
 * Internal - Restart does not restart worker processes
 * Desktop - Fixed main entrypoint
+* Windows - Fixed long path in drive bundler
 
 ## v1.13.0
 
