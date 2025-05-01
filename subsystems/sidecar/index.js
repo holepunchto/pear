@@ -415,7 +415,7 @@ class Sidecar extends ReadyResource {
 
   async config (params, client) {
     if (!client.userData) return
-    const cfg = client.userData.state.constructor.configFrom(client.userData.state)
+    const cfg = client.userData.state?.constructor.configFrom(client.userData.state)
     return cfg
   }
 

@@ -555,10 +555,10 @@ class App {
 
       const decalSession = electron.session.fromPartition('persist:pear')
 
-      const { main } = await this.ipc.config()
+      const config = await this.ipc.config()
 
       decalSession.setUserAgent('Pear Platform')
-      const entry = state.entrypoint || '/' + (main || state.main)
+      const entry = state.entrypoint || '/' + (config?.main || state.main)
       const identify = await this.ipc.identify({ startId: state.startId })
       const { id, host } = identify
 
