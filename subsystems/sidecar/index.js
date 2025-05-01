@@ -53,6 +53,7 @@ const ops = {
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
   Dump: require('./ops/dump'),
+  Asset: require('./ops/asset'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
@@ -114,6 +115,7 @@ class Sidecar extends ReadyResource {
 
     this.ipc.on('client', (client) => {
       client.once('close', () => {
+        this.spindownms = SPINDOWN_TIMEOUT
         this.#spindownCountdown()
       })
     })
@@ -338,6 +340,7 @@ class Sidecar extends ReadyResource {
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
     LOG.info('sidecar', ' v' + version.fork + '.' + version.length + '.' + version.key + (info.link ? ' (' + info.link + ')' : ''))
 
+    if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
     const messaged = new Set()
 
@@ -379,6 +382,8 @@ class Sidecar extends ReadyResource {
   stage (params, client) { return new ops.Stage(params, client, this) }
 
   dump (params, client) { return new ops.Dump(params, client, this) }
+
+  asset (params, client) { return new ops.Asset(params, client, this) }
 
   info (params, client) { return new ops.Info(params, client, this) }
 
@@ -644,7 +649,7 @@ class Sidecar extends ReadyResource {
           if (startId === app.startId) return false
           return app.state.storage === (storage || appStorage) && (appdev
             ? app.state.dir === appdev
-            : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
+            : app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
           )
         })
 
@@ -654,7 +659,6 @@ class Sidecar extends ReadyResource {
           const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
           app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData })
         }
-
         const min = selfwake ? 1 : 0
         resolve(matches.length > min)
       })

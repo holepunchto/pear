@@ -4,9 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "brittle",
-    "bootstrap": "pear-electron",
-    "postinstall": "npm run bootstrap"
+    "test": "brittle"
   },
   "type": "module",
   "pear": {
@@ -27,6 +25,6 @@
   },
   "dependencies": {
     "pear-bridge": "^1.0.0",
-    "pear-electron": "^1.2.0"
+    "pear-electron": "^1.3.1"
   }
 }
