@@ -101,7 +101,7 @@ module.exports = class Model {
     const tx = await this.lock.enter()
     const asset = await tx.get('@pear/asset', { link }) ?? { link }
     if (!asset.path) {
-      asset.path = path.join(PLATFORM_DIR, randomBytes(16).toString('hex'))
+      asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
       await tx.insert('@pear/asset', asset)
       asset.inserted = true
     } else {
