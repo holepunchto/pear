@@ -115,7 +115,7 @@ class Sidecar extends ReadyResource {
 
     this.ipc.on('client', (client) => {
       client.once('close', () => {
-        this.spindownms = 100
+        this.spindownms = SPINDOWN_TIMEOUT
         this.#spindownCountdown()
       })
     })
