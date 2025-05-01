@@ -129,6 +129,7 @@ class Sidecar extends ReadyResource {
             }
           }
         }
+        this.spindownms = 100
         this.#spindownCountdown()
       })
     })
@@ -985,7 +986,7 @@ class Sidecar extends ReadyResource {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const tearingDown = client.userData instanceof this.App && client.userData.teardown()
     if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
-
+    client.userData.shutdownClient = true
     this.spindownms = 0
     const restarts = this.closeClients()
 
