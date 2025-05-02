@@ -1,9 +1,16 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import ui from 'pear-electron'
+
 const { config } = Pear
 console.log('link', config.link)
 console.log('linkData', config.linkData)
 console.log('key', config.key)
+
+Pear.pipe.on('data', (data) => {
+  const cmd = Buffer.from(data).toString()
+  if (cmd === 'hello from app') Pear.pipe.write('hello from ui')
+  console.log('PIPE DATA', cmd)
+})
 
 Pear.updates(function (data) {
   console.log('update available:', data)
