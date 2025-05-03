@@ -89,8 +89,7 @@ module.exports = class Model {
       const updatedBundle = { ...bundle, appStorage: newAppStorage }
       LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
       await tx.insert('@pear/bundle', updatedBundle)
-      LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: oldStorage })})`)
-      await tx.insert('@pear/gc', { path: oldStorage })
+      await this.addGc(oldStorage)
       result = updatedBundle
     }
     await this.lock.exit()
@@ -164,16 +163,21 @@ module.exports = class Model {
     const updatedDstBundle = { ...dstBundle, appStorage: srcBundle.appStorage }
     LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedDstBundle)})`)
     await tx.insert('@pear/bundle', updatedDstBundle)
-    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: dstBundle.appStorage })})`)
-    await tx.insert('@pear/gc', { path: dstBundle.appStorage })
+    await this.addGc(dstBundle.appStorage)
 
     const updatedSrcBundle = { ...srcBundle, appStorage: newSrcAppStorage }
-    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify(updatedSrcBundle)})`)
-    await tx.insert('@pear/bundle', updatedSrcBundle)
+    await this.addGc(updatedSrcBundle)
 
     await this.lock.exit()
 
     return { srcBundle: updatedSrcBundle, dstBundle: updatedDstBundle }
+  }
+
+  async addGc (path) {
+    const tx = await this.lock.enter()
+    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path })})`)
+    await tx.insert('@pear/gc', { path })
+    await this.lock.exit()
   }
 
   async allGc () {
