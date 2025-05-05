@@ -566,6 +566,7 @@ class Sidecar extends ReadyResource {
 
   async restart ({ platform = false } = {}, client) {
     LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
+    this.spindownms = SPINDOWN_TIMEOUT
     if (platform === false) {
       if (client.userData instanceof this.App === false) {
         LOG.info('sidecar', 'Invalid restart request from non-app client')
@@ -575,15 +576,13 @@ class Sidecar extends ReadyResource {
       const appling = client.userData.state.appling
       const opts = { cwd, env, detached: false, stdio: 'ignore' }
       if (!client.closed) {
-        await new Promise((resolve) => {
-          if (client.closed) {
-            resolve()
-            return
-          }
-          client.once('close', resolve)
-          const tearingDown = client.userData instanceof this.App && client.userData.teardown()
-          if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
-        })
+        const tearingDown = client.userData.teardown()
+        if (tearingDown) {
+          await new Promise((resolve) => { client.once('close', resolve) })
+        } else {
+          await this.#endRPCStreams(client)
+          await client.close()
+        }
       }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
@@ -974,11 +973,8 @@ class Sidecar extends ReadyResource {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const tearingDown = client.userData instanceof this.App && client.userData.teardown()
     if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
-    client.userData.shutdownClient = true
     this.spindownms = 0
     const restarts = this.closeClients()
-
-    this.spindownms = 0
     this.#spindownCountdown()
     await this.closing
     return restarts
