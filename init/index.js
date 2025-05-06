@@ -63,7 +63,11 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
-  const locals = await prompt.run({ autosubmit })
+  const locals = await prompt.run({ autosubmit }).catch((err) => {
+    if (autosubmit) throw ERR_INVALID_TEMPLATE('Invalid Template')
+    throw err
+  })
+
   output.push({ tag: 'writing' })
   const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {

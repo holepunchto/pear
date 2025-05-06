@@ -2,7 +2,8 @@
   "params": [
     {
       "name": "name",
-      "prompt": "name"
+      "prompt": "name",
+      "validation": "(name) => /^[@/a-z0-9-_]+$/.test(name)"
     },
     {
       "name": "main",
