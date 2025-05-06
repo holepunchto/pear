@@ -140,7 +140,7 @@ test('bundle persisted with z32 encoded key', async function ({ is, comment, tea
   is(persistedBundles[0].link, `pear://${key}`, 'encoded key persisted')
 })
 
-test('no duplicated bundle local app', async function ({ is, comment, teardown }) {
+test.solo('no duplicated bundle local app', async function ({ is, comment, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -162,6 +162,7 @@ test('no duplicated bundle local app', async function ({ is, comment, teardown }
   const bundles = await result.apps
 
   const key = isWindows ? `file:///${versionsDir.replaceAll('\\', '/')}` : `file://${versionsDir}`
+  console.log(key, JSON.stringify(bundles, 0, 2))
   const persistedBundles = bundles.filter(e => e.link.startsWith(key))
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, key, 'bundle key is origin key')
