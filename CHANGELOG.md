@@ -13,9 +13,9 @@
 * CLI - `pear stage --purge` - remove ignored files from app hypercore
 * CLI - `pear stage --only` - filter by paths
 * Config - pear.stage.only - filter by paths on stage
-* Config - pear.via -
-* Config - pear.routes -
-* Config - pear.unrouted - 
+* Config - pear.via - extend config via a module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
+* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, {"routes": {"/route": "/path"},  {"routes": "."} catch-all
+* Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
 * IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
 * CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
 
