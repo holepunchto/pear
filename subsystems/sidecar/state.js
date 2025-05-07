@@ -55,7 +55,6 @@ module.exports = class State extends SharedState {
       ...Object.fromEntries(Object.entries((state.options.links ?? {}))),
       ...(state.links ?? {})
     }
-    state.gui = state.options.gui || null
     state.entrypoints = new Set(state.options.stage?.entrypoints || [])
     state.routes = state.options.routes || null
     state.route = '/' + state.linkData
