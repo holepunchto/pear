@@ -32,6 +32,7 @@ swap: incremental integer dirname (default: 0) - incremented with `swap + 1 & 3`
     - /pear -> symlink -> ../current/by-arch/[os]-[arch]/bin/pear-runtime <-- linux/mac
     - /pear.cmd | pear.ps1 -> win cmd/powershell script wrapper for ../current/by-arch/[os]-[arch]/bin/pear-runtime.exe
     - /[name] | ([name].cmd | [name].ps1) -> reserved
+  - /assets/[random] -> assets (such as UI Runtimes) are dumped here, link<->path is stored in platform db
 ```
 
 `boot.bundle` has just enough code to run itself with the bare js runtime and open the hyperdrive that contains the rest of the code.
