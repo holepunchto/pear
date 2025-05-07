@@ -6,6 +6,7 @@ const Localdrive = require('localdrive')
 const { Interact } = require('pear-api/terminal')
 const transform = require('pear-api/transform')
 const parseLink = require('pear-api/parse-link')
+const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
 async function init (link = 'default', dir, { ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
   const isPear = link.startsWith('pear://')
@@ -14,14 +15,13 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
   const isName = !isPear && !isFile && !isPath
 
   if (isName) {
-    const { platform } = await ipc.versions()
     if (link === 'ui') {
       link = 'pear://electron/template'
       ask = false
-    } else if (platform.key.startsWith('/')) {
+    } else if (LOCALDEV) {
       link = path.join(__dirname, 'templates', link)
     } else {
-      link = 'pear://' + platform.key + '/init/templates/' + link
+      link = 'pear://pear/init/templates/' + link
     }
   }
   let params = null
