@@ -29,8 +29,10 @@
 ### Improvements
 
 * `pear run` - **MAJOR** only runs terminal (Bare) apps from JS entrypoints, will throw ERR_LEGACY for .html entrypoints
-* CLI - **MAJOR** `pear reset` **DEPRECATED** now `pear drop`
-* CLI - `pear dev` now hidden, **WILL BE REMOVED**, use `pear run --dev`
+* CLI - **MAJOR** `pear reset` **DEPRECATED & REMOVED** now `pear drop`
+* CLI - **MAJOR** `pear init`, `-t|--type` flag removed, replaced with `name` (default, node-compat, ui), in `[link|name]`
+* CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app
+* CLI - **MAJOR** `pear dev` **DEPRECATED & REMOVED**  use `pear run --dev`
 * Decomposition - `Pear` global now defined in [`pear-api`](./node_modules/pear-api/CHANGELOG.md) allowing for API extension in other environments, such a Pear UI Libraries 
 * Decomposition - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) integration libraries for externalized integration
 * Decomposition - GUI internals externalized to [`pear-electron`](pear://yceb7sjhgfzsnza7oc38hy3oxu9dhnywi3mzxdm9ubc48kjnxqgo/CHANGELOG.md) Pear UI Library
