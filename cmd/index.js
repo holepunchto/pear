@@ -196,10 +196,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('inspect', runners.sidecar(ipc), summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description`
-      The Pear Sidecar is a local-running HTTP and IPC server which
-      provides access to corestores.
+      The sidecar is a local-running IPC server for corestore access.
 
-      This command instructs any existing sidecar process to shutdown
+      The pear sidecar command shutdown any existing sidecar process
       and then becomes the sidecar.
     `,
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
