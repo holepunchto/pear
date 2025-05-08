@@ -72,7 +72,7 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
-  const { locals, shave } = await prompt.run({ autosubmit })
+  const { fields, shave } = await prompt.run({ autosubmit })
   output.push({ tag: 'writing' })
   const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
@@ -83,9 +83,9 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-    const file = transform.sync(key, locals)
+    const file = transform.sync(key, fields)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, locals, shave), writeStream)
+    const promise = pipelinePromise(transform.stream(value, fields, shave), writeStream)
     promise.catch((err) => { output.push({ tag: 'error', data: err }) })
     promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
     promises.push(promise)
