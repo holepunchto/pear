@@ -5,8 +5,8 @@
 ### Features
 
 * CLI - `pear data manifest` to read platform database manifest
-* API - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.asset()`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
-* Integration - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
+* API - [`pear-api`][v2.0.0:pear-api] - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.asset()`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
+* Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
 * CLI - `pear dump --only` - filter by paths
 * CLI - `pear dump --no-prune` - disallow removals
 * CLI - `pear dump` downloads & peers stats output status
@@ -33,17 +33,22 @@
 * CLI - **MAJOR** `pear init`, `-t|--type` flag removed, replaced with `name` (default, node-compat, ui), in `[link|name]`
 * CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app
 * CLI - **MAJOR** `pear dev` **DEPRECATED & REMOVED**  use `pear run --dev`
-* Decomposition - `Pear` global now defined in [`pear-api`](./node_modules/pear-api/CHANGELOG.md) allowing for API extension in other environments, such a Pear UI Libraries 
-* Decomposition - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) integration libraries for externalized integration
-* Decomposition - GUI internals externalized to [`pear-electron`](pear://yceb7sjhgfzsnza7oc38hy3oxu9dhnywi3mzxdm9ubc48kjnxqgo/CHANGELOG.md) Pear UI Library
+* Decomposition - `Pear` global now defined in [`pear-api`][v2.0.0:pear-api] allowing for API extension in other environments, such a Pear UI Libraries
+* Decomposition - [`pear-api`][v2.0.0:pear-api] integration libraries for externalized integration
+* Decomposition - GUI internals externalized to [`pear-electron`][v2.0.0:pear-electron] Pear UI Library
 * Internal - boot flow stripped decoupled from electron boot flow
-* Internal - internal dependencies switched to [`pear-api`](./node_modules/pear-api/CHANGELOG.md)
+* Internal - internal dependencies switched to [`pear-api`][v2.0.0:pear-api]
 * Internal - gc op refactor
 * CLI - help output tweaks/clarifications
 * CLI - error output improvements (classifications for stacks/non-stacks)
 * Internal - versions cmd refactor
 * Internal - seed op tweak (seeds are not apps)
-* Examples - desktop updated to use [`pear-electron`](pear://yceb7sjhgfzsnza7oc38hy3oxu9dhnywi3mzxdm9ubc48kjnxqgo/CHANGELOG.md) with Pipe example
+* Examples - desktop updated to use [`pear-electron`][v2.0.0:pear-electron] with Pipe example
+
+
+[v2.0.0:pear-electron]: pear://0.TODO-LENGTH.pear/node_modules/pear-api/CHANGELOG.md "pear info pear://0.TODO-LENGTH.pear/node_modules/pear-api"
+[v2.0.0:pear-api]: pear://0.TODO-LENGTH.electron/CHANGELOG.md "pear info pear://0.TODO-LENGTH.electron"
+
 
 ## v1.15.0
 
