@@ -31,13 +31,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const init = command(
     'init',
     summary('Create initial project files'),
-    description('Template Types: desktop, terminal, terminal-node'),
-    arg('<link|type=desktop>', 'Link or type to init from.'),
+    description`
+    Links:
+      pear://electron/template
+      ${ansi.italic(ansi.dim('pear://your.key.here/your/path/here'))}
+
+    Names:
+      default, ui, node-compat
+    `,
+    arg('[link|name]', 'Link or core template to init from'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--type|-t <type>', 'Template type. Overrides <link|type>'),
     flag('--force|-f', 'Force overwrite existing files'),
-    flag('--with|-w <name>', 'Additional functionality. Available: node'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     runners.init(ipc)
   )
@@ -194,10 +199,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'sidecar',
     summary('Advanced. Run sidecar in terminal'),
     description`
-      The Pear Sidecar is a local-running HTTP and IPC server which
-      provides access to corestores.
+      The sidecar is a local-running IPC server for corestore access.
 
-      This command instructs any existing sidecar process to shutdown
+      The pear sidecar command shuts down any existing sidecar process
       and then becomes the sidecar.
     `,
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
@@ -320,17 +324,21 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         Bare.exit(1)
       }
     }
-    const message = (bail) => bail.err.message
+    const messageOnly = (bail) => bail.err.message
+    const messageUsage = (bail) => bail.err.message
     const codemap = new Map([
       ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
       ['UNKNOWN_ARG', (bail) => 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value],
-      ['ERR_INVALID_INPUT', message],
-      ['ERR_LEGACY', message]
+      ['ERR_INVALID_INPUT', messageUsage],
+      ['ERR_LEGACY', messageOnly],
+      ['ERR_INVALID_TEMPLATE', messageOnly],
+      ['ERR_DIR_NONEMPTY', messageOnly]
     ])
-    const reason = codemap.has(bail.reason) ? codemap.get(bail.reason)(bail) : (codemap.has(bail.err.code) ? codemap.get(bail.err.code)(bail) : bail.reason)
+    const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
+    const reason = codemap.has(code) ? codemap.get(code)(bail) : bail.reason
 
     print(reason, false)
-    if (bail.err?.code === 'ERR_LEGACY') return
+    if (codemap.get(code) === messageOnly) return
     print('\n' + bail.command.usage())
     Bare.exitCode = 1
   }

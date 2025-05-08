@@ -1,17 +1,62 @@
 # Pear Runtime Changelog
 
+## v2.0.0
+
+### Features
+
+* CLI - `pear data manifest` to read platform database manifest
+* API - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.asset()`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
+* Integration - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
+* CLI - `pear dump --only` - filter by paths
+* CLI - `pear dump --no-prune` - disallow removals
+* CLI - `pear dump` downloads & peers stats output status
+* CLI - `pear stage --purge` - remove ignored files from app hypercore
+* CLI - `pear stage --only` - filter by paths
+* Config - pear.stage.only - filter by paths on stage
+* Config - pear.via - extend config via a module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
+* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, {"routes": {"/route": "/path"},  {"routes": "."} catch-all
+* Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
+* IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
+* CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
+
+### Fixes
+
+* Permissions - UID of Pear process must match Pear platform directory UID
+* `pear sidecar` - cursor reset on teardown
+* `pear sidecar` - corrected restart commands output
+* `pear run` - remove cwd reliance from project resolution algorithm
+
+### Improvements
+
+* `pear run` - **MAJOR** only runs terminal (Bare) apps from JS entrypoints, will throw ERR_LEGACY for .html entrypoints
+* CLI - **MAJOR** `pear reset` **DEPRECATED & REMOVED** now `pear drop`
+* CLI - **MAJOR** `pear init`, `-t|--type` flag removed, replaced with `name` (default, node-compat, ui), in `[link|name]`
+* CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app
+* CLI - **MAJOR** `pear dev` **DEPRECATED & REMOVED**  use `pear run --dev`
+* Decomposition - `Pear` global now defined in [`pear-api`](./node_modules/pear-api/CHANGELOG.md) allowing for API extension in other environments, such a Pear UI Libraries 
+* Decomposition - [`pear-api`](./node_modules/pear-api/CHANGELOG.md) integration libraries for externalized integration
+* Decomposition - GUI internals externalized to [`pear-electron`](pear://yceb7sjhgfzsnza7oc38hy3oxu9dhnywi3mzxdm9ubc48kjnxqgo/CHANGELOG.md) Pear UI Library
+* Internal - boot flow stripped decoupled from electron boot flow
+* Internal - internal dependencies switched to [`pear-api`](./node_modules/pear-api/CHANGELOG.md)
+* Internal - gc op refactor
+* CLI - help output tweaks/clarifications
+* CLI - error output improvements (classifications for stacks/non-stacks)
+* Internal - versions cmd refactor
+* Internal - seed op tweak (seeds are not apps)
+* Examples - desktop updated to use [`pear-electron`](pear://yceb7sjhgfzsnza7oc38hy3oxu9dhnywi3mzxdm9ubc48kjnxqgo/CHANGELOG.md) with Pipe example
+
 ## v1.13.0
 
 ### Features
 
-* CLI – The terminal app entrypoint can now be located inside the desktop app bundle.
+* CLI – The terminal app entrypoint can now be located inside the desktop app bundle
 
 ### Fixes
 
-* Internal - Fixed multi worker data piping.
-* Terminal - Fixed unhandled rejection handler for terminal apps.
-* Desktop - Fixed client restart after update nofification.
-* Desktop – Fixed missing traffic lights on macOS.
+* Internal - Fixed multi worker data piping
+* Terminal - Fixed unhandled rejection handler for terminal apps
+* Desktop - Fixed client restart after update nofification
+* Desktop – Fixed missing traffic lights on macOS
 
 ## v1.12.1
 

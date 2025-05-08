@@ -6,20 +6,26 @@ const Localdrive = require('localdrive')
 const { Interact } = require('pear-api/terminal')
 const transform = require('pear-api/transform')
 const parseLink = require('pear-api/parse-link')
+const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
-async function init (link, dir, { ipc, header, autosubmit, defaults, force = false } = {}) {
+async function init (link = 'default', dir, { ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
-  const isType = !isPear && !isFile && !isPath
+  const isName = !isPear && !isFile && !isPath
 
-  if (isType) {
-    const { platform } = await ipc.versions()
-    if (platform.key.startsWith('/')) link = path.join(__dirname, 'templates', link)
-    else link = 'pear://' + platform.key + '/init/templates/' + link
+  if (isName) {
+    if (link === 'ui') {
+      link = 'pear://electron/template'
+      ask = false
+    } else if (LOCALDEV) {
+      link = path.join(__dirname, 'templates', link)
+    } else {
+      link = 'pear://pear/init/templates/' + link
+    }
   }
   let params = null
-  if (isPear) {
+  if (isPear && ask) {
     if (await ipc.trusted(link) === false) {
       const { drive } = parseLink(link)
       throw ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
@@ -41,6 +47,9 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
       const definition = JSON.parse(data.value)
       params = definition.params
       for (const prompt of params) {
+        defaults[prompt.name] = Array.isArray(prompt.override)
+          ? prompt.override.reduce((o, k) => o?.[k], pkg)
+          : prompt.default ?? defaults[prompt.name]
         if (typeof prompt.validation !== 'string') continue
         prompt.validation = new Function('value', 'return (' + prompt.validation + ')(value)') // eslint-disable-line
       }
@@ -49,7 +58,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     }
     break
   }
-  if (params === null) throw ERR_INVALID_TEMPLATE('Invalid Template')
+  if (params === null) throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -63,7 +72,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
-  const locals = await prompt.run({ autosubmit })
+  const { locals, shave } = await prompt.run({ autosubmit })
   output.push({ tag: 'writing' })
   const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
@@ -76,7 +85,7 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
     if (value === null) continue // dir
     const file = transform.sync(key, locals)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, locals), writeStream)
+    const promise = pipelinePromise(transform.stream(value, locals, shave), writeStream)
     promise.catch((err) => { output.push({ tag: 'error', data: err }) })
     promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
     promises.push(promise)
