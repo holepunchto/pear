@@ -361,11 +361,17 @@ class IPC {
         cb()
       }
     })
-    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
-      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
+    electron.ipcRenderer.on('workerPipeError', (e, args) => {
+      if (args.id === id) {
+        stream.emit('error', new Error('Worker PipeError (from electron-main): ' + args.stack))
+      }
     })
-    electron.ipcRenderer.on('workerPipeClose', () => { stream.destroy() })
-    electron.ipcRenderer.on('workerPipeEnd', () => { stream.end() })
+    electron.ipcRenderer.on('workerPipeClose', (e, args) => {
+      if (args.id === id) stream.destroy()
+    })
+    electron.ipcRenderer.on('workerPipeEnd', (e, args) => {
+      if (args.id === id) stream.end()
+    })
     stream.once('close', () => {
       electron.ipcRenderer.send('workerPipeClose', id)
     })
