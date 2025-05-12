@@ -25,5 +25,6 @@ module.exports = [
   flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
   flag('--sandbox').hide(), // electron passthrough
-  flag('--app-name <name>').hide()
+  flag('--app-name <name>').hide(),
+  flag('--run').hide() // appling legacy
 ]
