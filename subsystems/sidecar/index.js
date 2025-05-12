@@ -346,10 +346,12 @@ class Sidecar extends ReadyResource {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle?.link) {
+        app.state.updated = { app: true, version, diff: info.diff }
         app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
         continue
       }
       if (info.link) continue
+      app.state.updated = { app: false, version, diff: null }
       app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true })
     }
   }
