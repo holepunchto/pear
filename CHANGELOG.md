@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v1.13.2
+
+### Fixes
+
+* API - Added Pear.updated to check missed update notifications
+* Internal - Pass correct worker flags
+
 ## v1.13.1
 
 ### Fixes
