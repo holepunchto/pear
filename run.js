@@ -4,12 +4,13 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const ENV = require('bare-env')
+const { pathToFileURL } = require('url-file-url')
 const { spawn: daemon } = require('bare-daemon')
 const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
 const teardown = require('pear-api/teardown')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const {
   ERR_PERMISSION_REQUIRED,
   ERR_INVALID_PROJECT_DIR,
@@ -19,8 +20,7 @@ const {
 const State = require('pear-api/state')
 
 module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detached, flags, appArgs }) {
-  const { drive, pathname } = parseLink(link)
-  const entry = isWindows ? path.normalize(pathname.slice(1)) : pathname
+  const { drive, pathname, search, hash } = plink.parse(link)
   const { key } = drive
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
@@ -28,19 +28,14 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   if (key !== null && isPear === false) {
     throw ERR_INVALID_INPUT('Key must start with pear://')
   }
-
   const cwd = os.cwd()
   let dir = cwd
   let base = null
   if (key === null) {
-    try {
-      dir = fs.statSync(entry).isDirectory() ? entry : path.dirname(entry)
-    } catch { /* ignore */ }
-    base = project(dir, pathname, cwd)
+    base = project(pathname, pathname, cwd)
     dir = base.dir
-    if (isPath) {
-      link = path.join(dir, base.entrypoint || '/')
-    }
+    if (dir.length > 1 && dir.endsWith('/')) dir = dir.slice(0, -1)
+    if (isPath) link = pathToFileURL(path.join(dir, base.entrypoint || '/')) + search + hash
   }
 
   if (detached) {
@@ -67,7 +62,6 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 
   await ipc.ready()
   const config = await ipc.config()
-
   state.update({ config })
 
   global.Pear = new API(ipc, state, { teardown })
@@ -110,8 +104,11 @@ function project (dir, origin, cwd) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
-  if (parent === dir || path.resolve(dir) === path.resolve(parent)) {
-    throw ERR_INVALID_PROJECT_DIR('A valid package.json file with pear field must exist in the project')
+  if (parent === dir) {
+    const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
+    const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
+    const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
+    throw ERR_INVALID_PROJECT_DIR(`A valid package.json file with pear field must exist ${condition}`)
   }
   return project(parent, origin, cwd)
 }
