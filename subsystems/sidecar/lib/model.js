@@ -54,8 +54,8 @@ module.exports = class Model {
 
   async addBundle (link, appStorage) {
     const { origin } = pearLink(ALIASES)(link)
-    const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link: origin, appStorage })})`)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/bundle', { link: origin, appStorage })
     await this.lock.exit()
     return { link, appStorage }
@@ -63,8 +63,8 @@ module.exports = class Model {
 
   async updateEncryptionKey (link, encryptionKey) {
     let result
-    const tx = await this.lock.enter()
     LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })} })`)
+    const tx = await this.lock.enter()
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
@@ -80,8 +80,8 @@ module.exports = class Model {
 
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
-    const tx = await this.lock.enter()
     LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
+    const tx = await this.lock.enter()
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
@@ -116,8 +116,8 @@ module.exports = class Model {
   }
 
   async setDhtNodes (nodes) {
-    const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/dht', ${JSON.stringify(nodes)})`)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/dht', { nodes })
     await this.lock.exit()
   }
@@ -129,8 +129,8 @@ module.exports = class Model {
 
   async updateTags (link, tags) {
     let result
-    const tx = await this.lock.enter()
     LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
+    const tx = await this.lock.enter()
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
@@ -175,8 +175,8 @@ module.exports = class Model {
   }
 
   async addGc (path) {
-    const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path })})`)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/gc', { path })
     await this.lock.exit()
   }
@@ -193,8 +193,8 @@ module.exports = class Model {
 
   async setManifest (version) {
     const manifest = { version }
-    const tx = await this.lock.enter()
     LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/manifest', manifest)
     await this.lock.exit()
   }
