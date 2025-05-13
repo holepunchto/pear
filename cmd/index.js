@@ -1,5 +1,5 @@
 'use strict'
-const { header, footer, command, flag, arg, summary, description, bail, sloppy, hiddenCommand } = require('paparam')
+const { header, footer, command, flag, arg, summary, description, bail, sloppy, validate, hiddenCommand } = require('paparam')
 const { usage, print, ansi } = require('pear-api/terminal')
 const { CHECKOUT } = require('pear-api/constants')
 const errors = require('pear-api/errors')
@@ -144,14 +144,20 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'dump',
     summary('Synchronize files from key to dir'),
     arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
-    arg('<dir>', 'Directory path to dump to, may be - for stdout'),
+    arg('<dir>', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
+    flag('--list', 'List paths at link. Sets <dir> to -'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--no-prune', 'Prevent removal of existing paths'),
     flag('--json', 'Newline delimited JSON output'),
+    validate((cmd) => {
+      if (cmd.flags.list) cmd.args.dir = '-'
+      return true
+    }),
+    validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
     runners.dump(ipc)
   )
 
@@ -319,18 +325,20 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   return program
 
   function explain (bail) {
-    if (bail.err) {
+    if (!bail.reason && bail.err) {
       const known = errors.known()
       if (known.includes(bail.err.code) === false) {
         print(errors.ERR_UNKNOWN('Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack), false)
         Bare.exit(1)
       }
     }
-    const messageOnly = (bail) => bail.err.message
     const messageUsage = (bail) => bail.err.message
+    const messageOnly = (bail) => bail.err.message
     const codemap = new Map([
       ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
       ['UNKNOWN_ARG', (bail) => 'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value],
+      ['MISSING_ARG', (bail) => bail.arg.value],
+      ['INVALID', messageUsage],
       ['ERR_INVALID_INPUT', messageUsage],
       ['ERR_LEGACY', messageOnly],
       ['ERR_INVALID_TEMPLATE', messageOnly],
