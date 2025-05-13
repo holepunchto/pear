@@ -416,7 +416,11 @@ class Sidecar extends ReadyResource {
     }
 
     const runtimes = { bare: Bare.versions.bare, pear: version, electron: this.electronVersion }
-    return { platform: this.version, app: client.userData?.state?.version, updated: client.userData?.state?.updated, runtimes }
+    return { platform: this.version, app: client.userData?.state?.version, runtimes }
+  }
+
+  async updated (params, client) {
+    return client.userData?.state?.updated
   }
 
   reports (params, client) {
