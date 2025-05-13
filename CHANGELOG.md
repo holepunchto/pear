@@ -14,7 +14,7 @@
 * CLI - `pear stage --only` - filter by paths
 * Config - pear.stage.only - filter by paths on stage
 * Config - pear.via - extend config via a module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
-* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, {"routes": {"/route": "/path"},  {"routes": "."} catch-all
+* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"},  {"routes": "."}` catch-all
 * Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
 * IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
 * CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
@@ -46,8 +46,8 @@
 * Examples - desktop updated to use [`pear-electron`][v2.0.0:pear-electron] with Pipe example
 
 
-[v2.0.0:pear-electron]: pear://0.TODO-LENGTH.pear/node_modules/pear-api/CHANGELOG.md "pear info pear://0.TODO-LENGTH.pear/node_modules/pear-api"
-[v2.0.0:pear-api]: pear://0.TODO-LENGTH.electron/CHANGELOG.md "pear info pear://0.TODO-LENGTH.electron"
+[v2.0.0:pear-api]: pear://runtime/doc?pear://0.TODO.pear/node_modules/pear-api/CHANGELOG.md "pear run pear://runtime/doc?pear://0.TODO.pear/node_modules/pear-api/CHANGELOG.md"
+[v2.0.0:pear-electron]: pear://runtime/doc?pear://0.TODO.electron/CHANGELOG.md "pear run pear://runtime/doc?pear://0.TODO.electron/CHANGELOG.md"
 
 
 ## v1.17.0
