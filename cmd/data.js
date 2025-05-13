@@ -1,5 +1,5 @@
 'use strict'
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { outputter, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
@@ -64,7 +64,7 @@ class Data {
     const { secrets, json } = command.parent.flags
     const link = command.args.link
     if (link) {
-      const parsed = parseLink(link)
+      const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
       await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
     } else {
