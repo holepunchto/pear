@@ -96,6 +96,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
 }
 
 function project (dir, origin, cwd) {
+  console.log('PROJECT', dir, origin, cwd)
   try {
     if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))).pear) {
       return { dir, origin, entrypoint: isWindows ? path.normalize(origin.slice(1)).slice(dir.length) : origin.slice(dir.length) }
