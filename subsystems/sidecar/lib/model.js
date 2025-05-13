@@ -64,7 +64,7 @@ module.exports = class Model {
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
-    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })} })`)
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})`)
     const bundle = await tx.get('@pear/bundle', { link })
     if (!bundle) {
       result = null
