@@ -3,8 +3,8 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
-const parseLink = require('pear-api/parse-link')
-const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('pear-api/errors')
+const plink = require('pear-api/link')
+const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY, ERR_INVALID_INPUT } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const DriveMonitor = require('../lib/drive-monitor')
@@ -12,8 +12,11 @@ const DriveMonitor = require('../lib/drive-monitor')
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, only, force, prune = !only }) {
+  async #op ({ link, dir, dryRun, checkout, only, force, prune = !only, list }) {
     const { session, sidecar } = this
+    if (list) dir = '-'
+    if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
+    if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
     await sidecar.ready()
     if (dir !== '-') {
       try {
@@ -25,7 +28,7 @@ module.exports = class Dump extends Opstream {
       }
     }
 
-    const parsed = parseLink(link)
+    const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
@@ -87,17 +90,24 @@ module.exports = class Dump extends Opstream {
       ? ''
       : (isFile ? path.basename(parsed.pathname) : prefix)
     const entry = pathname === '' ? null : await src.entry(pathname)
+
     if (dir === '-') {
       if (entry !== null) {
-        const value = await src.get(entry)
         const key = entry.key.split('/').pop()
-        this.push({ tag: 'file', data: { key, value } })
+        const value = list ? null : await src.get(entry)
+        const data = list ? { key } : { key, value }
+        this.push({ tag: 'file', data })
+        this.final = data
         return
       }
 
       for await (const entry of src.list(pathname)) {
-        const value = await src.get(entry)
         const key = isFileLink ? entry.key : entry.key.slice(prefix.length)
+        if (list) {
+          this.push({ tag: 'file', data: { key } })
+          continue
+        }
+        const value = await src.get(entry)
         this.push({ tag: 'file', data: { key, value } })
       }
       return

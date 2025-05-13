@@ -1,6 +1,6 @@
 'use strict'
 const { outputter } = require('pear-api/terminal')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const output = outputter('shift', {
@@ -17,11 +17,11 @@ module.exports = (ipc) => async function shift (cmd) {
   const src = cmd.args.source
   const dst = cmd.args.destination
 
-  if (parseLink(src).drive.key === null) {
+  if (plink.parse(src).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid source application link must be specified.')
   }
 
-  if (parseLink(dst).drive.key === null) {
+  if (plink.parse(dst).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid destination application link must be specified.')
   }
 

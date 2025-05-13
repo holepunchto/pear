@@ -17,13 +17,12 @@ const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
-const pearLink = require('pear-link')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const rundef = require('pear-api/cmd/run')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT,
@@ -648,7 +647,7 @@ class Sidecar extends ReadyResource {
 
   wakeup (params = {}) {
     const [link, storage, appdev = null, selfwake = true, startId] = params.args
-    const parsed = parseLink(link)
+    const parsed = plink.parse(link)
     const appLink = link.substring(0, link.length - parsed.pathname.length)
     return this.model.getAppStorage(appLink).then((appStorage) => {
       return new Promise((resolve) => {
@@ -741,7 +740,7 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const parsedLink = parseLink(link)
+    const parsedLink = plink.parse(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
     const key = parsedLink.drive?.key
@@ -763,7 +762,7 @@ class Sidecar extends ReadyResource {
     } else if (!link.startsWith('file://')) {
       link = pathToFileURL(link).href
     }
-    link = pearLink.normalize(link)
+    link = plink.normalize(link)
 
     const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
 
