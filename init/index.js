@@ -5,7 +5,7 @@ const path = require('bare-path')
 const Localdrive = require('localdrive')
 const { Interact } = require('pear-api/terminal')
 const transform = require('pear-api/transform')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
 async function init (link = 'default', dir, { ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
@@ -27,7 +27,7 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
   let params = null
   if (isPear && ask) {
     if (await ipc.trusted(link) === false) {
-      const { drive } = parseLink(link)
+      const { drive } = plink.parse(link)
       throw ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
     }
   }
