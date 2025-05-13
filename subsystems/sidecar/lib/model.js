@@ -166,7 +166,8 @@ module.exports = class Model {
     await this.addGc(dstBundle.appStorage)
 
     const updatedSrcBundle = { ...srcBundle, appStorage: newSrcAppStorage }
-    await this.addGc(updatedSrcBundle)
+    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedSrcBundle)})`)
+    await tx.insert('@pear/bundle', updatedSrcBundle)
 
     await this.lock.exit()
 
