@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-api/terminal')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { permit, isTTY, byteDiff } = require('pear-api/terminal')
 
@@ -34,7 +34,7 @@ const output = outputter('stage', {
 
 module.exports = (ipc) => async function stage (cmd) {
   const { dryRun, bare, json, ignore, purge, name, truncate, only } = cmd.flags
-  const isKey = cmd.args.channel && parseLink(cmd.args.channel).drive.key !== null
+  const isKey = cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
   if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified.')

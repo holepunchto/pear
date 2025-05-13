@@ -1,5 +1,5 @@
 'use strict'
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { outputter, confirm, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const os = require('bare-os')
@@ -17,7 +17,7 @@ module.exports = (ipc) => async function drop (cmd) {
   const { json } = cmd.flags
   const link = cmd.args.link
   if (link) {
-    const parsed = parseLink(link)
+    const parsed = plink.parse(link)
     if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
   }
   const dialog = ansi.warning + `  ${ansi.bold('WARNING')} the storage of ${ansi.bold(link)} will be permanently deleted and cannot be recovered. To confirm type "RESET"\n\n`

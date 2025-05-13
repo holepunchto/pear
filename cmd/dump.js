@@ -1,10 +1,9 @@
 'use strict'
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-api/terminal')
 
 const output = outputter('dump', {
-  dumping: ({ link, dir }) => `\n🍐 Dumping ${link} into ${dir}`,
+  dumping: ({ link, dir }) => dir === '-' ? `${ansi.pear} List ${link}` : `\n${ansi.pear} Dumping ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => { return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n' },
   stats ({ upload, download, peers }) {
@@ -28,11 +27,9 @@ const output = outputter('dump', {
 })
 
 module.exports = (ipc) => async function dump (cmd) {
-  const { dryRun, checkout, json, only, force, ask, prune } = cmd.flags
+  const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
-  if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
-  if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
   dir = dir === '-' ? '-' : (isAbsolute(dir) ? dir : resolve('.', dir))
-  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, only, force, prune }), { ask }, ipc)
+  await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, only, force, prune, list }), { ask }, ipc)
 }

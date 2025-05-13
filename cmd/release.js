@@ -3,7 +3,7 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 
 const output = outputter('release', {
   releasing: ({ name, channel, link }) => `\n${ansi.pear} Releasing ${name} [ ${channel || link} ]\n`,
@@ -15,7 +15,7 @@ const output = outputter('release', {
 
 module.exports = (ipc) => async function release (cmd) {
   const { checkout, name, json } = cmd.flags
-  const isKey = parseLink(cmd.args.channel).drive.key !== null
+  const isKey = plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
   if (!channel && !link) throw ERR_INVALID_INPUT('A valid pear link or the channel name must be specified.')

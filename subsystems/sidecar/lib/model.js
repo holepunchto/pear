@@ -2,9 +2,9 @@
 const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
-const pearLink = require('pear-link')
+const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
-const { ALIASES, PLATFORM_DIR } = require('pear-api/constants')
+const { PLATFORM_DIR } = require('pear-api/constants')
 const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
 
@@ -41,7 +41,7 @@ module.exports = class Model {
     const isPearLink = link.startsWith('pear://')
     const isFileUrl = link.startsWith('file://')
     link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
-    const { origin } = pearLink(ALIASES)(link)
+    const { origin } = plink.parse(link)
     LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link: origin })})`)
     const bundle = await this.db.get('@pear/bundle', { link: origin })
     return bundle
@@ -53,7 +53,7 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
-    const { origin } = pearLink(ALIASES)(link)
+    const { origin } = plink.parse(link)
     const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link: origin, appStorage })})`)
     await tx.insert('@pear/bundle', { link: origin, appStorage })
