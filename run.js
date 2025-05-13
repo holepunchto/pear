@@ -32,6 +32,7 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   let dir = cwd
   let base = null
   if (key === null) {
+    console.log('CALLING PROJECT', pathname, pathname, cwd, base)
     base = project(pathname, pathname, cwd)
     dir = base.dir
     if (dir.length > 1 && dir.endsWith('/')) dir = dir.slice(0, -1)
