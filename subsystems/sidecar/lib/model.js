@@ -54,8 +54,8 @@ module.exports = class Model {
 
   async addBundle (link, appStorage) {
     const { origin } = plink.parse(link)
-    const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link: origin, appStorage })})`)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/bundle', { link: origin, appStorage })
     await this.lock.exit()
     return { link, appStorage }
@@ -99,9 +99,11 @@ module.exports = class Model {
 
   async touchAsset (link) {
     const tx = await this.lock.enter()
+    LOG.trace('db', `GET ('@pear/asset', ${JSON.stringify({ link })})`)
     const asset = await tx.get('@pear/asset', { link }) ?? { link }
     if (!asset.path) {
       asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+      LOG.trace('db', `INSERT ('@pear/asset', ${JSON.stringify(asset)})`)
       await tx.insert('@pear/asset', asset)
       asset.inserted = true
     } else {
@@ -117,8 +119,8 @@ module.exports = class Model {
   }
 
   async setDhtNodes (nodes) {
-    const tx = await this.lock.enter()
     LOG.trace('db', `INSERT ('@pear/dht', ${JSON.stringify(nodes)})`)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/dht', { nodes })
     await this.lock.exit()
   }
@@ -146,6 +148,7 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})[appStorage]`)
     return (await this.db.get('@pear/bundle', { link }))?.appStorage
   }
 
@@ -188,8 +191,8 @@ module.exports = class Model {
 
   async setManifest (version) {
     const manifest = { version }
-    const tx = await this.lock.enter()
     LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
+    const tx = await this.lock.enter()
     await tx.insert('@pear/manifest', manifest)
     await this.lock.exit()
   }
