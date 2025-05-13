@@ -103,6 +103,7 @@ function project (dir, origin, cwd) {
       return { dir, origin, entrypoint: isWindows ? path.normalize(origin.slice(1)).slice(dir.length) : origin.slice(dir.length) }
     }
   } catch (err) {
+    console.log(err)
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
