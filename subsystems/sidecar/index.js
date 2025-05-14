@@ -440,7 +440,7 @@ class Sidecar extends ReadyResource {
 
   async config (params, client) {
     if (!client.userData) return
-    const cfg = client.userData.state.constructor.configFrom(client.userData.state)
+    const cfg = client.userData.state?.constructor.configFrom(client.userData.state)
     return cfg
   }
 
@@ -513,7 +513,9 @@ class Sidecar extends ReadyResource {
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      if (!app.state.parent) { // do not restart worker processes
+        metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      }
       const tearingDown = app.teardown()
       if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }
@@ -707,7 +709,7 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : pathToFileURL(link).href)
+    link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : link.startsWith('file://') ? link : pathToFileURL(link).href)
     const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage

@@ -555,8 +555,10 @@ class App {
 
       const decalSession = electron.session.fromPartition('persist:pear')
 
+      const config = await this.ipc.config()
+
       decalSession.setUserAgent('Pear Platform')
-      const entry = state.entrypoint || '/' + state.main
+      const entry = state.entrypoint || '/' + (config?.main || state.main)
       const identify = await this.ipc.identify({ startId: state.startId })
       const { id, host } = identify
 
@@ -1460,7 +1462,6 @@ class PearGUI extends ReadyResource {
       },
       connect: tryboot
     })
-    this.worker = new Worker()
     this.pipes = new Freelist()
     this.ipc.once('close', () => this.close())
 
@@ -1562,7 +1563,8 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
-      const pipe = this.worker.run(link, args)
+      const worker = new Worker({ parent: this.state.id })
+      const pipe = worker.run(link, args)
       const id = this.pipes.alloc(pipe)
       pipe.on('close', () => {
         this.pipes.free(id)
