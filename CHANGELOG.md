@@ -1,5 +1,26 @@
 # Pear Runtime Changelog
 
+## v1.14.0
+
+## Fixes
+
+* Internal - Emit error, end and close events in correct worker pipes
+
+## v1.13.2
+
+### Fixes
+
+* API - Added Pear.updated to check missed update notifications
+* Internal - Pass correct worker flags
+
+## v1.13.1
+
+### Fixes
+
+* Internal - Restart does not restart worker processes
+* Desktop - Fixed main entrypoint
+* Windows - Fixed long path in drive bundler
+
 ## v1.13.0
 
 ### Features
