@@ -11,7 +11,7 @@ const Helper = require('./helper')
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
-test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test.solo('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(17)
 
