@@ -1,4 +1,5 @@
 'use strict'
+const hypercoreid = require('hypercore-id-encoding')
 const { EventEmitter } = require('bare-events')
 
 module.exports = class Replicator extends EventEmitter {
@@ -41,6 +42,7 @@ module.exports = class Replicator extends EventEmitter {
       done()
     }
 
+    LOG.info('sidecar', '- Sidecar swarm joining discovery key of ' + hypercoreid.encode(this.drive.key))
     const topic = swarm.join(this.drive.discoveryKey, { server, client })
 
     try {
