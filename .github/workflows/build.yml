@@ -25,10 +25,10 @@ on:
       dry-run:
         type: choice
         description: Dry run
-        required: false
+        default: true
         options:
-          - false
           - true
+          - false
 
 run-name: Build ${{ inputs.channel }}
 
