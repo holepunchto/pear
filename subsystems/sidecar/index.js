@@ -726,10 +726,10 @@ class Sidecar extends ReadyResource {
     await this.ready()
     LOG.info(LOG_RUN_LINK, 'sidecar is ready')
 
-    const parsedLink = plink.parse(link)
+    const parsed = plink.parse(link)
     LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
 
-    const key = parsedLink.drive?.key
+    const key = parsed.drive?.key
 
     if (key !== null && !flags.trusted) {
       const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
@@ -743,14 +743,11 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    if (link.startsWith('pear://')) {
-      link = `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}`
-    } else if (!link.startsWith('file://')) {
-      link = pathToFileURL(link).href
-    }
+    if (parsed.protocol !== 'pear:' && !link.startsWith('file:')) link = pathToFileURL(link).href
+
     link = plink.normalize(link)
 
-    const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
+    const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsed))
 
     await fs.promises.mkdir(appStorage, { recursive: true })
 
