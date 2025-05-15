@@ -30,9 +30,10 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   }
   const cwd = os.cwd()
   let dir = cwd
-  let base = null
+
   if (key === null) {
-    base = project(pathname, pathname, cwd)
+    const initial = isWindows ? normalize(pathname) : pathname
+    const base = project(initial, initial)
     dir = base.dir
     if (dir.length > 1 && dir.endsWith('/')) dir = dir.slice(0, -1)
     if (isPath) link = pathToFileURL(path.join(dir, base.entrypoint || '/')) + search + hash
@@ -95,20 +96,22 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
   return new Promise((resolve) => global.Pear.teardown(resolve))
 }
 
-function project (dir, origin, cwd) {
+function project (dir, initial) {
   try {
     if (JSON.parse(fs.readFileSync(path.join(dir, 'package.json'))).pear) {
-      return { dir, origin, entrypoint: isWindows ? path.normalize(origin.slice(1)).slice(dir.length) : origin.slice(dir.length) }
+      return { dir, entrypoint: initial.slice(dir.length) }
     }
   } catch (err) {
     if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
   }
   const parent = path.dirname(dir)
   if (parent === dir) {
-    const normalizedOrigin = !isWindows ? origin : path.normalize(origin.slice(1))
-    const cwdIsOrigin = path.relative(cwd, normalizedOrigin).length === 0
-    const condition = cwdIsOrigin ? `at "${cwd}"` : normalizedOrigin.includes(cwd) ? `from "${normalizedOrigin}" up to "${cwd}"` : `at "${normalizedOrigin}"`
-    throw ERR_INVALID_PROJECT_DIR(`A valid package.json file with pear field must exist ${condition}`)
+    throw ERR_INVALID_PROJECT_DIR(`A valid package.json file with pear field must exist (checked from "${initial}" to "${dir}")`)
   }
-  return project(parent, origin, cwd)
+  return project(parent, initial)
+}
+
+function normalize (pathname) {
+  if (isWindows) return path.normalize(pathname.slice(1))
+  return pathname
 }
