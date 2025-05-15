@@ -25,7 +25,6 @@ on:
       dry-run:
         type: choice
         description: Dry run
-        required: true
         default: true
         options:
           - true
