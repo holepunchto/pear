@@ -18,11 +18,16 @@ module.exports = class Asset extends Opstream {
     await sidecar.ready()
     const unlock = model.lock.manual()
     session.teardown(unlock)
+    const parsed = plink.parse(link)
+    // TODO
+    // if (parsed.drive.length === null) {
+    //   parsed.drive.length = getLatestDriveLength()
+    //   link = plink.serialize(parsed)
+    // }
     const asset = await model.touchAsset(link)
     asset.forced = force
     this.final = asset
     if (asset.forced === false && asset.inserted === false) return
-    const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
