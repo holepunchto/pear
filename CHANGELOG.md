@@ -5,6 +5,7 @@
 ## Fixes
 
 * Internal - Emit error, end and close events in correct worker pipes
+* Restart - Fix client restart by ignoring stdio
 
 ## v1.13.2
 
