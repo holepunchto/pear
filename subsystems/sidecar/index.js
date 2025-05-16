@@ -510,8 +510,8 @@ class Sidecar extends ReadyResource {
   }
 
   async trusted (link) {
-    const aliases = Object.keys(ALIASES).map(e => `pear://${e}`)
-    const aliasesKeys = Object.values(ALIASES).map(e => `pear://${hypercoreid.encode(e)}`)
+    const aliases = Object.keys(ALIASES).map((alias) => 'pear://' + alias)
+    const aliasesKeys = Object.values(ALIASES).map((key) => `pear://${hypercoreid.encode(key)}`)
     return aliases.includes(link) || aliasesKeys.includes(link) || await this.model.getBundle(link) !== null
   }
 
@@ -656,13 +656,13 @@ class Sidecar extends ReadyResource {
   wakeup (params = {}) {
     const [link, storage, appdev = null, selfwake = true, startId] = params.args
     const parsed = plink.parse(link)
-    const appLink = link.substring(0, link.length - parsed.pathname.length)
-    return this.model.getAppStorage(appLink).then((appStorage) => {
+    return this.model.getAppStorage(parsed).then((appStorage) => {
       return new Promise((resolve) => {
         if (this.hasClients === false) {
           resolve(false)
           return
         }
+
         if (parsed.drive.key === null && appdev === null) {
           resolve(false)
           return
