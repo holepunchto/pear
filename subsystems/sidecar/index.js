@@ -506,10 +506,9 @@ class Sidecar extends ReadyResource {
     }
 
     const wokeup = await this.wakeup({ args: [link, storage, appdev, false, null] })
-
     if (wokeup) return { wokeup, appling: null }
-    const appling = (await this.applings.get(key.toString('hex'))) || null
 
+    const appling = (await this.applings.get(key.toString('hex'))) || null
     return { wokeup, appling }
   }
 
@@ -654,12 +653,12 @@ class Sidecar extends ReadyResource {
             : app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
           )
         })
-
         for (const app of matches) {
           const pathname = parsed.pathname
           const fragment = parsed.hash ? parsed.hash.slice(1) : null
+          const query = parsed.search ? parsed.search.slice(1) : null
           const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData })
+          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, query, linkData })
         }
         const min = selfwake ? 1 : 0
         resolve(matches.length > min)
