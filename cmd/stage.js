@@ -1,10 +1,10 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('./iface')
-const parseLink = require('../lib/parse-link')
-const { ERR_INVALID_INPUT } = require('../errors')
-const { permit, isTTY } = require('./iface')
+const { outputter, ansi } = require('pear-api/terminal')
+const plink = require('pear-api/link')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const { permit, isTTY, byteDiff } = require('pear-api/terminal')
 
 let blocks = 0
 let total = 0
@@ -28,17 +28,18 @@ const output = outputter('stage', {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`
+  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`,
+  byteDiff
 })
 
 module.exports = (ipc) => async function stage (cmd) {
-  const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
-  const isKey = cmd.args.channel && parseLink(cmd.args.channel).drive.key !== null
+  const { dryRun, bare, json, ignore, purge, name, truncate, only } = cmd.flags
+  const isKey = cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
   if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
   let { dir = os.cwd() } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
+  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
 }

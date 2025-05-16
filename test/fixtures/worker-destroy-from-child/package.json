@@ -1,6 +1,0 @@
-{
-  "name": "worker-destroy-from-child",
-  "main": "index.js",
-  "type": "module",
-  "pear": {}
-}
