@@ -1,9 +1,8 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { spawn } = require('bare-subprocess')
 const os = require('bare-os')
-const { spawn: daemon } = require('bare-daemon')
+const daemon = require('bare-daemon')
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -573,7 +572,7 @@ class Sidecar extends ReadyResource {
       }
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: false, stdio: 'ignore' }
+      const opts = { cwd, env }
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -585,8 +584,8 @@ class Sidecar extends ReadyResource {
       }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else spawn(applingPath, opts)
+        if (isMac) daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+        else daemon.spawn(applingPath, opts)
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -599,7 +598,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        spawn(RUNTIME, cmdArgs, opts)
+        daemon.spawn(RUNTIME, cmdArgs, opts)
       }
 
       return
@@ -622,8 +621,8 @@ class Sidecar extends ReadyResource {
       const opts = { cwd, env }
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) daemon('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon(applingPath, opts)
+        if (isMac) daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+        else daemon.spawn(applingPath, opts)
       } else {
         const TARGET_RUNTIME = this.updater === null
           ? RUNTIME
@@ -640,7 +639,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon(TARGET_RUNTIME, cmdArgs, opts)
+        daemon.spawn(TARGET_RUNTIME, cmdArgs, opts)
       }
     }
   }
