@@ -152,13 +152,11 @@ class Applings extends ReadyResource {
 
   async get (hexKey) {
     if (!this.opened) await this.ready()
-    if (hexKey === constants.ALIASES.keet.toString('hex') || constants.EOLS.keet.some((hexKey) === constants.EOLS.keet.toString('hex'))) hexKey = 'keet'
+    if (hexKey === constants.ALIASES.keet.toString('hex')) hexKey = 'keet'
+    if (constants.EOLS.keet.some((hK) => hK === hexKey)) hexKey = 'keet'
     if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
     if (hexKey === constants.ALIASES.doctor.toString('hex')) hexKey = 'doctor'
-
-    for (const { key, path } of this._applings) {
-      if (key === hexKey) return path
-    }
+    for (const { key, path } of this._applings) if (key === hexKey) return path
   }
 }
 
