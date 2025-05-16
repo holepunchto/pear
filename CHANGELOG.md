@@ -46,8 +46,8 @@
 * Examples - desktop updated to use [`pear-electron`][v2.0.0:pear-electron] with Pipe example
 
 
-[v2.0.0:pear-api]: pear://runtime/doc?pear://0.TODO.pear/node_modules/pear-api/CHANGELOG.md "pear run pear://runtime/doc?pear://0.TODO.pear/node_modules/pear-api/CHANGELOG.md"
-[v2.0.0:pear-electron]: pear://runtime/doc?pear://0.TODO.electron/CHANGELOG.md "pear run pear://runtime/doc?pear://0.TODO.electron/CHANGELOG.md"
+[v2.0.0:pear-api]: pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md "pear run pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md"
+[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run pear://runtime/doc?pear://electron/CHANGELOG.md"
 
 
 ## v1.18.0
