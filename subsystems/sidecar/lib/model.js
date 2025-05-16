@@ -8,6 +8,8 @@ const { PLATFORM_DIR } = require('pear-api/constants')
 const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
 
+const origin = (link) => typeof link === 'string' ? plink.parse(link).origin : link.origin
+
 class Lock extends DBLock {
   #manual = false
   constructor (db) {
@@ -41,8 +43,7 @@ module.exports = class Model {
     const isPearLink = link.startsWith('pear://')
     const isFileUrl = link.startsWith('file://')
     link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
-    const { origin } = plink.parse(link)
-    const get = { link: origin }
+    const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await this.db.get('@pear/bundle', get)
     return bundle
@@ -54,9 +55,8 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
-    const { origin } = plink.parse(link)
     const tx = await this.lock.enter()
-    const bundle = { link: origin, appStorage }
+    const bundle = { link: origin(link), appStorage }
     LOG.trace('db', 'INSERT', '@pear/bundle', bundle)
     await tx.insert('@pear/bundle', bundle)
     await this.lock.exit()
@@ -66,7 +66,7 @@ module.exports = class Model {
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
-    const get = { link }
+    const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
@@ -84,7 +84,7 @@ module.exports = class Model {
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
-    const get = { link }
+    const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
@@ -157,19 +157,19 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
-    const get = { link }
+    const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     return (await this.db.get('@pear/bundle', get))?.appStorage
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    const src = { link: srcLink }
+    const src = { link: origin(srcLink) }
     LOG.trace('db', 'GET', '@pear/bundle', src)
     const srcBundle = await tx.get('@pear/bundle', src)
-    const dst = { link: dstLink }
+    const dst = { link: origin(dstLink) }
     LOG.trace('db', 'GET', '@pear/bundle', dst)
-    const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
+    const dstBundle = await tx.get('@pear/bundle', dst)
 
     if (!srcBundle || !dstBundle) {
       await this.lock.exit()
