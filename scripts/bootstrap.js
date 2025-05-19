@@ -34,7 +34,8 @@ const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'dhpc5npmqkansx38uh18h3uwpdp6g9ukozr
 const CORESTORE = cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
-const ADDON_HOST = require.addon?.host || platform + '-' + arch
+let ADDON_HOST = require.addon?.host || platform + '-' + arch
+if (ADDON_HOST === 'win32-arm64') ADDON_HOST = 'win32-x64' // TODO: support runtime for Windows ARM to avoid emulation
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
