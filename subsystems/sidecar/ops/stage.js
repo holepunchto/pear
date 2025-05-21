@@ -16,7 +16,7 @@ const ReadyResource = require('ready-resource')
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
     const { client, session, sidecar } = this
 
     const state = new State({
@@ -28,7 +28,7 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.ready()
 
-    await state.constructor.build(state)
+    await State.build(state, pkg)
 
     const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
     await corestore.ready()

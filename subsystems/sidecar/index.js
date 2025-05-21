@@ -59,7 +59,8 @@ const ops = {
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
-  Data: require('./ops/data')
+  Data: require('./ops/data'),
+  Run: require('./ops/run')
 }
 
 // ensure that we are registered as a link handler
@@ -408,6 +409,8 @@ class Sidecar extends ReadyResource {
 
   drop (params, client) { return new ops.Drop(params, client, this) }
 
+  run (params, client) { return new ops.Run(params, client, this) }
+
   gc (params, client) { return new ops.GC(params, client) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
@@ -694,7 +697,7 @@ class Sidecar extends ReadyResource {
   }
 
   async start (params, client) {
-    const { flags, env, cwd, link, dir, args, cmdArgs, pid } = params
+    const { flags, env, cwd, link, dir, args, cmdArgs, pkg = null } = params
     const LOG_RUN_LINK = ['run', link]
     if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
     let { startId } = params
@@ -810,8 +813,9 @@ class Sidecar extends ReadyResource {
       app.bundle = appBundle
 
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
+
       try {
-        await state.initialize({ bundle: appBundle, app })
+        await state.initialize({ bundle: appBundle, app, pkg })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
