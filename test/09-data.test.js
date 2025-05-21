@@ -64,6 +64,7 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data dht')
+  await new Promise(resolve => setTimeout(resolve, 100))
   data = await helper.data({ resource: 'dht' })
   result = await Helper.pick(data, [{ tag: 'dht' }])
   const dht = await result.dht
