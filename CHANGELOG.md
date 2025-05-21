@@ -12,12 +12,27 @@
 * CLI - `pear dump` downloads & peers stats output status
 * CLI - `pear stage --purge` - remove ignored files from app hypercore
 * CLI - `pear stage --only` - filter by paths
-* Config - pear.stage.only - filter by paths on stage
-* Config - pear.via - extend config via a module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
+* Config - `pear.stage.only` - filter by paths on stage
+* Config - `pear.pre` - set to a project path or npm installed bin to run a pear app prior to staging or running an app from dir. The pre run app has `Pear.pipe` which receives initial config (per `package.json pear` field) as `compact-encoding` `any`, and can write back to the `pipe` in the form `{ tag, data }`. Repsonding with `{ tag: 'configure', data: mutatedConfig }` will update the application config. All tags will be displayed prior to run & stage output to indicate actions taken by the pre app. Enabling > log level `INF` will (`-L INF`) also output `data` with the `tag`
+* Config - `pear.stage.pre` - as `pear.pre` but for pre stage only
+* Config - `pear.run.pre` - as `pear.pre` but for pre run from dir only
+* CLI - `pear run --no-pre` - disallow any `pear.pre` apps to run prior to run from dir
+* CLI - `pear run --preio` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear run --prequiet` - hide any pre tags from displaying
+* CLI - `pear stage --no-pre` - disallow any `pear.pre` apps to run prior to stage
+* CLI - `pear stage --preio` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear stage --prequiet` - hide any pre tags from displaying
+set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
 * Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"},  {"routes": "."}` catch-all
 * Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
 * IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
 * CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
+* CLI - `pear --log-labels|-l <list> <cmd>` new `-l` alias for `--log-labels` + setting `-l` flag now implies logging on
+* CLI - `pear --log-level|-L <level> <cmd>` new `-L` alias for `--log-level`
+* CLI - `pear --log-fields|-F <list> <cmd>`  new `-F` alias for `--log-fields`
+* CLI - `pear --log-stacks|-S <cmd>` new `-S` alias for `--log-stacks`
+* CLI - `pear --log-verbose|-V <cmd>` new flag, enables all `--log-fields` `date,time,level,label,delta`
+* CLI - `pear --log-max|-M <cmd>` new flag, log all levels and labels + implies `--log-verbose`
 
 ### Fixes
 
@@ -31,7 +46,7 @@
 * `pear run` - **MAJOR** only runs terminal (Bare) apps from JS entrypoints, will throw ERR_LEGACY for .html entrypoints
 * CLI - **MAJOR** `pear reset` **DEPRECATED & REMOVED** now `pear drop`
 * CLI - **MAJOR** `pear init`, `-t|--type` flag removed, replaced with `name` (default, node-compat, ui), in `[link|name]`
-* CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app
+* CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app, also `--type|-t` flag removed, now use `pear init [link|name]` where `name` may be `default`, `ui`, or `node-compat`.
 * CLI - **MAJOR** `pear dev` **DEPRECATED & REMOVED**  use `pear run --dev`
 * Decomposition - `Pear` global now defined in [`pear-api`][v2.0.0:pear-api] allowing for API extension in other environments, such a Pear UI Libraries
 * Decomposition - [`pear-api`][v2.0.0:pear-api] integration libraries for externalized integration
