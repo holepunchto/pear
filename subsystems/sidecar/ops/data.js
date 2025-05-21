@@ -33,5 +33,10 @@ module.exports = class Data extends Opstream {
       const manifest = await this.sidecar.model.getManifest()
       this.push({ tag: 'manifest', data: manifest })
     }
+
+    if (resource === 'assets') {
+      const assets = await this.sidecar.model.allAssets()
+      this.push({ tag: 'assets', data: assets })
+    }
   }
 }

@@ -44,12 +44,24 @@ const manifestOutput = (manifest) => {
   return `version: ${ansi.bold(manifest.version)}\n`
 }
 
+const assetsOutput = (assets) => {
+  if (!assets.length) return placeholder
+  let out = ''
+  for (const asset of assets) {
+    out += `- ${ansi.bold(asset.link)}\n`
+    out += `${padding}path: ${ansi.dim(asset.path)}\n`
+    out += '\n'
+  }
+  return out
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
-  manifest: (result) => manifestOutput(result)
+  manifest: (result) => manifestOutput(result),
+  assets: (result) => assetsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -88,5 +100,11 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
+  }
+
+  async assets (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    await output(json, this.ipc.data({ resource: 'assets' }), { tag: 'assets' }, this.ipc)
   }
 }
