@@ -20,12 +20,8 @@ const {
 } = require('pear-api/constants')
 const gunk = require('pear-api/gunk')
 const registerUrlHandler = require('./url-handler')
-const Logger = require('pear-api/logger')
 crasher('sidecar', SWAP)
-global.LOG = new Logger({
-  labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
-  pretty: Logger.switches.log
-})
+
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
   LOG.error('internal', 'Sidecar Boot Failed', err)

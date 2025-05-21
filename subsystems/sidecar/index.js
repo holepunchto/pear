@@ -56,7 +56,8 @@ const ops = {
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
-  Data: require('./ops/data')
+  Data: require('./ops/data'),
+  Run: require('./ops/run')
 }
 
 // ensure that we are registered as a link handler
@@ -392,6 +393,8 @@ class Sidecar extends ReadyResource {
 
   drop (params, client) { return new ops.Drop(params, client, this) }
 
+  run (params, client) { return new ops.Run(params, client, this) }
+
   gc (params, client) { return new ops.GC(params, client) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
@@ -672,7 +675,7 @@ class Sidecar extends ReadyResource {
   }
 
   async start (params, client) {
-    const { flags, env, cwd, link, dir, args, cmdArgs } = params
+    const { flags, env, cwd, link, dir, args, cmdArgs, pkg = null } = params
     const LOG_RUN_LINK = ['run', link]
     if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
     let { startId } = params
@@ -687,7 +690,7 @@ class Sidecar extends ReadyResource {
     LOG.info('session', 'new session for', startId)
     const session = new Session(client)
 
-    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
+    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pkg)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -714,7 +717,7 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
+  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pkg = null) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     app.clients.add(client)
@@ -785,8 +788,9 @@ class Sidecar extends ReadyResource {
       app.bundle = appBundle
 
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
+
       try {
-        await state.initialize({ bundle: appBundle, app })
+        await state.initialize({ bundle: appBundle, app, pkg })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)

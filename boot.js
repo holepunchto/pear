@@ -24,6 +24,12 @@ if (isWindows === false) {
   }
 }
 
+const Logger = require('pear-api/logger')
+global.LOG = new Logger({
+  labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
+  pretty: Logger.switches.log
+})
+
 const BOOT_SIDECAR = 1
 const BOOT_CLI = 2
 switch (getBootType()) {
