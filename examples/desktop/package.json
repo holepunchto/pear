@@ -8,7 +8,7 @@
   },
   "type": "module",
   "pear": {
-    "via": "pear-electron",
+    "pre": "./pre.js",
     "name": "deskex",
     "gui": {
       "main": "index.html",
@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "pear-bridge": "^1.0.0",
-    "pear-electron": "^1.4.2"
+    "pear-electron": "^1.4.11"
   }
 }

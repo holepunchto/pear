@@ -5,6 +5,8 @@ const { outputter, ansi } = require('pear-api/terminal')
 const plink = require('pear-api/link')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 const { permit, isTTY, byteDiff } = require('pear-api/terminal')
+const State = require('pear-api/state')
+const Pre = require('../pre')
 
 let blocks = 0
 let total = 0
@@ -29,7 +31,24 @@ const output = outputter('stage', {
     }
   },
   addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`,
-  byteDiff
+  byteDiff,
+  preio ({ from, output, index, fd }, { preio }) {
+    if (!preio) return {}
+    const io = fd === 1 ? 'stdout' : 'stderr'
+    const pre = 'Pre-stage [' + index + ':' + from + ':' + io + ']: '
+    return pre + output
+  },
+  pre ({ from, output, index, success }, { prequiet }) {
+    if (prequiet) return {}
+    const pre = index > 0 ? 'Pre-stage [' + index + ':' + from + ']: ' : 'Pre-stage [' + from + ']: '
+    const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
+    if (success === false) return { success: false, message: output?.stack || output?.message || 'Unknown Pre Error' }
+    return pre + output.tag + suffix
+  },
+  final (data, info) {
+    if (info.pre) return {}
+    return data
+  }
 })
 
 module.exports = (ipc) => async function stage (cmd) {
@@ -38,8 +57,19 @@ module.exports = (ipc) => async function stage (cmd) {
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
   if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
-  let { dir = os.cwd() } = cmd.args
+  const cwd = os.cwd()
+  let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
+  const base = { cwd, dir }
+  let pkg = null
+  if (cmd.flags.pre) {
+    pkg = await State.localPkg(base)
+    if (pkg !== null) {
+      const pre = new Pre('stage', { dir, cwd })
+      pkg = await output({ ctrlTTY: false }, pre, { pre: true, prequiet: cmd.flags.prequiet, preio: cmd.flags.preio })
+    }
+  }
+  const stream = ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1), pkg })
+  await output(json, stream, { ask: cmd.flags.ask }, ipc)
 }
