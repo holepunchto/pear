@@ -550,7 +550,7 @@ class Sidecar extends ReadyResource {
       seen.add(client.userData.state.id)
       const isApp = client.userData instanceof this.App
       const { id, cmdArgs, cwd, dir, appling, env, options } = client.userData.state
-      if (!app.state.parent) {
+      if (!client.userData.state.parent) {
         metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
       }
       const tearingDown = isApp && client.userData.teardown()
