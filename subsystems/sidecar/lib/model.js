@@ -102,13 +102,14 @@ module.exports = class Model {
     return result
   }
 
-  async touchAsset (link) {
+  async touchAsset (link, bytesAllocated) {
     const tx = await this.lock.enter()
-    const get = { link }
+    const get = { link, bytesAllocated }
     LOG.trace('db', 'GET', '@pear/asset', get)
     const asset = await tx.get('@pear/asset', get) ?? get
     if (!asset.path) {
       asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+      asset.bytesAllocated = bytesAllocated
       LOG.trace('db', 'INSERT', '@pear/asset', asset)
       await tx.insert('@pear/asset', asset)
       asset.inserted = true
@@ -117,6 +118,24 @@ module.exports = class Model {
     }
     await this.lock.exit()
     return asset
+  }
+
+  async allAssets () {
+    LOG.trace('db', 'FIND', '@pear/asset')
+    return await this.db.find('@pear/asset').toArray()
+  }
+
+  async firstAsset () {
+    LOG.trace('db', 'FIND ONE', '@pear/asset')
+    return await this.db.findOne('@pear/asset')
+  }
+
+  async deleteAsset (link) {
+    const tx = await this.lock.enter()
+    const get = { link }
+    LOG.trace('db', 'DELETE', '@pear/asset', get)
+    await tx.delete('@pear/asset', get)
+    await this.lock.exit()
   }
 
   async getDhtNodes () {
@@ -195,6 +214,19 @@ module.exports = class Model {
   async allGc () {
     LOG.trace('db', 'FIND', '@pear/gc')
     return await this.db.find('@pear/gc').toArray()
+  }
+
+  async firstGc () {
+    LOG.trace('db', 'FIND ONE', '@pear/gc')
+    return await this.db.findOne('@pear/gc')
+  }
+
+  async deleteGc (path) {
+    const get = { path }
+    const tx = await this.lock.enter()
+    LOG.trace('db', 'DELETE', '@pear/gc', get)
+    await tx.delete('@pear/gc', get)
+    await this.lock.exit()
   }
 
   async getManifest () {

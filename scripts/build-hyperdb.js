@@ -98,6 +98,11 @@ pearSchema.register({
       name: 'path',
       type: 'string',
       required: true
+    },
+    {
+      name: 'bytesAllocated',
+      type: 'uint',
+      required: true
     }
   ]
 })
