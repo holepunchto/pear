@@ -136,7 +136,8 @@ class Sidecar extends ReadyResource {
 
     this.running = new Map()
 
-    this.gcInterval = setInterval(() => { this._gcCycle().catch(err => LOG.error('sidecar', 'GC: cycle run', err)) }, 10_000)
+    const gcCycleMs = 10 * 60 * 1000
+    this.gcInterval = setInterval(() => { this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
 
     const sidecar = this
     this.App = class App {
@@ -954,16 +955,16 @@ class Sidecar extends ReadyResource {
     return this.corestore.namespace(`${name}~${channel}`, { writable: false, ...opts })
   }
 
-  async _gcCycle () {
-    LOG.info('sidecar', 'GC: cycle run')
+  async _gcRunCycle () {
+    LOG.info('sidecar', 'GC run cycle')
     const record = await this.model.firstGc()
     if (!record) {
-      LOG.info('sidecar', 'GC: all clear')
+      LOG.info('sidecar', 'GC clear')
       return
     }
     await fs.promises.rm(record.path, { recursive: true, force: true })
     await this.model.deleteGc(record.path)
-    LOG.info('sidecar', 'GC: deleted', record.path)
+    LOG.info('sidecar', 'GC removed', record.path)
   }
 
   async #shutdown (client) {

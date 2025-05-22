@@ -125,16 +125,21 @@ module.exports = class Model {
     return await this.db.find('@pear/asset').toArray()
   }
 
-  async firstAsset () {
-    LOG.trace('db', 'FIND ONE', '@pear/asset')
-    return await this.db.findOne('@pear/asset')
-  }
-
-  async deleteAsset (link) {
+  async gcFirstAsset () {
     const tx = await this.lock.enter()
-    const get = { link }
-    LOG.trace('db', 'DELETE', '@pear/asset', get)
-    await tx.delete('@pear/asset', get)
+    LOG.trace('db', 'FIND ONE', '@pear/asset')
+    const asset = await tx.findOne('@pear/asset')
+    if (!asset) {
+      await this.lock.exit()
+      return null
+    }
+
+    const gc = { path: asset.path }
+    LOG.trace('db', 'INSERT', '@pear/gc', gc)
+    await tx.insert('@pear/gc', gc)
+
+    LOG.trace('db', 'DELETE', '@pear/asset', asset)
+    await tx.delete('@pear/asset', asset)
     await this.lock.exit()
   }
 

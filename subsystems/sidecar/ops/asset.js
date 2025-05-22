@@ -25,16 +25,13 @@ module.exports = class Asset extends Opstream {
     //   link = plink.serialize(parsed)
     // }
 
-    const bytesAllocated = 1000 // @TODO: get real bytes allocated from the drive
+    const bytesAllocated = 1000 // @TODO: get real size
     const asset = await model.touchAsset(link, bytesAllocated)
-    const maxCapacity = 2000 // @TODO: define real size
+
+    const maxCapacity = 12 * 1024 ** 3
     const assets = await model.allAssets()
-    const totalAllocated = assets.reduce((sum, { bytesAllocated = 0 }) => sum + bytesAllocated, 0)
-    if (totalAllocated >= maxCapacity) {
-      const firstAsset = await model.firstAsset()
-      await model.addGc(firstAsset.link)
-      await model.deleteAsset(firstAsset.link)
-    }
+    const currentUsage = assets.reduce((sum, { bytesAllocated = 0 }) => sum + bytesAllocated, 0)
+    if (currentUsage > maxCapacity) await model.gcFirstAsset()
 
     asset.forced = force
     this.final = asset
