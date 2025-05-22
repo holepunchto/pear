@@ -567,7 +567,9 @@ class Sidecar extends ReadyResource {
       seen.add(client.userData.state.id)
       const isApp = client.userData instanceof this.App
       const { id, cmdArgs, cwd, dir, appling, env, options } = client.userData.state
-      metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
+      if (!app.state.parent) {
+        metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
+      }
       const tearingDown = isApp && client.userData.teardown()
       if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
     }
