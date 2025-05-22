@@ -11,7 +11,7 @@ const Helper = require('./helper')
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
-test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test.solo('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(17)
 
@@ -64,7 +64,6 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data dht')
-  await new Promise(resolve => setTimeout(resolve, 100)) // ensure sidecar reached model.setDhtNodes() at #start
   data = await helper.data({ resource: 'dht' })
   result = await Helper.pick(data, [{ tag: 'dht' }])
   const dht = await result.dht
