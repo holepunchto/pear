@@ -7,6 +7,8 @@ module.exports = class Data extends Opstream {
   }
 
   async #op ({ resource, secrets, link }) {
+    await this.sidecar.ready()
+
     if (resource === 'apps') {
       let bundles = await this.sidecar.model.allBundles()
       if (!secrets) bundles = bundles.map(({ encryptionKey, ...rest }) => rest)
