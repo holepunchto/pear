@@ -24,7 +24,15 @@ module.exports = class Asset extends Opstream {
     //   parsed.drive.length = getLatestDriveLength()
     //   link = plink.serialize(parsed)
     // }
-    const asset = await model.touchAsset(link)
+
+    const bytesAllocated = 1000 // @TODO: get real size
+    const asset = await model.touchAsset(link, bytesAllocated)
+
+    const maxCapacity = 12 * 1024 ** 3
+    const assets = await model.allAssets()
+    const currentUsage = assets.reduce((sum, { bytesAllocated = 0 }) => sum + bytesAllocated, 0)
+    if (currentUsage > maxCapacity) await model.gcFirstAsset()
+
     asset.forced = force
     this.final = asset
     if (asset.forced === false && asset.inserted === false) return
