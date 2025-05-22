@@ -3,6 +3,7 @@ const path = require('bare-path')
 const teardown = require('pear-api/teardown')
 const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('pear-api/terminal')
+const Logger = require('pear-api/logger')
 module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.command.name === 'inspect') {
     const inspectorKey = await ipc.inspect()
@@ -29,8 +30,14 @@ module.exports = (ipc) => async function sidecar (cmd) {
   print('\n========================= INIT ===================================\n')
 
   Bare.argv.splice(Bare.argv.lastIndexOf('sidecar'), 1)
-  Bare.argv.splice(1, 0, '--sidecar', '--log')
+  Bare.argv.splice(1, 0, '--sidecar')
 
+  Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
+  if (Logger.switches.level < 2) {
+    Logger.switches.level = 2
+    global.LOG = new Logger({ pretty: true })
+    
+  }
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
