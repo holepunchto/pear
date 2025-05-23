@@ -7,6 +7,8 @@ module.exports = class Data extends Opstream {
   }
 
   async #op ({ resource, secrets, link }) {
+    await this.sidecar.ready()
+
     if (resource === 'apps') {
       let bundles = await this.sidecar.model.allBundles()
       if (!secrets) bundles = bundles.map(({ encryptionKey, ...rest }) => rest)
@@ -27,6 +29,11 @@ module.exports = class Data extends Opstream {
     if (resource === 'gc') {
       const records = await this.sidecar.model.allGc()
       this.push({ tag: 'gc', data: records })
+    }
+
+    if (resource === 'manifest') {
+      const manifest = await this.sidecar.model.getManifest()
+      this.push({ tag: 'manifest', data: manifest })
     }
   }
 }

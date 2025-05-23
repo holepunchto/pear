@@ -1,7 +1,7 @@
 'use strict'
-const parseLink = require('../lib/parse-link')
-const { outputter, ansi } = require('./iface')
-const { ERR_INVALID_INPUT } = require('../errors')
+const plink = require('pear-api/link')
+const { outputter, ansi } = require('pear-api/terminal')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -39,11 +39,17 @@ const gcOutput = (records) => {
   return out
 }
 
+const manifestOutput = (manifest) => {
+  if (!manifest) return placeholder
+  return `version: ${ansi.bold(manifest.version)}\n`
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result)
+  gc: (result) => gcOutput(result),
+  manifest: (result) => manifestOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -58,27 +64,29 @@ class Data {
     const { secrets, json } = command.parent.flags
     const link = command.args.link
     if (link) {
-      const parsed = parseLink(link)
+      const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      const result = await this.ipc.data({ resource: 'link', secrets, link })
-      await output(json, result, { tag: 'link' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
     } else {
-      const result = await this.ipc.data({ resource: 'apps', secrets })
-      await output(json, result, { tag: 'apps' }, this.ipc)
+      await output(json, this.ipc.data({ resource: 'apps', secrets }), { tag: 'apps' }, this.ipc)
     }
   }
 
   async dht (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'dht' })
-    await output(json, result, { tag: 'dht' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' }, this.ipc)
   }
 
   async gc (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    const result = await this.ipc.data({ resource: 'gc' })
-    await output(json, result, { tag: 'gc' }, this.ipc)
+    await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
+  }
+
+  async manifest (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
   }
 }

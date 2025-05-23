@@ -129,8 +129,29 @@ const encoding4 = {
   }
 }
 
-// @pear/gc/hyperdb#2
+// @pear/asset
 const encoding5 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.path)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.path)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+
+    return {
+      link: r0,
+      path: r1
+    }
+  }
+}
+
+// @pear/gc/hyperdb#2
+const encoding6 = {
   preencode (state, m) {
 
   },
@@ -145,16 +166,16 @@ const encoding5 = {
 }
 
 // @pear/bundle/hyperdb#3.tags
-const encoding6_3 = encoding3_3
+const encoding7_3 = encoding3_3
 
 // @pear/bundle/hyperdb#3
-const encoding6 = {
+const encoding7 = {
   preencode (state, m) {
     c.string.preencode(state, m.appStorage)
     state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
-    if (m.tags) encoding6_3.preencode(state, m.tags)
+    if (m.tags) encoding7_3.preencode(state, m.tags)
   },
   encode (state, m) {
     const flags =
@@ -165,7 +186,7 @@ const encoding6 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
-    if (m.tags) encoding6_3.encode(state, m.tags)
+    if (m.tags) encoding7_3.encode(state, m.tags)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -175,7 +196,25 @@ const encoding6 = {
       link: null,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding6_3.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding7_3.decode(state) : null
+    }
+  }
+}
+
+// @pear/asset/hyperdb#5
+const encoding8 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.path)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.path)
+  },
+  decode (state) {
+    const r1 = c.string.decode(state)
+
+    return {
+      link: null,
+      path: r1
     }
   }
 }
@@ -207,8 +246,10 @@ function getEncoding (name) {
     case '@pear/dht': return encoding2
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
-    case '@pear/gc/hyperdb#2': return encoding5
-    case '@pear/bundle/hyperdb#3': return encoding6
+    case '@pear/asset': return encoding5
+    case '@pear/gc/hyperdb#2': return encoding6
+    case '@pear/bundle/hyperdb#3': return encoding7
+    case '@pear/asset/hyperdb#5': return encoding8
     default: throw new Error('Encoder not found ' + name)
   }
 }

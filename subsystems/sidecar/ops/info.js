@@ -1,12 +1,12 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
-const parseLink = require('../../../lib/parse-link')
+const plink = require('pear-api/link')
 const Hyperdrive = require('hyperdrive')
+const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
-const State = require('../state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const State = require('../state')
 
 module.exports = class Info extends Opstream {
   constructor (...args) {
@@ -23,7 +23,7 @@ module.exports = class Info extends Opstream {
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
     const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
 
-    const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
+    const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
     const query = link ? await this.sidecar.model.getBundle(link) : null
     const encryptionKey = query?.encryptionKey
@@ -34,7 +34,7 @@ module.exports = class Info extends Opstream {
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     } else {
       drive = this.sidecar.drive
@@ -73,10 +73,10 @@ module.exports = class Info extends Opstream {
         drive.db.get('release'),
         drive.db.get('manifest')
       ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR') throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        if (error.code === 'DECODING_ERROR') throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       })
 
-      const name = manifest?.value?.pear?.name || manifest?.value?.holepunch?.name || manifest?.value?.name
+      const name = manifest?.value?.pear?.name || manifest?.value?.name
       const length = drive.core.length
       const byteLength = drive.core.byteLength
       const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null

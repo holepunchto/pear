@@ -2,12 +2,12 @@
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
+const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
+const { SWAP } = require('pear-api/constants')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
-const { SWAP } = require('../../../constants')
-const DriveAnalyzer = require('drive-analyzer')
 const noop = Function.prototype
 
 module.exports = class Bundle {
@@ -18,7 +18,7 @@ module.exports = class Bundle {
       key, channel, stage = false, status = noop, failure,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
-    this.checkout = checkout
+    this.checkout = checkout ?? null
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
@@ -149,14 +149,11 @@ module.exports = class Bundle {
   }
 
   async get (key) {
-    const entry = await this.entry(key)
-    const result = await this.drive.get(entry)
-    return result
+    return this.drive.get(key)
   }
 
-  async has (key) {
-    const meta = await this.entry(key)
-    return meta !== null
+  async exists (key) {
+    return this.drive.exists(key)
   }
 
   async del (key) {
@@ -250,7 +247,7 @@ module.exports = class Bundle {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
         if (this.release) this.drive = this.drive.checkout(this.release)
-      } else if (Number.isInteger(+this.checkout)) {
+      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       }
     }
