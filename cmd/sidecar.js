@@ -36,7 +36,6 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (Logger.switches.level < 2) {
     Logger.switches.level = 2
     global.LOG = new Logger({ pretty: true })
-    
   }
   require('../sidecar')
 
