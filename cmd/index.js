@@ -137,6 +137,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--changelog', 'View changelog only'),
     flag('--full-changelog', 'Full record of changes'),
     flag('--metadata', 'View metadata only'),
+    flag('--manifest', 'View app manifest only'),
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
