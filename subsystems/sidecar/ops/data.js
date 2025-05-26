@@ -8,15 +8,15 @@ module.exports = class Data extends Opstream {
 
   async #op ({ resource, secrets, link }) {
     if (resource === 'apps') {
-      let bundles = await this.sidecar.model.allBundles()
+      let bundles
+      if (link) {
+        const bundle = await this.sidecar.model.getBundle(link)
+        bundles = bundle ? [bundle] : []
+      } else {
+        bundles = await this.sidecar.model.allBundles()
+      }
       if (!secrets) bundles = bundles.map(({ encryptionKey, ...rest }) => rest)
       this.push({ tag: 'apps', data: bundles })
-    }
-
-    if (resource === 'link') {
-      const bundle = await this.sidecar.model.getBundle(link)
-      if (bundle && !secrets) bundle.encryptionKey = undefined
-      this.push({ tag: 'link', data: bundle })
     }
 
     if (resource === 'dht') {
@@ -35,7 +35,13 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'assets') {
-      const assets = await this.sidecar.model.allAssets()
+      let assets
+      if (link) {
+        const asset = await this.sidecar.model.getAsset(link)
+        assets = asset ? [asset] : []
+      } else {
+        assets = await this.sidecar.model.allAssets()
+      }
       this.push({ tag: 'assets', data: assets })
     }
   }

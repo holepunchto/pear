@@ -57,7 +57,6 @@ const assetsOutput = (assets) => {
 
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
-  link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
   manifest: (result) => manifestOutput(result),
@@ -78,10 +77,8 @@ class Data {
     if (link) {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
-    } else {
-      await output(json, this.ipc.data({ resource: 'apps', secrets }), { tag: 'apps' }, this.ipc)
     }
+    await output(json, this.ipc.data({ resource: 'apps', secrets, link }), { tag: 'apps' }, this.ipc)
   }
 
   async dht (cmd) {
@@ -105,6 +102,11 @@ class Data {
   async assets (cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(json, this.ipc.data({ resource: 'assets' }), { tag: 'assets' }, this.ipc)
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
   }
 }
