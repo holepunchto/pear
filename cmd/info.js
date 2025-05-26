@@ -51,11 +51,16 @@ const output = outputter('info', {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  final (data, info) { return info.onlyShowKey && data.success ? {} : false }
+  manifest: (data) => {
+    return JSON.stringify(data.manifest, 0, 2)
+  },
+  final (data, info) {
+    return info.onlyShowKey && data.success ? {} : false
+  }
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, manifest } = cmd.flags
   const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
@@ -70,6 +75,7 @@ module.exports = (ipc) => async function info (cmd) {
     showKey,
     metadata,
     changelog,
+    manifest,
     full,
     cmdArgs: Bare.argv.slice(1)
   }), { ask: cmd.flags.ask }, ipc)

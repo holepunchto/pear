@@ -13,7 +13,7 @@ module.exports = class Info extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link, channel, dir, showKey, metadata, changelog, full, cmdArgs } = {}) {
+  async #op ({ link, channel, dir, showKey, metadata, changelog, manifest, full, cmdArgs } = {}) {
     const { session } = this
     let bundle = null
     let drive = null
@@ -58,6 +58,16 @@ module.exports = class Info extends Opstream {
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
+      const appManifest = await drive.db.get('manifest').catch((error) => {
+        if (error.code === 'DECODING_ERROR') throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      })
+
+      if (manifest) {
+        this.push({ tag: 'manifest', data: { manifest: appManifest.value } })
+        this.final = { manifest: appManifest.value }
+        return
+      }
+
       if (isEnabled(metadata)) {
         this.push({
           tag: 'keys',
@@ -68,33 +78,36 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const [channel, release, manifest] = await Promise.all([
+      const [channel, release] = await Promise.all([
         drive.db.get('channel'),
-        drive.db.get('release'),
-        drive.db.get('manifest')
+        drive.db.get('release')
       ]).catch((error) => {
         if (error.code === 'DECODING_ERROR') throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       })
 
-      const name = manifest?.value?.pear?.name || manifest?.value?.name
-      const length = drive.core.length
-      const byteLength = drive.core.byteLength
-      const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
-      const fork = drive.core.fork
-      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel: channel?.value, release: release?.value || ['Unreleased'], name, length, byteLength, blobs, fork } })
+      if (isEnabled(metadata)) {
+        const name = appManifest?.value?.pear?.name || appManifest?.value?.name
+        const length = drive.core.length
+        const byteLength = drive.core.byteLength
+        const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
+        const fork = drive.core.fork
+        this.push({ tag: 'info', data: { channel: channel?.value, release: release?.value || ['Unreleased'], name, length, byteLength, blobs, fork } })
+      }
     }
-
-    const contents = await drive.get('/CHANGELOG.md')
 
     const type = full ? 'full' : 'latest'
     const showChangelog = isEnabled(changelog) || full ? type : false
-    const blank = '[ No Changelog ]'
-    const parsed = showChangelog === 'latest'
-      ? (clog.parse(contents).at(0)?.[1]) || blank
-      : showChangelog === 'full'
-        ? (clog.parse(contents).map(entry => entry[1]).join('\n\n')) || blank
-        : blank
 
-    if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+    if (showChangelog) {
+      const contents = await drive.get('/CHANGELOG.md')
+      const blank = '[ No Changelog ]'
+      const parsed = showChangelog === 'latest'
+        ? (clog.parse(contents).at(0)?.[1]) || blank
+        : showChangelog === 'full'
+          ? (clog.parse(contents).map(entry => entry[1]).join('\n\n')) || blank
+          : blank
+
+      this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+    }
   }
 }
