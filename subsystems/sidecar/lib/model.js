@@ -102,14 +102,14 @@ module.exports = class Model {
     return result
   }
 
-  async touchAsset (link, bytesAllocated) {
+  async touchAsset (link) {
     const tx = await this.lock.enter()
-    const get = { link, bytesAllocated }
+    const get = { link }
     LOG.trace('db', 'GET', '@pear/asset', get)
     const asset = await tx.get('@pear/asset', get) ?? get
     if (!asset.path) {
       asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
-      asset.bytesAllocated = bytesAllocated
+      asset.bytesAllocated = 0
       LOG.trace('db', 'INSERT', '@pear/asset', asset)
       await tx.insert('@pear/asset', asset)
       asset.inserted = true
@@ -148,6 +148,24 @@ module.exports = class Model {
     LOG.trace('db', 'DELETE', '@pear/asset', asset)
     await tx.delete('@pear/asset', asset)
     await this.lock.exit()
+  }
+
+  async updateAssetBytesAllocated (link, bytesAllocated) {
+    let result
+    const tx = await this.lock.enter()
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await tx.get('@pear/asset', get)
+    if (!asset) {
+      result = null
+    } else {
+      const update = { ...asset, bytesAllocated }
+      LOG.trace('db', 'INSERT', '@pear/asset', update)
+      await tx.insert('@pear/asset', update)
+      result = update
+    }
+    await this.lock.exit()
+    return result
   }
 
   async getDhtNodes () {
