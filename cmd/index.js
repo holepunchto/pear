@@ -137,6 +137,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--changelog', 'View changelog only'),
     flag('--full-changelog', 'Full record of changes'),
     flag('--metadata', 'View metadata only'),
+    flag('--manifest', 'View app manifest only'),
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
@@ -247,7 +248,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
-    command('manifest', summary('database internal versioning'), (cmd) => runners.data(ipc).manifest(cmd)),
+    command('manifest', summary('Database internal versioning'), (cmd) => runners.data(ipc).manifest(cmd)),
+    command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).assets(cmd)),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
