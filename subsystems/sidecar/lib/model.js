@@ -119,6 +119,18 @@ module.exports = class Model {
     return asset
   }
 
+  async getAsset (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await this.db.get('@pear/asset', get)
+    return asset
+  }
+
+  async allAssets () {
+    LOG.trace('db', 'FIND', '@pear/asset')
+    return await this.db.find('@pear/asset').toArray()
+  }
+
   async getDhtNodes () {
     LOG.trace('db', 'GET', '@pear/dht', '[nodes]')
     return (await this.db.get('@pear/dht'))?.nodes || []

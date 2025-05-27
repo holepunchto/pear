@@ -224,9 +224,9 @@ test('local app', async function ({ ok, is, teardown }) {
   is(versions.app.key, null, 'app key is null')
   await Helper.untilClose(run.pipe)
 
-  const data = await helper.data({ resource: 'link', link: tmpdir })
-  const dataResult = await Helper.pick(data, [{ tag: 'link' }])
-  const bundle = await dataResult.link
+  const data = await helper.data({ resource: 'apps', link: tmpdir })
+  const dataResult = await Helper.pick(data, [{ tag: 'apps' }])
+  const bundle = (await dataResult.apps)[0]
 
   is(bundle.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
   ok(bundle.appStorage.includes('by-random'), 'application by storage has been generate randomly and persisted')
