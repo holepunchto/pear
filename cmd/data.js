@@ -44,12 +44,23 @@ const manifestOutput = (manifest) => {
   return `version: ${ansi.bold(manifest.version)}\n`
 }
 
+const assetsOutput = (assets) => {
+  if (!assets.length) return placeholder
+  let out = ''
+  for (const asset of assets) {
+    out += `- ${ansi.bold(asset.link)}\n`
+    out += `${padding}path: ${ansi.dim(asset.path)}\n`
+    out += '\n'
+  }
+  return out
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
-  link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
-  manifest: (result) => manifestOutput(result)
+  manifest: (result) => manifestOutput(result),
+  assets: (result) => assetsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -66,10 +77,8 @@ class Data {
     if (link) {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      await output(json, this.ipc.data({ resource: 'link', secrets, link }), { tag: 'link' }, this.ipc)
-    } else {
-      await output(json, this.ipc.data({ resource: 'apps', secrets }), { tag: 'apps' }, this.ipc)
     }
+    await output(json, this.ipc.data({ resource: 'apps', secrets, link }), { tag: 'apps' }, this.ipc)
   }
 
   async dht (cmd) {
@@ -88,5 +97,16 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
+  }
+
+  async assets (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
   }
 }
