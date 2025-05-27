@@ -46,18 +46,18 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   is(typeof bundles[0].appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data apps [link]')
-  data = await helper.data({ resource: 'link', link })
-  result = await Helper.pick(data, [{ tag: 'link' }])
-  let bundle = await result.link
+  data = await helper.data({ resource: 'apps', link })
+  result = await Helper.pick(data, [{ tag: 'apps' }])
+  let bundle = (await result.apps)[0]
   ok(bundle.encryptionKey === undefined, 'Encryption key is hidden without --secrets')
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
   is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
   comment('pear data --secrets apps [link]')
-  data = await helper.data({ resource: 'link', link, secrets: true })
-  result = await Helper.pick(data, [{ tag: 'link' }])
-  bundle = await result.link
+  data = await helper.data({ resource: 'apps', link, secrets: true })
+  result = await Helper.pick(data, [{ tag: 'apps' }])
+  bundle = (await result.apps)[0]
   is(bundle.encryptionKey.toString('hex'), ek.toString('hex'), 'Encryption key from bundle matches')
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
   is(bundle.link, link, 'Link matches to the one just created')
