@@ -50,6 +50,7 @@ const assetsOutput = (assets) => {
   for (const asset of assets) {
     out += `- ${ansi.bold(asset.link)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
+    out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)}\n`
     out += '\n'
   }
   return out

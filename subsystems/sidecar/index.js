@@ -136,9 +136,6 @@ class Sidecar extends ReadyResource {
 
     this.running = new Map()
 
-    const gcCycleMs = 10 * 60 * 1000
-    this.gcInterval = setInterval(() => { this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
-
     const sidecar = this
     this.App = class App {
       sidecar = sidecar
@@ -305,6 +302,10 @@ class Sidecar extends ReadyResource {
   async _open () {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
+
+    this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err))
+    const gcCycleMs = 10 * 60 * 1000
+    this.gcInterval = setInterval(() => { this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
   }
 
   get clients () { return this.ipc.clients }
@@ -958,15 +959,15 @@ class Sidecar extends ReadyResource {
   }
 
   async _gcRunCycle () {
-    LOG.info('sidecar', 'GC run cycle')
+    LOG.info('sidecar', '- GC run cycle')
     const record = await this.model.firstGc()
     if (!record) {
-      LOG.info('sidecar', 'GC clear')
+      LOG.trace('sidecar', '- GC is clear')
       return
     }
+    LOG.trace('sidecar', '- GC removing directory', record.path)
     await fs.promises.rm(record.path, { recursive: true, force: true })
     await this.model.deleteGc(record.path)
-    LOG.info('sidecar', 'GC removed', record.path)
   }
 
   async #shutdown (client) {
