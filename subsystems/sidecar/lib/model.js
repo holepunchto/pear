@@ -1,12 +1,13 @@
 'use strict'
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
+const pearLink = require('pear-link')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_HYPERDB } = require('../../../constants')
+const { ALIASES } = require('../../../constants')
 
 module.exports = class Model {
-  constructor () {
-    this.db = HyperDB.rocks(PLATFORM_HYPERDB, dbSpec)
+  constructor (corestore) {
+    this.db = HyperDB.rocks(corestore.storage.rocks.session(), dbSpec)
 
     this.lock = new DBLock({
       enter: () => {
@@ -20,8 +21,9 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})`)
-    const bundle = await this.db.get('@pear/bundle', { link })
+    const { origin } = pearLink(ALIASES)(link)
+    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link: origin })})`)
+    const bundle = await this.db.get('@pear/bundle', { link: origin })
     return bundle
   }
 
@@ -31,9 +33,10 @@ module.exports = class Model {
   }
 
   async addBundle (link, appStorage) {
+    const { origin } = pearLink(ALIASES)(link)
     const tx = await this.lock.enter()
-    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link, appStorage })})`)
-    await tx.insert('@pear/bundle', { link, appStorage })
+    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link: origin, appStorage })})`)
+    await tx.insert('@pear/bundle', { link: origin, appStorage })
     await this.lock.exit()
     return { link, appStorage }
   }

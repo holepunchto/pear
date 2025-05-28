@@ -4,7 +4,9 @@ const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
 const path = isBare ? require('bare-path') : require('path')
 const url = isBare ? require('bare-url') : require('url')
-const { randomBytes } = require('hypercore-crypto')
+const crypto = require('hypercore-crypto')
+const hypercoreid = require('hypercore-id-encoding')
+const resolve = require('unix-path-resolve')
 const pearLink = require('pear-link')
 const z32 = require('z32')
 const { PLATFORM_DIR, RUNTIME } = require('./constants')
@@ -66,6 +68,14 @@ module.exports = class State {
     try { this.storage(state) } catch (err) { state.error = err }
   }
 
+  static storageFromLink (link) {
+    const parsedLink = typeof link === 'string' ? parseLink(link) : link
+    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
+    return parsedLink.protocol !== 'pear:'
+      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
+  }
+
   static storage (state) {
     if (!state.key && !state.name) { // uninited local case
       this.injestPackage(state, readPkg(path.join(state.dir, 'package.json')))
@@ -91,7 +101,7 @@ module.exports = class State {
   }
 
   static isEntrypoint (pathname) {
-    if (pathname === null || pathname === '/') return false
+    if (pathname === null || pathname === undefined || pathname === '/' || pathname.length === 0) return false
     // NOTE: return true once keet invite code detection is no longer needed, assess for removal October 2024
     const segment = pathname = pathname?.startsWith('/') ? pathname.slice(1) : pathname
     return this.isKeetInvite(segment) === false
@@ -107,16 +117,16 @@ module.exports = class State {
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, updates, updatesDiff,
-      unsafeClearAppStorage, chromeWebrtcInternals
+      unsafeClearAppStorage, chromeWebrtcInternals, parent
     } = flags
     const { drive: { alias = null, key = null }, pathname: route, protocol, hash } = link ? parseLink(link) : { drive: {} }
     const pathname = protocol === 'file:' ? isWindows ? route.slice(1).slice(dir.length) : route.slice(dir.length) : route
     const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
     const fragment = hash ? hash.slice(1) : (this.constructor.isKeetInvite(segment) ? segment : null)
-    const entrypoint = this.constructor.isEntrypoint(pathname) ? pathname : null
+    const entrypoint = pathname && this.constructor.isEntrypoint(resolve(pathname)) ? resolve(pathname) : null
     const pkgPath = path.join(dir, 'package.json')
     const pkg = key === null ? readPkg(pkgPath) : null
-    const store = flags.tmpStore ? path.join(os.tmpdir(), randomBytes(16).toString('hex')) : flags.store
+    const store = flags.tmpStore ? path.join(os.tmpdir(), crypto.randomBytes(16).toString('hex')) : flags.store
     this.#onupdate = onupdate
     this.startId = startId || null
     this.dht = dht
@@ -148,6 +158,7 @@ module.exports = class State {
     this.id = id
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
+    this.parent = parent
     this.env = { ...env }
     if (this.stage || (this.run && this.dev === false)) {
       this.env.NODE_ENV = this.env.NODE_ENV || 'production'

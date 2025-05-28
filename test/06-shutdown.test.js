@@ -25,7 +25,7 @@ test('lock released after shutdown', async function ({ ok, plan, comment, teardo
   await helper.shutdown()
   comment('sidecar shutdown')
   comment('checking file lock is free')
-  const lock = path.join(rig.platformDir, 'corestores', 'platform', 'primary-key')
+  const lock = path.join(rig.platformDir, 'corestores', 'platform', 'db', 'LOCK')
   const fd = fs.openSync(lock, 'r+')
 
   teardown(async () => {

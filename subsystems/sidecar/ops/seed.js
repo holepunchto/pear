@@ -10,7 +10,7 @@ const Hyperdrive = require('hyperdrive')
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ name, channel, link, verbose, seeders, dir, cmdArgs } = {}) {
+  async #op ({ name, channel, link, verbose, dir, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
@@ -48,7 +48,7 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
-    await bundle.join(this.sidecar.swarm, { seeders, server: true })
+    await bundle.join(this.sidecar.swarm, { server: true })
 
     try {
       await bundle.drive.get('/package.json')

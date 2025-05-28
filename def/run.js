@@ -19,10 +19,12 @@ module.exports = [
   flag('--detached', 'Wakeup existing app or run detached'),
   flag('--no-ask', 'Suppress permissions dialog'),
   flag('--dht-bootstrap <nodes>', 'DHT boostrap').hide(),
+  flag('--parent <id>').hide(),
   flag('--trusted').hide(),
   flag('--detach').hide(),
   flag('--swap <path>').hide(),
   flag('--start-id <id>').hide(),
   flag('--sandbox').hide(), // electron passthrough
-  flag('--app-name <name>').hide()
+  flag('--app-name <name>').hide(),
+  flag('--run').hide() // appling legacy
 ]

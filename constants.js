@@ -4,7 +4,7 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { pathToFileURL, fileURLToPath } = require('url-file-url')
 const sodium = require('sodium-native')
 const b4a = require('b4a')
-const CHECKOUT = require('./checkout')
+const CHECKOUT = require('./checkout.js')
 const { ERR_COULD_NOT_INFER_MODULE_PATH } = require('./errors')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
@@ -23,7 +23,7 @@ const swapPath = toPath(swapURL)
 const IPC_ID = 'pear'
 const PLATFORM_URL = LOCALDEV ? new URL('pear/', swapURL) : new URL('../../../', swapURL)
 const PLATFORM_DIR = toPath(PLATFORM_URL)
-const PLATFORM_LOCK = toPath(new URL('corestores/platform/primary-key', PLATFORM_URL))
+const PLATFORM_LOCK = toPath(new URL('corestores/platform/db/LOCK', PLATFORM_URL))
 
 const DESKTOP_EXEC = isWindows
   ? 'pear-runtime-app/Pear Runtime.exe'
@@ -59,7 +59,6 @@ exports.EOLS = EOLS
 exports.SWAP = swapPath
 exports.PLATFORM_DIR = PLATFORM_DIR
 exports.PLATFORM_LOCK = PLATFORM_LOCK
-exports.PLATFORM_HYPERDB = toPath(new URL('hyperdb', PLATFORM_URL))
 exports.GC = toPath(new URL('gc', PLATFORM_URL))
 exports.PLATFORM_CORESTORE = toPath(new URL('corestores/platform', PLATFORM_URL))
 exports.UPGRADE_LOCK = toPath(new URL('lock', PLATFORM_URL))

@@ -1,5 +1,93 @@
 # Pear Runtime Changelog
 
+## v1.13.0
+
+### Features
+
+* CLI – The terminal app entrypoint can now be located inside the desktop app bundle.
+
+### Fixes
+
+* Internal - Fixed multi worker data piping.
+* Terminal - Fixed unhandled rejection handler for terminal apps.
+* Desktop - Fixed client restart after update nofification.
+* Desktop – Fixed missing traffic lights on macOS.
+
+## v1.12.1
+
+### Fixes
+
+* Internal - Updated device-file to 1.2.6
+
+## v1.12.0
+
+### Fixes
+
+* Tray Icon - Corrected tray icon size
+* Tray Icon (Mac) - Set tray icon as image template
+* Desktop - Fixed application wake-up
+* Windows - Platform add-ons now linked with vcruntime
+* Desktop - Added `crypto` to Nodejs available builtin modules
+
+### Improvements
+
+* Internal - Migrated platform Corestore to Hypercore 11
+* CLI - Improved "Unknown Argument" error message
+* Bare - Update Bare runtime to v1.17.3
+* Internal - Single storage for platform database and Corestore
+* Internal - Fixed internal database keys duplication
+
+### Features
+
+* CLI - Removed `--seeders` flag from `pear seed` command
+
+## v1.11.2
+
+### Fixes
+
+* Windows - Updated native dependencies
+* Internal - Updated sloppy-module-parser to version 2.2.3
+
+## v1.11.1
+
+### Fixes
+
+* Windows - Fixed VCRUNTIME error
+
+## v1.11.0
+
+### Features
+
+* Internal - HyperDB integration
+* CLI - Added `data` command
+* CLI - Added `reset` command
+* Desktop - Added Pear.tray
+
+### Improvements
+
+* Desktop - Set Electron application name on boot
+* Desktop - Added default Linux icon and badges
+* Internal - Faster offline boot
+* CLI - Improved `dump` for single file or folder
+
+### Fixes
+
+* Sidecar - Fixed teardown without clients
+* Templates - Skipped warmup creation for template stage
+* Pear Runtime - Fixed detached run mode for pear://runtime
+
+## v1.10.0
+
+### Improvements
+
+* Desktop - Added "hideable" GUI option
+* Desktop - Pear.gui options platform specific
+* Internal - Udx-Native version 1.17.3
+
+### Fixes
+
+* Internal - Parsing .resolve calls statically (Sloppy Module Parser 2.2.1 and ScriptLinker 2.5.4) 
+
 ## v1.9.0
 
 ### Improvements

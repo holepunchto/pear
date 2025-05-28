@@ -14,7 +14,7 @@ test('reset', async function ({ ok, is, plan, comment, teardown, timeout }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })

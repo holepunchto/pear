@@ -11,6 +11,7 @@ const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-boot
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
+const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -23,7 +24,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -59,7 +60,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -98,7 +99,7 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout 
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const id = Math.floor(Math.random() * 10000)
+    const id = Helper.getRandomId()
 
     comment('staging')
     const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
@@ -141,7 +142,7 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -179,7 +180,7 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Math.floor(Math.random() * 10000)
+  const id = Helper.getRandomId()
 
   comment('staging')
   const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
@@ -232,4 +233,37 @@ test('local app', async function ({ ok, is, teardown }) {
   is(bundle.encryptionKey, undefined, 'application has no encryption key')
 
   ok(true, 'ended')
+})
+
+test('entrypoint and fragment', async function ({ is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(2)
+
+  const dir = entrypointAndFragment
+  const entrypoint = '/entrypoint.js'
+  const fragment = (Helper.getRandomId()).toString()
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}${entrypoint}#${fragment}`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+
+  is(info.entrypoint, entrypoint)
+  is(info.fragment, fragment)
+
+  await Helper.untilClose(run.pipe)
 })

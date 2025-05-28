@@ -42,7 +42,7 @@ async function electronMain (cmd) {
   await gui.ready()
 
   // note: would be unhandled rejection on failure, but should never fail:
-  if (await gui.ipc.wakeup(state.link, state.storage, state.key === null ? state.dir : null, state.link?.startsWith('pear://dev'))) {
+  if (await gui.ipc.wakeup(state.link, state.storage, state.key === null ? state.dir : null, state.link?.startsWith('pear://dev'), state.flags.startId)) {
     electron.app.quit(0)
     return
   }

@@ -3,9 +3,20 @@
   "offset": 0,
   "schema": [
     {
-      "name": "dht",
+      "name": "manifest",
       "namespace": "pear",
       "id": 0,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/manifest",
+      "derived": false,
+      "key": [],
+      "trigger": null
+    },
+    {
+      "name": "dht",
+      "namespace": "pear",
+      "id": 1,
       "type": 1,
       "indexes": [],
       "schema": "@pear/dht",
@@ -16,7 +27,7 @@
     {
       "name": "gc",
       "namespace": "pear",
-      "id": 1,
+      "id": 2,
       "type": 1,
       "indexes": [],
       "schema": "@pear/gc",
@@ -29,7 +40,7 @@
     {
       "name": "bundle",
       "namespace": "pear",
-      "id": 2,
+      "id": 3,
       "type": 1,
       "indexes": [
         "@pear/bundle-by-tags"
@@ -44,7 +55,7 @@
     {
       "name": "bundle-by-tags",
       "namespace": "pear",
-      "id": 3,
+      "id": 4,
       "type": 2,
       "collection": "@pear/bundle",
       "unique": false,

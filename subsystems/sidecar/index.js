@@ -33,7 +33,7 @@ const parseLink = require('../../lib/parse-link')
 const runDefinition = require('../../def/run')
 const { version } = require('../../package.json')
 const {
-  PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
+  PLATFORM_LOCK, SOCKET_PATH, CHECKOUT, APPLINGS_PATH, SWAP, RUNTIME,
   DESKTOP_RUNTIME, ALIASES, SPINDOWN_TIMEOUT, WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('../../constants')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('../../errors')
@@ -74,7 +74,7 @@ class Sidecar extends ReadyResource {
   constructor ({ updater, drive, corestore, gunk, flags }) {
     super()
 
-    this.model = new Model()
+    this.model = new Model(corestore.session())
 
     this.dhtBootstrap = typeof flags.dhtBootstrap === 'string'
       ? flags.dhtBootstrap.split(',').map(e => ({ host: e.split(':')[0], port: Number(e.split(':')[1]) }))
@@ -84,7 +84,17 @@ class Sidecar extends ReadyResource {
     this.version = CHECKOUT
 
     this.updater = updater
-    if (this.updater) this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    if (this.updater) {
+      this.updater.on('updating', (checkout) => {
+        const { key, length } = checkout
+        LOG.info('sidecar', key === this.version.key
+          ? `- Updating to length ${length}...`
+          : `- Switching to key ${key} with length ${length}...`
+        )
+        this.updatingNotify(checkout)
+      })
+      this.updater.on('update', (checkout) => this.updateNotify(checkout))
+    }
 
     this.#spindownCountdown()
 
@@ -149,6 +159,12 @@ class Sidecar extends ReadyResource {
         if (report.err?.code === 'ERR_OPEN') return reports.dev(...args)
         if (report.err?.code === 'ERR_CRASH') return reports.crash(...args)
         return reports.generic(...args)
+      }
+
+      #updatingTrigger () {
+        if (this.sidecar.updater?.updating) {
+          this.message({ type: 'pear/updates', app: false, version: this.sidecar.updater.checkout, info: null, updating: true, updated: false })
+        }
       }
 
       async _loadUnsafeAddon (drive, input, output) {
@@ -238,6 +254,9 @@ class Sidecar extends ReadyResource {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
         const stream = new streamx.PassThrough({ objectMode: true })
         streamx.pipeline(subscriber, pickData(), stream)
+
+        if (ptn?.type === 'pear/updates') this.#updatingTrigger()
+
         return stream
       }
 
@@ -301,8 +320,15 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
+  async updatingNotify (checkout = null) {
+    for await (const app of this.apps) {
+      if (!app || app.minvering === true) continue
+
+      app.message({ type: 'pear/updates', app: false, version: checkout, diff: null, updating: true, updated: false })
+    }
+  }
+
   async updateNotify (version, info = {}) {
-    this.spindownms = 0
     this.updateAvailable = { version, info }
 
     if (info.link) LOG.info('sidecar', 'Application update available:')
@@ -320,11 +346,13 @@ class Sidecar extends ReadyResource {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle?.link) {
-        app.message({ type: 'pear/updates', app: true, version, diff: info.diff })
+        app.state.updated = { app: true, version, diff: info.diff }
+        app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
         continue
       }
       if (info.link) continue
-      app.message({ type: 'pear/updates', app: false, version, diff: null })
+      app.state.updated = { app: false, version, diff: null }
+      app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true })
     }
   }
 
@@ -391,6 +419,10 @@ class Sidecar extends ReadyResource {
     return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
+  async updated (params, client) {
+    return client.userData?.state?.updated
+  }
+
   reports (params, client) {
     if (!client.userData) return
     const stream = new streamx.PassThrough({ objectMode: true })
@@ -408,7 +440,7 @@ class Sidecar extends ReadyResource {
 
   async config (params, client) {
     if (!client.userData) return
-    const cfg = client.userData.state.constructor.configFrom(client.userData.state)
+    const cfg = client.userData.state?.constructor.configFrom(client.userData.state)
     return cfg
   }
 
@@ -436,7 +468,7 @@ class Sidecar extends ReadyResource {
       const link = `pear://${hypercoreid.encode(params.key)}`
       const bundle = await this.model.getBundle(link)
       if (!bundle) {
-        await this.model.addBundle(link, this._generateAppStorage(parseLink(link)))
+        await this.model.addBundle(link, State.storageFromLink(link))
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
@@ -450,11 +482,9 @@ class Sidecar extends ReadyResource {
 
   async detached ({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
-    if (!storage) {
-      storage = path.join(PLATFORM_DIR, 'app-storage', 'by-dkey', crypto.discoveryKey(key).toString('hex'))
-    }
+    if (!storage) storage = State.storageFromLink(link)
 
-    const wokeup = await this.wakeup({ args: [link, storage, appdev, false] })
+    const wokeup = await this.wakeup({ args: [link, storage, appdev, false, null] })
 
     if (wokeup) return { wokeup, appling: null }
     const appling = (await this.applings.get(key.toString('hex'))) || null
@@ -483,7 +513,9 @@ class Sidecar extends ReadyResource {
       if (seen.has(app.state.id)) continue
       seen.add(app.state.id)
       const { pid, cmdArgs, cwd, dir, runtime, appling, env, run, options } = app.state
-      metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      if (!app.state.parent) { // do not restart worker processes
+        metadata.push({ pid, cmdArgs, cwd, dir, runtime, appling, env, run, options })
+      }
       const tearingDown = app.teardown()
       if (tearingDown === false) this.#teardownPipelines(client).then(() => client.close())
     }
@@ -495,7 +527,7 @@ class Sidecar extends ReadyResource {
     if (platform === false) {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env, detached: false, stdio: 'pipe' }
+      const opts = { cwd, env, detached: false, stdio: 'ignore' }
       if (!client.closed) {
         await new Promise((resolve) => {
           if (client.closed) {
@@ -571,34 +603,38 @@ class Sidecar extends ReadyResource {
   }
 
   wakeup (params = {}) {
-    const [link, storage, appdev = null, selfwake = true] = params.args
-    return new Promise((resolve) => {
-      if (this.hasClients === false) {
-        resolve(false)
-        return
-      }
-      const parsed = parseLink(link)
-      if (parsed.drive.key === null && appdev === null) {
-        resolve(false)
-        return
-      }
-      const matches = [...this.apps].filter((app) => {
-        if (!app || !app.state) return false
-        return app.state.storage === storage && (appdev
-          ? app.state.dir === appdev
-          : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
-        )
+    const [link, storage, appdev = null, selfwake = true, startId] = params.args
+    const parsed = parseLink(link)
+    const appLink = link.substring(0, link.length - parsed.pathname.length)
+    return this.model.getAppStorage(appLink).then((appStorage) => {
+      return new Promise((resolve) => {
+        if (this.hasClients === false) {
+          resolve(false)
+          return
+        }
+        if (parsed.drive.key === null && appdev === null) {
+          resolve(false)
+          return
+        }
+        const matches = [...this.apps].filter((app) => {
+          if (!app || !app.state) return false
+          if (startId === app.startId) return false
+          return app.state.storage === (storage || appStorage) && (appdev
+            ? app.state.dir === appdev
+            : !!app.state.key && (hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
+          )
+        })
+
+        for (const app of matches) {
+          const pathname = parsed.pathname
+          const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+          const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
+          app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
+        }
+
+        const min = selfwake ? 1 : 0
+        resolve(matches.length > min)
       })
-
-      for (const app of matches) {
-        const pathname = parsed.pathname
-        const segment = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-        const fragment = parsed.hash ? parsed.hash.slice(1) : (SharedState.isKeetInvite(segment) ? segment : null)
-        app.message({ type: 'pear/wakeup', link, applink: app.state.applink, entrypoint: pathname, fragment, linkData: segment })
-      }
-
-      const min = selfwake ? 1 : 0
-      resolve(matches.length > min)
     })
   }
 
@@ -637,7 +673,7 @@ class Sidecar extends ReadyResource {
       if (this.updateAvailable !== null) {
         const { version, info } = this.updateAvailable
         LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
-        client.userData.message({ type: 'pear/updates', version, diff: info.diff })
+        client.userData.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
       }
       return info
     } catch (err) {
@@ -673,8 +709,8 @@ class Sidecar extends ReadyResource {
       }
     }
 
-    link = pearLink.normalize(link.startsWith('pear://') ? link : pathToFileURL(link).href)
-    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, this._generateAppStorage(parsedLink))
+    link = pearLink.normalize(link.startsWith('pear://') ? `pear://${hypercoreid.encode(key)}${parsedLink.pathname}${parsedLink.hash}` : link.startsWith('file://') ? link : pathToFileURL(link).href)
+    const persistedBundle = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsedLink))
     const encryptionKey = persistedBundle.encryptionKey
     const appStorage = persistedBundle.appStorage
 
@@ -727,11 +763,15 @@ class Sidecar extends ReadyResource {
       LOG.info(LOG_RUN_LINK, id, 'checking minver')
       const updating = await app.minver()
       if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      const type = state.type
+      const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
+      const type = entrypointIsJS ? 'terminal' : state.type
       LOG.info(LOG_RUN_LINK, id, type, 'app')
       const isTerminalApp = type === 'terminal'
       if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
       const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+      if (entrypointIsJS) {
+        bundle.type = 'terminal'
+      }
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
     }
@@ -829,10 +869,14 @@ class Sidecar extends ReadyResource {
     const updating = await app.minver()
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
     // start is tied to the lifecycle of the client itself so we don't tear it down now
-    const type = state.type
+    const entrypointIsJS = state.entrypoint && (path.extname(state.entrypoint) === '.js' || path.extname(state.entrypoint) === '.mjs')
+    const type = entrypointIsJS ? 'terminal' : state.type
     const isTerminalApp = type === 'terminal'
     if (isTerminalApp) LOG.info(LOG_RUN_LINK, id, 'making Bare bundle')
     const bundle = isTerminalApp ? await app.bundle.bundle(state.entrypoint) : null
+    if (entrypointIsJS) {
+      bundle.type = 'terminal'
+    }
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { port: this.port, id, startId, host: `http://127.0.0.1:${this.port}`, bail: updating, type, bundle, app: { name: state.appName } }
   }
@@ -920,8 +964,8 @@ class Sidecar extends ReadyResource {
       }
       await this.swarm.destroy()
     }
-    if (this.corestore) await this.corestore.close()
     await this.model.close()
+    if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', LOG.CHECKMARK + ' Sidecar Closed')
   }
 
@@ -941,13 +985,6 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
       }
     }
-  }
-
-  _generateAppStorage (parsedLink) {
-    const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-    return parsedLink.protocol !== 'pear:'
-      ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
-      : path.join(appStorage, 'by-dkey', crypto.discoveryKey(hypercoreid.decode(parsedLink.drive.key)).toString('hex'))
   }
 
   deathClock (ms = 20000) {

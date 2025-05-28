@@ -100,6 +100,7 @@ module.exports = class PearGUI extends ReadyResource {
           fullscreen () { return ipc.fullscreen({ id: this.id }) }
           restore () { return ipc.restore({ id: this.id }) }
           close () { return ipc.close({ id: this.id }) }
+          quit () { return ipc.quit({ id: this.id }) }
           dimensions (options = null) { return ipc.dimensions({ id: this.id, options }) }
           isVisible () { return ipc.isVisible({ id: this.id }) }
           isMinimized () { return ipc.isMinimized({ id: this.id }) }
@@ -241,7 +242,7 @@ module.exports = class PearGUI extends ReadyResource {
             return
           }
           if (key === 'quit') {
-            this.exit(0)
+            this.Window.self.quit()
           }
         })
 
@@ -300,6 +301,7 @@ class IPC {
   parent (...args) { return electron.ipcRenderer.invoke('parent', ...args) }
   open (...args) { return electron.ipcRenderer.invoke('open', ...args) }
   close (...args) { return electron.ipcRenderer.invoke('close', ...args) }
+  quit (...args) { return electron.ipcRenderer.invoke('quit', ...args) }
   show (...args) { return electron.ipcRenderer.invoke('show', ...args) }
   hide (...args) { return electron.ipcRenderer.invoke('hide', ...args) }
   minimize (...args) { return electron.ipcRenderer.invoke('minimize', ...args) }
@@ -335,6 +337,7 @@ class IPC {
   message (...args) { return electron.ipcRenderer.invoke('message', ...args) }
   checkpoint (...args) { return electron.ipcRenderer.invoke('checkpoint', ...args) }
   versions (...args) { return electron.ipcRenderer.invoke('versions', ...args) }
+  updated (...args) { return electron.ipcRenderer.invoke('updated', ...args) }
   restart (...args) { return electron.ipcRenderer.invoke('restart', ...args) }
   badge (...args) { return electron.ipcRenderer.invoke('badge', ...args) }
 
@@ -382,16 +385,24 @@ class IPC {
         cb()
       }
     })
-    electron.ipcRenderer.on('workerPipeError', (e, stack) => {
-      stream.emit('error', new Error('Worker PipeError (from electron-main): ' + stack))
+    electron.ipcRenderer.on('workerPipeError', (e, args) => {
+      if (args.id === id) {
+        stream.emit('error', new Error('Worker PipeError (from electron-main): ' + args.stack))
+      }
     })
-    electron.ipcRenderer.on('workerPipeClose', () => { stream.destroy() })
-    electron.ipcRenderer.on('workerPipeEnd', () => { stream.end() })
+    electron.ipcRenderer.on('workerPipeClose', (e, args) => {
+      if (args.id === id) stream.destroy()
+    })
+    electron.ipcRenderer.on('workerPipeEnd', (e, args) => {
+      if (args.id === id) stream.end()
+    })
     stream.once('close', () => {
       electron.ipcRenderer.send('workerPipeClose', id)
     })
 
-    electron.ipcRenderer.on('workerPipeData', (e, data) => { stream.push(data) })
+    electron.ipcRenderer.on('workerPipeData', (e, args) => {
+      if (args.id === id) stream.push(args.data)
+    })
     return stream
   }
 

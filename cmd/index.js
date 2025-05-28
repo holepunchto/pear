@@ -59,7 +59,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<channel|link>', 'Channel name or Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
-    flag('--seeders|-s ', 'Additional public keys to seed from'),
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permissions dialogs'),
     flag('--json', 'Newline delimited JSON output'),
@@ -276,9 +275,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
     const reason = bail.reason === 'UNKNOWN_FLAG'
       ? 'Unrecognized Flag: --' + bail.flag.name
-      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value' + bail.arg.value : bail.reason)
+      : (bail.reason === 'UNKNOWN_ARG' ? 'Unrecognized Argument at index ' + bail.arg.index + ' with value "' + bail.arg.value + '"' : bail.reason)
 
     print(reason, false)
     print('\n' + bail.command.usage())
+    Bare.exitCode = 1
   }
 }

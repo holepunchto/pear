@@ -555,8 +555,10 @@ class App {
 
       const decalSession = electron.session.fromPartition('persist:pear')
 
+      const config = await this.ipc.config()
+
       decalSession.setUserAgent('Pear Platform')
-      const entry = state.entrypoint || '/' + state.main
+      const entry = state.entrypoint || '/' + (config?.main || state.main)
       const identify = await this.ipc.identify({ startId: state.startId })
       const { id, host } = identify
 
@@ -1008,6 +1010,7 @@ class Window extends GuiCtrl {
       this.appkin = null
     }
     const session = electron.session.fromPartition(`persist:${this.sessname || (this.state.key ? hypercoreid.encode(this.state.key) : this.state.dir)}`)
+    session.setUserAgent(`Pear ${this.state.id}`)
 
     const { show = true } = { show: (options.show || options.window?.show) }
     const { height = this.constructor.height, width = this.constructor.width } = options
@@ -1112,7 +1115,7 @@ class Window extends GuiCtrl {
       details.requestHeaders.Pragma = details.requestHeaders['Cache-Control'] = 'no-cache'
       const sidecarURL = new URL(this.sidecar)
       const requestURL = new URL(details.url)
-      if (requestURL.host === sidecarURL.host) {
+      if (requestURL.host === sidecarURL.host || requestURL.host === 'devtools') {
         details.requestHeaders['User-Agent'] = `Pear ${this.state.id}`
       } else if (this.state?.config?.options?.userAgent) {
         details.requestHeaders['User-Agent'] = this.state.config.options.userAgent
@@ -1303,6 +1306,11 @@ class Window extends GuiCtrl {
     this.closing = false
     return closed
   }
+
+  async quit () {
+    this.quitting = true
+    return this.close()
+  }
 }
 
 class View extends GuiCtrl {
@@ -1454,7 +1462,6 @@ class PearGUI extends ReadyResource {
       },
       connect: tryboot
     })
-    this.worker = new Worker()
     this.pipes = new Freelist()
     this.streams = new Map()
     this.ipc.once('close', () => this.close())
@@ -1505,6 +1512,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('parent', (evt, ...args) => this.parent(...args))
     electron.ipcMain.handle('open', (evt, ...args) => this.open(...args))
     electron.ipcMain.handle('close', (evt, ...args) => this.guiClose(...args))
+    electron.ipcMain.handle('quit', (evt, ...args) => this.quit(...args))
     electron.ipcMain.handle('show', (evt, ...args) => this.show(...args))
     electron.ipcMain.handle('hide', (evt, ...args) => this.hide(...args))
     electron.ipcMain.handle('minimize', (evt, ...args) => this.minimize(...args))
@@ -1536,6 +1544,7 @@ class PearGUI extends ReadyResource {
     electron.ipcMain.handle('message', (evt, ...args) => this.message(...args))
     electron.ipcMain.handle('checkpoint', (evt, ...args) => this.checkpoint(...args))
     electron.ipcMain.handle('versions', (evt, ...args) => this.versions(...args))
+    electron.ipcMain.handle('updated', (evt, ...args) => this.updated(...args))
     electron.ipcMain.handle('restart', (evt, ...args) => this.restart(...args))
     electron.ipcMain.handle('badge', (evt, ...args) => this.badge(...args))
 
@@ -1555,15 +1564,16 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
-      const pipe = this.worker.run(link, args)
+      const worker = new Worker({ parent: this.state.id })
+      const pipe = worker.run(link, args)
       const id = this.pipes.alloc(pipe)
       pipe.on('close', () => {
         this.pipes.free(id)
-        evt.reply('workerPipeClose')
+        evt.reply('workerPipeClose', { id })
       })
-      pipe.on('data', (data) => { evt.reply('workerPipeData', data) })
-      pipe.on('end', () => { evt.reply('workerPipeEnd') })
-      pipe.on('error', (err) => { evt.reply('workerPipeError', err.stack) })
+      pipe.on('data', (data) => { evt.reply('workerPipeData', { data, id }) })
+      pipe.on('end', () => { evt.reply('workerPipeEnd', { id }) })
+      pipe.on('error', (err) => { evt.reply('workerPipeError', { stack: err.stack, id }) })
     })
 
     electron.ipcMain.on('workerPipeId', (evt) => {
@@ -1593,7 +1603,12 @@ class PearGUI extends ReadyResource {
     })
 
     electron.nativeTheme.on('updated', () => {
-      this.message({ type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() })
+      const message = { type: 'pear/gui/tray/darkMode', darkMode: getDarkMode() }
+      if (this.ipc.opened) {
+        this.message(message)
+      } else {
+        this.ipc.ready().then(() => this.message(message), noop)
+      }
     })
   }
 
@@ -1737,6 +1752,8 @@ class PearGUI extends ReadyResource {
   // guiClose because ReadyResource needs close (affects internal naming only)
   guiClose ({ id }) { return this.get(id).close() }
 
+  quit ({ id }) { return this.get(id).quit() }
+
   show ({ id }) { return this.get(id).show() }
 
   hide ({ id }) { return this.get(id).hide() }
@@ -1812,6 +1829,8 @@ class PearGUI extends ReadyResource {
   checkpoint (state) { return this.ipc.checkpoint(state) }
 
   versions () { return this.ipc.versions() }
+
+  updated () { return this.ipc.updated() }
 
   restart (opts = {}) { return this.ipc.restart(opts) }
 
@@ -1938,6 +1957,10 @@ class Tray extends ReadyResource {
     const iconNativeImg = icon ? await this.#getIconNativeImg(icon) : defaultTrayIcon
     const menuTemplate = Object.entries(menu).map(([key, label]) => ({ label, click: () => this.onMenuClick(key) }))
 
+    if (isMac) {
+      iconNativeImg.setTemplateImage(true)
+    }
+
     this.tray = new electron.Tray(iconNativeImg)
     this.tray.on('click', () => this.onMenuClick('click'))
     const contextMenu = electron.Menu.buildFromTemplate(menuTemplate)
@@ -1954,7 +1977,8 @@ class Tray extends ReadyResource {
       const iconNativeImg = electron.nativeImage.createFromBuffer(iconBuffer)
       if (iconNativeImg.isEmpty()) throw new Error('Failed to create tray icon: Invalid image, try PNG or JPEG')
 
-      return iconNativeImg
+      const trayIconSize = isWindows ? { width: 16, height: 16 } : { width: 22, height: 22 }
+      return iconNativeImg.resize(trayIconSize)
     } catch (err) {
       console.warn(err)
       return defaultTrayIcon

@@ -25,7 +25,7 @@ module.exports = class Info extends Opstream {
 
     const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
-    const query = await this.sidecar.model.getBundle(link)
+    const query = link ? await this.sidecar.model.getBundle(link) : null
     const encryptionKey = query?.encryptionKey
 
     if (link || channel) {

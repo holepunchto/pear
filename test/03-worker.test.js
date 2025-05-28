@@ -16,6 +16,8 @@ const workerEndFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'work
 const workerDestroyFromParent = path.join(Helper.localDir, 'test', 'fixtures', 'worker-destroy-from-parent')
 const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-parent-error-handler')
 const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child-error-handler')
+const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'worker-from-same-bundle')
+const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -139,4 +141,54 @@ test('worker exit when parent calls pipe.destroy()', async function () {
   const pipe = await Pear.worker.run(workerDestroyFromParent, [workerChildErrorHandler])
   const pid = await Helper.untilResult(pipe)
   await Helper.untilWorkerExit(pid)
+})
+
+test('worker in desktop app', async function ({ is, teardown }) {
+  const dir = workerFromSameBundle
+  const entrypoint = '/worker/index.js'
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}/worker/index.js`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+
+  is(info.entrypoint, entrypoint, 'path entrypoint should work with app key')
+  await Helper.untilClose(run.pipe)
+
+  const fileLink = path.join(dir, 'worker', 'index.js')
+  const fileRun = await Helper.run({ link: fileLink })
+
+  const fileResult = await Helper.untilResult(fileRun.pipe)
+  const fileInfo = JSON.parse(fileResult)
+
+  is(fileInfo.entrypoint, entrypoint, 'path entrypoint should work with local app')
+  await Helper.untilClose(fileRun.pipe)
+})
+
+test('worker can set uncaughtException handler', async function ({ is, teardown }) {
+  const dir = workerExceptionHandler
+  const expected = 'HANDLED-ERROR'
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const run = await Helper.run({ link: dir })
+  const result = await Helper.untilResult(run.pipe)
+
+  is(result, expected, 'uncaughtException handler in worker works')
+  await Helper.untilClose(run.pipe)
 })
