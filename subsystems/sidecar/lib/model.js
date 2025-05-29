@@ -2,6 +2,7 @@
 const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
+const LocalDrive = require('localdrive')
 const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_DIR } = require('pear-api/constants')
@@ -129,7 +130,25 @@ module.exports = class Model {
 
   async allAssets () {
     LOG.trace('db', 'FIND', '@pear/asset')
-    return await this.db.find('@pear/asset').toArray()
+    const assets = await this.db.find('@pear/asset').toArray()
+    let totalAllocated = 0
+    for (const asset of assets) {
+      if (asset.bytesAllocated === 0) {
+        let bytesAllocated = 0
+        const drive = new LocalDrive(asset.path)
+        for await (const entry of drive.list('/')) {
+          if (entry.value.blob) bytesAllocated += entry.value.blob.byteLength
+        }
+        const tx = await this.lock.enter()
+        const update = { ...asset, bytesAllocated }
+        LOG.trace('db', 'INSERT', '@pear/asset', update)
+        await tx.insert('@pear/asset', update)
+        await this.lock.exit()
+        asset.bytesAllocated = bytesAllocated
+      }
+      totalAllocated += asset.bytesAllocated
+    }
+    return { assets, totalAllocated }
   }
 
   async gcFirstAsset () {
@@ -148,24 +167,6 @@ module.exports = class Model {
     LOG.trace('db', 'DELETE', '@pear/asset', asset)
     await tx.delete('@pear/asset', asset)
     await this.lock.exit()
-  }
-
-  async updateAssetBytesAllocated (link, bytesAllocated) {
-    let result
-    const tx = await this.lock.enter()
-    const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await tx.get('@pear/asset', get)
-    if (!asset) {
-      result = null
-    } else {
-      const update = { ...asset, bytesAllocated }
-      LOG.trace('db', 'INSERT', '@pear/asset', update)
-      await tx.insert('@pear/asset', update)
-      result = update
-    }
-    await this.lock.exit()
-    return result
   }
 
   async getDhtNodes () {

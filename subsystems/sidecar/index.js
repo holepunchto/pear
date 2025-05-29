@@ -960,22 +960,9 @@ class Sidecar extends ReadyResource {
 
   async _gcRunCycle () {
     LOG.info('sidecar', '- GC run cycle')
-    const assets = await this.model.allAssets()
-    let capacityUsage = 0
-    for (const asset of assets) {
-      if (asset.bytesAllocated === 0) {
-        let countBytes = 0
-        const drive = new LocalDrive(asset.path)
-        for await (const entry of drive.list('/')) {
-          if (entry.value.blob) countBytes += entry.value.blob.byteLength
-        }
-        await this.model.updateAssetBytesAllocated(asset.link, countBytes)
-      }
-      capacityUsage += asset.bytesAllocated || 0
-    }
+    const { totalAllocated } = await this.model.allAssets()
     const maxCapacity = 12 * 1024 ** 3
-    if (capacityUsage > maxCapacity) await this.model.gcFirstAsset()
-
+    if (totalAllocated > maxCapacity) await this.model.gcFirstAsset()
     const record = await this.model.firstGc()
     if (!record) {
       LOG.trace('sidecar', '- GC is clear')
