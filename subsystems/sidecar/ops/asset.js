@@ -24,7 +24,6 @@ module.exports = class Asset extends Opstream {
     //   parsed.drive.length = getLatestDriveLength()
     //   link = plink.serialize(parsed)
     // }
-
     const asset = await model.touchAsset(link)
     asset.forced = force
     this.final = asset
@@ -110,14 +109,5 @@ module.exports = class Asset extends Opstream {
         this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
       }
     }
-    let totalBytes = 0
-    for await (const entry of dst.list('/')) {
-      if (entry.value.blob) totalBytes += entry.value.blob.byteLength
-    }
-    await model.updateAssetBytesAllocated(link, totalBytes)
-    const assets = await model.allAssets()
-    const maxCapacity = 12 * 1024 ** 3
-    const currentUsage = assets.reduce((sum, { bytesAllocated = 0 }) => sum + bytesAllocated, 0)
-    if (currentUsage > maxCapacity) await model.gcFirstAsset()
   }
 }
