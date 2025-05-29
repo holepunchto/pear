@@ -38,7 +38,7 @@ module.exports = class Dump extends Opstream {
     const query = await this.sidecar.model.getBundle(link)
     const encryptionKey = query?.encryptionKey
 
-    const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
+    const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
     let drive = null
 
     if (corestore) {

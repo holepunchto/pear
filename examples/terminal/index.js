@@ -17,3 +17,8 @@ const out = `${grn}           ▅
        ▄▄▄▄▆▆▆▆
 `
 console.log('\n\x1b[s\x1b[J' + out)
+
+// const pipe = Pear.run('file:///Users/dmc/code/pear-desktop')
+// pipe.on('data', (data) => {
+//   console.log('GOT', data + '')
+// })

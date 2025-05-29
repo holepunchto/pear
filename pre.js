@@ -73,7 +73,7 @@ module.exports = class Pre extends Readable {
 
   #run (options, link, index, from) {
     const { cwd } = this
-    const sp = spawn(RUNTIME, ['run', '--trusted', link], {
+    const sp = spawn(RUNTIME, ['run', '--prerunning', '--trusted', link], {
       stdio: ['ignore', 'pipe', 'pipe', 'overlapped'],
       windowsHide: true,
       cwd

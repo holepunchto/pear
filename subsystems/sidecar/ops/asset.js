@@ -34,10 +34,10 @@ module.exports = class Asset extends Opstream {
     const key = parsed.drive.key
     const checkout = parsed.drive.length
 
-    const query = await this.sidecar.model.getBundle(link)
+    const query = await this.sidecar.model.getBundle(parsed)
     const encryptionKey = query?.encryptionKey
 
-    const corestore = isFileLink ? null : sidecar._getCorestore(null, null)
+    const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
     let drive = null
 
     if (corestore) {

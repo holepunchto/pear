@@ -40,9 +40,6 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    const isPearLink = link.startsWith('pear://')
-    const isFileUrl = link.startsWith('file://')
-    link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
     const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await this.db.get('@pear/bundle', get)
