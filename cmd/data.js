@@ -46,11 +46,14 @@ const manifestOutput = (manifest) => {
 
 const assetsOutput = (assets) => {
   if (!assets.length) return placeholder
+  const bytesToMb = bytes => Math.round(bytes / 1e6)
   let out = ''
   for (const asset of assets) {
     out += `- ${ansi.bold(asset.link)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
-    out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)}\n`
+    if (asset.bytesAllocated) {
+      out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${bytesToMb(asset.bytesAllocated)} MB)\n`
+    }
     out += '\n'
   }
   return out
