@@ -3,14 +3,11 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
-const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
-const LocalDrive = require('localdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
-const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
@@ -19,7 +16,6 @@ const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
-const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
 const plink = require('pear-api/link')
 const rundef = require('pear-api/cmd/run')
@@ -28,20 +24,11 @@ const {
   APPLINGS_PATH, SWAP, RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
-const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
-const DHT_BOOTSTRAP = require('pear-api/cmd')(Bare.argv.slice(1))
-  .flags.dhtBootstrap?.split(',')
-  .map((hostPort) => {
-    const [host, portStr] = hostPort.split(':')
-    const port = Number(portStr)
-    if (Number.isNaN(port)) throw new Error(`Invalid port: ${portStr}`)
-    return { host, port }
-  })
+const { ERR_INTERNAL_ERROR } = require('pear-api/errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
-const Session = require('./lib/session')
 const Model = require('./lib/model')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
@@ -80,7 +67,7 @@ class Sidecar extends ReadyResource {
 
   teardown () { global.Bare.exit() }
 
-  constructor ({ updater, drive, corestore, gunk }) {
+  constructor ({ updater, drive, corestore, nodes, gunk }) {
     super()
 
     this.model = new Model(corestore.session())
@@ -105,6 +92,7 @@ class Sidecar extends ReadyResource {
 
     this.drive = drive
     this.corestore = corestore
+    this.nodes = nodes
     this.gunk = gunk
 
     this.ipc = new IPC.Server({
@@ -154,7 +142,6 @@ class Sidecar extends ReadyResource {
       handlers = null
       linker = null
       bundle = null
-      reporter = null
       reported = null
       state = null
       session = null
@@ -162,11 +149,12 @@ class Sidecar extends ReadyResource {
       unload = null
       unloader = null
       minvering = false
+      reporter = null
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
-        if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permissionRequired(report)
+        if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permission(report)
         if (report.err?.code === 'ERR_INVALID_LENGTH') return reports.minver(report)
         if (report.err?.code === 'ERR_CONNECTION') return reports.connection()
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
@@ -221,13 +209,13 @@ class Sidecar extends ReadyResource {
           this.minvering = true
           const current = {
             length: this.sidecar.drive.version,
-            fork: this.sidecar.drive.fork,
+            fork: this.sidecar.drive.fork ?? 0,
             key: this.sidecar.drive.core.id
           }
           const minver = {
             key: hypercoreid.normalize(state.options.minver.key),
             length: state.options.minver.length,
-            fork: state.options.minver.fork
+            fork: state.options.minver.fork ?? 0
           }
           if (minver.key !== current.key) {
             LOG.error('internal', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
@@ -239,6 +227,7 @@ class Sidecar extends ReadyResource {
               fork: minver.fork || 0,
               key: minver.key,
               force: { reason: 'minver' },
+              applink: state.applink,
               current
             }
 
@@ -267,7 +256,7 @@ class Sidecar extends ReadyResource {
 
       messages (ptn) {
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
-        const stream = new streamx.PassThrough({ objectMode: true })
+        const stream = new streamx.PassThrough()
         streamx.pipeline(subscriber, pickData(), stream)
 
         if (ptn?.type === 'pear/updates') this.#updatingTrigger()
@@ -295,8 +284,8 @@ class Sidecar extends ReadyResource {
         this.bundle = bundle
         this.id = id
         this.state = state
-        this.warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id })
         this.reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id })
+        this.warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id })
         this.startId = startId
         this.clients = new Set()
       }
@@ -418,7 +407,7 @@ class Sidecar extends ReadyResource {
 
   warming (params, client) {
     if (client.userData instanceof this.App === false) return
-    const stream = new streamx.PassThrough({ objectMode: true })
+    const stream = new streamx.PassThrough()
     streamx.pipeline(client.userData.warming, pickData(), stream)
     return stream
   }
@@ -433,18 +422,28 @@ class Sidecar extends ReadyResource {
   }
 
   reports (params, client) {
-    if (client.userData instanceof this.App === false) return
-    const stream = new streamx.PassThrough({ objectMode: true })
-    streamx.pipeline(client.userData.reporter, pickData(), stream)
+    const app = client.userData
+    if (app === null && params.id) {
+      const rpt = this.bus.sub({ topic: 'reports', id: params.id })
+      const stream = pickData()
+      streamx.pipeline(rpt, stream)
+      return stream
+    }
+    if (app instanceof this.App === false) {
+      LOG.error('reporting', 'invalid reports requests', params)
+      return
+    }
+    const stream = pickData()
+    streamx.pipeline(app.reporter, stream)
     return stream
   }
 
-  createReport (err, client) {
+  createReport (params, client) {
     if (client.userData instanceof this.App === false) {
-      console.trace('REPORT', err)
+      console.trace('REPORT', params)
       return
     }
-    return client.userData.report({ err: { message: err.message, stack: err.stack, code: err.code, clientCreated: true } })
+    return client.userData.report(params)
   }
 
   reported (params, client) {
@@ -688,260 +687,6 @@ class Sidecar extends ReadyResource {
     return client.userData.unloading()
   }
 
-  async start (params, client) {
-    const { flags, env, cwd, link, dir, args, cmdArgs, pkg = null } = params
-    const LOG_RUN_LINK = ['run', link]
-    if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
-    let { startId } = params
-    const starting = this.running.get(startId)
-    if (starting) {
-      LOG.info(LOG_RUN_LINK, startId, 'running, referencing existing client userData')
-      client.userData = starting.client.userData
-      return await starting.running
-    }
-    if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
-    startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-    LOG.info('session', 'new session for', startId)
-    const session = new Session(client)
-
-    await gcOrphanWorkers(this.apps)
-
-    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid)
-    this.running.set(startId, { client, running })
-    session.teardown(() => {
-      const free = this.running.get(startId)
-      LOG.info(LOG_RUN_LINK, client.userData.id, 'teardown')
-      LOG.info('session', 'tearing down for', startId)
-      if (free.running === running) {
-        this.running.delete(startId)
-        LOG.info(LOG_RUN_LINK, startId, 'removed from running set')
-      }
-    })
-
-    try {
-      const info = await running
-      if (this.updateAvailable !== null) {
-        const { version, info } = this.updateAvailable
-        LOG.info(LOG_RUN_LINK, client.userData.id, 'application update available, notifying application', version)
-        client.userData.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
-      }
-      return info
-    } catch (err) {
-      await session.close()
-      LOG.info('session', 'session closed for', startId)
-      throw err
-    }
-  }
-
-  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid) {
-    const id = client.userData?.id || `${client.id}@${startId}`
-    const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
-    app.clients.add(client)
-    const LOG_RUN_LINK = ['run', link]
-    if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
-    LOG.info(LOG_RUN_LINK, 'ensuring sidecar ready')
-    await this.ready()
-    LOG.info(LOG_RUN_LINK, 'sidecar is ready')
-
-    const parsed = plink.parse(link)
-    LOG.info(LOG_RUN_LINK, id, 'loading encryption keys')
-
-    const key = parsed.drive?.key
-
-    if (key !== null && !flags.trusted) {
-      const trusted = await this.trusted(`pear://${hypercoreid.encode(key)}`)
-      if (!trusted) {
-        const state = new State({ startId, id, env, link, dir, cwd, flags, args, cmdArgs, run: true })
-        app.state = state // needs to setup app state for decal trust dialog restart
-        const err = new ERR_PERMISSION_REQUIRED('Permission required to run key', { key })
-        app.report({ err })
-        LOG.info(LOG_RUN_LINK, id, 'untrusted - bailing')
-        return { startId, bail: err }
-      }
-    }
-
-    if (parsed.protocol !== 'pear:' && !link.startsWith('file:')) link = pathToFileURL(link).href
-
-    link = plink.normalize(link)
-
-    const { encryptionKey, appStorage } = await this.model.getBundle(link) || await this.model.addBundle(link, State.storageFromLink(parsed))
-
-    await fs.promises.mkdir(appStorage, { recursive: true })
-
-    const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: DHT_BOOTSTRAP }
-    await this.model.setDhtNodes(dht.nodes)
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage, pid })
-
-    const applingPath = state.appling?.path
-    if (applingPath && state.key !== null) {
-      const applingKey = state.key.toString('hex')
-      LOG.info(LOG_RUN_LINK, id, 'appling detected, storing path')
-      await this.applings.set(applingKey, applingPath)
-    }
-
-    app.state = state
-
-    if (state.key === null) {
-      LOG.info(LOG_RUN_LINK, id, 'running from disk')
-      const drive = new LocalDrive(state.dir, { followExternalLinks: true, followLinks: state.followSymlinks })
-      this.#updatePearInterface(drive)
-      const appBundle = new Bundle({
-        drive,
-        updatesDiff: state.updatesDiff,
-        updateNotify: state.updates && ((version, info) => this.updateNotify(version, info))
-      })
-      const linker = new ScriptLinker(appBundle, {
-        builtins: this.gunk.builtins,
-        map: this.gunk.app.map,
-        mapImport: this.gunk.app.mapImport,
-        symbol: this.gunk.app.symbol,
-        protocol: this.gunk.app.protocol,
-        runtimes: this.gunk.app.runtimes
-      })
-      LOG.info('session', 'adding appBundle to session for', startId)
-      await session.add(appBundle)
-      LOG.info('session', 'appBundle added to session for', startId)
-      app.linker = linker
-      app.bundle = appBundle
-
-      LOG.info(LOG_RUN_LINK, id, 'initializing state')
-
-      try {
-        await state.initialize({ bundle: appBundle, app, pkg })
-        LOG.info(LOG_RUN_LINK, id, 'state initialized')
-      } catch (err) {
-        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
-        if (err.code === 'ERR_CONNECTION' || err.code === 'ERR_INVALID_CONFIG') app.report({ err })
-      }
-      LOG.info(LOG_RUN_LINK, id, 'checking minver')
-      const updating = await app.minver()
-      if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      else LOG.info(LOG_RUN_LINK, id)
-      const bundle = await app.bundle.bundle(state.entrypoint)
-      LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle }
-    }
-
-    LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
-    const corestore = this._getCorestore(state.manifest?.name, state.channel)
-    let drive
-    try {
-      drive = new Hyperdrive(corestore, state.key, { encryptionKey })
-      await drive.ready()
-    } catch (err) {
-      if (err.code !== 'DECODING_ERROR') {
-        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failure checking for encryption for', link, 'app id:', id, err)
-        throw err
-      }
-      LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
-      const permissionError = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-      app.report({ err: permissionError })
-      return { startId, bail: permissionError }
-    }
-
-    const appBundle = new Bundle({
-      encryptionKey,
-      corestore,
-      appling: state.appling,
-      channel: state.channel,
-      checkout: parsedLink.drive.length !== null ? parsedLink.drive.length : state.checkout,
-      key: state.key,
-      name: state.manifest?.name,
-      dir: state.key ? null : state.dir,
-      updatesDiff: state.updatesDiff,
-      drive,
-      updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
-      async failure (err) {
-        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failure creating drive bundle for', link, 'app id:', id, err)
-        app.report({ err })
-      }
-    })
-
-    LOG.info('session', 'adding appBundle to session for', startId)
-    await session.add(appBundle)
-    LOG.info('session', 'appBundle added to session for', startId)
-
-    if (this.swarm) appBundle.join(this.swarm)
-
-    const linker = new ScriptLinker(appBundle, {
-      builtins: this.gunk.builtins,
-      map: this.gunk.app.map,
-      mapImport: this.gunk.app.mapImport,
-      symbol: this.gunk.app.symbol,
-      protocol: this.gunk.app.protocol,
-      runtimes: this.gunk.app.runtimes
-    })
-
-    app.linker = linker
-    app.bundle = appBundle
-
-    try {
-      await appBundle.calibrate()
-    } catch (err) {
-      if (err.code === 'DECODING_ERROR') {
-        LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
-        const bail = new ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-        app.report({ err: bail })
-        return { startId, bail }
-      } else {
-        LOG.error(LOG_RUN_LINK, 'Failure creating drive bundle for', link, 'app id:', id, err)
-        LOG.info('session', 'closing session for', startId)
-        await session.close()
-        LOG.info('session', 'session closed for', startId)
-        throw err
-      }
-    }
-
-    LOG.info(LOG_RUN_LINK, id, 'initializing state')
-    try {
-      await state.initialize({ bundle: appBundle, app })
-      LOG.info(LOG_RUN_LINK, id, 'state initialized')
-    } catch (err) {
-      LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
-      if (err.code === 'ERR_CONNECTION') app.report({ err })
-    }
-    if (appBundle.platformVersion !== null) {
-      app.report({ type: 'upgrade' })
-      LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-      const bundle = await app.bundle.bundle(state.entrypoint)
-      LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle }
-    }
-
-    LOG.info(LOG_RUN_LINK, id, 'checking minver')
-    const updating = await app.minver()
-    if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-    else LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-    const bundle = await app.bundle.bundle(state.entrypoint)
-    LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { id, startId, bundle }
-    // start is tied to the lifecycle of the client itself so we don't tear it down
-  }
-
-  async #updatePearInterface (drive) {
-    try {
-      const pkgEntry = await drive.entry('/package.json')
-      if (pkgEntry === null) return
-      const pkg = JSON.parse(await drive.get(pkgEntry))
-      const isDevDep = !!pkg.devDependencies?.['pear-interface']
-      if (isDevDep === false) return
-      const pearInterfacePkgEntry = await drive.entry('/node_modules/pear-interface/package.json')
-      if (pearInterfacePkgEntry === null) return
-      const projPkg = JSON.parse(await drive.get(pearInterfacePkgEntry))
-      const platPkg = JSON.parse(await this.drive.get('/node_modules/pear-interface/package.json'))
-      if (projPkg.version === platPkg.version) return
-      const tmp = path.join(drive.root, 'node_modules', '.pear-interface.next')
-      const mirror = this.drive.mirror(new LocalDrive(tmp), { prefix: '/node_modules/pear-interface' })
-      await mirror.done()
-      const next = path.join(tmp, 'node_modules', 'pear-interface')
-      const current = path.join(drive.root, 'node_modules', 'pear-interface')
-      await fsx.swap(next, current)
-      await fs.promises.rm(tmp, { recursive: true })
-    } catch (err) {
-      LOG.error('internal', 'Unexpected error while attempting to update pear-interface in project', drive.root, err)
-    }
-  }
-
   async #ensureSwarm () {
     try {
       await this.corestore.ready()
@@ -951,20 +696,20 @@ class Sidecar extends ReadyResource {
       throw err
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    if (DHT_BOOTSTRAP) LOG.info('sidecar', 'DHT bootstrap set', DHT_BOOTSTRAP)
+    if (this.nodes) LOG.info('sidecar', 'DHT bootstrap set', this.nodes)
     const knownNodes = await this.model.getDhtNodes()
-    const nodes = DHT_BOOTSTRAP ? undefined : knownNodes
+    const nodes = this.nodes ? undefined : knownNodes
     if (nodes) {
       LOG.info('sidecar', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
       LOG.trace('sidecar', nodes.map(node => `  - ${node.host}:${node.port}`).join('\n'))
     }
-    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: DHT_BOOTSTRAP, nodes })
+    this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.nodes, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
     if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
   }
 
-  _getCorestore (name, channel, opts) {
+  getCorestore (name, channel, opts) {
     if (!name || !channel) return this.corestore.session({ writable: false, ...opts })
     return this.corestore.namespace(`${name}~${channel}`, { writable: false, ...opts })
   }
@@ -985,7 +730,7 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.swarm) {
-      if (!DHT_BOOTSTRAP) {
+      if (!this.nodes) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
           await this.model.setDhtNodes(knownNodes)
