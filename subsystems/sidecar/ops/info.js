@@ -21,7 +21,7 @@ module.exports = class Info extends Opstream {
     const isEnabled = (flag) => enabledFlags.size > 0 ? !!flag : !flag
 
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
-    const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
+    const corestore = link ? this.sidecar.getCorestore(null, null) : this.sidecar.getCorestore(state.name, channel)
 
     const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
