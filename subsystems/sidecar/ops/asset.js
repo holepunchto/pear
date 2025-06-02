@@ -22,7 +22,6 @@ module.exports = class Asset extends Opstream {
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
     const key = parsed.drive.key
-    const checkout = parsed.drive.length
 
     const query = await this.sidecar.model.getBundle(parsed)
     const encryptionKey = query?.encryptionKey
@@ -42,6 +41,7 @@ module.exports = class Asset extends Opstream {
       parsed.drive.length = drive.version
       link = plink.serialize(parsed)
     }
+    const checkout = parsed.drive.length
 
     const asset = await model.touchAsset(link)
     asset.forced = force
