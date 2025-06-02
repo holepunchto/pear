@@ -38,7 +38,7 @@ module.exports = class Asset extends Opstream {
       }
     }
     if (parsed.drive.length === null && drive) {
-      parsed.drive.length = drive.version
+      parsed.drive.length = drive.core.length
       link = plink.serialize(parsed)
     }
     const checkout = parsed.drive.length
