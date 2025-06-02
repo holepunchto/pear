@@ -5,7 +5,6 @@ const DBLock = require('db-lock')
 const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
 const { PLATFORM_DIR } = require('pear-api/constants')
-const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
 
 const origin = (link) => typeof link === 'string' ? plink.parse(link).origin : link.origin
@@ -40,9 +39,6 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    const isPearLink = link.startsWith('pear://')
-    const isFileUrl = link.startsWith('file://')
-    link = isPearLink || isFileUrl ? link : pathToFileURL(link).href
     const get = { link: origin(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await this.db.get('@pear/bundle', get)

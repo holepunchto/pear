@@ -30,7 +30,7 @@ module.exports = class Stage extends Opstream {
 
     await State.build(state, pkg)
 
-    const corestore = sidecar._getCorestore(name || state.name, channel, { writable: true })
+    const corestore = sidecar.getCorestore(name || state.name, channel, { writable: true })
     await corestore.ready()
 
     key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
