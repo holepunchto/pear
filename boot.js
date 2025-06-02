@@ -13,7 +13,6 @@ API.CONSTANTS = require('pear-api/constants')
 if (isWindows === false) {
   const fs = require('bare-fs')
   const os = require('bare-os')
-
   const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
   const user = os.userInfo()
 

@@ -5,7 +5,6 @@ const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
-const subsystem = require('./subsystem')
 const crasher = require('pear-api/crasher')
 const teardown = require('pear-api/teardown')
 const {
@@ -19,7 +18,10 @@ const {
   WAKEUP
 } = require('pear-api/constants')
 const gunk = require('pear-api/gunk')
+const pear = require('pear-api/cmd')
 const registerUrlHandler = require('./url-handler')
+const subsystem = require('./subsystem')
+
 crasher('sidecar', SWAP)
 
 LOG.info('sidecar', '- Sidecar Booting')
@@ -37,6 +39,12 @@ async function bootSidecar () {
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
+  const nodes = pear(Bare.argv.slice(1)).flags.dhtBootstrap?.split(',').map((tuple) => {
+    const [host, port] = tuple.split(':')
+    const int = +port
+    if (Number.isInteger(int) === false) throw new Error(`Invalid port: ${port}`)
+    return { host, port: int }
+  })
   const corestore = new Corestore(PLATFORM_CORESTORE, { globalCache, manifestVersion: 1, compat: false })
   await corestore.ready()
 
@@ -44,7 +52,8 @@ async function bootSidecar () {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
 
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk })
+
+  const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
