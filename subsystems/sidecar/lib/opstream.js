@@ -4,7 +4,7 @@ const plink = require('pear-api/link')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
   final = {}
-  constructor (op, params, client, sidecar = null, { sessionless = false } = {}) {
+  constructor (op, params, client, sidecar = null, { autosession = true } = {}) {
     super({
       read (cb) {
         let success = true
@@ -17,7 +17,7 @@ module.exports = class Opstream extends streamx.Readable {
           this.push({ tag: 'final', data: { success, ...this.final } })
           this.push(null)
           cb(null)
-          if (sessionless === false) return this.session.close()
+          if (autosession) return this.session.close()
         }
         if (params.link) params.link = plink.normalize(params.link)
         op(params).catch(error).finally((close))
@@ -25,6 +25,6 @@ module.exports = class Opstream extends streamx.Readable {
     })
     this.client = client
     this.sidecar = sidecar
-    this.session = sessionless ? null : new Session(client)
+    this.session = autosession ? new Session(client) : null
   }
 }

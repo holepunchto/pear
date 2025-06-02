@@ -33,7 +33,6 @@ module.exports = class State extends SharedState {
     }
     state.entrypoints = new Set(state.options.stage?.entrypoints || [])
     state.routes = state.options.routes || null
-    state.route = '/' + state.linkData
     const unrouted = new Set(Array.isArray(state.options.unrouted) ? state.options.unrouted : [])
     unrouted.add('/node_modules/.bin/')
     state.unrouted = Array.from(unrouted)
