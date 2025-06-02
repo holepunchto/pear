@@ -19,27 +19,15 @@ module.exports = class Asset extends Opstream {
     const unlock = model.lock.manual()
     session.teardown(unlock)
     const parsed = plink.parse(link)
-    // TODO
-    // if (parsed.drive.length === null) {
-    //   parsed.drive.length = getLatestDriveLength()
-    //   link = plink.serialize(parsed)
-    // }
-    const asset = await model.touchAsset(link)
-    asset.forced = force
-    this.final = asset
-    if (asset.forced === false && asset.inserted === false) return
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
-
     const key = parsed.drive.key
     const checkout = parsed.drive.length
 
     const query = await this.sidecar.model.getBundle(parsed)
     const encryptionKey = query?.encryptionKey
-
     const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
     let drive = null
-
     if (corestore) {
       await corestore.ready()
       try {
@@ -50,6 +38,16 @@ module.exports = class Asset extends Opstream {
         throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
       }
     }
+    if (parsed.drive.length === null && drive) {
+      parsed.drive.length = drive.version
+      link = plink.serialize(parsed)
+    }
+
+    const asset = await model.touchAsset(link)
+    asset.forced = force
+    this.final = asset
+    if (asset.forced === false && asset.inserted === false) return
+
     const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
     const bundle = new Bundle({
       corestore,
