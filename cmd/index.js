@@ -351,7 +351,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     const reason = codemap.has(code) ? codemap.get(code)(bail) : bail.reason
 
     print(reason, false)
-    if (codemap.get(code) === messageOnly) return
+    if (codemap.get(code) === messageOnly || codemap.has(code) === false) return
     print('\n' + bail.command.usage())
     Bare.exitCode = 1
   }
