@@ -56,7 +56,7 @@ const assetsOutput = (assets) => {
       out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${bytesToMb(asset.bytesAllocated)} MB)\n`
       totalAllocated += asset.bytesAllocated
     }
-    out += `\n${ansi.bold('Total:')} ${bytesToMb(totalAllocated)} MB\n`
+    out += `\n${ansi.bold('Total')}: ${bytesToMb(totalAllocated)} MB\n`
   }
   return out
 }
