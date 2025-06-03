@@ -237,7 +237,6 @@ module.exports = class Model {
         const gc = { path: asset.path }
         LOG.trace('db', 'INSERT', '@pear/gc', gc)
         await tx.insert('@pear/gc', gc)
-
         LOG.trace('db', 'DELETE', '@pear/asset', asset)
         await tx.delete('@pear/asset', asset)
       }
@@ -245,11 +244,11 @@ module.exports = class Model {
     }
 
     LOG.trace('db', 'FIND ONE', '@pear/gc')
-    const record = await this.db.findOne('@pear/gc')
-    if (record) {
-      LOG.trace('db', '- GC removing directory', record.path)
-      await fs.promises.rm(record.path, { recursive: true, force: true })
-      const get = { path: record.path }
+    const entry = await this.db.findOne('@pear/gc')
+    if (entry) {
+      LOG.trace('db', '- GC removing directory', entry.path)
+      await fs.promises.rm(entry.path, { recursive: true, force: true })
+      const get = { path: entry.path }
       const tx = await this.lock.enter()
       LOG.trace('db', 'DELETE', '@pear/gc', get)
       await tx.delete('@pear/gc', get)
