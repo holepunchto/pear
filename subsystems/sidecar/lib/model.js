@@ -1,4 +1,5 @@
 'use strict'
+const fs = require('bare-fs')
 const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
@@ -147,24 +148,6 @@ module.exports = class Model {
     return { assets, totalAllocated }
   }
 
-  async gcFirstAsset () {
-    const tx = await this.lock.enter()
-    LOG.trace('db', 'FIND ONE', '@pear/asset')
-    const asset = await tx.findOne('@pear/asset')
-    if (!asset) {
-      await this.lock.exit()
-      return null
-    }
-
-    const gc = { path: asset.path }
-    LOG.trace('db', 'INSERT', '@pear/gc', gc)
-    await tx.insert('@pear/gc', gc)
-
-    LOG.trace('db', 'DELETE', '@pear/asset', asset)
-    await tx.delete('@pear/asset', asset)
-    await this.lock.exit()
-  }
-
   async getDhtNodes () {
     LOG.trace('db', 'GET', '@pear/dht', '[nodes]')
     return (await this.db.get('@pear/dht'))?.nodes || []
@@ -243,17 +226,37 @@ module.exports = class Model {
     return await this.db.find('@pear/gc').toArray()
   }
 
-  async firstGc () {
-    LOG.trace('db', 'FIND ONE', '@pear/gc')
-    return await this.db.findOne('@pear/gc')
-  }
+  async gc () {
+    const { totalAllocated } = await this.allAssets()
+    const maxCapacity = 12 * 1024 ** 3
+    if (totalAllocated > maxCapacity) {
+      const tx = await this.lock.enter()
+      LOG.trace('db', 'FIND ONE', '@pear/asset')
+      const asset = await tx.findOne('@pear/asset')
+      if (asset) {
+        const gc = { path: asset.path }
+        LOG.trace('db', 'INSERT', '@pear/gc', gc)
+        await tx.insert('@pear/gc', gc)
 
-  async deleteGc (path) {
-    const get = { path }
-    const tx = await this.lock.enter()
-    LOG.trace('db', 'DELETE', '@pear/gc', get)
-    await tx.delete('@pear/gc', get)
-    await this.lock.exit()
+        LOG.trace('db', 'DELETE', '@pear/asset', asset)
+        await tx.delete('@pear/asset', asset)
+      }
+      await this.lock.exit()
+    }
+
+    LOG.trace('db', 'FIND ONE', '@pear/gc')
+    const record = await this.db.findOne('@pear/gc')
+    if (record) {
+      LOG.trace('db', '- GC removing directory', record.path)
+      await fs.promises.rm(record.path, { recursive: true, force: true })
+      const get = { path: record.path }
+      const tx = await this.lock.enter()
+      LOG.trace('db', 'DELETE', '@pear/gc', get)
+      await tx.delete('@pear/gc', get)
+      await this.lock.exit()
+    } else {
+      LOG.trace('db', '- GC is clear')
+    }
   }
 
   async getManifest () {

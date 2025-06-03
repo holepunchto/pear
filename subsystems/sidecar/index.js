@@ -292,9 +292,9 @@ class Sidecar extends ReadyResource {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
 
-    this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err))
+    this._gcCycle().catch(err => LOG.error('sidecar', 'GC cycle error', err))
     const gcCycleMs = 10 * 60 * 1000
-    this.gcInterval = setInterval(() => { this._gcRunCycle().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
+    this.gcInterval = setInterval(() => { this._gcCycle().catch(err => LOG.error('sidecar', 'GC cycle error', err)) }, gcCycleMs)
   }
 
   get clients () { return this.ipc.clients }
@@ -706,19 +706,9 @@ class Sidecar extends ReadyResource {
     return this.corestore.namespace(`${name}~${channel}`, { writable: false, ...opts })
   }
 
-  async _gcRunCycle () {
-    LOG.info('sidecar', '- GC run cycle')
-    const { totalAllocated } = await this.model.allAssets()
-    const maxCapacity = 12 * 1024 ** 3
-    if (totalAllocated > maxCapacity) await this.model.gcFirstAsset()
-    const record = await this.model.firstGc()
-    if (!record) {
-      LOG.trace('sidecar', '- GC is clear')
-      return
-    }
-    LOG.trace('sidecar', '- GC removing directory', record.path)
-    await fs.promises.rm(record.path, { recursive: true, force: true })
-    await this.model.deleteGc(record.path)
+  async _gcCycle () {
+    LOG.info('sidecar', '- GC cycle')
+    await this.model.gc()
   }
 
   async #shutdown (client) {
