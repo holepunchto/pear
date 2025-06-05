@@ -1,4 +1,6 @@
 'use strict'
+const bareInspector = require('bare-inspector')
+const { Inspector } = require('pear-inspect')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
@@ -144,6 +146,8 @@ class Sidecar extends ReadyResource {
 
     this.http = new Http(this)
     this.running = new Map()
+
+    this._inspector = new Inspector({ inspector: bareInspector })
 
     const sidecar = this
     this.App = class App {
@@ -303,7 +307,7 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
+      this.ready().then(() => { global.sidecar = this }).catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
   }
 
@@ -312,6 +316,9 @@ class Sidecar extends ReadyResource {
     await this.http.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
+
+    const key = await this._inspector.enable()
+    this._inspectorKey = key.toString('hex')
   }
 
   get clients () { return this.ipc.clients }
@@ -984,6 +991,7 @@ class Sidecar extends ReadyResource {
   }
 
   async _close () {
+    this._inspector.disable()
     if (this.decomissioned) return
     this.decomissioned = true
     for (const client of this.clients) await this.#teardownPipelines(client)
