@@ -2,6 +2,7 @@
 const plink = require('pear-api/link')
 const { outputter, ansi } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const byteSize = require('tiny-byte-size')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -46,17 +47,16 @@ const manifestOutput = (manifest) => {
 
 const assetsOutput = (assets) => {
   if (!assets.length) return placeholder
-  const bytesToMb = bytes => Math.round(bytes / 1e6)
   let totalAllocated = 0
   let out = ''
   for (const asset of assets) {
     out += `- ${ansi.bold(asset.link)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
     if (asset.bytesAllocated) {
-      out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${bytesToMb(asset.bytesAllocated)} MB)\n`
+      out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${byteSize(asset.bytesAllocated)} MB)\n`
       totalAllocated += asset.bytesAllocated
     }
-    out += `\n${ansi.bold('Total')}: ${bytesToMb(totalAllocated)} MB\n`
+    out += `\n${ansi.bold('Total')}: ${byteSize(totalAllocated)} MB\n`
   }
   return out
 }
