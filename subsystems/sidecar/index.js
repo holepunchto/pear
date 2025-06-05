@@ -292,9 +292,9 @@ class Sidecar extends ReadyResource {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
 
-    this._gcCycle().catch(err => LOG.error('sidecar', 'GC cycle error', err))
+    this.model.gc().catch(err => LOG.error('sidecar', 'GC error', err))
     const gcCycleMs = 10 * 60 * 1000
-    this.gcInterval = setInterval(() => { this._gcCycle().catch(err => LOG.error('sidecar', 'GC cycle error', err)) }, gcCycleMs)
+    this.gcInterval = setInterval(() => { this.model.gc().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
   }
 
   get clients () { return this.ipc.clients }
@@ -704,11 +704,6 @@ class Sidecar extends ReadyResource {
   getCorestore (name, channel, opts) {
     if (!name || !channel) return this.corestore.session({ writable: false, ...opts })
     return this.corestore.namespace(`${name}~${channel}`, { writable: false, ...opts })
-  }
-
-  async _gcCycle () {
-    LOG.info('sidecar', '- GC cycle')
-    await this.model.gc()
   }
 
   async #shutdown (client) {
