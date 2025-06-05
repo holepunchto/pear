@@ -96,6 +96,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
   class Reporter {
     display (rpt) {
+      if (rpt.type === 'permission-required') return // handled in bail
       console.error(ansi.warning, ansi.bold(rpt.headline.content))
       console.error(rpt.tagline.content)
       if (rpt.message) console.error(rpt.message)
