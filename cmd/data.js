@@ -39,11 +39,16 @@ const gcOutput = (records) => {
   return out
 }
 
+const inspectOutput = (inspectorKey) => {
+  return `- Inspector key: ${inspectorKey}`
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result)
+  gc: (result) => gcOutput(result),
+  inspect: (result) => inspectOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -80,5 +85,12 @@ class Data {
     const { json } = command.parent.flags
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
+  }
+
+  async inspect (cmd) {
+    const { command } = cmd
+    const result = await this.ipc.data({ resource: 'inspect' })
+    const { json } = command.parent.flags
+    await output(json, result, { tag: 'inspect' }, this.ipc)
   }
 }
