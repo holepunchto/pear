@@ -53,10 +53,10 @@ const assetsOutput = (assets) => {
     out += `- ${ansi.bold(asset.link)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
     if (asset.bytesAllocated) {
-      out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${byteSize(asset.bytesAllocated)} MB)\n`
+      out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${byteSize(asset.bytesAllocated)})\n`
       totalAllocated += asset.bytesAllocated
     }
-    out += `\n${ansi.bold('Total')}: ${byteSize(totalAllocated)} MB\n`
+    out += `\n${ansi.bold('Total')}: ${byteSize(totalAllocated)}\n`
   }
   return out
 }
