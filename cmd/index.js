@@ -43,7 +43,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
     flag('--force|-f', 'Force overwrite existing files'),
-    flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-ask', 'Suppress permission prompt'),
     runners.init(ipc)
   )
 
@@ -68,7 +68,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
     flag('--name <name>', 'Advanced. Override app name'),
-    flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     runners.seed(ipc)
   )
@@ -90,7 +90,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--name <name>', 'Advanced. Override app name'),
-    flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-pre', 'Skip pre scripts'),
     flag('--preio', 'Show stdout & stderr of pre scripts'),
     flag('--prequiet', 'Suppress piped output of pre scripts'),
@@ -139,7 +139,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
     flag('--key', 'View key only'),
-    flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     runners.info(ipc)
   )
@@ -154,7 +154,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
-    flag('--no-ask', 'Suppress permissions dialogs'),
+    flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-prune', 'Prevent removal of existing paths'),
     flag('--json', 'Newline delimited JSON output'),
     validate((cmd) => {
