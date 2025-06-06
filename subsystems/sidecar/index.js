@@ -136,14 +136,12 @@ class Sidecar extends ReadyResource {
       app = null
       unload = null
       unloader = null
-      minvering = false
       reporter = null
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
         if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permission(report)
-        if (report.err?.code === 'ERR_INVALID_LENGTH') return reports.minver(report)
         if (report.err?.code === 'ERR_CONNECTION') return reports.connection()
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
         const args = [report.err?.message, report.err?.stack, report.info || report.err]
@@ -188,48 +186,6 @@ class Sidecar extends ReadyResource {
           return { input, output }
         } catch {
           return null
-        }
-      }
-
-      async minver () {
-        const { state } = this
-        if (state.options.minver && this.sidecar.updater !== null) {
-          this.minvering = true
-          const current = {
-            length: this.sidecar.drive.version,
-            fork: this.sidecar.drive.fork ?? 0,
-            key: this.sidecar.drive.core.id
-          }
-          const minver = {
-            key: hypercoreid.normalize(state.options.minver.key),
-            length: state.options.minver.length,
-            fork: state.options.minver.fork ?? 0
-          }
-          if (minver.key !== current.key) {
-            LOG.error('internal', 'Specified minver key', minver.key, ' does not match current version key', current.key, '. Ignoring.\nminver:', minver, '\ncurrent:', this.version)
-          } else if (typeof minver.length !== 'number') {
-            LOG.error('internal', `Invalid minver (length is required). Ignoring. minver: ${minver.fork}.${minver.length}.${minver.key}`)
-          } else if (minver.length > current.length) {
-            const checkout = {
-              length: minver.length,
-              fork: minver.fork || 0,
-              key: minver.key,
-              force: { reason: 'minver' },
-              applink: state.applink,
-              current
-            }
-
-            this.report({ type: 'update', version: checkout })
-
-            try {
-              await this.sidecar.updater.wait(checkout)
-              this.sidecar.updateNotify(checkout)
-              return true
-            } catch (err) {
-              this.report({ err })
-            }
-          }
-          this.minvering = false
         }
       }
 
@@ -313,7 +269,7 @@ class Sidecar extends ReadyResource {
 
   async updatingNotify (checkout = null) {
     for await (const app of this.apps) {
-      if (!app || app.minvering === true) continue
+      if (!app) continue
 
       app.message({ type: 'pear/updates', app: false, version: checkout, diff: null, updating: true, updated: false })
     }
@@ -332,7 +288,7 @@ class Sidecar extends ReadyResource {
     const messaged = new Set()
 
     for await (const app of this.apps) {
-      if (!app || (app.minvering === true && !version.force)) continue
+      if (!app) continue
 
       if (messaged.has(app)) continue
       messaged.add(app)
