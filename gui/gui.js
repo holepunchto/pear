@@ -712,10 +712,10 @@ function applyGuiOption (win, key, value) {
       let y = Math.round(curY - ((height - currentHeight) / 2))
       x = x < 0 ? 0 : x
       y = y < 0 ? 0 : y
-      try { win.setPosition(x, y, true) } catch { /* ignore */ }
-      return win.setSize(parseConfigNumber(width, 'gui.width'), parseConfigNumber(height, 'gui.height'), true)
+      try { win.setPosition(x, y) } catch { /* ignore */ }
+      return win.setSize(parseConfigNumber(width, 'gui.width'), parseConfigNumber(height, 'gui.height'))
     }
-    case 'x:y': return win.setPosition(value[0], value[1], true)
+    case 'x:y': return win.setPosition(value[0], value[1])
     case 'center': return value && win.center()
     case 'minWidth:minHeight': return win.setMinimumSize(parseConfigNumber(value[0], 'gui.minWidth'), parseConfigNumber(value[1], 'gui.minHeight'))
     case 'maxWidth:maxHeight': return win.setMaximumSize(parseConfigNumber(value[0], 'gui.maxWidth'), parseConfigNumber(value[1], 'gui.maxHeight'))
@@ -915,9 +915,9 @@ class GuiCtrl {
     const bounds = item.getBounds()
     if (opts === null) return bounds
     const {
-      x = bounds.x, y = bounds.y, width = bounds.width, height = bounds.height, animate, position
+      x = bounds.x, y = bounds.y, width = bounds.width, height = bounds.height, position
     } = opts
-    item.setBounds({ x, y, width, height }, animate)
+    item.setBounds({ x, y, width, height })
     if (position === 'center' && this[kCtrl] === 'win') {
       item.center()
     }
