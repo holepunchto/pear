@@ -44,13 +44,6 @@ const upgrade = () => ({
   cta: { content: 'QUIT', action: 'quit' }
 })
 
-const minver = (report) => ({
-  type: 'minver',
-  headline: { content: 'This application specifies a non-existent minimum platform version' },
-  tagline: { content: report.err?.checkout ? `v${report.err.checkout.fork}.${report.err.checkout.length}.${report.err.checkout.key} cannot be found` : JSON.stringify(report) },
-  cta: { content: 'QUIT', action: 'quit' }
-})
-
 const update = (report) => {
   const { version } = report
   const { current } = version
@@ -72,4 +65,4 @@ const permission = (report) => {
   }
 }
 
-module.exports = { generic, crash, dev, connection, upgrade, minver, update, permission }
+module.exports = { generic, crash, dev, connection, upgrade, update, permission }
