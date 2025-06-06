@@ -147,10 +147,7 @@ module.exports = class Run extends Opstream {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
         throw err
       }
-      LOG.info(LOG_RUN_LINK, id, 'checking minver')
-      const updating = await app.minver()
-      if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-      else LOG.info(LOG_RUN_LINK, id)
+      LOG.info(LOG_RUN_LINK, id)
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
@@ -230,10 +227,7 @@ module.exports = class Run extends Opstream {
       return { id, startId, bundle }
     }
 
-    LOG.info(LOG_RUN_LINK, id, 'checking minver')
-    const updating = await app.minver()
-    if (updating) LOG.info(LOG_RUN_LINK, id, 'minver updating:', !!updating)
-    else LOG.info(LOG_RUN_LINK, id, 'app bundling..')
+    LOG.info(LOG_RUN_LINK, id, 'app bundling..')
     const bundle = await app.bundle.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { id, startId, bundle }
