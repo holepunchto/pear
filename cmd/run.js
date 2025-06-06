@@ -118,10 +118,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
   const { startId, id, bundle, bail, success } = await opwait(stream)
   if (bail) {
-    if (bail.code === 'ERR_PERMISSION_REQUIRED') {
-      if (flags.detach || flags.appling) return // handled by ui
-      return permit(ipc, bail.info, 'run')
-    }
+    if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
   }
   if (success === false) return
