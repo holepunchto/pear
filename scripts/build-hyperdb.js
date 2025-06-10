@@ -86,6 +86,22 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'asset',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'path',
+      type: 'string',
+      required: true
+    }
+  ]
+})
+
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -112,6 +128,12 @@ pearDB.collections.register({
 pearDB.collections.register({
   name: 'bundle',
   schema: '@pear/bundle',
+  key: ['link']
+})
+
+pearDB.collections.register({
+  name: 'asset',
+  schema: '@pear/asset',
   key: ['link']
 })
 

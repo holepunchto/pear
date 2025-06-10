@@ -1,58 +1,77 @@
 'use strict'
+const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
-const pearLink = require('pear-link')
+const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
-const { ALIASES } = require('../../../constants')
+const { PLATFORM_DIR } = require('pear-api/constants')
+const { randomBytes } = require('hypercore-crypto')
 
-module.exports = class Model {
-  constructor (corestore) {
-    this.db = HyperDB.rocks(corestore.storage.rocks.session(), dbSpec)
+const origin = (link) => typeof link === 'string' ? plink.parse(link).origin : link.origin
 
-    this.lock = new DBLock({
-      enter: () => {
-        return this.db.transaction()
-      },
-      exit: tx => {
-        return tx.flush()
-      },
+class Lock extends DBLock {
+  #manual = false
+  constructor (db) {
+    super({
+      enter: () => db.transaction(),
+      exit: (tx) => tx.flush(),
       maxParallel: 1
     })
   }
 
+  exit () {
+    if (this.#manual) return Promise.resolve()
+    return super.exit()
+  }
+
+  manual () {
+    this.#manual = true
+    return async () => {
+      try { await super.exit() } finally { this.#manual = false }
+    }
+  }
+}
+
+module.exports = class Model {
+  constructor (corestore) {
+    this.db = HyperDB.rocks(corestore.storage.rocks.session(), dbSpec)
+    this.lock = new Lock(this.db)
+  }
+
   async getBundle (link) {
-    const { origin } = pearLink(ALIASES)(link)
-    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link: origin })})`)
-    const bundle = await this.db.get('@pear/bundle', { link: origin })
+    const get = { link: origin(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
     return bundle
   }
 
   async allBundles () {
-    LOG.trace('db', 'FIND (\'@pear/bundle\')')
+    LOG.trace('db', 'FIND', '@pear/bundle')
     return await this.db.find('@pear/bundle').toArray()
   }
 
   async addBundle (link, appStorage) {
-    const { origin } = pearLink(ALIASES)(link)
     const tx = await this.lock.enter()
-    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ link: origin, appStorage })})`)
-    await tx.insert('@pear/bundle', { link: origin, appStorage })
+    const bundle = { link: origin(link), appStorage }
+    LOG.trace('db', 'INSERT', '@pear/bundle', bundle)
+    await tx.insert('@pear/bundle', bundle)
     await this.lock.exit()
-    return { link, appStorage }
+    return bundle
   }
 
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
-    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })} })`)
-    const bundle = await tx.get('@pear/bundle', { link })
+    const get = { link: origin(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
       result = null
     } else {
-      const updatedBundle = { ...bundle, encryptionKey }
-      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify({ ...bundle, encryptionKey })})`)
-      await tx.insert('@pear/bundle', updatedBundle)
-      result = updatedBundle
+      const update = { ...bundle, encryptionKey }
+      LOG.trace('db', 'INSERT', '@pear/bundle', update)
+      await tx.insert('@pear/bundle', update)
+      result = update
     }
     await this.lock.exit()
     return result
@@ -61,93 +80,146 @@ module.exports = class Model {
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
-    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
-    const bundle = await tx.get('@pear/bundle', { link })
+    const get = { link: origin(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
       result = null
     } else {
-      const updatedBundle = { ...bundle, appStorage: newAppStorage }
-      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
-      await tx.insert('@pear/bundle', updatedBundle)
-      LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: oldStorage })})`)
-      await tx.insert('@pear/gc', { path: oldStorage })
-      result = updatedBundle
+      const insert = { ...bundle, appStorage: newAppStorage }
+      LOG.trace('db', 'INSERT', '@pear/bundle', insert)
+      await tx.insert('@pear/bundle', insert)
+      const gc = { path: oldStorage }
+      LOG.trace('db', 'INSERT', '@pear/gc', gc)
+      await tx.insert('@pear/gc', gc)
+      result = insert
     }
     await this.lock.exit()
     return result
   }
 
+  async touchAsset (link) {
+    const tx = await this.lock.enter()
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await tx.get('@pear/asset', get) ?? get
+    if (!asset.path) {
+      asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+      LOG.trace('db', 'INSERT', '@pear/asset', asset)
+      await tx.insert('@pear/asset', asset)
+      asset.inserted = true
+    } else {
+      asset.inserted = false
+    }
+    await this.lock.exit()
+    return asset
+  }
+
+  async getAsset (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await this.db.get('@pear/asset', get)
+    return asset
+  }
+
+  async allAssets () {
+    LOG.trace('db', 'FIND', '@pear/asset')
+    return await this.db.find('@pear/asset').toArray()
+  }
+
   async getDhtNodes () {
-    LOG.trace('db', 'GET (\'@pear/dht\')[nodes]')
+    LOG.trace('db', 'GET', '@pear/dht', '[nodes]')
     return (await this.db.get('@pear/dht'))?.nodes || []
   }
 
   async setDhtNodes (nodes) {
     const tx = await this.lock.enter()
-    LOG.trace('db', `INSERT ('@pear/dht', ${JSON.stringify(nodes)})`)
-    await tx.insert('@pear/dht', { nodes })
+    const insert = { nodes }
+    LOG.trace('db', 'INSERT', '@pear/dht', insert)
+    await tx.insert('@pear/dht', insert)
     await this.lock.exit()
   }
 
   async getTags (link) {
-    LOG.trace('db', `GET ('@pear/bundle', ${JSON.stringify({ link })})[tags]`)
-    return (await this.db.get('@pear/bundle', { link }))?.tags || []
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/bundle', get, '[tags]')
+    return (await this.db.get('@pear/bundle', get))?.tags || []
   }
 
   async updateTags (link, tags) {
     let result
     const tx = await this.lock.enter()
-    LOG.trace('db', `GET ('@pear/bundle', { link: ${link} })`)
-    const bundle = await tx.get('@pear/bundle', { link })
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
       result = null
     } else {
-      const updatedBundle = { ...bundle, tags }
-      LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedBundle)})`)
-      await tx.insert('@pear/bundle', updatedBundle)
-      result = updatedBundle
+      const update = { ...bundle, tags }
+      LOG.trace('db', 'INSERT', '@pear/bundle', update)
+      await tx.insert('@pear/bundle', update)
+      result = update
     }
     await this.lock.exit()
     return result
   }
 
   async getAppStorage (link) {
-    return (await this.db.get('@pear/bundle', { link }))?.appStorage
+    const get = { link: origin(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    return (await this.db.get('@pear/bundle', get))?.appStorage
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    LOG.trace('db', `GET ('@pear/bundle', { link: ${srcLink} })`)
-    const srcBundle = await tx.get('@pear/bundle', { link: srcLink })
-    LOG.trace('db', `GET ('@pear/bundle', { link: ${dstLink} })`)
-    const dstBundle = await tx.get('@pear/bundle', { link: dstLink })
+    const src = { link: origin(srcLink) }
+    LOG.trace('db', 'GET', '@pear/bundle', src)
+    const srcBundle = await tx.get('@pear/bundle', src)
+    const dst = { link: origin(dstLink) }
+    LOG.trace('db', 'GET', '@pear/bundle', dst)
+    const dstBundle = await tx.get('@pear/bundle', dst)
 
     if (!srcBundle || !dstBundle) {
       await this.lock.exit()
       return null
     }
 
-    const updatedDstBundle = { ...dstBundle, appStorage: srcBundle.appStorage }
-    LOG.trace('db', `INSERT ('@pear/bundle', ${JSON.stringify(updatedDstBundle)})`)
-    await tx.insert('@pear/bundle', updatedDstBundle)
-    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify({ path: dstBundle.appStorage })})`)
-    await tx.insert('@pear/gc', { path: dstBundle.appStorage })
+    const dstUpdate = { ...dstBundle, appStorage: srcBundle.appStorage }
+    LOG.trace('db', 'INSERT', '@pear/bundle', dstUpdate)
+    await tx.insert('@pear/bundle', dstUpdate)
+    const gc = { path: dstBundle.appStorage }
+    LOG.trace('db', 'INSERT', '@pear/gc', gc)
+    await tx.insert('@pear/gc', gc)
 
-    const updatedSrcBundle = { ...srcBundle, appStorage: newSrcAppStorage }
-    LOG.trace('db', `INSERT ('@pear/gc', ${JSON.stringify(updatedSrcBundle)})`)
-    await tx.insert('@pear/bundle', updatedSrcBundle)
+    const srcUpdate = { ...srcBundle, appStorage: newSrcAppStorage }
+    LOG.trace('db', 'INSERT', '@pear/gc', srcUpdate)
+    await tx.insert('@pear/bundle', srcUpdate)
 
     await this.lock.exit()
 
-    return { srcBundle: updatedSrcBundle, dstBundle: updatedDstBundle }
+    return { srcBundle: srcUpdate, dstBundle: dstUpdate }
   }
 
   async allGc () {
-    LOG.trace('db', 'FIND (\'@pear/gc\')')
+    LOG.trace('db', 'FIND', '@pear/gc')
     return await this.db.find('@pear/gc').toArray()
   }
 
+  async getManifest () {
+    LOG.trace('db', 'GET', '@pear/manifest')
+    return await this.db.get('@pear/manifest')
+  }
+
+  async setManifest (version) {
+    const manifest = { version }
+    const tx = await this.lock.enter()
+    LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
+    await tx.insert('@pear/manifest', manifest)
+    await this.lock.exit()
+  }
+
   async close () {
+    LOG.trace('db', 'CLOSE')
     await this.db.close()
   }
 }
