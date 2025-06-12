@@ -18,12 +18,36 @@ const output = outputter('stage', {
   }
 })
 
+function getFileNameFromPearUrl(url) {
+    if (url.startsWith('pear://')) {
+        const urlParts = url.slice(7).split('/')
+        const path = urlParts.slice(1).join('/')
+        if (path) {
+            const pathParts = path.split('/')
+            return pathParts[pathParts.length - 1]
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
+
 module.exports = (ipc) => async function dump (cmd) {
   const { dryRun, checkout, json, ask, force } = cmd.flags
   const { link } = cmd.args
+
   let { dir } = cmd.args
   if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
   if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
-  dir = dir === '-' ? '-' : (isAbsolute(dir) ? dir : resolve('.', dir))
+  if (dir === '-') {
+      dir = '-'
+  } else if (getFileNameFromPearUrl(link)) {
+      dir = '-'
+  }
+  else {
+      dir = isAbsolute(dir) ? dir : resolve('.', dir);
+  }
+
   await output(json, ipc.dump({ id: Bare.pid, link, dir, dryRun, checkout, force }), { ask }, ipc)
 }
