@@ -22,7 +22,7 @@ module.exports = class GC extends Opstream {
     const { resource } = this
     if (resource === 'releases') return this.releases(data)
     if (resource === 'sidecars') return this.sidecars(data)
-    if (resource === 'interfaces') return this.interfaces(data)
+    if (resource === 'assets') return this.assets(data)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
@@ -109,33 +109,6 @@ module.exports = class GC extends Opstream {
     })
   }
 
-  async interfaces ({ age = 2.592e9 }) { // default age, 30 days
-    const interfaces = path.join(PLATFORM_DIR, 'interfaces')
-    await fs.promises.mkdir(interfaces, { recursive: true })
-
-    const runtimes = await fs.promises.opendir(interfaces)
-
-    const { resource } = this
-    const now = Date.now()
-
-    try {
-      for await (const runtime of runtimes) {
-        if (runtime.isDirectory() === false) continue
-        const semvers = await fs.promises.opendir(runtime)
-        for await (const entry of semvers) {
-          if (entry.isDirectory() === false) continue
-          const version = path.join(runtime, entry.name)
-          const stats = await fs.promises.stat(version)
-          const delta = now - stats.mtimeMs
-          if (delta > age) {
-            this.push({ tag: 'remove', data: { resource, id: version } })
-            await fs.promises.rm(version, { recursive: true, force: true })
-          }
-        }
-      }
-    } catch (err) {
-      if (err.code === 'ENOENT' || err.code === 'EBUSY') return
-      throw err
-    }
+  async assets ({ link }) {
   }
 }

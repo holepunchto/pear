@@ -29,7 +29,9 @@ class GC {
     return this.#op(cmd, { pid: Bare.pid })
   }
 
-  async interfaces (cmd) {
-    return this.#op(cmd, { age: cmd.flags.age })
+  async assets (cmd) {
+    const { command } = cmd
+    const link = command.args.link
+    return this.#op(cmd, { link })
   }
 }
