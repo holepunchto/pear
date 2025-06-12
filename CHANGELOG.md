@@ -2,6 +2,10 @@
 
 ## v1.15.0
 
+### Improvements
+
+* Internal - Bare 1.19
+
 ### Fixes
 
 * Internal - Limited amount of connections per internal swarm topic
