@@ -1,8 +1,15 @@
 # Pear Runtime Changelog
 
+## v1.15.0
+
+### Fixes
+
+* Internal - Limited amount of connections per internal swarm topic
+* Mac - Disable resize window animation 
+
 ## v1.14.0
 
-## Fixes
+### Fixes
 
 * Internal - Emit error, end and close events in correct worker pipes
 * Restart - Fix client restart by ignoring stdio
