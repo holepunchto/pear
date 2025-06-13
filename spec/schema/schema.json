@@ -111,6 +111,12 @@
           "required": true,
           "type": "string",
           "version": 1
+        },
+        {
+          "name": "bytesAllocated",
+          "required": true,
+          "type": "uint",
+          "version": 1
         }
       ]
     }
