@@ -1,5 +1,7 @@
 'use strict'
-const { outputter } = require('pear-api/terminal')
+const plink = require('pear-api/link')
+const { outputter, confirm, ansi } = require('pear-api/terminal')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const output = outputter('gc', {
   remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
@@ -32,6 +34,17 @@ class GC {
   async assets (cmd) {
     const { command } = cmd
     const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    const dialog = ansi.warning + `  ${ansi.bold('WARNING')} assets will be permanently removed and cannot be recovered. To confirm type "DELETE"\n\n`
+    const target = link || 'all assets'
+    const ask = `Delete ${target}`
+    const delim = '?'
+    const validation = v => v === 'DELETE'
+    const msg = '\n' + ansi.cross + ' type uppercase DELETE to confirm\n'
+    await confirm(dialog, ask, delim, validation, msg)
     return this.#op(cmd, { link })
   }
 }

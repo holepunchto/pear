@@ -1,4 +1,5 @@
 'use strict'
+const fs = require('bare-fs')
 const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
@@ -125,6 +126,30 @@ module.exports = class Model {
   async allAssets () {
     LOG.trace('db', 'FIND', '@pear/asset')
     return await this.db.find('@pear/asset').toArray()
+  }
+
+  async removeAsset (link) {
+    const tx = await this.lock.enter()
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await tx.get('@pear/asset', get)
+    if (asset) {
+      await fs.promises.rm(asset.path, { recursive: true, force: true })
+      LOG.trace('db', 'DELETE', '@pear/asset', asset)
+      await tx.delete('@pear/asset', asset)
+    }
+    await this.lock.exit()
+  }
+
+  async removeAllAssets () {
+    const tx = await this.lock.enter()
+    const assets = await this.db.find('@pear/asset').toArray()
+    for (const asset of assets) {
+      await fs.promises.rm(asset.path, { recursive: true, force: true })
+      LOG.trace('db', 'DELETE', '@pear/asset', asset)
+      await tx.delete('@pear/asset', asset)
+    }
+    await this.lock.exit()
   }
 
   async getDhtNodes () {
