@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
+const os = require('bare-os')
 const daemon = require('bare-daemon')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -101,6 +102,9 @@ class Sidecar extends ReadyResource {
     })
 
     this.ipc.on('client', (client) => {
+      if (client._clock === 0) {
+        os.kill(client.userData.state.pid, 'SIGKILL') // Force close process with blocked event loop
+      }
       client.once('close', () => {
         this.#spindownCountdown()
       })

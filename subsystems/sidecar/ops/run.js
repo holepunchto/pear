@@ -75,7 +75,7 @@ module.exports = class Run extends Opstream {
     }
   }
 
-  async run ({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg = null } = {}) {
+  async run ({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg = null, pid } = {}) {
     const { sidecar, session, LOG_RUN_LINK } = this
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
     LOG.info(LOG_RUN_LINK, 'ensuring sidecar ready')
@@ -107,7 +107,7 @@ module.exports = class Run extends Opstream {
 
     const dht = { nodes: sidecar.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: sidecar.nodes }
     await sidecar.model.setDhtNodes(dht.nodes)
-    const state = new State({ startId, id, dht, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
+    const state = new State({ startId, id, dht, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage, pid })
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {
       const applingKey = state.key.toString('hex')
