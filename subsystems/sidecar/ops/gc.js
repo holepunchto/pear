@@ -111,10 +111,6 @@ module.exports = class GC extends Opstream {
 
   async assets ({ link }) {
     await this.sidecar.ready()
-    if (link) {
-      await this.sidecar.model.removeAsset(link)
-    } else {
-      await this.sidecar.model.removeAllAssets()
-    }
+    await this.sidecar.model.removeAssets(link)
   }
 }

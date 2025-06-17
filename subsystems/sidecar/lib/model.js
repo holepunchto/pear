@@ -128,22 +128,17 @@ module.exports = class Model {
     return await this.db.find('@pear/asset').toArray()
   }
 
-  async removeAsset (link) {
+  async removeAssets ({ link }) {
     const tx = await this.lock.enter()
-    const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await tx.get('@pear/asset', get)
-    if (asset) {
-      await fs.promises.rm(asset.path, { recursive: true, force: true })
-      LOG.trace('db', 'DELETE', '@pear/asset', asset)
-      await tx.delete('@pear/asset', asset)
+    let assets = []
+    if (link) {
+      const asset = await tx.get('@pear/asset', { link })
+      LOG.trace('db', 'GET', '@pear/asset', link)
+      assets.push(asset)
+    } else {
+      LOG.trace('db', 'FIND', '@pear/asset')
+      assets = await tx.find('@pear/asset').toArray()
     }
-    await this.lock.exit()
-  }
-
-  async removeAllAssets () {
-    const tx = await this.lock.enter()
-    const assets = await tx.find('@pear/asset').toArray()
     for (const asset of assets) {
       await fs.promises.rm(asset.path, { recursive: true, force: true })
       LOG.trace('db', 'DELETE', '@pear/asset', asset)
