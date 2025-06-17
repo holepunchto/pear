@@ -111,8 +111,8 @@ class Sidecar extends ReadyResource {
 
     this.ipc.on('client', (client) => {
       client.once('close', () => {
-        if (client._clock === 0) {
-          os.kill(client.userData.state.pid, 'SIGKILL') // Force close process with blocked event loop
+        if (client.clock <= 0) {
+          os.kill(client.userData.state.pid, 'SIGKILL') // force close unresponsive client
         }
         this.#spindownCountdown()
       })

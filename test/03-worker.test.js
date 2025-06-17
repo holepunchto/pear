@@ -18,6 +18,7 @@ const workerParentErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 
 const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-child-error-handler')
 const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'worker-from-same-bundle')
 const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
+const workerZombie = path.join(Helper.localDir, 'test', 'fixtures', 'worker-zombie')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -191,4 +192,19 @@ test('worker can set uncaughtException handler', async function ({ is, teardown 
 
   is(result, expected, 'uncaughtException handler in worker works')
   await Helper.untilClose(run.pipe)
+})
+
+test('worker with blocked event-loop terminates', async function ({ teardown, plan, pass }) {
+  plan(1)
+  const dir = workerZombie
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('close', () => {
+    pass('SIGKILL\'d worker')
+  })
 })
