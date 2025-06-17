@@ -47,7 +47,7 @@ module.exports = class Run extends Opstream {
 
     this.push({ tag: 'initialized', data: { id } })
 
-    const running = this.run({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg })
+    const running = this.run({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg, pid: params.pid })
     sidecar.running.set(startId, { client, running })
     session.teardown(() => {
       const free = sidecar.running.get(startId)
