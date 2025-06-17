@@ -40,7 +40,7 @@ class GC {
     }
     const dialog = ansi.warning + `  ${ansi.bold('WARNING')} synced assets will be removed from disk. To confirm type "CLEAR"\n\n`
     const target = link || 'all assets'
-    const ask = `Clear ${ansi.dim(target)}`
+    const ask = `Clear ${target}`
     const delim = '?'
     const validation = v => v === 'CLEAR'
     const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
