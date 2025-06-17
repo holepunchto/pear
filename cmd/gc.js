@@ -38,7 +38,7 @@ class GC {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
-    const dialog = ansi.warning + `  ${ansi.bold('WARNING')} assets will be permanently removed and cannot be recovered. To confirm type "DELETE"\n\n`
+    const dialog = ansi.warning + `  ${ansi.bold('WARNING')} synced assets will be permanently removed and cannot be recovered. To confirm type "DELETE"\n\n`
     const target = link || 'all assets'
     const ask = `Delete ${target}`
     const delim = '?'

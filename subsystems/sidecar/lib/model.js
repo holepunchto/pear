@@ -143,7 +143,7 @@ module.exports = class Model {
 
   async removeAllAssets () {
     const tx = await this.lock.enter()
-    const assets = await this.db.find('@pear/asset').toArray()
+    const assets = await tx.find('@pear/asset').toArray()
     for (const asset of assets) {
       await fs.promises.rm(asset.path, { recursive: true, force: true })
       LOG.trace('db', 'DELETE', '@pear/asset', asset)
