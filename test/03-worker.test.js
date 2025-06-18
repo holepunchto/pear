@@ -204,6 +204,8 @@ test('worker with blocked event-loop terminates', async function ({ teardown, pl
 
   const { pipe } = await Helper.run({ link: dir })
 
+  pipe.on('error', () => {})
+
   pipe.on('close', () => {
     pass('SIGKILL\'d worker')
   })
