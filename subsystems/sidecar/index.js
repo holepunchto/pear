@@ -2,6 +2,7 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn, spawnSync } = require('bare-subprocess')
+const os = require('bare-os')
 const fsx = require('fs-native-extensions')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -110,6 +111,9 @@ class Sidecar extends ReadyResource {
 
     this.ipc.on('client', (client) => {
       client.once('close', () => {
+        if (client.clock <= 0) {
+          os.kill(client.userData.state.pid, 'SIGKILL') // force close unresponsive client
+        }
         this.#spindownCountdown()
       })
     })
@@ -641,7 +645,7 @@ class Sidecar extends ReadyResource {
   unloading (params, client) { return client.userData.unloading() }
 
   async start (params, client) {
-    const { flags, env, cwd, link, dir, args, cmdArgs } = params
+    const { flags, env, cwd, link, dir, args, cmdArgs, pid } = params
     const LOG_RUN_LINK = ['run', link]
     if (LOG.INF) LOG.info(LOG_RUN_LINK, 'start', link.slice(0, 14) + '..')
     let { startId } = params
@@ -656,7 +660,7 @@ class Sidecar extends ReadyResource {
     LOG.info('session', 'new session for', startId)
     const session = new Session(client)
 
-    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs)
+    const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid)
     this.running.set(startId, { client, running })
     session.teardown(() => {
       const free = this.running.get(startId)
@@ -683,7 +687,7 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs) {
+  async #start (flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid) {
     const id = client.userData?.id || `${client.id}@${startId}`
     const app = client.userData = client.userData?.id ? client.userData : new this.App({ id, startId, session })
     const LOG_RUN_LINK = ['run', link]
@@ -718,7 +722,7 @@ class Sidecar extends ReadyResource {
 
     const dht = { nodes: this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }), bootstrap: this.dhtBootstrap }
     await this.model.setDhtNodes(dht.nodes)
-    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage })
+    const state = new State({ dht, id, env, link, dir, cwd, flags, args, cmdArgs, run: true, storage: appStorage, pid })
 
     const applingPath = state.appling?.path
     if (applingPath && state.key !== null) {

@@ -113,7 +113,7 @@ module.exports = class State {
   }
 
   constructor (params = {}) {
-    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run, storage } = params
+    const { dht, link, id = null, args = null, env = ENV, dir = CWD, cwd = dir, cmdArgs, onupdate = () => {}, flags, run, storage, pid } = params
     const {
       startId, appling, channel, devtools, checkout, links,
       dev = false, stage, updates, updatesDiff,
@@ -159,6 +159,7 @@ module.exports = class State {
     this.clearAppStorage = unsafeClearAppStorage
     this.chromeWebrtcInternals = chromeWebrtcInternals
     this.parent = parent
+    this.pid = pid
     this.env = { ...env }
     if (this.stage || (this.run && this.dev === false)) {
       this.env.NODE_ENV = this.env.NODE_ENV || 'production'
