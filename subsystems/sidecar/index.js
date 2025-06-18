@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
+const os = require('bare-os')
 const daemon = require('bare-daemon')
 const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
@@ -102,6 +103,10 @@ class Sidecar extends ReadyResource {
 
     this.ipc.on('client', (client) => {
       client.once('close', () => {
+        if (client.clock <= 0) {
+          LOG.info('sidecar', `Killing unresponsive process with pid ${client.userData.state.pid}`)
+          os.kill(client.userData.state.pid, 'SIGKILL') // Force close unresponsive process
+        }
         this.#spindownCountdown()
       })
     })
