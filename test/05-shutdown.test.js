@@ -215,6 +215,27 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 })
 
+test('blocked event loop terminated', async function ({ plan, teardown, pass }) {
+  plan(1)
+
+  const dir = path.join(Helper.localDir, 'test', 'fixtures', 'unresponsive')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.write('hello app')
+  pipe.on('error', () => {})
+  pipe.on('close', () => {
+    pass('closed unresponsive process')
+  })
+  pipe.on('end', () => {
+    pass('closed unresponsive process')
+  })
+})
+
 test.hook('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })

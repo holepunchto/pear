@@ -107,7 +107,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
   const reporter = new Reporter()
 
-  const stream = ipc.run({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs, pkg })
+  const stream = ipc.run({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs, pkg, pid: os.pid() })
   stream.on('data', function ondata ({ tag, data }) {
     if (tag !== 'initialized') return
     const reporting = ipc.reports({ id: data.id })
