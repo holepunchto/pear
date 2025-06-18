@@ -105,7 +105,7 @@ class Sidecar extends ReadyResource {
       client.once('close', () => {
         if (client.clock <= 0) {
           LOG.info('sidecar', `Killing unresponsive process with pid ${client.userData.state.pid}`)
-          os.kill(client.userData.state.pid, 'SIGKILL') // force close unresponsive client
+          os.kill(client.userData.state.pid, 'SIGKILL') // force close unresponsive process
         }
         this.#spindownCountdown()
       })
