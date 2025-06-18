@@ -231,6 +231,9 @@ test('blocked event loop terminated', async function ({ plan, teardown, pass }) 
   pipe.on('close', () => {
     pass('closed unresponsive process')
   })
+  pipe.on('end', () => {
+    pass('closed unresponsive process')
+  })
 })
 
 test.hook('patched platform cleanup', async () => {
