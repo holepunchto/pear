@@ -104,7 +104,7 @@ class Sidecar extends ReadyResource {
     this.ipc.on('client', (client) => {
       client.once('close', () => {
         if (client.clock <= 0) {
-          console.log('SIGKILLING', client.userData.state.pid)
+          LOG.info('sidecar', `Killing unresponsive process with pid ${client.userData.state.pid}`)
           os.kill(client.userData.state.pid, 'SIGKILL') // Force close unresponsive process
         }
         this.#spindownCountdown()
