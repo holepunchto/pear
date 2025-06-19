@@ -129,13 +129,14 @@ module.exports = class Model {
   }
 
   async removeAsset (link) {
+    const get = { link }
     const tx = await this.lock.enter()
-    LOG.trace('db', 'GET', '@pear/asset', { link })
-    const asset = await tx.get('@pear/asset', { link })
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await tx.get('@pear/asset', get)
     if (asset) {
       if (asset.path) await fs.promises.rm(asset.path, { recursive: true, force: true })
-      LOG.trace('db', 'DELETE', '@pear/asset', asset)
-      await tx.delete('@pear/asset', asset)
+      LOG.trace('db', 'DELETE', '@pear/asset', get)
+      await tx.delete('@pear/asset', get)
     }
     await this.lock.exit()
     return asset
