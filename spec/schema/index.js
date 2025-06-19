@@ -134,18 +134,22 @@ const encoding5 = {
   preencode (state, m) {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.path)
+    c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     c.string.encode(state, m.link)
     c.string.encode(state, m.path)
+    c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
+    const r2 = c.uint.decode(state)
 
     return {
       link: r0,
-      path: r1
+      path: r1,
+      bytesAllocated: r2
     }
   }
 }
