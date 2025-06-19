@@ -380,6 +380,9 @@ class IPC {
     electron.ipcRenderer.on('workerPipeData', (e, args) => {
       if (args.id === id) stream.push(args.data)
     })
+    electron.ipcRenderer.on('workerStdError', (e, args) => {
+      if (args.id === id) console.error(args.data)
+    })
     return stream
   }
 
