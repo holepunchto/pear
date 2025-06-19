@@ -12,7 +12,6 @@ module.exports = class State extends SharedState {
   checkpoint = null
   options = null
   manifest = null
-
   static async build (state, pkg = null) {
     if (state.manifest) return state.manifest
     if (pkg === null && state.key === null) pkg = await this.localPkg(state)
