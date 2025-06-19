@@ -9,9 +9,10 @@ const { ERR_INVALID_GC_RESOURCE } = require('pear-api/errors')
 const Opstream = require('../lib/opstream')
 
 module.exports = class GC extends Opstream {
-  constructor ({ data = {}, resource } = {}, client) {
+  constructor ({ data = {}, resource } = {}, client, sidecar) {
     super((params) => this.#op(params), data, client)
     this.resource = resource
+    this.sidecar = sidecar
   }
 
   _destroy (cb) {
@@ -110,7 +111,21 @@ module.exports = class GC extends Opstream {
   }
 
   async assets ({ link }) {
-    await this.sidecar.ready()
-    await this.sidecar.model.removeAssets(link)
+    const { resource, sidecar } = this
+    await sidecar.ready()
+    let count = 0
+    let assets = []
+    if (link) {
+      const asset = await sidecar.model.getAsset(link)
+      if (asset) assets = [asset]
+    } else {
+      assets = await sidecar.model.allAssets()
+    }
+    for (const asset of assets) {
+      await sidecar.model.removeAsset(asset.link)
+      this.push({ tag: 'remove', data: { resource, id: asset.link } })
+      count += 1
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
   }
 }
