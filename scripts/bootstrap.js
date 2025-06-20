@@ -30,7 +30,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'dhpc5npmqkansx38uh18h3uwpdp6g9ukozrqyc4irbhwriedyeho'
+const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 const CORESTORE = cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
@@ -111,7 +111,24 @@ async function download (key, all = false) {
   console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
-    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
+    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST),
+    filter: (key) => {
+      const runtimes = [
+        '/by-arch/linux-x64/bin/pear-runtime',
+        '/by-arch/linux-arm64/bin/pear-runtime',
+        '/by-arch/darwin-x64/bin/pear-runtime',
+        '/by-arch/darwin-arm64/bin/pear-runtime',
+        '/by-arch/win32-x64/bin/pear-runtime.exe'
+      ]
+      const lib = [
+        '/by-arch/linux-x64/lib',
+        '/by-arch/linux-arm64/lib',
+        '/by-arch/darwin-x64/lib',
+        '/by-arch/darwin-arm64/lib',
+        '/by-arch/win32-x64/lib'
+      ]
+      return runtimes.some(r => key === r) || lib.some(l => key.startsWith(l))
+    }
   })
 
   const monitor = monitorDrive(runtimes)
