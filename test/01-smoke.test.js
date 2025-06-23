@@ -280,10 +280,10 @@ test('skipping stage link in app', async function ({ plan, pass, fail }) {
   await fs.copyFile(path.join(skippingLinkDir, 'index.js'), path.join(tmpdir, 'index.js'))
 
   const run = await Helper.run({ link: tmpdir })
-  try{
+  try {
     await Helper.untilResult(run.pipe)
     pass()
-  } catch (err){
+  } catch (err) {
     console.error(err)
     fail()
   }
