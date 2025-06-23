@@ -345,7 +345,7 @@ class Sidecar extends ReadyResource {
 
   run (params, client) { return new ops.Run(params, client, this) }
 
-  gc (params, client) { return new ops.GC(params, client) }
+  gc (params, client) { return new ops.GC(params, client, this) }
 
   touch (params, client) { return new ops.Touch(params, client, this) }
 
