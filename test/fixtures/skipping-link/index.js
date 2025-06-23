@@ -9,4 +9,4 @@ pipe.on('data', () => {
       console.error(err)
       Pear.exit()
     }
-  })
+})
