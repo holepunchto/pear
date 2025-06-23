@@ -55,13 +55,14 @@ module.exports = class Asset extends Opstream {
       corestore,
       drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
       key,
-      checkout
+      checkout,
+      swarm: sidecar.swarm
     })
 
     await session.add(bundle)
 
     if (sidecar.swarm && !isFileLink) {
-      bundle.join(sidecar.swarm)
+      bundle.join()
       const monitor = new DriveMonitor(bundle.drive)
       this.on('end', () => monitor.destroy())
       monitor.on('error', (err) => this.push({ tag: 'stats-error', data: { err } }))
@@ -76,7 +77,7 @@ module.exports = class Asset extends Opstream {
 
     if (!isFileLink) {
       try {
-        await bundle.calibrate()
+        await bundle.calibrate({ sync: false })
       } catch (err) {
         await session.close()
         throw err

@@ -14,6 +14,7 @@ const { KNOWN_NODES_LIMIT } = require('pear-api/constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
+const DriveMonitor = require('../lib/drive-monitor')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -167,25 +168,83 @@ module.exports = class Run extends Opstream {
       LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
       throw ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
     }
-
+    let current = await sidecar.model.getCurrent(state.applink)
+    const checkoutLength = state.checkout ?? current?.checkout.length ?? null
     const appBundle = new Bundle({
+      swarm: sidecar.swarm,
       encryptionKey,
       corestore,
       appling: state.appling,
       channel: state.channel,
-      checkout: state.checkout,
+      checkout: checkoutLength,
       key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       drive,
       updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info)),
+      asset: async (opts) => {
+        const asset = await sidecar.model.touchAsset(opts.link)
+        if (asset.inserted === false) return asset
+        const parsed = plink.parse(asset.link)
+        const query = await this.sidecar.model.getBundle(parsed)
+        const encryptionKey = query?.encryptionKey
+        const dst = new LocalDrive(asset.path)
+        let src = null
+        try {
+          src = new Hyperdrive(corestore, key, { encryptionKey })
+          await src.ready()
+        } catch (err) {
+          if (err.code !== 'DECODING_ERROR') throw err
+          throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        }
+
+        const bundle = new Bundle({
+          corestore,
+          drive: src,
+          key: parsed.drive.key,
+          checkout: parsed.drive.length,
+          swarm: sidecar.swarm
+        })
+        await session.add(bundle)
+        bundle.join()
+        const monitor = new DriveMonitor(bundle.drive)
+        this.on('end', () => monitor.destroy())
+        monitor.on('error', (err) => this.push({ tag: 'asset-stats-error', data: { err } }))
+        monitor.on('data', (stats) => this.push({ tag: 'asset-stats', data: stats }))
+        const dir = asset.path
+        this.push({ tag: 'syncing', data: { link, dir } })
+        try {
+          await bundle.calibrate({ sync: false })
+        } catch (err) {
+          await session.close()
+          throw err
+        }
+        let only = opts.only
+        let select = null
+        if (only) {
+          only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim().replace(/__HOST__/g, require.addon.host))
+          select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+        }
+        const extraOpts = entry === null ? { prefix, filter: select } : { filter: select || ((key) => key === prefix) }
+        const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
+        for await (const diff of mirror) {
+          if (diff.op === 'add') {
+            this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
+          } else if (diff.op === 'change') {
+            this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
+          } else if (diff.op === 'remove') {
+            this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
+          }
+        }
+        return asset
+      },
       failure (err) { app.report({ err }) }
     })
 
     await session.add(appBundle)
 
-    if (sidecar.swarm) appBundle.join(sidecar.swarm)
+    if (sidecar.swarm) appBundle.join() // note: no await is deliberate
 
     const linker = new ScriptLinker(appBundle, {
       builtins: sidecar.gunk.builtins,
@@ -200,7 +259,7 @@ module.exports = class Run extends Opstream {
     app.bundle = appBundle
 
     try {
-      await appBundle.calibrate()
+      current = await appBundle.calibrate()
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
@@ -212,6 +271,9 @@ module.exports = class Run extends Opstream {
       }
     }
 
+    LOG.info(LOG_RUN_LINK, id, 'determining assets')
+    state.assets = current && !state.checkout ? current.assets : await bundle.assets()
+
     LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
       await state.initialize({ bundle: appBundle, app })
@@ -219,6 +281,9 @@ module.exports = class Run extends Opstream {
     } catch (err) {
       LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
     }
+
+    await this.model.setCurrent(state.applink, { assets: state.assets, checkout: current })
+
     if (appBundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
