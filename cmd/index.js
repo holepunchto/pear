@@ -232,7 +232,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Clear dangling resources'),
     command('releases', summary('Clear inactive releases'), (cmd) => runners.gc(ipc).releases(cmd)),
     command('sidecars', summary('Clear running sidecars'), (cmd) => runners.gc(ipc).sidecars(cmd)),
-    command('interfaces', flag('--age ms', 'GC if mtime exceeds. Default 2.592e9ms (30 days)'), summary('Clear unused interfaces'), (cmd) => runners.gc(ipc).interfaces(cmd)),
+    command('assets', summary('Clear synced assets'), arg('[link]', 'Filter by link'), (cmd) => runners.gc(ipc).assets(cmd)),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(gc.help()) }
   )
