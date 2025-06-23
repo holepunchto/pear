@@ -1,9 +1,11 @@
 'use strict'
-const { outputter } = require('pear-api/terminal')
+const plink = require('pear-api/link')
+const { outputter, confirm, ansi } = require('pear-api/terminal')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const output = outputter('gc', {
   remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
-  complete: ({ resource, count }) => { return count > 0 ? `Total ${resource}s removed: ${count}` : `No ${resource} removed` },
+  complete: ({ resource, count }) => { return count > 0 ? `Total ${resource} removed: ${count}` : `No ${resource} removed` },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
@@ -29,7 +31,20 @@ class GC {
     return this.#op(cmd, { pid: Bare.pid })
   }
 
-  async interfaces (cmd) {
-    return this.#op(cmd, { age: cmd.flags.age })
+  async assets (cmd) {
+    const { command } = cmd
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    const dialog = ansi.warning + `  ${ansi.bold('WARNING')} synced assets will be cleared from disk. To confirm type "CLEAR"\n\n`
+    const target = link || 'all assets'
+    const ask = `Clear ${target}`
+    const delim = '?'
+    const validation = (v) => v === 'CLEAR'
+    const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
+    await confirm(dialog, ask, delim, validation, msg)
+    return this.#op(cmd, { link })
   }
 }
