@@ -42,7 +42,7 @@ class GC {
     const target = link || 'all assets'
     const ask = `Clear ${target}`
     const delim = '?'
-    const validation = v => v === 'CLEAR'
+    const validation = (v) => v === 'CLEAR'
     const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
     return this.#op(cmd, { link })
