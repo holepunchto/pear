@@ -660,6 +660,14 @@ class Sidecar extends ReadyResource {
     LOG.info('session', 'new session for', startId)
     const session = new Session(client)
 
+    const runningApps = this.apps.map(app => app.state?.config.id).filter(id => id !== undefined)
+    for await (const app of this.apps) {
+      if (app.state &&  app.state.pid && app.state.parent && !runningApps.includes(app.state.parent)) {
+        LOG.info('sidecar', 'Killing orphan worker process with PID', app.state.pid)
+        os.kill(app.state.pid, 'SIGKILL')
+      }
+    }
+
     const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid)
     this.running.set(startId, { client, running })
     session.teardown(() => {
