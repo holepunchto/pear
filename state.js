@@ -89,7 +89,6 @@ module.exports = class State {
   }
 
   static configFrom (state) {
-    console.log('STATEEEE', state)
     const { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, version } = state
     const pearDir = PLATFORM_DIR
     return { id, key, links, alias, env, options, checkpoint, flags, dev, tier, stage, storage, name, main, dependencies, args, channel, release, applink, fragment, link, linkData, entrypoint, dir, dht, pearDir, length: version?.length, fork: version?.fork }
