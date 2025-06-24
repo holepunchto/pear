@@ -1,5 +1,5 @@
 {
-  "name": "worker-checkout-flag",
+  "name": "worker-length",
   "main": "index.js",
   "type": "module",
   "pear": {}

@@ -19,7 +19,7 @@ const workerChildErrorHandler = path.join(Helper.localDir, 'test', 'fixtures', '
 const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'worker-from-same-bundle')
 const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
 const workerZombie = path.join(Helper.localDir, 'test', 'fixtures', 'worker-zombie')
-const workerCheckoutFlag = path.join(Helper.localDir, 'test', 'fixtures', 'worker-checkout-flag')
+const workerLength = path.join(Helper.localDir, 'test', 'fixtures', 'worker-length')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -212,7 +212,7 @@ test('worker with blocked event-loop terminates', async function ({ teardown, pl
   })
 })
 
-test('worker checkout flag', async function ({ is, plan, comment, teardown }) {
+test('worker length', async function ({ is, plan, comment, teardown }) {
   plan(1)
 
   const helper = new Helper()
@@ -221,7 +221,7 @@ test('worker checkout flag', async function ({ is, plan, comment, teardown }) {
 
   const testId = Math.floor(Math.random() * 100000)
   comment('Staging worker-runner...')
-  const staging = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerCheckoutFlag, cmdArgs: [], dryRun: false, ignore: [] })
+  const staging = helper.stage({ channel: `test-${testId}`, name: `test-${testId}`, key: null, dir: workerLength, cmdArgs: [], dryRun: false, ignore: [] })
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'addendum' }, { tag: 'final' }])
   const { link } = await until.staging
