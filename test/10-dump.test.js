@@ -42,7 +42,7 @@ test('pear dump skip link arg', async function ({ pass, fail, plan, teardown, co
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try{
+  try {
     comment('dumping')
     const dumping = await helper.dump({ dir: '/path/to/dir' })
     await Helper.opwait(dumping)

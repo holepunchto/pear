@@ -136,7 +136,7 @@ class Helper extends IPC.Client {
     return buf.toString('hex')
   }
 
-  static opwait(stream, fn) {
+  static opwait (stream, fn) {
     return opwait(stream, fn)
   }
 

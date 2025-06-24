@@ -23,7 +23,7 @@ test('seed but skip link arg', async function ({ pass, fail, plan, teardown, com
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try{
+  try {
     comment('seeding')
     const seeding = await helper.seed({ dir: '/path/to/dir' })
     await Helper.opwait(seeding)
@@ -41,7 +41,7 @@ test('release but skip link arg', async function ({ pass, fail, plan, teardown, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try{
+  try {
     comment('releasing')
     const releasing = await helper.release({ dir: '/path/to/dir' })
     await Helper.opwait(releasing)

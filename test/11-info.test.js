@@ -9,7 +9,7 @@ test('info but skip link arg', async function ({ pass, fail, plan, teardown, com
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try{
+  try {
     comment('getting info')
     const infoStream = await helper.info({ dir: '/path/to/dir' })
     await Helper.opwait(infoStream)

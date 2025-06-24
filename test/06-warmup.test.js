@@ -68,7 +68,7 @@ test('stage but skip link arg', async function ({ pass, fail, plan, teardown, co
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try{
+  try {
     comment('staging')
     const staging = await helper.stage({ dir: '/path/to/dir' })
     await Helper.opwait(staging)
