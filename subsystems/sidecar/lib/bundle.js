@@ -44,8 +44,9 @@ module.exports = class Bundle {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    this.updater = null
+    this._asset = asset
     if (this.corestore) {
+      this._mutex = null
       this.updater = new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
@@ -56,6 +57,8 @@ module.exports = class Bundle {
         this.status({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
       })
     } else {
+      this._mutex = new RW()
+      this.updater = null
       this.replicator = null
     }
 
@@ -70,15 +73,26 @@ module.exports = class Bundle {
 
     this.announcing = null
     this.leaving = null
-    this.swarm = null
 
     this.initializing = this.#init()
 
     if (typeof updateNotify === 'function') this.#updates(updateNotify)
   }
 
-  async assets () {
-    if (this.updater === null) return
+  async assets (manifest) {
+    if (this.updater === null) {
+      const assets = {}
+      await this._mutex.write.lock()
+      try {
+        for (const [ns, asset] of Object.entries(manifest.pear?.assets || {})) {
+          assets[ns] = await this._asset({ ns, ...asset })
+        }
+      } finally {
+        this._mutex.write.unlock()
+      }
+      return assets
+    }
+
     return this.updater.assets()
   }
 
@@ -258,7 +272,7 @@ module.exports = class Bundle {
     return this.leaving
   }
 
-  async calibrate ({ sync = true } = {}) {
+  async calibrate () {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -272,9 +286,6 @@ module.exports = class Bundle {
       }
       if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
-        // if (sync && this.updater !== null) {
-        //   await this.updater.wait({ length: this.drive.core.length, fork: this.drive.core.fork })
-        // }
       }
     }
 
@@ -292,7 +303,7 @@ module.exports = class Bundle {
 
     if (warmup) {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges) // TODO: instead fetch everything??
+      this.prefetch(ranges)
     }
 
     return { key: hypercoreid.decode(this.drive.key), length: this.drive.core.length, fork: this.drive.core.fork }
@@ -469,8 +480,8 @@ class AppUpdater extends ReadyResource {
 
       await this.onupdating(checkout, old)
       this.emit('updating', checkout, old)
-
       await this.assets()
+      await this.snapshot.download()
     } finally {
       await this.snapshot.close()
       this.snapshot = null
@@ -499,13 +510,13 @@ class AppUpdater extends ReadyResource {
     return { key, abi: this.abi, compat: [] }
   }
 
-  async assets () {
-    const pkg = await this.snapshot.db.get('manifest')
+  async assets (manifest = null) {
+    const pkg = manifest ?? await this.snapshot.db.get('manifest')
     const assets = {}
     await this._mutex.write.lock()
     try {
-      for (const { key, asset } of Object.entries(pkg?.pear?.assets || {})) {
-        assets[key] = await this._asset(asset)
+      for (const [key, asset] of Object.entries(pkg?.pear?.assets || {})) {
+        assets[key] = await this._asset({ key, ...asset })
       }
     } finally {
       this._mutex.write.unlock()

@@ -76,7 +76,7 @@ module.exports = class Dump extends Opstream {
 
     if (!isFileLink) {
       try {
-        await bundle.calibrate({ sync: false })
+        await bundle.calibrate()
       } catch (err) {
         await session.close()
         throw err

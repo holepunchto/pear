@@ -9,8 +9,9 @@ const ScriptLinker = require('script-linker')
 const plink = require('pear-api/link')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
+const { randomBytes } = require('hypercore-crypto')
 const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
-const { KNOWN_NODES_LIMIT } = require('pear-api/constants')
+const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-api/constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
@@ -18,7 +19,9 @@ const DriveMonitor = require('../lib/drive-monitor')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
-  constructor (...args) { super((...args) => this.#op(...args), ...args, { autosession: false }) }
+  constructor (...args) {
+    super((...args) => this.#op(...args), ...args, { autosession: false })
+  }
 
   async #op (params) {
     const { sidecar, client } = this
@@ -76,6 +79,71 @@ module.exports = class Run extends Opstream {
     }
   }
 
+  async asset (opts, corestore) {
+    LOG.info(this.LOG_RUN_LINK, 'getting  asset', opts.link.slice(0, 14) + '..')
+
+    let asset = await this.sidecar.model.getAsset(opts.link)
+    if (asset !== null) return asset
+
+    asset = {
+      ...opts,
+      path: path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+    }
+
+    LOG.info(this.LOG_RUN_LINK, 'syncing asset', asset.link.slice(0, 14) + '..')
+    const parsed = plink.parse(asset.link)
+
+    const dst = new LocalDrive(asset.path)
+    const key = parsed.drive.key
+    let src = null
+    try {
+      src = new Hyperdrive(corestore, key)
+      await src.ready()
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
+    }
+    const bundle = new Bundle({
+      key,
+      corestore,
+      drive: src,
+      checkout: parsed.drive.length,
+      swarm: this.sidecar.swarm
+    })
+    await this.session.add(bundle)
+    bundle.join()
+    const monitor = new DriveMonitor(bundle.drive)
+    this.on('end', () => monitor.destroy())
+    monitor.on('error', (err) => this.push({ tag: 'assetStatsErr', data: { err } }))
+    monitor.on('data', (stats) => this.push({ tag: 'assetStats', data: stats }))
+    this.push({ tag: 'assetSyncing', data: { link: asset.link, dir: asset.path } })
+    try {
+      await bundle.calibrate()
+    } catch (err) {
+      await this.session.close()
+      throw err
+    }
+    let only = opts.only
+    let select = null
+    if (only) {
+      only = (Array.isArray(only) ? only : only.split(',')).map((s) => s.trim().replace(/%%HOST%%/g, require.addon.host))
+      select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+    }
+    const mirror = src.mirror(dst, { filter: select })
+    for await (const diff of mirror) {
+      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
+      if (diff.op === 'add') {
+        this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
+      } else if (diff.op === 'change') {
+        this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
+      } else if (diff.op === 'remove') {
+        this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
+      }
+    }
+    await this.sidecar.model.addAsset(opts.link, asset)
+    LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
+    return asset
+  }
+
   async run ({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg = null, pid } = {}) {
     const { sidecar, session, LOG_RUN_LINK } = this
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
@@ -118,13 +186,16 @@ module.exports = class Run extends Opstream {
 
     app.state = state
 
-    if (state.key === null) {
+    const corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
+    const fromDisk = state.key === null
+    if (fromDisk) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
       const drive = new LocalDrive(state.dir, { followExternalLinks: true, followLinks: state.followSymlinks })
       this.#updatePearInterface(drive)
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
+        asset: (opts) => this.asset(opts, corestore),
         updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info))
       })
       const linker = new ScriptLinker(appBundle, {
@@ -140,22 +211,24 @@ module.exports = class Run extends Opstream {
       app.bundle = appBundle
 
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
-
       try {
-        await state.initialize({ bundle: appBundle, app, pkg })
+        await state.initialize({ bundle: app.bundle, app, pkg })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
         throw err
       }
-      LOG.info(LOG_RUN_LINK, id)
+
+      LOG.info(LOG_RUN_LINK, id, 'determining assets')
+      state.update({ assets: await app.bundle.assets(state.manifest) })
+      LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
+
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
-    const corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
     let drive
     try {
       drive = new Hyperdrive(corestore, state.key, { encryptionKey })
@@ -183,62 +256,7 @@ module.exports = class Run extends Opstream {
       updatesDiff: state.updatesDiff,
       drive,
       updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info)),
-      asset: async (opts) => {
-        const asset = await sidecar.model.touchAsset(opts.link)
-        if (asset.inserted === false) return asset
-        const parsed = plink.parse(asset.link)
-        const query = await this.sidecar.model.getBundle(parsed)
-        const encryptionKey = query?.encryptionKey
-        const dst = new LocalDrive(asset.path)
-        let src = null
-        try {
-          src = new Hyperdrive(corestore, key, { encryptionKey })
-          await src.ready()
-        } catch (err) {
-          if (err.code !== 'DECODING_ERROR') throw err
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
-        }
-
-        const bundle = new Bundle({
-          corestore,
-          drive: src,
-          key: parsed.drive.key,
-          checkout: parsed.drive.length,
-          swarm: sidecar.swarm
-        })
-        await session.add(bundle)
-        bundle.join()
-        const monitor = new DriveMonitor(bundle.drive)
-        this.on('end', () => monitor.destroy())
-        monitor.on('error', (err) => this.push({ tag: 'asset-stats-error', data: { err } }))
-        monitor.on('data', (stats) => this.push({ tag: 'asset-stats', data: stats }))
-        const dir = asset.path
-        this.push({ tag: 'syncing', data: { link, dir } })
-        try {
-          await bundle.calibrate({ sync: false })
-        } catch (err) {
-          await session.close()
-          throw err
-        }
-        let only = opts.only
-        let select = null
-        if (only) {
-          only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim().replace(/__HOST__/g, require.addon.host))
-          select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
-        }
-        const extraOpts = entry === null ? { prefix, filter: select } : { filter: select || ((key) => key === prefix) }
-        const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
-        for await (const diff of mirror) {
-          if (diff.op === 'add') {
-            this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
-          } else if (diff.op === 'change') {
-            this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
-          } else if (diff.op === 'remove') {
-            this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
-          }
-        }
-        return asset
-      },
+      asset: (opts) => this.asset(opts, corestore),
       failure (err) { app.report({ err }) }
     })
 
@@ -258,8 +276,21 @@ module.exports = class Run extends Opstream {
     app.linker = linker
     app.bundle = appBundle
 
+    LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
-      current = await appBundle.calibrate()
+      await state.initialize({ bundle: app.bundle, app })
+      LOG.info(LOG_RUN_LINK, id, 'state initialized')
+    } catch (err) {
+      LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
+    }
+
+    LOG.info(LOG_RUN_LINK, id, 'determining assets')
+    state.update({ assets: current && !state.checkout ? current.assets : await app.bundle.assets() })
+
+    LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
+
+    try {
+      current = { checkout: await app.bundle.calibrate(), assets: state.assets }
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
@@ -271,20 +302,9 @@ module.exports = class Run extends Opstream {
       }
     }
 
-    LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    state.assets = current && !state.checkout ? current.assets : await bundle.assets()
+    await this.model.setCurrent(state.applink, current)
 
-    LOG.info(LOG_RUN_LINK, id, 'initializing state')
-    try {
-      await state.initialize({ bundle: appBundle, app })
-      LOG.info(LOG_RUN_LINK, id, 'state initialized')
-    } catch (err) {
-      LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
-    }
-
-    await this.model.setCurrent(state.applink, { assets: state.assets, checkout: current })
-
-    if (appBundle.platformVersion !== null) {
+    if (app.bundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
       const bundle = await app.bundle.bundle(state.entrypoint)
