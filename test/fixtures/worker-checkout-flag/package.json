@@ -1,0 +1,6 @@
+{
+  "name": "worker-checkout-flag",
+  "main": "index.js",
+  "type": "module",
+  "pear": {}
+}
