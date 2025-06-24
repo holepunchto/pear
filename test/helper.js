@@ -14,6 +14,7 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('pear-api/constants')
+const opwait = require('pear-api/opwait')
 const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
@@ -133,6 +134,10 @@ class Helper extends IPC.Client {
     const buf = Buffer.alloc(32)
     sodium.randombytes_buf(buf)
     return buf.toString('hex')
+  }
+
+  static opwait(stream, fn) {
+    return opwait(stream, fn)
   }
 
   static async teardownStream (stream) {

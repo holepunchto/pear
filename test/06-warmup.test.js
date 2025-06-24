@@ -61,6 +61,24 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   is(warming.success, true, 'Warmup completed')
 })
 
+test('stage but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  try{
+    comment('staging')
+    const staging = await helper.stage({ dir: '/path/to/dir' })
+    await Helper.opwait(staging)
+    pass()
+  } catch (err) {
+    console.error(err)
+    fail()
+  }
+})
+
 test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   const dir = appWithIgnore
 

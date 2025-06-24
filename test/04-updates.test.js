@@ -16,6 +16,42 @@ const PLATFORM_STAGE_TIMEOUT = 30_000
 
 test.hook('updates setup', rig.setup)
 
+test('seed but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  try{
+    comment('seeding')
+    const seeding = await helper.seed({ dir: '/path/to/dir' })
+    await Helper.opwait(seeding)
+    pass()
+  } catch (err) {
+    console.error(err)
+    fail()
+  }
+})
+
+test('release but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  try{
+    comment('releasing')
+    const releasing = await helper.release({ dir: '/path/to/dir' })
+    await Helper.opwait(releasing)
+    pass()
+  } catch (err) {
+    console.error(err)
+    fail()
+  }
+})
+
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {
   plan(7)
 

@@ -35,6 +35,24 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
 })
 
+test('pear dump skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  try{
+    comment('dumping')
+    const dumping = await helper.dump({ dir: '/path/to/dir' })
+    await Helper.opwait(dumping)
+    pass()
+  } catch (err) {
+    console.error(err)
+    fail()
+  }
+})
+
 test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
   plan(4)
 

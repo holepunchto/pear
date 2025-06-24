@@ -12,7 +12,6 @@ const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
-const skippingLinkDir = path.join(Helper.localDir, 'test', 'fixtures', 'skipping-link')
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
@@ -267,24 +266,4 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
   is(info.fragment, fragment)
 
   await Helper.untilClose(run.pipe)
-})
-
-test('skipping stage link in app', async function ({ plan, pass, fail }) {
-  plan(1)
-  const helper = new Helper()
-  await helper.ready()
-
-  const tmpdir = await tmp()
-  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
-  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
-  await fs.copyFile(path.join(skippingLinkDir, 'index.js'), path.join(tmpdir, 'index.js'))
-
-  const run = await Helper.run({ link: tmpdir })
-  try {
-    await Helper.untilResult(run.pipe)
-    pass()
-  } catch (err) {
-    console.error(err)
-    fail()
-  }
 })
