@@ -1,21 +1,17 @@
 'use strict'
 const test = require('brittle')
+const opwait = require('pear-api/opwait')
 const Helper = require('./helper')
+const skippingInfoLinkDir = path.join(Helper.localDir, 'test', 'fixtures', 'skipping-info-link')
 
-test('info but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+test('Pear.info but skip link arg', async function ({ execution, plan, teardown, comment }) {
   plan(1)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try {
-    comment('getting info')
-    const infoStream = await helper.info({ dir: '/path/to/dir' })
-    await Helper.opwait(infoStream)
-    pass()
-  } catch (err) {
-    console.error(err)
-    fail()
-  }
+  comment('getting info')
+  const info = await helper.info({ dir: '/path/to/dir' })
+  await execution(async () => {await opwait(info)})
 })

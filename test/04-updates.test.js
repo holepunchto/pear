@@ -4,6 +4,7 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
+const opwait = require('pear-api/opwait')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
@@ -16,40 +17,28 @@ const PLATFORM_STAGE_TIMEOUT = 30_000
 
 test.hook('updates setup', rig.setup)
 
-test('seed but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+test('seed but skip link arg', async function ({ execution, plan, teardown, comment }) {
   plan(1)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try {
-    comment('seeding')
-    const seeding = await helper.seed({ dir: '/path/to/dir' })
-    await Helper.opwait(seeding)
-    pass()
-  } catch (err) {
-    console.error(err)
-    fail()
-  }
+  comment('seeding')
+  const seeding = await helper.seed({ dir: '/path/to/dir' })
+  await execution(async () => {await opwait(seeding)})
 })
 
-test('release but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+test('release but skip link arg', async function ({ execution, plan, teardown, comment }) {
   plan(1)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try {
-    comment('releasing')
-    const releasing = await helper.release({ dir: '/path/to/dir' })
-    await Helper.opwait(releasing)
-    pass()
-  } catch (err) {
-    console.error(err)
-    fail()
-  }
+  comment('releasing')
+  const releasing = await helper.release({ dir: '/path/to/dir' })
+  await execution(async () => {await opwait(releasing)})
 })
 
 test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown, timeout }) {

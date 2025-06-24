@@ -3,6 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
 const Helper = require('./helper')
+const opwait = require('pear-api/opwait')
 
 const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
 const prefetch = path.join(Helper.localDir, 'test', 'fixtures', 'warmup-with-prefetch')
@@ -61,22 +62,16 @@ test('stage warmup with prefetch', async function ({ ok, is, plan, comment, tear
   is(warming.success, true, 'Warmup completed')
 })
 
-test('stage but skip link arg', async function ({ pass, fail, plan, teardown, comment }) {
+test('stage but skip link arg', async function ({ execution, plan, teardown, comment }) {
   plan(1)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  try {
-    comment('staging')
-    const staging = await helper.stage({ dir: '/path/to/dir' })
-    await Helper.opwait(staging)
-    pass()
-  } catch (err) {
-    console.error(err)
-    fail()
-  }
+  comment('staging')
+  const staging = await helper.stage({ dir: '/path/to/dir' })
+  await execution(async () => {await opwait(staging)})
 })
 
 test('stage with ignore', async function ({ ok, is, plan, teardown }) {
