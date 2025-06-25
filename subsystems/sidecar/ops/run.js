@@ -79,71 +79,6 @@ module.exports = class Run extends Opstream {
     }
   }
 
-  async asset (opts, corestore) {
-    LOG.info(this.LOG_RUN_LINK, 'getting  asset', opts.link.slice(0, 14) + '..')
-
-    let asset = await this.sidecar.model.getAsset(opts.link)
-    if (asset !== null) return asset
-
-    asset = {
-      ...opts,
-      path: path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
-    }
-
-    LOG.info(this.LOG_RUN_LINK, 'syncing asset', asset.link.slice(0, 14) + '..')
-    const parsed = plink.parse(asset.link)
-
-    const dst = new LocalDrive(asset.path)
-    const key = parsed.drive.key
-    let src = null
-    try {
-      src = new Hyperdrive(corestore, key)
-      await src.ready()
-    } catch (err) {
-      if (err.code !== 'DECODING_ERROR') throw err
-    }
-    const bundle = new Bundle({
-      key,
-      corestore,
-      drive: src,
-      checkout: parsed.drive.length,
-      swarm: this.sidecar.swarm
-    })
-    await this.session.add(bundle)
-    bundle.join()
-    const monitor = new DriveMonitor(bundle.drive)
-    this.on('end', () => monitor.destroy())
-    monitor.on('error', (err) => this.push({ tag: 'assetStatsErr', data: { err } }))
-    monitor.on('data', (stats) => this.push({ tag: 'assetStats', data: stats }))
-    this.push({ tag: 'assetSyncing', data: { link: asset.link, dir: asset.path } })
-    try {
-      await bundle.calibrate()
-    } catch (err) {
-      await this.session.close()
-      throw err
-    }
-    let only = opts.only
-    let select = null
-    if (only) {
-      only = (Array.isArray(only) ? only : only.split(',')).map((s) => s.trim().replace(/%%HOST%%/g, require.addon.host))
-      select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
-    }
-    const mirror = src.mirror(dst, { filter: select })
-    for await (const diff of mirror) {
-      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
-      if (diff.op === 'add') {
-        this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
-      } else if (diff.op === 'change') {
-        this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
-      } else if (diff.op === 'remove') {
-        this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
-      }
-    }
-    await this.sidecar.model.addAsset(opts.link, asset)
-    LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
-    return asset
-  }
-
   async run ({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg = null, pid } = {}) {
     const { sidecar, session, LOG_RUN_LINK } = this
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
@@ -317,6 +252,71 @@ module.exports = class Run extends Opstream {
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { id, startId, bundle }
     // start is tied to the lifecycle of the client itself so we don't tear it down
+  }
+
+  async asset (opts, corestore) {
+    LOG.info(this.LOG_RUN_LINK, 'getting  asset', opts.link.slice(0, 14) + '..')
+
+    let asset = await this.sidecar.model.getAsset(opts.link)
+    if (asset !== null) return asset
+
+    asset = {
+      ...opts,
+      path: path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+    }
+
+    LOG.info(this.LOG_RUN_LINK, 'syncing asset', asset.link.slice(0, 14) + '..')
+    const parsed = plink.parse(asset.link)
+
+    const dst = new LocalDrive(asset.path)
+    const key = parsed.drive.key
+    let src = null
+    try {
+      src = new Hyperdrive(corestore, key)
+      await src.ready()
+    } catch (err) {
+      if (err.code !== 'DECODING_ERROR') throw err
+    }
+    const bundle = new Bundle({
+      key,
+      corestore,
+      drive: src,
+      checkout: parsed.drive.length,
+      swarm: this.sidecar.swarm
+    })
+    await this.session.add(bundle)
+    bundle.join()
+    const monitor = new DriveMonitor(bundle.drive)
+    this.on('end', () => monitor.destroy())
+    monitor.on('error', (err) => this.push({ tag: 'assetStatsErr', data: { err } }))
+    monitor.on('data', (stats) => this.push({ tag: 'assetStats', data: stats }))
+    this.push({ tag: 'assetSyncing', data: { link: asset.link, dir: asset.path } })
+    try {
+      await bundle.calibrate()
+    } catch (err) {
+      await this.session.close()
+      throw err
+    }
+    let only = opts.only
+    let select = null
+    if (only) {
+      only = (Array.isArray(only) ? only : only.split(',')).map((s) => s.trim().replace(/%%HOST%%/g, require.addon.host))
+      select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+    }
+    const mirror = src.mirror(dst, { filter: select })
+    for await (const diff of mirror) {
+      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
+      if (diff.op === 'add') {
+        this.push({ tag: 'byteDiff', data: { type: 1, sizes: [diff.bytesAdded], message: diff.key } })
+      } else if (diff.op === 'change') {
+        this.push({ tag: 'byteDiff', data: { type: 0, sizes: [-diff.bytesRemoved, diff.bytesAdded], message: diff.key } })
+      } else if (diff.op === 'remove') {
+        this.push({ tag: 'byteDiff', data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key } })
+      }
+    }
+    await this.sidecar.model.addAsset(opts.link, asset)
+    LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
+    return asset
   }
 
   async #updatePearInterface (drive) {
