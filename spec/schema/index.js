@@ -129,23 +129,103 @@ const encoding4 = {
   }
 }
 
+// @pear/asset.only
+const encoding5_4 = encoding3_3
+
 // @pear/asset
 const encoding5 = {
   preencode (state, m) {
     c.string.preencode(state, m.link)
+    c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
+    state.end++ // max flag is 2 so always one byte
+
+    if (m.name) c.string.preencode(state, m.name)
+    if (m.only) encoding5_4.preencode(state, m.only)
   },
   encode (state, m) {
+    const flags =
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0)
+
     c.string.encode(state, m.link)
+    c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
+    c.uint.encode(state, flags)
+
+    if (m.name) c.string.encode(state, m.name)
+    if (m.only) encoding5_4.encode(state, m.only)
   },
   decode (state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+    const flags = c.uint.decode(state)
 
     return {
       link: r0,
-      path: r1
+      ns: r1,
+      path: r2,
+      name: (flags & 1) !== 0 ? c.string.decode(state) : null,
+      only: (flags & 2) !== 0 ? encoding5_4.decode(state) : null
+    }
+  }
+}
+
+// @pear/checkout
+const encoding6 = {
+  preencode (state, m) {
+    c.uint.preencode(state, m.fork)
+    c.uint.preencode(state, m.length)
+  },
+  encode (state, m) {
+    c.uint.encode(state, m.fork)
+    c.uint.encode(state, m.length)
+  },
+  decode (state) {
+    const r0 = c.uint.decode(state)
+    const r1 = c.uint.decode(state)
+
+    return {
+      fork: r0,
+      length: r1
+    }
+  }
+}
+
+// @pear/current.checkout
+const encoding7_1 = c.frame(encoding6)
+// @pear/current.assets
+const encoding7_2 = c.array(c.frame(encoding5))
+
+// @pear/current
+const encoding7 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    state.end++ // max flag is 2 so always one byte
+
+    if (m.checkout) encoding7_1.preencode(state, m.checkout)
+    if (m.assets) encoding7_2.preencode(state, m.assets)
+  },
+  encode (state, m) {
+    const flags =
+      (m.checkout ? 1 : 0) |
+      (m.assets ? 2 : 0)
+
+    c.string.encode(state, m.link)
+    c.uint.encode(state, flags)
+
+    if (m.checkout) encoding7_1.encode(state, m.checkout)
+    if (m.assets) encoding7_2.encode(state, m.assets)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: r0,
+      checkout: (flags & 1) !== 0 ? encoding7_1.decode(state) : null,
+      assets: (flags & 2) !== 0 ? encoding7_2.decode(state) : null
     }
   }
 }
@@ -178,6 +258,8 @@ function getEncoding (name) {
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
     case '@pear/asset': return encoding5
+    case '@pear/checkout': return encoding6
+    case '@pear/current': return encoding7
     default: throw new Error('Encoder not found ' + name)
   }
 }

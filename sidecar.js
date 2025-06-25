@@ -26,6 +26,7 @@ crasher('sidecar', SWAP)
 
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
+  console.log('HELLO?')
   LOG.error('internal', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })
@@ -50,7 +51,6 @@ async function bootSidecar () {
 
   const drive = await createPlatformDrive()
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
-
   const updater = createUpdater()
 
   const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })

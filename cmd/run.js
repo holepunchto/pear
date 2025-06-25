@@ -8,8 +8,6 @@ const { spawn: daemon } = require('bare-daemon')
 const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-api/constants')
-const teardown = require('pear-api/teardown')
-const opwait = require('pear-api/opwait')
 const plink = require('pear-api/link')
 const {
   ERR_OPERATION_FAILED,
@@ -18,10 +16,10 @@ const {
   ERR_LEGACY
 } = require('pear-api/errors')
 const State = require('pear-api/state')
-const { outputter, permit, ansi } = require('pear-api/terminal')
+const { outputter, permit, byteSize, ansi } = require('pear-api/terminal')
 const Pre = require('../pre')
 const noop = () => {}
-const output = outputter('run', {
+const preout = outputter('run', {
   preio ({ from, output, index, fd }, { io }) {
     if (!io) return {}
     const std = fd === 1 ? 'stdout' : 'stderr'
@@ -36,7 +34,19 @@ const output = outputter('run', {
     if (success === false) return { success: false, message: output?.stack || output?.message || 'Unknown Pre Error' }
     return pre + output.tag + suffix
   },
-  final: {} // hide "{tick} Success", not needed for run
+  final: {} // hide "{tick} Success"
+})
+
+const runout = outputter('run', {
+  assetStats ({ upload, download, peers }) {
+    const dl = download.total + download.speed === 0 ? '' : `[${ansi.down} ${byteSize(download.total)} - ${byteSize(download.speed)}/s ] `
+    const ul = upload.total + upload.speed === 0 ? '' : `[${ansi.up} ${byteSize(upload.total)} - ${byteSize(upload.speed)}/s ] `
+    return {
+      output: 'status',
+      message: `Syncing [ Peers: ${peers} ] ${dl}${ul}`
+    }
+  },
+  final: {} // hide "{tick} Success"
 })
 
 module.exports = (ipc) => async function run (cmd, devrun = false) {
@@ -78,7 +88,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     if (isPath) link = plink.normalize(pathToFileURL(path.join(dir, base.entrypoint || '/')).href) + search + hash
     if (flags.pre) {
       const pre = new Pre('run', base)
-      pkg = await output({ ctrlTTY: false }, pre, { io: flags.preio, quiet: flags.prequiet })
+      pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, { io: flags.preio, quiet: flags.prequiet })
     }
   }
 
@@ -116,7 +126,8 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     stream.removeListener('data', ondata)
   })
 
-  const { startId, id, bundle, bail, success } = await opwait(stream)
+  const { startId, id, bundle, bail, success } = await runout({ json: flags.json }, stream)
+
   if (bail) {
     if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
@@ -126,10 +137,12 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   const state = new State({ startId, id, flags, link, dir, cmdArgs, cwd })
 
   await ipc.ready()
+
   const config = await ipc.config()
+
   state.update({ config })
 
-  global.Pear = new API(ipc, state, { teardown })
+  global.Pear = new API(ipc, state)
 
   const protocol = new Module.Protocol({
     exists (url) {

@@ -41,7 +41,7 @@ module.exports = class Info extends Opstream {
     }
 
     if (link || channel) {
-      bundle = new Bundle({ corestore, key, drive })
+      bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, drive })
       await bundle.ready()
     }
 
@@ -54,7 +54,7 @@ module.exports = class Info extends Opstream {
     await this.sidecar.ready()
     if (bundle) {
       await session.add(bundle)
-      await bundle.join(this.sidecar.swarm)
+      await bundle.join()
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {

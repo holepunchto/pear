@@ -5,7 +5,7 @@
 ### Features
 
 * CLI - `pear data manifest` to read platform database manifest
-* API - [`pear-api`][v2.0.0:pear-api] - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.asset()`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
+* API - [`pear-api`][v2.0.0:pear-api] - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
 * Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
 * CLI - `pear dump --only` - filter by paths
 * CLI - `pear dump --no-prune` - disallow removals

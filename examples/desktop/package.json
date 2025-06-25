@@ -22,7 +22,7 @@
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
-    "pear-bridge": "^1.0.0",
-    "pear-electron": "^1.5.2"
+    "pear-bridge": "^1.1.1",
+    "pear-electron": "^1.7.0"
   }
 }
