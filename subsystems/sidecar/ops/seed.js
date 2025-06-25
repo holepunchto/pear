@@ -35,7 +35,7 @@ module.exports = class Seed extends Opstream {
     const query = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
     const encryptionKey = query?.encryptionKey
 
-    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey })
+    const bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, channel, status, encryptionKey })
 
     try {
       await session.add(bundle)
@@ -50,7 +50,7 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
-    await bundle.join(this.sidecar.swarm, { server: true })
+    await bundle.join({ server: true })
 
     try {
       await bundle.drive.get('/package.json')
