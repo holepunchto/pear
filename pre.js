@@ -28,10 +28,10 @@ module.exports = class Pre extends Readable {
     this.#pre().catch((err) => this.destroy(err))
   }
 
-  #final (pkg = null) {
+  #final () {
     if (this.#finalled) return
     this.#finalled = true
-    this.push({ tag: 'final', data: pkg })
+    this.push({ tag: 'final', data: this.pkg })
     this.push(null)
   }
 
@@ -69,7 +69,7 @@ module.exports = class Pre extends Readable {
       this.options = await this.#run(this.options, link, this.index++, specifier)
     }
     this.pkg.pear = this.options
-    this.#final(this.pkg)
+    this.#final()
   }
 
   #run (options, link, index, from) {
