@@ -15,5 +15,3 @@ pipe.on('data', (data) => {
 })
 
 pipe.write('hello from app')
-
-Pear.teardown(() => { pipe.destroy() })
