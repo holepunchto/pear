@@ -143,11 +143,6 @@ pearSchema.register({
     {
       name: 'checkout',
       type: '@pear/checkout'
-    },
-    {
-      name: 'assets',
-      type: '@pear/asset',
-      array: true
     }
   ]
 })
