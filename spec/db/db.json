@@ -53,21 +53,9 @@
       "trigger": null
     },
     {
-      "name": "bundle-by-tags",
-      "namespace": "pear",
-      "id": 4,
-      "type": 2,
-      "collection": "@pear/bundle",
-      "unique": false,
-      "key": {
-        "type": "string",
-        "map": "tags"
-      }
-    },
-    {
       "name": "asset",
       "namespace": "pear",
-      "id": 5,
+      "id": 4,
       "type": 1,
       "indexes": [],
       "schema": "@pear/asset",
@@ -80,7 +68,7 @@
     {
       "name": "current",
       "namespace": "pear",
-      "id": 6,
+      "id": 5,
       "type": 1,
       "indexes": [],
       "schema": "@pear/current",
@@ -89,6 +77,18 @@
         "link"
       ],
       "trigger": null
+    },
+    {
+      "name": "bundle-by-tags",
+      "namespace": "pear",
+      "id": 6,
+      "type": 2,
+      "collection": "@pear/bundle",
+      "unique": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
     }
   ]
 }
