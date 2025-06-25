@@ -93,7 +93,7 @@ module.exports = class Bundle {
       return assets
     }
 
-    return this.updater.assets()
+    return this.updater.assets(manifest)
   }
 
   async #updates (updateNotify) {
