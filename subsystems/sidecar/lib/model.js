@@ -1,24 +1,31 @@
 'use strict'
 const fs = require('bare-fs')
-const path = require('bare-path')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const LocalDrive = require('localdrive')
 const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
-const { PLATFORM_DIR } = require('pear-api/constants')
-const { randomBytes } = require('hypercore-crypto')
+const { ERR_INVALID_LINK } = require('pear-api/errors')
 
 const origin = (link) => typeof link === 'string' ? plink.parse(link).origin : link.origin
 
 class Lock extends DBLock {
   #manual = false
+  #tx = null
   constructor (db) {
     super({
-      enter: () => db.transaction(),
+      enter: () => {
+        this.#tx = db.transaction()
+        return this.#tx
+      },
       exit: (tx) => tx.flush(),
       maxParallel: 1
     })
+  }
+
+  enter () {
+    if (this.#manual && this.#tx !== null) return this.#tx
+    return super.enter()
   }
 
   exit () {
@@ -100,24 +107,18 @@ module.exports = class Model {
     return result
   }
 
-  async touchAsset (link) {
+  async addAsset (link, { ns, name, only, path }) {
+    if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const tx = await this.lock.enter()
-    const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await tx.get('@pear/asset', get) ?? get
-    if (!asset.path) {
-      asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
-      LOG.trace('db', 'INSERT', '@pear/asset', asset)
-      await tx.insert('@pear/asset', asset)
-      asset.inserted = true
-    } else {
-      asset.inserted = false
-    }
+    const asset = { link, ns, name, only, path }
+    LOG.trace('db', 'INSERT', '@pear/asset', asset)
+    await tx.insert('@pear/asset', asset)
     await this.lock.exit()
     return asset
   }
 
   async getAsset (link) {
+    if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const get = { link }
     LOG.trace('db', 'GET', '@pear/asset', get)
     const asset = await this.db.get('@pear/asset', get)
@@ -130,6 +131,7 @@ module.exports = class Model {
   }
 
   async removeAsset (link) {
+    if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const get = { link }
     const tx = await this.lock.enter()
     LOG.trace('db', 'GET', '@pear/asset', get)
@@ -141,6 +143,24 @@ module.exports = class Model {
     }
     await this.lock.exit()
     return asset
+  }
+
+  async getCurrent (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const current = await this.db.get('@pear/current', get)
+    current.assets = Object.fromEntries(current.assets.map(({ ns, ...asset }) => [ns, asset]))
+    return current
+  }
+
+  async setCurrent (link, { assets, checkout } = {}) {
+    const current = {
+      link,
+      assets: Object.entries(assets).map(([ns, asset]) => ({ ns, ...asset })),
+      checkout: { fork: checkout.fork, length: checkout.length }
+    }
+    LOG.trace('db', 'INSERT', '@pear/current', current)
+    return this.db.insert('@pear/current', current)
   }
 
   async getDhtNodes () {
