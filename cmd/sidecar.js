@@ -40,13 +40,8 @@ module.exports = (ipc) => async function sidecar (cmd) {
   if (commands.length > 0) {
     print('Restart Commands:', 0)
     for (const { dir, cmdArgs = [] } of commands) {
-      const runix = cmdArgs.indexOf('--run')
       const devix = cmdArgs.indexOf('--dev')
-      if (runix > -1) {
-        const key = cmdArgs[runix + 1]
-        cmdArgs.splice(runix, 2)
-        cmdArgs.unshift('run', key)
-      } else if (devix > -1) {
+      if (devix > -1) {
         cmdArgs[devix] = 'dev'
         if (cmdArgs[devix + 1][0] !== '/' && cmdArgs[devix + 1][0] !== '.') {
           cmdArgs.splice(devix + 1, 0, dir)
