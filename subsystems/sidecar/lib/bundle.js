@@ -46,7 +46,6 @@ module.exports = class Bundle {
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
     this._asset = asset
     if (this.corestore) {
-      this._mutex = null
       this.updater = new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
@@ -57,7 +56,6 @@ module.exports = class Bundle {
         this.status({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
       })
     } else {
-      this._mutex = new RW()
       this.updater = null
       this.replicator = null
     }
@@ -76,24 +74,15 @@ module.exports = class Bundle {
 
     this.initializing = this.#init()
 
-    if (typeof updateNotify === 'function') this.#updates(updateNotify)
+    if (typeof updateNotify === 'function') this.#updates(updateNotify).catch((err) => this.fatal(err))
   }
 
   async assets (manifest) {
-    if (this.updater === null) {
-      const assets = {}
-      await this._mutex.write.lock()
-      try {
-        for (const [ns, asset] of Object.entries(manifest.pear?.assets || {})) {
-          assets[ns] = await this._asset({ ns, ...asset })
-        }
-      } finally {
-        this._mutex.write.unlock()
-      }
-      return assets
+    const assets = {}
+    for (const [ns, asset] of Object.entries(manifest.pear?.assets || {})) {
+      assets[ns] = await this._asset({ ns, ...asset })
     }
-
-    return this.updater.assets(manifest)
+    return assets
   }
 
   async #updates (updateNotify) {
@@ -104,13 +93,13 @@ module.exports = class Bundle {
         this.watchingUpdates = watch(this.drive)
         for await (const { key, length, fork, diff } of this.watchingUpdates) {
           if (this.updater !== null) await this.updater.wait({ length, fork })
-          updateNotify({ key, length, fork }, { link: this.link, diff })
+          await updateNotify({ key, length, fork }, { link: this.link, diff })
         }
       } else {
         this.watchingUpdates = releaseWatcher(this.drive.version || 0, this.drive)
         for await (const upd of this.watchingUpdates) {
           if (this.updater !== null) await this.updater.wait({ length: upd.length, fork: upd.fork })
-          updateNotify(
+          await updateNotify(
             { key: this.hexKey, length: upd.length, fork: upd.fork },
             { link: this.link, diff: null }
           )
@@ -510,18 +499,9 @@ class AppUpdater extends ReadyResource {
     return { key, abi: this.abi, compat: [] }
   }
 
-  async assets (manifest = null) {
-    const pkg = manifest ?? await this.snapshot.db.get('manifest')
-    const assets = {}
-    await this._mutex.write.lock()
-    try {
-      for (const [key, asset] of Object.entries(pkg?.pear?.assets || {})) {
-        assets[key] = await this._asset({ key, ...asset })
-      }
-    } finally {
-      this._mutex.write.unlock()
-    }
-    return assets
+  async assets () {
+    const pkg = await this.snapshot.db.get('manifest')
+    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {})) await this._asset({ ns, ...asset })
   }
 
   async _getLock () {

@@ -66,7 +66,7 @@ module.exports = (ipc) => async function stage (cmd) {
   if (cmd.flags.pre) {
     pkg = await State.localPkg(base)
     if (pkg !== null) {
-      const pre = new Pre('stage', { dir, cwd })
+      const pre = new Pre('stage', { dir, cwd }, pkg)
       pkg = await output({ ctrlTTY: false }, pre, { pre: true, prequiet: cmd.flags.prequiet, preio: cmd.flags.preio })
     }
   }
