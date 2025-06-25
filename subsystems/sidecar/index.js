@@ -660,6 +660,8 @@ class Sidecar extends ReadyResource {
     LOG.info('session', 'new session for', startId)
     const session = new Session(client)
 
+    await gcOrphanWorkers(this.apps)
+
     const running = this.#start(flags, client, session, env, cwd, link, dir, startId, args, cmdArgs, pid)
     this.running.set(startId, { client, running })
     session.teardown(() => {
@@ -1006,6 +1008,20 @@ function pickData () {
       cb(null, data)
     }
   })
+}
+
+async function gcOrphanWorkers (apps) {
+  const runningApps = apps.map(app => app.state?.config.id).filter(id => id !== undefined)
+  for await (const app of apps) {
+    if (app.state && app.state.pid && app.state.parent && !runningApps.includes(app.state.parent)) {
+      try {
+        LOG.info('sidecar', 'Killing orphan worker process with PID', app.state.pid)
+        os.kill(app.state.pid, 'SIGKILL')
+      } catch (err) {
+        LOG.error('sidecar', 'Error killing orphan worker', err)
+      }
+    }
+  }
 }
 
 module.exports = Sidecar
