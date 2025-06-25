@@ -52,12 +52,12 @@ pearSchema.register({
       required: true
     },
     {
-      name: 'ns',
+      name: 'path',
       type: 'string',
       required: true
     },
     {
-      name: 'path',
+      name: 'ns',
       type: 'string',
       required: true
     },
