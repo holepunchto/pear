@@ -220,7 +220,7 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    state.update({ assets: current && !state.checkout ? current.assets : await app.bundle.assets() })
+    state.update({ assets: current && !state.checkout ? current.assets : await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
 
@@ -237,7 +237,7 @@ module.exports = class Run extends Opstream {
       }
     }
 
-    await this.model.setCurrent(state.applink, current)
+    await this.sidecar.model.setCurrent(state.applink, current)
 
     if (app.bundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
