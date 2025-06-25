@@ -107,13 +107,13 @@
           "version": 1
         },
         {
-          "name": "ns",
+          "name": "path",
           "required": true,
           "type": "string",
           "version": 1
         },
         {
-          "name": "path",
+          "name": "ns",
           "required": true,
           "type": "string",
           "version": 1
@@ -127,6 +127,12 @@
           "name": "only",
           "array": true,
           "type": "string",
+          "version": 1
+        },
+        {
+          "name": "bytesAllocated",
+          "required": true,
+          "type": "uint",
           "version": 1
         }
       ]

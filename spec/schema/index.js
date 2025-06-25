@@ -136,12 +136,13 @@ const encoding5_4 = encoding3_3
 const encoding5 = {
   preencode (state, m) {
     c.string.preencode(state, m.link)
-    c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
+    c.string.preencode(state, m.ns)
     state.end++ // max flag is 2 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding5_4.preencode(state, m.only)
+    c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     const flags =
@@ -149,12 +150,13 @@ const encoding5 = {
       (m.only ? 2 : 0)
 
     c.string.encode(state, m.link)
-    c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
+    c.string.encode(state, m.ns)
     c.uint.encode(state, flags)
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding5_4.encode(state, m.only)
+    c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r0 = c.string.decode(state)
@@ -164,10 +166,11 @@ const encoding5 = {
 
     return {
       link: r0,
-      ns: r1,
-      path: r2,
+      path: r1,
+      ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding5_4.decode(state) : null
+      only: (flags & 2) !== 0 ? encoding5_4.decode(state) : null,
+      bytesAllocated: c.uint.decode(state)
     }
   }
 }
