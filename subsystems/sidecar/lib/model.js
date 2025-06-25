@@ -149,6 +149,7 @@ module.exports = class Model {
     const get = { link }
     LOG.trace('db', 'GET', '@pear/asset', get)
     const current = await this.db.get('@pear/current', get)
+    if (current === null) return null
     current.assets = Object.fromEntries(current.assets.map(({ ns, ...asset }) => [ns, asset]))
     return current
   }
