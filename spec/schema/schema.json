@@ -22,6 +22,69 @@
       ]
     },
     {
+      "name": "checkout",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "fork",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "length",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "asset",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 3,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "path",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "ns",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "only",
+          "array": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "bytesAllocated",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
       "name": "manifest",
       "namespace": "pear",
       "compact": false,
@@ -95,10 +158,10 @@
       ]
     },
     {
-      "name": "asset",
+      "name": "current",
       "namespace": "pear",
       "compact": false,
-      "flagsPosition": -1,
+      "flagsPosition": 1,
       "fields": [
         {
           "name": "link",
@@ -107,15 +170,14 @@
           "version": 1
         },
         {
-          "name": "path",
-          "required": true,
-          "type": "string",
+          "name": "checkout",
+          "type": "@pear/checkout",
           "version": 1
         },
         {
-          "name": "bytesAllocated",
-          "required": true,
-          "type": "uint",
+          "name": "assets",
+          "array": true,
+          "type": "@pear/asset",
           "version": 1
         }
       ]
