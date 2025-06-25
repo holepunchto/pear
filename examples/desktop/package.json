@@ -8,7 +8,7 @@
   },
   "type": "module",
   "pear": {
-    "pre": "./pre.js",
+    "pre": "pear-electron/pre",
     "name": "deskex",
     "gui": {
       "main": "index.html",
