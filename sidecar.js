@@ -26,7 +26,6 @@ crasher('sidecar', SWAP)
 
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
-  console.log('HELLO?')
   LOG.error('internal', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })

@@ -1,6 +1,6 @@
 'use strict'
 const { Readable } = require('streamx')
-const State = require('pear-api/state')
+const Module = require('bare-module')
 const plink = require('pear-api/link')
 const fs = require('fs')
 const { isWindows } = require('which-runtime')
@@ -16,13 +16,14 @@ module.exports = class Pre extends Readable {
   options = null
   pre = null
   #finalled = false
-  constructor (op, { dir, cwd, entrypoint = '/' }) {
+  constructor (op, { dir, cwd, entrypoint = '/' }, pkg) {
     super()
     this.op = op
     this.dir = dir
     this.applink = pathToFileURL(dir).href
     this.cwd = cwd
     this.link = plink.normalize(pathToFileURL(path.join(dir, entrypoint)).href)
+    this.pkg = pkg
     this.index = 0
     this.#pre().catch((err) => this.destroy(err))
   }
@@ -35,7 +36,6 @@ module.exports = class Pre extends Readable {
   }
 
   async #pre () {
-    this.pkg = await State.localPkg(this)
     if (this.pkg === null) {
       this.#final()
       return
@@ -63,7 +63,8 @@ module.exports = class Pre extends Readable {
       if (this.link.endsWith(specifier)) continue
       specifier = specifier[0] === '/' ? '.' + specifier : specifier
       const base = this.applink.endsWith('/') ? this.applink : this.applink + '/'
-      const link = new URL(specifier, base).href
+      const url = specifier[0] === '.' ? new URL(specifier, base) : Module.resolve(specifier, new URL(base))
+      const link = url.href
       if (this.link === link) continue
       this.options = await this.#run(this.options, link, this.index++, specifier)
     }
@@ -73,7 +74,7 @@ module.exports = class Pre extends Readable {
 
   #run (options, link, index, from) {
     const { cwd } = this
-    const sp = spawn(RUNTIME, ['run', '--prerunning', '--trusted', link], {
+    const sp = spawn(RUNTIME, ['run', '--base', this.dir, '--prerunning', '--trusted', link], {
       stdio: ['ignore', 'pipe', 'pipe', 'overlapped'],
       windowsHide: true,
       cwd
