@@ -176,7 +176,8 @@ module.exports = class Run extends Opstream {
       LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
       throw ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
     }
-    let current = await sidecar.model.getCurrent(state.applink)
+
+    const current = await sidecar.model.getCurrent(state.applink)
     const checkoutLength = state.checkout ?? current?.checkout.length ?? null
     const appBundle = new Bundle({
       swarm: sidecar.swarm,
@@ -190,7 +191,10 @@ module.exports = class Run extends Opstream {
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       drive,
-      updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info)),
+      updateNotify: async (version, info) => {
+        if (state.updates) sidecar.updateNotify(version, info)
+        await this.sidecar.model.setCurrent(state.applink, { fork: version.fork, length: version.length })
+      },
       asset: (opts) => this.asset(opts, corestore),
       failure (err) { app.report({ err }) }
     })
@@ -220,12 +224,13 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    state.update({ assets: current && !state.checkout ? current.assets : await app.bundle.assets(state.manifest) })
+    state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
 
     try {
-      current = { checkout: await app.bundle.calibrate(), assets: state.assets }
+      const { fork, length } = await app.bundle.calibrate()
+      if (current === null) await this.sidecar.model.setCurrent(state.applink, { fork, length })
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
@@ -236,8 +241,6 @@ module.exports = class Run extends Opstream {
         throw err
       }
     }
-
-    await this.sidecar.model.setCurrent(state.applink, current)
 
     if (app.bundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
