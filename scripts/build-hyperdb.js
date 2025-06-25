@@ -26,8 +26,54 @@ pearSchema.register({
   ]
 })
 
-// structs
+pearSchema.register({
+  name: 'checkout',
+  fields: [
+    {
+      name: 'fork',
+      type: 'uint',
+      required: true
+    },
+    {
+      name: 'length',
+      type: 'uint',
+      required: true
+    }
+  ]
+})
 
+// both structs & custom types
+pearSchema.register({
+  name: 'asset',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'ns',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'path',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'name',
+      type: 'string'
+    },
+    {
+      name: 'only',
+      type: 'string',
+      array: true
+    }
+  ]
+})
+
+// structs
 pearSchema.register({
   name: 'manifest',
   fields: [
@@ -159,6 +205,12 @@ pearDB.collections.register({
 pearDB.collections.register({
   name: 'asset',
   schema: '@pear/asset',
+  key: ['link']
+})
+
+pearDB.collections.register({
+  name: 'current',
+  schema: '@pear/current',
   key: ['link']
 })
 
