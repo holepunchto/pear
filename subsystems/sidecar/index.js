@@ -1024,5 +1024,4 @@ async function gcOrphanWorkers (apps) {
   }
 }
 
-
 module.exports = Sidecar
