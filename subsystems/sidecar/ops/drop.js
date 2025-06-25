@@ -13,7 +13,7 @@ module.exports = class Drop extends Opstream {
   async #op ({ link }) {
     const persistedBundle = await this.sidecar.model.getBundle(link)
     if (!persistedBundle) {
-      throw ERR_INVALID_INPUT('Link was not found')
+      throw ERR_INVALID_INPUT('Link was not found ' + link)
     }
     this.push({ tag: 'resetting', data: { link } })
     const oldAppStorage = persistedBundle.appStorage

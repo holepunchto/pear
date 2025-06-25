@@ -8,7 +8,6 @@
   },
   "type": "module",
   "pear": {
-    "pre": "pear-electron/pre",
     "name": "deskex",
     "gui": {
       "main": "index.html",

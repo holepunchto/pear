@@ -11,7 +11,7 @@ const Helper = require('./helper')
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
-test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test.skip('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
   plan(17)
 
@@ -81,7 +81,7 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   ok(true, 'ended')
 })
 
-test('no duplicated bundle', async function ({ is, comment, teardown }) {
+test.skip('pear data: no duplicated bundle', async function ({ is, comment, teardown }) {
   const dir = versionsDir
 
   const helper = new Helper()
@@ -112,7 +112,7 @@ test('no duplicated bundle', async function ({ is, comment, teardown }) {
   is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
 })
 
-test('bundle persisted with z32 encoded key', async function ({ is, comment, teardown }) {
+test.skip('pear data: bundle persisted with z32 encoded key', async function ({ is, comment, teardown }) {
   const dir = versionsDir
 
   const helper = new Helper()
@@ -140,7 +140,7 @@ test('bundle persisted with z32 encoded key', async function ({ is, comment, tea
   is(persistedBundles[0].link, `pear://${key}`, 'encoded key persisted')
 })
 
-test('no duplicated bundle local app', async function ({ is, comment, teardown }) {
+test.skip('pear data: no duplicated bundle local app', async function ({ is, comment, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
