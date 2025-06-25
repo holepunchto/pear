@@ -1563,7 +1563,7 @@ class PearGUI extends ReadyResource {
     })
 
     electron.ipcMain.on('workerRun', (evt, link, args) => {
-      const worker = new Worker({ parent: this.state.id })
+      const worker = new Worker({ parent: this.state.id, applink: this.state.config.applink, length: this.state.length, fork: this.state.fork })
       const pipe = worker.run(link, args)
       const id = this.pipes.alloc(pipe)
       pipe.on('close', () => {
