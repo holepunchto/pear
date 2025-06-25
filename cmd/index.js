@@ -60,9 +60,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'seed',
     summary('Seed or reseed a project'),
     description`
-      Specify channel or key to seed a project.
+      Specify channel or link to seed a project.
 
-      Specify a remote key to reseed.
+      Specify a remote link to reseed.
     `,
     arg('<channel|link>', 'Channel name or Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
@@ -80,7 +80,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Channel name must be specified on first stage,
       in order to generate the initial key.
 
-      Outputs diff information and project key.
+      Outputs diff information and project link.
     `,
     arg('<channel|link>', 'Channel name or Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
@@ -115,7 +115,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const run = command(
     'run',
-    summary('Run an application from a key or dir'),
+    summary('Run an application from a link or dir'),
     description`
       ${ansi.bold('link')}   pear://<key> | pear://<alias>
       ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
@@ -128,7 +128,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'info',
     summary('View project information'),
     description`
-      Supply a key or channel to view application information.
+      Supply a link or channel to view application information.
 
       Supply no argument to view platform information.
     `,
@@ -146,7 +146,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const dump = command(
     'dump',
-    summary('Synchronize files from key to dir'),
+    summary('Synchronize files from link to dir'),
     arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
     arg('<dir>', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
