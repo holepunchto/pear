@@ -39,7 +39,6 @@ const ops = {
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
   Dump: require('./ops/dump'),
-  Asset: require('./ops/asset'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
@@ -332,8 +331,6 @@ class Sidecar extends ReadyResource {
   stage (params, client) { return new ops.Stage(params, client, this) }
 
   dump (params, client) { return new ops.Dump(params, client, this) }
-
-  asset (params, client) { return new ops.Asset(params, client, this) }
 
   info (params, client) { return new ops.Info(params, client, this) }
 
