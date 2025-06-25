@@ -73,21 +73,19 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   if (onDisk === false && isPear === false) throw ERR_INVALID_INPUT('Key must start with pear://')
 
   const cwd = os.cwd()
-  let dir = cwd
+  let dir = normalize(flags.base || cwd)
   let pkg = null
 
   if (onDisk) {
-    dir = normalize(pathname)
     const base = { cwd, dir, entrypoint: '/' }
     pkg = await State.localPkg(base) // may modify base.dir
     if (pkg === null) throw ERR_INVALID_PROJECT_DIR(`A valid package.json must exist (checked from "${dir}" to "${base.dir}")`)
     base.entrypoint = dir.slice(base.dir.length)
-
     dir = base.dir
     if (dir.length > 1 && dir.endsWith('/')) dir = dir.slice(0, -1)
     if (isPath) link = plink.normalize(pathToFileURL(path.join(dir, base.entrypoint || '/')).href) + search + hash
     if (flags.pre) {
-      const pre = new Pre('run', base)
+      const pre = new Pre('run', base, pkg)
       pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, { io: flags.preio, quiet: flags.prequiet })
     }
   }
@@ -116,7 +114,6 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   }
 
   const reporter = new Reporter()
-
   const stream = ipc.run({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs, pkg, pid: os.pid() })
   stream.on('data', function ondata ({ tag, data }) {
     if (tag !== 'initialized') return
