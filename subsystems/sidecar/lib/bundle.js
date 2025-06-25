@@ -1,23 +1,34 @@
 'use strict'
+const fs = require('fs')
+const { waitForLock } = require('fs-native-extensions')
+const RW = require('read-write-mutexify')
+const ReadyResource = require('ready-resource')
+const { Readable } = require('streamx')
+const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
 const watch = require('watch-drive')
+const hypercoreid = require('hypercore-id-encoding')
+const b4a = require('b4a')
 const { SWAP } = require('pear-api/constants')
 const Replicator = require('./replicator')
 const releaseWatcher = require('./release-watcher')
 const noop = Function.prototype
 
+const ABI = 0
+
 module.exports = class Bundle {
   platformVersion = null
   constructor (opts = {}) {
     const {
-      corestore = false, drive = false, checkout = 'release', appling,
-      key, channel, stage = false, status = noop, failure,
+      corestore = false, swarm, drive = false, checkout = 'release', appling,
+      key, channel, stage = false, status = noop, failure, asset,
       updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
+    this.swarm = swarm
     this.checkout = checkout ?? null
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
@@ -34,7 +45,10 @@ module.exports = class Bundle {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
+    this._asset = asset
     if (this.corestore) {
+      this._mutex = null
+      this.updater = new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
@@ -44,6 +58,8 @@ module.exports = class Bundle {
         this.status({ tag: 'peer-remove', data: peer.remotePublicKey.toString('hex') })
       })
     } else {
+      this._mutex = new RW()
+      this.updater = null
       this.replicator = null
     }
 
@@ -58,11 +74,27 @@ module.exports = class Bundle {
 
     this.announcing = null
     this.leaving = null
-    this.swarm = null
 
     this.initializing = this.#init()
 
     if (typeof updateNotify === 'function') this.#updates(updateNotify)
+  }
+
+  async assets (manifest) {
+    if (this.updater === null) {
+      const assets = {}
+      await this._mutex.write.lock()
+      try {
+        for (const [ns, asset] of Object.entries(manifest.pear?.assets || {})) {
+          assets[ns] = await this._asset({ ns, ...asset })
+        }
+      } finally {
+        this._mutex.write.unlock()
+      }
+      return assets
+    }
+
+    return this.updater.assets()
   }
 
   async #updates (updateNotify) {
@@ -72,11 +104,13 @@ module.exports = class Bundle {
       if (this.updatesDiff) {
         this.watchingUpdates = watch(this.drive)
         for await (const { key, length, fork, diff } of this.watchingUpdates) {
+          if (this.updater !== null) await this.updater.wait({ length, fork })
           updateNotify({ key, length, fork }, { link: this.link, diff })
         }
       } else {
         this.watchingUpdates = releaseWatcher(this.drive.version || 0, this.drive)
         for await (const upd of this.watchingUpdates) {
+          if (this.updater !== null) await this.updater.wait({ length: upd.length, fork: upd.fork })
           updateNotify(
             { key: this.hexKey, length: upd.length, fork: upd.fork },
             { link: this.link, diff: null }
@@ -219,15 +253,17 @@ module.exports = class Bundle {
     return promise
   }
 
-  async join (swarm, { server = false, client = true } = {}) {
+  // does not throw, must never throw:
+  async join ({ server = false, client = true } = {}) {
+    if (!this.swarm) return
     if (this.announcing) return this.announcing
-    this.swarm = swarm
-    this.announcing = this.replicator.join(swarm, { server, client })
+    this.announcing = this.replicator.join(this.swarm, { server, client })
     this.announcing.then(() => { this.leaving = null })
     this.announcing.catch(err => this.fatal(err))
     return this.announcing
   }
 
+  // does not throw, must never throw:
   async leave () {
     if (!this.swarm) return
     if (this.leaving) return this.leaving
@@ -246,6 +282,7 @@ module.exports = class Bundle {
     if (this.stage === false) {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
+
         if (this.release) {
           this.drive = this.drive.checkout(this.release)
         } else {
@@ -278,6 +315,8 @@ module.exports = class Bundle {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
       this.prefetch(ranges)
     }
+
+    return { key: hypercoreid.decode(this.drive.key), length: this.drive.core.length, fork: this.drive.core.fork }
   }
 
   async * progresser () {
@@ -309,4 +348,259 @@ module.exports = class Bundle {
     await this.drain()
     await this.drive.close()
   }
+}
+
+class AppUpdater extends ReadyResource {
+  static Watcher = class Watcher extends Readable {
+    constructor (updater, opts) {
+      super(opts)
+      this.updater = updater
+      this.updater._watchers.add(this)
+    }
+
+    _destroy (cb) {
+      this.updater._watchers.delete(this)
+      cb(null)
+    }
+  }
+
+  constructor (drive, {
+    abi = ABI,
+    lock = null,
+    checkout = null,
+    asset = noop,
+    corestore = null,
+    onupdating = noop,
+    onupdate = noop
+  } = {}) {
+    super()
+
+    this.corestore = corestore
+    this.drive = drive
+    this.checkout = checkout
+    this.onupdate = onupdate
+    this.onupdating = onupdating
+
+    this.lock = lock
+    this.abi = abi
+
+    this.snapshot = null
+    this.updated = false
+    this.updating = false
+    this.frozen = false
+
+    this._asset = asset
+    this._mutex = new RW()
+    this._running = null
+    this._lockFd = 0
+    this._shouldUpdateSwap = false
+    this._entrypoint = null
+    this._watchers = new Set()
+    this._bumpBound = this._bump.bind(this)
+
+    this.drive.core.on('append', this._bumpBound)
+    this.drive.core.on('truncate', this._bumpBound)
+
+    this.ready().catch(safetyCatch)
+  }
+
+  async wait ({ length, fork }, opts) {
+    if (fork < this.checkout.fork || (fork === this.checkout.fork && length <= this.checkout.length)) return this.checkout
+    for await (const checkout of this.watch(opts)) {
+      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length)) return checkout
+    }
+
+    return null
+  }
+
+  watch (opts) {
+    return new this.constructor.Watcher(this, opts)
+  }
+
+  async update () {
+    if (this.opened === false) await this.ready()
+    if (this.closing) throw new Error('Updater closing')
+
+    // if updating is set, but nothing is running we need to wait a tick
+    // this can only happen if the onupgrading hook/event calls update recursively, so just for extra safety
+    while (this.updating && !this._running) await Promise.resolve()
+
+    if (this._running) await this._running
+    if (this._running) return this._running // debounce
+
+    if (this.drive.core.length === this.checkout.length && this.drive.core.fork === this.checkout.fork) {
+      return this.checkout
+    }
+
+    if (this.frozen) return this.checkout
+
+    try {
+      this.updating = true
+      this._running = this._update()
+      await this._running
+    } finally {
+      this._running = null
+      this.updating = false
+    }
+
+    return this.checkout
+  }
+
+  _bump () {
+    this.update().catch(safetyCatch)
+  }
+
+  async _ensureValidCheckout (checkout) {
+    const conf = await this._getUpdatesConfig()
+    if (conf.abi <= this.abi) return
+
+    let compat = null
+
+    for (const next of conf.compat) {
+      if (next.abi > this.abi) break
+      compat = next
+    }
+
+    if (compat === null) {
+      throw new Error('No valid update exist')
+    }
+
+    if (compat.length < this.checkout.length) {
+      throw new Error('Refusing to go back in time')
+    }
+
+    this.frozen = true
+    checkout.length = compat.length
+    await this.snapshot.close()
+    this.snapshot = this.drive.checkout(checkout.length)
+  }
+
+  async _update () {
+    const old = this.checkout
+    const checkout = {
+      key: this.drive.core.id,
+      length: this.drive.core.length,
+      fork: this.drive.core.fork
+    }
+
+    this.snapshot = this.drive.checkout(checkout.length)
+
+    try {
+      await this._ensureValidCheckout(checkout)
+
+      await this.onupdating(checkout, old)
+      this.emit('updating', checkout, old)
+      await this.assets()
+      await this.snapshot.download()
+    } finally {
+      await this.snapshot.close()
+      this.snapshot = null
+    }
+
+    this.checkout = checkout
+    this.updated = true
+
+    await this.onupdate(checkout, old)
+    this.emit('update', checkout, old)
+
+    for (const w of this._watchers) w.push(checkout)
+  }
+
+  async _getUpdatesConfig () {
+    const pkg = await this.snapshot.db.get('manifest')
+    const updater = [].concat(pkg?.pear?.updates || [])
+    const key = this.snapshot.core.key
+
+    for (const u of updater) {
+      const k = hypercoreid.decode(u.key)
+      if (!b4a.equals(k, key)) continue
+      return { key: k, abi: u.abi || this.abi, compat: (u.compat || []).sort(sortABI) }
+    }
+
+    return { key, abi: this.abi, compat: [] }
+  }
+
+  async assets (manifest = null) {
+    const pkg = manifest ?? await this.snapshot.db.get('manifest')
+    const assets = {}
+    await this._mutex.write.lock()
+    try {
+      for (const [key, asset] of Object.entries(pkg?.pear?.assets || {})) {
+        assets[key] = await this._asset({ key, ...asset })
+      }
+    } finally {
+      this._mutex.write.unlock()
+    }
+    return assets
+  }
+
+  async _getLock () {
+    if (this.lock === null) return 0
+
+    const fd = await new Promise((resolve, reject) => {
+      fs.open(this.lock, 'w+', function (err, fd) {
+        if (err) return reject(err)
+        resolve(fd)
+      })
+    })
+
+    await waitForLock(fd)
+
+    return fd
+  }
+
+  async applyUpdate () {
+    await this._mutex.write.lock()
+    let lock = 0
+
+    try {
+      if (!this.updated) return null
+
+      lock = await this._getLock()
+
+      await this.assets()
+
+      this.emit('update-applied', this.checkout)
+
+      return this.checkout
+    } finally {
+      if (lock) await closeFd(lock)
+      this._mutex.write.unlock()
+    }
+  }
+
+  async _open () {
+    await this.drive.ready()
+
+    if (this.checkout === null) {
+      this.checkout = {
+        key: this.drive.core.id,
+        length: this.drive.core.length,
+        fork: this.drive.core.fork
+      }
+    }
+
+    this._bump() // bg
+  }
+
+  async _close () {
+    if (this.snapshot) await this.snapshot.close()
+
+    this.drive.core.removeListener('append', this._bumpBound)
+    this.drive.core.removeListener('truncate', this._bumpBound)
+
+    for (const w of this._watchers) w.push(null)
+    this._watchers.clear()
+  }
+}
+
+function sortABI (a, b) {
+  if (a.abi === b.abi) return a.length - b.length
+  return a.abi - b.abi
+}
+
+function closeFd (fd) {
+  return new Promise((resolve) => {
+    fs.close(fd, () => resolve())
+  })
 }
