@@ -42,37 +42,6 @@ pearSchema.register({
   ]
 })
 
-// both structs & custom types
-pearSchema.register({
-  name: 'asset',
-  fields: [
-    {
-      name: 'link',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'ns',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'path',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'name',
-      type: 'string'
-    },
-    {
-      name: 'only',
-      type: 'string',
-      array: true
-    }
-  ]
-})
-
 // structs
 pearSchema.register({
   name: 'manifest',
@@ -128,6 +97,36 @@ pearSchema.register({
       name: 'path',
       type: 'string',
       required: true
+    }
+  ]
+})
+
+pearSchema.register({
+  name: 'asset',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'path',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'ns',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'name',
+      type: 'string'
+    },
+    {
+      name: 'only',
+      type: 'string',
+      array: true
     }
   ]
 })

@@ -58,8 +58,8 @@ const encoding2_4 = c.array(c.string)
 const encoding2 = {
   preencode (state, m) {
     c.string.preencode(state, m.link)
-    c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
+    c.string.preencode(state, m.ns)
     state.end++ // max flag is 2 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
@@ -71,8 +71,8 @@ const encoding2 = {
       (m.only ? 2 : 0)
 
     c.string.encode(state, m.link)
-    c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
+    c.string.encode(state, m.ns)
     c.uint.encode(state, flags)
 
     if (m.name) c.string.encode(state, m.name)
@@ -86,8 +86,8 @@ const encoding2 = {
 
     return {
       link: r0,
-      ns: r1,
-      path: r2,
+      path: r1,
+      ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
       only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null
     }

@@ -54,13 +54,13 @@
           "version": 1
         },
         {
-          "name": "ns",
+          "name": "path",
           "required": true,
           "type": "string",
           "version": 1
         },
         {
-          "name": "path",
+          "name": "ns",
           "required": true,
           "type": "string",
           "version": 1
