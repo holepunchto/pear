@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
-test.skip('drop', async function ({ ok, not, plan, comment, teardown, timeout }) {
+test('drop', async function ({ ok, not, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
