@@ -91,7 +91,12 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     return stream
   }
 
+  console.log('setting debug interval')
+  const debugInterval = setInterval(() => console.log('waiting for ipc start...'), 1000)
+
   const { startId, host, id, type = 'desktop', bundle, bail, app } = await ipc.start({ flags, env: ENV, dir, link, cwd, args: appArgs, cmdArgs })
+
+  clearInterval(debugInterval)
 
   if (bail?.code === 'ERR_PERMISSION_REQUIRED' && !flags.detach) {
     throw new ERR_PERMISSION_REQUIRED('Permission required to run key', bail.info)
@@ -126,6 +131,8 @@ module.exports = async function run ({ ipc, args, cmdArgs, link, storage, detach
     // clear global handlers
     Bare.removeAllListeners('uncaughtException')
     Bare.removeAllListeners('unhandledRejection')
+
+    console.log('running module')
 
     // preserves uncaught exception (otherwise it becomes uncaught rejection)
     setImmediate(() => {
