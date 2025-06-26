@@ -1,5 +1,6 @@
 'use strict'
 const fs = require('bare-fs')
+const os = require('bare-os')
 const path = require('bare-path')
 const fsx = require('fs-native-extensions')
 const crypto = require('hypercore-crypto')
@@ -24,6 +25,7 @@ module.exports = class Run extends Opstream {
   }
 
   async #op (params) {
+    this.#gcOrphanWorkers()
     const { sidecar, client } = this
     const { flags, env, cwd, link, dir, args, cmdArgs, pkg = null } = params
     const { App } = sidecar
@@ -320,6 +322,25 @@ module.exports = class Run extends Opstream {
     await this.sidecar.model.addAsset(opts.link, asset)
     LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
     return asset
+  }
+
+  #gcOrphanWorkers () {
+    try {
+      for (const client of this.clients) {
+        const userData = client.userData
+        if (!userData) continue
+        if (userData.state && userData.state.pid && userData.state.parent && !this.sidecar.apps.includes(userData.state.parent)) {
+          try {
+            LOG.trace(this.LOG_RUN_LINK, 'Killing orphan worker process with PID', userData.state.pid)
+            os.kill(userData.state.pid, 'SIGKILL')
+          } catch (err) {
+            LOG.error('internal', 'Error killing orphan worker', err)
+          }
+        }
+      }
+    } catch (err) {
+      LOG.error('internal', 'gc orphan workers error', err)
+    }
   }
 
   async #updatePearInterface (drive) {
