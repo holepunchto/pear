@@ -1,0 +1,14 @@
+{
+  "name": "app-with-unignore",
+  "main": "index.js",
+  "pear": {
+    "name": "app-with-unignore",
+    "type": "terminal",
+    "stage": {
+      "ignore": [
+        "/modules-test/**/prebuilds-example",
+        "!/modules-test/dir1/prebuilds-example"
+      ]
+    }
+  }
+}
