@@ -4,12 +4,16 @@
 
 ### Improvements
 
-* Internal - Bare 1.19
+* Internal - Bare 1.20.2
 
 ### Fixes
 
 * Internal - Limited amount of connections per internal swarm topic
 * Mac - Disable resize window animation 
+* Internal - Swarm connections limit fix
+* Internal - Terminate non-responsive workers after 5 seconds
+* Internal - Terminate workers when parent app is not running
+* Sidecar - Start worker with parent's checkout by default
 
 ## v1.14.0
 
