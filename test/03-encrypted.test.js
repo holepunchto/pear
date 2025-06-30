@@ -8,7 +8,7 @@ const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 
 const rig = new Helper.Rig()
 
-// test.hook('encrypted setup', rig.setup)
+test.hook('encrypted setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
   timeout(180000)
@@ -69,4 +69,4 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(true, 'ended')
 })
 
-// test.hook('encrypted cleanup', rig.cleanup)
+test.hook('encrypted cleanup', rig.cleanup)
