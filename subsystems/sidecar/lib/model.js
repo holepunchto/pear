@@ -152,12 +152,15 @@ module.exports = class Model {
   }
 
   async setCurrent (link, checkout) {
+    const tx = await this.lock.enter()
     const current = {
       link,
       checkout: { fork: checkout.fork, length: checkout.length }
     }
     LOG.trace('db', 'INSERT', '@pear/current', current)
-    return this.db.insert('@pear/current', current)
+    const result = await tx.insert('@pear/current', current)
+    await this.lock.exit()
+    return result
   }
 
   async getDhtNodes () {
