@@ -66,6 +66,8 @@ module.exports = class Stage extends Opstream {
     if (state.options?.stage?.only) only = state.options?.stage?.only
     else only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
 
+    const type = state.manifest.pear?.type || 'desktop'
+    const isTerminal = type === 'terminal'
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
@@ -82,7 +84,7 @@ module.exports = class Stage extends Opstream {
     await glob.ready()
 
     const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
-    const builtins = sidecar.gunk.bareBuiltins
+    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
