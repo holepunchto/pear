@@ -1030,6 +1030,20 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
+
+  // forward compat facilities:
+
+  // do not port:
+  addAsset (params) { return this.model.addAsset(params.link, params) }
+
+  // do not port:
+  getAsset (params) { return this.model.getAsset(params.link) }
+
+  // do not port:
+  reserveAssetPath (params) { return this.model.reserveAssetPath(params.link, params) }
+
+  // do not port:
+  retrieveAssetPath (params) { return this.model.retrieveAssetPath(params.link) }
 }
 
 function pickData () {
