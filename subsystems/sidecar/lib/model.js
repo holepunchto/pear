@@ -115,6 +115,38 @@ module.exports = class Model {
     return (await this.db.get('@pear/bundle', { link }))?.appStorage
   }
 
+  async addAsset (link, { ns, name, only, path }) {
+    const tx = await this.lock.enter()
+    const asset = { link, ns, name, only, path }
+    LOG.trace('db', 'INSERT', '@pear/asset', asset)
+    await tx.insert('@pear/asset', asset)
+    await this.lock.exit()
+    return asset
+  }
+
+  async getAsset (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/asset', get)
+    const asset = await this.db.get('@pear/asset', get)
+    return asset
+  }
+
+  async reserveAssetPath (link, { path }) {
+    const tx = await this.lock.enter()
+    const asset = { link, path }
+    LOG.trace('db', 'INSERT', '@pear/assetsync', asset)
+    await tx.insert('@pear/assetsync', asset)
+    await this.lock.exit()
+    return asset
+  }
+
+  async retrieveAssetPath (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/assetsync', get)
+    const asset = await this.db.get('@pear/assetsync', get)
+    return asset
+  }
+
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
     LOG.trace('db', `GET ('@pear/bundle', { link: ${srcLink} })`)
