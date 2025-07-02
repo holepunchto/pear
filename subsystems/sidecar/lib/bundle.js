@@ -47,7 +47,7 @@ module.exports = class Bundle {
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
     this._asset = asset
     if (this.corestore) {
-      this.updater = new AppUpdater(this.drive, { asset })
+      this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
@@ -89,6 +89,18 @@ module.exports = class Bundle {
   async #updates (updateNotify) {
     await this.ready()
     if (this.closed) return
+
+    if (this.checkout < this.drive.core.length) {
+      await updateNotify({
+        key: this.hexKey,
+        length: this.drive.core.length,
+        fork: this.drive.core.fork
+      }, {
+        link: this.link,
+        diff: null
+      })
+    }
+
     try {
       if (this.updatesDiff) {
         this.watchingUpdates = watch(this.drive)
