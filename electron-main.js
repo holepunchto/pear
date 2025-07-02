@@ -12,6 +12,29 @@ const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.a
 const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
+
+async function premigrate (ipc) {
+  const v1 = !!Pear.config.tier
+  if (!v1) return
+  const { randomBytes } = require('hypercore-crypto')
+  const path = require('path')
+  const ui = require('./package.json').pear.assets.ui
+  let asset = await ipc.getAsset({ link: ui.link })
+  if (asset !== null) return
+  const opwait = require('pear-api/opwait')
+  asset = ui
+  asset.only = asset.only.split(',').map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
+  const reserved = await ipc.retrieveAssetPath({ link: asset.link })
+  asset.path = reserved.path ?? path.join(Pear.config.pearDir, 'assets', randomBytes(16).toString('hex'))
+  await ipc.reserveAssetPath({ link: asset.link, path: asset.path })
+  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only }), (status) => {
+    console.info('pear-electron/premigrate passive forward syncing', status)
+  })
+  await ipc.addAsset(asset)
+}
+
+
+
 configureElectron()
 crasher('electron-main', SWAP, argv.indexOf('--log') > -1)
 const run = command('run', ...runDefinition, electronMain)
@@ -46,6 +69,8 @@ async function electronMain (cmd) {
     electron.app.quit(0)
     return
   }
+
+  premigrate(ipc).catch((err) => { console.error('Passive Premigration Failure', err) })
 
   electron.ipcMain.on('send-to', (e, id, channel, message) => { electron.webContents.fromId(id)?.send(channel, message) })
 
