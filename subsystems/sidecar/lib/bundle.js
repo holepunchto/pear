@@ -74,7 +74,7 @@ module.exports = class Bundle {
 
     this.initializing = this.#init()
 
-    if (typeof updateNotify === 'function') this.#updates(updateNotify).catch((err) => this.fatal(err))
+    this.updateNotify = updateNotify
   }
 
   async assets (manifest) {
@@ -85,11 +85,12 @@ module.exports = class Bundle {
     return assets
   }
 
-  async #updates (updateNotify) {
-    await this.ready()
+  async #updates () {
+    const { updateNotify } = this
+    if (typeof updateNotify !== 'function') return
     if (this.closed) return
 
-    if (this.checkout < this.drive.core.length) {
+    if (this.checkout < this.drive.version) {
       await updateNotify({
         key: this.hexKey,
         length: this.drive.core.length,
@@ -285,6 +286,7 @@ module.exports = class Bundle {
         this.release = (await this.db.get('release'))?.value
         if (this.release) this.checkout = this.release
       }
+      this.#updates().catch((err) => this.fatal(err))
       if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       }
