@@ -291,7 +291,7 @@ test('Pear.exit calls teardown and Bare.exit', async function ({ teardown, plan,
   const { pipe } = await Helper.run({ link: dir })
 
   pipe.on('data', (data) => {
-    is(data.toString(), 'bye')
+    is(data.toString().trim(), 'bye')
   })
 
   pipe.on('error', () => {})
