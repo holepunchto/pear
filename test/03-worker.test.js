@@ -2,6 +2,7 @@
 /* global Pear */
 const test = require('brittle')
 const path = require('bare-path')
+const os = require('bare-os')
 const Helper = require('./helper')
 const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
 const helloWorld = path.join(Helper.localDir, 'test', 'fixtures', 'hello-world')
@@ -20,6 +21,10 @@ const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'wor
 const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
 const workerZombie = path.join(Helper.localDir, 'test', 'fixtures', 'worker-zombie')
 const workerLength = path.join(Helper.localDir, 'test', 'fixtures', 'worker-length')
+const workerTeardownOnClose = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-on-close')
+const workerPearExit = path.join(Helper.localDir, 'test', 'fixtures', 'worker-pear-exit')
+const workerBareExit = path.join(Helper.localDir, 'test', 'fixtures', 'worker-bare-exit')
+const workerTeardownUnresolved = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-unresolved')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -235,4 +240,80 @@ test('worker length', async function ({ is, plan, comment, teardown }) {
   is(response, version.toString(), 'subworker checkout flag has parent length value')
 
   await Helper.untilClose(pipe)
+})
+
+test('worker teardown on close', async function ({ teardown, plan, pass }) {
+  plan(1)
+  const dir = workerTeardownOnClose
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  let PID = null
+
+  pipe.on('close', () => {
+    os.kill(Number(PID), 0)
+    pass(`worker process (PID ${PID}) is not running`)
+  })
+
+  PID = await Helper.untilResult(pipe)
+  await Helper.untilClose(pipe)
+})
+
+test('Pear.exit calls teardown', async function ({ teardown, plan, pass }) {
+  plan(1)
+  const dir = workerPearExit
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('error', () => {})
+
+  pipe.on('close', () => {
+    pass('worker process closed')
+  })
+})
+
+test('Pear.exit calls teardown and Bare.exit', async function ({ teardown, plan, pass, is }) {
+  plan(2)
+  const dir = workerBareExit
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('data', (data) => {
+    is(data.toString().trim(), 'bye')
+  })
+
+  pipe.on('error', () => {})
+
+  pipe.on('close', () => {
+    pass('worker process closed')
+  })
+})
+
+test('Pear.exit calls unresolved teardown', async function ({ teardown, plan, pass }) {
+  plan(1)
+  const dir = workerTeardownUnresolved
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('error', () => {})
+
+  pipe.on('close', () => {
+    pass('worker process closed')
+  })
 })

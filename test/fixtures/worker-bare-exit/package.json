@@ -1,0 +1,8 @@
+{
+  "name": "worker-bare-exit",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-bare-exit",
+    "type": "terminal"
+  }
+}
