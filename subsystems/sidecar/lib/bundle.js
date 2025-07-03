@@ -86,6 +86,8 @@ module.exports = class Bundle {
     return assets
   }
 
+  watch () { return this.#updates() }
+
   async #updates () {
     const { updateNotify } = this
     if (typeof updateNotify !== 'function') return
