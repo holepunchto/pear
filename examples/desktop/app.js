@@ -1,29 +1,45 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
-const { versions, config, updates, wakeups, Window } = Pear
-console.log('link', config.link)
-console.log('linkData', config.linkData)
-console.log('key', config.key)
+import ui from 'pear-electron'
+console.log('link', Pear.config.link)
+console.log('linkData', Pear.config.linkData)
+console.log('key', Pear.config.key)
 
-updates(function (data) {
-  console.log('update available:', data)
+Pear.pipe.on('data', (data) => {
+  const cmd = Buffer.from(data).toString()
+  if (cmd === 'hello from app') Pear.pipe.write('hello from ui')
+  console.log('PIPE DATA', cmd)
 })
 
-wakeups(async (wakeup) => {
+const action = document.getElementById('action')
+
+action.addEventListener('click', () => {
+  if (action.dataset.type === 'reload') global.location.reload()
+  Pear.restart()
+})
+//
+Pear.updated().then((update) => {
+  console.log('UPDATED', update)
+})
+
+Pear.updates(function (update) {
+  console.log('update available:', update)
+  document.getElementById('update').style.display = 'revert'
+  action.style.display = 'revert'
+  action.dataset.type = update.app ? 'reload' : 'restart'
+  action.innerText = 'Restart' + ' [' + update.version.fork + '.' + update.version.length + ']'
+})
+
+Pear.wakeups(async (wakeup) => {
   console.log('GOT WAKEUP', wakeup)
-  await Window.self.focus({ steal: true })
+  await ui.app.focus({ steal: true })
 })
 
-document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
-document.getElementById('release').innerText = config.release || (config.dev ? 'none [ dev ]' : '0')
-const { app, platform } = await versions()
+document.getElementById('channel').innerText = Pear.config.channel || 'none [ dev ]'
+document.getElementById('release').innerText = Pear.config.release || (Pear.config.dev ? 'none [ dev ]' : '0')
+const { app, platform } = await Pear.versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork
 document.getElementById('platformLength').innerText = platform.length
 document.getElementById('appKey').innerText = app.key
 document.getElementById('appFork').innerText = app.fork
 document.getElementById('appLength').innerText = app.length
-
-if (config.args.includes('--worker-demo')) {
-  global.pipe = Pear.worker.run(config.links.worker)
-  console.info('Pipe Duplex Stream available as `pipe`')
-}
