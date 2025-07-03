@@ -273,6 +273,8 @@ test('Pear.exit calls teardown', async function ({ teardown, plan, pass }) {
 
   const { pipe } = await Helper.run({ link: dir })
 
+  pipe.on('error', () => {})
+
   pipe.on('close', () => {
     pass('worker process closed')
   })
@@ -292,6 +294,8 @@ test('Pear.exit calls teardown and Bare.exit', async function ({ teardown, plan,
     is(data.toString(), 'bye')
   })
 
+  pipe.on('error', () => {})
+
   pipe.on('close', () => {
     pass('worker process closed')
   })
@@ -306,6 +310,8 @@ test('Pear.exit calls unresolved teardown', async function ({ teardown, plan, pa
   await helper.ready()
 
   const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('error', () => {})
 
   pipe.on('close', () => {
     pass('worker process closed')
