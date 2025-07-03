@@ -12,7 +12,6 @@ const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.a
 const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
-
 async function premigrate (ipc) {
   const v1 = !!Pear.config.tier
   if (!v1) return
@@ -32,8 +31,6 @@ async function premigrate (ipc) {
   })
   await ipc.addAsset(asset)
 }
-
-
 
 configureElectron()
 crasher('electron-main', SWAP, argv.indexOf('--log') > -1)
@@ -70,7 +67,7 @@ async function electronMain (cmd) {
     return
   }
 
-  premigrate(ipc).catch((err) => { console.error('Passive Premigration Failure', err) })
+  premigrate(gui.ipc).catch((err) => { console.error('Passive Premigration Failure', err) })
 
   electron.ipcMain.on('send-to', (e, id, channel, message) => { electron.webContents.fromId(id)?.send(channel, message) })
 
