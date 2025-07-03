@@ -41,10 +41,11 @@ module.exports = class Data extends Opstream {
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
         assets = asset ? [asset] : []
+        this.push({ tag: 'assets', data: assets })
       } else {
-        assets = await this.sidecar.model.allAssets()
+        const { assets } = await this.sidecar.model.allAssets()
+        this.push({ tag: 'assets', data: assets })
       }
-      this.push({ tag: 'assets', data: assets })
     }
   }
 }
