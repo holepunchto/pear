@@ -20,6 +20,7 @@ const workerFromSameBundle = path.join(Helper.localDir, 'test', 'fixtures', 'wor
 const workerExceptionHandler = path.join(Helper.localDir, 'test', 'fixtures', 'worker-exception-handler')
 const workerZombie = path.join(Helper.localDir, 'test', 'fixtures', 'worker-zombie')
 const workerLength = path.join(Helper.localDir, 'test', 'fixtures', 'worker-length')
+const workerTeardownOnClose = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-on-close')
 
 test('worker pipe', async function ({ is, plan, teardown }) {
   plan(1)
@@ -233,6 +234,23 @@ test('worker length', async function ({ is, plan, comment, teardown }) {
   const response = await Helper.untilResult(pipe)
 
   is(response, version.toString(), 'subworker checkout flag has parent length value')
+
+  await Helper.untilClose(pipe)
+})
+
+test('worker teardown on close', async function ({ teardown, plan, pass }) {
+  plan(1)
+  const dir = workerTeardownOnClose
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const { pipe } = await Helper.run({ link: dir })
+
+  pipe.on('close', () => {
+    pass('worker closed')
+  })
 
   await Helper.untilClose(pipe)
 })
