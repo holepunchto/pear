@@ -2,6 +2,7 @@
 /* global Pear */
 const test = require('brittle')
 const path = require('bare-path')
+const os = require('bare-os')
 const Helper = require('./helper')
 const worker = path.join(Helper.localDir, 'test', 'fixtures', 'worker')
 const helloWorld = path.join(Helper.localDir, 'test', 'fixtures', 'hello-world')
@@ -248,9 +249,13 @@ test('worker teardown on close', async function ({ teardown, plan, pass }) {
 
   const { pipe } = await Helper.run({ link: dir })
 
+  let PID = null
+
   pipe.on('close', () => {
-    pass('worker closed')
+    os.kill(Number(PID), 0)
+    pass(`worker process (PID ${PID}) is not running`)
   })
 
+  PID = await Helper.untilResult(pipe)
   await Helper.untilClose(pipe)
 })
