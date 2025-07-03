@@ -35,7 +35,7 @@ module.exports = class State extends SharedState {
     const unrouted = new Set(Array.isArray(state.options.unrouted) ? state.options.unrouted : [])
     unrouted.add('/node_modules/.bin/')
     state.unrouted = Array.from(unrouted)
-    let entrypoint = this.route(state.route, state.routes, state.unrouted)
+    let entrypoint = state.prerunning ? state.route : this.route(state.route, state.routes, state.unrouted)
     if (entrypoint.startsWith('/') === false) entrypoint = '/' + entrypoint
     else if (entrypoint.startsWith('./')) entrypoint = entrypoint.slice(1)
     state.entrypoint = entrypoint
