@@ -1,0 +1,8 @@
+{
+  "name": "worker-teardown-unresolved",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-unresolved",
+    "type": "terminal"
+  }
+}
