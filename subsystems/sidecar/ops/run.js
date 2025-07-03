@@ -146,7 +146,7 @@ module.exports = class Run extends Opstream {
       await session.add(appBundle)
       app.linker = linker
       app.bundle = appBundle
-
+      if (state.updates) app.bundle.watch()
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
         await state.initialize({ bundle: app.bundle, app, pkg })

@@ -1,10 +1,8 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import ui from 'pear-electron'
-
-const { config } = Pear
-console.log('link', config.link)
-console.log('linkData', config.linkData)
-console.log('key', config.key)
+console.log('link', Pear.config.link)
+console.log('linkData', Pear.config.linkData)
+console.log('key', Pear.config.key)
 
 Pear.pipe.on('data', (data) => {
   const cmd = Buffer.from(data).toString()
@@ -12,8 +10,23 @@ Pear.pipe.on('data', (data) => {
   console.log('PIPE DATA', cmd)
 })
 
-Pear.updates(function (data) {
-  console.log('update available:', data)
+const action = document.getElementById('action')
+
+action.addEventListener('click', () => {
+  if (action.dataset.type === 'reload') global.location.reload()
+  Pear.restart()
+})
+//
+Pear.updated().then((update) => {
+  console.log('UPDATED', update)
+})
+
+Pear.updates(function (update) {
+  console.log('update available:', update)
+  document.getElementById('update').style.display = 'revert'
+  action.style.display = 'revert'
+  action.dataset.type = update.app ? 'reload' : 'restart'
+  action.innerText = 'Restart' + ' [' + update.version.fork + '.' + update.version.length + ']'
 })
 
 Pear.wakeups(async (wakeup) => {
@@ -21,8 +34,8 @@ Pear.wakeups(async (wakeup) => {
   await ui.app.focus({ steal: true })
 })
 
-document.getElementById('channel').innerText = config.channel || 'none [ dev ]'
-document.getElementById('release').innerText = config.release || (config.dev ? 'none [ dev ]' : '0')
+document.getElementById('channel').innerText = Pear.config.channel || 'none [ dev ]'
+document.getElementById('release').innerText = Pear.config.release || (Pear.config.dev ? 'none [ dev ]' : '0')
 const { app, platform } = await Pear.versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork
