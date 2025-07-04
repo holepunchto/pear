@@ -58,12 +58,13 @@ const encoding2_4 = c.array(c.string)
 const encoding2 = {
   preencode (state, m) {
     c.string.preencode(state, m.link)
-    c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
+    c.string.preencode(state, m.ns)
     state.end++ // max flag is 2 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding2_4.preencode(state, m.only)
+    c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     const flags =
@@ -71,12 +72,13 @@ const encoding2 = {
       (m.only ? 2 : 0)
 
     c.string.encode(state, m.link)
-    c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
+    c.string.encode(state, m.ns)
     c.uint.encode(state, flags)
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding2_4.encode(state, m.only)
+    c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r0 = c.string.decode(state)
@@ -86,10 +88,11 @@ const encoding2 = {
 
     return {
       link: r0,
-      ns: r1,
-      path: r2,
+      path: r1,
+      ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null
+      only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null,
+      bytesAllocated: c.uint.decode(state)
     }
   }
 }
@@ -280,24 +283,26 @@ const encoding10_4 = encoding2_4
 // @pear/asset/hyperdb#4
 const encoding10 = {
   preencode (state, m) {
-    c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
+    c.string.preencode(state, m.ns)
     state.end++ // max flag is 2 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding10_4.preencode(state, m.only)
+    c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     const flags =
       (m.name ? 1 : 0) |
       (m.only ? 2 : 0)
 
-    c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
+    c.string.encode(state, m.ns)
     c.uint.encode(state, flags)
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding10_4.encode(state, m.only)
+    c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -306,10 +311,11 @@ const encoding10 = {
 
     return {
       link: null,
-      ns: r1,
-      path: r2,
+      path: r1,
+      ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null
+      only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null,
+      bytesAllocated: c.uint.decode(state)
     }
   }
 }

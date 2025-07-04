@@ -1,6 +1,6 @@
 'use strict'
 const plink = require('pear-api/link')
-const { outputter, ansi } = require('pear-api/terminal')
+const { outputter, ansi, byteSize } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const padding = '    '
@@ -46,12 +46,18 @@ const manifestOutput = (manifest) => {
 
 const assetsOutput = (assets) => {
   if (!assets.length) return placeholder
+  let totalAllocated = 0
   let out = ''
   for (const asset of assets) {
     out += `- ${ansi.bold(asset.link)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
-    out += '\n'
+    out += `${padding}ns: ${ansi.dim(asset.ns)}\n`
+    out += `${padding}name: ${ansi.dim(asset.name)}\n`
+    out += `${padding}only: ${ansi.dim(asset.only)}\n`
+    out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${byteSize(asset.bytesAllocated)})\n`
+    totalAllocated += asset.bytesAllocated || 0
   }
+  out += `\n${ansi.bold('Total')}: ${byteSize(totalAllocated)}\n`
   return out
 }
 
