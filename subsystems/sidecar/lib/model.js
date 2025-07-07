@@ -262,7 +262,7 @@ module.exports = class Model {
 
   async gc () {
     const { totalAllocated } = await this.allAssets()
-    const maxCapacity = 12 * 1024 ** 3
+    const maxCapacity = 12 * 1024 ** 3 // 12 GiB
     if (totalAllocated > maxCapacity) {
       const tx = await this.lock.enter()
       LOG.trace('db', 'FIND ONE', '@pear/asset')
