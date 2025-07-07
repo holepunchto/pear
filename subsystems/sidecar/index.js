@@ -620,7 +620,7 @@ class Sidecar extends ReadyResource {
           resolve(false)
           return
         }
-        const matches = [...this.apps].filter((app) => {
+        const matches = [...this.apps].filter(app => this.ipc.clients.some(c => c.userData.id === app.id && !c.closing)).filter((app) => {
           if (!app || !app.state) return false
           if (startId === app.startId) return false
           return app.state.storage === (storage || appStorage) && (appdev
