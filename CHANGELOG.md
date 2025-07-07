@@ -1,5 +1,42 @@
 # Pear Runtime Changelog
 
+## v1.15.0
+
+### Improvements
+
+* Internal - Bare 1.20.2
+
+### Fixes
+
+* Internal - Limited amount of connections per internal swarm topic
+* Mac - Disable resize window animation
+* Internal - Swarm connections limit fix
+* Internal - Terminate non-responsive workers after 5 seconds
+* Internal - Terminate workers when parent app is not running
+* Sidecar - Start worker with parent's checkout by default
+
+## v1.14.0
+
+### Fixes
+
+* Internal - Emit error, end and close events in correct worker pipes
+* Restart - Fix client restart by ignoring stdio
+
+## v1.13.2
+
+### Fixes
+
+* API - Added Pear.updated to check missed update notifications
+* Internal - Pass correct worker flags
+
+## v1.13.1
+
+### Fixes
+
+* Internal - Restart does not restart worker processes
+* Desktop - Fixed main entrypoint
+* Windows - Fixed long path in drive bundler
+
 ## v1.13.0
 
 ### Features
