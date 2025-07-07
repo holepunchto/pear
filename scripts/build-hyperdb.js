@@ -72,8 +72,7 @@ pearSchema.register({
     },
     {
       name: 'bytesAllocated',
-      type: 'uint',
-      required: true
+      type: 'uint'
     }
   ]
 })

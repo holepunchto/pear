@@ -78,7 +78,6 @@
         },
         {
           "name": "bytesAllocated",
-          "required": true,
           "type": "uint",
           "version": 1
         }

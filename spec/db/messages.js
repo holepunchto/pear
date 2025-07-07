@@ -60,16 +60,17 @@ const encoding2 = {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.path)
     c.string.preencode(state, m.ns)
-    state.end++ // max flag is 2 so always one byte
+    state.end++ // max flag is 4 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding2_4.preencode(state, m.only)
-    c.uint.preencode(state, m.bytesAllocated)
+    if (m.bytesAllocated) c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     const flags =
       (m.name ? 1 : 0) |
-      (m.only ? 2 : 0)
+      (m.only ? 2 : 0) |
+      (m.bytesAllocated ? 4 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.path)
@@ -78,7 +79,7 @@ const encoding2 = {
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding2_4.encode(state, m.only)
-    c.uint.encode(state, m.bytesAllocated)
+    if (m.bytesAllocated) c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r0 = c.string.decode(state)
@@ -92,7 +93,7 @@ const encoding2 = {
       ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
       only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null,
-      bytesAllocated: c.uint.decode(state)
+      bytesAllocated: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }
@@ -285,16 +286,17 @@ const encoding10 = {
   preencode (state, m) {
     c.string.preencode(state, m.path)
     c.string.preencode(state, m.ns)
-    state.end++ // max flag is 2 so always one byte
+    state.end++ // max flag is 4 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding10_4.preencode(state, m.only)
-    c.uint.preencode(state, m.bytesAllocated)
+    if (m.bytesAllocated) c.uint.preencode(state, m.bytesAllocated)
   },
   encode (state, m) {
     const flags =
       (m.name ? 1 : 0) |
-      (m.only ? 2 : 0)
+      (m.only ? 2 : 0) |
+      (m.bytesAllocated ? 4 : 0)
 
     c.string.encode(state, m.path)
     c.string.encode(state, m.ns)
@@ -302,7 +304,7 @@ const encoding10 = {
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding10_4.encode(state, m.only)
-    c.uint.encode(state, m.bytesAllocated)
+    if (m.bytesAllocated) c.uint.encode(state, m.bytesAllocated)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -315,7 +317,7 @@ const encoding10 = {
       ns: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
       only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null,
-      bytesAllocated: c.uint.decode(state)
+      bytesAllocated: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }

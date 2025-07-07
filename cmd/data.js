@@ -54,7 +54,7 @@ const assetsOutput = (assets) => {
     out += `${padding}ns: ${ansi.dim(asset.ns)}\n`
     out += `${padding}name: ${ansi.dim(asset.name)}\n`
     out += `${padding}only: ${ansi.dim(asset.only)}\n`
-    out += `${padding}bytesAllocated: ${ansi.dim(asset.bytesAllocated)} (${byteSize(asset.bytesAllocated)})\n`
+    out += `${padding}bytesAllocated: ${ansi.dim(byteSize(asset.bytesAllocated || 0))}\n`
     totalAllocated += asset.bytesAllocated || 0
   }
   out += `\n${ansi.bold('Total')}: ${byteSize(totalAllocated)}\n`

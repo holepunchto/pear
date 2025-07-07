@@ -130,7 +130,7 @@ module.exports = class Model {
     const assets = await this.db.find('@pear/asset').toArray()
     let totalAllocated = 0
     for (const asset of assets) {
-      if (asset.bytesAllocated === 0) {
+      if (!asset.bytesAllocated) {
         let bytesAllocated = 0
         const drive = new LocalDrive(asset.path)
         for await (const entry of drive.list('/')) {
