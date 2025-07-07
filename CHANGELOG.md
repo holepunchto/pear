@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v1.16.0
+
+### Improvements
+
+* API - Pear.exit calls teardown before exit
+* Worker - Worker pipe calls Pear.exit on close/end
+
 ## v1.15.0
 
 ### Improvements
