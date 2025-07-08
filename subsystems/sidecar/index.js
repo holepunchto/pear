@@ -5,7 +5,6 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
-const streamx = require('streamx')
 const ReadyResource = require('ready-resource')
 const ScriptLinker = require('script-linker')
 const Hyperswarm = require('hyperswarm')
@@ -152,6 +151,7 @@ class Sidecar extends ReadyResource {
       unload = null
       unloader = null
       reporter = null
+      cutover = null
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
@@ -165,7 +165,7 @@ class Sidecar extends ReadyResource {
         return reports.generic(...args)
       }
 
-      #updatingTrigger () {
+      _updatingTrigger () {
         if (this.sidecar.updater?.updating) {
           this.message({ type: 'pear/updates', app: false, version: this.sidecar.updater.checkout, info: null, updating: true, updated: false })
         }
@@ -204,6 +204,17 @@ class Sidecar extends ReadyResource {
         }
       }
 
+      register (client, startId) {
+        this.clients.add(client)
+        const userData = Object.create(this)
+        userData.id = `${client.id}@${startId}`
+        const opts = { map: pickData }
+        userData.reporter = this.reporter.relay(this.sidecar.bus.sub({ topic: 'reports', id: userData.id }, opts))
+        userData.warming = this.warming.relay(this.sidecar.bus.sub({ topic: 'warming', id: userData.id }, opts))
+        userData.updates = this.updates.relay(userData.messages({ type: 'pear/updates' }, opts))
+        return userData
+      }
+
       report (report) {
         this.reported = report
         return this.sidecar.bus.pub({ topic: 'reports', id: this.id, data: this.#mapReport(report) })
@@ -211,16 +222,18 @@ class Sidecar extends ReadyResource {
 
       warmup (data) { return this.sidecar.bus.pub({ topic: 'warming', id: this.id, data }) }
 
-      message (msg) { return this.sidecar.bus.pub({ topic: 'messages', id: this.id, data: msg }) }
+      message (msg) {
+        console.log('PUB MSG', { topic: 'messages', id: this.id, data: msg })
+        return this.sidecar.bus.pub({ topic: 'messages', id: this.id, data: msg })
+      }
 
-      messages (ptn) {
-        const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) })
-        const stream = new streamx.PassThrough()
-        streamx.pipeline(subscriber, pickData(), stream)
-
-        if (ptn?.type === 'pear/updates') this.#updatingTrigger()
-
-        return stream
+      messages (ptn, opts = {}) {
+        if (ptn.type === 'pear/updates') {
+          this._updatingTrigger() // TODO, remove when impl Pear.updating
+        }
+        opts.map = pickData
+        const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
+        return subscriber
       }
 
       teardown () {
@@ -243,10 +256,20 @@ class Sidecar extends ReadyResource {
         this.bundle = bundle
         this.id = id
         this.state = state
-        this.reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id })
-        this.warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id })
         this.startId = startId
         this.clients = new Set()
+        const opts = { relays: true, replay: true, map: pickData }
+        const reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id }, opts)
+        const warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id }, opts)
+        const updates = this.messages({ type: 'pear/updates' }, opts)
+        this.cutover = () => { // closure scoped to keep cutover refs to top ancestor subs
+          reporter.replay = false
+          warming.replay = false
+          updates.replay = false
+        }
+        this.reporter = reporter
+        this.warming = warming
+        this.updates = updates
       }
 
       get closed () { return this.session.closed }
@@ -310,12 +333,10 @@ class Sidecar extends ReadyResource {
       messaged.add(app)
 
       if (info.link && info.link === app.bundle?.link) {
-        app.state.updated = { app: true, version, diff: info.diff }
         app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true, link: info.link })
         continue
       }
       if (info.link) continue
-      app.state.updated = { app: false, version, diff: null }
       app.message({ type: 'pear/updates', app: false, version, diff: null, updating: false, updated: true, link: null })
     }
   }
@@ -324,14 +345,13 @@ class Sidecar extends ReadyResource {
 
   async identify (params, client) {
     if (params.startId) {
-      const starting = this.running.get(params.startId)
-      if (starting) {
-        client.userData = starting.client.userData
-        client.userData.clients.add(client)
-        if (params.startWait) await starting.running
-      } else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId (check crash logs)')
+      const started = this.running.get(params.startId)
+      if (started) {
+        client.userData = started.client.userData.register(client, params.startId)
+        if (params.startWait) await started.running
+      } else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId')
     }
-    if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData (check crash logs)')
+    if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData')
     const id = client.userData.id
     return { id }
   }
@@ -365,9 +385,7 @@ class Sidecar extends ReadyResource {
 
   warming (params, client) {
     if (client.userData instanceof this.App === false) return
-    const stream = new streamx.PassThrough()
-    streamx.pipeline(client.userData.warming, pickData(), stream)
-    return stream
+    return client.userData.warming
   }
 
   async versions (params, client) {
@@ -375,25 +393,22 @@ class Sidecar extends ReadyResource {
     return { platform: this.version, app: client.userData?.state?.version, runtimes }
   }
 
-  async updated (params, client) {
-    return client.userData?.state?.updated
+  cutover (params, client) {
+    const app = client.userData
+    if (app instanceof this.App === false) return
+    return app.cutover()
   }
 
   reports (params, client) {
     const app = client.userData
     if (app === null && params.id) {
-      const rpt = this.bus.sub({ topic: 'reports', id: params.id })
-      const stream = pickData()
-      streamx.pipeline(rpt, stream)
-      return stream
+      return this.bus.sub({ topic: 'reports', id: params.id }, { map: pickData })
     }
     if (app instanceof this.App === false) {
       LOG.error('reporting', 'invalid reports requests', params)
-      return
+      return null
     }
-    const stream = pickData()
-    streamx.pipeline(app.reporter, stream)
-    return stream
+    return app.reporter
   }
 
   createReport (params, client) {
@@ -759,12 +774,8 @@ class Sidecar extends ReadyResource {
   allocatedAssets () { return this.model.allocatedAssets() }
 }
 
-function pickData () {
-  return new streamx.Transform({
-    transform ({ data }, cb) {
-      cb(null, data)
-    }
-  })
+function pickData (msg) {
+  return msg.data ?? msg
 }
 
 module.exports = Sidecar
