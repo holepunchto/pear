@@ -11,7 +11,7 @@ const plink = require('pear-api/link')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const { ERR_PERMISSION_REQUIRED, ERR_INVALID_MANIFEST } = require('pear-api/errors')
 const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-api/constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -215,6 +215,7 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
+    if (!state?.manifest) throw ERR_INVALID_MANIFEST('Failed to load app manifest, check link and network connection')
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
