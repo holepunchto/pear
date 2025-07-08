@@ -1,4 +1,4 @@
-/** @typedef {import('pear-interface')} */
+/** @typedef {import('pear-interface')} */ /* global Pear */
 import Runtime from 'pear-electron'
 import Bridge from 'pear-bridge'
 

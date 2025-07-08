@@ -9,19 +9,24 @@ Pear.pipe.on('data', (data) => {
   if (cmd === 'hello from app') Pear.pipe.write('hello from ui')
   console.log('PIPE DATA', cmd)
 })
+
 Pear.updates((update) => {
   console.log('update available:', update)
   document.getElementById('update').style.display = 'revert'
   const action = document.getElementById('action')
   action.style.display = 'revert'
   action.onclick = () => { Pear.restart({ platform: !update.app }) }
-  const disk = Pear.config.key === null
-  action.innerText = 'Restart' + disk ? '' : '[' + update.version.fork + '.' + update.version.length + ']'
+  action.innerText = 'Restart ' + (update.app ? 'App' : 'Pear') + ' [' + update.version.fork + '.' + update.version.length + ']'
 })
 
 Pear.wakeups(async (wakeup) => {
   console.log('GOT WAKEUP', wakeup)
   await ui.app.focus({ steal: true })
+})
+
+Pear.teardown(async () => {
+  console.log('Perform async teardown here')
+  await new Promise((resolve) => setTimeout(resolve, 500)) // example async work
 })
 
 document.getElementById('channel').innerText = Pear.config.channel || 'none [ dev ]'
