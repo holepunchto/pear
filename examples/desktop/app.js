@@ -9,24 +9,14 @@ Pear.pipe.on('data', (data) => {
   if (cmd === 'hello from app') Pear.pipe.write('hello from ui')
   console.log('PIPE DATA', cmd)
 })
-
-const action = document.getElementById('action')
-
-action.addEventListener('click', () => {
-  if (action.dataset.type === 'reload') global.location.reload()
-  Pear.restart()
-})
-//
-Pear.updated().then((update) => {
-  console.log('UPDATED', update)
-})
-
-Pear.updates(function (update) {
+Pear.updates((update) => {
   console.log('update available:', update)
   document.getElementById('update').style.display = 'revert'
+  const action = document.getElementById('action')
   action.style.display = 'revert'
-  action.dataset.type = update.app ? 'reload' : 'restart'
-  action.innerText = 'Restart' + ' [' + update.version.fork + '.' + update.version.length + ']'
+  action.onclick = () => { Pear.restart({ platform: !update.app }) }
+  const disk = Pear.config.key === null
+  action.innerText = 'Restart' + disk ? '' : '[' + update.version.fork + '.' + update.version.length + ']'
 })
 
 Pear.wakeups(async (wakeup) => {
