@@ -138,7 +138,6 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   const config = await ipc.config()
 
   state.update({ config })
-
   global.Pear = new API(ipc, state)
 
   const protocol = new Module.Protocol({
@@ -164,6 +163,10 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     Module.load(new URL(bundle.entrypoint), {
       protocol,
       resolutions: bundle.resolutions
+    })
+    setImmediate(() => {
+      // stops replaying & relaying subscriber streams between clients
+      if (Pear.constructor.CUTOVER === true) ipc.cutover()
     })
   })
 
