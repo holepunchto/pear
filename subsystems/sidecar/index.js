@@ -212,7 +212,6 @@ class Sidecar extends ReadyResource {
       warmup (data) { return this.sidecar.bus.pub({ topic: 'warming', id: this.id, data }) }
 
       message (msg) {
-        console.log('PUB MSG', { topic: 'messages', id: this.id, data: msg })
         return this.sidecar.bus.pub({ topic: 'messages', id: this.id, data: msg })
       }
 
