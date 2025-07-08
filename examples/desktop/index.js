@@ -3,7 +3,7 @@ import Runtime from 'pear-electron'
 import Bridge from 'pear-bridge'
 
 Pear.updates((update) => {
-  console.log('Application update available:', update.link)
+  console.log('Application update available:', update)
 })
 
 const bridge = new Bridge()
