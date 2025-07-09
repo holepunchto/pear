@@ -110,6 +110,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       if (rpt.message) console.error(rpt.message)
       if (rpt.stack) console.error(rpt.stack)
       if (rpt.info) console.error(rpt.info)
+      if (rpt.reason) console.error('reason:', rpt.reason)
     }
   }
 
@@ -127,6 +128,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
   if (bail) {
     if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
+    if (bail.code === 'ERR_CONNECTION') return // handled by the reporter
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
   }
   if (success === false) return
