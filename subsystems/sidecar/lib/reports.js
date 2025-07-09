@@ -35,7 +35,7 @@ const connection = (report) => ({
   headline: { content: 'There seems to be a connection problem' },
   tagline: { content: 'Check the application key and/or your network and try again' },
   cta: { content: 'QUIT', action: 'quit' },
-  reason: report?.err?.info?.err?.stack
+  stack: report?.err?.info?.err?.stack
 })
 
 const upgrade = () => ({
