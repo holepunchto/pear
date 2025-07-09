@@ -212,10 +212,10 @@ module.exports = class Run extends Opstream {
       LOG.info(LOG_RUN_LINK, id, 'state initialized')
     } catch (err) {
       LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
+      throw err
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    if (!state?.manifest) throw ERR_INVALID_MANIFEST()
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
