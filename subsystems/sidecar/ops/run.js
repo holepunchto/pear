@@ -215,7 +215,7 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    if (!state?.manifest) throw ERR_INVALID_MANIFEST('Check application key and/or your network and try again')
+    if (!state?.manifest) throw ERR_INVALID_MANIFEST()
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
