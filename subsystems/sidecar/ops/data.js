@@ -28,5 +28,17 @@ module.exports = class Data extends Opstream {
       const records = await this.sidecar.model.allGc()
       this.push({ tag: 'gc', data: records })
     }
+
+    if (resource === 'swarm') {
+      const result = this.sidecar.swarm
+        ? {
+            peers: this.sidecar.swarm.peers.size,
+            connections: this.sidecar.swarm.connections.size,
+            dhtHost: this.sidecar.swarm.dht.host,
+            dhtPort: this.sidecar.swarm.dht.port
+          }
+        : {}
+      this.push({ tag: 'swarm', data: result })
+    }
   }
 }
