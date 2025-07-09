@@ -65,12 +65,4 @@ const permission = (report) => {
   }
 }
 
-const manifest = (report) => {
-  return {
-    type: 'invalid-manifest',
-    headline: { content: 'Invalid manifest' },
-    tagline: { content: report.err.message }
-  }
-}
-
-module.exports = { generic, crash, dev, connection, upgrade, update, permission, manifest }
+module.exports = { generic, crash, dev, connection, upgrade, update, permission }
