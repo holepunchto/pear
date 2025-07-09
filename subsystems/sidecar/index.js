@@ -146,8 +146,7 @@ class Sidecar extends ReadyResource {
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
         if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permission(report)
-        if (report.err?.code === 'ERR_INVALID_MANIFEST') return reports.manifest(report)
-        if (report.err?.code === 'ERR_CONNECTION') return reports.connection()
+        if (report.err?.code === 'ERR_CONNECTION' || report.err?.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') return reports.connection(report)
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
         const args = [report.err?.message, report.err?.stack, report.info || report.err]
         if (report.err?.code === 'ERR_OPEN') return reports.dev(...args)
