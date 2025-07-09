@@ -110,6 +110,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
       if (rpt.message) console.error(rpt.message)
       if (rpt.stack) console.error(rpt.stack)
       if (rpt.info) console.error(rpt.info)
+      if (rpt.reason) console.error('reason:', rpt.reason)
     }
   }
 
