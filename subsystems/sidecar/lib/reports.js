@@ -69,7 +69,7 @@ const manifest = (report) => {
   return {
     type: 'invalid-manifest',
     headline: { content: 'Invalid manifest' },
-    tagline: { content: report.err.message }
+    tagline: { content: 'Check the application key and/or your network and try again' }
   }
 }
 
