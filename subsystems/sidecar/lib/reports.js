@@ -66,12 +66,4 @@ const permission = (report) => {
   }
 }
 
-const manifest = () => {
-  return {
-    type: 'invalid-manifest',
-    headline: { content: 'Invalid manifest' },
-    tagline: { content: 'Check the application key and/or your network and try again' }
-  }
-}
-
-module.exports = { generic, crash, dev, connection, upgrade, update, permission, manifest }
+module.exports = { generic, crash, dev, connection, upgrade, update, permission }
