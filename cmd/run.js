@@ -127,7 +127,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 
   if (bail) {
     if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
-    if (bail.code === 'ERR_NOT_FOUND_OR_NOT_CONNECTED') return // handled by the reporter
+    if (bail.code === 'ERR_CONNECTION') return // handled by the reporter
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
   }
   if (success === false) return
