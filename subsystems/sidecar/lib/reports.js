@@ -65,7 +65,7 @@ const permission = (report) => {
   }
 }
 
-const manifest = (report) => {
+const manifest = () => {
   return {
     type: 'invalid-manifest',
     headline: { content: 'Invalid manifest' },
