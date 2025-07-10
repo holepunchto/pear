@@ -52,12 +52,12 @@ pearSchema.register({
       required: true
     },
     {
-      name: 'ns',
+      name: 'path',
       type: 'string',
       required: true
     },
     {
-      name: 'path',
+      name: 'ns',
       type: 'string',
       required: true
     },
@@ -69,6 +69,10 @@ pearSchema.register({
       name: 'only',
       type: 'string',
       array: true
+    },
+    {
+      name: 'bytesAllocated',
+      type: 'uint'
     }
   ]
 })

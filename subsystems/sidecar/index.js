@@ -273,6 +273,9 @@ class Sidecar extends ReadyResource {
   async _open () {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
+    this.model.gc().catch(err => LOG.error('sidecar', 'GC error', err))
+    const gcCycleMs = 10 * 60 * 1000 // 10 minutes
+    this.gcInterval = setInterval(() => { this.model.gc().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
   }
 
   get clients () { return this.ipc.clients }
@@ -687,6 +690,7 @@ class Sidecar extends ReadyResource {
 
   async #close () {
     await this.applings.close()
+    clearInterval(this.gcInterval)
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.swarm) {
