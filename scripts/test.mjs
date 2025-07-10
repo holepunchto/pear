@@ -38,7 +38,8 @@ const logging = Bare.argv.filter((arg) => arg.startsWith('--log'))
 spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'], { cwd: root, stdio: 'inherit' })
 
-tests.on('exit', async (code) => {
+tests.on('exit', async (code, signal) => {
   await testnet.destroy()
-  Bare.exitCode = code
+  if (signal !== 0) Bare.exitCode = 128 + signal
+  if (code !== 0) Bare.exitCode = code
 })
