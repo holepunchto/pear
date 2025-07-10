@@ -157,10 +157,6 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
-  // TEST: Intentionally failing test
-  const bundle = undefined
-  is(bundle.link, 'link', 'bundle.link should be link')
-
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
