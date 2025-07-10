@@ -65,7 +65,7 @@ module.exports = class Run extends Opstream {
       this.final = info
     } catch (err) {
       app.report({ err })
-      this.final = { success: false, bail: { message: err.message, stack: err.stack, code: err.code, info: err.info } }
+      this.final = { bail: { message: err.message, stack: err.stack, code: err.code, info: err.info } }
       await session.close()
     }
   }
@@ -148,7 +148,7 @@ module.exports = class Run extends Opstream {
       LOG.info(LOG_RUN_LINK, id, 'determining assets')
       state.update({ assets: await app.bundle.assets(state.manifest) })
       LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
-
+      if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
       const bundle = await app.bundle.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
@@ -234,6 +234,8 @@ module.exports = class Run extends Opstream {
         throw err
       }
     }
+
+    if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
 
     if (app.bundle.platformVersion !== null) {
       app.report({ type: 'upgrade' })
