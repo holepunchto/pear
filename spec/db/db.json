@@ -53,9 +53,35 @@
       "trigger": null
     },
     {
-      "name": "bundle-by-tags",
+      "name": "asset",
       "namespace": "pear",
       "id": 4,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/asset",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "current",
+      "namespace": "pear",
+      "id": 5,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/current",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "bundle-by-tags",
+      "namespace": "pear",
+      "id": 6,
       "type": 2,
       "collection": "@pear/bundle",
       "unique": false,

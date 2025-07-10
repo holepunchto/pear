@@ -74,11 +74,13 @@
       margin-top: 18px;
       margin-left: 12px;
     }
+
+    #update, #action { display: none }
+    #action { font-size: 1.25rem; background: #405b40; color: #ddd; border: 2px solid #ddd; padding: .2em .3em; cursor: pointer }
   </style>
 </head>
 <body>
   <div id="bar"><pear-ctrl></pear-ctrl></div>
-  <h1>Hello Pear 🍐</h1>
   <table>
     <thead>
       <tr>
@@ -90,13 +92,13 @@
     </thead>
     <tbody>
       <tr>
-        <td>Platform</td>
+        <td>Pear</td>
         <td id="platformKey" class="key"></td>
         <td id="platformFork" class="fork"></td>
         <td id="platformLength" class="length"></td>
       </tr>
       <tr>
-        <td>App</td>
+        <td id="app">App</td>
         <td id="appKey" class="key"></td>
         <td id="appFork" class="fork"></td>
         <td id="appLength" class="length"></td>
@@ -111,6 +113,10 @@
     <tr>
       <th>Release</th>
       <td id="release"></td>
+    </tr>
+    <tr id="update">
+      <th>Update</th>
+      <td><button id="action"></button></td>
     </tr>
   </table>
   <script src="./app.js" type="module"></script>
