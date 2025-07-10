@@ -90,7 +90,7 @@ module.exports = class Stage extends Opstream {
     //       if entrypoint is string, then it's bareBuiltins, if object then
     //       ns = assets[entrypoint.asset]
     //       makeBuiltins(ns.builtins, ns.overrides, ns.mappings) -> gunk.builtins equiv
-    const builtins = state.options.assets.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
+    const builtins = state.options.assets?.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null
