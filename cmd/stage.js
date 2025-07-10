@@ -32,14 +32,14 @@ const output = outputter('stage', {
   },
   addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`,
   byteDiff,
-  preio ({ from, output, index, fd }, { preio }) {
-    if (!preio) return {}
+  preIo ({ from, output, index, fd }, { preIo }) {
+    if (!preIo) return {}
     const io = fd === 1 ? 'stdout' : 'stderr'
     const pre = 'Pre-stage [' + index + ':' + from + ':' + io + ']: '
     return pre + output
   },
-  pre ({ from, output, index, success }, { prequiet }) {
-    if (prequiet) return {}
+  pre ({ from, output, index, success }, { preQ }) {
+    if (preQ) return {}
     const pre = index > 0 ? 'Pre-stage [' + index + ':' + from + ']: ' : 'Pre-stage [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
     if (success === false) return { success: false, message: output?.stack || output?.message || 'Unknown Pre Error' }
@@ -67,7 +67,7 @@ module.exports = (ipc) => async function stage (cmd) {
     pkg = await State.localPkg(base)
     if (pkg !== null) {
       const pre = new Pre('stage', { dir, cwd }, pkg)
-      pkg = await output({ ctrlTTY: false }, pre, { pre: true, prequiet: cmd.flags.prequiet, preio: cmd.flags.preio })
+      pkg = await output({ ctrlTTY: false }, pre, { pre: true, preQ: cmd.flags.preQ, preIo: cmd.flags.preIo })
     }
   }
   const stream = ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1), pkg })
