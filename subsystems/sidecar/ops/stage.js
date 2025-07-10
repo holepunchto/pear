@@ -28,9 +28,10 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.ready()
 
+    if (name) state.name = name
     await State.build(state, pkg)
 
-    const corestore = sidecar.getCorestore(name || state.name, channel, { writable: true })
+    const corestore = sidecar.getCorestore(state.name, channel, { writable: true })
     await corestore.ready()
 
     key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
@@ -54,7 +55,7 @@ module.exports = class Stage extends Opstream {
     await session.add(bundle)
 
     const currentVersion = bundle.version
-    await state.initialize({ bundle, dryRun, name })
+    await state.initialize({ bundle, dryRun })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
     const defaultIgnore = ['**.git', '**.github', '**.DS_Store']
@@ -66,8 +67,6 @@ module.exports = class Stage extends Opstream {
     if (state.options?.stage?.only) only = state.options?.stage?.only
     else only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
 
-    const type = state.manifest.pear?.type || 'desktop'
-    const isTerminal = type === 'terminal'
     const release = (await bundle.db.get('release'))?.value || 0
     const z32 = hypercoreid.encode(bundle.drive.key)
     const link = 'pear://' + z32
@@ -84,7 +83,14 @@ module.exports = class Stage extends Opstream {
     await glob.ready()
 
     const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
-    const builtins = isTerminal ? sidecar.gunk.bareBuiltins : sidecar.gunk.builtins
+    // TODO: each specified entrypoint could be for a different runtime, warmup for each entrypoint depends
+    //       on knowing the runtime (asset). builtins/overrides/mappings need to be declared statically
+    //       PER entrypoint PER asset so extend stage.entrypoints such that it's
+    //       [{ key: '/path/to/entrypoint', asset: 'ui' }]
+    //       if entrypoint is string, then it's bareBuiltins, if object then
+    //       ns = assets[entrypoint.asset]
+    //       makeBuiltins(ns.builtins, ns.overrides, ns.mappings) -> gunk.builtins equiv
+    const builtins = state.options.assets.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = await src.entry(unixPathResolve('/', state.main)) !== null

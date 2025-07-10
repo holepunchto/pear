@@ -86,13 +86,12 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     if (isPath) link = plink.normalize(pathToFileURL(path.join(dir, base.entrypoint || '/')).href) + search + hash
     if (flags.pre) {
       const pre = new Pre('run', base, pkg)
-      pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, { io: flags.preio, quiet: flags.prequiet })
+      pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, { io: flags.preIo, quiet: flags.preQ })
     }
   }
 
   if (detached) {
     const { wokeup, appling } = await ipc.detached({ key, link, storage, appdev: onDisk ? dir : null, pkg })
-
     if (wokeup) return ipc.close().catch(console.error)
     args = args.filter((arg) => arg !== '--detached')
     const opts = { cwd }
@@ -124,14 +123,14 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     stream.removeListener('data', ondata)
   })
 
-  const { startId, id, bundle, bail, success } = await runout({ json: flags.json }, stream)
+  const { startId, id, bundle, bail } = await runout({ json: flags.json }, stream)
 
   if (bail) {
+    if (bail.code === 'PREFLIGHT') return // done
+    if (bail.code === 'ERR_CONNECTION') return // handled by reporter
     if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
-    if (bail.code === 'ERR_CONNECTION') return // handled by the reporter
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
   }
-  if (success === false) return
 
   const state = new State({ startId, id, flags, link, dir, cmdArgs, cwd })
 
