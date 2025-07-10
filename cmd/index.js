@@ -92,8 +92,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-pre', 'Skip pre scripts'),
-    flag('--preio', 'Show stdout & stderr of pre scripts'),
-    flag('--prequiet', 'Suppress piped output of pre scripts'),
+    flag('--pre-io', 'Show stdout & stderr of pre scripts'),
+    flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
     runners.stage(ipc)
   )
