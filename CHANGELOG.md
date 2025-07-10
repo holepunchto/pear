@@ -17,11 +17,12 @@
 * Config - `pear.stage.pre` - as `pear.pre` but for pre stage only
 * Config - `pear.run.pre` - as `pear.pre` but for pre run from dir only
 * CLI - `pear run --no-pre` - disallow any `pear.pre` apps to run prior to run from dir
-* CLI - `pear run --preio` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
-* CLI - `pear run --prequiet` - hide any pre tags from displaying
+* CLI - `pear run --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear run --pre-q` - hide any pre tags from displaying
+* CLI - `pear run --preflight` - advanced, synchronize assets, exit without app execution
 * CLI - `pear stage --no-pre` - disallow any `pear.pre` apps to run prior to stage
-* CLI - `pear stage --preio` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
-* CLI - `pear stage --prequiet` - hide any pre tags from displaying
+* CLI - `pear stage --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear stage --pre-q` - hide any pre tags from displaying
 set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
 * Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"},  {"routes": "."}` catch-all
 * Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
