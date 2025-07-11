@@ -47,5 +47,16 @@ module.exports = class Data extends Opstream {
         this.push({ tag: 'assets', data: assets })
       }
     }
+
+    if (resource === 'currents') {
+      let records
+      if (link) {
+        const record = await this.sidecar.model.getCurrent(link)
+        records = record ? [record] : []
+      } else {
+        records = await this.sidecar.model.allCurrents()
+      }
+      this.push({ tag: 'currents', data: records })
+    }
   }
 }

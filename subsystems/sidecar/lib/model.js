@@ -170,6 +170,11 @@ module.exports = class Model {
     return current
   }
 
+  async allCurrents () {
+    LOG.trace('db', 'FIND', '@pear/current')
+    return await this.db.find('@pear/current').toArray()
+  }
+
   async setCurrent (link, checkout) {
     const tx = await this.lock.enter()
     const current = {

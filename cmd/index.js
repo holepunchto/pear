@@ -250,6 +250,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
     command('manifest', summary('Database internal versioning'), (cmd) => runners.data(ipc).manifest(cmd)),
     command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).assets(cmd)),
+    command('currents', summary('Current link checkouts'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).currents(cmd)),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
