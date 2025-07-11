@@ -6,6 +6,7 @@
 
 * API - Pear.exit calls teardown before exit
 * Worker - Worker pipe calls Pear.exit on close/end
+* Worker - Standard err stream printed in GUI devtools
 
 ## v1.15.0
 
