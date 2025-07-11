@@ -1573,6 +1573,7 @@ class PearGUI extends ReadyResource {
       pipe.on('data', (data) => { evt.reply('workerPipeData', { data, id }) })
       pipe.on('end', () => { evt.reply('workerPipeEnd', { id }) })
       pipe.on('error', (err) => { evt.reply('workerPipeError', { stack: err.stack, id }) })
+      worker.stderr.on('data', (data) => { evt.reply('workerStdError', { pid: worker.pid, link: worker.link, data: data.toString(), id }) })
     })
 
     electron.ipcMain.on('workerPipeId', (evt) => {
