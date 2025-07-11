@@ -65,7 +65,7 @@
     ]
   },
   "dependencies": {
-    "@fontsource/open-sans": "^5.2.5",
+    "@fontsource/open-sans": "5.2.5",
     "b4a": "^1.6.7",
     "bare-bundle": "^1.8.3",
     "bare-env": "^3.0.0",
