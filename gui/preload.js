@@ -381,7 +381,7 @@ class IPC {
       if (args.id === id) stream.push(args.data)
     })
     electron.ipcRenderer.on('workerStdError', (e, args) => {
-      if (args.id === id) console.error(args.link, args.pid, args.data)
+      if (args.id === id) console.error(args.link, '[ ' + args.pid + ' ] ->', args.data)
     })
     return stream
   }
