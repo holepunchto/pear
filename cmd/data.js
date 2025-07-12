@@ -39,11 +39,25 @@ const gcOutput = (records) => {
   return out
 }
 
+const swarmOutput = (info) => {
+  let out = ''
+  if (!info.dhtHost) {
+    out += '\nThe sidecar swarm is not ready.\n'
+  } else {
+    out += `\n - Peers: ${info.peers}\n`
+    out += ` - Connections: ${info.connections}\n`
+    out += ` - DHT host: ${info.dhtHost}\n`
+    out += ` - DHT port: ${info.dhtPort}\n`
+  }
+  return out
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result)
+  gc: (result) => gcOutput(result),
+  swarm: (result) => swarmOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -80,5 +94,12 @@ class Data {
     const { json } = command.parent.flags
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
+  }
+
+  async swarm (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    const result = await this.ipc.data({ resource: 'swarm' })
+    await output(json, result, { tag: 'swarm' }, this.ipc)
   }
 }

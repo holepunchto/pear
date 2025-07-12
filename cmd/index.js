@@ -192,6 +192,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     description(usage.descriptions.data),
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
+    command('swarm', summary('Swarm information'), (cmd) => runners.data(ipc).swarm(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
     flag('--json', 'Newline delimited JSON output'),
