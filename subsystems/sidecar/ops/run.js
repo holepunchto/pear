@@ -52,7 +52,6 @@ module.exports = class Run extends Opstream {
         sidecar.running.delete(startId)
         LOG.info(LOG_RUN_LINK, startId, 'removed from running set')
       }
-      this.push({ tag: 'torndown', data: { id } })
     })
     try {
       const info = await running
