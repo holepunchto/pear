@@ -145,8 +145,8 @@ module.exports = class Model {
   }
 
   async getCurrent (link) {
-    const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
+    const get = { link: origin(link) }
+    LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
     return current
   }
@@ -154,7 +154,7 @@ module.exports = class Model {
   async setCurrent (link, checkout) {
     const tx = await this.lock.enter()
     const current = {
-      link,
+      link: origin(link),
       checkout: { fork: checkout.fork, length: checkout.length }
     }
     LOG.trace('db', 'INSERT', '@pear/current', current)
