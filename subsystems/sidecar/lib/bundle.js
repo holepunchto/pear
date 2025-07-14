@@ -92,7 +92,7 @@ module.exports = class Bundle {
     if (typeof updateNotify !== 'function') return
     if (this.closed) return
 
-    if (this.checkout < this.drive.version) {
+    if (this.checkout !== null && this.checkout < this.drive.version) {
       await updateNotify({
         key: this.hexKey,
         length: this.drive.core.length,
