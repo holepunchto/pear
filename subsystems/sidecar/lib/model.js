@@ -265,7 +265,7 @@ module.exports = class Model {
     return await this.db.find('@pear/gc').toArray()
   }
 
-  async gc () {
+  async checkAssetsCapacity () {
     const { totalAllocated } = await this.allAssets()
     const maxCapacity = 12 * 1024 ** 3 // 12 GiB
     if (totalAllocated > maxCapacity) {
@@ -281,7 +281,9 @@ module.exports = class Model {
       }
       await this.lock.exit()
     }
+  }
 
+  async gcSweepOne () {
     LOG.trace('db', 'FIND ONE', '@pear/gc')
     const entry = await this.db.findOne('@pear/gc')
     if (entry) {
