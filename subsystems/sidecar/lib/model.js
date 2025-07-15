@@ -7,7 +7,11 @@ const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
 const { ERR_INVALID_LINK } = require('pear-api/errors')
 
-const origin = (link) => typeof link === 'string' ? plink.parse(link).origin : link.origin
+const applink = (link) => {
+  const parsed = typeof link === 'string' ? plink.parse(link) : link
+  parsed.alias = null
+  return plink.serialize(parsed).applink
+}
 
 class Lock extends DBLock {
   #manual = false
@@ -48,7 +52,7 @@ module.exports = class Model {
   }
 
   async getBundle (link) {
-    const get = { link: origin(link) }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await this.db.get('@pear/bundle', get)
     return bundle
@@ -61,7 +65,7 @@ module.exports = class Model {
 
   async addBundle (link, appStorage) {
     const tx = await this.lock.enter()
-    const bundle = { link: origin(link), appStorage }
+    const bundle = { link: applink(link), appStorage }
     LOG.trace('db', 'INSERT', '@pear/bundle', bundle)
     await tx.insert('@pear/bundle', bundle)
     await this.lock.exit()
@@ -71,7 +75,7 @@ module.exports = class Model {
   async updateEncryptionKey (link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
-    const get = { link: origin(link) }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
@@ -89,7 +93,7 @@ module.exports = class Model {
   async updateAppStorage (link, newAppStorage, oldStorage) {
     let result
     const tx = await this.lock.enter()
-    const get = { link: origin(link) }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
@@ -178,7 +182,7 @@ module.exports = class Model {
   }
 
   async getTags (link) {
-    const get = { link }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get, '[tags]')
     return (await this.db.get('@pear/bundle', get))?.tags || []
   }
@@ -186,7 +190,7 @@ module.exports = class Model {
   async updateTags (link, tags) {
     let result
     const tx = await this.lock.enter()
-    const get = { link }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     const bundle = await tx.get('@pear/bundle', get)
     if (!bundle) {
@@ -202,7 +206,7 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
-    const get = { link: origin(link) }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     return (await this.db.get('@pear/bundle', get))?.appStorage
   }
@@ -248,10 +252,10 @@ module.exports = class Model {
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    const src = { link: origin(srcLink) }
+    const src = { link: applink(srcLink) }
     LOG.trace('db', 'GET', '@pear/bundle', src)
     const srcBundle = await tx.get('@pear/bundle', src)
-    const dst = { link: origin(dstLink) }
+    const dst = { link: applink(dstLink) }
     LOG.trace('db', 'GET', '@pear/bundle', dst)
     const dstBundle = await tx.get('@pear/bundle', dst)
 
