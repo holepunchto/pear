@@ -215,7 +215,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 })
 
-test('blocked event loop terminated', async function ({ plan, teardown, pass }) {
+test('unresponsive subprocess termination', async function ({ plan, teardown, pass }) {
   plan(1)
 
   const dir = path.join(Helper.localDir, 'test', 'fixtures', 'unresponsive')
