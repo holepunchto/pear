@@ -318,7 +318,7 @@ module.exports = class Run extends Opstream {
 
   #gcOrphanWorkers () {
     try {
-      for (const client of this.clients) {
+      for (const client of this.sidecar.clients) {
         const userData = client.userData
         if (!userData) continue
         if (userData.state && userData.state.pid && userData.state.parent && !this.sidecar.apps.includes(userData.state.parent)) {
