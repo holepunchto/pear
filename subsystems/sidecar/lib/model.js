@@ -6,10 +6,10 @@ const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
 const { ERR_INVALID_LINK } = require('pear-api/errors')
 
-const applink = (link, { alias = false } = {}) => {
+const applink = (link, { alias = true } = {}) => {
   const parsed = typeof link === 'string' ? plink.parse(link) : link
   if (alias === false) parsed.alias = null
-  return plink.serialize(parsed).applink
+  return plink.serialize(parsed).origin
 }
 
 class Lock extends DBLock {
@@ -149,7 +149,7 @@ module.exports = class Model {
   }
 
   async getCurrent (link) {
-    const get = { link }
+    const get = { link: applink(link, { alias: false }) }
     LOG.trace('db', 'GET', '@pear/asset', get)
     const current = await this.db.get('@pear/current', get)
     return current
@@ -158,7 +158,7 @@ module.exports = class Model {
   async setCurrent (link, checkout) {
     const tx = await this.lock.enter()
     const current = {
-      link,
+      link: applink(link, { alias: false }),
       checkout: { fork: checkout.fork, length: checkout.length }
     }
     LOG.trace('db', 'INSERT', '@pear/current', current)
@@ -205,17 +205,17 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
-    const get = { link: applink(link, { alias: true }) }
+    const get = { link: applink(link) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     return (await this.db.get('@pear/bundle', get))?.appStorage
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    const src = { link: applink(srcLink, { alias: true }) }
+    const src = { link: applink(srcLink) }
     LOG.trace('db', 'GET', '@pear/bundle', src)
     const srcBundle = await tx.get('@pear/bundle', src)
-    const dst = { link: applink(dstLink, { alias: true }) }
+    const dst = { link: applink(dstLink) }
     LOG.trace('db', 'GET', '@pear/bundle', dst)
     const dstBundle = await tx.get('@pear/bundle', dst)
 
