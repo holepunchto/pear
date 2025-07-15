@@ -29,7 +29,7 @@ module.exports = class Replicator extends EventEmitter {
     let done = noop
     try {
       await this.drive.ready()
-      LOG.info('sidecar', '- Drive bundle ' + hypercoreid.encode(this.drive.key) + ' core length: ' + this.drive.core.length)
+      LOG.info('sidecar', '- Drive ' + hypercoreid.encode(this.drive.key) + ' length: ' + this.drive.core.length)
       if (this.drive.core.length === 0) done = this.drive.findingPeers()
     } catch {
       done()
