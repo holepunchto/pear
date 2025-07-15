@@ -8,6 +8,7 @@ const { RUNTIME } = require('pear-api/constants')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('url-file-url')
 const { ERR_INVALID_CONFIG } = require('pear-api/errors')
+const State = require('pear-api/state')
 const path = require('bare-path')
 const cenc = require('compact-encoding')
 
@@ -49,7 +50,10 @@ module.exports = class Pre extends Readable {
     this.pre = pre.length > 0 ? pre : null
 
     const dir = this.dir.endsWith('/') ? this.dir.slice(0, -1) : this.dir
-    const isAppEntrypoint = this.link.endsWith(dir) || this.link.endsWith(dir + '/' + this.pkg.main)
+    const state = new State()
+    await State.build(state, this.pkg)
+    const isAppEntrypoint = state.routed || this.link.endsWith(dir) || this.link.endsWith(dir + '/' + state.main)
+
     if (this.pre === null || isAppEntrypoint === false) {
       this.#final()
       return
