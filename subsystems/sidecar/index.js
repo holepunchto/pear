@@ -694,7 +694,7 @@ class Sidecar extends ReadyResource {
   async #shutdown (client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const tearingDown = client.userData instanceof this.App && client.userData.teardown()
-    if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
+    if (tearingDown === false) await this.#endRPCStreams(client).then(() => client.close())
     this.spindownms = 0
     const restarts = this.closeClients()
     this.#spindownCountdown()
