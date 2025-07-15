@@ -6,9 +6,9 @@ const plink = require('pear-api/link')
 const dbSpec = require('../../../spec/db')
 const { ERR_INVALID_LINK } = require('pear-api/errors')
 
-const applink = (link) => {
+const applink = (link, { alias = false } = {}) => {
   const parsed = typeof link === 'string' ? plink.parse(link) : link
-  parsed.alias = null
+  if (alias === false) parsed.alias = null
   return plink.serialize(parsed).applink
 }
 
@@ -205,17 +205,17 @@ module.exports = class Model {
   }
 
   async getAppStorage (link) {
-    const get = { link: applink(link) }
+    const get = { link: applink(link, { alias: true }) }
     LOG.trace('db', 'GET', '@pear/bundle', get)
     return (await this.db.get('@pear/bundle', get))?.appStorage
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
-    const src = { link: applink(srcLink) }
+    const src = { link: applink(srcLink, { alias: true }) }
     LOG.trace('db', 'GET', '@pear/bundle', src)
     const srcBundle = await tx.get('@pear/bundle', src)
-    const dst = { link: applink(dstLink) }
+    const dst = { link: applink(dstLink, { alias: true }) }
     LOG.trace('db', 'GET', '@pear/bundle', dst)
     const dstBundle = await tx.get('@pear/bundle', dst)
 
