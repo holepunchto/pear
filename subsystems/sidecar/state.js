@@ -3,46 +3,10 @@ const path = require('bare-path')
 const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST, ERR_INVALID_APP_NAME } = require('pear-api/errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('pear-api/errors')
 const SharedState = require('pear-api/state')
 
 module.exports = class State extends SharedState {
-  initialized = false
-  version = { key: null, length: 0, fork: 0 }
-  checkpoint = null
-  options = null
-  manifest = null
-  static async build (state, pkg = null) {
-    if (state.manifest) return state.manifest
-    if (pkg === null && state.key === null) pkg = await this.localPkg(state)
-    if (pkg === null) throw ERR_INVALID_PROJECT_DIR(`"${path.join(this.dir, 'package.json')}" not found. Pear project must have a package.json`)
-    state.pkg = pkg
-    state.options = state.pkg?.pear ?? {}
-
-    state.name = state.name ?? this.appname(state.pkg)
-
-    state.main = state.options.main ?? pkg?.main ?? 'index.js'
-
-    const invalidName = /^[@/a-z0-9-_]+$/.test(state.name) === false
-    if (invalidName) throw ERR_INVALID_APP_NAME('App name must be lowercase and one word, and may contain letters, numbers, hyphens (-), underscores (_), forward slashes (/) and asperands (@).')
-
-    state.links = {
-      ...Object.fromEntries(Object.entries((state.options.links ?? {}))),
-      ...(state.links ?? {})
-    }
-    state.entrypoints = new Set(state.options.stage?.entrypoints || [])
-    state.routes = state.options.routes || null
-    const unrouted = new Set(Array.isArray(state.options.unrouted) ? state.options.unrouted : [])
-    unrouted.add('/node_modules/.bin/')
-    state.unrouted = Array.from(unrouted)
-    let entrypoint = state.prerunning ? state.route : this.route(state.route, state.routes, state.unrouted)
-    if (entrypoint.startsWith('/') === false) entrypoint = '/' + entrypoint
-    else if (entrypoint.startsWith('./')) entrypoint = entrypoint.slice(1)
-    state.entrypoint = entrypoint
-    state.manifest = { ...pkg, pear: state.options }
-    return state.manifest
-  }
-
   constructor (opts) {
     super(opts)
     this.reconfigure()
