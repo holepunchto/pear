@@ -13,7 +13,8 @@ const {
   ERR_OPERATION_FAILED,
   ERR_INVALID_PROJECT_DIR,
   ERR_INVALID_INPUT,
-  ERR_LEGACY
+  ERR_LEGACY,
+  ERR_INTERNAL_ERROR
 } = require('pear-api/errors')
 const State = require('pear-api/state')
 const { outputter, permit, byteSize, ansi } = require('pear-api/terminal')
@@ -123,7 +124,9 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
     stream.removeListener('data', ondata)
   })
 
-  const { startId, id, bundle, bail } = await runout({ json: flags.json }, stream)
+  const result = await runout({ json: flags.json }, stream)
+  if (result === null) throw ERR_INTERNAL_ERROR('run failure unknown')
+  const { startId, id, bundle, bail } = result
 
   if (bail) {
     if (bail.code === 'PREFLIGHT') return // done
