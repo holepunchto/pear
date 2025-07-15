@@ -3,13 +3,13 @@ const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const plink = require('pear-api/link')
-const dbSpec = require('../../../spec/db')
 const { ERR_INVALID_LINK } = require('pear-api/errors')
+const dbSpec = require('../../../spec/db')
 
 const applink = (link, { alias = true } = {}) => {
-  const parsed = typeof link === 'string' ? plink.parse(link) : link
+  const parsed = typeof link === 'string' ? plink.parse(link) : { ...link }
   if (alias === false) parsed.alias = null
-  return plink.serialize(parsed).origin
+  return plink.parse(plink.serialize(parsed)).origin
 }
 
 class Lock extends DBLock {
@@ -150,7 +150,7 @@ module.exports = class Model {
 
   async getCurrent (link) {
     const get = { link: applink(link, { alias: false }) }
-    LOG.trace('db', 'GET', '@pear/asset', get)
+    LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
     return current
   }

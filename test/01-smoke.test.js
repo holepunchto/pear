@@ -227,7 +227,6 @@ test('local app', async function ({ ok, is, teardown }) {
   const data = await helper.data({ resource: 'apps', link: tmpdir })
   const dataResult = await Helper.pick(data, [{ tag: 'apps' }])
   const bundle = (await dataResult.apps)[0]
-
   is(bundle.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
   ok(bundle.appStorage.includes('by-random'), 'application by storage has been generate randomly and persisted')
   is(bundle.encryptionKey, undefined, 'application has no encryption key')

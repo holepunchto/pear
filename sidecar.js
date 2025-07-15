@@ -21,7 +21,6 @@ const gunk = require('pear-api/gunk')
 const pear = require('pear-api/cmd')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
-
 crasher('sidecar', SWAP)
 
 LOG.info('sidecar', '- Sidecar Booting')
