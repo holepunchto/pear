@@ -157,7 +157,7 @@ class Helper extends IPC.Client {
     const timeout = opts.timeout || 10000
     const res = new Promise((resolve, reject) => {
       let buffer = ''
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
       pipe.on('data', (data) => {
         buffer += data.toString()
         if (buffer[buffer.length - 1] === STOP_CHAR) {
