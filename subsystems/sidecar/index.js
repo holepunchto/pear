@@ -812,7 +812,7 @@ class Sidecar extends ReadyResource {
       corestore,
       appling: state.appling,
       channel: state.channel,
-      checkout: state.checkout,
+      checkout: parsedLink.drive.length !== null ? parsedLink.drive.length : state.checkout,
       key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,

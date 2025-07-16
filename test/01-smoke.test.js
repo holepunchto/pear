@@ -267,3 +267,52 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
 
   await Helper.untilClose(run.pipe)
 })
+
+test('link length', async function ({ plan, comment, teardown, ok, is }) {
+  plan(2)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const pkgA = { name: 'tmp-app-a', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgA))
+  await fs.copyFile(path.join(versionsDir, 'index.js'), path.join(tmpdir, 'index.js'))
+
+  const id = Helper.getRandomId()
+
+  comment('first stage')
+  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await stagedA.addendum
+  await stagedA.final
+
+  const link = `pear://${key}`
+  const runA = await Helper.run({ link })
+  const resultA = JSON.parse(await Helper.untilResult(runA.pipe))
+  await Helper.untilClose(runA.pipe)
+
+  const pkgB = { name: 'tmp-app-b', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgB))
+
+  comment('second stage')
+  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [{ tag: 'final' }])
+  await stagedB.final
+
+  const runB = await Helper.run({ link })
+  const resultB = JSON.parse(await Helper.untilResult(runB.pipe))
+  await Helper.untilClose(runB.pipe)
+
+  ok(resultA.app.length < resultB.app.length)
+
+  comment('run with link + length')
+  const runC = await Helper.run({ link: `pear://0.${resultA.app.length}.${key}` })
+  const resultC = JSON.parse(await Helper.untilResult(runC.pipe))
+  await Helper.untilClose(runC.pipe)
+
+  is(resultA.app.length, resultC.app.length)
+})
