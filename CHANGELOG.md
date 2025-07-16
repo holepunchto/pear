@@ -62,8 +62,8 @@ set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, 
 * Examples - desktop updated to use [`pear-electron`][v2.0.0:pear-electron] with Pipe example
 
 
-[v2.0.0:pear-api]: pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md "pear run pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md"
-[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run pear://runtime/doc?pear://electron/CHANGELOG.md"
+[v2.0.0:pear-api]: pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md "pear run 'pear://runtime/doc?pear://pear/node_modules/pear-api/CHANGELOG.md'"
+[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run 'pear://runtime/doc?pear://electron/CHANGELOG.md'"
 
 
 ## v1.17.0
