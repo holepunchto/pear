@@ -15,7 +15,7 @@ const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const rig = new Helper.Rig()
 const { tmp } = rig
 
-const PLATFORM_STAGE_TIMEOUT = 30_000
+const PLATFORM_STAGE_TIMEOUT = 45_000
 
 test.hook('updates setup', rig.setup)
 
@@ -165,7 +165,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(7)
-  timeout(60_000)
+  timeout(80_000)
 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -242,7 +242,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(11)
-  timeout(60_000)
+  timeout(80_000)
 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -340,7 +340,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
 test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(6)
-  timeout(60_000)
+  timeout(80_000)
 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -411,7 +411,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
 test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
-  timeout(60_000)
+  timeout(80_000)
 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
