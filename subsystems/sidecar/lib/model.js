@@ -2,6 +2,7 @@
 const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
+const LocalDrive = require('localdrive')
 const plink = require('pear-api/link')
 const { ERR_INVALID_LINK } = require('pear-api/errors')
 const dbSpec = require('../../../spec/db')
@@ -134,6 +135,29 @@ module.exports = class Model {
     return await this.db.find('@pear/asset').toArray()
   }
 
+  async allocatedAssets () {
+    LOG.trace('db', 'FIND', '@pear/asset')
+    const assets = await this.db.find('@pear/asset').toArray()
+    let totalBytes = 0
+    for (const asset of assets) {
+      if (!asset.bytes) {
+        let bytes = 0
+        const drive = new LocalDrive(asset.path)
+        for await (const entry of drive.list('/')) {
+          if (entry.value.blob) bytes += entry.value.blob.byteLength
+        }
+        const tx = await this.lock.enter()
+        const update = { ...asset, bytes }
+        LOG.trace('db', 'INSERT', '@pear/asset', update)
+        await tx.insert('@pear/asset', update)
+        await this.lock.exit()
+        asset.bytes = bytes
+      }
+      totalBytes += asset.bytes
+    }
+    return totalBytes
+  }
+
   async removeAsset (link) {
     if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const get = { link }
@@ -154,6 +178,11 @@ module.exports = class Model {
     LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
     return current
+  }
+
+  async allCurrents () {
+    LOG.trace('db', 'FIND', '@pear/current')
+    return await this.db.find('@pear/current').toArray()
   }
 
   async setCurrent (link, checkout) {
@@ -244,6 +273,40 @@ module.exports = class Model {
   async allGc () {
     LOG.trace('db', 'FIND', '@pear/gc')
     return await this.db.find('@pear/gc').toArray()
+  }
+
+  async scavengeAssets () {
+    const totalBytes = await this.allocatedAssets()
+    const maxCapacity = 12 * 1024 ** 3 // 12 GiB
+    if (totalBytes > maxCapacity) {
+      const tx = await this.lock.enter()
+      LOG.trace('db', 'FIND ONE', '@pear/asset')
+      const asset = await tx.findOne('@pear/asset')
+      if (asset) {
+        const gc = { path: asset.path }
+        LOG.trace('db', 'INSERT', '@pear/gc', gc)
+        await tx.insert('@pear/gc', gc)
+        LOG.trace('db', 'DELETE', '@pear/asset', asset)
+        await tx.delete('@pear/asset', asset)
+      }
+      await this.lock.exit()
+    }
+  }
+
+  async gc () {
+    LOG.trace('db', 'FIND ONE', '@pear/gc')
+    const entry = await this.db.findOne('@pear/gc')
+    if (entry) {
+      LOG.trace('db', 'GC removing directory', entry.path)
+      await fs.promises.rm(entry.path, { recursive: true, force: true })
+      const get = { path: entry.path }
+      const tx = await this.lock.enter()
+      LOG.trace('db', 'DELETE', '@pear/gc', get)
+      await tx.delete('@pear/gc', get)
+      await this.lock.exit()
+    } else {
+      LOG.trace('db', 'GC is clear')
+    }
   }
 
   async getManifest () {
