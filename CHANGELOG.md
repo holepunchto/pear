@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.15.1
+
+### Improvements
+
+* Internal - Increased worker deathloop to 30 seconds
+
 ## v1.15.0
 
 ### Improvements
