@@ -75,6 +75,11 @@
           "array": true,
           "type": "string",
           "version": 1
+        },
+        {
+          "name": "bytes",
+          "type": "uint",
+          "version": 1
         }
       ]
     },
