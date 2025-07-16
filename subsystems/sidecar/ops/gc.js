@@ -114,14 +114,21 @@ module.exports = class GC extends Opstream {
     const { resource, sidecar } = this
     await sidecar.ready()
     let count = 0
-    let assets = []
+    let removeAssets = []
     if (link) {
       const asset = await sidecar.model.getAsset(link)
-      if (asset) assets = [asset]
+      if (asset) removeAssets = [asset]
     } else {
-      assets = await sidecar.model.allAssets()
+      const assets = await sidecar.model.allAssets()
+      if (assets) removeAssets = assets
     }
-    for (const asset of assets) {
+    for (const { client } of sidecar.running.values()) {
+      // skip running assets
+      if (client.userData instanceof sidecar.App === false) return
+      const links = Object.values(client.userData.state.manifest.pear.assets).map((asset) => asset.link)
+      removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
+    }
+    for (const asset of removeAssets) {
       await sidecar.model.removeAsset(asset.link)
       this.push({ tag: 'remove', data: { resource, id: asset.link } })
       count += 1
