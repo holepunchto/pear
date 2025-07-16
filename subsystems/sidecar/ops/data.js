@@ -37,14 +37,27 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'assets') {
+      await this.sidecar.model.allocatedAssets()
       let assets
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
         assets = asset ? [asset] : []
+        this.push({ tag: 'assets', data: assets })
       } else {
-        assets = await this.sidecar.model.allAssets()
+        const assets = await this.sidecar.model.allAssets()
+        this.push({ tag: 'assets', data: assets })
       }
-      this.push({ tag: 'assets', data: assets })
+    }
+
+    if (resource === 'currents') {
+      let records
+      if (link) {
+        const record = await this.sidecar.model.getCurrent(link)
+        records = record ? [record] : []
+      } else {
+        records = await this.sidecar.model.allCurrents()
+      }
+      this.push({ tag: 'currents', data: records })
     }
   }
 }

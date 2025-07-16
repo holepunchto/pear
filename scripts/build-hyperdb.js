@@ -69,6 +69,10 @@ pearSchema.register({
       name: 'only',
       type: 'string',
       array: true
+    },
+    {
+      name: 'bytes',
+      type: 'uint'
     }
   ]
 })

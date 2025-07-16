@@ -3,8 +3,9 @@
 /* eslint-disable camelcase */
 /* eslint-disable quotes */
 
-const VERSION = 1
 const { c } = require('hyperschema/runtime')
+
+const VERSION = 1
 
 // eslint-disable-next-line no-unused-vars
 let version = VERSION
@@ -60,15 +61,17 @@ const encoding2 = {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
-    state.end++ // max flag is 2 so always one byte
+    state.end++ // max flag is 4 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding2_4.preencode(state, m.only)
+    if (m.bytes) c.uint.preencode(state, m.bytes)
   },
   encode (state, m) {
     const flags =
       (m.name ? 1 : 0) |
-      (m.only ? 2 : 0)
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -77,6 +80,7 @@ const encoding2 = {
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding2_4.encode(state, m.only)
+    if (m.bytes) c.uint.encode(state, m.bytes)
   },
   decode (state) {
     const r0 = c.string.decode(state)
@@ -89,7 +93,8 @@ const encoding2 = {
       ns: r1,
       path: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null
+      only: (flags & 2) !== 0 ? encoding2_4.decode(state) : null,
+      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }
@@ -282,15 +287,17 @@ const encoding10 = {
   preencode (state, m) {
     c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
-    state.end++ // max flag is 2 so always one byte
+    state.end++ // max flag is 4 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
     if (m.only) encoding10_4.preencode(state, m.only)
+    if (m.bytes) c.uint.preencode(state, m.bytes)
   },
   encode (state, m) {
     const flags =
       (m.name ? 1 : 0) |
-      (m.only ? 2 : 0)
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
 
     c.string.encode(state, m.ns)
     c.string.encode(state, m.path)
@@ -298,6 +305,7 @@ const encoding10 = {
 
     if (m.name) c.string.encode(state, m.name)
     if (m.only) encoding10_4.encode(state, m.only)
+    if (m.bytes) c.uint.encode(state, m.bytes)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -309,7 +317,8 @@ const encoding10 = {
       ns: r1,
       path: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null
+      only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null,
+      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }
