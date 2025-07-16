@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = Pear.pipe
 
 const updates = Pear.updates((data) => {
   pipe.write(JSON.stringify(data) + '\n')
