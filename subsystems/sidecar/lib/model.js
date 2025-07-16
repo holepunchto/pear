@@ -140,7 +140,7 @@ module.exports = class Model {
     const assets = await this.db.find('@pear/asset').toArray()
     let totalBytes = 0
     for (const asset of assets) {
-      if (!asset.bytesAllocated) {
+      if (!asset.bytes) {
         let bytes = 0
         const drive = new LocalDrive(asset.path)
         for await (const entry of drive.list('/')) {
@@ -151,9 +151,9 @@ module.exports = class Model {
         LOG.trace('db', 'INSERT', '@pear/asset', update)
         await tx.insert('@pear/asset', update)
         await this.lock.exit()
-        asset.bytesAllocated = bytes
+        asset.bytes = bytes
       }
-      totalBytes += asset.bytesAllocated
+      totalBytes += asset.bytes
     }
     return totalBytes
   }
