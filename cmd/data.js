@@ -1,6 +1,6 @@
 'use strict'
 const plink = require('pear-api/link')
-const { outputter, ansi } = require('pear-api/terminal')
+const { outputter, ansi, byteSize } = require('pear-api/terminal')
 const { ERR_INVALID_INPUT } = require('pear-api/errors')
 
 const padding = '    '
@@ -46,10 +46,29 @@ const manifestOutput = (manifest) => {
 
 const assetsOutput = (assets) => {
   if (!assets.length) return placeholder
+  let totalBytes = 0
   let out = ''
   for (const asset of assets) {
     out += `- ${ansi.bold(asset.link)}\n`
+    out += `${padding}ns: ${ansi.dim(asset.ns)}\n`
     out += `${padding}path: ${ansi.dim(asset.path)}\n`
+    out += `${padding}name: ${ansi.dim(asset.name)}\n`
+    out += `${padding}only: ${ansi.dim(asset.only)}\n`
+    out += `${padding}bytes: ${ansi.dim(byteSize(asset.bytes || 0))}\n`
+    out += '\n'
+    totalBytes += asset.bytes || 0
+  }
+  out += `\n${ansi.bold('Total assets: ')}${ansi.dim(byteSize(totalBytes))}\n`
+  return out
+}
+
+const currentsOutput = (records) => {
+  if (!records.length) return placeholder
+  let out = ''
+  for (const record of records) {
+    out += `- ${ansi.bold(record.link)}\n`
+    out += `${padding}fork: ${ansi.dim(record.checkout.fork)}\n`
+    out += `${padding}length: ${ansi.dim(record.checkout.length)}\n`
     out += '\n'
   }
   return out
@@ -60,7 +79,8 @@ const output = outputter('data', {
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
   manifest: (result) => manifestOutput(result),
-  assets: (result) => assetsOutput(result)
+  assets: (result) => assetsOutput(result),
+  currents: (result) => currentsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -108,5 +128,16 @@ class Data {
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
     await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
+  }
+
+  async currents (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    await output(json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' }, this.ipc)
   }
 }
