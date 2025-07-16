@@ -16,7 +16,6 @@
   "author": "Holepunch",
   "pear": {
     "name": "pear",
-    "type": "terminal",
     "stage": {
       "ignore": [
         "prebuilds",
