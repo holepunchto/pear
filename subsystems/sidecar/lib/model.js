@@ -7,9 +7,12 @@ const { ERR_INVALID_LINK } = require('pear-api/errors')
 const dbSpec = require('../../../spec/db')
 
 const applink = (link, { alias = true } = {}) => {
+  console.log('APPLINK', link)
   const parsed = typeof link === 'string' ? plink.parse(link) : { ...link }
   if (alias === false) parsed.alias = null
-  return plink.parse(plink.serialize(parsed)).origin
+  const ser = plink.serialize(parsed)
+  console.log('SER', ser)
+  return plink.parse(ser).origin
 }
 
 class Lock extends DBLock {
