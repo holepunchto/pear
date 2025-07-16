@@ -29,7 +29,7 @@ module.exports = class Replicator extends EventEmitter {
     let done = noop
     try {
       await this.drive.ready()
-      LOG.info('sidecar', '- Replicator: drive=' + this.drive.core.fork + '.' + this.drive.core.length + '.' + hypercoreid.encode(this.drive.key))
+      LOG.info('sidecar', '- Replicator: drive = ' + this.drive.core.fork + '.' + this.drive.core.length + '.' + hypercoreid.encode(this.drive.key))
       if (this.drive.core.length === 0) done = this.drive.findingPeers()
     } catch {
       done()
@@ -43,7 +43,7 @@ module.exports = class Replicator extends EventEmitter {
       done()
     }
 
-    LOG.info('sidecar', '- swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
+    LOG.info('sidecar', '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
     const topic = swarm.join(this.drive.discoveryKey, { server, client, limit: 16 })
 
     try {
