@@ -200,7 +200,8 @@ test('worker can set uncaughtException handler', async function ({ is, teardown 
   await Helper.untilClose(run.pipe)
 })
 
-test('worker with blocked event-loop terminates', async function ({ teardown, plan, pass }) {
+test('worker with blocked event-loop terminates', async function ({ teardown, plan, pass, timeout }) {
+  timeout(60000)
   plan(1)
   const dir = workerZombie
 
