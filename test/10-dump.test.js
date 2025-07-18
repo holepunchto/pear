@@ -2,6 +2,7 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
+const opwait = require('pear-api/opwait')
 const fs = require('bare-fs')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'dump')
 
@@ -33,6 +34,18 @@ test('pear dump', async function ({ ok, plan, teardown }) {
 
   ok(await exists(path.join(dir, 'index.js')), 'index.js should exist')
   ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
+})
+
+test('pear dump skip link arg', async function ({ execution, plan, teardown, comment }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  comment('dumping')
+  const dumping = await helper.dump({ dir: '/path/to/dir' })
+  await execution(async () => { await opwait(dumping) })
 })
 
 test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
