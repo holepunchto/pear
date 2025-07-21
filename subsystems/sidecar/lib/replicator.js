@@ -53,9 +53,6 @@ module.exports = class Replicator extends EventEmitter {
       return
     }
 
-    // if good network join as server always
-    if (!this.appling && (swarm.dht.port > 0 && swarm.dht.host)) await swarm.join(this.drive.discoveryKey, { client: true, server: true, limit: 16 }).flushed()
-
     this.emit('announce')
     swarm.flush().then(fin, fin)
   }
