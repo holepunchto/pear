@@ -321,7 +321,7 @@ module.exports = class Run extends Opstream {
       for (const client of this.sidecar.clients) {
         const userData = client.userData
         if (!userData) continue
-        if (userData.state && userData.state.pid && userData.state.parent && !this.sidecar.apps.some(app => app.state.parent === userData.state.parent)) {
+        if (userData.state && userData.state.pid && userData.state.parent && !this.sidecar.apps.some((app) => app.state.parent === userData.state.parent)) {
           try {
             LOG.trace(this.LOG_RUN_LINK, 'Killing orphan worker process with PID', userData.state.pid)
             os.kill(userData.state.pid, 'SIGKILL')
