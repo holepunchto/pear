@@ -175,7 +175,7 @@ module.exports = class Run extends Opstream {
       corestore,
       appling: state.appling,
       channel: state.channel,
-      checkout: checkoutLength,
+      checkout: parsed.drive.length ? parsed.drive.length : checkoutLength,
       key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,

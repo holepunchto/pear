@@ -267,7 +267,7 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
   await Helper.untilClose(run.pipe)
 })
 
-test('double stage', async ({ teardown, comment, ok, is }) => {
+test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -278,9 +278,9 @@ test('double stage', async ({ teardown, comment, ok, is }) => {
   await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
 
   const writeIndex = (version) => `const pipe = Pear.worker.pipe()
-Pear.versions().then((versions) => {
-  pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
-})
+  Pear.versions().then((versions) => {
+    pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
+  })
 `
   await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('A'))
 
@@ -298,12 +298,10 @@ Pear.versions().then((versions) => {
   const resultA = await Helper.untilResult(runA.pipe)
   const infoA = JSON.parse(resultA)
   await Helper.untilClose(runA.pipe)
-
   is(infoA.version, 'A')
 
-  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('B'))
-
   comment('staging B')
+  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('B'))
   const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingB))
   const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])
@@ -313,10 +311,22 @@ Pear.versions().then((versions) => {
 
   ok(lengthA < lengthB)
 
+  // runAA Needed for update
+  const runAA = await Helper.run({ link })
+  await Helper.untilResult(runAA.pipe)
+  await Helper.untilClose(runAA.pipe)
+
   const runB = await Helper.run({ link })
   const resultB = await Helper.untilResult(runB.pipe)
   const infoB = JSON.parse(resultB)
   await Helper.untilClose(runB.pipe)
-
   is(infoB.version, 'B')
+
+  const run = await Helper.run({ link: `pear://0.${lengthA}.${addendumA.key}` })
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+  await Helper.untilClose(run.pipe)
+
+  is(info.version, 'A')
+  is(info.app.length, lengthA)
 })
