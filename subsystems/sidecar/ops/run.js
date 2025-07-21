@@ -205,6 +205,20 @@ module.exports = class Run extends Opstream {
     app.linker = linker
     app.bundle = appBundle
 
+    try {
+      const { fork, length } = await app.bundle.calibrate()
+      if (current === null) await this.sidecar.model.setCurrent(state.applink, { fork, length })
+    } catch (err) {
+      if (err.code === 'DECODING_ERROR') {
+        LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
+      } else {
+        LOG.error(LOG_RUN_LINK, 'Failure creating drive bundle for', link, 'app id:', id, err)
+        await session.close()
+        throw err
+      }
+    }
+
     LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
       await state.initialize({ bundle: app.bundle, app })
@@ -219,20 +233,6 @@ module.exports = class Run extends Opstream {
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
-
-    try {
-      const { fork, length } = await app.bundle.calibrate()
-      if (current === null) await this.sidecar.model.setCurrent(state.applink, { fork, length })
-    } catch (err) {
-      if (err.code === 'DECODING_ERROR') {
-        LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
-        throw ERR_PERMISSION_REQUIRED('Encryption key required', { key: state.key, encrypted: true })
-      } else {
-        LOG.error(LOG_RUN_LINK, 'Failure creating drive bundle for', link, 'app id:', id, err)
-        await session.close()
-        throw err
-      }
-    }
 
     if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
 
