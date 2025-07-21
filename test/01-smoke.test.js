@@ -266,3 +266,57 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
 
   await Helper.untilClose(run.pipe)
 })
+
+test('double stage', async ({ teardown, comment, ok, is }) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const id = Helper.getRandomId()
+  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
+
+  const writeIndex = (version) => `const pipe = Pear.worker.pipe()
+Pear.versions().then((versions) => {
+  pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
+})
+`
+  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('A'))
+
+  comment('staging A')
+  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendumA = await stagedA.addendum
+  const lengthA = addendumA.version
+  await stagedA.final
+
+  const link = `pear://${addendumA.key}`
+
+  const runA = await Helper.run({ link })
+  const resultA = await Helper.untilResult(runA.pipe)
+  const infoA = JSON.parse(resultA)
+  await Helper.untilClose(runA.pipe)
+
+  is(infoA.version, 'A')
+
+  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('B'))
+
+  comment('staging B')
+  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendumB = await stagedB.addendum
+  const lengthB = addendumB.version
+  await stagedB.final
+
+  ok(lengthA < lengthB)
+
+  const runB = await Helper.run({ link })
+  const resultB = await Helper.untilResult(runB.pipe)
+  const infoB = JSON.parse(resultB)
+  await Helper.untilClose(runB.pipe)
+
+  is(infoB.version, 'B')
+})
