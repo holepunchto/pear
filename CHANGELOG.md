@@ -5,6 +5,7 @@
 ### Fixes
 
 * API - Fixed `pear run ${link}` when link contains fork, length and app key
+* Internal - Only join swarm topic on server mode when seeding
 
 ### Improvements
 
