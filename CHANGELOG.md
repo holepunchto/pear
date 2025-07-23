@@ -4,7 +4,9 @@
 
 ### Features
 
-* CLI - `pear data manifest` to read platform database manifest
+* Internal - sidecar garbage collection of dangling filesystem resources
+* CLI - `pear gc assets` force clean-up of locally synced assets
+* CLI - `pear data` explore platform database collections `apps`, `dht`, `gc`, `manifest`, `assets`, `currents`
 * API - [`pear-api`][v2.0.0:pear-api] - `Pear.exit()`, `Pear.exitCode`, `Pear.argv`, `Pear.pid`, `Pear.dump()`, `Pear.stage()`, `Pear.release()`, `Pear.info()`, `Pear.seed()`
 * Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
 * CLI - `pear dump --only` - filter by paths
