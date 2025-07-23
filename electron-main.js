@@ -16,9 +16,11 @@ async function premigrate (ipc) {
   const config = await ipc.config
   const v1 = !!config.tier
   if (!v1) return
+  if (await ipc.exists({key: '/node_modules/pear-electron/package.json'}) === false) return
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
-  const ui = require('./package.json').pear.assets.ui
+  const pkg = await ipc.get({key: '/node_modules/pear-electron/package.json'})
+  const ui = pkg.pear.assets.ui
   let asset = await ipc.getAsset({ link: ui.link })
   if (asset !== null) return
   const opwait = require('pear-api/opwait')
