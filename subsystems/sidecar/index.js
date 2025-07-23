@@ -1032,7 +1032,14 @@ class Sidecar extends ReadyResource {
   }
 
   // forward compat facilities:
-
+  get (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.get(params.key)
+  }
+  exists (params, client) {
+    if (!client.userData) return
+    return client.userData.bundle.exists(params.key)
+  }
   // do not port:
   addAsset (params) { return this.model.addAsset(params.link, params) }
 
