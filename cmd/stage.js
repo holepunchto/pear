@@ -67,7 +67,7 @@ module.exports = (ipc) => async function stage (cmd) {
     pkg = await State.localPkg(base)
     if (pkg !== null) {
       const pre = new Pre('stage', { dir, cwd }, pkg)
-      pkg = await output({ ctrlTTY: false }, pre, { pre: true, preQ: cmd.flags.preQ, preIo: cmd.flags.preIo })
+      pkg = await output({ ctrlTTY: false, json }, pre, { pre: true, preQ: cmd.flags.preQ, preIo: cmd.flags.preIo })
     }
   }
   const stream = ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1), pkg })
