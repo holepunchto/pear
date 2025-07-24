@@ -938,7 +938,7 @@ class Sidecar extends ReadyResource {
     this.swarm = new Hyperswarm({ keyPair: this.keyPair, bootstrap: this.dhtBootstrap, nodes })
     this.swarm.once('close', () => { this.swarm = null })
     this.swarm.on('connection', (connection) => { this.corestore.replicate(connection) })
-    if (this.replicator !== null) this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
+    if (this.replicator !== null) this.replicator.join(this.swarm, { server: false }).catch(safetyCatch)
   }
 
   _getCorestore (name, channel, opts) {
