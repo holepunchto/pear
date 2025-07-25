@@ -1003,7 +1003,16 @@ class Sidecar extends ReadyResource {
 
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
-    this.bailout = setTimeout(() => {
+    this.bailout = setTimeout(async () => {
+      if (this.updater) {
+        try {
+          if (await this.updater.applyUpdate() !== null) {
+            LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
+          }
+        } catch (err) {
+          LOG.error('sidecar', err)
+        }
+      }
       LOG.error('internal', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
