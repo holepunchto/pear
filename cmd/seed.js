@@ -2,8 +2,8 @@
 const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
-const parseLink = require('../lib/parse-link')
-const { outputter, ansi, permit, isTTY } = require('./iface')
+const plink = require('pear-api/link')
+const { outputter, ansi, permit, isTTY } = require('pear-api/terminal')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
@@ -26,7 +26,7 @@ const output = outputter('seed', {
 module.exports = (ipc) => async function seed (cmd) {
   const { json, verbose, ask } = cmd.flags
   const { dir = os.cwd() } = cmd.args
-  const isKey = parseLink(cmd.args.channel).drive.key !== null
+  const isKey = plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
   let { name } = cmd.flags
