@@ -158,6 +158,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const sidecar = command(
     'sidecar',
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
+    command('inspect', runners.sidecar(ipc), summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
     flag('--mem', 'Memory mode: RAM corestore'),
