@@ -1,5 +1,19 @@
 # Pear Runtime Changelog
 
+## v1.16.0
+
+### Fixes
+
+* API - Fixed `pear run ${link}` when link contains fork, length and app key
+* Internal - Only join swarm topic on server mode when seeding
+
+### Improvements
+
+* API - Pear.exit calls teardown before exit
+* Worker - Worker pipe calls Pear.exit on close/end
+* Worker - Standard err stream printed in GUI devtools
+* Desktop - Sidecar sends pear/subprocess-killed message
+
 ## v1.15.0
 
 ### Improvements
