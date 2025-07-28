@@ -996,9 +996,9 @@ class Sidecar extends ReadyResource {
   }
 
   async _close () {
-    this._inspector.disable()
     if (this.decomissioned) return
     this.decomissioned = true
+    await this._inspector.disable()
     for (const client of this.clients) await this.#teardownPipelines(client)
     // point of no return, death-march ensues
     this.deathClock()
