@@ -4,7 +4,6 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const { equals } = require('b4a')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
@@ -247,7 +246,6 @@ test('Pear.updates should notify Platform stage updates (different pear instance
     await rcv.shutdown()
     await Helper.untilClose(pipeAfterUpdate)
   }
-
 })
 
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
