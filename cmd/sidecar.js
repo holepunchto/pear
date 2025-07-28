@@ -2,6 +2,13 @@
 const path = require('bare-path')
 const { print, ansi, stdio } = require('./iface')
 module.exports = (ipc) => async function sidecar (cmd) {
+  if (cmd.command.name === 'inspect') {
+    const inspectorKey = await ipc.inspect()
+    print(`\n${ansi.bold('Sidecar inspector enabled.')}\n`)
+    print(`${ansi.yellow(ansi.bold('Security Warning:'))} Do not share this inspector key unless you trust the recipient and understand the risks.`)
+    print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
+    return
+  }
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
