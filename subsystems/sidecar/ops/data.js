@@ -30,7 +30,10 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'inspect') {
-      this.push({ tag: 'inspect', data: this.sidecar._inspectorKey })
+      if (!this.sidecar.inspector.dht) {
+        await this.sidecar.inspector.enable()
+      }
+      this.push({ tag: 'inspect', data: this.sidecar.inspector.inspectorKey.toString('hex') })
     }
   }
 }

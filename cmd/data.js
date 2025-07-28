@@ -40,7 +40,10 @@ const gcOutput = (records) => {
 }
 
 const inspectOutput = (inspectorKey) => {
-  return `- Inspector key: ${inspectorKey}`
+  let out = `\n${ansi.bold('Sidecar inspector enabled.')}`
+  out += `\n\n${ansi.yellow(ansi.bold('Security Warning:'))} Do not share this inspector key unless you trust the recipient and understand the risks.`
+  out += `\n${ansi.bold('Inspector Key:')} ${inspectorKey}\n`
+  return out
 }
 
 const output = outputter('data', {
