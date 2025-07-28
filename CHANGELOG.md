@@ -1,5 +1,15 @@
 # Pear Runtime Changelog
 
+## v1.17.0
+
+### Features
+
+* API - added `pear sidecar inspect`
+
+### Fixes
+
+* Internal - Apply platform update event if deathclock triggered on sidecar close
+
 ## v1.16.0
 
 ### Fixes
