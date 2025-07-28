@@ -4,6 +4,7 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
+const { equals } = require('b4a')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
@@ -161,7 +162,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(7)
+  plan(8)
   timeout(60_000)
 
   const appStager = new Helper(rig)
@@ -229,11 +230,24 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   ok(update.updated, 'platform has been updated')
   ok(pearUpdateLength > pearVersionLength, `platform version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
-  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
-  await rcv.ready()
-  await rcv.shutdown()
+  {
+    const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+    await rcv.ready()
+    await rcv.shutdown()
+    await Helper.untilClose(pipe)
+  }
 
-  await Helper.untilClose(pipe)
+  const { pipe: pipeAfterUpdate } = await Helper.run({ link, platformDir: platformDirRcv })
+  const { platform: versionAfterUpdate } = await Helper.untilResult(pipeAfterUpdate).then((data) => JSON.parse(data))
+  ok(versionAfterUpdate.length > pearVersionLength, `platform version.length incremented (v${versionAfterUpdate?.fork}.${versionAfterUpdate?.length})`)
+
+  {
+    const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+    await rcv.ready()
+    await rcv.shutdown()
+    await Helper.untilClose(pipeAfterUpdate)
+  }
+
 })
 
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
