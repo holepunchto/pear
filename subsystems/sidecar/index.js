@@ -147,7 +147,7 @@ class Sidecar extends ReadyResource {
     this.http = new Http(this)
     this.running = new Map()
 
-    this.inspector = new Inspector({ inspector: bareInspector })
+    this._inspector = new Inspector({ inspector: bareInspector })
 
     const sidecar = this
     this.App = class App {
@@ -509,6 +509,14 @@ class Sidecar extends ReadyResource {
   }
 
   shutdown (params, client) { return this.#shutdown(client) }
+
+  inspect (params, client) {
+    if (!this._inspector.dht) {
+      return this._inspector.enable()
+    } else {
+      return this._inspector.inspectorKey
+    }
+  }
 
   #teardownPipelines (client) {
     // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
@@ -988,7 +996,7 @@ class Sidecar extends ReadyResource {
   }
 
   async _close () {
-    this.inspector.disable()
+    this._inspector.disable()
     if (this.decomissioned) return
     this.decomissioned = true
     for (const client of this.clients) await this.#teardownPipelines(client)

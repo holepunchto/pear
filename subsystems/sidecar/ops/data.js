@@ -28,12 +28,5 @@ module.exports = class Data extends Opstream {
       const records = await this.sidecar.model.allGc()
       this.push({ tag: 'gc', data: records })
     }
-
-    if (resource === 'inspect') {
-      if (!this.sidecar.inspector.dht) {
-        await this.sidecar.inspector.enable()
-      }
-      this.push({ tag: 'inspect', data: this.sidecar.inspector.inspectorKey.toString('hex') })
-    }
   }
 }

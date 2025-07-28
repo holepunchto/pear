@@ -158,6 +158,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const sidecar = command(
     'sidecar',
     command('shutdown', runners.sidecar(ipc), summary('Shutdown running sidecar')),
+    command('inspect', runners.sidecar(ipc), summary('Inspect running sidecar')),
     summary('Advanced. Run sidecar in terminal'),
     description(usage.descriptions.sidecar),
     flag('--mem', 'Memory mode: RAM corestore'),
@@ -193,7 +194,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('apps', summary('Installed apps'), arg('[link]', 'Filter by Pear link'), (cmd) => runners.data(ipc).apps(cmd)),
     command('dht', summary('DHT known-nodes cache'), (cmd) => runners.data(ipc).dht(cmd)),
     command('gc', summary('Garbage collection records'), (cmd) => runners.data(ipc).gc(cmd)),
-    command('inspect', summary('Print inspector key'), (cmd) => runners.data(ipc).inspect(cmd)),
     flag('--secrets', 'Show sensitive information, i.e. encryption-keys'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }

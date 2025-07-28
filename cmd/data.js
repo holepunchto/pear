@@ -39,19 +39,11 @@ const gcOutput = (records) => {
   return out
 }
 
-const inspectOutput = (inspectorKey) => {
-  let out = `\n${ansi.bold('Sidecar inspector enabled.')}`
-  out += `\n\n${ansi.yellow(ansi.bold('Security Warning:'))} Do not share this inspector key unless you trust the recipient and understand the risks.`
-  out += `\n${ansi.bold('Inspector Key:')} ${inspectorKey}\n`
-  return out
-}
-
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   link: (result) => appsOutput([result]),
   dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result),
-  inspect: (result) => inspectOutput(result)
+  gc: (result) => gcOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -88,12 +80,5 @@ class Data {
     const { json } = command.parent.flags
     const result = await this.ipc.data({ resource: 'gc' })
     await output(json, result, { tag: 'gc' }, this.ipc)
-  }
-
-  async inspect (cmd) {
-    const { command } = cmd
-    const result = await this.ipc.data({ resource: 'inspect' })
-    const { json } = command.parent.flags
-    await output(json, result, { tag: 'inspect' }, this.ipc)
   }
 }
