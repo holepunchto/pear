@@ -4,7 +4,7 @@
 
 ### Features
 
-* API - added `pear sidecar inspect`
+* CLI - added `pear sidecar inspect`
 
 ### Fixes
 
