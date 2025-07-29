@@ -57,6 +57,11 @@ module.exports = class Seed extends Opstream {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
+    bundle.drive.core.download({ start: 0, end: -1 })
+
+    const blobs = await bundle.drive.getBlobs()
+    blobs.core.download({ start: 0, end: -1 })
+
     if (verbose) {
       this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
       this.push({ tag: 'meta-discovery-key', data: bundle.drive.discoveryKey.toString('hex') })
