@@ -270,10 +270,12 @@ class Sidecar extends ReadyResource {
       get closed () { return this.session.closed }
     }
 
+    LOG.info('sidecar', '- Swarming...')
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
       this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
+      LOG.info('sidecar', '- Sidecar Ready')
     }, SWARM_DELAY)
   }
 
@@ -281,6 +283,7 @@ class Sidecar extends ReadyResource {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
+      LOG.info('sidecar', '- GC Cycle')
       await this.model.scavengeAssets()
       await this.model.gc()
     }
@@ -700,6 +703,7 @@ class Sidecar extends ReadyResource {
   }
 
   async #close () {
+    LOG.info('sidecar', '- Sidecar Closing...')
     await this.applings.close()
     clearInterval(this.gcInterval)
     clearTimeout(this.lazySwarmTimeout)
