@@ -147,7 +147,7 @@ class Sidecar extends ReadyResource {
     this.http = new Http(this)
     this.running = new Map()
 
-    this._inspector = new Inspector({ inspector: bareInspector })
+    this._inspector = new Inspector({ inspector: bareInspector, bootstrap: this.dhtBootstrap })
 
     const sidecar = this
     this.App = class App {
