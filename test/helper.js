@@ -4,6 +4,7 @@ const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
+const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
@@ -12,14 +13,13 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const constants = require('../constants')
+const constants = require('pear-api/constants')
 const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
-
 const rigPear = path.join(tmp, 'rig-pear')
 const STOP_CHAR = '\n'
 
@@ -122,11 +122,8 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          const sc = spawn(runtime, args, {
-            detached: !log,
-            stdio: log ? 'inherit' : 'ignore'
-          })
-          sc.unref()
+          if (log) spawn(runtime, args, { stdio: 'inherit' })
+          else daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
@@ -148,11 +145,10 @@ class Helper extends IPC.Client {
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
   static async run ({ link, platformDir, args = [] }) {
-    if (platformDir) Pear.worker.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+    if (platformDir) Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+    const pipe = Pear.run(link, args)
 
-    const pipe = Pear.worker.run(link, args)
-
-    if (platformDir) Pear.worker.constructor.RUNTIME = RUNTIME
+    if (platformDir) Pear.constructor.RUNTIME = RUNTIME
 
     return { pipe }
   }
@@ -161,7 +157,7 @@ class Helper extends IPC.Client {
     const timeout = opts.timeout || 10000
     const res = new Promise((resolve, reject) => {
       let buffer = ''
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
       pipe.on('data', (data) => {
         buffer += data.toString()
         if (buffer[buffer.length - 1] === STOP_CHAR) {
@@ -187,7 +183,6 @@ class Helper extends IPC.Client {
   }
 
   static async untilClose (pipe, timeout = 5000) {
-    // TODO: fix the "Error: RPC destroyed" when calling pipe.end() too fast, then remove this hack delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     const res = new Promise((resolve, reject) => {

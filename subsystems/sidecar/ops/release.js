@@ -1,10 +1,10 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
+const { ERR_UNSTAGED } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
-const { ERR_UNSTAGED } = require('../../../errors')
 
 module.exports = class Release extends Opstream {
   constructor (...args) {
@@ -29,7 +29,7 @@ module.exports = class Release extends Opstream {
 
     this.push({ tag: 'releasing', data: { name, channel, link } })
 
-    const corestore = this.sidecar._getCorestore(name || state.name, channel, { writable: true })
+    const corestore = this.sidecar.getCorestore(name || state.name, channel, { writable: true })
 
     const bundle = new Bundle({ corestore, channel, key })
     await session.add(bundle)
