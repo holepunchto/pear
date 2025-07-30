@@ -52,6 +52,7 @@ const ops = {
 registerUrlHandler(WAKEUP)
 
 const SWARM_DELAY = 5000
+const CLOSE_TIMEOUT = 12000
 const CHECKMARK = isWindows ? '^' : '✔'
 
 class Sidecar extends ReadyResource {
@@ -235,15 +236,29 @@ class Sidecar extends ReadyResource {
         return subscriber
       }
 
-      teardown () {
-        if (this.unload) {
-          this.unload()
-          return true
+      teardown () { // must never throw/reject
+        if (this.unload === null) return
+        this.unload()
+        const closers = []
+        for (const client of this.clients) {
+          if (this.unloaders.has(client) === false) {
+            closers.push(endRPCStreams(client).then(() => { client.close() }))
+          } else {
+            const closer = new Promise((resolve) => {
+              const countdown = setTimeout(() => { endRPCStreams(client).then(() => client.close()) }, CLOSE_TIMEOUT)
+              client.once('close', () => {
+                clearTimeout(countdown)
+                resolve()
+              })
+            })
+            closers.push(closer)
+          }
         }
-        return false
+        return Promise.all(closers)
       }
 
-      unloading () {
+      unloading (client) {
+        this.unloaders.add(client)
         if (this.unloader) return this.unloader
         this.unloader = new Promise((resolve) => { this.unload = resolve })
         return this.unloader
@@ -257,6 +272,7 @@ class Sidecar extends ReadyResource {
         this.state = state
         this.startId = startId
         this.clients = new Set()
+        this.unloaders = new Set()
         const opts = { relays: true, replay: true, map: pickData }
         const reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id }, opts)
         const warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id }, opts)
@@ -514,15 +530,6 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  #endRPCStreams (client) {
-    // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
-    const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
-    return Promise.all(streams.map((stream) => new Promise((resolve) => {
-      stream.once('close', resolve)
-      stream.end()
-    })))
-  }
-
   closeClients (params = {}, originClient) {
     if (this.hasClients === false) return []
     const metadata = []
@@ -533,7 +540,7 @@ class Sidecar extends ReadyResource {
       }
       if (!client.userData || !client.userData.state) { // user & stateless ipc clients
         metadata.push({}) // count the client close
-        this.#endRPCStreams(client).then(() => client.close())
+        endRPCStreams(client).then(() => client.close())
         continue
       }
       if (seen.has(client.userData.state.id)) continue
@@ -543,8 +550,8 @@ class Sidecar extends ReadyResource {
       if (!client.userData.state.parent) {
         metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
       }
-      const tearingDown = isApp && client.userData.teardown()
-      if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
+      if (isApp) client.userData.teardown()
+      else endRPCStreams(client).then(() => client.close())
     }
     return metadata
   }
@@ -560,15 +567,7 @@ class Sidecar extends ReadyResource {
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
       const opts = { cwd, env }
-      if (!client.closed) {
-        const tearingDown = client.userData.teardown()
-        if (tearingDown) {
-          await new Promise((resolve) => { client.once('close', resolve) })
-        } else {
-          await this.#endRPCStreams(client)
-          await client.close()
-        }
-      }
+      if (!client.closed) await client.userData.teardown()
       if (appling) {
         const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
@@ -668,7 +667,7 @@ class Sidecar extends ReadyResource {
 
   unloading (params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.unloading()
+    return client.userData.unloading(client)
   }
 
   async #ensureSwarm () {
@@ -700,8 +699,9 @@ class Sidecar extends ReadyResource {
 
   async #shutdown (client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
-    const tearingDown = client.userData instanceof this.App && client.userData.teardown()
-    if (tearingDown === false) await this.#endRPCStreams(client).then(() => client.close())
+    const unload = client.userData instanceof this.App && client.userData.unload ? true : false
+    if (unload) client.userData.unload()
+    else endRPCStreams(client).then(() => client.close())
     this.spindownms = 0
     const restarts = this.closeClients()
     this.#spindownCountdown()
@@ -734,7 +734,7 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     this.decomissioned = true
     await this._inspector.disable()
-    for (const client of this.clients) await this.#endRPCStreams(client)
+    for (const client of this.clients) await endRPCStreams(client)
     // point of no return, death-march ensues
     this.deathClock()
     const closing = this.#close()
@@ -769,6 +769,15 @@ class Sidecar extends ReadyResource {
 
 function pickData (msg) {
   return msg.data ?? msg
+}
+
+function endRPCStreams (client) { // must never throw/reject
+  // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
+  const streams = client._rpc._handlers.flatMap((m) => m?._streams).filter((m) => m?.destroyed === false)
+  return Promise.all(streams.map((stream) => new Promise((resolve) => {
+    stream.once('close', resolve)
+    stream.end()
+  })))
 }
 
 module.exports = Sidecar

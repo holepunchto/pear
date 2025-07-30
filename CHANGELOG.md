@@ -26,7 +26,7 @@
 * CLI - `pear stage --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
 * CLI - `pear stage --pre-q` - hide any pre tags from displaying
 set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
-* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"},  {"routes": "."}` catch-all
+* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"}`, `{"routes": "."}` catch-all
 * Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
 * IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
 * CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
