@@ -13,7 +13,7 @@ const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-as
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
 
-test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
+test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout, test }) {
   timeout(180000)
   plan(14)
 
@@ -214,7 +214,7 @@ test('local app', async function ({ ok, is, teardown }) {
   await helper.ready()
 
   const tmpdir = await tmp()
-  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app' } }
   await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
   await fs.copyFile(path.join(versionsDir, 'index.js'), path.join(tmpdir, 'index.js'))
 
@@ -274,7 +274,7 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
 
   const tmpdir = await tmp()
   const id = Helper.getRandomId()
-  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app' } }
   await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
 
   const writeIndex = (version) => `const pipe = Pear.worker.pipe()

@@ -25,7 +25,7 @@ const {
   APPLINGS_PATH, SWAP, RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
-const { ERR_INTERNAL_ERROR } = require('pear-api/errors')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-api/errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -104,8 +104,16 @@ class Sidecar extends ReadyResource {
     this.ipc.on('client', (client) => {
       client.once('close', () => {
         if (client.clock <= 0) {
-          LOG.info('sidecar', `Killing unresponsive process with pid ${client.userData.state.pid}`)
-          os.kill(client.userData.state.pid, 'SIGKILL') // force close unresponsive process
+          if (client.userData instanceof this.App === false) {
+            LOG.info('sidecar', 'Unresponsive non-app process detected with closed client id ' + client.id)
+            return
+          }
+          if (client.userData.pid === null) {
+            LOG.info('sidecar', 'Unresponsive app process detected with closed client id ' + client.id + ' (no pid provided)')
+            return
+          }
+          LOG.info('sidecar', `Killing unresponsive process with pid ${client.userData.pid}`)
+          os.kill(client.userData.pid, 'SIGKILL') // force close unresponsive process
           if (client.userData.state.parent) {
             const parent = this.apps.find((app) => app.state?.config.id === client.userData.state.parent)
             if (parent) {
@@ -152,6 +160,7 @@ class Sidecar extends ReadyResource {
       unloader = null
       reporter = null
       cutover = null
+      _pid = null
       #mapReport (report) {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
@@ -204,15 +213,20 @@ class Sidecar extends ReadyResource {
         }
       }
 
-      register (client, startId) {
+      register (client, startId, pid = -1) {
         this.clients.add(client)
         const userData = Object.create(this)
         userData.id = `${client.id}@${startId}`
+        userData._pid = pid
         const opts = { map: pickData }
         userData.reporter = this.reporter.relay(this.sidecar.bus.sub({ topic: 'reports', id: userData.id }, opts))
         userData.warming = this.warming.relay(this.sidecar.bus.sub({ topic: 'warming', id: userData.id }, opts))
         userData.updates = this.updates.relay(userData.messages({ type: 'pear/updates' }, opts))
         return userData
+      }
+
+      get pid () {
+        return this._pid === -1 ? null : (this._pid ?? this.state?.pid)
       }
 
       report (report) {
@@ -352,9 +366,9 @@ class Sidecar extends ReadyResource {
     if (params.startId) {
       const started = this.running.get(params.startId)
       if (started) {
-        client.userData = started.client.userData.register(client, params.startId)
+        client.userData = started.client.userData.register(client, params.startId, params.pid)
         if (params.startWait) await started.running
-      } else throw ERR_INTERNAL_ERROR('identify failure unrecognized startId')
+      } else throw ERR_INVALID_INPUT('identify failure unrecognized startId - did the origin app close?')
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData')
     const id = client.userData.id
@@ -544,6 +558,7 @@ class Sidecar extends ReadyResource {
         metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
       }
       const tearingDown = isApp && client.userData.teardown()
+      // TODO: close timeout for tearingDown clients
       if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
     }
     return metadata
@@ -563,6 +578,7 @@ class Sidecar extends ReadyResource {
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
+          // TODO: close timeout
           await new Promise((resolve) => { client.once('close', resolve) })
         } else {
           await this.#endRPCStreams(client)
@@ -734,7 +750,10 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     this.decomissioned = true
     await this._inspector.disable()
-    for (const client of this.clients) await this.#endRPCStreams(client)
+    for (const client of this.clients) {
+      // TODO: can teardown be respected here?
+      await this.#endRPCStreams(client)
+    }
     // point of no return, death-march ensues
     this.deathClock()
     const closing = this.#close()
