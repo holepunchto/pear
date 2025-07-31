@@ -177,9 +177,19 @@ class Helper extends IPC.Client {
     if (opts.runFn) {
       await opts.runFn()
     } else {
-      pipe.write('start')
+      pipe.write(opts.info ?? 'start')
     }
     return res
+  }
+
+  static untilData (pipe, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const tid = setTimeout(reject, timeout, new Error('timeout'))
+      pipe.once('data', (data) => {
+        clearTimeout(tid)
+        resolve(data)
+      })
+    })
   }
 
   static async untilClose (pipe, timeout = 5000) {
