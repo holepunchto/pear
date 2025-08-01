@@ -11,7 +11,7 @@ const { ERR_PERMISSION_REQUIRED, ERR_DIR_NONEMPTY } = require('../../../errors')
 module.exports = class Dump extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ link, dir, dryRun, checkout, force }) {
+  async #op ({ link, dir, dryRun, checkout, force, only }) {
     const { session, sidecar } = this
     await sidecar.ready()
 
@@ -100,7 +100,12 @@ module.exports = class Dump extends Opstream {
 
     const dst = new LocalDrive(dir)
 
-    const extraOpts = entry !== null ? { filter: (key) => key === prefix } : { prefix }
+    let select = null
+    if (only) {
+      only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())
+      select = (key) => only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+    }
+    const extraOpts = entry === null ? { prefix, filter: select } : { filter: select || ((key) => key === prefix) }
     const mirror = src.mirror(dst, { dryRun, ...extraOpts })
     for await (const diff of mirror) {
       if (diff.op === 'add') {
