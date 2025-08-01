@@ -50,6 +50,7 @@ async function premigrate (ipc) {
   asset = ui
   if (!asset.only) asset.only =  [ "/boot.bundle", "/by-arch/%%HOST%%", "/prebuilds/%%HOST%%" ]
   if (!asset.name) asset.name = 'Pear Runtime'
+  if (!asset.ns) asset.ns = 'ui'
   asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
   const reserved = await ipc.retrieveAssetPath({ link: asset.link })
   asset.path = reserved?.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
