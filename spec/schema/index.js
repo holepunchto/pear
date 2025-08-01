@@ -3,8 +3,9 @@
 /* eslint-disable camelcase */
 /* eslint-disable quotes */
 
-const VERSION = 1
 const { c } = require('hyperschema/runtime')
+
+const VERSION = 1
 
 // eslint-disable-next-line no-unused-vars
 let version = VERSION
@@ -129,6 +130,74 @@ const encoding4 = {
   }
 }
 
+// @pear/asset.only
+const encoding5_4 = encoding3_3
+
+// @pear/asset
+const encoding5 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.ns)
+    c.string.preencode(state, m.path)
+    state.end++ // max flag is 4 so always one byte
+
+    if (m.name) c.string.preencode(state, m.name)
+    if (m.only) encoding5_4.preencode(state, m.only)
+    if (m.bytes) c.uint.preencode(state, m.bytes)
+  },
+  encode (state, m) {
+    const flags =
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
+
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.ns)
+    c.string.encode(state, m.path)
+    c.uint.encode(state, flags)
+
+    if (m.name) c.string.encode(state, m.name)
+    if (m.only) encoding5_4.encode(state, m.only)
+    if (m.bytes) c.uint.encode(state, m.bytes)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: r0,
+      ns: r1,
+      path: r2,
+      name: (flags & 1) !== 0 ? c.string.decode(state) : null,
+      only: (flags & 2) !== 0 ? encoding5_4.decode(state) : null,
+      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
+    }
+  }
+}
+
+// @pear/assetsync
+const encoding6 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.path)
+  },
+  encode (state, m) {
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.path)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+
+    return {
+      link: r0,
+      path: r1
+    }
+  }
+}
+
 function setVersion (v) {
   version = v
 }
@@ -156,6 +225,8 @@ function getEncoding (name) {
     case '@pear/dht': return encoding2
     case '@pear/bundle': return encoding3
     case '@pear/gc': return encoding4
+    case '@pear/asset': return encoding5
+    case '@pear/assetsync': return encoding6
     default: throw new Error('Encoder not found ' + name)
   }
 }
