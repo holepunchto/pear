@@ -18,7 +18,7 @@ async function premigrate (ipc) {
   if (!v1) return
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
-  const DEFAULT_ASSET = 'pear://0.2756.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o'
+  const DEFAULT_ASSET = 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o'
   const pkg = await ipc.get({ key: '/node_modules/pear-electron/package.json' })
   const ui = pkg === null ? { link: DEFAULT_ASSET } : pkg?.pear?.assets?.ui
   let asset = await ipc.getAsset({ link: ui.link })
