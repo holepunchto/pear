@@ -6,7 +6,7 @@ const State = require('./state')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('./constants')
 const runDefinition = require('./def/run')
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 const runix = argv.indexOf('--run')
@@ -50,9 +50,9 @@ async function premigrate (ipc) {
   }
 
   asset = ui
-  asset.only = asset.only.split(',').map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
+  asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
   const reserved = await ipc.retrieveAssetPath({ link: asset.link })
-  asset.path = reserved.path ?? path.join(config.pearDir, 'assets', randomBytes(16).toString('hex'))
+  asset.path = reserved.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
   await ipc.reserveAssetPath({ link: asset.link, path: asset.path })
   await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only }), (status) => {
     console.info('pear-electron/premigrate passive forward syncing', status)
