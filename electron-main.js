@@ -17,7 +17,7 @@ async function premigrate (ipc) {
   const path = require('path')
   const DEFAULT_ASSET = 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o'
   const pkgJson = await ipc.get({ key: '/node_modules/pear-electron/package.json' })
-  const pkg = pkgJson === null ? null : JSON.parse(pkgJson)
+  const pkg = !pkgJson ? null : JSON.parse(pkgJson)
   const ui = pkg === null ? { link: DEFAULT_ASSET } : pkg?.pear?.assets?.ui
   let asset = await ipc.getAsset({ link: ui.link })
   if (asset !== null) return
