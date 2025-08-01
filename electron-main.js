@@ -19,7 +19,7 @@ async function premigrate (ipc) {
   const pkgJson = await ipc.get({ key: '/node_modules/pear-electron/package.json' })
   const pkg = !pkgJson ? null : JSON.parse(pkgJson)
   const ui = pkg === null ? { link: DEFAULT_ASSET } : pkg?.pear?.assets?.ui
-  let asset = await ipc.getAsset({ link: ui.link })
+  let asset = await ipc.getAsset({ link: ui.link, })
   if (asset !== null) return
   const noop = () => {}
   const { ERR_OPERATION_FAILED } = require('./errors')
@@ -48,6 +48,8 @@ async function premigrate (ipc) {
   }
 
   asset = ui
+  if (!asset.only) asset.only =  [ "/boot.bundle", "/by-arch/%%HOST%%", "/prebuilds/%%HOST%%" ]
+  if (!asset.name) asset.name = 'Pear Runtime'
   asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
   const reserved = await ipc.retrieveAssetPath({ link: asset.link })
   asset.path = reserved?.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
