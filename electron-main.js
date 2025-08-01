@@ -13,9 +13,8 @@ const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
 async function premigrate (ipc) {
-  const config = await ipc.config()
-  const v1 = !!config.tier
-  if (!v1) return
+  const v2 = 'COMPAT' in Pear.constructor
+  if (v2) return
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
   const DEFAULT_ASSET = 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o'
