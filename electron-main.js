@@ -13,7 +13,7 @@ const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
 async function premigrate (ipc) {
-  const config = await ipc.config
+  const config = await ipc.config()
   const v1 = !!config.tier
   if (!v1) return
   const { randomBytes } = require('hypercore-crypto')
@@ -23,7 +23,32 @@ async function premigrate (ipc) {
   const ui = pkg === null ? { link: DEFAULT_ASSET } : pkg?.pear?.assets?.ui
   let asset = await ipc.getAsset({ link: ui.link })
   if (asset !== null) return
-  const opwait = require('pear-api/opwait')
+  const noop = () => {}
+  const { ERR_OPERATION_FAILED } = require('./errors')
+
+  function opwait (stream, onstatus) {
+    if (typeof onstatus !== 'function') onstatus = noop
+    return new Promise((resolve, reject) => {
+      let final = null
+      stream.once('error', reject)
+      stream.on('end', () => { resolve(final) })
+      stream.on('data', (status) => {
+        const { tag, data } = status
+        if (tag === 'error') {
+          stream.destroy(ERR_OPERATION_FAILED(data.stack || data.message || 'Unknown', data))
+          return
+        }
+        if (tag === 'final') final = data
+        try {
+          const p = onstatus(status)
+          if (typeof p?.catch === 'function') p.catch((err) => stream.destroy(err))
+        } catch (err) {
+          stream.destroy(err)
+        }
+      })
+    })
+  }
+
   asset = ui
   asset.only = asset.only.split(',').map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
   const reserved = await ipc.retrieveAssetPath({ link: asset.link })
