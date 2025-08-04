@@ -16,19 +16,18 @@ async function premigrate (ipc) {
   const { ERR_OPERATION_FAILED } = require('./errors')
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
-  const ui = { link: 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o' }
+  const ui = { link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto' }
   const asset = await ipc.getAsset(ui) ?? ui
-  if (asset !== ui) return
   if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
   if (!asset.name) asset.name = 'Pear Runtime'
   if (!asset.ns) asset.ns = 'ui'
   asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
-  asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
-  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only }), (status) => {
-    console.info('pear-electron/premigrate passive forward syncing', status)
+  asset.path = asset.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only, force: true }), (status) => {
+    if (status?.tag === 'dumping' || status?.tag === 'final') return
+    console.info('v1 -> v2 premigrate passive syncing', status)
   })
   await ipc.addAsset(asset)
-
   function opwait (stream, onstatus) {
     if (typeof onstatus !== 'function') onstatus = () => {}
     return new Promise((resolve, reject) => {

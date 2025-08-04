@@ -118,16 +118,16 @@ module.exports = class Model {
   async addAsset (link, { ns, name, only, path }) {
     const tx = await this.lock.enter()
     const asset = { link, ns, name, only, path }
-    LOG.trace('db', 'INSERT', '@pear/asset', asset)
-    await tx.insert('@pear/asset', asset)
+    LOG.trace('db', 'INSERT', '@pear/assets', asset)
+    await tx.insert('@pear/assets', asset)
     await this.lock.exit()
     return asset
   }
 
   async getAsset (link) {
     const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await this.db.get('@pear/asset', get)
+    LOG.trace('db', 'GET', '@pear/assets', get)
+    const asset = await this.db.get('@pear/assets', get)
     return asset
   }
 

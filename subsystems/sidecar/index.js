@@ -1041,6 +1041,8 @@ class Sidecar extends ReadyResource {
 
   // do not port:
   getAsset (params) { return this.model.getAsset(params.link) }
+
+  reserveAssetPath () { return this.model.allAssets() }
 }
 
 function pickData () {
