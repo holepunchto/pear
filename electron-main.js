@@ -13,19 +13,24 @@ const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
 
 async function premigrate (ipc) {
+  const { ERR_OPERATION_FAILED } = require('./errors')
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
-  const DEFAULT_ASSET = 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o'
-  const pkgJson = await ipc.get({ key: '/node_modules/pear-electron/package.json' })
-  const pkg = !pkgJson ? null : JSON.parse(pkgJson)
-  const ui = pkg === null ? { link: DEFAULT_ASSET } : pkg?.pear?.assets?.ui
-  let asset = await ipc.getAsset({ link: ui.link, })
-  if (asset !== null) return
-  const noop = () => {}
-  const { ERR_OPERATION_FAILED } = require('./errors')
+  const ui = { link: 'pear://0.2763.goowesg5dga9j1ryx47rsk9o4zms4541me4zerxsnbu8u99duh4o' }
+  const asset = await ipc.getAsset(ui) ?? ui
+  if (asset !== ui) return
+  if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
+  if (!asset.name) asset.name = 'Pear Runtime'
+  if (!asset.ns) asset.ns = 'ui'
+  asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
+  asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only }), (status) => {
+    console.info('pear-electron/premigrate passive forward syncing', status)
+  })
+  await ipc.addAsset(asset)
 
   function opwait (stream, onstatus) {
-    if (typeof onstatus !== 'function') onstatus = noop
+    if (typeof onstatus !== 'function') onstatus = () => {}
     return new Promise((resolve, reject) => {
       let final = null
       stream.once('error', reject)
@@ -46,19 +51,6 @@ async function premigrate (ipc) {
       })
     })
   }
-
-  asset = ui
-  if (!asset.only) asset.only =  [ "/boot.bundle", "/by-arch/%%HOST%%", "/prebuilds/%%HOST%%" ]
-  if (!asset.name) asset.name = 'Pear Runtime'
-  if (!asset.ns) asset.ns = 'ui'
-  asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
-  const reserved = await ipc.retrieveAssetPath({ link: asset.link })
-  asset.path = reserved?.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
-  await ipc.reserveAssetPath({ link: asset.link, path: asset.path })
-  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only }), (status) => {
-    console.info('pear-electron/premigrate passive forward syncing', status)
-  })
-  await ipc.addAsset(asset)
 }
 
 configureElectron()

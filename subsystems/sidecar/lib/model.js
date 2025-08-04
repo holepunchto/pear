@@ -131,22 +131,6 @@ module.exports = class Model {
     return asset
   }
 
-  async reserveAssetPath (link, { path }) {
-    const tx = await this.lock.enter()
-    const asset = { link, path }
-    LOG.trace('db', 'INSERT', '@pear/assetsync', asset)
-    await tx.insert('@pear/assetsync', asset)
-    await this.lock.exit()
-    return asset
-  }
-
-  async retrieveAssetPath (link) {
-    const get = { link }
-    LOG.trace('db', 'GET', '@pear/assetsync', get)
-    const asset = await this.db.get('@pear/assetsync', get)
-    return asset
-  }
-
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
     LOG.trace('db', `GET ('@pear/bundle', { link: ${srcLink} })`)
