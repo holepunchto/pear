@@ -367,74 +367,13 @@ const collection6 = {
   indexes: []
 }
 
-// '@pear/assets' collection key
-const collection7_key = new IndexEncoder([
-  IndexEncoder.STRING
-], { prefix: 7 })
-
-function collection7_indexify (record) {
-  const a = record.link
-  return a === undefined ? [] : [a]
-}
-
-// '@pear/assets' value encoding
-const collection7_enc = getEncoding('@pear/assets/hyperdb#7')
-
-// '@pear/assets' reconstruction function
-function collection7_reconstruct (version, keyBuf, valueBuf) {
-  const key = collection7_key.decode(keyBuf)
-  setVersion(version)
-  const record = c.decode(collection7_enc, valueBuf)
-  record.link = key[0]
-  return record
-}
-// '@pear/assets' key reconstruction function
-function collection7_reconstruct_key (keyBuf) {
-  const key = collection7_key.decode(keyBuf)
-  return {
-    link: key[0]
-  }
-}
-
-// '@pear/assets'
-const collection7 = {
-  name: '@pear/assets',
-  id: 7,
-  encodeKey (record) {
-    const key = [record.link]
-    return collection7_key.encode(key)
-  },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
-    return collection7_key.encodeRange({
-      gt: gt ? collection7_indexify(gt) : null,
-      lt: lt ? collection7_indexify(lt) : null,
-      gte: gte ? collection7_indexify(gte) : null,
-      lte: lte ? collection7_indexify(lte) : null
-    })
-  },
-  encodeValue (version, record) {
-    setVersion(version)
-    return c.encode(collection7_enc, record)
-  },
-  trigger: null,
-  reconstruct: collection7_reconstruct,
-  reconstructKey: collection7_reconstruct_key,
-  indexes: []
-}
-
 const collections = [
   collection0,
   collection1,
   collection2,
   collection3,
-<<<<<<< HEAD
   collection5,
   collection6
-=======
-  collection4,
-  collection5,
-  collection7
->>>>>>> 88fc2507 (spec)
 ]
 
 const indexes = [
@@ -449,14 +388,8 @@ function resolveCollection (name) {
     case '@pear/dht': return collection1
     case '@pear/gc': return collection2
     case '@pear/bundle': return collection3
-<<<<<<< HEAD
     case '@pear/assets': return collection5
     case '@pear/current': return collection6
-=======
-    case '@pear/asset': return collection4
-    case '@pear/current': return collection5
-    case '@pear/assets': return collection7
->>>>>>> 88fc2507 (spec)
     default: return null
   }
 }
