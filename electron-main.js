@@ -24,7 +24,8 @@ async function premigrate (ipc) {
   if (!asset.ns) asset.ns = 'ui'
   if (!asset.path) asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
   await ipc.addAsset(asset)
-  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only, force: true }), (status) => {
+  const only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
+  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: only, force: true }), (status) => {
     console.info('v1 -> v2 premigrate passive syncing', status)
   })
   await ipc.allocatedAssets()
