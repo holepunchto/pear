@@ -18,16 +18,17 @@ async function premigrate (ipc) {
   const path = require('path')
   const ui = { link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto' }
   const asset = await ipc.getAsset(ui) ?? ui
+  if (asset.bytes) return
   if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
   if (!asset.name) asset.name = 'Pear Runtime'
   if (!asset.ns) asset.ns = 'ui'
   asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
   asset.path = asset.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+  await ipc.addAsset(asset)
   await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only, force: true }), (status) => {
-    if (status?.tag === 'dumping' || status?.tag === 'final') return
     console.info('v1 -> v2 premigrate passive syncing', status)
   })
-  await ipc.addAsset(asset)
+  await ipc.allocatedAssets()
   function opwait (stream, onstatus) {
     if (typeof onstatus !== 'function') onstatus = () => {}
     return new Promise((resolve, reject) => {
