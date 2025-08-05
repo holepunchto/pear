@@ -44,7 +44,7 @@ pearSchema.register({
 
 // both structs & custom types
 pearSchema.register({
-  name: 'asset',
+  name: 'assets',
   fields: [
     {
       name: 'link',
@@ -207,8 +207,8 @@ pearDB.collections.register({
 })
 
 pearDB.collections.register({
-  name: 'asset',
-  schema: '@pear/asset',
+  name: 'assets',
+  schema: '@pear/assets',
   key: ['link']
 })
 
