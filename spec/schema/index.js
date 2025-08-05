@@ -228,53 +228,6 @@ const encoding7 = {
   }
 }
 
-// @pear/assets.only
-const encoding8_4 = encoding2_4
-
-// @pear/assets
-const encoding8 = {
-  preencode (state, m) {
-    c.string.preencode(state, m.link)
-    c.string.preencode(state, m.ns)
-    c.string.preencode(state, m.path)
-    state.end++ // max flag is 4 so always one byte
-
-    if (m.name) c.string.preencode(state, m.name)
-    if (m.only) encoding8_4.preencode(state, m.only)
-    if (m.bytes) c.uint.preencode(state, m.bytes)
-  },
-  encode (state, m) {
-    const flags =
-      (m.name ? 1 : 0) |
-      (m.only ? 2 : 0) |
-      (m.bytes ? 4 : 0)
-
-    c.string.encode(state, m.link)
-    c.string.encode(state, m.ns)
-    c.string.encode(state, m.path)
-    c.uint.encode(state, flags)
-
-    if (m.name) c.string.encode(state, m.name)
-    if (m.only) encoding8_4.encode(state, m.only)
-    if (m.bytes) c.uint.encode(state, m.bytes)
-  },
-  decode (state) {
-    const r0 = c.string.decode(state)
-    const r1 = c.string.decode(state)
-    const r2 = c.string.decode(state)
-    const flags = c.uint.decode(state)
-
-    return {
-      link: r0,
-      ns: r1,
-      path: r2,
-      name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding8_4.decode(state) : null,
-      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
-    }
-  }
-}
-
 function setVersion (v) {
   version = v
 }
@@ -305,7 +258,6 @@ function getEncoding (name) {
     case '@pear/assets': return encoding5
     case '@pear/checkout': return encoding6
     case '@pear/current': return encoding7
-    case '@pear/assets': return encoding8
     default: throw new Error('Encoder not found ' + name)
   }
 }
