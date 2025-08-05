@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.18.0
+
+### Improvements
+
+* Internal - premigrate UI runtime assets ahead of v2
+
 ## v1.17.0
 
 ### Features
