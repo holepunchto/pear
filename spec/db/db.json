@@ -89,34 +89,6 @@
         "link"
       ],
       "trigger": null
-<<<<<<< HEAD
-=======
-    },
-    {
-      "name": "bundle-by-tags",
-      "namespace": "pear",
-      "id": 6,
-      "type": 2,
-      "collection": "@pear/bundle",
-      "unique": false,
-      "key": {
-        "type": "string",
-        "map": "tags"
-      }
-    },
-    {
-      "name": "assets",
-      "namespace": "pear",
-      "id": 7,
-      "type": 1,
-      "indexes": [],
-      "schema": "@pear/assets",
-      "derived": false,
-      "key": [
-        "link"
-      ],
-      "trigger": null
->>>>>>> 88fc2507 (spec)
     }
   ]
 }
