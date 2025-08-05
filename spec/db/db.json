@@ -63,6 +63,19 @@
         "type": "string",
         "map": "tags"
       }
+    },
+    {
+      "name": "assets",
+      "namespace": "pear",
+      "id": 5,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/assets",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
     }
   ]
 }

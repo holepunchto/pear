@@ -6,11 +6,52 @@ const State = require('./state')
 const GUI = require('./gui')
 const crasher = require('./lib/crasher')
 const tryboot = require('./lib/tryboot')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT } = require('./constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('./constants')
 const runDefinition = require('./def/run')
 const argv = (process.argv.length > 1 && process.argv[1][0] === '-') ? process.argv.slice(1) : process.argv.slice(2)
 const runix = argv.indexOf('--run')
 if (runix > -1) argv.splice(runix, 1)
+
+async function premigrate (ipc) {
+  const { ERR_OPERATION_FAILED } = require('./errors')
+  const { randomBytes } = require('hypercore-crypto')
+  const path = require('path')
+  const ui = { link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto' }
+  const asset = await ipc.getAsset(ui) ?? ui
+  if (asset.bytes) return
+  if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
+  if (!asset.name) asset.name = 'Pear Runtime'
+  if (!asset.ns) asset.ns = 'ui'
+  if (!asset.path) asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+  await ipc.addAsset(asset)
+  const only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
+  await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: only, force: true }), (status) => {
+    console.info('v1 -> v2 premigrate passive syncing', status)
+  })
+  await ipc.allocatedAssets()
+  function opwait (stream, onstatus) {
+    if (typeof onstatus !== 'function') onstatus = () => {}
+    return new Promise((resolve, reject) => {
+      let final = null
+      stream.once('error', reject)
+      stream.on('end', () => { resolve(final) })
+      stream.on('data', (status) => {
+        const { tag, data } = status
+        if (tag === 'error') {
+          stream.destroy(ERR_OPERATION_FAILED(data.stack || data.message || 'Unknown', data))
+          return
+        }
+        if (tag === 'final') final = data
+        try {
+          const p = onstatus(status)
+          if (typeof p?.catch === 'function') p.catch((err) => stream.destroy(err))
+        } catch (err) {
+          stream.destroy(err)
+        }
+      })
+    })
+  }
+}
 
 configureElectron()
 crasher('electron-main', SWAP, argv.indexOf('--log') > -1)
@@ -46,6 +87,8 @@ async function electronMain (cmd) {
     electron.app.quit(0)
     return
   }
+
+  premigrate(gui.ipc).catch((err) => { console.error('Passive Premigration Failure', err) })
 
   electron.ipcMain.on('send-to', (e, id, channel, message) => { electron.webContents.fromId(id)?.send(channel, message) })
 

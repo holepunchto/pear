@@ -86,6 +86,41 @@ pearSchema.register({
   ]
 })
 
+// both structs & custom types
+pearSchema.register({
+  name: 'assets',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'ns',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'path',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'name',
+      type: 'string'
+    },
+    {
+      name: 'only',
+      type: 'string',
+      array: true
+    },
+    {
+      name: 'bytes',
+      type: 'uint'
+    }
+  ]
+})
+
 Hyperschema.toDisk(schema)
 
 // hyperdb/db
@@ -107,6 +142,12 @@ pearDB.collections.register({
   name: 'gc',
   schema: '@pear/gc',
   key: ['path']
+})
+
+pearDB.collections.register({
+  name: 'assets',
+  schema: '@pear/assets',
+  key: ['link']
 })
 
 pearDB.collections.register({

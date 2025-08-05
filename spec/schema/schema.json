@@ -93,6 +93,48 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "assets",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 3,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "ns",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "path",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "only",
+          "array": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "bytes",
+          "type": "uint",
+          "version": 1
+        }
+      ]
     }
   ]
 }

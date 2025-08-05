@@ -2,6 +2,7 @@
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const pearLink = require('pear-link')
+const LocalDrive = require('localdrive')
 const dbSpec = require('../../../spec/db')
 const { ALIASES } = require('../../../constants')
 
@@ -113,6 +114,45 @@ module.exports = class Model {
 
   async getAppStorage (link) {
     return (await this.db.get('@pear/bundle', { link }))?.appStorage
+  }
+
+  async addAsset (link, { ns, name, only, path }) {
+    const tx = await this.lock.enter()
+    const asset = { link, ns, name, only, path }
+    LOG.trace('db', 'INSERT', '@pear/assets', asset)
+    await tx.insert('@pear/assets', asset)
+    await this.lock.exit()
+    return asset
+  }
+
+  async getAsset (link) {
+    const get = { link }
+    LOG.trace('db', 'GET', '@pear/assets', get)
+    const asset = await this.db.get('@pear/assets', get)
+    return asset
+  }
+
+  async allocatedAssets () {
+    LOG.trace('db', 'FIND', '@pear/assets')
+    const assets = await this.db.find('@pear/assets').toArray()
+    let totalBytes = 0
+    for (const asset of assets) {
+      if (!asset.bytes) {
+        let bytes = 0
+        const drive = new LocalDrive(asset.path)
+        for await (const entry of drive.list('/')) {
+          if (entry.value.blob) bytes += entry.value.blob.byteLength
+        }
+        const tx = await this.lock.enter()
+        const update = { ...asset, bytes }
+        LOG.trace('db', 'INSERT', '@pear/assets', update)
+        await tx.insert('@pear/assets', update)
+        await this.lock.exit()
+        asset.bytes = bytes
+      }
+      totalBytes += asset.bytes
+    }
+    return totalBytes
   }
 
   async shiftAppStorage (srcLink, dstLink, newSrcAppStorage = null) {
