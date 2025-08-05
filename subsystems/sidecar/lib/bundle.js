@@ -79,8 +79,16 @@ module.exports = class Bundle {
   }
 
   async assets (manifest) {
-    const assets = {}
-    for (const [ns, asset] of Object.entries(manifest.pear?.assets || {})) {
+    const assets = manifest.pear?.assets || {}
+    // TODO: remove some time after v2 release
+    if (!assets.ui && manifest?.pear?.pre === 'pear-electron/pre') {
+      assets.ui = {
+        link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto',
+        only: ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%'],
+        name: 'Pear Runtime'
+      }
+    }
+    for (const [ns, asset] of Object.entries(assets)) {
       assets[ns] = await this._asset({ ns, ...asset })
     }
     return assets
