@@ -252,7 +252,7 @@ module.exports = class Run extends Opstream {
   }
 
   async asset (opts, corestore) {
-    LOG.info(this.LOG_RUN_LINK, 'getting  asset', opts.link.slice(0, 14) + '..')
+    LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
     if (asset !== null) return asset
