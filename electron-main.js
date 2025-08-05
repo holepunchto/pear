@@ -22,8 +22,7 @@ async function premigrate (ipc) {
   if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
   if (!asset.name) asset.name = 'Pear Runtime'
   if (!asset.ns) asset.ns = 'ui'
-  asset.only = asset.only.map((s) => s.trim().replace(/%%HOST%%/g, process.platform + '-' + process.arch))
-  asset.path = asset.path ?? path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
+  if (!asset.path) asset.path = path.join(PLATFORM_DIR, 'assets', randomBytes(16).toString('hex'))
   await ipc.addAsset(asset)
   await opwait(ipc.dump({ link: asset.link, dir: asset.path, only: asset.only, force: true }), (status) => {
     console.info('v1 -> v2 premigrate passive syncing', status)
