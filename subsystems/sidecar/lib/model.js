@@ -116,8 +116,8 @@ module.exports = class Model {
     if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const tx = await this.lock.enter()
     const asset = { link, ns, name, only, path }
-    LOG.trace('db', 'INSERT', '@pear/asset', asset)
-    await tx.insert('@pear/asset', asset)
+    LOG.trace('db', 'INSERT', '@pear/assets', asset)
+    await tx.insert('@pear/assets', asset)
     await this.lock.exit()
     return asset
   }
@@ -125,19 +125,19 @@ module.exports = class Model {
   async getAsset (link) {
     if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const get = { link }
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await this.db.get('@pear/asset', get)
+    LOG.trace('db', 'GET', '@pear/assets', get)
+    const asset = await this.db.get('@pear/assets', get)
     return asset
   }
 
   async allAssets () {
-    LOG.trace('db', 'FIND', '@pear/asset')
-    return await this.db.find('@pear/asset').toArray()
+    LOG.trace('db', 'FIND', '@pear/assets')
+    return await this.db.find('@pear/assets').toArray()
   }
 
   async allocatedAssets () {
-    LOG.trace('db', 'FIND', '@pear/asset')
-    const assets = await this.db.find('@pear/asset').toArray()
+    LOG.trace('db', 'FIND', '@pear/assets')
+    const assets = await this.db.find('@pear/assets').toArray()
     let totalBytes = 0
     for (const asset of assets) {
       if (!asset.bytes) {
@@ -148,8 +148,8 @@ module.exports = class Model {
         }
         const tx = await this.lock.enter()
         const update = { ...asset, bytes }
-        LOG.trace('db', 'INSERT', '@pear/asset', update)
-        await tx.insert('@pear/asset', update)
+        LOG.trace('db', 'INSERT', '@pear/assets', update)
+        await tx.insert('@pear/assets', update)
         await this.lock.exit()
         asset.bytes = bytes
       }
@@ -162,12 +162,12 @@ module.exports = class Model {
     if (!plink.parse(link)?.drive?.length) throw ERR_INVALID_LINK(link + ' asset links must include length')
     const get = { link }
     const tx = await this.lock.enter()
-    LOG.trace('db', 'GET', '@pear/asset', get)
-    const asset = await tx.get('@pear/asset', get)
+    LOG.trace('db', 'GET', '@pear/assets', get)
+    const asset = await tx.get('@pear/assets', get)
     if (asset) {
       if (asset.path) await fs.promises.rm(asset.path, { recursive: true, force: true })
-      LOG.trace('db', 'DELETE', '@pear/asset', get)
-      await tx.delete('@pear/asset', get)
+      LOG.trace('db', 'DELETE', '@pear/assets', get)
+      await tx.delete('@pear/assets', get)
     }
     await this.lock.exit()
     return asset
@@ -319,14 +319,14 @@ module.exports = class Model {
     const maxCapacity = 12 * 1024 ** 3 // 12 GiB
     if (totalBytes > maxCapacity) {
       const tx = await this.lock.enter()
-      LOG.trace('db', 'FIND ONE', '@pear/asset')
-      const asset = await tx.findOne('@pear/asset')
+      LOG.trace('db', 'FIND ONE', '@pear/assets')
+      const asset = await tx.findOne('@pear/assets')
       if (asset) {
         const gc = { path: asset.path }
         LOG.trace('db', 'INSERT', '@pear/gc', gc)
         await tx.insert('@pear/gc', gc)
-        LOG.trace('db', 'DELETE', '@pear/asset', asset)
-        await tx.delete('@pear/asset', asset)
+        LOG.trace('db', 'DELETE', '@pear/assets', asset)
+        await tx.delete('@pear/assets', asset)
       }
       await this.lock.exit()
     }
