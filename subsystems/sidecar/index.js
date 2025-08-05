@@ -785,19 +785,6 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
-
-  exists (params, client) {
-    if (!client.userData) return
-    return client.userData.bundle.exists(params.key)
-  }
-
-  // do not port:
-  addAsset (params) { return this.model.addAsset(params.link, params) }
-
-  // do not port:
-  getAsset (params) { return this.model.getAsset(params.link) }
-
-  allocatedAssets () { return this.model.allocatedAssets() }
 }
 
 function pickData (msg) {
