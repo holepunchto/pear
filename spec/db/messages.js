@@ -228,8 +228,55 @@ const encoding7 = {
   }
 }
 
-// @pear/gc/hyperdb#2
+// @pear/assets.only
+const encoding8_4 = encoding2_4
+
+// @pear/assets
 const encoding8 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.ns)
+    c.string.preencode(state, m.path)
+    state.end++ // max flag is 4 so always one byte
+
+    if (m.name) c.string.preencode(state, m.name)
+    if (m.only) encoding8_4.preencode(state, m.only)
+    if (m.bytes) c.uint.preencode(state, m.bytes)
+  },
+  encode (state, m) {
+    const flags =
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
+
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.ns)
+    c.string.encode(state, m.path)
+    c.uint.encode(state, flags)
+
+    if (m.name) c.string.encode(state, m.name)
+    if (m.only) encoding8_4.encode(state, m.only)
+    if (m.bytes) c.uint.encode(state, m.bytes)
+  },
+  decode (state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: r0,
+      ns: r1,
+      path: r2,
+      name: (flags & 1) !== 0 ? c.string.decode(state) : null,
+      only: (flags & 2) !== 0 ? encoding8_4.decode(state) : null,
+      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
+    }
+  }
+}
+
+// @pear/gc/hyperdb#2
+const encoding9 = {
   preencode (state, m) {
 
   },
@@ -244,16 +291,20 @@ const encoding8 = {
 }
 
 // @pear/bundle/hyperdb#3.tags
+<<<<<<< HEAD
 const encoding9_3 = encoding3_3
+=======
+const encoding10_3 = encoding2_4
+>>>>>>> 88fc2507 (spec)
 
 // @pear/bundle/hyperdb#3
-const encoding9 = {
+const encoding10 = {
   preencode (state, m) {
     c.string.preencode(state, m.appStorage)
     state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
-    if (m.tags) encoding9_3.preencode(state, m.tags)
+    if (m.tags) encoding10_3.preencode(state, m.tags)
   },
   encode (state, m) {
     const flags =
@@ -264,7 +315,7 @@ const encoding9 = {
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
-    if (m.tags) encoding9_3.encode(state, m.tags)
+    if (m.tags) encoding10_3.encode(state, m.tags)
   },
   decode (state) {
     const r1 = c.string.decode(state)
@@ -274,23 +325,31 @@ const encoding9 = {
       link: null,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding9_3.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding10_3.decode(state) : null
     }
   }
 }
 
+<<<<<<< HEAD
 // @pear/assets/hyperdb#5.only
 const encoding10_4 = encoding3_3
 
 // @pear/assets/hyperdb#5
 const encoding10 = {
+=======
+// @pear/asset/hyperdb#4.only
+const encoding11_4 = encoding2_4
+
+// @pear/asset/hyperdb#4
+const encoding11 = {
+>>>>>>> 88fc2507 (spec)
   preencode (state, m) {
     c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
     state.end++ // max flag is 4 so always one byte
 
     if (m.name) c.string.preencode(state, m.name)
-    if (m.only) encoding10_4.preencode(state, m.only)
+    if (m.only) encoding11_4.preencode(state, m.only)
     if (m.bytes) c.uint.preencode(state, m.bytes)
   },
   encode (state, m) {
@@ -304,7 +363,7 @@ const encoding10 = {
     c.uint.encode(state, flags)
 
     if (m.name) c.string.encode(state, m.name)
-    if (m.only) encoding10_4.encode(state, m.only)
+    if (m.only) encoding11_4.encode(state, m.only)
     if (m.bytes) c.uint.encode(state, m.bytes)
   },
   decode (state) {
@@ -317,35 +376,87 @@ const encoding10 = {
       ns: r1,
       path: r2,
       name: (flags & 1) !== 0 ? c.string.decode(state) : null,
-      only: (flags & 2) !== 0 ? encoding10_4.decode(state) : null,
+      only: (flags & 2) !== 0 ? encoding11_4.decode(state) : null,
       bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }
 
+<<<<<<< HEAD
 // @pear/current/hyperdb#6.checkout
 const encoding11_1 = encoding7_1
 
 // @pear/current/hyperdb#6
 const encoding11 = {
+=======
+// @pear/current/hyperdb#5.checkout
+const encoding12_1 = encoding7_1
+
+// @pear/current/hyperdb#5
+const encoding12 = {
+>>>>>>> 88fc2507 (spec)
   preencode (state, m) {
     state.end++ // max flag is 1 so always one byte
 
-    if (m.checkout) encoding11_1.preencode(state, m.checkout)
+    if (m.checkout) encoding12_1.preencode(state, m.checkout)
   },
   encode (state, m) {
     const flags = m.checkout ? 1 : 0
 
     c.uint.encode(state, flags)
 
-    if (m.checkout) encoding11_1.encode(state, m.checkout)
+    if (m.checkout) encoding12_1.encode(state, m.checkout)
   },
   decode (state) {
     const flags = c.uint.decode(state)
 
     return {
       link: null,
-      checkout: (flags & 1) !== 0 ? encoding11_1.decode(state) : null
+      checkout: (flags & 1) !== 0 ? encoding12_1.decode(state) : null
+    }
+  }
+}
+
+// @pear/assets/hyperdb#7.only
+const encoding13_4 = encoding2_4
+
+// @pear/assets/hyperdb#7
+const encoding13 = {
+  preencode (state, m) {
+    c.string.preencode(state, m.ns)
+    c.string.preencode(state, m.path)
+    state.end++ // max flag is 4 so always one byte
+
+    if (m.name) c.string.preencode(state, m.name)
+    if (m.only) encoding13_4.preencode(state, m.only)
+    if (m.bytes) c.uint.preencode(state, m.bytes)
+  },
+  encode (state, m) {
+    const flags =
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
+
+    c.string.encode(state, m.ns)
+    c.string.encode(state, m.path)
+    c.uint.encode(state, flags)
+
+    if (m.name) c.string.encode(state, m.name)
+    if (m.only) encoding13_4.encode(state, m.only)
+    if (m.bytes) c.uint.encode(state, m.bytes)
+  },
+  decode (state) {
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: null,
+      ns: r1,
+      path: r2,
+      name: (flags & 1) !== 0 ? c.string.decode(state) : null,
+      only: (flags & 2) !== 0 ? encoding13_4.decode(state) : null,
+      bytes: (flags & 4) !== 0 ? c.uint.decode(state) : 0
     }
   }
 }
@@ -380,10 +491,19 @@ function getEncoding (name) {
     case '@pear/assets': return encoding5
     case '@pear/checkout': return encoding6
     case '@pear/current': return encoding7
+<<<<<<< HEAD
     case '@pear/gc/hyperdb#2': return encoding8
     case '@pear/bundle/hyperdb#3': return encoding9
     case '@pear/assets/hyperdb#5': return encoding10
     case '@pear/current/hyperdb#6': return encoding11
+=======
+    case '@pear/assets': return encoding8
+    case '@pear/gc/hyperdb#2': return encoding9
+    case '@pear/bundle/hyperdb#3': return encoding10
+    case '@pear/asset/hyperdb#4': return encoding11
+    case '@pear/current/hyperdb#5': return encoding12
+    case '@pear/assets/hyperdb#7': return encoding13
+>>>>>>> 88fc2507 (spec)
     default: throw new Error('Encoder not found ' + name)
   }
 }
