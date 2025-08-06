@@ -16,7 +16,7 @@ async function premigrate (ipc) {
   const { ERR_OPERATION_FAILED } = require('./errors')
   const { randomBytes } = require('hypercore-crypto')
   const path = require('path')
-  const ui = { link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto' }
+  const ui = { link: 'pear://0.924.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto' }
   const asset = await ipc.getAsset(ui) ?? ui
   if (asset.bytes) return
   if (!asset.only) asset.only = ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%']
