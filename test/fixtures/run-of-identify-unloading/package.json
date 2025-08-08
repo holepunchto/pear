@@ -1,0 +1,5 @@
+{
+  "name": "run",
+  "main": "index.js",
+  "type": "module"
+}

@@ -1,11 +1,11 @@
 'use strict'
-const Bundle = require('../lib/bundle')
-const State = require('../state')
-const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('../../../errors')
 const Hyperdrive = require('hyperdrive')
+const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const Bundle = require('../lib/bundle')
+const Opstream = require('../lib/opstream')
+const State = require('../state')
 
 module.exports = class Seed extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
@@ -18,12 +18,14 @@ module.exports = class Seed extends Opstream {
       dir,
       cmdArgs
     })
-    client.userData = new this.sidecar.App({ state, session })
+
+    // not an app but a long running process, setting userData for restart recognition:
+    client.userData = { state }
 
     this.push({ tag: 'seeding', data: { key: link, name, channel } })
     await this.sidecar.ready()
 
-    const corestore = this.sidecar._getCorestore(name, channel)
+    const corestore = this.sidecar.getCorestore(name, channel)
     await corestore.ready()
     const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
@@ -33,7 +35,7 @@ module.exports = class Seed extends Opstream {
     const query = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
     const encryptionKey = query?.encryptionKey
 
-    const bundle = new Bundle({ corestore, key, channel, status, encryptionKey })
+    const bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, channel, status, encryptionKey })
 
     try {
       await session.add(bundle)
@@ -41,20 +43,20 @@ module.exports = class Seed extends Opstream {
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     if (!link && bundle.drive.core.length === 0) {
       throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
-    await bundle.join(this.sidecar.swarm, { server: true })
+    await bundle.join({ server: true })
 
     try {
       await bundle.drive.get('/package.json')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
     }
 
     bundle.drive.core.download({ start: 0, end: -1 })

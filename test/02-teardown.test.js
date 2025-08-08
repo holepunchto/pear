@@ -5,15 +5,17 @@ const path = require('bare-path')
 const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const workerTeardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown')
-const workerTeardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-os-kill')
-const workerTeardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'worker-teardown-exit-code')
+const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
+const unloadingDir = path.join(Helper.localDir, 'test', 'fixtures', 'unloading')
+const runOfIdentifyDir = path.join(Helper.localDir, 'test', 'fixtures', 'run-of-identify-unloading')
+const teardownOsKillDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-os-kill')
+const teardownExitCodeDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown-exit-code')
 
 test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(4)
 
-  const dir = workerTeardownDir
+  const dir = teardownDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -49,7 +51,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   timeout(180000)
   plan(5)
 
-  const dir = workerTeardownOsKillDir
+  const dir = teardownOsKillDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -78,7 +80,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const { pipe } = run
 
   const pid = +(await Helper.untilResult(pipe))
-  ok(pid > 0, 'worker pid is valid')
+  ok(pid > 0, 'pid is valid')
 
   const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => os.kill(pid) })
   ok(td, 'teardown executed')
@@ -88,7 +90,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   timeout(180000)
   plan(6)
 
-  const dir = workerTeardownExitCodeDir
+  const dir = teardownExitCodeDir
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -121,7 +123,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   })
 
   const pid = +(await Helper.untilResult(pipe))
-  ok(pid > 0, 'worker pid is valid')
+  ok(pid > 0, 'pid is valid')
 
   const exitCodePromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
@@ -136,4 +138,108 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
 
   const exitCode = await exitCodePromise
   is(exitCode, 124, 'exit code is 124')
+})
+
+test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(4)
+
+  const dir = teardownDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const run = await Helper.run({ link })
+  const { pipe } = run
+
+  const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => pipe.end() })
+  is(td, 'teardown', 'teardown executed')
+})
+
+test('teardown unloading resolves on sidecar-side teardown', async function ({ ok, pass, plan, comment, teardown }) {
+  plan(4)
+
+  const dir = unloadingDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const { pipe } = await Helper.run({ link })
+  const pid = +(await Helper.untilResult(pipe))
+  await Pear[Pear.constructor.IPC].closeClients() // triggers teardown from sidecar, preserves test runner ipc client
+  pass('unloading resolved')
+  os.kill(pid)
+})
+
+test('teardown unloading - run of run identify as subapp', async function ({ ok, is, plan, comment, teardown }) {
+  plan(4)
+
+  const dir = runOfIdentifyDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const link = `pear://${key}`
+  const { pipe } = await Helper.run({ link })
+  const status = await Helper.untilData(pipe)
+  is(status.toString(), 'unloading')
 })

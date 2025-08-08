@@ -4,62 +4,65 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const streamx = require('streamx')
-const { PLATFORM_DIR } = require('../../../constants')
-const { ERR_INVALID_GC_RESOURCE } = require('../../../errors')
+const { PLATFORM_DIR } = require('pear-api/constants')
+const { ERR_INVALID_GC_RESOURCE } = require('pear-api/errors')
+const Opstream = require('../lib/opstream')
 
-module.exports = class GC extends streamx.Readable {
-  constructor ({ pid, resource }, client) {
-    super()
-    this.client = client
-    if (resource === 'releases') this.releases({ resource })
-    else if (resource === 'sidecars') this.sidecars({ pid, resource })
-    else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
+module.exports = class GC extends Opstream {
+  constructor ({ data = {}, resource } = {}, client, sidecar) {
+    super((params) => this.#op(params), data, client)
+    this.resource = resource
+    this.sidecar = sidecar
   }
 
   _destroy (cb) {
     cb(null)
   }
 
-  async releases ({ resource }) {
-    try {
-      let count = 0
-      const symlinkPath = path.join(PLATFORM_DIR, 'current')
-      const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
-
-      try { await fs.promises.stat(dkeyDir) } catch {
-        this.push({ tag: 'complete', data: { resource, count } })
-        this.push({ tag: 'final', data: { success: true } })
-        this.push(null)
-      }
-
-      const current = await fs.promises.readlink(symlinkPath)
-      const currentDirPath = path.dirname(current)
-      const currentDirName = path.basename(currentDirPath)
-
-      const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
-
-      const dirNames = dirs
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-
-      for (const dirName of dirNames) {
-        if (dirName !== currentDirName) {
-          const dirPath = path.join(dkeyDir, dirName)
-          await fs.promises.rm(dirPath, { recursive: true })
-          this.push({ tag: 'remove', data: { resource, id: dirName } })
-          count++
-        }
-      }
-      this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
-    } catch (error) {
-      this.#error(error)
-    }
+  #op (data) {
+    const { resource } = this
+    if (resource === 'releases') return this.releases(data)
+    if (resource === 'sidecars') return this.sidecars(data)
+    if (resource === 'assets') return this.assets(data)
+    throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
-  sidecars ({ pid, resource }) {
+  async releases () {
+    const { resource } = this
+    let count = 0
+    const symlinkPath = path.join(PLATFORM_DIR, 'current')
+    const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
+
+    try {
+      await fs.promises.stat(dkeyDir)
+    } catch {
+      this.push({ tag: 'complete', data: { resource, count } })
+      return
+    }
+
+    const current = await fs.promises.readlink(symlinkPath)
+    const currentDirPath = path.dirname(current)
+    const currentDirName = path.basename(currentDirPath)
+
+    const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
+
+    const dirNames = dirs
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name)
+
+    for (const dirName of dirNames) {
+      if (dirName !== currentDirName) {
+        const dirPath = path.join(dkeyDir, dirName)
+        await fs.promises.rm(dirPath, { recursive: true })
+        this.push({ tag: 'remove', data: { resource, id: dirName } })
+        count++
+      }
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
+  }
+
+  sidecars ({ pid }) {
+    const { resource } = this
     const name = 'pear-runtime'
     const flag = '--sidecar'
 
@@ -95,20 +98,41 @@ module.exports = class GC extends streamx.Readable {
       }
     })
 
-    sp.on('exit', (code, signal) => {
-      if (code !== 0 || signal) {
-        this.#error(new Error(`Process exited with code: ${code}, signal: ${signal}`))
-      }
-      this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
+    return new Promise((resolve, reject) => {
+      sp.on('exit', (code, signal) => {
+        if (code !== 0 || signal) {
+          reject(new Error(`Process exited with code: ${code}, signal: ${signal}`))
+          return
+        }
+        this.push({ tag: 'complete', data: { resource, count } })
+        resolve()
+      })
     })
   }
 
-  #error (err) {
-    const { stack, code, message } = err
-    this.push({ tag: 'error', data: { stack, code, message, success: false } })
-    this.push({ tag: 'final', data: { success: false } })
-    this.push(null)
+  async assets ({ link }) {
+    const { resource, sidecar } = this
+    await sidecar.ready()
+    let count = 0
+    let removeAssets = []
+    if (link) {
+      const asset = await sidecar.model.getAsset(link)
+      if (asset) removeAssets = [asset]
+    } else {
+      const assets = await sidecar.model.allAssets()
+      if (assets) removeAssets = assets
+    }
+    for (const { client } of sidecar.running.values()) {
+      // skip running assets
+      if (client.userData instanceof sidecar.App === false) return
+      const links = Object.values(client.userData.state.manifest.pear.assets).map((asset) => asset.link)
+      removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
+    }
+    for (const asset of removeAssets) {
+      await sidecar.model.removeAsset(asset.link)
+      this.push({ tag: 'remove', data: { resource, id: asset.link } })
+      count += 1
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
   }
 }

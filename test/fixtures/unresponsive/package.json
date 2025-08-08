@@ -1,0 +1,7 @@
+{
+  "name": "unresponsive",
+  "main": "index.js",
+  "pear": {
+    "name": "unresponsive"
+  }
+}

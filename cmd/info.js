@@ -1,10 +1,10 @@
 'use strict'
-const parseLink = require('../lib/parse-link')
-const { outputter } = require('./iface')
+const plink = require('pear-api/link')
+const { outputter } = require('pear-api/terminal')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { ERR_INVALID_INPUT } = require('../errors')
-const { permit, isTTY } = require('./iface')
+const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const { permit, isTTY } = require('pear-api/terminal')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -51,12 +51,17 @@ const output = outputter('info', {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  final (data, info) { return info.onlyShowKey && data.success ? {} : false }
+  manifest: (data) => {
+    return JSON.stringify(data.manifest, 0, 2)
+  },
+  final (data, info) {
+    return info.onlyShowKey && data.success ? {} : false
+  }
 })
 
 module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
-  const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, manifest } = cmd.flags
+  const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
   if (link && isKey === false) throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
@@ -70,6 +75,7 @@ module.exports = (ipc) => async function info (cmd) {
     showKey,
     metadata,
     changelog,
+    manifest,
     full,
     cmdArgs: Bare.argv.slice(1)
   }), { ask: cmd.flags.ask }, ipc)

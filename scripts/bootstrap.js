@@ -111,7 +111,24 @@ async function download (key, all = false) {
   console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
-    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST)
+    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST),
+    filter: (key) => {
+      const runtimes = [
+        '/by-arch/linux-x64/bin/pear-runtime',
+        '/by-arch/linux-arm64/bin/pear-runtime',
+        '/by-arch/darwin-x64/bin/pear-runtime',
+        '/by-arch/darwin-arm64/bin/pear-runtime',
+        '/by-arch/win32-x64/bin/pear-runtime.exe'
+      ]
+      const lib = [
+        '/by-arch/linux-x64/lib',
+        '/by-arch/linux-arm64/lib',
+        '/by-arch/darwin-x64/lib',
+        '/by-arch/darwin-arm64/lib',
+        '/by-arch/win32-x64/lib'
+      ]
+      return runtimes.some(r => key === r) || lib.some(l => key.startsWith(l))
+    }
   })
 
   const monitor = monitorDrive(runtimes)
