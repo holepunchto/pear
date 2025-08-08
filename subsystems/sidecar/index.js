@@ -145,6 +145,7 @@ class Sidecar extends ReadyResource {
     this.running = new Map()
 
     this._inspector = new Inspector({ inspector: bareInspector, bootstrap: this.nodes })
+    this._startTime = Date.now()
 
     const sidecar = this
     this.App = class App {
@@ -765,6 +766,36 @@ class Sidecar extends ReadyResource {
       if (await this.updater.applyUpdate() !== null) {
         LOG.info('sidecar', CHECKMARK + ' Applied update')
       }
+    }
+  }
+
+  async updaterFallback () {
+    const applyPendingUpdate = () => new Promise((resolve) => {
+      if (this.updater?.updated) {
+        this.updater.applyUpdate().then((res) => resolve(res !== null)).catch(() => resolve(false))
+      } else if (this.updater?.updating) {
+        this.updater.once('update', async () => {
+          this.updater.applyUpdate().then((res) => resolve(res !== null)).catch(() => resolve(false))
+        })
+        const maxWait = 120_000
+        setTimeout(() => resolve(false), maxWait)
+      } else {
+        resolve(false)
+      }
+    })
+
+    let pendingUpdateApplied = await applyPendingUpdate()
+    if (pendingUpdateApplied === false) {
+      const currentTime = Date.now()
+      const fallbackTime = 30_000
+      if (currentTime - this._startTime < fallbackTime) {
+        await new Promise((resolve) => setTimeout(resolve, fallbackTime)) // wait for FALLBACK_TIME ms in case an update arrives
+        pendingUpdateApplied = await applyPendingUpdate() // try to apply a new arrived update
+      }
+    }
+
+    if (pendingUpdateApplied) {
+      LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
     }
   }
 
