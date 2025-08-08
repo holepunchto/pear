@@ -8,7 +8,7 @@ const transform = require('pear-api/transform')
 const plink = require('pear-api/link')
 const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
-async function init (link = 'default', dir, { ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
+async function init (link = 'default', dir, { cwd, ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
@@ -24,6 +24,7 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
       link = 'pear://pear/init/templates/' + link
     }
   }
+
   let params = null
   if (isPear && ask) {
     if (await ipc.trusted(link) === false) {
@@ -33,10 +34,11 @@ async function init (link = 'default', dir, { ipc, header, autosubmit, defaults,
   }
 
   if (isPath) {
-    let url = pathToFileURL(dir).toString()
+    let url = pathToFileURL(cwd).toString()
     if (url.slice(1) !== '/') url += '/'
     link = new URL(link, url).toString()
   }
+
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {

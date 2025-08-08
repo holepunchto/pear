@@ -34,8 +34,9 @@ module.exports = (ipc) => async function init (cmd) {
   const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
   let header = `\n${banner}${ansi.dim('›')}\n\n`
   if (force) header += ansi.bold('FORCE MODE\n\n')
+
   try {
-    await output(false, await require('../init')(link, dir, { ipc, autosubmit: yes, ask, force, defaults, header, tmpl, pkg }))
+    await output(false, await require('../init')(link, dir, { cwd, ipc, autosubmit: yes, ask, force, defaults, header, tmpl, pkg }))
   } catch (err) {
     if (err.code !== 'ERR_PERMISSION_REQUIRED' || !ask) throw err
     await permit(ipc, err.info, 'init')
