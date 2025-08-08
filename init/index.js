@@ -8,7 +8,8 @@ const transform = require('pear-api/transform')
 const plink = require('pear-api/link')
 const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
-async function init (link = 'default', dir, { cwd, ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = {}) {
+async function init (link = 'default', dir, opts = {}) {
+  const { cwd, ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = opts
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
@@ -18,10 +19,11 @@ async function init (link = 'default', dir, { cwd, ipc, header, autosubmit, defa
     if (link === 'ui') {
       link = 'pear://electron/template'
       ask = false
-    } else if (LOCALDEV) {
-      link = path.join(__dirname, 'templates', link)
+    } else if (link === 'default' || link === 'node-compat') {
+      if (LOCALDEV) link = path.join(__dirname, 'templates', link)
+      else link = 'pear://pear/init/templates/' + link
     } else {
-      link = 'pear://pear/init/templates/' + link
+      return init('./' + link, dir, opts)
     }
   }
 
