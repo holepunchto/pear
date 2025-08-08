@@ -41,7 +41,6 @@ async function init (link = 'default', dir, opts = {}) {
     link = new URL(link, url).toString()
   }
 
-
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
       throw ERR_PERMISSION_REQUIRED(data.message, data.info)

@@ -53,6 +53,8 @@ registerUrlHandler(WAKEUP)
 
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'
+const UNCAUGHT_MAX_WAIT = 120_000
+const UNCAUGHT_MIN_WAIT = 30_000
 
 class Sidecar extends ReadyResource {
   static Updater = Updater
@@ -769,16 +771,15 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  async updaterFallback () {
+  async uncaughtWindDown () {
     const applyPendingUpdate = () => new Promise((resolve) => {
       if (this.updater?.updated) {
         this.updater.applyUpdate().then((res) => resolve(res !== null)).catch(() => resolve(false))
       } else if (this.updater?.updating) {
-        this.updater.once('update', async () => {
+        this.updater.once('update', () => {
           this.updater.applyUpdate().then((res) => resolve(res !== null)).catch(() => resolve(false))
         })
-        const maxWait = 120_000
-        setTimeout(() => resolve(false), maxWait)
+        setTimeout(() => resolve(false), UNCAUGHT_MAX_WAIT)
       } else {
         resolve(false)
       }
@@ -786,10 +787,8 @@ class Sidecar extends ReadyResource {
 
     let pendingUpdateApplied = await applyPendingUpdate()
     if (pendingUpdateApplied === false) {
-      const currentTime = Date.now()
-      const fallbackTime = 30_000
-      if (currentTime - this._startTime < fallbackTime) {
-        await new Promise((resolve) => setTimeout(resolve, fallbackTime)) // wait for FALLBACK_TIME ms in case an update arrives
+      if (Date.now() - this._startTime < UNCAUGHT_MIN_WAIT) {
+        await new Promise((resolve) => setTimeout(resolve, UNCAUGHT_MIN_WAIT)) // wait for UNCAUGHT_WINDOWN_MIN_WAIT ms in case an update arrives
         pendingUpdateApplied = await applyPendingUpdate() // try to apply a new arrived update
       }
     }

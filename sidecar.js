@@ -7,7 +7,6 @@ const fs = require('bare-fs')
 const Rache = require('rache')
 const crasher = require('pear-api/crasher')
 const teardown = require('pear-api/teardown')
-const uncaughts = require('uncaughts')
 const {
   SWAP,
   GC,
@@ -22,7 +21,6 @@ const gunk = require('pear-api/gunk')
 const pear = require('pear-api/cmd')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
-crasher('sidecar', SWAP, undefined, false)
 
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
@@ -56,14 +54,7 @@ async function bootSidecar () {
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
 
-  uncaughts.on(async () => {
-    try {
-      await sidecar.updaterFallback()
-    } catch (err) {
-      LOG.error('internal', 'Sidecar updater fallback failed', err)
-    }
-    Bare.exit()
-  })
+  crasher('sidecar', SWAP, null, () => sidecar.uncaughtWindDown())
 
   registerUrlHandler(WAKEUP)
 

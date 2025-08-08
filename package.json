@@ -121,7 +121,6 @@
     "streamx": "^2.22.0",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.17.8",
-    "uncaughts": "^1.1.1",
     "unix-path-resolve": "^1.0.2",
     "url-file-url": "^1.0.5",
     "watch-drive": "^2.0.3",
