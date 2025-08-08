@@ -269,6 +269,7 @@ module.exports = class Bundle {
   async join ({ server = false, client = true } = {}) {
     if (!this.swarm) return
     if (this.announcing) return this.announcing
+    if (this.replicator === null) return
     this.announcing = this.replicator.join(this.swarm, { server, client })
     this.announcing.then(() => { this.leaving = null })
     this.announcing.catch(err => this.fatal(err))
@@ -279,6 +280,7 @@ module.exports = class Bundle {
   async leave () {
     if (!this.swarm) return
     if (this.leaving) return this.leaving
+    if (this.replicator === null) return
     this.leaving = this.replicator.leave(this.swarm)
     this.leaving.then(() => { this.announcing = null })
     this.leaving.catch(err => this.fatal(err))
