@@ -78,6 +78,10 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
 
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'pid is valid')
