@@ -9,7 +9,8 @@ const plink = require('pear-api/link')
 const { LOCALDEV } = require('pear-api/constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
 async function init (link = 'default', dir, opts = {}) {
-  const { cwd, ipc, header, autosubmit, defaults, ask = true, force = false, pkg } = opts
+  const { cwd, ipc, header, autosubmit, defaults, force = false, pkg } = opts
+  let { ask = true } = opts
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
   const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
@@ -40,7 +41,6 @@ async function init (link = 'default', dir, opts = {}) {
     if (url.slice(1) !== '/') url += '/'
     link = new URL(link, url).toString()
   }
-
 
   for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
