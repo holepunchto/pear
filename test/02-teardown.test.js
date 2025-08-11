@@ -90,7 +90,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   ok(td, 'teardown executed')
 })
 
-test('teardown on os kill with exit code', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
@@ -129,7 +129,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'pid is valid')
 
-  const pipeClosedPromise = new Promise((resolve, reject) => {
+  const pipeClosed = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
     pipe.on('close', () => {
       clearTimeout(timeoutId)
@@ -140,7 +140,7 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => os.kill(pid) })
   ok(td, 'teardown executed')
 
-  await pipeClosedPromise
+  await pipeClosed
   ok(td, 'pipe closed')
 })
 
