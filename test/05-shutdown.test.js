@@ -231,9 +231,6 @@ test('unresponsive subprocess termination', async function ({ plan, teardown, pa
   pipe.on('close', () => {
     pass('closed unresponsive process')
   })
-  pipe.on('end', () => {
-    pass('closed unresponsive process')
-  })
 })
 
 test.hook('patched platform cleanup', async () => {
