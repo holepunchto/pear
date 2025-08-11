@@ -21,7 +21,6 @@ const gunk = require('pear-api/gunk')
 const pear = require('pear-api/cmd')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
-crasher('sidecar', SWAP)
 
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
@@ -54,6 +53,8 @@ async function bootSidecar () {
   const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })
   teardown(() => sidecar.close())
   await sidecar.ipc.ready()
+
+  crasher('sidecar', SWAP, null, () => sidecar.uncaughtWindDown())
 
   registerUrlHandler(WAKEUP)
 
