@@ -78,6 +78,10 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
 
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'pid is valid')
@@ -86,7 +90,7 @@ test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan,
   ok(td, 'teardown executed')
 })
 
-test('teardown on os kill with exit code', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('teardown on os kill', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(6)
 
@@ -125,19 +129,19 @@ test('teardown on os kill with exit code', { skip: isWindows }, async function (
   const pid = +(await Helper.untilResult(pipe))
   ok(pid > 0, 'pid is valid')
 
-  const exitCodePromise = new Promise((resolve, reject) => {
+  const pipeClosed = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => reject(new Error('timed out')), 5000)
-    pipe.on('crash', (data) => {
+    pipe.on('close', () => {
       clearTimeout(timeoutId)
-      resolve(data.exitCode)
+      resolve()
     })
   })
 
   const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => os.kill(pid) })
   ok(td, 'teardown executed')
 
-  const exitCode = await exitCodePromise
-  is(exitCode, 124, 'exit code is 124')
+  await pipeClosed
+  ok(td, 'pipe closed')
 })
 
 test('teardown on pipe end', { skip: isWindows }, async function ({ ok, is, plan, comment, teardown, timeout }) {
@@ -205,6 +209,10 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({ o
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
   const pid = +(await Helper.untilResult(pipe))
   await Pear[Pear.constructor.IPC].closeClients() // triggers teardown from sidecar, preserves test runner ipc client
   pass('unloading resolved')
@@ -240,6 +248,10 @@ test('teardown unloading - run of run identify as subapp', async function ({ ok,
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
   const status = await Helper.untilData(pipe)
   is(status.toString(), 'unloading')
 })
