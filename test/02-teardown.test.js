@@ -209,6 +209,10 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({ o
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
   const pid = +(await Helper.untilResult(pipe))
   await Pear[Pear.constructor.IPC].closeClients() // triggers teardown from sidecar, preserves test runner ipc client
   pass('unloading resolved')
@@ -244,6 +248,10 @@ test('teardown unloading - run of run identify as subapp', async function ({ ok,
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  pipe.on('error', (err) => {
+    if (err.code === 'ENOTCONN') return
+    throw err
+  })
   const status = await Helper.untilData(pipe)
   is(status.toString(), 'unloading')
 })
