@@ -103,6 +103,7 @@ module.exports = class Pre extends Readable {
         reject(new ERR_INVALID_CONFIG('pear.pre "' + link + '" did not respond with configuration data in time'))
       }, IDLE_TIMEOUT).unref()
       const ondata = (data) => {
+        console.log(data)
         let output = null
         try {
           output = cenc.decode(cenc.any, data)
@@ -127,6 +128,8 @@ module.exports = class Pre extends Readable {
           resolve(output.data)
         }
       }
+      console.log('listening for pipe data')
+      console.log(pipe)
       pipe.on('data', ondata)
     })
 
