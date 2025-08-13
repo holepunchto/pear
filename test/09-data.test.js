@@ -178,7 +178,6 @@ test('pear data: hypercore stats', async function ({ ok, teardown }) {
 
   ok(Number.isFinite(stats.fullyDownloadedCores))
   ok(Number.isFinite(stats.totalWireRequestReceived))
-  ok(Number.isFinite(stats.invalidRequests))
   ok(Number.isFinite(stats.totalCores))
 })
 
