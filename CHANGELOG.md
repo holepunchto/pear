@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v1.18.0
+
+### Improvements
+
+* Internal - premigrate UI runtime assets ahead of v2
+* Worker - output err logs to both terminal and console 
+
 ## v1.17.0
 
 ### Features
