@@ -59,5 +59,15 @@ module.exports = class Data extends Opstream {
       }
       this.push({ tag: 'currents', data: records })
     }
+
+    if (resource === 'hypercore-stats') {
+      const stats = this.sidecar.hypercoreStats.toJson()
+      this.push({ tag: 'hypercore-stats', data: stats })
+    }
+
+    if (resource === 'hyperswarm-stats') {
+      const stats = this.sidecar.hyperswarmStats.toJson()
+      this.push({ tag: 'hyperswarm-stats', data: stats })
+    }
   }
 }

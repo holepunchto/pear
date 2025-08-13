@@ -74,13 +74,33 @@ const currentsOutput = (records) => {
   return out
 }
 
+const hypercoreStatsOutput = (stats) => {
+  let out = ''
+  out += '\n'
+  out += `- ${ansi.bold('Sidecar corestore:')}\n\n`
+  out += JSON.stringify(stats, 0, 2)
+  out += '\n'
+  return out
+}
+
+const hyperswarmStatsOutput = (stats) => {
+  let out = ''
+  out += '\n'
+  out += `- ${ansi.bold('Sidecar hyperswarm:')}\n\n`
+  out += JSON.stringify(stats, 0, 2)
+  out += '\n'
+  return out
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
   manifest: (result) => manifestOutput(result),
   assets: (result) => assetsOutput(result),
-  currents: (result) => currentsOutput(result)
+  currents: (result) => currentsOutput(result),
+  'hypercore-stats': (result) => hypercoreStatsOutput(result),
+  'hyperswarm-stats': (result) => hyperswarmStatsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -139,5 +159,17 @@ class Data {
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
     await output(json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' }, this.ipc)
+  }
+
+  async hypercoreStats (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    await output(json, this.ipc.data({ resource: 'hypercore-stats' }), { tag: 'hypercore-stats' }, this.ipc)
+  }
+
+  async hyperswarmStats (cmd) {
+    const { command } = cmd
+    const { json } = command.parent.flags
+    await output(json, this.ipc.data({ resource: 'hyperswarm-stats' }), { tag: 'hyperswarm-stats' }, this.ipc)
   }
 }

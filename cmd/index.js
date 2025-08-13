@@ -253,6 +253,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('manifest', summary('Database internal versioning'), (cmd) => runners.data(ipc).manifest(cmd)),
     command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).assets(cmd)),
     command('currents', summary('Current working versions'), arg('[link]', 'Filter by link'), (cmd) => runners.data(ipc).currents(cmd)),
+    command('hypercore-stats', summary('Sidecar storage stats'), (cmd) => runners.data(ipc).hypercoreStats(cmd)),
+    command('hyperswarm-stats', summary('Sidecar network stats'), (cmd) => runners.data(ipc).hyperswarmStats(cmd)),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     () => { console.log(data.help()) }
