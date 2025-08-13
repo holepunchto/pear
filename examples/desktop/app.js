@@ -1,12 +1,13 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import ui from 'pear-electron'
+import pearPipe from 'pear-pipe'
 console.log('link', Pear.config.link)
 console.log('linkData', Pear.config.linkData)
 console.log('key', Pear.config.key)
-
-Pear.pipe.on('data', (data) => {
+const pipe = pearPipe()
+pipe.on('data', (data) => {
   const cmd = Buffer.from(data).toString()
-  if (cmd === 'hello from app') Pear.pipe.write('hello from ui')
+  if (cmd === 'hello from app') pipe.write('hello from ui')
   console.log('PIPE DATA', cmd)
 })
 
