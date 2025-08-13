@@ -166,3 +166,32 @@ test('pear data: no duplicated bundle local app', async function ({ is, comment,
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, key, 'bundle key is origin key')
 })
+
+test('pear data: hypercore stats', async function ({ ok, teardown }) {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const data = await helper.data({ resource: 'hypercore-stats' })
+  const result = await Helper.pick(data, [{ tag: 'hypercore-stats' }])
+  const stats = await result['hypercore-stats']
+
+  ok(Number.isFinite(stats.fullyDownloadedCores))
+  ok(Number.isFinite(stats.totalWireRequestReceived))
+  ok(Number.isFinite(stats.invalidRequests))
+  ok(Number.isFinite(stats.totalCores))
+})
+
+test('pear data: hyperswarm stats', async function ({ ok, teardown }) {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const data = await helper.data({ resource: 'hyperswarm-stats' })
+  const result = await Helper.pick(data, [{ tag: 'hyperswarm-stats' }])
+  const stats = await result['hyperswarm-stats']
+
+  ok(stats.dht)
+  ok(Number.isFinite(stats.nrPeers))
+  ok(Number.isFinite(stats.bytesTransmittedOverSwarmStreams))
+})

@@ -26,6 +26,8 @@ const {
   WAKEUP, SALT, KNOWN_NODES_LIMIT
 } = require('pear-api/constants')
 const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-api/errors')
+const HypercoreStats = require('hypercore-stats')
+const HyperswarmStats = require('hyperswarm-stats')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -145,6 +147,9 @@ class Sidecar extends ReadyResource {
     this.running = new Map()
 
     this._inspector = new Inspector({ inspector: bareInspector, bootstrap: this.nodes })
+
+    this.hypercoreStats = null
+    this.hyperswarmStats = null
 
     const sidecar = this
     this.App = class App {
@@ -305,6 +310,9 @@ class Sidecar extends ReadyResource {
     gcCycle().catch(err => LOG.error('sidecar', 'GC error', err))
     const gcCycleMs = 10 * 60 * 1000 // 10 minutes
     this.gcInterval = setInterval(() => { gcCycle().catch(err => LOG.error('sidecar', 'GC error', err)) }, gcCycleMs)
+
+    this.hyperswarmStats = new HyperswarmStats(this.swarm) // initilize after ensureSwarm
+    this.hypercoreStats = HypercoreStats.fromCorestore(this.corestore)
   }
 
   get clients () { return this.ipc.clients }
