@@ -3,7 +3,7 @@ const tmp = require('test-tmp')
 const test = require('brittle')
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
-const fs = require('bare-fs/promises')
+const LocalDrive = require('localdrive')
 const { pathToFileURL } = require('url-file-url')
 const Helper = require('./helper')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
@@ -214,9 +214,11 @@ test('local app', async function ({ ok, is, teardown }) {
   await helper.ready()
 
   const tmpdir = await tmp()
-  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app' } }
-  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
-  await fs.copyFile(path.join(versionsDir, 'index.js'), path.join(tmpdir, 'index.js'))
+  const from = new LocalDrive(versionsDir)
+  const to = new LocalDrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
 
   const run = await Helper.run({ link: tmpdir })
   const result = await Helper.untilResult(run.pipe)
@@ -274,15 +276,19 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
 
   const tmpdir = await tmp()
   const id = Helper.getRandomId()
-  const pkg = { name: 'tmp-app', main: 'index.js', pear: { name: 'tmp-app' } }
-  await fs.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkg))
 
-  const writeIndex = (version) => `const pipe = Pear.worker.pipe()
+  const from = new LocalDrive(versionsDir)
+  const to = new LocalDrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
+
+  const makeIndex = (version) => `const pipe = require('pear-pipe')()
   Pear.versions().then((versions) => {
     pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
   })
 `
-  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('A'))
+  await to.put('/index.js', makeIndex('A'))
 
   comment('staging A')
   const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
@@ -301,7 +307,7 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
   is(infoA.version, 'A')
 
   comment('staging B')
-  await fs.writeFile(path.join(tmpdir, 'index.js'), writeIndex('B'))
+  await to.put('/index.js', makeIndex('B'))
   const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingB))
   const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])

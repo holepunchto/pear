@@ -20,8 +20,25 @@ const force = Bare.argv.includes('--force-install')
 
 const dirs = [
   path.join(root, 'test', 'fixtures', 'require-assets', 'node_modules'),
-  path.join(root, 'test', 'fixtures', 'sub-dep-require-assets', 'node_modules')
+  path.join(root, 'test', 'fixtures', 'sub-dep-require-assets', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'dht-bootstrap', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'encrypted', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'entrypoint-and-fragment', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'hello-world', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'print-args', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'require-assets', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'run-of-identify-unloading', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'storage', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'sub-dep-require-assets', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'teardown', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'teardown-exit-code', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'teardown-os-kill', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'unloading', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'unresponsive', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'updates', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'versions', 'node_modules')
 ]
+
 for (const dir of dirs) {
   if (force === false && fs.existsSync(dir)) continue
   console.log(force ? 'reinstalling node_modules in' : 'node_modules not found in', path.dirname(dir))
