@@ -83,7 +83,7 @@ module.exports = class Bundle {
     // TODO: remove some time after v2 release
     if (!assets.ui && manifest?.pear?.pre === 'pear-electron/pre') {
       assets.ui = {
-        link: 'pear://0.922.pkzpbccx8ojp4516p7abompuhyj5gcpqfux1s9e7e4zzcdhyhdto',
+        link: 'pear://0.940.cktxzetiwt6un3ado5kgqedge6ya4nfazjckzq76zcapefwxakdy',
         only: ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%'],
         name: 'Pear Runtime'
       }
