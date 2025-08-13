@@ -13,7 +13,8 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const constants = require('pear-api/constants')
+const constants = require('pear-constants')
+const run = require('pear-run')
 const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
@@ -146,7 +147,7 @@ class Helper extends IPC.Client {
 
   static async run ({ link, platformDir, args = [] }) {
     if (platformDir) Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
-    const pipe = Pear.run(link, args)
+    const pipe = run(link, args)
 
     if (platformDir) Pear.constructor.RUNTIME = RUNTIME
 

@@ -5,5 +5,8 @@
     "name": "encrypted",
     "type": "terminal",
     "encrypted": true
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
   }
 }
