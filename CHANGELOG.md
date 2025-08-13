@@ -15,7 +15,7 @@
 * CLI - `pear stage --purge` - remove ignored files from app hypercore
 * CLI - `pear stage --only` - filter by paths
 * Config - `pear.stage.only` - filter by paths on stage
-* Config - `pear.pre` - set to a project path or npm installed bin to run a pear app prior to staging or running an app from dir. The pre run app has `Pear.pipe` which receives initial config (per `package.json pear` field) as `compact-encoding` `any`, and can write back to the `pipe` in the form `{ tag, data }`. Repsonding with `{ tag: 'configure', data: mutatedConfig }` will update the application config. All tags will be displayed prior to run & stage output to indicate actions taken by the pre app. Enabling > log level `INF` will (`-L INF`) also output `data` with the `tag`
+* Config - `pear.pre` - set to a project path or npm installed bin to run a pear app prior to staging or running an app from dir. The pre run app uses `pear-pipe` which receives initial config (per `package.json pear` field) as `compact-encoding` `any`, and can write back to the `pipe` in the form `{ tag, data }`. Repsonding with `{ tag: 'configure', data: mutatedConfig }` will update the application config. All tags will be displayed prior to run & stage output to indicate actions taken by the pre app. Enabling > log level `INF` will (`-L INF`) also output `data` with the `tag`
 * Config - `pear.stage.pre` - as `pear.pre` but for pre stage only
 * Config - `pear.run.pre` - as `pear.pre` but for pre run from dir only
 * CLI - `pear run --no-pre` - disallow any `pear.pre` apps to run prior to run from dir
@@ -25,7 +25,7 @@
 * CLI - `pear stage --no-pre` - disallow any `pear.pre` apps to run prior to stage
 * CLI - `pear stage --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
 * CLI - `pear stage --pre-q` - hide any pre tags from displaying
-set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `Pear.pipe` `data` and `Pear.pipe.write` the mutated config back
+set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `pear-pipe` `data` and `pipe.write` the mutated config back
 * Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"}`, `{"routes": "."}` catch-all
 * Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
 * IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
