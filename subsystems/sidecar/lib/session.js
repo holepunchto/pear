@@ -1,6 +1,6 @@
 'use strict'
 const safetyCatch = require('safety-catch')
-const { ERR_INTERNAL_ERROR } = require('pear-api/errors')
+const { ERR_INTERNAL_ERROR } = require('pear-errors')
 module.exports = class Session {
   constructor (client, identifier = '') {
     this.client = client

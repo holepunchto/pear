@@ -5,7 +5,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const { isWindows } = require('which-runtime')
 const deriveEncryptionKey = require('pw-to-ek')
-const { SALT } = require('pear-api/constants')
+const { SALT } = require('pear-constants')
 const Helper = require('./helper')
 
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')

@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, ansi } = require('pear-api/terminal')
+const { outputter, ansi } = require('pear-terminal')
 const { dependencies } = require('../package.json')
 
 const output = outputter('versions', {

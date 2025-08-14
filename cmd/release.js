@@ -1,9 +1,9 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('pear-api/terminal')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const plink = require('pear-api/link')
+const { outputter, ansi } = require('pear-terminal')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const plink = require('pear-link')
 
 const output = outputter('release', {
   releasing: ({ name, channel, link }) => `\n${ansi.pear} Releasing ${name} [ ${channel || link} ]\n`,

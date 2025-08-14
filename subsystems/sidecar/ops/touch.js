@@ -2,7 +2,7 @@
 const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const Hyperdrive = require('hyperdrive')
-const { ERR_INVALID_PROJECT_DIR } = require('pear-api/errors')
+const { ERR_INVALID_PROJECT_DIR } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
 

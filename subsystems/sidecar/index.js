@@ -18,14 +18,14 @@ const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
-const plink = require('pear-api/link')
-const rundef = require('pear-api/cmd/run')
+const plink = require('pear-link')
+const rundef = require('pear-cmd/run')
 const {
   PLATFORM_DIR, PLATFORM_LOCK, SOCKET_PATH, CHECKOUT,
   APPLINGS_PATH, SWAP, RUNTIME, ALIASES, SPINDOWN_TIMEOUT,
   WAKEUP, SALT, KNOWN_NODES_LIMIT
-} = require('pear-api/constants')
-const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-api/errors')
+} = require('pear-constants')
+const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')

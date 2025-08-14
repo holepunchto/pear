@@ -3,8 +3,8 @@ const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
 const LocalDrive = require('localdrive')
-const plink = require('pear-api/link')
-const { ERR_INVALID_LINK } = require('pear-api/errors')
+const plink = require('pear-link')
+const { ERR_INVALID_LINK } = require('pear-errors')
 const dbSpec = require('../../../spec/db')
 
 const applink = (link, { alias = true } = {}) => {

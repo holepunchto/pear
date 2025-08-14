@@ -1,11 +1,11 @@
 'use strict'
 const { header, footer, command, flag, arg, summary, description, bail, sloppy, validate, hiddenCommand } = require('paparam')
-const { usage, print, ansi } = require('pear-api/terminal')
-const { CHECKOUT } = require('pear-api/constants')
-const errors = require('pear-api/errors')
+const { usage, print, ansi } = require('pear-terminal')
+const { CHECKOUT } = require('pear-constants')
+const errors = require('pear-errors')
 const def = {
-  run: require('pear-api/cmd/run'),
-  pear: require('pear-api/cmd/pear')
+  run: require('pear-cmd/run'),
+  pear: require('pear-cmd/pear')
 }
 const runners = {
   init: require('./init'),
@@ -308,7 +308,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     console.log(cmd.overview())
   }
 
-  const shell = require('pear-api/cmd')(argv)
+  const shell = require('pear-cmd')(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 

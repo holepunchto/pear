@@ -2,7 +2,7 @@
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const Hyperdrive = require('hyperdrive')
-const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const State = require('../state')

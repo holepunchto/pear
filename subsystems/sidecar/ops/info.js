@@ -1,9 +1,9 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
-const plink = require('pear-api/link')
+const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
