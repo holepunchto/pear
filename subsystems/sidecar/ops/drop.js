@@ -1,8 +1,8 @@
 'use strict'
 const path = require('bare-path')
 const crypto = require('hypercore-crypto')
-const { PLATFORM_DIR } = require('pear-api/constants')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const { PLATFORM_DIR } = require('pear-constants')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Drop extends Opstream {

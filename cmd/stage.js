@@ -1,11 +1,11 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('pear-api/terminal')
-const plink = require('pear-api/link')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { permit, isTTY, byteDiff } = require('pear-api/terminal')
-const State = require('pear-api/state')
+const { outputter, ansi } = require('pear-terminal')
+const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const { permit, isTTY, byteDiff } = require('pear-terminal')
+const State = require('pear-state')
 const Pre = require('../pre')
 
 let blocks = 0
