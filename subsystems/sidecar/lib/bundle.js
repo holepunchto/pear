@@ -1,5 +1,5 @@
 'use strict'
-const fs = require('fs')
+const fs = require('bare-fs')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
