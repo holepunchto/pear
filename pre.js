@@ -2,7 +2,7 @@
 const { Readable } = require('streamx')
 const Module = require('bare-module')
 const plink = require('pear-link')
-const fs = require('fs')
+const fs = require('bare-fs')
 const { isWindows } = require('which-runtime')
 const { RUNTIME } = require('pear-constants')
 const { spawn } = require('bare-subprocess')
