@@ -116,7 +116,7 @@
     "pear-logger": "^1.0.0",
     "pear-pipe": "^1.0.1",
     "pear-run": "^1.0.0",
-    "pear-state": "^1.0.1",
+    "pear-state": "^1.0.2",
     "pear-terminal": "^1.0.0",
     "pear-tryboot": "^1.0.0",
     "pear-updater": "^3.4.3",
