@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v1.17.1
+
+### Fixes
+
+* Windows - fix bare-inspector
+
 ## v1.17.0
 
 ### Features
