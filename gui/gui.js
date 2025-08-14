@@ -279,11 +279,19 @@ class Menu {
   devtoolsReloaderListen (wc) {
     if (this.devtoolsReloaderActive) return
     this.devtoolsReloaderActive = true
+
+    const listener = () => { refresh(wc, this.app.state) }
+    // ignore electron docs about register: it DOES NOT accept an array of accelerators, just the one string
+    electron.globalShortcut.register('CommandOrControl+R', listener)
+    electron.globalShortcut.register('F5', listener)
   }
 
   devtoolsReloaderUnlisten () {
     if (this.devtoolsReloaderActive === false) return
     this.devtoolsReloaderActive = false
+
+    electron.globalShortcut.unregister('CommandOrControl+R')
+    electron.globalShortcut.unregister('F5')
   }
 
   destroy () {
@@ -417,7 +425,6 @@ class App {
       let devtoolsBlurPolling = null
       wc.on('devtools-opened', () => {
         devtoolsBlurPolling = setInterval(() => {
-          if (this.menu.globalReloaderActive === false) return
           if (wc.isDevToolsFocused() === false) this.menu.devtoolsReloaderUnlisten()
         }, 150)
       })
