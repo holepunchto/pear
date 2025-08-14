@@ -1,10 +1,10 @@
 'use strict'
-const plink = require('pear-api/link')
-const { outputter } = require('pear-api/terminal')
+const plink = require('pear-link')
+const { outputter } = require('pear-terminal')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
-const { permit, isTTY } = require('pear-api/terminal')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const { permit, isTTY } = require('pear-terminal')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex

@@ -1,7 +1,7 @@
 'use strict'
-const { outputter } = require('pear-api/terminal')
-const plink = require('pear-api/link')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const { outputter } = require('pear-terminal')
+const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('shift', {
   moving: ({ src, dst, force }) => `Shifting user application storage\n\nFrom: ${src}\nTo: ${dst}\n${force ? '\nForce flag used, overwriting existing application storage.' : ''}`,

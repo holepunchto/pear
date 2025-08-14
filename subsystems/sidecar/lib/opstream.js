@@ -1,6 +1,6 @@
 'use strict'
 const streamx = require('streamx')
-const plink = require('pear-api/link')
+const plink = require('pear-link')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
   final = {}

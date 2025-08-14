@@ -7,17 +7,17 @@ const { pathToFileURL } = require('url-file-url')
 const { spawn: daemon } = require('bare-daemon')
 const { isWindows } = require('which-runtime')
 const API = require('pear-api')
-const constants = require('pear-api/constants')
-const plink = require('pear-api/link')
+const constants = require('pear-constants')
+const plink = require('pear-link')
 const {
   ERR_OPERATION_FAILED,
   ERR_INVALID_PROJECT_DIR,
   ERR_INVALID_INPUT,
   ERR_LEGACY,
   ERR_INTERNAL_ERROR
-} = require('pear-api/errors')
-const State = require('pear-api/state')
-const { outputter, permit, byteSize, ansi } = require('pear-api/terminal')
+} = require('pear-errors')
+const State = require('pear-state')
+const { outputter, permit, byteSize, ansi } = require('pear-terminal')
 const Pre = require('../pre')
 const noop = () => {}
 const preout = outputter('run', {
