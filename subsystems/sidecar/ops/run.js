@@ -120,6 +120,7 @@ module.exports = class Run extends Opstream {
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
+        // asset method doesnt get/add assets when running pre.js file
         asset: (opts) => state.prerunning ? null : this.asset(opts, corestore),
         updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info))
       })
@@ -185,6 +186,7 @@ module.exports = class Run extends Opstream {
         if (state.updates) sidecar.updateNotify(version, info)
         await this.sidecar.model.setCurrent(state.applink, { fork: version.fork, length: version.length })
       },
+      // pre.js file only runs on disk, so no need for conditional
       asset: (opts) => this.asset(opts, corestore),
       failure (err) { app.report({ err }) }
     })
