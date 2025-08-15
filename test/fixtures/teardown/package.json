@@ -1,0 +1,11 @@
+{
+  "name": "worker-teardown",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}

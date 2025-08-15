@@ -3,7 +3,7 @@ const cenc = require('compact-encoding')
 const fsp = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')
 const ReadyResource = require('ready-resource')
-const constants = require('../../../constants')
+const constants = require('pear-constants')
 
 const APPLINGS_STORAGE_VERSION = 0
 
@@ -152,13 +152,11 @@ class Applings extends ReadyResource {
 
   async get (hexKey) {
     if (!this.opened) await this.ready()
-    if (hexKey === constants.ALIASES.keet.toString('hex') || hexKey === constants.EOLS.keet.toString('hex')) hexKey = 'keet'
+    if (hexKey === constants.ALIASES.keet.toString('hex')) hexKey = 'keet'
+    if (constants.EOLS.keet.some((hK) => hK === hexKey)) hexKey = 'keet'
     if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
     if (hexKey === constants.ALIASES.doctor.toString('hex')) hexKey = 'doctor'
-
-    for (const { key, path } of this._applings) {
-      if (key === hexKey) return path
-    }
+    for (const { key, path } of this._applings) if (key === hexKey) return path
   }
 }
 
