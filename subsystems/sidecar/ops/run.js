@@ -120,7 +120,7 @@ module.exports = class Run extends Opstream {
       const appBundle = new Bundle({
         drive,
         updatesDiff: state.updatesDiff,
-        asset: (opts) => this.asset(opts, corestore),
+        asset: (opts) => state.prerunning ? null : this.asset(opts, corestore),
         updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info))
       })
       const linker = new ScriptLinker(appBundle, {
