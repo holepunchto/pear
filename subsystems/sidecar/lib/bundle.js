@@ -221,10 +221,10 @@ module.exports = class Bundle {
     return promise
   }
 
-  async join (swarm, { server = false, client = true } = {}) {
+  async join (swarm, { server = false } = {}) {
     if (this.announcing) return this.announcing
     this.swarm = swarm
-    this.announcing = this.replicator.join(swarm, { server, client })
+    this.announcing = this.replicator.join(swarm, { server })
     this.announcing.then(() => { this.leaving = null })
     this.announcing.catch(err => this.fatal(err))
     return this.announcing

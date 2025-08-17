@@ -25,7 +25,7 @@ module.exports = class Replicator extends EventEmitter {
     swarm.leave(this.drive.discoveryKey)
   }
 
-  async _join (swarm, { server, client }) {
+  async _join (swarm, { server }) {
     let done = noop
     try {
       await this.drive.ready()
@@ -44,7 +44,8 @@ module.exports = class Replicator extends EventEmitter {
     }
 
     LOG.info('sidecar', '- Sidecar swarm joining discovery key of ' + hypercoreid.encode(this.drive.key))
-    const topic = swarm.join(this.drive.discoveryKey, { server, client, limit: 16 })
+    // IMPORTANT! join always in client mode
+    const topic = swarm.join(this.drive.discoveryKey, { server, client: true, limit: 16 })
 
     try {
       await topic.flushed()
