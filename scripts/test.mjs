@@ -37,7 +37,8 @@ const dirs = [
   path.join(root, 'test', 'fixtures', 'unloading', 'node_modules'),
   path.join(root, 'test', 'fixtures', 'unresponsive', 'node_modules'),
   path.join(root, 'test', 'fixtures', 'updates', 'node_modules'),
-  path.join(root, 'test', 'fixtures', 'versions', 'node_modules')
+  path.join(root, 'test', 'fixtures', 'versions', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'app-with-assets', 'node_modules')
 ]
 
 for (const dir of dirs) {
