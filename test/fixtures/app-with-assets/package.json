@@ -1,0 +1,19 @@
+{
+  "name": "app-with-assets",
+  "main": "index.js",
+  "pear": {
+    "name": "app-with-assets",
+    "assets": {
+      "ui": {
+        "link": "",
+        "name": "Pear Fixture Asset",
+        "only": [
+          "/asset"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}
