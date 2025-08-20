@@ -1,0 +1,8 @@
+{
+  "name": "worker-teardown-exception",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-exception",
+    "type": "terminal"
+  }
+}
