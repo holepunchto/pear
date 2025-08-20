@@ -1,5 +1,6 @@
 /* eslint-env browser */
 'use strict'
+const crypto = require('crypto')
 const streamx = require('streamx')
 const { EventEmitter } = require('events')
 const Iambus = require('iambus')
@@ -267,6 +268,31 @@ module.exports = class PearGUI extends ReadyResource {
 }
 
 class IPC {
+  #streams
+
+  constructor () {
+    this.#streams = new Map()
+    electron.ipcRenderer.on('streamEnd', (e, id) => {
+      const item = this.#streams.get(id)
+      if (item) item.stream.end()
+    })
+    electron.ipcRenderer.on('streamClose', (e, id) => {
+      const item = this.#streams.get(id)
+      if (item) {
+        item.stream.destroy()
+        this.#streams.delete(id)
+      }
+    })
+    electron.ipcRenderer.on('streamData', (e, id, data) => {
+      const item = this.#streams.get(id)
+      if (item) item.ondata(data)
+    })
+    electron.ipcRenderer.on('streamError', (e, id, stack) => {
+      const item = this.#streams.get(id)
+      if (item) item.onerror(stack)
+    })
+  }
+
   getMediaAccessStatus (...args) { return electron.ipcRenderer.invoke('getMediaAccessStatus', ...args) }
   askForMediaAccess (...args) { return electron.ipcRenderer.invoke('askForMediaAccess', ...args) }
   desktopSources (...args) { return electron.ipcRenderer.invoke('desktopSources', ...args) }
@@ -325,27 +351,24 @@ class IPC {
   }
 
   messages (pattern) {
-    electron.ipcRenderer.send('messages', pattern)
     const bus = new Iambus()
-    electron.ipcRenderer.on('messages', (e, msg) => {
-      if (msg === null) bus.end()
-      else bus.pub(msg)
-    })
     const stream = bus.sub(pattern)
+    const id = this.#relay({ stream, ondata: (data) => bus.pub(data) })
+    electron.ipcRenderer.send('messages', id, pattern)
     return stream
   }
 
   warming () {
-    electron.ipcRenderer.send('warming')
     const stream = new streamx.Readable()
-    electron.ipcRenderer.on('warming', (e, data) => { stream.push(data) })
+    const id = this.#relay({ stream })
+    electron.ipcRenderer.send('warming', id)
     return stream
   }
 
   reports () {
-    electron.ipcRenderer.send('reports')
     const stream = new streamx.Readable()
-    electron.ipcRenderer.on('reports', (e, data) => { stream.push(data) })
+    const id = this.#relay({ stream })
+    electron.ipcRenderer.send('reports', id)
     return stream
   }
 
@@ -384,6 +407,17 @@ class IPC {
       if (args.id === id) console.error(args.link, '[ ' + args.pid + ' ] ->', args.data)
     })
     return stream
+  }
+
+  #relay ({ id = crypto.randomUUID(), stream, ondata, onerror }) {
+    this.#streams.set(id, {
+      stream,
+      ondata: ondata ?? ((data) => stream.push(data)),
+      onerror: onerror ?? ((stack) => stream.emit('error', new Error('IPC Error: ' + stack)))
+    })
+    stream.on('end', () => electron.ipcRenderer.send('streamEnd', id))
+    stream.on('close', () => electron.ipcRenderer.send('streamClose', id))
+    return id
   }
 
   ref () {}
