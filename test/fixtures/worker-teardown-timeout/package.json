@@ -1,0 +1,8 @@
+{
+  "name": "worker-teardown-timeout",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-timeout",
+    "type": "terminal"
+  }
+}
