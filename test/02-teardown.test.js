@@ -173,6 +173,8 @@ test('worker forced teardown', async function ({ ok, is, plan, comment, teardown
   const run = await Helper.run({ link })
   const { pipe } = run
 
+  pipe.on('error', () => {})
+
   pipe.on('close', () => {
     pass('worker forced teardown')
   })
@@ -210,6 +212,8 @@ test('teardown after exception', async function ({ ok, is, plan, comment, teardo
   const run = await Helper.run({ link })
   const { pipe } = run
 
+  pipe.on('error', () => {})
+
   const td = await Helper.untilResult(pipe)
   is(td, 'teardown')
 })
@@ -245,6 +249,8 @@ test('worker exception during teardown', async function ({ ok, plan, comment, te
   const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
+
+  pipe.on('error', () => {})
 
   pipe.on('close', () => {
     pass('worker forced teardown')
