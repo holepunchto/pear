@@ -12,6 +12,7 @@ const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
 const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
 const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
+const routesDir = path.join(Helper.localDir, 'test', 'fixtures', 'routes')
 
 test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout, test }) {
   timeout(180000)
@@ -335,4 +336,45 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
 
   is(info.version, 'A')
   is(info.app.length, lengthA)
+})
+
+test('routes and linkdata', async ({ teardown, comment, ok, is }) => {
+  const dir = routesDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const linkData = 'link-data'
+  const link = `pear://${key}/${linkData}`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  await Helper.untilClose(run.pipe)
+  ok(result, linkData)
+
+  const routeLink = `pear://${key}/subdir/index.js`
+  const routeRun = await Helper.run({ link: routeLink })
+  const expected = 'this-is-subdir'
+  const routeResult = await Helper.untilResult(routeRun.pipe)
+  is(routeResult, expected)
+  await Helper.untilClose(routeRun.pipe)
 })
