@@ -1,0 +1,14 @@
+{
+  "name": "routes",
+  "main": "index.js",
+  "pear": {
+    "name": "routes",
+    "routes": ".",
+    "unrouted": [
+      "/subdir/index.js"
+    ]
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}
