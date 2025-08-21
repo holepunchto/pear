@@ -369,7 +369,7 @@ test('routes and linkdata', async ({ teardown, comment, ok, is }) => {
 
   const result = await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
-  ok(result, linkData)
+  is(result, linkData)
 
   const routeLink = `pear://${key}/subdir/index.js`
   const routeRun = await Helper.run({ link: routeLink })
