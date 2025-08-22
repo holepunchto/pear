@@ -16,7 +16,9 @@ const force = Bare.argv.includes('--force-install')
 const dirs = [
   path.join(root, 'test', 'fixtures', 'require-assets', 'node_modules'),
   path.join(root, 'test', 'fixtures', 'sub-dep-require-assets', 'node_modules'),
-  path.join(root, 'test', 'fixtures', 'worker-teardown-after-exception', 'node_modules')
+  path.join(root, 'test', 'fixtures', 'worker-teardown-after-exception', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'stage-app-min', 'node_modules'),
+  path.join(root, 'test', 'fixtures', 'stage-app-min-with-entrypoints', 'node_modules')
 ]
 for (const dir of dirs) {
   if (force === false && fs.existsSync(dir)) continue

@@ -1,0 +1,11 @@
+{
+  "name": "stage-app-min",
+  "pear": {
+    "name": "stage-app-min",
+    "type": "desktop"
+  },
+  "dependencies": {
+    "ready-resource": "^1.2.0",
+    "uncaughts": "^1.1.1"
+  }
+}

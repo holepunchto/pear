@@ -7,15 +7,17 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
+const { dirname } = require('bare-path')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const TreeShaker = require('../lib/tree-shaker')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, compact, cmdArgs, ignore = '.git,.github,.DS_Store', ...params }) {
     const { client, session, sidecar } = this
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
@@ -79,9 +81,17 @@ module.exports = class Stage extends Opstream {
     ]
       .map(entrypoint => unixPathResolve('/', entrypoint))
 
+    const prefetch = state.manifest.pear?.stage?.prefetch || []
+
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
       if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
+    }
+
+    if (compact) {
+      const treeShaker = new TreeShaker(src, entrypoints)
+      const files = await treeShaker.run()
+      opts.ignore = compactStageIgnore(files, prefetch)
     }
 
     const mods = await linker.warmup(entrypoints)
@@ -123,7 +133,6 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
-      const prefetch = state.manifest.pear?.stage?.prefetch || []
       const warmup = await analyzer.analyze(entrypoints, prefetch)
       await bundle.db.put('warmup', warmup)
       const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
@@ -138,5 +147,14 @@ module.exports = class Stage extends Opstream {
     if (dryRun) return
 
     this.push({ tag: 'addendum', data: { version: bundle.version, release, channel, key: z32, link } })
+  }
+}
+
+function compactStageIgnore (files, prefetch) {
+  const dirs = files.map(e => dirname(e))
+  return (key) => {
+    const isAsset = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
+    const isParentDir = dirs.some(e => e.startsWith(key))
+    return !files.includes(key) && !isAsset && !isParentDir
   }
 }
