@@ -151,10 +151,12 @@ module.exports = class Stage extends Opstream {
 }
 
 function compactStageIgnore (files, prefetch) {
+  console.log('FILES', files)
   const dirs = files.map(e => dirname(e))
   return (key) => {
     const isAsset = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
     const isParentDir = dirs.some(e => e.startsWith(key))
-    return !files.includes(key) && !isAsset && !isParentDir
+    const isPrebuild = key.includes('prebuilds')
+    return !files.includes(key) && !isAsset && !isParentDir && !isPrebuild
   }
 }

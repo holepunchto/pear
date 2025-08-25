@@ -13,11 +13,16 @@ module.exports = class TreeShaker {
     const files = (await Promise.all(
       entrypoints.map(async (e) => {
         const deps = []
-        const dependencyStream = new DependencyStream(this._drive, { entrypoint: e, packages: true })
-        for await (const dep of dependencyStream) {
+        const bareDependencyStream = new DependencyStream(this._drive, { runtimes: ['bare'], entrypoint: e, packages: true })
+        for await (const dep of bareDependencyStream) {
           deps.push(dep.key)
         }
-        return deps
+
+        const nodeDependencyStream = new DependencyStream(this._drive, { runtimes: ['node'], entrypoint: e, packages: true })
+        for await (const dep of nodeDependencyStream) {
+          deps.push(dep.key)
+        }
+        return [...new Set(deps)] // remove bare/node duplicates
       })
     )).flat()
     return [...this._entrypoints, ...files]
