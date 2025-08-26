@@ -9,6 +9,7 @@ const { Session } = require('pear-inspect')
 const Helper = require('./helper')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+const noCutover = path.join(Helper.localDir, 'test', 'fixtures', 'no-cutover')
 const seedOpts = (id) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
@@ -725,6 +726,83 @@ test('Pear.updates should notify App stage, App release updates (different pear 
     appUpdate2Length > appUpdateLength,
     `app version length incremented (v${update2Version?.fork}.${update2Version?.length})`
   )
+
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
+
+  await Helper.untilClose(pipe)
+})
+
+test('Pear.updates should replay updates when cutover is not called', async function (t) {
+  const { ok, is, plan, timeout, comment, teardown, pass } = t
+  plan(7)
+  timeout(80_000)
+
+  const appStager = new Helper(rig)
+  teardown(() => appStager.close(), { order: Infinity })
+  await appStager.ready()
+
+  const channel = 'test-fixture'
+
+  comment('staging app')
+  const appStaging = appStager.stage({ channel, name: channel, dir: noCutover, dryRun: false })
+  teardown(() => Helper.teardownStream(appStaging))
+  const appFinal = await Helper.pick(appStaging, { tag: 'final' })
+  ok(appFinal.success, 'stage succeeded')
+
+  comment('seeding app')
+  const appSeeder = new Helper(rig)
+  teardown(() => appSeeder.close(), { order: Infinity })
+  await appSeeder.ready()
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: noCutover, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(appSeeding))
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
+
+  const appKey = await untilApp.key
+  const appAnnounced = await untilApp.announced
+
+  ok(hypercoreid.isValid(appKey), 'app key is valid')
+  ok(appAnnounced, 'seeding is announced')
+
+  comment('bootstrapping rcv platform...')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
+  await Helper.bootstrap(rig.key, platformDirRcv)
+  comment('rcv platform bootstrapped')
+
+  comment('running app from rcv platform')
+  const link = 'pear://' + appKey
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
+  is(appVersionKey, appKey, 'app version key matches staged key')
+
+  const untilUpdate = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+
+  const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
+  const file = `${ts()}.tmp`
+  comment(`creating app test file (${file})`)
+  fs.writeFileSync(path.join(updates, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(updates, file)) }, { order: -Infinity })
+
+  comment('restaging app')
+  const appStager2 = new Helper(rig)
+  teardown(() => appStager2.close(), { order: Infinity })
+  await appStager2.ready()
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false })
+  teardown(() => Helper.teardownStream(appStaging2))
+  const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
+  ok(appFinal2.success, 'stage succeeded')
+
+  await new Promise(resolve => setTimeout(resolve, 1000)) // allow update to buffer
+
+  pipe.write('start-listener\n')
+
+  const update = await untilUpdate
+  pass('app has received replayed update')
+  const updateVersion = update?.version
+  const appUpdateLength = updateVersion.length
+  ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
