@@ -74,8 +74,7 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
   if (onDisk === false && isPear === false) throw ERR_INVALID_INPUT('Key must start with pear://')
 
   const cwd = os.cwd()
-  const pathnameNoBase = isWindows ? (onDisk ? pathname.slice(1) : cwd) : (onDisk ? pathname : cwd)
-  let dir = normalize(flags.base || pathnameNoBase)
+  let dir = normalize(flags.base || (onDisk ? pathname : cwd))
   let pkg = null
 
   if (onDisk) {
@@ -179,6 +178,6 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 }
 
 function normalize (pathname) {
-  if (isWindows) return path.normalize(pathname)
-  return pathname
+  if (pathname[0] === '/' && pathname[2] === ':') return path.normalize(pathname.slice(1))
+  return path.normalize(pathname)
 }
