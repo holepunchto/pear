@@ -1,13 +1,11 @@
 {
-  "name": "minimal",
-  "version": "1.0.0",
-  "description": "",
+  "name": "no-cutover",
   "main": "index.js",
-  "type": "module",
   "pear": {
-    "name": "minimal",
+    "name": "updates",
     "type": "terminal"
   },
-  "keywords": [],
-  "author": "Holepunch"
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
 }
