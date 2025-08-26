@@ -58,7 +58,12 @@ module.exports = class Pre extends Readable {
       this.#final()
       return
     }
-    const hasPipe = isWindows ? fs.fstatSync(3).isFIFO() : fs.fstatSync(3).isSocket()
+    let hasPipe
+    try{
+      hasPipe = isWindows ? fs.fstatSync(3).isFIFO() : fs.fstatSync(3).isSocket()
+    } catch{
+      hasPipe = false
+    }
     if (hasPipe) {
       this.#final()
       return
