@@ -1014,14 +1014,6 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  _terminateUnresponsiveApps () {
-    for (const app of this.apps) {
-      if (!app.state.pid) continue
-      LOG.info('sidecar', `Killing unresponsive app with PID ${app.state.pid}`)
-      os.kill(app.state.pid, 'SIGKILL')
-    }
-  }
-
   deathClock (ms = 20000) {
     clearTimeout(this.bailout)
     this.bailout = setTimeout(async () => {
@@ -1034,7 +1026,14 @@ class Sidecar extends ReadyResource {
           LOG.error('sidecar', err)
         }
       }
-      this._terminateUnresponsiveApps()
+
+      // terminate any remaining unresponsive processes
+      for (const app of this.apps) {
+        if (!app.state.pid) continue
+        LOG.info('sidecar', `Killing unresponsive app with PID ${app.state.pid}`)
+        os.kill(app.state.pid, 'SIGKILL')
+      }
+
       LOG.error('internal', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
