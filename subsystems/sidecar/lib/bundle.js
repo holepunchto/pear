@@ -239,7 +239,7 @@ module.exports = class Bundle {
     return this.leaving
   }
 
-  async calibrate () {
+  async calibrate (length = 0) {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -252,7 +252,7 @@ module.exports = class Bundle {
       } else if (Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       } else {
-        this.drive = this.drive.checkout(this.drive.core.length)
+        this.drive = length > 0 ? this.drive.checkout(length) : this.drive.checkout(this.drive.core.length)
       }
     }
 

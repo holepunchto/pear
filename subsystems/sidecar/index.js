@@ -841,6 +841,9 @@ class Sidecar extends ReadyResource {
     await session.add(appBundle)
     LOG.info('session', 'appBundle added to session for', startId)
 
+    // get checkout to use before bundle.join can cause mistmatch between state.version and drive length
+    const length = drive.core.length
+
     if (this.swarm) appBundle.join(this.swarm)
 
     const linker = new ScriptLinker(appBundle, {
@@ -856,7 +859,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     try {
-      await appBundle.calibrate()
+      await appBundle.calibrate(length)
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
