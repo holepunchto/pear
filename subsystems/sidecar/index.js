@@ -1017,6 +1017,7 @@ class Sidecar extends ReadyResource {
   _terminateUnresponsiveApps () {
     for (const app of this.apps) {
       if (!app.state.pid) continue
+      LOG.info('sidecar', `Killing unresponsive app with PID ${app.state.pid}`)
       os.kill(app.state.pid, 'SIGKILL')
     }
   }
