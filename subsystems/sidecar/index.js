@@ -303,10 +303,11 @@ class Sidecar extends ReadyResource {
       }
 
       messages(ptn, opts = {}) {
-        if (ptn.type === 'pear/updates') {
-          this._updatingTrigger() // TODO, remove when impl Pear.updating
-        }
         opts.map = pickData
+        if (Iambus.match(ptn, { type: 'pear/updates' })) {
+          this._updatingTrigger() // TODO, remove when impl Pear.updating
+          if (this.updates) return this.updates
+        }
         const subscriber = this.sidecar.bus.sub(
           { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
           opts
