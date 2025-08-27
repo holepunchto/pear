@@ -5,7 +5,6 @@ const path = require('bare-path')
 const ENV = require('bare-env')
 const { pathToFileURL } = require('url-file-url')
 const { spawn: daemon } = require('bare-daemon')
-const { isWindows } = require('which-runtime')
 const API = require('pear-api')
 const constants = require('pear-constants')
 const plink = require('pear-link')
@@ -178,6 +177,6 @@ module.exports = (ipc) => async function run (cmd, devrun = false) {
 }
 
 function normalize (pathname) {
-  if (isWindows) return path.normalize(pathname.slice(1))
-  return pathname
+  if (pathname[0] === '/' && pathname[2] === ':') return path.normalize(pathname.slice(1))
+  return path.normalize(pathname)
 }
