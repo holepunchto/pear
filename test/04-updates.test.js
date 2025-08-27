@@ -743,7 +743,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
 
-  const channel = 'test-fixture'
+  const channel = 'test-fixture-no-cutover'
 
   comment('staging app')
   const appStaging = appStager.stage({ channel, name: channel, dir: noCutover, dryRun: false })
@@ -777,7 +777,8 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const untilUpdate = Helper.untilResult(pipe, { timeout: 30_000 })
+    .then((data) => JSON.parse(data.split('\n').at(-1))) // get last line as buffered data is combined into one string
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
