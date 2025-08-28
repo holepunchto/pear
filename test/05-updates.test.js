@@ -532,6 +532,7 @@ test('state version and bundle drive version match', async function ({ comment, 
   comment('first run from rcv platform')
   const link = 'pear://' + key
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  pipe.on('error', () => {})
   pipe.end()
 
   comment('shutdown rcv platform')
@@ -550,6 +551,7 @@ test('state version and bundle drive version match', async function ({ comment, 
 
   comment('second run from rcv platform')
   const { pipe: pipeB } = await Helper.run({ link, platformDir: platformDirRcv })
+  pipeB.on('error', () => {})
 
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcvB.ready()
