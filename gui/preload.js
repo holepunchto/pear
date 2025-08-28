@@ -349,8 +349,8 @@ class IPC {
     return stream
   }
 
-  reset () {
-    electron.ipcRenderer.send('reset')
+  reset (link, opts = {}) {
+    electron.ipcRenderer.send('reset', link, opts)
     const stream = new streamx.Readable()
     electron.ipcRenderer.on('reset', (e, data) => { stream.push(data) })
     return stream

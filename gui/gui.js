@@ -1494,8 +1494,8 @@ class PearGUI extends ReadyResource {
       })
     })
 
-    electron.ipcMain.on('reset', (event) => {
-      const reset = this.reset()
+    electron.ipcMain.on('reset', (event, link, opts = {}) => {
+      const reset = this.reset({ link, ...opts })
       reset.on('data', (data) => event.reply('reset', data))
       reset.on('end', () => {
         reset.end()
@@ -1839,7 +1839,7 @@ class PearGUI extends ReadyResource {
 
   reports () { return this.ipc.reports() }
 
-  reset () { return this.ipc.reset() }
+  reset (params) { return this.ipc.reset(params) }
 
   permit (params) { return this.ipc.permit(params) }
 
