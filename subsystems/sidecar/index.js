@@ -841,7 +841,6 @@ class Sidecar extends ReadyResource {
     await session.add(appBundle)
     LOG.info('session', 'appBundle added to session for', startId)
 
-    // get checkout to use before bundle.join can cause mistmatch between state.version and drive length
     const length = drive.core.length
 
     if (this.swarm) appBundle.join(this.swarm)
