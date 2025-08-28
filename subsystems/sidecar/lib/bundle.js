@@ -16,7 +16,8 @@ module.exports = class Bundle {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
       key, channel, stage = false, status = noop, failure,
-      updateNotify, updatesDiff = false, truncate, encryptionKey = null
+      updateNotify, updatesDiff = false, truncate, encryptionKey = null,
+      initLength = 0
     } = opts
     this.checkout = checkout
     this.appling = appling
@@ -29,6 +30,7 @@ module.exports = class Bundle {
     this.corestore = corestore
     this.stage = stage
     this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.initLength = initLength
     this.updatesDiff = updatesDiff
     this.link = null
     this.watchingUpdates = null
@@ -239,7 +241,7 @@ module.exports = class Bundle {
     return this.leaving
   }
 
-  async calibrate (length = 0) {
+  async calibrate () {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -252,7 +254,9 @@ module.exports = class Bundle {
       } else if (Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       } else {
-        this.drive = length > 0 ? this.drive.checkout(length) : this.drive.checkout(this.drive.core.length)
+        this.drive = this.initLength > 0
+          ? this.drive.checkout(this.initLength)
+          : this.drive.checkout(this.drive.core.length)
       }
     }
 

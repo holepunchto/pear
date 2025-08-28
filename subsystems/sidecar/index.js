@@ -829,6 +829,7 @@ class Sidecar extends ReadyResource {
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
+      initLength: drive.core.length,
       drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) {
@@ -840,8 +841,6 @@ class Sidecar extends ReadyResource {
     LOG.info('session', 'adding appBundle to session for', startId)
     await session.add(appBundle)
     LOG.info('session', 'appBundle added to session for', startId)
-
-    const length = drive.core.length
 
     if (this.swarm) appBundle.join(this.swarm)
 
@@ -858,7 +857,7 @@ class Sidecar extends ReadyResource {
     app.bundle = appBundle
 
     try {
-      await appBundle.calibrate(length)
+      await appBundle.calibrate()
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
