@@ -8,7 +8,7 @@ class API {
   config = {}
 }
 global.Pear = new API()
-API.CONSTANTS = require('pear-api/constants')
+API.CONSTANTS = require('pear-constants')
 
 if (isWindows === false) {
   const fs = require('bare-fs')
@@ -23,7 +23,7 @@ if (isWindows === false) {
   }
 }
 
-const Logger = require('pear-api/logger')
+const Logger = require('pear-logger')
 global.LOG = new Logger({
   labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
   pretty: Logger.switches.log

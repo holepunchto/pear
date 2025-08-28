@@ -14,7 +14,7 @@ class API {
   config = {}
 }
 global.Pear = new API()
-const { RUNTIME } = await import('pear-api/constants')
+const { RUNTIME } = await import('pear-constants')
 
 const force = Bare.argv.includes('--force-install')
 
