@@ -1,6 +1,5 @@
 const uncaughts = require('uncaughts')
-
-const pipe = Pear.worker.pipe()
+const pipe = require('pear-pipe')()
 
 Pear.teardown(async () => {
   pipe.write('teardown' + '\n')
