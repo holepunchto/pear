@@ -1,4 +1,4 @@
-const pipe = Pear.worker.pipe()
+const pipe = require('pear-pipe')()
 
 pipe.on('data', () => {})
 
