@@ -11,4 +11,7 @@ pipe.on('data', async (data) => {
   })
   if (data.toString() === 'unwind') Pear[Pear.constructor.IPC].closeClients()
 })
-
+pipe.on('error', (err) => {
+  // ENOTCONN expected:
+  if (err.code !== 'ENOTCONN') throw err
+})

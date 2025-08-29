@@ -4,5 +4,8 @@
   "pear": {
     "name": "worker-teardown-on-close",
     "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.2"
   }
 }
