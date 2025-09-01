@@ -498,7 +498,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   await Helper.untilClose(pipe)
 })
 
-// Important: do not use sidecar inspect for any other test!
+// IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
 test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
   timeout(90_000)
