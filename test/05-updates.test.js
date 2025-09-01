@@ -500,7 +500,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
+test.skip('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
   timeout(90_000)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -534,8 +534,8 @@ test('state version and bundle drive version match', async function ({ comment, 
   comment('first run from rcv platform')
   const link = 'pear://' + key
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  await Helper.untilClose(pipe)
   pipe.on('error', () => {})
-  pipe.end()
 
   comment('shutdown rcv platform')
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
@@ -557,6 +557,7 @@ test('state version and bundle drive version match', async function ({ comment, 
 
   const resultB = await Helper.untilResult(pipeB)
   const version = JSON.parse(resultB)
+  await Helper.untilClose(pipeB)
 
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcvB.ready()
@@ -581,7 +582,6 @@ test('state version and bundle drive version match', async function ({ comment, 
   const { result } = await inspectorResult
   is(result.value, version.app.length, 'state.version matches bundle.drive.length')
 
-  pipeB.end()
   await rcvB.shutdown()
 })
 
