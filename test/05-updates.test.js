@@ -557,6 +557,7 @@ test('state version and bundle drive version match', async function ({ comment, 
 
   const resultB = await Helper.untilResult(pipeB)
   const version = JSON.parse(resultB)
+  await Helper.untilClose(pipeB)
 
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcvB.ready()
@@ -581,7 +582,6 @@ test('state version and bundle drive version match', async function ({ comment, 
   const { result } = await inspectorResult
   is(result.value, version.app.length, 'state.version matches bundle.drive.length')
 
-  pipeB.end()
   await rcvB.shutdown()
 })
 
