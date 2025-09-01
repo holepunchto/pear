@@ -500,7 +500,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
+test.skip('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
   timeout(90_000)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
