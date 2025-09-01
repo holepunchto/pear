@@ -830,7 +830,6 @@ class Sidecar extends ReadyResource {
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
-      initLength: drive.core.length,
       drive,
       updateNotify: state.updates && ((version, info) => this.updateNotify(version, info)),
       async failure (err) {
