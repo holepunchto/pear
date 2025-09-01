@@ -1494,6 +1494,15 @@ class PearGUI extends ReadyResource {
       })
     })
 
+    electron.ipcMain.on('reset', (event, link, opts = {}) => {
+      const reset = this.reset({ link, ...opts })
+      reset.on('data', (data) => event.reply('reset', data))
+      reset.on('end', () => {
+        reset.end()
+        event.reply('reset', null)
+      })
+    })
+
     electron.ipcMain.on('messages', (event, pattern) => {
       const messages = this.messages(pattern)
       messages.on('data', (data) => event.reply('messages', data))
@@ -1829,6 +1838,8 @@ class PearGUI extends ReadyResource {
   warming () { return this.ipc.warming() }
 
   reports () { return this.ipc.reports() }
+
+  reset (params) { return this.ipc.reset(params) }
 
   permit (params) { return this.ipc.permit(params) }
 

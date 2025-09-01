@@ -349,6 +349,13 @@ class IPC {
     return stream
   }
 
+  reset (link, opts = {}) {
+    electron.ipcRenderer.send('reset', link, opts)
+    const stream = new streamx.Readable()
+    electron.ipcRenderer.on('reset', (e, data) => { stream.push(data) })
+    return stream
+  }
+
   workerRun (link, args) {
     const id = electron.ipcRenderer.sendSync('workerPipeId')
     electron.ipcRenderer.send('workerRun', link, args)
