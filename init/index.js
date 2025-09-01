@@ -4,7 +4,7 @@ const { pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const Localdrive = require('localdrive')
 const { Interact } = require('pear-terminal')
-const transform = require('pear-transform')
+const stamp = require('pear-stamp')
 const plink = require('pear-link')
 const { LOCALDEV } = require('pear-constants')
 const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-errors')
@@ -87,9 +87,9 @@ async function init (link = 'default', dir, opts = {}) {
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-    const file = transform.sync(key, fields)
+    const file = stamp.sync(key, fields)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, fields, shave), writeStream)
+    const promise = pipelinePromise(stamp.stream(value, fields, shave), writeStream)
     promise.catch((err) => { output.push({ tag: 'error', data: err }) })
     promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
     promises.push(promise)
