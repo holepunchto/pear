@@ -307,8 +307,9 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().then(() => { global.sidecar = this }).catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
+      this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
+    global.sidecar = this
   }
 
   async _open () {

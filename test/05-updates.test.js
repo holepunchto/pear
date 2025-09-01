@@ -3,8 +3,11 @@ const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
+const testTmp = require('test-tmp')
+const { Session } = require('pear-inspect')
 const Helper = require('./helper')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
+const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
@@ -493,6 +496,93 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   await rcv.shutdown()
 
   await Helper.untilClose(pipe)
+})
+
+// IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
+
+test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
+  timeout(90_000)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await testTmp()
+  const pkgA = { name: 'tmp-app-a', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgA))
+  await fs.promises.copyFile(path.join(versions, 'index.js'), path.join(tmpdir, 'index.js'))
+
+  const id = Helper.getRandomId()
+
+  comment('first stage')
+  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
+  const { key } = await stagedA.addendum
+  await stagedA.final
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  await until.announced
+
+  comment('bootstrapping rcv platform...')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
+  await Helper.bootstrap(rig.key, platformDirRcv)
+  comment('rcv platform bootstrapped')
+
+  comment('first run from rcv platform')
+  const link = 'pear://' + key
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  pipe.on('error', () => {})
+  pipe.end()
+
+  comment('shutdown rcv platform')
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
+
+  const pkgB = { name: 'tmp-app-b', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
+  await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgB))
+
+  comment('second stage')
+  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [{ tag: 'final' }])
+  await stagedB.final
+
+  comment('second run from rcv platform')
+  const { pipe: pipeB } = await Helper.run({ link, platformDir: platformDirRcv })
+  pipeB.on('error', () => {})
+
+  const resultB = await Helper.untilResult(pipeB)
+  const version = JSON.parse(resultB)
+
+  const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcvB.ready()
+
+  comment('inspect rcv platform')
+  const inspectorKey = await rcvB.inspect()
+  const session = new Session({ inspectorKey, bootstrap: null })
+  teardown(() => { session.destroy() })
+  session.connect()
+
+  const inspectorResult = new Promise((resolve) => {
+    session.on('message', ({ result }) => {
+      resolve(result)
+    })
+  })
+
+  session.post({
+    method: 'Runtime.evaluate',
+    params: { expression: 'global.sidecar.apps[0].bundle.drive.core.length' }
+  })
+
+  const { result } = await inspectorResult
+  is(result.value, version.app.length, 'state.version matches bundle.drive.length')
+
+  pipeB.end()
+  await rcvB.shutdown()
 })
 
 test.hook('updates cleanup', rig.cleanup)
