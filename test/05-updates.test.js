@@ -573,8 +573,6 @@ test('state version and bundle drive version match', async function ({ comment, 
     })
   })
 
-  await new Promise(resolve => setTimeout(resolve, 7500)) // wait until sidecar is ready
-
   session.post({
     method: 'Runtime.evaluate',
     params: { expression: 'global.sidecar.apps[0].bundle.drive.core.length' }

@@ -23,8 +23,6 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
     ok(result, 'sidecar is defined')
   })
 
-  await new Promise(resolve => setTimeout(resolve, 7500)) // wait until sidecar is ready
-
   session.post({
     method: 'Runtime.evaluate',
     params: { expression: 'global.sidecar' }
