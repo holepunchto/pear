@@ -16,8 +16,7 @@ module.exports = class Bundle {
     const {
       corestore = false, drive = false, checkout = 'release', appling,
       key, channel, stage = false, status = noop, failure,
-      updateNotify, updatesDiff = false, truncate, encryptionKey = null,
-      initLength = 0
+      updateNotify, updatesDiff = false, truncate, encryptionKey = null
     } = opts
     this.checkout = checkout
     this.appling = appling
