@@ -248,9 +248,15 @@ module.exports = class Bundle {
       await this.drive.core.update()
     }
     if (this.stage === false) {
-      this.release = (await this.db.get('release'))?.value
-      if (this.checkout === 'release' && this.release) {
-        this.drive = this.drive.checkout(this.release)
+      if (this.checkout === 'release') {
+        this.release = (await this.db.get('release'))?.value
+        if (this.release) {
+          this.drive = this.drive.checkout(this.release)
+        } else {
+          this.drive = this.initLength > 0
+            ? this.drive.checkout(this.initLength)
+            : this.drive.checkout(this.drive.core.length)
+        }
       } else if (Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       } else {

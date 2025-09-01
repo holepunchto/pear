@@ -498,6 +498,8 @@ test('Pear.updates should notify App stage, App release updates (different pear 
   await Helper.untilClose(pipe)
 })
 
+// Important: do not use sidecar inspect for any other test!
+
 test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
   timeout(90_000)
   const helper = new Helper()
@@ -553,6 +555,9 @@ test('state version and bundle drive version match', async function ({ comment, 
   const { pipe: pipeB } = await Helper.run({ link, platformDir: platformDirRcv })
   pipeB.on('error', () => {})
 
+  const resultB = await Helper.untilResult(pipeB)
+  const version = JSON.parse(resultB)
+
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcvB.ready()
 
@@ -572,11 +577,11 @@ test('state version and bundle drive version match', async function ({ comment, 
 
   session.post({
     method: 'Runtime.evaluate',
-    params: { expression: 'global.sidecar.apps[0].state.version.length === global.sidecar.apps[0].bundle.drive.core.length' }
+    params: { expression: 'global.sidecar.apps[0].bundle.drive.core.length' }
   })
 
   const { result } = await inspectorResult
-  is(result.value, true, 'state.version matches bundle.drive.length')
+  is(result.value, version.app.length, 'state.version matches bundle.drive.length')
 
   pipeB.end()
   await rcvB.shutdown()
