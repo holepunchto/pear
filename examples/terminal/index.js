@@ -1,5 +1,6 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
-const updates = Pear.updates((update) => {
+import pearUpdates from 'pear-updates'
+const updates = pearUpdates((update) => {
   console.log('Application update available:', update)
 })
 const [grn, rst, dim] = ['\x1b[32m', '\x1b[0m', '\x1b[2m']

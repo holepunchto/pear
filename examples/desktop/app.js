@@ -1,4 +1,5 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
+import pearUpdates from 'pear-updates'
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
 console.log('link', Pear.config.link)
@@ -11,7 +12,7 @@ pipe.on('data', (data) => {
   console.log('PIPE DATA', cmd)
 })
 
-Pear.updates((update) => {
+pearUpdates((update) => {
   console.log('update available:', update)
   document.getElementById('update').style.display = 'revert'
   const action = document.getElementById('action')
