@@ -1,4 +1,4 @@
-import pearUpdates from 'pear-updates'
+const pearUpdates = require('pear-updates')
 const pipe = require('pear-pipe')()
 
 const updates = pearUpdates((data) => {
