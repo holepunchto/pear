@@ -40,7 +40,6 @@ module.exports = class Bundle {
     this.corestore = corestore
     this.stage = stage
     this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
-    this.initLength = this.drive.core.length
     this.updatesDiff = updatesDiff
     this.link = null
     this.watchingUpdates = null
@@ -293,23 +292,13 @@ module.exports = class Bundle {
     if (this.drive.core.length === 0) {
       await this.drive.core.update()
     }
+
     if (this.stage === false) {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
-        this.#updates().catch((err) => this.fatal(err))
-        if (this.release) {
-          this.drive = this.drive.checkout(this.release)
-        } else {
-          this.drive = this.initLength > 0
-            ? this.drive.checkout(this.initLength)
-            : this.drive.checkout(this.drive.core.length)
-        }
-      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
+        if (this.release) this.drive = this.drive.checkout(this.release)
+      } else if (Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
-      } else {
-        this.drive = this.initLength > 0
-          ? this.drive.checkout(this.initLength)
-          : this.drive.checkout(this.drive.core.length)
       }
     }
 
