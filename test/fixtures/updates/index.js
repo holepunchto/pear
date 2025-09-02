@@ -1,6 +1,7 @@
+import pearUpdates from 'pear-updates'
 const pipe = require('pear-pipe')()
 
-const updates = Pear.updates((data) => {
+const updates = pearUpdates((data) => {
   pipe.write(JSON.stringify(data) + '\n')
 })
 

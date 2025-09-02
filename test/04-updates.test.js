@@ -19,7 +19,7 @@ const PLATFORM_STAGE_TIMEOUT = 45_000
 
 test.hook('updates setup', rig.setup)
 
-test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown }) {
+test('pear-updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({ ok, is, plan, comment, teardown }) {
   plan(7)
 
   const testId = Helper.getRandomId()
@@ -87,7 +87,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
+test('pear-updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
   const { ok, is, plan, comment, teardown } = t
   plan(7)
 
