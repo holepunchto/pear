@@ -1,0 +1,11 @@
+{
+  "name": "worker-teardown-unresolved",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-unresolved",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.2"
+  }
+}
