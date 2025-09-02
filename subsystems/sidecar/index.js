@@ -68,7 +68,6 @@ class Sidecar extends ReadyResource {
   spindownt = null
   spindownms = SPINDOWN_TIMEOUT
   decomissioned = false
-  updateAvailable = null
   swarm = null
   keyPair = null
   discovery = null
@@ -441,8 +440,6 @@ class Sidecar extends ReadyResource {
   }
 
   async updateNotify(version, info = {}) {
-    this.updateAvailable = { version, info }
-
     if (info.link) LOG.info('sidecar', 'Application update available:')
     else if (version.force)
       LOG.info(
