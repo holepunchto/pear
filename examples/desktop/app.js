@@ -1,7 +1,7 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
-import pearUpdates from 'pear-updates'
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
+import pearUpdates from 'pear-updates'
 console.log('link', Pear.config.link)
 console.log('linkData', Pear.config.linkData)
 console.log('key', Pear.config.key)
