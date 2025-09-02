@@ -296,15 +296,10 @@ module.exports = class Bundle {
     if (this.stage === false) {
       if (this.checkout === 'release') {
         this.release = (await this.db.get('release'))?.value
-        this.#updates().catch((err) => this.fatal(err))
-        if (this.release) {
-          this.drive = this.drive.checkout(this.release)
-        } else {
-          this.drive = this.initLength > 0
-            ? this.drive.checkout(this.initLength)
-            : this.drive.checkout(this.drive.core.length)
-        }
-      } else if (this.checkout !== null && Number.isInteger(+this.checkout)) {
+        if (this.release) this.checkout = this.release
+      }
+      this.#updates().catch((err) => this.fatal(err))
+      if (this.checkout !== null && Number.isInteger(+this.checkout)) {
         this.drive = this.drive.checkout(+this.checkout)
       } else {
         this.drive = this.initLength > 0
