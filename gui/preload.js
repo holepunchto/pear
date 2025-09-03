@@ -28,10 +28,11 @@ module.exports = class PearGUI extends ReadyResource {
     }
     API = class extends API {
       #untray
-
+      static IPC = Symbol('ipc')
+      static UI = Symbol('ui')
       constructor (ipc, state, onteardown) {
         super(ipc, state, onteardown)
-        this[Symbol.for('pear.ipc')] = ipc
+        this[Symbol.for('pear.ipc')] = this[this.constructor.IPC] = ipc
         this.worker = new Worker({ ipc })
         this.media = {
           status: {
@@ -223,6 +224,16 @@ module.exports = class PearGUI extends ReadyResource {
 
         this.Window = Window
         this.View = View
+
+        const media = this.media
+        class PearElectron {
+          Window = Window
+          View = View
+          media = media
+          get app () { return Window.self }
+        }
+
+        this[this.constructor.UI] = new PearElectron()
       }
 
       tray = async (opts = {}, listener) => {
