@@ -1,6 +1,6 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
-import pearUpdates from 'pear-updates'
-const updates = pearUpdates((update) => {
+import updates from 'pear-updates'
+updates((update) => {
   console.log('Application update available:', update)
 })
 const [grn, rst, dim] = ['\x1b[32m', '\x1b[0m', '\x1b[2m']
@@ -18,9 +18,7 @@ ${grn}           ▅
    ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆
    ▄▄▄▄▄▄▄▄▆▆▆▆▆▆▆▆     ${rst}${grn}Welcome to the IoP
      ▄▄▄▄▄▄▆▆▆▆▆▆
-       ▄▄▄▄▆▆▆▆         
-       
-       exit: ^C${rst}`
-console.log('\n\x1b[s\x1b[J' + out)
+       ▄▄▄▄▆▆▆▆
 
-Pear.teardown(() => { updates.end() })
+`
+console.log('\n\x1b[s\x1b[J' + out)

@@ -1,9 +1,9 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import Runtime from 'pear-electron'
 import Bridge from 'pear-bridge'
-import pearUpdates from 'pear-updates'
+import updates from 'pear-updates'
 
-pearUpdates((update) => {
+updates((update) => {
   console.log('Application update available:', update)
 })
 
