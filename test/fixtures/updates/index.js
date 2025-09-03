@@ -1,8 +1,10 @@
-const updates = require('pear-updates')
 const pipe = require('pear-pipe')()
 
-updates((data) => {
+const updates = Pear.updates((data) => {
   pipe.write(JSON.stringify(data) + '\n')
 })
+
+pipe.on('end', () => updates.end())
+pipe.resume()
 
 Pear.versions().then((versions) => pipe.write(JSON.stringify(versions) + '\n'))
