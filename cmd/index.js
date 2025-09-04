@@ -198,6 +198,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const reset = hiddenCommand(
     'reset',
+    arg('[link]'),
     () => {
       console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
       console.log(drop.help())
