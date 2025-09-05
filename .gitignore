@@ -11,3 +11,5 @@ pear/current
 .DS_Store
 *.tmp
 /assets/
+examples/desktop/package-lock.json
+examples/terminal/package-lock.json
