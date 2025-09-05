@@ -1,5 +1,3 @@
-const { extname } = require('bare-path')
-const unixPathResolve = require('unix-path-resolve')
 const pack = require('bare-pack-drive')
 const traverse = require('bare-module-traverse')
 const lex = require('bare-module-lexer')
@@ -11,7 +9,7 @@ module.exports = class TreeShaker {
   }
 
   async run () {
-    const entrypoints = await this._extractJSFromHTML(this._entrypoints)
+    const entrypoints = this._entrypoints
     const target = ['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-x64', 'win32-x64', 'win32-x64']
     const builtins = [
       'net', 'assert', 'console', 'events', 'fs', 'fs/promises', 'http', 'https', 'os', 'util',
@@ -26,56 +24,6 @@ module.exports = class TreeShaker {
     )).flat()
 
     return [...this._entrypoints, ...files]
-  }
-
-  async _extractJSFromHTML (entrypoints) {
-    const expandedEntrypoints = []
-    for (const entrypoint of entrypoints) {
-      if (this._isHTML(entrypoint)) {
-        const html = await this._drive.get(unixPathResolve('/', entrypoint))
-        if (html) expandedEntrypoints.push(...this._sniffJS(html.toString()))
-      } else {
-        expandedEntrypoints.push(entrypoint)
-      }
-    }
-    return expandedEntrypoints
-  }
-
-  _isJS (path) {
-    return extname(path) === '.js' || extname(path) === '.mjs'
-  }
-
-  _isHTML (path) {
-    return extname(path) === '.html'
-  }
-
-  _isCustomScheme (str) {
-    return /^[a-z][a-z0-9]+:/i.test(str)
-  }
-
-  _sniffJS (src) {
-    const s1 = src.match(/"[^"]+"/ig)
-    const s2 = src.match(/'[^']+'/ig)
-
-    const entries = []
-
-    if (s1) {
-      for (const s of s1) {
-        if (/\.(m|c)?js"$/.test(s)) {
-          entries.push(s.slice(1, -1))
-        }
-      }
-    }
-
-    if (s2) {
-      for (const s of s2) {
-        if (/\.(m|c)?js'$/.test(s)) {
-          entries.push(s.slice(1, -1))
-        }
-      }
-    }
-
-    return entries.filter(e => !this._isCustomScheme(e))
   }
 }
 
