@@ -102,6 +102,7 @@ module.exports = class Stage extends Opstream {
     ].map(entrypoint => unixPathResolve('/', entrypoint))
 
     const prefetch = state.options?.stage?.prefetch || []
+    const main = state.options?.gui?.main || null
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
@@ -111,7 +112,7 @@ module.exports = class Stage extends Opstream {
     if (compact) {
       const treeShaker = new TreeShaker(src, entrypoints)
       const files = await treeShaker.run()
-      opts.ignore = compactStageIgnore(files, prefetch)
+      opts.ignore = compactStageIgnore(files, prefetch, main)
     }
 
     const mods = await linker.warmup(entrypoints)
@@ -262,11 +263,12 @@ class GlobDrive extends ReadyResource {
   }
 }
 
-function compactStageIgnore (files, prefetch) {
+function compactStageIgnore (files, prefetch, main) {
   const dirs = files.map(e => dirname(e))
   return (key) => {
-    const isAsset = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
+    const isPrefetch = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
+    const isMain = main ? key === unixPathResolve('/', main) : false
     const isParentDir = dirs.some(e => e.startsWith(key))
-    return !files.includes(key) && !isAsset && !isParentDir
+    return !files.includes(key) && !isPrefetch && !isMain && !isParentDir
   }
 }

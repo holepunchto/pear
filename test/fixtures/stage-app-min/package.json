@@ -3,9 +3,12 @@
   "pear": {
     "name": "stage-app-min",
     "type": "desktop",
+    "gui": {
+      "main": "index.html"
+    },
     "stage": {
       "entrypoints": [
-        "index.html"
+        "/index.js"
       ]
     }
   },
