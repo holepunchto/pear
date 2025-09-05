@@ -7,16 +7,18 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
+const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
+const TreeShaker = require('../lib/tree-shaker')
 const ReadyResource = require('ready-resource')
 
 module.exports = class Stage extends Opstream {
   constructor (...args) { super((...args) => this.#op(...args), ...args) }
 
-  async #op ({ channel, key, dir, dryRun, name, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
+  async #op ({ channel, key, dir, dryRun, name, truncate, compact, cmdArgs, ignore, purge, only, pkg = null }) {
     const { client, session, sidecar } = this
 
     const state = new State({
@@ -99,9 +101,18 @@ module.exports = class Stage extends Opstream {
       ...(state.options?.stage?.entrypoints || [])
     ].map(entrypoint => unixPathResolve('/', entrypoint))
 
+    const prefetch = state.options?.stage?.prefetch || []
+
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
+      console.log('E', entrypoint)
       if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
+    }
+
+    if (compact) {
+      const treeShaker = new TreeShaker(src, entrypoints)
+      const files = await treeShaker.run()
+      opts.ignore = compactStageIgnore(files, prefetch)
     }
 
     const mods = await linker.warmup(entrypoints)
@@ -155,7 +166,6 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
-      const prefetch = state.options?.stage?.prefetch || []
       const warmup = await analyzer.analyze(entrypoints, prefetch)
       await bundle.db.put('warmup', warmup)
       const total = bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
@@ -250,5 +260,14 @@ class GlobDrive extends ReadyResource {
       return false
     }
     return this.ignore
+  }
+}
+
+function compactStageIgnore (files, prefetch) {
+  const dirs = files.map(e => dirname(e))
+  return (key) => {
+    const isAsset = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
+    const isParentDir = dirs.some(e => e.startsWith(key))
+    return !files.includes(key) && !isAsset && !isParentDir
   }
 }
