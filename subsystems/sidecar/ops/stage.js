@@ -105,7 +105,6 @@ module.exports = class Stage extends Opstream {
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
-      console.log('E', entrypoint)
       if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
     }
 
