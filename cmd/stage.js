@@ -52,7 +52,7 @@ const output = outputter('stage', {
 })
 
 module.exports = (ipc) => async function stage (cmd) {
-  const { dryRun, bare, json, ignore, purge, name, truncate, only } = cmd.flags
+  const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } = cmd.flags
   const isKey = cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
@@ -70,6 +70,6 @@ module.exports = (ipc) => async function stage (cmd) {
       pkg = await output({ ctrlTTY: false, json }, pre, { pre: true, preQ: cmd.flags.preQ, preIo: cmd.flags.preIo })
     }
   }
-  const stream = ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, cmdArgs: Bare.argv.slice(1), pkg })
+  const stream = ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, purge, name, truncate, only, compact, cmdArgs: Bare.argv.slice(1), pkg })
   await output(json, stream, { ask: cmd.flags.ask }, ipc)
 }
