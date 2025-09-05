@@ -14,7 +14,7 @@ module.exports = class TreeShaker {
     const entrypoints = await this._extractJSFromHTML(this._entrypoints)
     const target = ['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-x64', 'win32-x64', 'win32-x64']
     const builtins = [
-      'net', 'assert', 'console', 'events', 'fs', 'fs/promises', 'http', 'https', 'os',
+      'net', 'assert', 'console', 'events', 'fs', 'fs/promises', 'http', 'https', 'os', 'util',
       'path', 'child_process', 'repl', 'url', 'tty', 'module', 'process', 'timers', 'inspector', 'crc-universal'
     ]
 
