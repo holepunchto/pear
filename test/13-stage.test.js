@@ -29,6 +29,7 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 
   const expectedStagedFiles = [
     '/package.json',
+    '/app.js',
     '/index.js',
     '/index.html',
     '/node_modules/bare-events/package.json',

@@ -12,7 +12,7 @@ const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
-const TreeShaker = require('../lib/tree-shaker')
+const PearShake = require('pear-shake')
 const ReadyResource = require('ready-resource')
 
 module.exports = class Stage extends Opstream {
@@ -110,8 +110,8 @@ module.exports = class Stage extends Opstream {
     }
 
     if (compact) {
-      const treeShaker = new TreeShaker(src, entrypoints)
-      const files = await treeShaker.run()
+      const pearShake = new PearShake(src, entrypoints)
+      const files = await pearShake.run()
       opts.ignore = compactStageIgnore(files, prefetch, main)
     }
 
