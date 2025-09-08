@@ -3,6 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
+const LocalDrive = require('localdrive')
 const testTmp = require('test-tmp')
 const { Session } = require('pear-inspect')
 const Helper = require('./helper')
@@ -500,16 +501,22 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test.skip('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
+test('state version and bundle drive version match', async function ({ comment, teardown, is, timeout }) {
   timeout(90_000)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
   const tmpdir = await testTmp()
+
+  const from = new LocalDrive(versions)
+  const to = new LocalDrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
+
   const pkgA = { name: 'tmp-app-a', main: 'index.js', pear: { name: 'tmp-app', type: 'terminal' } }
   await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgA))
-  await fs.promises.copyFile(path.join(versions, 'index.js'), path.join(tmpdir, 'index.js'))
 
   const id = Helper.getRandomId()
 
@@ -557,7 +564,6 @@ test.skip('state version and bundle drive version match', async function ({ comm
 
   const resultB = await Helper.untilResult(pipeB)
   const version = JSON.parse(resultB)
-  await Helper.untilClose(pipeB)
 
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcvB.ready()
@@ -582,6 +588,7 @@ test.skip('state version and bundle drive version match', async function ({ comm
   const { result } = await inspectorResult
   is(result.value, version.app.length, 'state.version matches bundle.drive.length')
 
+  pipeB.end()
   await rcvB.shutdown()
 })
 
