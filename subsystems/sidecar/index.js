@@ -60,7 +60,6 @@ class Sidecar extends ReadyResource {
   spindownt = null
   spindownms = SPINDOWN_TIMEOUT
   decomissioned = false
-  updateAvailable = null
   swarm = null
   keyPair = null
   discovery = null
@@ -241,10 +240,11 @@ class Sidecar extends ReadyResource {
       }
 
       messages (ptn, opts = {}) {
-        if (ptn.type === 'pear/updates') {
-          this._updatingTrigger() // TODO, remove when impl Pear.updating
-        }
         opts.map = pickData
+        if (Iambus.match(ptn, { type: 'pear/updates' })) {
+          this._updatingTrigger() // TODO, remove when impl Pear.updating
+          if (this.updates) return this.updates
+        }
         const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
         return subscriber
       }
@@ -335,8 +335,6 @@ class Sidecar extends ReadyResource {
   }
 
   async updateNotify (version, info = {}) {
-    this.updateAvailable = { version, info }
-
     if (info.link) LOG.info('sidecar', 'Application update available:')
     else if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
