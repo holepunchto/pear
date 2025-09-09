@@ -4,6 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 
 const stageAppMin = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min')
+const stageAppMinWithOnly = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min-with-only')
 const stageAppMinWithEntrypoints = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min-with-entrypoints')
 
 test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
@@ -75,6 +76,39 @@ test('basic stage min desktop app with entrypoints', async ({ teardown, ok, comm
   ]
 
   comment('Only files in the dependency tree and assets are staged')
+  ok(stagedFiles.length === expectedStagedFiles.length)
+  ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
+})
+
+test('basic stage min desktop app with only and include', async ({ teardown, ok, comment }) => {
+  const dir = stageAppMinWithOnly
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, compact: true })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byteDiff') {
+      stagedFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  const expectedStagedFiles = [
+    '/package.json',
+    '/index.js',
+    '/folder/foo.js',
+    '/folder/bar.js'
+  ]
+
+  comment('Only files in the dependency tree and pear.stage.only are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
 })

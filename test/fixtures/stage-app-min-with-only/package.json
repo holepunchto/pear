@@ -1,0 +1,24 @@
+{
+  "name": "stage-app-min-with-only",
+  "pear": {
+    "name": "stage-app-min-with-only",
+    "type": "desktop",
+    "gui": {
+      "main": "index.html"
+    },
+    "stage": {
+      "include": [
+        "/app.js"
+      ],
+      "only": [
+        "/package.json",
+        "/index.js",
+        "/folder"
+      ]
+    }
+  },
+  "dependencies": {
+    "ready-resource": "^1.2.0",
+    "uncaughts": "^1.1.1"
+  }
+}
