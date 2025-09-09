@@ -102,6 +102,7 @@ module.exports = class Stage extends Opstream {
     ].map(entrypoint => unixPathResolve('/', entrypoint))
 
     const prefetch = state.options?.stage?.prefetch || []
+    const include = state.options?.stage?.include || []
     const main = state.options?.gui?.main || null
 
     for (const entrypoint of entrypoints) {
@@ -112,7 +113,7 @@ module.exports = class Stage extends Opstream {
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
       const files = await pearShake.run()
-      opts.ignore = compactStageIgnore(files, prefetch, main)
+      opts.ignore = compactStageIgnore(files, [...prefetch, ...include], select, main)
     }
 
     const mods = await linker.warmup(entrypoints)
@@ -263,12 +264,13 @@ class GlobDrive extends ReadyResource {
   }
 }
 
-function compactStageIgnore (files, prefetch, main) {
+function compactStageIgnore (files, prefetchAndInclude, selectFilter, main) {
   const dirs = files.map(e => dirname(e))
   return (key) => {
-    const isPrefetch = prefetch.length > 0 && prefetch.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
+    const isPrefetchOrInclude = prefetchAndInclude.length > 0 && prefetchAndInclude.some(e => key.startsWith(unixPathResolve('/', e))) // supports dir
     const isMain = main ? key === unixPathResolve('/', main) : false
     const isParentDir = dirs.some(e => e.startsWith(key))
-    return !files.includes(key) && !isPrefetch && !isMain && !isParentDir
+    const isSelected = selectFilter ? selectFilter(key) : false
+    return !files.includes(key) && !isPrefetchOrInclude && !isMain && !isParentDir && !isSelected
   }
 }
