@@ -7,7 +7,6 @@ module.exports = class Build extends Opstream {
   }
 
   async #op ({ link, dir } = {}) {
-    console.log('build params:', { link, dir })
     this.push({ tag: 'building', data: { link, dir } })
   }
 }
