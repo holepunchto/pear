@@ -101,7 +101,7 @@
     "mirror-drive": "^1.5.1",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.5",
-    "pear-api": "^1.28.12",
+    "pear-api": "^1.28.13",
     "pear-changelog": "^1.0.1",
     "pear-inspect": "^1.2.5",
     "pear-interface": "^1.1.0",
