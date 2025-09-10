@@ -165,7 +165,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
 
 test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
-  plan(7)
+  plan(8)
   timeout(80_000)
 
   const appStager = new Helper(rig)
@@ -237,7 +237,18 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   await rcv.ready()
   await rcv.shutdown()
 
+  comment('rcv platform runs after updater.applyUpdate')
+  const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+  const { pipe: pipeAfterUpdate } = await Helper.run({ link: versionsDir, platformDir: platformDirRcv })
+  const { platform } = await Helper.untilResult(pipeAfterUpdate).then((data) => JSON.parse(data))
+  ok(platform.length > pearVersionLength, 'platform has been updated')
+
+  const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcvB.ready()
+  await rcvB.shutdown()
+
   await Helper.untilClose(pipe)
+  await Helper.untilClose(pipeAfterUpdate)
 })
 
 test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
