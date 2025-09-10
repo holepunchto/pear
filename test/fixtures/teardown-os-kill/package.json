@@ -4,5 +4,8 @@
   "pear": {
     "name": "worker-teardown-os-kill",
     "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
   }
 }
