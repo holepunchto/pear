@@ -11,7 +11,7 @@ const plink = require('pear-api/link')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INTERNAL_ERROR, ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
+const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-api/constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -34,20 +34,10 @@ module.exports = class Run extends Opstream {
     const LOG_RUN_LINK = this.LOG_RUN_LINK = ['run', linkrep]
     LOG.info(LOG_RUN_LINK, 'start', linkrep)
 
-    let { startId } = params
-    const starting = sidecar.running.get(startId)
-    if (starting) {
-      LOG.info(LOG_RUN_LINK, startId, 'running, referencing existing client userData')
-      client.userData = starting.client.userData
-      return await starting.running
-    }
-
-    if (startId && !starting) throw ERR_INTERNAL_ERROR('start failure unrecognized startId')
-    startId = client.userData?.startId || crypto.randomBytes(16).toString('hex')
-
+    const startId = crypto.randomBytes(16).toString('hex')
     const session = this.session = new Session(client, startId)
-    const id = client.userData?.id || `${client.id}@${startId}`
-    client.userData = client.userData?.id ? client.userData : new App({ id, startId, session })
+    const id = `${client.id}@${startId}`
+    client.userData = new App({ id, startId, session })
     const app = client.userData
     app.clients.add(client)
 
@@ -70,7 +60,6 @@ module.exports = class Run extends Opstream {
       if (sidecar.updateAvailable !== null) {
         const { version, info } = sidecar.updateAvailable
         LOG.info(LOG_RUN_LINK, app.id, 'application update available, notifying application', version)
-        this.push({ tag: 'updateAvailable', data: { id, version } })
         app.message({ type: 'pear/updates', app: true, version, diff: info.diff, updating: false, updated: true })
       }
       this.final = info
