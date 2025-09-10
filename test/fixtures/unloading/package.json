@@ -1,0 +1,8 @@
+{
+  "name": "teardown-unloading",
+  "main": "index.js",
+  "pear": {
+    "name": "teardown-unloading",
+    "type": "terminal"
+  }
+}
