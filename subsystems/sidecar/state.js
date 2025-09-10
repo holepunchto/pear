@@ -19,7 +19,7 @@ module.exports = class State extends SharedState {
     state.pkg = pkg
     state.options = state.pkg?.pear ?? {}
 
-    state.name = this.appname(state.pkg)
+    state.name = state.name ?? this.appname(state.pkg)
 
     state.main = state.options.main ?? pkg?.main ?? 'index.js'
 
@@ -57,7 +57,7 @@ module.exports = class State extends SharedState {
     this.reconfigure()
   }
 
-  async initialize ({ bundle, app, name, dryRun = false, pkg = null } = {}) {
+  async initialize ({ bundle, app, dryRun = false, pkg = null } = {}) {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
@@ -96,11 +96,10 @@ module.exports = class State extends SharedState {
 
     const { dependencies } = this.manifest
     const options = this.options
-    name = name ?? options.name
     const { channel, release } = bundle
     const { main = 'index.js' } = this.manifest
 
-    this.update({ name, main, options, dependencies, channel, release })
+    this.update({ main, options, dependencies, channel, release })
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
 
