@@ -2,8 +2,8 @@
 const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
-const plink = require('pear-api/link')
-const { outputter, ansi, permit, isTTY } = require('pear-api/terminal')
+const plink = require('pear-link')
+const { outputter, ansi, permit, isTTY } = require('pear-terminal')
 
 const output = outputter('seed', {
   seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,

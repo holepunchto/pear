@@ -1,7 +1,7 @@
 'use strict'
-const plink = require('pear-api/link')
-const { outputter, ansi, byteSize } = require('pear-api/terminal')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const plink = require('pear-link')
+const { outputter, ansi, byteSize } = require('pear-terminal')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'

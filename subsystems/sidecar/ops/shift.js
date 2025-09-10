@@ -2,9 +2,9 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { randomBytes } = require('hypercore-crypto')
-const plink = require('pear-api/link')
-const { PLATFORM_DIR } = require('pear-api/constants')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const plink = require('pear-link')
+const { PLATFORM_DIR } = require('pear-constants')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 
 const exists = (path) => fs.promises.stat(path).then(() => true, () => false)
