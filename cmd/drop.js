@@ -1,7 +1,7 @@
 'use strict'
-const plink = require('pear-api/link')
-const { outputter, confirm, ansi } = require('pear-api/terminal')
-const { ERR_INVALID_INPUT } = require('pear-api/errors')
+const plink = require('pear-link')
+const { outputter, confirm, ansi } = require('pear-terminal')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const os = require('bare-os')
 const path = require('bare-path')
 

@@ -3,11 +3,11 @@ const { pipelinePromise, Readable } = require('streamx')
 const { pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const Localdrive = require('localdrive')
-const { Interact } = require('pear-api/terminal')
-const transform = require('pear-api/transform')
-const plink = require('pear-api/link')
-const { LOCALDEV } = require('pear-api/constants')
-const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-api/errors')
+const { Interact } = require('pear-terminal')
+const transform = require('pear-transform')
+const plink = require('pear-link')
+const { LOCALDEV } = require('pear-constants')
+const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-errors')
 async function init (link = 'default', dir, opts = {}) {
   const { cwd, ipc, header, autosubmit, defaults, force = false, pkg } = opts
   let { ask = true } = opts

@@ -1,9 +1,9 @@
 'use strict'
 const path = require('bare-path')
-const teardown = require('pear-api/teardown')
+const gracedown = require('pear-gracedown')
 const { isWindows } = require('which-runtime')
-const { print, ansi, stdio, isTTY } = require('pear-api/terminal')
-const Logger = require('pear-api/logger')
+const { print, ansi, stdio, isTTY } = require('pear-terminal')
+const Logger = require('pear-logger')
 module.exports = (ipc) => async function sidecar (cmd) {
   if (cmd.command.name === 'inspect') {
     const inspectorKey = await ipc.inspect()
@@ -12,7 +12,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
     print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
     return
   }
-  if (!isWindows && isTTY) teardown(() => { stdio.out.write('\x1B[1K\x1B[G') })
+  if (!isWindows && isTTY) gracedown(() => { stdio.out.write('\x1B[1K\x1B[G') })
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
@@ -21,7 +21,7 @@ module.exports = (ipc) => async function sidecar (cmd) {
   await ipc.shutdown()
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
-  const { CHECKOUT, RUNTIME } = require('pear-api/constants')
+  const { CHECKOUT, RUNTIME } = require('pear-constants')
   const KEY = CHECKOUT.key
 
   print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)

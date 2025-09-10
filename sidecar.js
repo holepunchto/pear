@@ -5,8 +5,8 @@ const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
-const crasher = require('pear-api/crasher')
-const teardown = require('pear-api/teardown')
+const crasher = require('pear-crasher')
+const gracedown = require('pear-gracedown')
 const {
   SWAP,
   GC,
@@ -16,9 +16,9 @@ const {
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('pear-api/constants')
-const gunk = require('pear-api/gunk')
-const pear = require('pear-api/cmd')
+} = require('pear-constants')
+const gunk = require('pear-gunk')
+const pear = require('pear-cmd')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
 crasher('sidecar', SWAP)
@@ -52,7 +52,7 @@ async function bootSidecar () {
   const updater = createUpdater()
 
   const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })
-  teardown(() => sidecar.close())
+  gracedown(() => sidecar.close())
   await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
