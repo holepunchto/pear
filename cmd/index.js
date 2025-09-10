@@ -262,7 +262,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const build = command(
     'build',
-    summary('Appling build'),
+    summary('Build appling for a project'),
+    description`
+      Specify a remote link to build.
+    `,
+    arg('<link>', 'Pear link to build'),
+    arg('[dir]', 'Output directory path (default: .)'),
+    flag('--json', 'Newline delimited JSON output'),
     runners.build(ipc)
   )
 

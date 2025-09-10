@@ -45,6 +45,7 @@ const ops = {
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
+  Build: require('./ops/build'),
   Run: require('./ops/run')
 }
 
@@ -387,6 +388,8 @@ class Sidecar extends ReadyResource {
   info (params, client) { return new ops.Info(params, client, this) }
 
   data (params, client) { return new ops.Data(params, client, this) }
+
+  build (params, client) { return new ops.Build(params, client, this) }
 
   shift (params, client) { return new ops.Shift(params, client, this) }
 
