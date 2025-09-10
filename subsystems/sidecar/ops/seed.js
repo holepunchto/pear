@@ -25,7 +25,7 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'seeding', data: { key: link, name, channel } })
     await this.sidecar.ready()
 
-    const corestore = this.sidecar._getCorestore(name, channel)
+    const corestore = this.sidecar.getCorestore(name, channel)
     await corestore.ready()
     const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
