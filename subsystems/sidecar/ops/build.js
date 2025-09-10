@@ -1,4 +1,7 @@
 'use strict'
+const { spawnSync } = require('bare-subprocess')
+const fs = require('bare-fs')
+const os = require('bare-os')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Build extends Opstream {
@@ -7,6 +10,32 @@ module.exports = class Build extends Opstream {
   }
 
   async #op ({ link, dir } = {}) {
-    this.push({ tag: 'building', data: { link, dir } })
+    this.push({ tag: 'init', data: { link, dir } })
+
+    const repoDir = dir + '/pear-appling'
+    let result
+
+    try {
+      fs.statSync(repoDir)
+    } catch {
+      result = spawnSync('git', ['clone', 'https://github.com/holepunchto/pear-appling'], { cwd: dir, stdio: 'inherit' })
+      if (result.status !== 0) throw new Error(`git exited with code ${result.status}, stderr: ${result.stderr?.toString()}`)
+    }
+
+    os.chdir(repoDir)
+
+    this.push({ tag: 'npm', data: {} })
+    result = spawnSync('npm', ['i'], { cwd: repoDir, stdio: 'inherit' })
+    if (result.status !== 0) throw new Error(`npm exited with code ${result.status}: ${result.stderr?.toString()}`)
+
+    this.push({ tag: 'generate', data: {} })
+    result = spawnSync('bare-make', ['generate'], { cwd: repoDir, stdio: 'inherit' })
+    if (result.status !== 0) throw new Error(`bare-make generate exited with code ${result.status}: ${result.stderr?.toString()}`)
+
+    this.push({ tag: 'build', data: {} })
+    result = spawnSync('bare-make', ['build'], { cwd: repoDir, stdio: 'inherit' })
+    if (result.status !== 0) throw new Error(`bare-make build exited with code ${result.status}: ${result.stderr?.toString()}`)
+
+    this.push({ tag: 'complete', data: { dir } })
   }
 }
