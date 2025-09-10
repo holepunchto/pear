@@ -57,7 +57,7 @@ test.hook('prepare low-spindown platform', async (t) => {
   const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
-  (() => { require('pear-api/constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+  (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
   `
   const patchedSidecarCode = patch + sidecarCode
   fs.writeFileSync(sidecarPath, patchedSidecarCode)

@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, ansi } = require('pear-api/terminal')
+const { outputter, ansi } = require('pear-terminal')
 const { randomBytes } = require('hypercore-crypto')
 const os = require('bare-os')
 

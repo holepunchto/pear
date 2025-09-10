@@ -1,14 +1,14 @@
 'use strict'
 const { Readable } = require('streamx')
 const Module = require('bare-module')
-const plink = require('pear-api/link')
+const plink = require('pear-link')
 const fs = require('fs')
 const { isWindows } = require('which-runtime')
-const { RUNTIME } = require('pear-api/constants')
+const { RUNTIME } = require('pear-constants')
 const { spawn } = require('bare-subprocess')
 const { pathToFileURL } = require('url-file-url')
-const { ERR_INVALID_CONFIG } = require('pear-api/errors')
-const State = require('pear-api/state')
+const { ERR_INVALID_CONFIG } = require('pear-errors')
+const State = require('pear-state')
 const path = require('bare-path')
 const cenc = require('compact-encoding')
 
