@@ -3,7 +3,7 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
-const parseLink = require('pear-api/parse-link')
+const plink = require('pear-api/link')
 const { ERR_PERMISSION_REQUIRED } = require('pear-api/errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -22,7 +22,7 @@ module.exports = class Asset extends Opstream {
     asset.forced = force
     this.final = asset
     if (asset.forced === false && asset.inserted === false) return
-    const parsed = parseLink(link)
+    const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
