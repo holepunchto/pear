@@ -470,6 +470,12 @@ class Sidecar extends ReadyResource {
     return client.userData.bundle.exists(params.key)
   }
 
+  list (params, client) {
+    if (client.userData instanceof this.App === false) return
+    const { key, ...opts } = params
+    return client.userData.bundle.list(key, opts)
+  }
+
   get (params, client) {
     if (client.userData instanceof this.App === false) return
     return client.userData.bundle.get(params.key)

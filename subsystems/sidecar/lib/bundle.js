@@ -203,6 +203,10 @@ module.exports = class Bundle {
     return this.drive.exists(key)
   }
 
+  list (key, opts) {
+    return this.drive.list(key, opts)
+  }
+
   async del (key) {
     return await this.drive.del(key)
   }
