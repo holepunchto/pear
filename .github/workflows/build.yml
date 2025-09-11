@@ -42,13 +42,31 @@ jobs:
             echo "PRs may not trigger builds"
             exit 1
           fi
+  
+  pre-build:
+    needs: tag
+    runs-on: ubuntu-latest
+    outputs:
+      channel: ${{ steps.prepare-channel.outputs.channel }}
+    steps:
+      - name: Prepare channel
+        id: prepare-channel
+        run: |
+          channel=${{ inputs.channel }}
+          if [[ $channel == 'dev' ]]; then
+            channel=dev-v2
+          elif [[ $channel == 'stage' ]]; then
+            channel=stage-v2
+          fi
+          echo "Channel to build: $channel"
+          echo channel=$channel >> $GITHUB_OUTPUT
 
   build:
-    needs: check
+    needs: [check, pre-build]
     uses: holepunchto/actions/.github/workflows/keet-automation.yml@v1
     secrets: inherit
     with:
       job: pear-platform
-      channel: ${{ inputs.channel }}
+      channel: ${{ needs.pre-build.outputs.channel }}
       commit: ${{ inputs.custom-commit || github.sha }}
       dry-run: ${{ inputs.dry-run }}
