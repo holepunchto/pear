@@ -138,8 +138,6 @@ class Sidecar extends ReadyResource {
       bareBuiltins: gunk.bareBuiltins
     })
 
-    this.bundle = new Bundle({ drive })
-
     this.applings = new Applings(APPLINGS_PATH)
 
     this.running = new Map()
@@ -697,7 +695,6 @@ class Sidecar extends ReadyResource {
   async #ensureSwarm () {
     try {
       await this.corestore.ready()
-      await this.bundle.ready()
     } catch (err) {
       err.code = 'ERR_OPEN'
       throw err
