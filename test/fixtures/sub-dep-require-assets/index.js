@@ -1,6 +1,6 @@
 const readAsset = require('./lib/utils.js')
 
-const pipe = Pear.worker.pipe()
+const pipe = require('pear-pipe')()
 pipe.on('data', () => {
   try {
     pipe.write(readAsset() + '\n')

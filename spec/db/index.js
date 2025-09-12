@@ -312,12 +312,68 @@ const collection5 = {
   indexes: []
 }
 
+// '@pear/current' collection key
+const collection6_key = new IndexEncoder([
+  IndexEncoder.STRING
+], { prefix: 6 })
+
+function collection6_indexify (record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/current' value encoding
+const collection6_enc = getEncoding('@pear/current/hyperdb#6')
+
+// '@pear/current' reconstruction function
+function collection6_reconstruct (version, keyBuf, valueBuf) {
+  const key = collection6_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection6_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/current' key reconstruction function
+function collection6_reconstruct_key (keyBuf) {
+  const key = collection6_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/current'
+const collection6 = {
+  name: '@pear/current',
+  id: 6,
+  encodeKey (record) {
+    const key = [record.link]
+    return collection6_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection6_key.encodeRange({
+      gt: gt ? collection6_indexify(gt) : null,
+      lt: lt ? collection6_indexify(lt) : null,
+      gte: gte ? collection6_indexify(gte) : null,
+      lte: lte ? collection6_indexify(lte) : null
+    })
+  },
+  encodeValue (version, record) {
+    setVersion(version)
+    return c.encode(collection6_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection6_reconstruct,
+  reconstructKey: collection6_reconstruct_key,
+  indexes: []
+}
+
 const collections = [
   collection0,
   collection1,
   collection2,
   collection3,
-  collection5
+  collection5,
+  collection6
 ]
 
 const indexes = [
@@ -333,6 +389,7 @@ function resolveCollection (name) {
     case '@pear/gc': return collection2
     case '@pear/bundle': return collection3
     case '@pear/assets': return collection5
+    case '@pear/current': return collection6
     default: return null
   }
 }
