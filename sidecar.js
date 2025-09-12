@@ -97,9 +97,9 @@ function getUpgradeTarget () {
         fork = +split[0]
         length = +split[1]
         key = hypercoreid.normalize(split[2])
-      } else {
-        key = hypercoreid.normalize(val)
+        break
       }
+      key = hypercoreid.normalize(val)
       break
     }
 
@@ -110,9 +110,9 @@ function getUpgradeTarget () {
         fork = +split[0]
         length = +split[1]
         key = hypercoreid.normalize(split[2])
-      } else {
-        key = hypercoreid.normalize(val)
+        break
       }
+      key = hypercoreid.normalize(val)
       break
     }
   }
