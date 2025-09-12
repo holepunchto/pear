@@ -83,18 +83,36 @@ async function bootSidecar () {
 function getUpgradeTarget () {
   if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
 
-  let key = null
+  let fork = null
+  let length = 0
+  let key = 0
 
   for (let i = 0; i < Bare.argv.length; i++) {
     const arg = Bare.argv[i]
 
     if (arg.startsWith('--key=')) {
-      key = hypercoreid.normalize(arg.slice(6))
+      const val = arg.slice(6)
+      const split = val.split('.')
+      if (split.length === 3) {
+        fork = +split[0]
+        length = +split[1]
+        key = hypercoreid.normalize(split[2])
+      } else {
+        key = hypercoreid.normalize(val)
+      }
       break
     }
 
     if (arg === '--key' && Bare.argv.length > i + 1) {
-      key = hypercoreid.normalize(Bare.argv[i + 1])
+      const val = Bare.argv[i + 1]
+      const split = val.split('.')
+      if (split.length === 3) {
+        fork = +split[0]
+        length = +split[1]
+        key = hypercoreid.normalize(split[2])
+      } else {
+        key = hypercoreid.normalize(val)
+      }
       break
     }
   }
@@ -102,7 +120,7 @@ function getUpgradeTarget () {
   if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
 
   return {
-    checkout: { key, length: 0, fork: 0 },
+    checkout: { key, length, fork },
     swap: null
   }
 }
