@@ -28,7 +28,6 @@ const {
 const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
-const Bundle = require('./lib/bundle')
 const Replicator = require('./lib/replicator')
 const Model = require('./lib/model')
 const registerUrlHandler = require('../../url-handler')
