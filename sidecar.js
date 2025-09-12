@@ -83,9 +83,9 @@ async function bootSidecar () {
 function getUpgradeTarget () {
   if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
 
-  let fork = null
+  let fork = 0
   let length = 0
-  let key = 0
+  let key = null
 
   for (let i = 0; i < Bare.argv.length; i++) {
     const arg = Bare.argv[i]
