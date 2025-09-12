@@ -21,7 +21,8 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  data: require('./data')
+  data: require('./data'),
+  build: require('./build')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -259,6 +260,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     () => { console.log(data.help()) }
   )
 
+  const build = command(
+    'build',
+    summary('Build appling for a project'),
+    description`
+      Specify a remote link to build.
+    `,
+    arg('<link>', 'Pear link to build'),
+    arg('[dir]', 'Output directory path (default: .)'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.build(ipc)
+  )
+
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
     if (h.args.command) console.log(cmd.help(h.args.command))
     else console.log(cmd.overview({ full: true }))
@@ -280,6 +293,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     shift,
     drop,
     reset,
+    build,
     sidecar,
     gc,
     versions,
