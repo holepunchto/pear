@@ -20,7 +20,7 @@ const noop = Function.prototype
 
 const ABI = 0
 
-module.exports = class Bundle {
+module.exports = class Bundle { // TODO: rename to Pod
   platformVersion = null
   constructor (opts = {}) {
     const {
