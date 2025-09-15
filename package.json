@@ -63,7 +63,6 @@
   },
   "dependencies": {
     "b4a": "^1.6.7",
-    "bare": "^1.21.7",
     "bare-bundle": "^1.8.3",
     "bare-daemon": "^1.1.0",
     "bare-env": "^3.0.0",
