@@ -7,6 +7,7 @@ pear.dev
 pear.ps1
 pear.cmd
 pear/current
+pear-appling
 *.log
 .DS_Store
 *.tmp
