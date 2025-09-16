@@ -1,5 +1,17 @@
 # Pear Runtime Changelog
 
+## v1.19.0
+
+### Fixes
+
+* Internal - Fixes app bundle checkout length
+* Desktop - Fixes restart teardown
+
+### Improvements
+
+* Internal - Terminates unresponsive app/process on sidecar deathclock
+* Internal - Improves warmup maps reducing time of first app boot
+
 ## v1.18.0
 
 ### Improvements
