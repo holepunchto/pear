@@ -1,0 +1,13 @@
+{
+  "crypto": "bare-crypto",
+  "events": "bare-events",
+  "fs": "bare-fs",
+  "http": "bare-http1",
+  "https": "bare-https",
+  "os": "bare-os",
+  "process": "bare-process",
+  "url": "bare-url",
+  "util": "bare-utils",
+  "v8": "bare-v8",
+  "zlib": "bare-zlib"
+}

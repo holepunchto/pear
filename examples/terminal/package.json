@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "pear": {
     "name": "termex",
     "type": "terminal",
@@ -15,5 +14,20 @@
   "devDependencies": {
     "brittle": "^3.0.0",
     "pear-interface": "^1.0.0"
+  },
+  "dependencies": {
+    "bare-crypto": "^1.11.2",
+    "bare-events": "^2.6.1",
+    "bare-fs": "^4.3.1",
+    "bare-http1": "^4.0.4",
+    "bare-https": "^2.0.0",
+    "bare-os": "^3.6.2",
+    "bare-path": "^3.0.0",
+    "bare-process": "^4.2.1",
+    "bare-url": "^2.2.2",
+    "bare-utils": "^1.5.1",
+    "bare-v8": "file://./bare-v8",
+    "bare-zlib": "^1.3.1",
+    "prom-client": "^15.1.3"
   }
 }
