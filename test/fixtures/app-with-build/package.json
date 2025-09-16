@@ -1,0 +1,24 @@
+{
+  "name": "app-with-build",
+  "main": "index.js",
+  "pear": {
+    "name": "app-with-build",
+    "build": {
+      "id": "",
+      "name": "",
+      "link": "",
+      "version": "1.0.0",
+      "author": "",
+      "description": "",
+      "macos_identifier": "",
+      "macos_category": "",
+      "macos_signing_identity": "",
+      "windows_signing_subject": "",
+      "windows_signing_thumbprint": "",
+      "linux_category": ""
+    }
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}

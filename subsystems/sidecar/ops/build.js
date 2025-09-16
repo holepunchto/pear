@@ -14,19 +14,16 @@ module.exports = class Build extends Opstream {
     this.push({ tag: 'init', data: { link, dir } })
 
     const repoDir = dir + '/pear-appling'
-    let result
-
     try {
       fs.statSync(repoDir)
     } catch {
-      result = spawnSync('git', ['clone', 'https://github.com/holepunchto/pear-appling'], { cwd: dir, stdio: 'inherit' })
-      if (result.status !== 0) throw new Error(`git exited with code ${result.status}, stderr: ${result.stderr?.toString()}`)
+      const result = spawnSync('git', ['clone', 'https://github.com/holepunchto/pear-appling'], { cwd: dir, stdio: 'inherit' })
+      if (result.status !== 0) throw new Error(`git exited with code ${result.status}: ${result.stderr?.toString()}`)
     }
-
     os.chdir(repoDir)
 
     this.push({ tag: 'npm', data: {} })
-    result = spawnSync('npm', ['i'], { cwd: repoDir, stdio: 'inherit' })
+    const result = spawnSync('npm', ['i'], { cwd: repoDir, stdio: 'inherit' })
     if (result.status !== 0) throw new Error(`npm exited with code ${result.status}: ${result.stderr?.toString()}`)
 
     this.push({ tag: 'generate', data: {} })
