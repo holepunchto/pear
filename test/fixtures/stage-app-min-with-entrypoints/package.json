@@ -1,0 +1,19 @@
+{
+  "name": "stage-app-min-with-entrypoints",
+  "main": "index.js",
+  "pear": {
+    "name": "stage-app-min-with-entrypoints",
+    "type": "terminal",
+    "stage": {
+      "entrypoints": [
+        "/entrypoint.js"
+      ],
+      "prefetch": [
+        "assets"
+      ]
+    }
+  },
+  "dependencies": {
+    "brittle": "^3.18.0"
+  }
+}
