@@ -72,6 +72,7 @@
     "bare-hrtime": "^2.0.11",
     "bare-http1": "^4.0.2",
     "bare-inspector": "^4.0.2",
+    "bare-make": "^1.6.0",
     "bare-module": "^5.0.3",
     "bare-os": "^3.6.1",
     "bare-pipe": "^4.0.5",
