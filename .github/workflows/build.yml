@@ -48,6 +48,8 @@ jobs:
     uses: holepunchto/actions/.github/workflows/keet-automation.yml@v1
     secrets: inherit
     with:
+      seed: ${{ inputs.channel == 'next' && secrets.AUTOMATION || secrets.BOT_AUTOMATION }}
+      remote: ${{ inputs.channel == 'next' && secrets.AUTOMATION_PUBLIC_KEY || secrets.BOT_AUTOMATION_PUBLIC_KEY }}
       job: pear-platform
       channel: ${{ inputs.channel }}
       commit: ${{ inputs.custom-commit || github.sha }}
