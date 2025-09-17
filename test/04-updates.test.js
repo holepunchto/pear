@@ -736,7 +736,7 @@ test('Pear.updates should notify App stage, App release updates (different pear 
 
 test('Pear.updates should replay updates when cutover is not called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
-  plan(7)
+  plan(11)
   timeout(80_000)
 
   const appStager = new Helper(rig)
@@ -777,7 +777,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe, { timeout: 30_000 })
+  const untilUpdate = Helper.untilResult(pipe, { timeout: 30_000, runFn: () => {} })
     .then((data) => JSON.parse(data.split('\n').at(-1))) // get last line as buffered data is combined into one string
 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -801,9 +801,20 @@ test('Pear.updates should replay updates when cutover is not called', async func
 
   const update = await untilUpdate
   pass('app has received replayed update')
-  const updateVersion = update?.version
+  is(update?.id, 1, 'app update id is 1 (first update subscription)')
+  const updateVersion = update?.data?.version
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
+
+  const untilUpdate2 = Helper.untilResult(pipe, { timeout: 30_000, info: 'start-listener\n' })
+    .then((data) => JSON.parse(data.split('\n').at(-1))) // get last line as buffered data is combined into one string
+
+  const update2 = await untilUpdate2
+  pass('app has received replayed update')
+  is(update2?.id, 2, 'app update id is 2 (second update subscription)')
+  const updateVersion2 = update?.data?.version
+  const appUpdateLength2 = updateVersion2.length
+  ok(appUpdateLength2 > appVersionLength, `app version.length incremented (v${updateVersion2?.fork}.${updateVersion2?.length})`)
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()
