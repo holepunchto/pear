@@ -9,7 +9,7 @@ const { Session } = require('pear-inspect')
 const Helper = require('./helper')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-const noCutover = path.join(Helper.localDir, 'test', 'fixtures', 'no-cutover')
+const cutover = path.join(Helper.localDir, 'test', 'fixtures', 'cutover')
 const seedOpts = (id) => ({ channel: `test-${id}`, name: `test-${id}`, key: null, dir: updates, cmdArgs: [] })
 const stageOpts = (id, dir) => ({ ...seedOpts(id, dir), dryRun: false, ignore: [] })
 const releaseOpts = (id, key) => ({ channel: `test-${id}`, name: `test-${id}`, key })
@@ -523,7 +523,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const channel = 'test-fixture-no-cutover'
 
   comment('staging app')
-  const appStaging = appStager.stage({ channel, name: channel, dir: noCutover, dryRun: false })
+  const appStaging = appStager.stage({ channel, name: channel, dir: cutover, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging))
   const appFinal = await Helper.pick(appStaging, { tag: 'final' })
   ok(appFinal.success, 'stage succeeded')
@@ -532,7 +532,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const appSeeder = new Helper(rig)
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
-  const appSeeding = appSeeder.seed({ channel, name: channel, dir: noCutover, key: null, cmdArgs: [] })
+  const appSeeding = appSeeder.seed({ channel, name: channel, dir: cutover, key: null, cmdArgs: [] })
   teardown(() => Helper.teardownStream(appSeeding))
   const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
@@ -549,7 +549,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
-  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv, args: ['--no-cutover'] })
   const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')

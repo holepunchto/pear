@@ -1,4 +1,4 @@
-Pear.constructor.CUTOVER = false
+Pear.constructor.CUTOVER = !Bare.argv.includes('--no-cutover')
 
 const pipe = require('pear-pipe')()
 
