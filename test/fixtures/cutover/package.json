@@ -1,5 +1,5 @@
 {
-  "name": "no-cutover",
+  "name": "cutover",
   "main": "index.js",
   "pear": {
     "name": "updates",
