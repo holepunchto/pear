@@ -11,7 +11,7 @@ pear-appling
 *.log
 .DS_Store
 *.tmp
-assets
+/assets/
 
 examples/desktop/package-lock.json
 examples/terminal/package-lock.json

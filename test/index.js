@@ -19,7 +19,8 @@ async function runTests () {
   await import('./10-dump.test.js')
   await import('./11-inspect.test.js')
   await import('./12-assets.test.js')
-  await import('./13-build.test.js')
+  await import('./13-stage.test.js')
+  await import('./14-build.test.js')
 
   test.resume()
 }
