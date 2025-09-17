@@ -783,14 +783,14 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(updates, file), 'test')
-  teardown(() => { fs.unlinkSync(path.join(updates, file)) }, { order: -Infinity })
+  fs.writeFileSync(path.join(cutover, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(cutover, file)) }, { order: -Infinity })
 
   comment('restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
-  const appStaging2 = appStager2.stage({ channel, name: channel, dir: updates, dryRun: false })
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: cutover, dryRun: false })
   teardown(() => Helper.teardownStream(appStaging2))
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
