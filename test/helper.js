@@ -210,6 +210,44 @@ class Helper extends IPC.Client {
     return res
   }
 
+  static async collectResults (pipe, { timeout = 5000, burstTimeout = 0, count = Infinity, runFn, info } = {}) {
+    const result = new Promise((resolve, reject) => {
+      const results = []
+      let burst = null
+      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
+      const end = () => {
+        clearTimeout(timeoutId)
+        if (burst) clearTimeout(burst)
+        pipe.off('data', onData)
+        resolve(results)
+      }
+      const onData = (data) => {
+        results.push(data.toString())
+        if (results.length >= count) {
+          if (!burstTimeout) {
+            end()
+            return
+          }
+
+          if (burst) clearTimeout(burst)
+          burst = setTimeout(() => end(), burstTimeout)
+        }
+      }
+
+      pipe.on('data', onData)
+      pipe.on('close', end)
+      pipe.on('end', end)
+    })
+
+    if (runFn) {
+      await runFn()
+    } else {
+      pipe.write(info ?? 'start')
+    }
+
+    return result
+  }
+
   static untilData(pipe, timeout = 5000) {
     return new Promise((resolve, reject) => {
       const tid = setTimeout(reject, timeout, new Error('timeout'))
