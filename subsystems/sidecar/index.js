@@ -53,13 +53,14 @@ registerUrlHandler(WAKEUP)
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'
 
+const CUTOVER_TIMEOUT = 20_000
+
 class Sidecar extends ReadyResource {
   static Updater = Updater
 
   spindownt = null
   spindownms = SPINDOWN_TIMEOUT
   decomissioned = false
-  updateAvailable = null
   swarm = null
   keyPair = null
   discovery = null
@@ -238,11 +239,20 @@ class Sidecar extends ReadyResource {
       }
 
       messages (ptn, opts = {}) {
-        if (ptn.type === 'pear/updates') {
-          this._updatingTrigger() // TODO, remove when impl Pear.updating
-        }
         opts.map = pickData
-        const subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
+        let subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
+
+        if (Iambus.match(ptn, { type: 'pear/updates' })) {
+          this._updatingTrigger() // TODO, remove when impl Pear.updating
+          if (this.updates) subscriber = this.updates.relay(subscriber)
+          if (this.cutoverTimeout) {
+            clearTimeout(this.cutoverTimeout)
+            this.updates.replay = false
+            this.warming.replay = false
+            this.updates.replay = false
+          }
+        }
+
         return subscriber
       }
 
@@ -268,14 +278,19 @@ class Sidecar extends ReadyResource {
         this.state = state
         this.startId = startId
         this.clients = new Set()
-        const opts = { relays: true, replay: true, map: pickData }
+        const opts = { relays: false, replay: true, map: pickData }
         const reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.id }, opts)
         const warming = this.sidecar.bus.sub({ topic: 'warming', id: this.id }, opts)
-        const updates = this.messages({ type: 'pear/updates' }, opts)
-        this.cutover = () => { // closure scoped to keep cutover refs to top ancestor subs
+        const updates = this.sidecar.bus.sub({ topic: 'messages', id: this.id, data: { type: 'pear/updates' } }, opts)
+        const clearBuffers = () => {
           reporter.replay = false
           warming.replay = false
           updates.replay = false
+        }
+        this.cutover = ({ stop } = {}) => { // closure scoped to keep cutover refs to top ancestor subs
+          if (this.cutoverTimeout) clearTimeout(this.cutoverTimeout)
+          if (stop) return clearBuffers()
+          this.cutoverTimeout = setTimeout(clearBuffers, CUTOVER_TIMEOUT)
         }
         this.reporter = reporter
         this.warming = warming
@@ -332,8 +347,6 @@ class Sidecar extends ReadyResource {
   }
 
   async updateNotify (version, info = {}) {
-    this.updateAvailable = { version, info }
-
     if (info.link) LOG.info('sidecar', 'Application update available:')
     else if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
