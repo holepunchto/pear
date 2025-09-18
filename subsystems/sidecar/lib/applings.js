@@ -3,20 +3,20 @@ const cenc = require('compact-encoding')
 const fsp = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')
 const ReadyResource = require('ready-resource')
-const constants = require('../../../constants')
+const constants = require('pear-constants')
 
 const APPLINGS_STORAGE_VERSION = 0
 
 const ApplingEntry = {
-  preencode (state, m) {
+  preencode(state, m) {
     cenc.string.preencode(state, m.path)
     cenc.string.preencode(state, m.key)
   },
-  encode (state, m) {
+  encode(state, m) {
     cenc.string.encode(state, m.path)
     cenc.string.encode(state, m.key)
   },
-  decode (state) {
+  decode(state) {
     const res = {
       path: cenc.string.decode(state),
       key: cenc.string.decode(state)
@@ -28,15 +28,15 @@ const ApplingEntry = {
 
 const ApplingEntryArray = cenc.array(ApplingEntry)
 const ApplingsEnc = {
-  preencode (state, m) {
+  preencode(state, m) {
     cenc.uint.preencode(state, m.version)
     ApplingEntryArray.preencode(state, m.entries)
   },
-  encode (state, m) {
+  encode(state, m) {
     cenc.uint.encode(state, m.version)
     ApplingEntryArray.encode(state, m.entries)
   },
-  decode (state) {
+  decode(state) {
     return {
       version: cenc.uint.decode(state),
       entries: ApplingEntryArray.decode(state)
@@ -44,7 +44,7 @@ const ApplingsEnc = {
   }
 }
 
-async function readApplingsFile (location) {
+async function readApplingsFile(location) {
   let applingsContent
   try {
     applingsContent = await fsp.readFile(location)
@@ -55,7 +55,7 @@ async function readApplingsFile (location) {
   return decodeApplings(applingsContent, location)
 }
 
-function decodeApplings (applings) {
+function decodeApplings(applings) {
   let parsedContent = { version: APPLINGS_STORAGE_VERSION, entries: [] }
   if (applings) {
     parsedContent = cenc.decode(ApplingsEnc, applings)
@@ -64,9 +64,10 @@ function decodeApplings (applings) {
   return parsedContent
 }
 
-async function writeApplings (entries, applingsLoc) {
+async function writeApplings(entries, applingsLoc) {
   const decodedContent = {
-    version: APPLINGS_STORAGE_VERSION, entries
+    version: APPLINGS_STORAGE_VERSION,
+    entries
   }
 
   const tempApplingsLoc = applingsLoc + '.temp'
@@ -77,7 +78,7 @@ async function writeApplings (entries, applingsLoc) {
 }
 
 class Applings extends ReadyResource {
-  constructor (applingsPath) {
+  constructor(applingsPath) {
     super()
     this.path = applingsPath
     this._mutex = mutexify()
@@ -85,21 +86,21 @@ class Applings extends ReadyResource {
     this._writes = 0
   }
 
-  async _open () {
+  async _open() {
     const parsedApplings = await readApplingsFile(this.path)
     this._applings = parsedApplings.entries
     this._applingsVersion = parsedApplings.version
   }
 
-  async _close () {
+  async _close() {
     await this._mutex() // Ensure final changes flushed
   }
 
-  get flushable () {
+  get flushable() {
     return this._applingsVersion === APPLINGS_STORAGE_VERSION && !this.closing
   }
 
-  async set (hexKey, path) {
+  async set(hexKey, path) {
     if (!this.opened) await this.ready()
     if (hexKey === constants.ALIASES.keet.toString('hex')) hexKey = 'keet'
     if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
@@ -123,11 +124,14 @@ class Applings extends ReadyResource {
     return true
   }
 
-  async #flush () {
+  async #flush() {
     this._writes++
 
     if (!this.flushable) {
-      LOG.error('internal', 'Cannot flush applings file to disk (not flushable)')
+      LOG.error(
+        'internal',
+        'Cannot flush applings file to disk (not flushable)'
+      )
       return
     }
 
@@ -150,15 +154,13 @@ class Applings extends ReadyResource {
     }
   }
 
-  async get (hexKey) {
+  async get(hexKey) {
     if (!this.opened) await this.ready()
-    if (hexKey === constants.ALIASES.keet.toString('hex') || hexKey === constants.EOLS.keet.toString('hex')) hexKey = 'keet'
+    if (hexKey === constants.ALIASES.keet.toString('hex')) hexKey = 'keet'
+    if (constants.EOLS.keet.some((hK) => hK === hexKey)) hexKey = 'keet'
     if (hexKey === constants.ALIASES.runtime.toString('hex')) hexKey = 'runtime'
     if (hexKey === constants.ALIASES.doctor.toString('hex')) hexKey = 'doctor'
-
-    for (const { key, path } of this._applings) {
-      if (key === hexKey) return path
-    }
+    for (const { key, path } of this._applings) if (key === hexKey) return path
   }
 }
 

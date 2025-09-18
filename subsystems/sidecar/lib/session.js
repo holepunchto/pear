@@ -1,54 +1,74 @@
 'use strict'
 const safetyCatch = require('safety-catch')
-const { ERR_INTERNAL_ERROR } = require('../../../errors')
+const { ERR_INTERNAL_ERROR } = require('pear-errors')
 module.exports = class Session {
-  constructor (client) {
+  constructor(client, identifier = '') {
     this.client = client
     this.resources = new Set()
     this._eagerTeardownBound = this._eagerTeardown.bind(this)
     this._tearingDown = null
     this._teardowns = []
+    this._identifier = identifier
+    LOG.info('session', 'new session', this._identifier)
     client.on('close', this._eagerTeardownBound)
   }
 
-  get closed () {
+  get closed() {
     return this.client.closed
   }
 
-  async add (resource) {
+  async add(resource) {
+    LOG.info('session', 'adding resource to session', this._identifier)
     await resource.ready()
 
     if (this.closed) {
+      LOG.info(
+        'session',
+        'closed, closing resource and not adding to session',
+        this._identifier
+      )
       await resource.close()
       throw ERR_INTERNAL_ERROR('Session is closed')
     }
 
     this.resources.add(resource)
+    LOG.info('session', 'resource added to session', this._identifier)
     return resource
   }
 
-  async delete (resource) {
+  async delete(resource) {
+    LOG.info('session', 'removing resource from session', this._identifier)
     this.resources.delete(resource)
     await resource.close()
+    LOG.info(
+      'session',
+      'resource closed and removed from session',
+      this._identifier
+    )
   }
 
-  close () {
+  async close() {
     this._eagerTeardown()
-    return this._tearingDown
+    try {
+      return await this._tearingDown
+    } finally {
+      LOG.info('session', 'closed session', this._identifier)
+    }
   }
 
-  _eagerTeardown () {
+  _eagerTeardown() {
     if (this._tearingDown) return
     this.client.off('close', this._eagerTeardownBound)
     this._tearingDown = this._teardown()
     this._tearingDown.catch(safetyCatch)
   }
 
-  teardown (fn) {
+  teardown(fn) {
     this._teardowns.push(fn)
   }
 
-  async _teardown () {
+  async _teardown() {
+    LOG.info('session', 'tearing down session', this._identifier)
     const closing = []
     for (const resource of this.resources) {
       const close = resource.close()

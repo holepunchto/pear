@@ -24,7 +24,6 @@ jobs:
           git tag ${{ env.version }}
           git push --tags
 
-
   pre-build:
     needs: tag
     runs-on: ubuntu-latest

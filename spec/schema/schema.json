@@ -135,6 +135,45 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "checkout",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "fork",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "length",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "current",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 1,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "checkout",
+          "type": "@pear/checkout",
+          "version": 1
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "name": "stage-pear-main",
+  "pear": {
+    "name": "stage-pear-main",
+    "main": "app.js"
+  }
+}

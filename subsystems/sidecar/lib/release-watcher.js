@@ -6,14 +6,14 @@ const { Readable } = require('streamx')
 module.exports = function (checkout, drive) {
   if (drive.key) return new DriveReleaseWatcher(checkout, drive)
   return new Localwatch(drive.root, {
-    mapReadable () {
+    mapReadable() {
       return { key: null, length: 0, fork: 0 }
     }
   })
 }
 
 class DriveReleaseWatcher extends Readable {
-  constructor (checkout, drive) {
+  constructor(checkout, drive) {
     super()
 
     this.drive = drive
@@ -24,13 +24,13 @@ class DriveReleaseWatcher extends Readable {
     this.drive.core.on('truncate', this._bumpBound)
   }
 
-  _destroy (cb) {
+  _destroy(cb) {
     this.drive.core.off('append', this._bumpBound)
     this.drive.core.off('truncate', this._bumpBound)
     cb(null)
   }
 
-  async _bump () {
+  async _bump() {
     try {
       const length = this.drive.core.length
       const fork = this.drive.core.fork

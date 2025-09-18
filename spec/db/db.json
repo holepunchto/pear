@@ -32,9 +32,7 @@
       "indexes": [],
       "schema": "@pear/gc",
       "derived": false,
-      "key": [
-        "path"
-      ],
+      "key": ["path"],
       "trigger": null
     },
     {
@@ -42,14 +40,10 @@
       "namespace": "pear",
       "id": 3,
       "type": 1,
-      "indexes": [
-        "@pear/bundle-by-tags"
-      ],
+      "indexes": ["@pear/bundle-by-tags"],
       "schema": "@pear/bundle",
       "derived": false,
-      "key": [
-        "link"
-      ],
+      "key": ["link"],
       "trigger": null
     },
     {
@@ -72,9 +66,18 @@
       "indexes": [],
       "schema": "@pear/assets",
       "derived": false,
-      "key": [
-        "link"
-      ],
+      "key": ["link"],
+      "trigger": null
+    },
+    {
+      "name": "current",
+      "namespace": "pear",
+      "id": 6,
+      "type": 1,
+      "indexes": [],
+      "schema": "@pear/current",
+      "derived": false,
+      "key": ["link"],
       "trigger": null
     }
   ]
