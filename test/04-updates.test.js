@@ -937,7 +937,7 @@ test('Pear.updates should no longer replay updates when cutover has timed out', 
   const CUTOVER_TIMEOUT = 2_000
 
   comment('1. Prepare reduced timeout platform as rcv')
-  const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
+  const patchedArtefactDir = path.join(Helper.tmp, 'urcv-pear')
   comment(`\tCopying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   teardown(() => Helper.gc(patchedArtefactDir))
@@ -971,7 +971,7 @@ test('Pear.updates should no longer replay updates when cutover has timed out', 
   teardown(() => Helper.teardownStream(patchedSeeder))
 
   comment('\tBootstrapping patched platform')
-  const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
+  const platformDirRcv = path.join(Helper.tmp, 'prcv-pear')
   await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
   teardown(() => Helper.gc(platformDirRcv))
 
