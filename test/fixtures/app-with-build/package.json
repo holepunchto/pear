@@ -17,8 +17,5 @@
       "windows_signing_thumbprint": "",
       "linux_category": ""
     }
-  },
-  "dependencies": {
-    "pear-pipe": "^1.0.1"
   }
 }

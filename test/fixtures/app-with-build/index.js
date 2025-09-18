@@ -1,4 +1,1 @@
-const pipe = require('pear-pipe')()
-pipe.on('data', () => {
-	pipe.write('hello' + '\n')
-})
+console.log('app-with-build')

@@ -6,7 +6,7 @@ const appWithBuildDir = path.join(Helper.localDir, 'test', 'fixtures', 'app-with
 
 test('can build an appling', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  // plan(4)
+  plan(3)
 
   const dir = appWithBuildDir
 
@@ -33,13 +33,8 @@ test('can build an appling', async function ({ ok, is, plan, comment, teardown, 
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const link = `pear://${key}`
-  const run = await Helper.run({ link })
-  const { pipe } = run
 
-  const td = await Helper.untilResult(pipe, { timeout: 5000, runFn: () => pipe.end() })
-  is(td, 'teardown', 'teardown executed')
-
-  // const build = await helper.build({ link, dir })
-  // const result = await Helper.pick(build, [{ tag: 'complete' }])
-  // await result.complete
+  const build = await helper.build({ link, dir })
+  const result = await Helper.pick(build, [{ tag: 'complete' }])
+  await result.complete
 })
