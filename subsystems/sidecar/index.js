@@ -62,6 +62,8 @@ registerUrlHandler(WAKEUP)
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'
 
+const CUTOVER_TIMEOUT = 20_000
+
 class Sidecar extends ReadyResource {
   static Updater = Updater
 
@@ -303,14 +305,18 @@ class Sidecar extends ReadyResource {
 
       messages(ptn, opts = {}) {
         opts.map = pickData
+        let subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
+
         if (Iambus.match(ptn, { type: 'pear/updates' })) {
           this._updatingTrigger() // TODO, remove when impl Pear.updating
-          if (this.updates) return this.updates
+          if (this.updates) subscriber = this.updates.relay(subscriber)
+          if (this.cutoverTimeout) {
+            clearTimeout(this.cutoverTimeout)
+            this.updates.replay = false
+            this.warming.replay = false
+            this.updates.replay = false
+          }
         }
-        const subscriber = this.sidecar.bus.sub(
-          { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
-          opts
-        )
         return subscriber
       }
 
@@ -344,7 +350,7 @@ class Sidecar extends ReadyResource {
         this.state = state
         this.startId = startId
         this.clients = new Set()
-        const opts = { relays: true, replay: true, map: pickData }
+        const opts = { relays: false, replay: true, map: pickData }
         const reporter = this.sidecar.bus.sub(
           { topic: 'reports', id: this.id },
           opts
@@ -353,12 +359,16 @@ class Sidecar extends ReadyResource {
           { topic: 'warming', id: this.id },
           opts
         )
-        const updates = this.messages({ type: 'pear/updates' }, opts)
-        this.cutover = () => {
-          // closure scoped to keep cutover refs to top ancestor subs
+        const updates = this.sidecar.bus.sub({ topic: 'messages', id: this.id, data: { type: 'pear/updates' } }, opts)
+        const clearBuffers = () => {
           reporter.replay = false
           warming.replay = false
           updates.replay = false
+        }
+        this.cutover = ({ stop } = {}) => { // closure scoped to keep cutover refs to top ancestor subs
+          if (this.cutoverTimeout) clearTimeout(this.cutoverTimeout)
+          if (stop) return clearBuffers()
+          this.cutoverTimeout = setTimeout(clearBuffers, CUTOVER_TIMEOUT)
         }
         this.reporter = reporter
         this.warming = warming
