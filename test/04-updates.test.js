@@ -823,9 +823,9 @@ test('Pear.updates should replay updates when cutover is not called', async func
   await Helper.untilClose(pipe)
 })
 
-test.solo('Pear.updates should replay updates only once when cutover is called', async function (t) {
+test('Pear.updates should replay updates only once when cutover is called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
-  plan(12)
+  plan(13)
   timeout(80_000)
 
   const appStager = new Helper(rig)
@@ -895,8 +895,7 @@ test.solo('Pear.updates should replay updates only once when cutover is called',
   const appUpdateLength = updateVersion.length
   ok(appUpdateLength > appVersionLength, `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`)
 
-  const untilUpdate2 = Helper.untilResult(pipe, { timeout: 30_000, info: 'start-listener\n' })
-    .then((data) => JSON.parse(data.split('\n').at(1)))
+  const updates2Results = Helper.collectResults(pipe, { timeout: 30_000, burstTimeout: 1000, count: 1, info: 'start-listener\n' })
 
   comment('updating app test file')
   fs.writeFileSync(path.join(cutover, file), 'test2')
@@ -910,10 +909,16 @@ test.solo('Pear.updates should replay updates only once when cutover is called',
   const appFinal3 = await Helper.pick(appStaging3, { tag: 'final' })
   ok(appFinal3.success, 'stage succeeded')
 
-  const update2 = await untilUpdate2
+  const rawUpdates2 = await updates2Results
   pass('app has received update')
-  is(update2?.id, 2, 'app update id is 2 (second update subscription)')
-  const updateVersion2 = update?.data?.version
+  const updates2 = []
+  for (const rawUpdate of rawUpdates2) {
+    rawUpdate.split('\n').filter(line => line).forEach(line => { updates2.push(JSON.parse(line)) })
+  }
+  ok(updates2.filter(u => u.id === 2).length >= 1, 'app has received an update from the second subscription')
+  is(updates2.filter(u => u.id === 1).length, updates2.filter(u => u.id === 2).length, 'app has received the same updates from the first subscription')
+  const update2 = updates2.filter(u => u.id === 2).sort((a, b) => a.data.version.length - b.data.version.length).at(0)
+  const updateVersion2 = update2?.data?.version
   const appUpdateLength2 = updateVersion2.length
   ok(appUpdateLength2 > appUpdateLength, `app version.length incremented from previous update (v${updateVersion2?.fork}.${updateVersion2?.length})`)
 
