@@ -6,7 +6,10 @@ const generic = (message, stack, info) => ({
   stack,
   info,
   headline: { content: 'Something has gone wrong' },
-  tagline: { content: 'An error has occurred which cannot be recovered from. Upgrading might help.' },
+  tagline: {
+    content:
+      'An error has occurred which cannot be recovered from. Upgrading might help.'
+  },
   cta: { content: 'QUIT', action: 'quit' }
 })
 
@@ -33,7 +36,9 @@ const dev = (message, stack, info) => ({
 const connection = (report) => ({
   type: 'connection',
   headline: { content: 'There seems to be a connection problem' },
-  tagline: { content: 'Check the application key and/or your network and try again' },
+  tagline: {
+    content: 'Check the application key and/or your network and try again'
+  },
   cta: { content: 'QUIT', action: 'quit' },
   reason: report?.err?.info?.err?.stack
 })
@@ -41,18 +46,35 @@ const connection = (report) => ({
 const upgrade = () => ({
   type: 'upgrade',
   headline: { content: 'Hey great news! A new version is available 🎉' },
-  tagline: { content: 'You can always find the latest version at <a href="https://keet.io">https://keet.io</a>' },
+  tagline: {
+    content:
+      'You can always find the latest version at <a href="https://keet.io">https://keet.io</a>'
+  },
   cta: { content: 'QUIT', action: 'quit' }
 })
 
 const update = (report) => {
   const { version } = report
   const { current } = version
-  const from = 'pear://' + current.fork + '.' + current.length + '.' + hypercoreid.normalize(current.key)
-  const to = 'pear://' + version.fork + '.' + version.length + '.' + hypercoreid.normalize(version.key)
+  const from =
+    'pear://' +
+    current.fork +
+    '.' +
+    current.length +
+    '.' +
+    hypercoreid.normalize(current.key)
+  const to =
+    'pear://' +
+    version.fork +
+    '.' +
+    version.length +
+    '.' +
+    hypercoreid.normalize(version.key)
   return {
     type: 'update',
-    headline: { content: 'Minimum Pear version required by ' + version.applink },
+    headline: {
+      content: 'Minimum Pear version required by ' + version.applink
+    },
     tagline: { content: 'Pear is updating from ' + from + ' to ' + to },
     version: report.version
   }
@@ -66,4 +88,12 @@ const permission = (report) => {
   }
 }
 
-module.exports = { generic, crash, dev, connection, upgrade, update, permission }
+module.exports = {
+  generic,
+  crash,
+  dev,
+  connection,
+  upgrade,
+  update,
+  permission
+}

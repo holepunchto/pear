@@ -86,11 +86,11 @@ const output = outputter('data', {
 module.exports = (ipc) => new Data(ipc)
 
 class Data {
-  constructor (ipc) {
+  constructor(ipc) {
     this.ipc = ipc
   }
 
-  async apps (cmd) {
+  async apps(cmd) {
     const { command } = cmd
     const { secrets, json } = command.parent.flags
     const link = command.args.link
@@ -98,28 +98,48 @@ class Data {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
-    await output(json, this.ipc.data({ resource: 'apps', secrets, link }), { tag: 'apps' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'apps', secrets, link }),
+      { tag: 'apps' },
+      this.ipc
+    )
   }
 
-  async dht (cmd) {
+  async dht(cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'dht' }),
+      { tag: 'dht' },
+      this.ipc
+    )
   }
 
-  async gc (cmd) {
+  async gc(cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'gc' }),
+      { tag: 'gc' },
+      this.ipc
+    )
   }
 
-  async manifest (cmd) {
+  async manifest(cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'manifest' }),
+      { tag: 'manifest' },
+      this.ipc
+    )
   }
 
-  async assets (cmd) {
+  async assets(cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
@@ -127,10 +147,15 @@ class Data {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
-    await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'assets', link }),
+      { tag: 'assets' },
+      this.ipc
+    )
   }
 
-  async currents (cmd) {
+  async currents(cmd) {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
@@ -138,6 +163,11 @@ class Data {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
-    await output(json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' }, this.ipc)
+    await output(
+      json,
+      this.ipc.data({ resource: 'currents', link }),
+      { tag: 'currents' },
+      this.ipc
+    )
   }
 }

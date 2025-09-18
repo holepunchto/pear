@@ -12,15 +12,15 @@ let version = VERSION
 
 // @pear/node
 const encoding0 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.string.preencode(state, m.host)
     c.uint.preencode(state, m.port)
   },
-  encode (state, m) {
+  encode(state, m) {
     c.string.encode(state, m.host)
     c.uint.encode(state, m.port)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.string.decode(state)
     const r1 = c.uint.decode(state)
 
@@ -33,13 +33,13 @@ const encoding0 = {
 
 // @pear/manifest
 const encoding1 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.uint.preencode(state, m.version)
   },
-  encode (state, m) {
+  encode(state, m) {
     c.uint.encode(state, m.version)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.uint.decode(state)
 
     return {
@@ -53,19 +53,19 @@ const encoding2_0 = c.array(c.frame(encoding0))
 
 // @pear/dht
 const encoding2 = {
-  preencode (state, m) {
+  preencode(state, m) {
     state.end++ // max flag is 1 so always one byte
 
     if (m.nodes) encoding2_0.preencode(state, m.nodes)
   },
-  encode (state, m) {
+  encode(state, m) {
     const flags = m.nodes ? 1 : 0
 
     c.uint.encode(state, flags)
 
     if (m.nodes) encoding2_0.encode(state, m.nodes)
   },
-  decode (state) {
+  decode(state) {
     const flags = c.uint.decode(state)
 
     return {
@@ -79,7 +79,7 @@ const encoding3_3 = c.array(c.string)
 
 // @pear/bundle
 const encoding3 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.appStorage)
     state.end++ // max flag is 2 so always one byte
@@ -87,10 +87,8 @@ const encoding3 = {
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
-  encode (state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) |
-      (m.tags ? 2 : 0)
+  encode(state, m) {
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -99,7 +97,7 @@ const encoding3 = {
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
     if (m.tags) encoding3_3.encode(state, m.tags)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
     const flags = c.uint.decode(state)
@@ -115,13 +113,13 @@ const encoding3 = {
 
 // @pear/gc
 const encoding4 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.string.preencode(state, m.path)
   },
-  encode (state, m) {
+  encode(state, m) {
     c.string.encode(state, m.path)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.string.decode(state)
 
     return {
@@ -135,7 +133,7 @@ const encoding5_4 = encoding3_3
 
 // @pear/assets
 const encoding5 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.ns)
     c.string.preencode(state, m.path)
@@ -145,11 +143,8 @@ const encoding5 = {
     if (m.only) encoding5_4.preencode(state, m.only)
     if (m.bytes) c.uint.preencode(state, m.bytes)
   },
-  encode (state, m) {
-    const flags =
-      (m.name ? 1 : 0) |
-      (m.only ? 2 : 0) |
-      (m.bytes ? 4 : 0)
+  encode(state, m) {
+    const flags = (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -160,7 +155,7 @@ const encoding5 = {
     if (m.only) encoding5_4.encode(state, m.only)
     if (m.bytes) c.uint.encode(state, m.bytes)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
     const r2 = c.string.decode(state)
@@ -179,15 +174,15 @@ const encoding5 = {
 
 // @pear/checkout
 const encoding6 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.uint.preencode(state, m.fork)
     c.uint.preencode(state, m.length)
   },
-  encode (state, m) {
+  encode(state, m) {
     c.uint.encode(state, m.fork)
     c.uint.encode(state, m.length)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.uint.decode(state)
     const r1 = c.uint.decode(state)
 
@@ -203,13 +198,13 @@ const encoding7_1 = c.frame(encoding6)
 
 // @pear/current
 const encoding7 = {
-  preencode (state, m) {
+  preencode(state, m) {
     c.string.preencode(state, m.link)
     state.end++ // max flag is 1 so always one byte
 
     if (m.checkout) encoding7_1.preencode(state, m.checkout)
   },
-  encode (state, m) {
+  encode(state, m) {
     const flags = m.checkout ? 1 : 0
 
     c.string.encode(state, m.link)
@@ -217,7 +212,7 @@ const encoding7 = {
 
     if (m.checkout) encoding7_1.encode(state, m.checkout)
   },
-  decode (state) {
+  decode(state) {
     const r0 = c.string.decode(state)
     const flags = c.uint.decode(state)
 
@@ -228,52 +223,62 @@ const encoding7 = {
   }
 }
 
-function setVersion (v) {
+function setVersion(v) {
   version = v
 }
 
-function encode (name, value, v = VERSION) {
+function encode(name, value, v = VERSION) {
   version = v
   return c.encode(getEncoding(name), value)
 }
 
-function decode (name, buffer, v = VERSION) {
+function decode(name, buffer, v = VERSION) {
   version = v
   return c.decode(getEncoding(name), buffer)
 }
 
-function getEnum (name) {
+function getEnum(name) {
   switch (name) {
-    default: throw new Error('Enum not found ' + name)
+    default:
+      throw new Error('Enum not found ' + name)
   }
 }
 
-function getEncoding (name) {
+function getEncoding(name) {
   switch (name) {
-    case '@pear/node': return encoding0
-    case '@pear/manifest': return encoding1
-    case '@pear/dht': return encoding2
-    case '@pear/bundle': return encoding3
-    case '@pear/gc': return encoding4
-    case '@pear/assets': return encoding5
-    case '@pear/checkout': return encoding6
-    case '@pear/current': return encoding7
-    default: throw new Error('Encoder not found ' + name)
+    case '@pear/node':
+      return encoding0
+    case '@pear/manifest':
+      return encoding1
+    case '@pear/dht':
+      return encoding2
+    case '@pear/bundle':
+      return encoding3
+    case '@pear/gc':
+      return encoding4
+    case '@pear/assets':
+      return encoding5
+    case '@pear/checkout':
+      return encoding6
+    case '@pear/current':
+      return encoding7
+    default:
+      throw new Error('Encoder not found ' + name)
   }
 }
 
-function getStruct (name, v = VERSION) {
+function getStruct(name, v = VERSION) {
   const enc = getEncoding(name)
   return {
-    preencode (state, m) {
+    preencode(state, m) {
       version = v
       enc.preencode(state, m)
     },
-    encode (state, m) {
+    encode(state, m) {
       version = v
       enc.encode(state, m)
     },
-    decode (state) {
+    decode(state) {
       version = v
       return enc.decode(state)
     }
@@ -282,4 +287,13 @@ function getStruct (name, v = VERSION) {
 
 const resolveStruct = getStruct // compat
 
-module.exports = { resolveStruct, getStruct, getEnum, getEncoding, encode, decode, setVersion, version }
+module.exports = {
+  resolveStruct,
+  getStruct,
+  getEnum,
+  getEncoding,
+  encode,
+  decode,
+  setVersion,
+  version
+}

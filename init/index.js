@@ -7,13 +7,22 @@ const { Interact } = require('pear-terminal')
 const stamp = require('pear-stamp')
 const plink = require('pear-link')
 const { LOCALDEV } = require('pear-constants')
-const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('pear-errors')
-async function init (link = 'default', dir, opts = {}) {
+const {
+  ERR_PERMISSION_REQUIRED,
+  ERR_OPERATION_FAILED,
+  ERR_DIR_NONEMPTY,
+  ERR_INVALID_TEMPLATE
+} = require('pear-errors')
+async function init(link = 'default', dir, opts = {}) {
   const { cwd, ipc, header, autosubmit, defaults, force = false, pkg } = opts
   let { ask = true } = opts
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
-  const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
+  const isPath =
+    link[0] === '.' ||
+    link[0] === '/' ||
+    link[1] === ':' ||
+    link.startsWith('\\')
   const isName = !isPear && !isFile && !isPath
 
   if (isName) {
@@ -30,9 +39,11 @@ async function init (link = 'default', dir, opts = {}) {
 
   let params = null
   if (isPear && ask) {
-    if (await ipc.trusted(link) === false) {
+    if ((await ipc.trusted(link)) === false) {
       const { drive } = plink.parse(link)
-      throw ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
+      throw ERR_PERMISSION_REQUIRED('Permission required to use template', {
+        key: drive.key
+      })
     }
   }
 
@@ -42,7 +53,10 @@ async function init (link = 'default', dir, opts = {}) {
     link = new URL(link, url).toString()
   }
 
-  for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
+  for await (const { tag, data } of ipc.dump({
+    link: link + '/_template.json',
+    dir: '-'
+  })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
       throw ERR_PERMISSION_REQUIRED(data.message, data.info)
     }
@@ -53,16 +67,20 @@ async function init (link = 'default', dir, opts = {}) {
       for (const prompt of params) {
         defaults[prompt.name] = Array.isArray(prompt.override)
           ? prompt.override.reduce((o, k) => o?.[k], pkg)
-          : prompt.default ?? defaults[prompt.name]
+          : (prompt.default ?? defaults[prompt.name])
         if (typeof prompt.validation !== 'string') continue
-        prompt.validation = new Function('value', 'return (' + prompt.validation + ')(value)') // eslint-disable-line
+        prompt.validation = new Function(
+          'value',
+          'return (' + prompt.validation + ')(value)'
+        ) // eslint-disable-line
       }
     } catch {
       params = null
     }
     break
   }
-  if (params === null) throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
+  if (params === null)
+    throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -72,7 +90,8 @@ async function init (link = 'default', dir, opts = {}) {
         break
       }
     }
-    if (empty === false) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    if (empty === false)
+      throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
@@ -89,9 +108,16 @@ async function init (link = 'default', dir, opts = {}) {
     if (value === null) continue // dir
     const file = stamp.sync(key, fields)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(stamp.stream(value, fields, shave), writeStream)
-    promise.catch((err) => { output.push({ tag: 'error', data: err }) })
-    promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
+    const promise = pipelinePromise(
+      stamp.stream(value, fields, shave),
+      writeStream
+    )
+    promise.catch((err) => {
+      output.push({ tag: 'error', data: err })
+    })
+    promise.then(() => {
+      output.push({ tag: 'wrote', data: { path: file } })
+    })
     promises.push(promise)
   }
 

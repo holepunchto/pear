@@ -7,11 +7,11 @@ const Opstream = require('../lib/opstream')
 const State = require('../state')
 
 module.exports = class Release extends Opstream {
-  constructor (...args) {
+  constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ name, channel, checkout, link, dir, cmdArgs }) {
+  async #op({ name, channel, checkout, link, dir, cmdArgs }) {
     const key = link ? hypercoreid.decode(link) : null
 
     const { session } = this
@@ -29,14 +29,18 @@ module.exports = class Release extends Opstream {
 
     this.push({ tag: 'releasing', data: { name, channel, link } })
 
-    const corestore = this.sidecar.getCorestore(name || state.name, channel, { writable: true })
+    const corestore = this.sidecar.getCorestore(name || state.name, channel, {
+      writable: true
+    })
 
     const bundle = new Bundle({ corestore, channel, key })
     await session.add(bundle)
     const manifest = await bundle.db.get('manifest')
 
     if (manifest === null) {
-      throw ERR_UNSTAGED(`The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`)
+      throw ERR_UNSTAGED(
+        `The "${name}" app has not been staged on ${channel ? '"' + channel + '" channel' : link}.`
+      )
     }
 
     const currentLength = bundle.db.feed.length
@@ -46,6 +50,9 @@ module.exports = class Release extends Opstream {
 
     await bundle.db.put('release', releaseLength)
 
-    this.push({ tag: 'released', data: { name, channel, link, length: bundle.db.feed.length } })
+    this.push({
+      tag: 'released',
+      data: { name, channel, link, length: bundle.db.feed.length }
+    })
   }
 }

@@ -7,14 +7,43 @@ const LocalDrive = require('localdrive')
 const { pathToFileURL } = require('url-file-url')
 const Helper = require('./helper')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-const dhtBootstrapDir = path.join(Helper.localDir, 'test', 'fixtures', 'dht-bootstrap')
+const dhtBootstrapDir = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'dht-bootstrap'
+)
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
-const requireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'require-assets')
-const subDepRequireAssets = path.join(Helper.localDir, 'test', 'fixtures', 'sub-dep-require-assets')
-const entrypointAndFragment = path.join(Helper.localDir, 'test', 'fixtures', 'entrypoint-and-fragment')
+const requireAssets = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'require-assets'
+)
+const subDepRequireAssets = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'sub-dep-require-assets'
+)
+const entrypointAndFragment = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'entrypoint-and-fragment'
+)
 const routesDir = path.join(Helper.localDir, 'test', 'fixtures', 'routes')
 
-test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout, test }) {
+test('smoke', async function ({
+  ok,
+  is,
+  alike,
+  plan,
+  comment,
+  teardown,
+  timeout,
+  test
+}) {
   timeout(180000)
   plan(14)
 
@@ -28,15 +57,29 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout,
     const id = Helper.getRandomId()
 
     comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+    const staging = helper.stage({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir,
+      dryRun: false
+    })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
     ok(staged.success, 'stage succeeded')
 
     comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    const seeding = helper.seed({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir,
+      key: null,
+      cmdArgs: []
+    })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const until = await Helper.pick(seeding, [
+      { tag: 'key' },
+      { tag: 'announced' }
+    ])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -64,15 +107,29 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout,
     const id = Helper.getRandomId()
 
     comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+    const staging = helper.stage({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir,
+      dryRun: false
+    })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, { tag: 'final' })
     ok(staged.success, 'stage succeeded')
 
     comment('seeding')
-    const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+    const seeding = helper.seed({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir,
+      key: null,
+      cmdArgs: []
+    })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    const until = await Helper.pick(seeding, [
+      { tag: 'key' },
+      { tag: 'announced' }
+    ])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -84,7 +141,11 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout,
 
     const result = await Helper.untilResult(run.pipe)
     const dhtBootstrap = JSON.parse(result)
-    alike(dhtBootstrap, Pear.config.dht.bootstrap, 'dht bootstrap matches Pear.config.dht.bootstrap')
+    alike(
+      dhtBootstrap,
+      Pear.config.dht.bootstrap,
+      'dht bootstrap matches Pear.config.dht.bootstrap'
+    )
 
     await Helper.untilClose(run.pipe)
     ok(true, 'ended')
@@ -103,9 +164,18 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout,
     const id = Helper.getRandomId()
 
     comment('staging')
-    const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+    const staging = helper.stage({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir,
+      dryRun: false,
+      bare: true
+    })
     teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+    const staged = await Helper.pick(staging, [
+      { tag: 'addendum' },
+      { tag: 'final' }
+    ])
     const { key } = await staged.addendum
     await staged.final
 
@@ -133,7 +203,14 @@ test('smoke', async function ({ ok, is, alike, plan, comment, teardown, timeout,
   await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
 })
 
-test('app with assets', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('app with assets', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
   timeout(180000)
   plan(5)
 
@@ -146,15 +223,29 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
 
   comment('seeding')
-  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -165,13 +256,24 @@ test('app with assets', async function ({ ok, is, plan, comment, teardown, timeo
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)
-  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  is(
+    result.trim(),
+    'This is the content of the asset',
+    'Read asset from entrypoint'
+  )
 
   await Helper.untilClose(run.pipe)
   ok(true, 'ended')
 })
 
-test('app with assets in sub dep', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('app with assets in sub dep', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
   timeout(180000)
   plan(5)
 
@@ -184,15 +286,29 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
 
   comment('seeding')
-  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -203,7 +319,11 @@ test('app with assets in sub dep', async function ({ ok, is, plan, comment, tear
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)
-  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
+  is(
+    result.trim(),
+    'This is the content of the asset',
+    'Read asset from entrypoint'
+  )
 
   await Helper.untilClose(run.pipe)
   ok(true, 'ended')
@@ -230,20 +350,33 @@ test('local app', async function ({ ok, is, teardown }) {
   const data = await helper.data({ resource: 'apps', link: tmpdir })
   const dataResult = await Helper.pick(data, [{ tag: 'apps' }])
   const bundle = (await dataResult.apps)[0]
-  is(bundle.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
-  ok(bundle.appStorage.includes('by-random'), 'application by storage has been generate randomly and persisted')
+  is(
+    bundle.link,
+    pathToFileURL(tmpdir).href,
+    'href of the directory is the app bundle key'
+  )
+  ok(
+    bundle.appStorage.includes('by-random'),
+    'application by storage has been generate randomly and persisted'
+  )
   is(bundle.encryptionKey, undefined, 'application has no encryption key')
 
   ok(true, 'ended')
 })
 
-test('entrypoint and fragment', async function ({ is, plan, comment, teardown, timeout }) {
+test('entrypoint and fragment', async function ({
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
   timeout(180000)
   plan(2)
 
   const dir = entrypointAndFragment
   const entrypoint = '/entrypoint.js'
-  const fragment = (Helper.getRandomId()).toString()
+  const fragment = Helper.getRandomId().toString()
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -252,9 +385,18 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key } = await staged.addendum
   await staged.final
 
@@ -270,7 +412,12 @@ test('entrypoint and fragment', async function ({ is, plan, comment, teardown, t
   await Helper.untilClose(run.pipe)
 })
 
-test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => {
+test('double stage and Pear.versions', async ({
+  teardown,
+  comment,
+  ok,
+  is
+}) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -292,9 +439,17 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
   await to.put('/index.js', makeIndex('A'))
 
   comment('staging A')
-  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  const stagingA = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(stagingA))
-  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
+  const stagedA = await Helper.pick(stagingA, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const addendumA = await stagedA.addendum
   const lengthA = addendumA.version
   await stagedA.final
@@ -309,9 +464,17 @@ test('double stage and Pear.versions', async ({ teardown, comment, ok, is }) => 
 
   comment('staging B')
   await to.put('/index.js', makeIndex('B'))
-  const stagingB = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir: tmpdir, dryRun: false })
+  const stagingB = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(stagingB))
-  const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])
+  const stagedB = await Helper.pick(stagingB, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const addendumB = await stagedB.addendum
   const lengthB = addendumB.version
   await stagedB.final
@@ -348,15 +511,29 @@ test('routes and linkdata', async ({ teardown, comment, ok, is }) => {
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, { tag: 'final' })
   ok(staged.success, 'stage succeeded')
 
   comment('seeding')
-  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 

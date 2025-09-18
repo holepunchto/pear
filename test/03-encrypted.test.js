@@ -10,7 +10,14 @@ const rig = new Helper.Rig()
 
 test.hook('encrypted setup', rig.setup)
 
-test('stage, seed and run encrypted app', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test('stage, seed and run encrypted app', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  timeout,
+  teardown
+}) {
   timeout(180000)
   plan(6)
 
@@ -29,7 +36,12 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   const password = hypercoreid.encode(crypto.randomBytes(32))
 
   comment('staging throws without encryption key')
-  const stagingA = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  const stagingA = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
   teardown(() => Helper.teardownStream(stagingA))
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
@@ -45,9 +57,18 @@ test('stage, seed and run encrypted app', async function ({ ok, is, plan, commen
   ok(final.success, 'stage succeeded')
 
   comment('seeding encrypted app')
-  const seeding = helper.seed({ channel: `test-${id}`, name: 'encrypted', dir, key: null, cmdArgs: [] })
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: 'encrypted',
+    dir,
+    key: null,
+    cmdArgs: []
+  })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 

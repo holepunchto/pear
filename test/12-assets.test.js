@@ -7,7 +7,12 @@ const Hyperswarm = require('hyperswarm')
 const Corestore = require('corestore')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const appWithAssetsDir = path.join(Helper.localDir, 'test', 'fixtures', 'app-with-assets')
+const appWithAssetsDir = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'app-with-assets'
+)
 
 test('can stage an application with pre', async (t) => {
   t.comment('creating test asset')
@@ -33,12 +38,18 @@ test('can stage an application with pre', async (t) => {
   const appPkg = JSON.parse(await fs.promises.readFile(appPkgPath, 'utf8'))
   const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
   appPkg.pear.assets.ui.link = link
-  await fs.promises.writeFile(path.join(appWithAssetsDir, 'package.json'), JSON.stringify(appPkg, null, 2))
+  await fs.promises.writeFile(
+    path.join(appWithAssetsDir, 'package.json'),
+    JSON.stringify(appPkg, null, 2)
+  )
 
   t.teardown(async () => {
     // revert change in package.json
     appPkg.pear.assets.ui.link = ''
-    await fs.promises.writeFile(path.join(appWithAssetsDir, 'package.json'), JSON.stringify(appPkg, null, 2))
+    await fs.promises.writeFile(
+      path.join(appWithAssetsDir, 'package.json'),
+      JSON.stringify(appPkg, null, 2)
+    )
   })
 
   const helper = new Helper()
@@ -55,7 +66,7 @@ test('can stage an application with pre', async (t) => {
   const assets = await assetsPipe.assets
 
   t.comment('asset created')
-  const asset = await assets.find(e => e.link === link)
+  const asset = await assets.find((e) => e.link === link)
   t.ok(asset)
 
   const assetBin = await fs.promises.readFile(path.join(asset.path, 'asset'))

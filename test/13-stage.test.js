@@ -3,10 +3,30 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 
-const stageAppMin = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min')
-const stageAppMinWithOnly = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min-with-only')
-const stageAppMinWithEntrypoints = path.join(Helper.localDir, 'test', 'fixtures', 'stage-app-min-with-entrypoints')
-const stagePearMain = path.join(Helper.localDir, 'test', 'fixtures', 'stage-pear-main')
+const stageAppMin = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'stage-app-min'
+)
+const stageAppMinWithOnly = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'stage-app-min-with-only'
+)
+const stageAppMinWithEntrypoints = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'stage-app-min-with-entrypoints'
+)
+const stagePearMain = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'stage-pear-main'
+)
 
 test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
   const dir = stageAppMin
@@ -16,7 +36,13 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
   await helper.ready()
 
   const id = Helper.getRandomId()
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, compact: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
@@ -43,10 +69,14 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 
   comment('Only files in the dependency tree are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
-  ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('basic stage min desktop app with entrypoints', async ({ teardown, ok, comment }) => {
+test('basic stage min desktop app with entrypoints', async ({
+  teardown,
+  ok,
+  comment
+}) => {
   const dir = stageAppMinWithEntrypoints
 
   const helper = new Helper()
@@ -54,7 +84,13 @@ test('basic stage min desktop app with entrypoints', async ({ teardown, ok, comm
   await helper.ready()
 
   const id = Helper.getRandomId()
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, compact: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
@@ -78,10 +114,14 @@ test('basic stage min desktop app with entrypoints', async ({ teardown, ok, comm
 
   comment('Only files in the dependency tree and assets are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
-  ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('basic stage min desktop app with only and include', async ({ teardown, ok, comment }) => {
+test('basic stage min desktop app with only and include', async ({
+  teardown,
+  ok,
+  comment
+}) => {
   const dir = stageAppMinWithOnly
 
   const helper = new Helper()
@@ -89,7 +129,13 @@ test('basic stage min desktop app with only and include', async ({ teardown, ok,
   await helper.ready()
 
   const id = Helper.getRandomId()
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, compact: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
@@ -111,7 +157,7 @@ test('basic stage min desktop app with only and include', async ({ teardown, ok,
 
   comment('Only files in the dependency tree and pear.stage.only are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
-  ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
 test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
@@ -122,7 +168,13 @@ test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
   await helper.ready()
 
   const id = Helper.getRandomId()
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, compact: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
@@ -135,14 +187,11 @@ test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  const expectedStagedFiles = [
-    '/package.json',
-    '/app.js'
-  ]
+  const expectedStagedFiles = ['/package.json', '/app.js']
 
   console.log(expectedStagedFiles)
 
   comment('Only files in the dependency tree are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
-  ok(stagedFiles.every(e => expectedStagedFiles.includes(e)))
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })

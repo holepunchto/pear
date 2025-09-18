@@ -17,7 +17,9 @@ if (isWindows === false) {
   const user = os.userInfo()
 
   if (stat.uid !== user.uid) {
-    const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
+    const err = new Error(
+      `Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`
+    )
     err.name = 'User Permissions Error'
     throw err
   }
@@ -42,7 +44,7 @@ switch (getBootType()) {
   }
 }
 
-function getBootType () {
+function getBootType() {
   if (global.Bare.argv[1] === '--sidecar') return BOOT_SIDECAR
   return BOOT_CLI
 }

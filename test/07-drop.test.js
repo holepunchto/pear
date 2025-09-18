@@ -17,9 +17,18 @@ test('drop', async function ({ ok, not, plan, comment, teardown, timeout }) {
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key } = await staged.addendum
   await staged.final
 

@@ -13,9 +13,18 @@ test('shift', async function ({ not, is, plan, comment, teardown }) {
 
   comment('staging src app')
   const id1 = Helper.getRandomId()
-  const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
+  const staging1 = helper.stage({
+    channel: `test-${id1}`,
+    name: `test-${id1}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged1 = await Helper.pick(staging1, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -27,9 +36,18 @@ test('shift', async function ({ not, is, plan, comment, teardown }) {
 
   comment('staging dst app')
   const id2 = Math.floor(Math.random() * 20000)
-  const staging2 = helper.stage({ channel: `test-${id2}`, name: `test-${id2}`, dir: storageDir, dryRun: false, bare: true })
+  const staging2 = helper.stage({
+    channel: `test-${id2}`,
+    name: `test-${id2}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging2))
-  const staged2 = await Helper.pick(staging2, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged2 = await Helper.pick(staging2, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key2 } = await staged2.addendum
   await staged2.final
 
@@ -43,7 +61,11 @@ test('shift', async function ({ not, is, plan, comment, teardown }) {
   const newDst = await Helper.untilResult(run2.pipe)
   await Helper.untilClose(run2.pipe)
 
-  is(oldSrc, newDst, 'dst app storage should be the same as old src app storage')
+  is(
+    oldSrc,
+    newDst,
+    'dst app storage should be the same as old src app storage'
+  )
 
   const run3 = await Helper.run({ link: src })
   const newSrc = await Helper.untilResult(run3.pipe)
@@ -52,7 +74,12 @@ test('shift', async function ({ not, is, plan, comment, teardown }) {
   not(oldSrc, newSrc, 'src app storage should be different after shift')
 })
 
-test('shift should fail with invalid src', async function ({ absent, plan, comment, teardown }) {
+test('shift should fail with invalid src', async function ({
+  absent,
+  plan,
+  comment,
+  teardown
+}) {
   plan(1)
 
   const helper = new Helper()
@@ -61,9 +88,18 @@ test('shift should fail with invalid src', async function ({ absent, plan, comme
 
   comment('staging dst app')
   const id1 = Helper.getRandomId()
-  const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
+  const staging1 = helper.stage({
+    channel: `test-${id1}`,
+    name: `test-${id1}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged1 = await Helper.pick(staging1, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -76,7 +112,12 @@ test('shift should fail with invalid src', async function ({ absent, plan, comme
   absent(error.success, 'should error')
 })
 
-test('shift should fail with invalid dst', async function ({ absent, plan, comment, teardown }) {
+test('shift should fail with invalid dst', async function ({
+  absent,
+  plan,
+  comment,
+  teardown
+}) {
   plan(1)
 
   const helper = new Helper()
@@ -85,9 +126,18 @@ test('shift should fail with invalid dst', async function ({ absent, plan, comme
 
   comment('staging src app')
   const id1 = Helper.getRandomId()
-  const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
+  const staging1 = helper.stage({
+    channel: `test-${id1}`,
+    name: `test-${id1}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged1 = await Helper.pick(staging1, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -100,7 +150,12 @@ test('shift should fail with invalid dst', async function ({ absent, plan, comme
   absent(error.success, 'should error')
 })
 
-test('shift should fail when src app storage does not exist', async function ({ absent, plan, comment, teardown }) {
+test('shift should fail when src app storage does not exist', async function ({
+  absent,
+  plan,
+  comment,
+  teardown
+}) {
   plan(1)
 
   const helper = new Helper()
@@ -109,9 +164,18 @@ test('shift should fail when src app storage does not exist', async function ({ 
 
   comment('staging src app')
   const id1 = Helper.getRandomId()
-  const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
+  const staging1 = helper.stage({
+    channel: `test-${id1}`,
+    name: `test-${id1}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged1 = await Helper.pick(staging1, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -124,7 +188,12 @@ test('shift should fail when src app storage does not exist', async function ({ 
   absent(error.success, 'should error')
 })
 
-test('shift should fail when dst app storage already exists without force', async function ({ absent, plan, comment, teardown }) {
+test('shift should fail when dst app storage already exists without force', async function ({
+  absent,
+  plan,
+  comment,
+  teardown
+}) {
   plan(1)
 
   const helper = new Helper()
@@ -133,18 +202,36 @@ test('shift should fail when dst app storage already exists without force', asyn
 
   comment('staging src app')
   const id1 = Helper.getRandomId()
-  const staging1 = helper.stage({ channel: `test-${id1}`, name: `test-${id1}`, dir: storageDir, dryRun: false, bare: true })
+  const staging1 = helper.stage({
+    channel: `test-${id1}`,
+    name: `test-${id1}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged1 = await Helper.pick(staging1, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
   const src = `pear://${key1}`
 
   const id2 = Math.floor(Math.random() * 20000)
-  const staging2 = helper.stage({ channel: `test-${id2}`, name: `test-${id2}`, dir: storageDir, dryRun: false, bare: true })
+  const staging2 = helper.stage({
+    channel: `test-${id2}`,
+    name: `test-${id2}`,
+    dir: storageDir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging2))
-  const staged2 = await Helper.pick(staging2, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged2 = await Helper.pick(staging2, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key: key2 } = await staged2.addendum
   await staged2.final
 

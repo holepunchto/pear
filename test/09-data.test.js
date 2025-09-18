@@ -11,7 +11,14 @@ const Helper = require('./helper')
 const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
 const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 
-test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) {
+test('pear data', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  timeout,
+  teardown
+}) {
   timeout(180000)
   plan(17)
 
@@ -49,7 +56,10 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   data = await helper.data({ resource: 'apps', link })
   result = await Helper.pick(data, [{ tag: 'apps' }])
   let bundle = (await result.apps)[0]
-  ok(bundle.encryptionKey === undefined, 'Encryption key is hidden without --secrets')
+  ok(
+    bundle.encryptionKey === undefined,
+    'Encryption key is hidden without --secrets'
+  )
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
   is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
@@ -58,7 +68,11 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   data = await helper.data({ resource: 'apps', link, secrets: true })
   result = await Helper.pick(data, [{ tag: 'apps' }])
   bundle = (await result.apps)[0]
-  is(bundle.encryptionKey.toString('hex'), ek.toString('hex'), 'Encryption key from bundle matches')
+  is(
+    bundle.encryptionKey.toString('hex'),
+    ek.toString('hex'),
+    'Encryption key from bundle matches'
+  )
   ok(bundle.link.startsWith('pear://'), 'Link starts with pear://')
   is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
@@ -81,7 +95,11 @@ test('pear data', async function ({ ok, is, plan, comment, timeout, teardown }) 
   ok(true, 'ended')
 })
 
-test('pear data: no duplicated bundle', async function ({ is, comment, teardown }) {
+test('pear data: no duplicated bundle', async function ({
+  is,
+  comment,
+  teardown
+}) {
   const dir = versionsDir
 
   const helper = new Helper()
@@ -91,9 +109,18 @@ test('pear data: no duplicated bundle', async function ({ is, comment, teardown 
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key } = await staged.addendum
   await staged.final
 
@@ -107,12 +134,18 @@ test('pear data: no duplicated bundle', async function ({ is, comment, teardown 
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
 
-  const persistedBundles = bundles.filter(e => e.link.startsWith(`pear://${key}`))
+  const persistedBundles = bundles.filter((e) =>
+    e.link.startsWith(`pear://${key}`)
+  )
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
 })
 
-test('pear data: bundle persisted with z32 encoded key', async function ({ is, comment, teardown }) {
+test('pear data: bundle persisted with z32 encoded key', async function ({
+  is,
+  comment,
+  teardown
+}) {
   const dir = versionsDir
 
   const helper = new Helper()
@@ -122,25 +155,42 @@ test('pear data: bundle persisted with z32 encoded key', async function ({ is, c
   const id = Helper.getRandomId()
 
   comment('staging')
-  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false, bare: true })
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
   const { key } = await staged.addendum
   await staged.final
 
-  const run = await Helper.run({ link: `pear://${hypercoreid.decode(key).toString('hex')}` })
+  const run = await Helper.run({
+    link: `pear://${hypercoreid.decode(key).toString('hex')}`
+  })
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'apps' })
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
 
-  const persistedBundles = bundles.filter(e => e.link.startsWith(`pear://${key}`))
+  const persistedBundles = bundles.filter((e) =>
+    e.link.startsWith(`pear://${key}`)
+  )
   is(persistedBundles.length, 1, 'bundle persisted')
   is(persistedBundles[0].link, `pear://${key}`, 'encoded key persisted')
 })
 
-test('pear data: no duplicated bundle local app', async function ({ is, comment, teardown }) {
+test('pear data: no duplicated bundle local app', async function ({
+  is,
+  comment,
+  teardown
+}) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -161,8 +211,10 @@ test('pear data: no duplicated bundle local app', async function ({ is, comment,
   const result = await Helper.pick(data, [{ tag: 'apps' }])
   const bundles = await result.apps
 
-  const key = isWindows ? `file:///${versionsDir.replaceAll('\\', '/')}` : `file://${versionsDir}`
-  const persistedBundles = bundles.filter(e => e.link.startsWith(key))
+  const key = isWindows
+    ? `file:///${versionsDir.replaceAll('\\', '/')}`
+    : `file://${versionsDir}`
+  const persistedBundles = bundles.filter((e) => e.link.startsWith(key))
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, key, 'bundle key is origin key')
 })

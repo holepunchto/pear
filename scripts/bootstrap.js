@@ -18,9 +18,11 @@ const Rache = require('rache')
 const speedometer = require('speedometer')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
-const argv = global.Pear?.config.args || global.Bare?.argv || global.process.argv
+const argv =
+  global.Pear?.config.args || global.Bare?.argv || global.process.argv
 
-const parser = command('bootstrap',
+const parser = command(
+  'bootstrap',
   flag('--archdump'),
   flag('--dlruntime'),
   flag('--external-corestore'),
@@ -30,16 +32,25 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
 const DLRUNTIME = cmd.flags.dlruntime === true
-const RUNTIMES_DRIVE_KEY = cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
-const CORESTORE = cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
+const RUNTIMES_DRIVE_KEY =
+  cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+const CORESTORE =
+  cmd.flags.externalCorestore &&
+  path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
-const ROOT = global.Pear ? path.join(new URL(global.Pear.config.applink).pathname, __dirname) : __dirname
+const ROOT = global.Pear
+  ? path.join(new URL(global.Pear.config.applink).pathname, __dirname)
+  : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
 const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 try {
-  fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file')
+  fs.symlinkSync(
+    '..',
+    path.join(PEAR, 'current'),
+    !isWindows ? 'junction' : 'file'
+  )
 } catch (err) {
   if (err.code === 'EPERM') throw err
   safetyCatch(err)
@@ -51,7 +62,9 @@ if (isWindows === false) {
     const peardev = path.join(SWAP, 'pear.dev')
     fs.symlinkSync(runtime, peardev)
     fs.chmodSync(peardev, 0o775)
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 } else {
   const ps1tmp = path.join(SWAP, Math.floor(Math.random() * 1000) + '.pear')
   fs.writeFileSync(ps1tmp, `& "${runtime}" @args`)
@@ -72,15 +85,19 @@ if (ARCHDUMP) {
   console.log('Now run ./pear.dev')
 }
 
-function advise () {
+function advise() {
   if (isWindows === false) {
-    console.log('🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.')
+    console.log(
+      '🍐 The ./pear.dev symlink now points to the runtime. Use ./pear.dev as localdev pear.'
+    )
     return
   }
-  console.log('🍐 The pear.cmd and pear.ps1 scripts wrap the runtime. Use pear.cmd or pear.ps1 as localdev pear.')
+  console.log(
+    '🍐 The pear.cmd and pear.ps1 scripts wrap the runtime. Use pear.cmd or pear.ps1 as localdev pear.'
+  )
 }
 
-async function download (key, all = false) {
+async function download(key, all = false) {
   if (all) console.log('🍐 Fetching all runtimes from: \n   ' + key)
   else console.log('🍐 [ localdev ] - no local runtime: fetching runtime')
 
@@ -95,7 +112,9 @@ async function download (key, all = false) {
   const swarm = new Hyperswarm()
   goodbye(() => swarm.destroy())
 
-  swarm.on('connection', (socket) => { runtimes.corestore.replicate(socket) })
+  swarm.on('connection', (socket) => {
+    runtimes.corestore.replicate(socket)
+  })
 
   await runtimes.ready()
 
@@ -127,7 +146,9 @@ async function download (key, all = false) {
         '/by-arch/darwin-arm64/lib',
         '/by-arch/win32-x64/lib'
       ]
-      return runtimes.some(r => key === r) || lib.some(l => key.startsWith(l))
+      return (
+        runtimes.some((r) => key === r) || lib.some((l) => key.startsWith(l))
+      )
     }
   })
 
@@ -137,11 +158,17 @@ async function download (key, all = false) {
   for await (const { op, key, bytesAdded } of runtime) {
     if (isTTY) monitor.clear()
     if (op === 'add') {
-      console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
+      console.log(
+        '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
     } else if (op === 'change') {
-      console.log('\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
+      console.log(
+        '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
     } else if (op === 'remove') {
-      console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
+      console.log(
+        '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
     }
   }
 
@@ -156,13 +183,18 @@ async function download (key, all = false) {
   const tick = isWindows ? '^' : '✔'
 
   if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
-  else console.log('\x1B[32m' + tick + '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n')
+  else
+    console.log(
+      '\x1B[32m' +
+        tick +
+        '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
+    )
 }
 
 /**
  * @param {Hyperdrive} drive
  */
-function monitorDrive (drive) {
+function monitorDrive(drive) {
   if (!isTTY) {
     return {
       clear: () => null,
@@ -176,24 +208,27 @@ function monitorDrive (drive) {
   let downloadedBytes = 0
   let uploadedBytes = 0
 
-  drive.getBlobs().then(blobs => {
-    blobs.core.on('download', (_index, bytes) => {
-      downloadedBytes += bytes
-      downloadSpeedometer(bytes)
+  drive
+    .getBlobs()
+    .then((blobs) => {
+      blobs.core.on('download', (_index, bytes) => {
+        downloadedBytes += bytes
+        downloadSpeedometer(bytes)
+      })
+      blobs.core.on('upload', (_index, bytes) => {
+        uploadedBytes += bytes
+        uploadSpeedometer(bytes)
+      })
+      blobs.core.on('peer-add', () => {
+        peers = blobs.core.peers.length
+      })
+      blobs.core.on('peer-remove', () => {
+        peers = blobs.core.peers.length
+      })
     })
-    blobs.core.on('upload', (_index, bytes) => {
-      uploadedBytes += bytes
-      uploadSpeedometer(bytes)
+    .catch(() => {
+      // ignore
     })
-    blobs.core.on('peer-add', () => {
-      peers = blobs.core.peers.length
-    })
-    blobs.core.on('peer-remove', () => {
-      peers = blobs.core.peers.length
-    })
-  }).catch(() => {
-    // ignore
-  })
 
   const clear = () => {
     process.stdout.clearLine()
@@ -202,7 +237,9 @@ function monitorDrive (drive) {
 
   const interval = setInterval(() => {
     clear()
-    process.stdout.write(`[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`)
+    process.stdout.write(
+      `[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`
+    )
   }, 500)
 
   const stop = () => {

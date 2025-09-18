@@ -8,9 +8,11 @@ const Opstream = require('../lib/opstream')
 const State = require('../state')
 
 module.exports = class Seed extends Opstream {
-  constructor (...args) { super((...args) => this.#op(...args), ...args) }
+  constructor(...args) {
+    super((...args) => this.#op(...args), ...args)
+  }
 
-  async #op ({ name, channel, link, verbose, dir, cmdArgs } = {}) {
+  async #op({ name, channel, link, verbose, dir, cmdArgs } = {}) {
     const { client, session } = this
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
@@ -27,15 +29,27 @@ module.exports = class Seed extends Opstream {
 
     const corestore = this.sidecar.getCorestore(name, channel)
     await corestore.ready()
-    const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
+    const key = link
+      ? hypercoreid.decode(link)
+      : await Hyperdrive.getDriveKey(corestore)
 
-    const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
+    const status = (msg) =>
+      this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const query = await this.sidecar.model.getBundle(`pear://${hypercoreid.encode(key)}`)
+    const query = await this.sidecar.model.getBundle(
+      `pear://${hypercoreid.encode(key)}`
+    )
     const encryptionKey = query?.encryptionKey
 
-    const bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, channel, status, encryptionKey })
+    const bundle = new Bundle({
+      swarm: this.sidecar.swarm,
+      corestore,
+      key,
+      channel,
+      status,
+      encryptionKey
+    })
 
     try {
       await session.add(bundle)
@@ -43,11 +57,16 @@ module.exports = class Seed extends Opstream {
       if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', {
+        key,
+        encrypted: true
+      })
     }
 
     if (!link && bundle.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+      throw ERR_INVALID_INPUT(
+        'Invalid Channel "' + channel + '" - nothing to seed'
+      )
     }
 
     await bundle.join({ server: true })
@@ -56,7 +75,10 @@ module.exports = class Seed extends Opstream {
       await bundle.drive.get('/package.json')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+      throw ERR_PERMISSION_REQUIRED('Encryption key required', {
+        key,
+        encrypted: true
+      })
     }
 
     bundle.drive.core.download({ start: 0, end: -1 })
@@ -66,8 +88,14 @@ module.exports = class Seed extends Opstream {
 
     if (verbose) {
       this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
-      this.push({ tag: 'meta-discovery-key', data: bundle.drive.discoveryKey.toString('hex') })
-      this.push({ tag: 'content-key', data: bundle.drive.contentKey.toString('hex') })
+      this.push({
+        tag: 'meta-discovery-key',
+        data: bundle.drive.discoveryKey.toString('hex')
+      })
+      this.push({
+        tag: 'content-key',
+        data: bundle.drive.contentKey.toString('hex')
+      })
     }
 
     this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })

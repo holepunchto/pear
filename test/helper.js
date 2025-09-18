@@ -12,7 +12,12 @@ const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const BY_ARCH = path.join(
+  'by-arch',
+  HOST,
+  'bin',
+  `pear-runtime${isWindows ? '.exe' : ''}`
+)
 const constants = require('pear-constants')
 const run = require('pear-run')
 const { PLATFORM_DIR, RUNTIME } = constants
@@ -41,7 +46,7 @@ class Rig {
   local = new Helper()
   tmp = tmp
   keepAlive = true
-  constructor ({ keepAlive = true } = {}) {
+  constructor({ keepAlive = true } = {}) {
     this.keepAlive = keepAlive
   }
 
@@ -52,15 +57,29 @@ class Rig {
     comment('connected to sidecar')
 
     comment('staging platform...')
-    const staging = this.local.stage({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, dryRun: false })
+    const staging = this.local.stage({
+      channel: `test-${this.id}`,
+      name: `test-${this.id}`,
+      dir: this.artefactDir,
+      dryRun: false
+    })
     await Helper.pick(staging, { tag: 'final' })
     comment('platform staged')
 
     comment('seeding platform')
     this.seeder = new Helper()
     await this.seeder.ready()
-    this.seeding = this.seeder.seed({ channel: `test-${this.id}`, name: `test-${this.id}`, dir: this.artefactDir, key: null, cmdArgs: [] })
-    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    this.seeding = this.seeder.seed({
+      channel: `test-${this.id}`,
+      name: `test-${this.id}`,
+      dir: this.artefactDir,
+      key: null,
+      cmdArgs: []
+    })
+    const until = await Helper.pick(this.seeding, [
+      { tag: 'key' },
+      { tag: 'announced' }
+    ])
     this.key = await until.key
     await until.announced
     comment('platform seeding')
@@ -93,7 +112,7 @@ class Rig {
 }
 
 class OperationError extends Error {
-  constructor ({ code, message, stack }) {
+  constructor({ code, message, stack }) {
     super(message)
     this.code = code
     this.sidecarStack = stack
@@ -105,11 +124,13 @@ class Helper extends IPC.Client {
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
-  constructor (opts = {}) {
+  constructor(opts = {}) {
     const log = global.Pear.config.args.includes('--log')
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.config.dht.bootstrap.map(e => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = Pear.config.dht.bootstrap
+      .map((e) => `${e.host}:${e.port}`)
+      .join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
     if (log) args.push('--log')
     const pipeId = (s) => {
@@ -118,7 +139,9 @@ class Helper extends IPC.Client {
       return b4a.toString(buf, 'hex')
     }
     const lock = path.join(platformDir, 'corestores', 'platform', 'db', 'LOCK')
-    const socketPath = isWindows ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}` : `${platformDir}/pear.sock`
+    const socketPath = isWindows
+      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
+      : `${platformDir}/pear.sock`
     const connectTimeout = 20_000
     const connect = opts.expectSidecar
       ? true
@@ -130,13 +153,13 @@ class Helper extends IPC.Client {
     this.log = log
   }
 
-  static getRandomId () {
+  static getRandomId() {
     const buf = Buffer.alloc(32)
     sodium.randombytes_buf(buf)
     return buf.toString('hex')
   }
 
-  static async teardownStream (stream) {
+  static async teardownStream(stream) {
     if (stream.destroyed) return
     stream.end()
     return new Promise((resolve) => stream.on('close', resolve))
@@ -145,8 +168,9 @@ class Helper extends IPC.Client {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async run ({ link, platformDir, args = [] }) {
-    if (platformDir) Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+  static async run({ link, platformDir, args = [] }) {
+    if (platformDir)
+      Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
     const pipe = run(link, args)
 
     if (platformDir) Pear.constructor.RUNTIME = RUNTIME
@@ -154,11 +178,14 @@ class Helper extends IPC.Client {
     return { pipe }
   }
 
-  static async untilResult (pipe, opts = {}) {
+  static async untilResult(pipe, opts = {}) {
     const timeout = opts.timeout || 10000
     const res = new Promise((resolve, reject) => {
       let buffer = ''
-      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
+      const timeoutId = setTimeout(
+        () => reject(new Error('timed out ' + timeout)),
+        timeout
+      )
       pipe.on('data', (data) => {
         buffer += data.toString()
         if (buffer[buffer.length - 1] === STOP_CHAR) {
@@ -183,7 +210,7 @@ class Helper extends IPC.Client {
     return res
   }
 
-  static untilData (pipe, timeout = 5000) {
+  static untilData(pipe, timeout = 5000) {
     return new Promise((resolve, reject) => {
       const tid = setTimeout(reject, timeout, new Error('timeout'))
       pipe.once('data', (data) => {
@@ -193,11 +220,14 @@ class Helper extends IPC.Client {
     })
   }
 
-  static async untilClose (pipe, timeout = 5000) {
+  static async untilClose(pipe, timeout = 5000) {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
+      const timeoutId = setTimeout(
+        () => reject(new Error('timed out')),
+        timeout
+      )
       pipe.on('close', () => {
         clearTimeout(timeoutId)
         resolve('closed')
@@ -211,7 +241,7 @@ class Helper extends IPC.Client {
     return res
   }
 
-  static async isRunning (pid) {
+  static async isRunning(pid) {
     try {
       // 0 is a signal that doesn't kill the process, just checks if it's running
       return process.kill(pid, 0)
@@ -220,7 +250,7 @@ class Helper extends IPC.Client {
     }
   }
 
-  static async untilWorkerExit (pid, timeout = 5000) {
+  static async untilWorkerExit(pid, timeout = 5000) {
     if (!pid) throw new Error('Invalid pid')
     const start = Date.now()
     while (await this.isRunning(pid)) {
@@ -229,26 +259,37 @@ class Helper extends IPC.Client {
     }
   }
 
-  static async pick (stream, ptn = {}, by = 'tag') {
+  static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
-      if ((ptn?.[by] !== 'error') && output[by] === 'error') throw new OperationError(output.data)
+      if (ptn?.[by] !== 'error' && output[by] === 'error')
+        throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
   }
 
-  static #untils (stream, patterns = [], by) {
+  static #untils(stream, patterns = [], by) {
     const untils = {}
     for (const ptn of patterns) {
       untils[ptn[by]] = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Helper: Data Timeout for ' + JSON.stringify(ptn) + ' after ' + MAX_OP_STEP_WAIT + 'ms'))
+          reject(
+            new Error(
+              'Helper: Data Timeout for ' +
+                JSON.stringify(ptn) +
+                ' after ' +
+                MAX_OP_STEP_WAIT +
+                'ms'
+            )
+          )
         }, MAX_OP_STEP_WAIT)
-        const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
+        const onclose = () =>
+          reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
         const ondata = (data) => {
-          if (data === null || data?.tag === 'final') stream.off('close', onclose)
+          if (data === null || data?.tag === 'final')
+            stream.off('close', onclose)
         }
         stream.on('data', ondata)
         stream.on('close', onclose)
@@ -270,20 +311,24 @@ class Helper extends IPC.Client {
     return untils
   }
 
-  static async sink (stream, ptn) {
+  static async sink(stream, ptn) {
     for await (const output of stream) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
     }
   }
 
-  static matchesPattern (message, pattern) {
+  static matchesPattern(message, pattern) {
     if (typeof pattern !== 'object' || pattern === null) return false
     for (const key in pattern) {
       if (Object.hasOwnProperty.call(pattern, key) === false) continue
       if (Object.hasOwnProperty.call(message, key) === false) return false
       const messageValue = message[key]
       const patternValue = pattern[key]
-      const nested = typeof patternValue === 'object' && patternValue !== null && typeof messageValue === 'object' && messageValue !== null
+      const nested =
+        typeof patternValue === 'object' &&
+        patternValue !== null &&
+        typeof messageValue === 'object' &&
+        messageValue !== null
       if (nested) {
         if (!this.matchesPattern(messageValue, patternValue)) return false
       } else if (messageValue !== patternValue) {
@@ -293,24 +338,24 @@ class Helper extends IPC.Client {
     return true
   }
 
-  static async bootstrap (key, dir) {
+  static async bootstrap(key, dir) {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
     await updaterBootstrap(key, dir, { bootstrap: Pear.config.dht.bootstrap })
   }
 
-  static async gc (dir) {
+  static async gc(dir) {
     if (NO_GC) return
 
-    await fs.promises.rm(dir, { recursive: true }).catch(() => { })
+    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
 }
 
 module.exports = Helper
 
 class Reiterate {
-  constructor (stream) {
+  constructor(stream) {
     this.stream = stream
     this.complete = false
     this.buffer = []
@@ -325,25 +370,25 @@ class Reiterate {
     this.stream.on('error', this._onerror)
   }
 
-  _ondata (value) {
+  _ondata(value) {
     this.buffer.push({ value, done: false })
     for (const { resolve } of this.readers) resolve()
     this.readers.length = 0
   }
 
-  _onend () {
+  _onend() {
     this.buffer.push({ done: true })
     this.complete = true
     for (const { resolve } of this.readers) resolve()
     this.readers.length = 0
   }
 
-  _onerror (err) {
+  _onerror(err) {
     for (const { reject } of this.readers) reject(err)
     this.readers.length = 0
   }
 
-  async * _tail () {
+  async *_tail() {
     try {
       let i = 0
       while (i < this.buffer.length || !this.complete) {
@@ -352,7 +397,9 @@ class Reiterate {
           if (done) break
           yield value
         } else {
-          await new Promise((resolve, reject) => this.readers.push({ resolve, reject }))
+          await new Promise((resolve, reject) =>
+            this.readers.push({ resolve, reject })
+          )
         }
       }
     } finally {
@@ -362,5 +409,7 @@ class Reiterate {
     }
   }
 
-  [Symbol.asyncIterator] () { return this._tail() }
+  [Symbol.asyncIterator]() {
+    return this._tail()
+  }
 }

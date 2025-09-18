@@ -7,21 +7,21 @@ const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('pear-errors')
 const SharedState = require('pear-state')
 
 module.exports = class State extends SharedState {
-  constructor (opts) {
+  constructor(opts) {
     super(opts)
     this.reconfigure()
   }
 
-  reconfigure () {
+  reconfigure() {
     this.config = this.constructor.configFrom(this)
   }
 
-  update (state) {
+  update(state) {
     Object.assign(this, state)
     this.reconfigure()
   }
 
-  async initialize ({ bundle, app, dryRun = false, pkg = null } = {}) {
+  async initialize({ bundle, app, dryRun = false, pkg = null } = {}) {
     if (app?.reported) return
     await bundle.ready()
     if (app?.reported) return
@@ -35,10 +35,14 @@ module.exports = class State extends SharedState {
       const result = await bundle.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
-        throw ERR_INVALID_MANIFEST(`unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`)
+        throw ERR_INVALID_MANIFEST(
+          `unable to fetch manifest from app pear://${hypercoreid.encode(this.key)}`
+        )
       }
       if (result.value === null) {
-        throw ERR_INVALID_MANIFEST(`empty manifest found from app pear://${hypercoreid.encode(this.key)}`)
+        throw ERR_INVALID_MANIFEST(
+          `empty manifest found from app pear://${hypercoreid.encode(this.key)}`
+        )
       }
       await this.constructor.build(this, result.value)
       if (app?.reported) return
@@ -49,14 +53,18 @@ module.exports = class State extends SharedState {
       if (this.stage && dryRun === false && this.manifest) {
         const result = await bundle.db.get('manifest')
         if (app?.reported) return
-        if (!result || !sameData(result.value, this.manifest)) await bundle.db.put('manifest', this.manifest)
+        if (!result || !sameData(result.value, this.manifest))
+          await bundle.db.put('manifest', this.manifest)
         if (app?.reported) return
       }
     }
 
     if (app?.reported) return
 
-    if (this.stage && this.manifest === null) throw ERR_INVALID_PROJECT_DIR(`"${path.join(this.dir, 'package.json')}" not found. Pear project must have a package.json`)
+    if (this.stage && this.manifest === null)
+      throw ERR_INVALID_PROJECT_DIR(
+        `"${path.join(this.dir, 'package.json')}" not found. Pear project must have a package.json`
+      )
 
     const { dependencies } = this.manifest
     const options = this.options
@@ -67,7 +75,13 @@ module.exports = class State extends SharedState {
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
 
-    try { this.checkpoint = JSON.parse(await fsp.readFile(path.join(this.storage, 'checkpoint'))) } catch { /* ignore */ }
+    try {
+      this.checkpoint = JSON.parse(
+        await fsp.readFile(path.join(this.storage, 'checkpoint'))
+      )
+    } catch {
+      /* ignore */
+    }
     if (app?.reported) return
     if (this.key) {
       this.version = {

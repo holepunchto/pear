@@ -6,11 +6,13 @@ const plink = require('pear-link')
 const { outputter, ansi, permit, isTTY } = require('pear-terminal')
 
 const output = outputter('seed', {
-  seeding: ({ key, name, channel }) => `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
+  seeding: ({ key, name, channel }) =>
+    `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
   key: (info) => `---:\n pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
-  'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
+  'meta-discovery-key': (info) =>
+    `Meta core discovery key (hex) :-\n\n    ${info}\n`,
   announced: '^_^ announced',
   'peer-add': (info) => `o-o peer join ${info}`,
   'peer-remove': (info) => `-_- peer drop ${info}`,
@@ -23,18 +25,32 @@ const output = outputter('seed', {
   }
 })
 
-module.exports = (ipc) => async function seed (cmd) {
-  const { json, verbose, ask } = cmd.flags
-  const { dir = os.cwd() } = cmd.args
-  const isKey = plink.parse(cmd.args.channel).drive.key !== null
-  const channel = isKey ? null : cmd.args.channel
-  const link = isKey ? cmd.args.channel : null
-  let { name } = cmd.flags
-  if (!name && !link) {
-    const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
-    name = pkg.pear?.name || pkg.name
-  }
-  const id = Bare.pid
+module.exports = (ipc) =>
+  async function seed(cmd) {
+    const { json, verbose, ask } = cmd.flags
+    const { dir = os.cwd() } = cmd.args
+    const isKey = plink.parse(cmd.args.channel).drive.key !== null
+    const channel = isKey ? null : cmd.args.channel
+    const link = isKey ? cmd.args.channel : null
+    let { name } = cmd.flags
+    if (!name && !link) {
+      const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
+      name = pkg.pear?.name || pkg.name
+    }
+    const id = Bare.pid
 
-  await output(json, ipc.seed({ id, name, channel, link, verbose, dir, cmdArgs: Bare.argv.slice(1) }), { ask }, ipc)
-}
+    await output(
+      json,
+      ipc.seed({
+        id,
+        name,
+        channel,
+        link,
+        verbose,
+        dir,
+        cmdArgs: Bare.argv.slice(1)
+      }),
+      { ask },
+      ipc
+    )
+  }

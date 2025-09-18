@@ -9,10 +9,13 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   await helper.ready()
   let session = null
 
-  teardown(() => {
-    helper.close()
-    session.destroy()
-  }, { order: Infinity })
+  teardown(
+    () => {
+      helper.close()
+      session.destroy()
+    },
+    { order: Infinity }
+  )
 
   const key = await helper.inspect()
   session = new Session({ inspectorKey: key, bootstrap: null })

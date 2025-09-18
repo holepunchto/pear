@@ -2,11 +2,11 @@
 const Opstream = require('../lib/opstream')
 
 module.exports = class Data extends Opstream {
-  constructor (...args) {
+  constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ resource, secrets, link }) {
+  async #op({ resource, secrets, link }) {
     await this.sidecar.ready()
 
     if (resource === 'apps') {

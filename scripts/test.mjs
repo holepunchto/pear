@@ -26,19 +26,31 @@ for (const dir of dirs) {
   if (fs.existsSync(pkg) === false) continue
   const { dependencies = {} } = await import(pkg)
   if (Object.keys(dependencies).length === 0) continue
-  console.log(force ? 'reinstalling node_modules in' : path.join(dir, 'node_modules') + ' not found')
+  console.log(
+    force
+      ? 'reinstalling node_modules in'
+      : path.join(dir, 'node_modules') + ' not found'
+  )
   console.log('Running npm install in ', dir)
-  if (isWindows) spawnSync('pwsh', ['-Command', 'npm install'], { cwd: dir, stdio: 'inherit' })
+  if (isWindows)
+    spawnSync('pwsh', ['-Command', 'npm install'], {
+      cwd: dir,
+      stdio: 'inherit'
+    })
   else spawnSync('npm', ['install'], { cwd: dir, stdio: 'inherit' })
 }
 
 const testnet = await createTestnet(10)
 
-const dhtBootstrap = testnet.nodes.map(e => `${e.host}:${e.port}`).join(',')
+const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
 const logging = Bare.argv.filter((arg) => arg.startsWith('--log'))
 spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
-const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'], { cwd: root, stdio: 'inherit' })
+const tests = spawn(
+  RUNTIME,
+  [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'],
+  { cwd: root, stdio: 'inherit' }
+)
 
 tests.on('exit', async (code) => {
   await testnet.destroy()

@@ -3,7 +3,7 @@ const DriveBundler = require('drive-bundler')
 const Module = require('bare-module')
 const { MOUNT, SWAP } = require('pear-constants')
 
-module.exports = async function subsystem (drive, entrypoint) {
+module.exports = async function subsystem(drive, entrypoint) {
   const cache = require.cache
   const res = await DriveBundler.bundle(drive, {
     entrypoint,
@@ -14,11 +14,13 @@ module.exports = async function subsystem (drive, entrypoint) {
   })
 
   const protocol = new Module.Protocol({
-    exists (url) {
+    exists(url) {
       if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
-      return Object.hasOwn(res.sources, url.href) || Object.hasOwn(cache, url.href)
+      return (
+        Object.hasOwn(res.sources, url.href) || Object.hasOwn(cache, url.href)
+      )
     },
-    read (url) {
+    read(url) {
       return res.sources[url.href]
     }
   })

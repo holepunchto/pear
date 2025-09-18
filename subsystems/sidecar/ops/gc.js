@@ -9,17 +9,17 @@ const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 
 module.exports = class GC extends Opstream {
-  constructor ({ data = {}, resource } = {}, client, sidecar) {
+  constructor({ data = {}, resource } = {}, client, sidecar) {
     super((params) => this.#op(params), data, client)
     this.resource = resource
     this.sidecar = sidecar
   }
 
-  _destroy (cb) {
+  _destroy(cb) {
     cb(null)
   }
 
-  #op (data) {
+  #op(data) {
     const { resource } = this
     if (resource === 'releases') return this.releases(data)
     if (resource === 'sidecars') return this.sidecars(data)
@@ -27,7 +27,7 @@ module.exports = class GC extends Opstream {
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
-  async releases () {
+  async releases() {
     const { resource } = this
     let count = 0
     const symlinkPath = path.join(PLATFORM_DIR, 'current')
@@ -47,8 +47,8 @@ module.exports = class GC extends Opstream {
     const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
 
     const dirNames = dirs
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name)
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name)
 
     for (const dirName of dirNames) {
       if (dirName !== currentDirName) {
@@ -61,14 +61,23 @@ module.exports = class GC extends Opstream {
     this.push({ tag: 'complete', data: { resource, count } })
   }
 
-  sidecars ({ pid }) {
+  sidecars({ pid }) {
     const { resource } = this
     const name = 'pear-runtime'
     const flag = '--sidecar'
 
     const [sh, args] = isWindows
-      ? ['cmd.exe', ['/c', `wmic process where (name like '%${name}%') get name,executablepath,processid,commandline /format:csv`]]
-      : ['/bin/sh', ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]]
+      ? [
+          'cmd.exe',
+          [
+            '/c',
+            `wmic process where (name like '%${name}%') get name,executablepath,processid,commandline /format:csv`
+          ]
+        ]
+      : [
+          '/bin/sh',
+          ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]
+        ]
 
     const sp = spawn(sh, args)
     let output = ''
@@ -82,9 +91,11 @@ module.exports = class GC extends Opstream {
       output = lines.pop()
       for (const line of lines) {
         if (!line.trim()) continue
-        const columns = line.split(isWindows ? ',' : ' ').filter(col => col)
+        const columns = line.split(isWindows ? ',' : ' ').filter((col) => col)
         if (isHeader && isWindows) {
-          const index = columns.findIndex(col => /processid/i.test(col.trim()))
+          const index = columns.findIndex((col) =>
+            /processid/i.test(col.trim())
+          )
           pidIndex = index !== -1 ? index : 4
           isHeader = false
         } else {
@@ -101,7 +112,9 @@ module.exports = class GC extends Opstream {
     return new Promise((resolve, reject) => {
       sp.on('exit', (code, signal) => {
         if (code !== 0 || signal) {
-          reject(new Error(`Process exited with code: ${code}, signal: ${signal}`))
+          reject(
+            new Error(`Process exited with code: ${code}, signal: ${signal}`)
+          )
           return
         }
         this.push({ tag: 'complete', data: { resource, count } })
@@ -110,7 +123,7 @@ module.exports = class GC extends Opstream {
     })
   }
 
-  async assets ({ link }) {
+  async assets({ link }) {
     const { resource, sidecar } = this
     await sidecar.ready()
     let count = 0
@@ -125,7 +138,9 @@ module.exports = class GC extends Opstream {
     for (const { client } of sidecar.running.values()) {
       // skip running assets
       if (client.userData instanceof sidecar.App === false) return
-      const links = Object.values(client.userData.state.manifest.pear.assets).map((asset) => asset.link)
+      const links = Object.values(
+        client.userData.state.manifest.pear.assets
+      ).map((asset) => asset.link)
       removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
     }
     for (const asset of removeAssets) {
