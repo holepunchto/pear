@@ -929,6 +929,122 @@ test('Pear.updates should replay updates only once when cutover is called', asyn
   await Helper.untilClose(pipe)
 })
 
+test('Pear.updates should no longer replay updates when cutover has timed out', async (t) => {
+  const { ok, is, absent, plan, timeout, comment, teardown, pass } = t
+  plan(5)
+  timeout(80_000)
+
+  const CUTOVER_TIMEOUT = 2_000
+
+  comment('1. Prepare reduced timeout platform as rcv')
+  const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
+  comment(`\tCopying platform code to ${patchedArtefactDir}`)
+  await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
+  teardown(() => Helper.gc(patchedArtefactDir))
+  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
+    prune: false,
+    ignore: ['/pear', '/.git', '/test']
+  })
+  await mirror.done()
+
+  comment('\tPatching sidecar to have reduced timeout')
+  const sidecarPath = path.join(patchedArtefactDir, 'subsystems', 'sidecar', 'index.js')
+  const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
+  const patchedSidecarCode = sidecarCode.replace(/(const\s+CUTOVER_TIMEOUT\s+=)\s+[\d_]+\n/, `$1 ${CUTOVER_TIMEOUT}
+`)
+  fs.writeFileSync(sidecarPath, patchedSidecarCode)
+
+  comment('\tStaging patched platform')
+  const rigHelper = new Helper(rig)
+  teardown(() => rigHelper.close(), { order: Infinity })
+  await rigHelper.ready()
+
+  const patchedStager = rigHelper.stage({ channel: 'test-reduced-cutover', name: 'test-reduced-cutover', dir: patchedArtefactDir, dryRun: false })
+  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
+  await patchedStagerUntil.final
+
+  comment('\tSeeding patched platform')
+  const patchedSeeder = rigHelper.seed({ channel: 'test-reduced-cutover', name: 'test-reduced-cutover', dir: patchedArtefactDir, key: null, cmdArgs: [] })
+  const patchedSeederUntil = await Helper.pick(patchedSeeder, [{ tag: 'key' }, { tag: 'announced' }])
+  const patchedPlatformKey = await patchedSeederUntil.key
+  await patchedSeederUntil.announced
+  teardown(() => Helper.teardownStream(patchedSeeder))
+
+  comment('\tBootstrapping patched platform')
+  const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
+  await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
+  teardown(() => Helper.gc(platformDirRcv))
+
+  await Helper.teardownStream(patchedSeeder)
+  await rigHelper.close()
+
+  comment('2. Start patched rcv platform')
+  comment('\tStarting rcv platform')
+  const rcvHelper = new Helper({ platformDir: platformDirRcv })
+  teardown(() => rcvHelper.close(), { order: Infinity })
+  await rcvHelper.ready()
+
+  comment('3. Stage and start app using rig')
+  comment('\tStaging app using rig')
+  const channel = 'test-fixture-no-cutover'
+  const appStager = new Helper(rig)
+  await appStager.ready()
+  const staging = appStager.stage({ channel, name: channel, dir: cutover, dryRun: false })
+  const stagingUntil = await Helper.pick(staging, [{ tag: 'final' }])
+  await stagingUntil.final
+
+  comment('\tSeeding staged app using rcv')
+  const appSeeder = new Helper(rig)
+  await appSeeder.ready()
+  const seeding = appSeeder.seed({ channel, name: channel, dir: cutover, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+
+  const seedingUntil = await Helper.pick(seeding, [{ tag: 'announced' }, { tag: 'key' }])
+  await seedingUntil.announced
+  pass('\tApp seeded and announced')
+  const appKey = await seedingUntil.key
+
+  ok(hypercoreid.isValid(appKey), 'app key is valid')
+
+  comment('4. Start app using rcv platform')
+  comment('\tStarting app using rcv platform')
+  const link = 'pear://' + appKey
+  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv, args: [] })
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: appVersionKey } = versions?.app || {}
+  is(appVersionKey, appKey, '\tapp version key matches staged key')
+
+  comment('5. Update app')
+  const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
+  const file = `${ts()}.tmp`
+  comment(`\tCreating app test file (${file})`)
+  fs.writeFileSync(path.join(cutover, file), 'test')
+  teardown(() => { fs.unlinkSync(path.join(cutover, file)) }, { order: -Infinity })
+
+  comment('\tRestaging app')
+  const appStager2 = new Helper(rig)
+  teardown(() => appStager2.close(), { order: Infinity })
+  await appStager2.ready()
+  const appStaging2 = appStager2.stage({ channel, name: channel, dir: cutover, dryRun: false })
+  teardown(() => Helper.teardownStream(appStaging2))
+  const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
+  ok(appFinal2.success, 'stage succeeded')
+
+  await new Promise(resolve => setTimeout(resolve, CUTOVER_TIMEOUT + 500))
+
+  const untilUpdate = Helper.untilResult(pipe, { timeout: 1000, info: 'start-listener\n' })
+    .then((data) => JSON.parse(data.split('\n').at(-1)))
+
+  const update = await untilUpdate.catch(() => null)
+  absent(update, 'app should not receive any replayed update as cutover should have timed out')
+
+  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  await rcv.ready()
+  await rcv.shutdown()
+
+  await Helper.untilClose(pipe)
+})
+
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
 test('state version and bundle drive version match', async function ({
