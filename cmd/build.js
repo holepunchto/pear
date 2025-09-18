@@ -3,11 +3,11 @@ const os = require('bare-os')
 const { outputter, ansi } = require('pear-terminal')
 
 const output = outputter('build', {
-  init: ({ link, dir }) => `\n${ansi.pear} Building: ${link} into ${dir}\n`,
+  init: ({ dir }) => `\n${ansi.pear} Building at ${dir}\n`,
   npm: () => 'Installing npm packages...\n',
-  generate: () => 'Generating project files...\n',
+  generate: () => 'Generating project...\n',
   build: () => 'Building project...\n',
-  complete: ({ dir }) => `\n${ansi.check} Build complete: ${dir}\n`
+  complete: ({ dir }) => `\n${ansi.tick} Build complete: ${dir}\n`
 })
 
 module.exports = (ipc) => async function build (cmd) {
