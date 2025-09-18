@@ -316,3 +316,32 @@ test('link length', async function ({ plan, comment, teardown, ok, is }) {
 
   is(resultA.app.length, resultC.app.length)
 })
+
+test('wakeup match is false when seeding', async function ({ ok, is, plan, comment, teardown, timeout }) {
+  timeout(30000)
+  plan(3)
+
+  const dir = versionsDir
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({ channel: `test-${id}`, name: `test-${id}`, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({ channel: `test-${id}`, name: `test-${id}`, dir, key: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const match = await helper.wakeup(pathToFileURL(dir).href, undefined, dir, false, 'start-id')
+  is(match, false, 'seed ipc client does not count as a wakeup match')
+})

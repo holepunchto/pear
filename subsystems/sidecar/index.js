@@ -642,7 +642,7 @@ class Sidecar extends ReadyResource {
           return
         }
         const matches = [...this.apps].filter((app) => {
-          if (!app || !app.state) return false
+          if (!app || !app.state || !app.state.storage) return false
           if (startId === app.startId) return false
           return app.state.storage === (storage || appStorage) && (appdev
             ? app.state.dir === appdev
