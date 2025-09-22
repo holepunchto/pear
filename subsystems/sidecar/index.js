@@ -310,12 +310,6 @@ class Sidecar extends ReadyResource {
         if (Iambus.match(ptn, { type: 'pear/updates' })) {
           this._updatingTrigger() // TODO, remove when impl Pear.updating
           if (this.updates) subscriber = this.updates.relay(subscriber)
-          if (this.cutoverTimeout) {
-            clearTimeout(this.cutoverTimeout)
-            this.updates.replay = false
-            this.warming.replay = false
-            this.updates.replay = false
-          }
         }
         return subscriber
       }
