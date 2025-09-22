@@ -359,9 +359,9 @@ class Sidecar extends ReadyResource {
           warming.replay = false
           updates.replay = false
         }
-        this.cutover = ({ stop } = {}) => { // closure scoped to keep cutover refs to top ancestor subs
+        this.cutover = ({ free } = {}) => { // closure scoped to keep cutover refs to top ancestor subs
           if (this.cutoverTimeout) clearTimeout(this.cutoverTimeout)
-          if (stop) return clearBuffers()
+          if (free) return clearBuffers()
           this.cutoverTimeout = setTimeout(clearBuffers, CUTOVER_TIMEOUT)
         }
         this.reporter = reporter
@@ -588,7 +588,7 @@ class Sidecar extends ReadyResource {
   cutover(params, client) {
     const app = client.userData
     if (app instanceof this.App === false) return
-    return app.cutover()
+    return app.cutover(params)
   }
 
   reports(params, client) {
