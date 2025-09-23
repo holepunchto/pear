@@ -1312,5 +1312,4 @@ test('Pear.updates should start timer for clearing buffer when cutover is called
   await Helper.untilClose(pipe)
 })
 
-
 test.hook('updates cleanup', rig.cleanup)
