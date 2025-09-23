@@ -52,7 +52,8 @@ const tests = spawn(
   { cwd: root, stdio: 'inherit' }
 )
 
-tests.on('exit', async (code) => {
+tests.on('exit', async (code, signal) => {
+  if (signal) code = 128 + signal
   await testnet.destroy()
   Bare.exitCode = code
 })
