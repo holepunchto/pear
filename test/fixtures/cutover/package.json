@@ -1,0 +1,11 @@
+{
+  "name": "cutover",
+  "main": "index.js",
+  "pear": {
+    "name": "updates",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}
