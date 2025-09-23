@@ -9,6 +9,7 @@ const { Session } = require('pear-inspect')
 const Helper = require('./helper')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
 const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
+const cutover = path.join(Helper.localDir, 'test', 'fixtures', 'cutover')
 const seedOpts = (id) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
