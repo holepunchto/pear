@@ -210,11 +210,17 @@ class Helper extends IPC.Client {
     return res
   }
 
-  static async collectResults (pipe, { timeout = 5000, burstTimeout = 0, count = Infinity, runFn, info } = {}) {
+  static async collectResults(
+    pipe,
+    { timeout = 5000, burstTimeout = 0, count = Infinity, runFn, info } = {}
+  ) {
     const result = new Promise((resolve, reject) => {
       const results = []
       let burst = null
-      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
+      const timeoutId = setTimeout(
+        () => reject(new Error('timed out ' + timeout)),
+        timeout
+      )
       const end = () => {
         clearTimeout(timeoutId)
         if (burst) clearTimeout(burst)

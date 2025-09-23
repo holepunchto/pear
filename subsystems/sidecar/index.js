@@ -305,7 +305,10 @@ class Sidecar extends ReadyResource {
 
       messages(ptn, opts = {}) {
         opts.map = pickData
-        let subscriber = this.sidecar.bus.sub({ topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) }, opts)
+        let subscriber = this.sidecar.bus.sub(
+          { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
+          opts
+        )
 
         if (Iambus.match(ptn, { type: 'pear/updates' })) {
           this._updatingTrigger() // TODO, remove when impl Pear.updating
@@ -353,13 +356,17 @@ class Sidecar extends ReadyResource {
           { topic: 'warming', id: this.id },
           opts
         )
-        const updates = this.sidecar.bus.sub({ topic: 'messages', id: this.id, data: { type: 'pear/updates' } }, opts)
+        const updates = this.sidecar.bus.sub(
+          { topic: 'messages', id: this.id, data: { type: 'pear/updates' } },
+          opts
+        )
         const clearBuffers = () => {
           reporter.replay = false
           warming.replay = false
           updates.replay = false
         }
-        this.cutover = ({ free } = {}) => { // closure scoped to keep cutover refs to top ancestor subs
+        this.cutover = ({ free } = {}) => {
+          // closure scoped to keep cutover refs to top ancestor subs
           if (this.cutoverTimeout) clearTimeout(this.cutoverTimeout)
           if (free) return clearBuffers()
           this.cutoverTimeout = setTimeout(clearBuffers, CUTOVER_TIMEOUT)
