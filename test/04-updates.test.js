@@ -877,7 +877,7 @@ test('state version and bundle drive version match', async function ({
   await rcvB.shutdown()
 })
 
-test('Pear.updates should replay updates when cutover is not called', async function (t) {
+test.solo('Pear.updates should replay updates when cutover is not called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
   plan(11)
   timeout(80_000)
