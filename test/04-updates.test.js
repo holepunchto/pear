@@ -1139,7 +1139,7 @@ test('Pear.updates should start timer for clearing buffer when cutover is called
   plan(5)
   timeout(80_000)
 
-  const CUTOVER_TIMEOUT = 2_000
+  const CUTOVER_DELAY = 2_000
 
   comment('1. Prepare reduced timeout platform as rcv')
   const patchedArtefactDir = path.join(Helper.tmp, 'urcv-pear')
@@ -1164,8 +1164,8 @@ test('Pear.updates should start timer for clearing buffer when cutover is called
   )
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patchedSidecarCode = sidecarCode.replace(
-    /(const\s+CUTOVER_TIMEOUT\s+=)\s+[\d_]+\n/,
-    `$1 ${CUTOVER_TIMEOUT}
+    /(const\s+CUTOVER_DELAY\s+=)\s+[\d_]+\n/,
+    `$1 ${CUTOVER_DELAY}
 `
   )
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
