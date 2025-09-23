@@ -60,6 +60,7 @@ const ops = {
 registerUrlHandler(WAKEUP)
 
 const SWARM_DELAY = 5000
+const CUTOVER_DELAY = 20_000
 const CHECKMARK = isWindows ? '^' : '✔'
 
 class Sidecar extends ReadyResource {
@@ -82,7 +83,19 @@ class Sidecar extends ReadyResource {
 
     this.model = new Model(corestore.session())
 
-    this.bus = new Iambus()
+    const all = {}
+
+    this.bus = new Iambus({
+      onsub: (sub) => {
+        if (sub.pattern === all) return
+        this._onsub(sub)
+      }
+    })
+
+    this.bus.sub(all).on('data', (msg) => {
+      LOG.trace('bus', 'PUB', msg)
+    })
+
     this.version = CHECKOUT
 
     this.updater = updater
@@ -194,7 +207,7 @@ class Sidecar extends ReadyResource {
       reporter = null
       cutover = null
       _pid = null
-      #mapReport(report) {
+      _mapReport(report) {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
@@ -211,19 +224,6 @@ class Sidecar extends ReadyResource {
         if (report.err?.code === 'ERR_OPEN') return reports.dev(...args)
         if (report.err?.code === 'ERR_CRASH') return reports.crash(...args)
         return reports.generic(...args)
-      }
-
-      _updatingTrigger() {
-        if (this.sidecar.updater?.updating) {
-          this.message({
-            type: 'pear/updates',
-            app: false,
-            version: this.sidecar.updater.checkout,
-            info: null,
-            updating: true,
-            updated: false
-          })
-        }
       }
 
       async _loadUnsafeAddon(drive, input, output) {
@@ -258,22 +258,35 @@ class Sidecar extends ReadyResource {
           return null
         }
       }
+      onUpdatesSub(sub) {
+        this.updates.feed(sub)
+
+        if (this.sidecar.updater?.updating) {
+          this.message({
+            type: 'pear/updates',
+            app: false,
+            version: this.sidecar.updater.checkout,
+            info: null,
+            updating: true,
+            updated: false
+          })
+        }
+      }
 
       register(client, startId, pid = -1) {
         this.clients.add(client)
         const userData = Object.create(this)
         userData.id = `${client.id}@${startId}`
         userData._pid = pid
-        const opts = { map: pickData }
-        userData.reporter = this.reporter.relay(
+        const opts = { map: pick }
+        userData.reporter = this.reporter.feed(
           this.sidecar.bus.sub({ topic: 'reports', id: userData.id }, opts)
         )
-        userData.warming = this.warming.relay(
+        userData.warming = this.warming.feed(
           this.sidecar.bus.sub({ topic: 'warming', id: userData.id }, opts)
         )
-        userData.updates = this.updates.relay(
-          userData.messages({ type: 'pear/updates' }, opts)
-        )
+        const ptn = this.updates.pattern.data
+        userData.updates = this.updates.feed(userData.messages(ptn, opts))
         return userData
       }
 
@@ -286,7 +299,7 @@ class Sidecar extends ReadyResource {
         return this.sidecar.bus.pub({
           topic: 'reports',
           id: this.id,
-          data: this.#mapReport(report)
+          data: this._mapReport(report)
         })
       }
 
@@ -303,10 +316,7 @@ class Sidecar extends ReadyResource {
       }
 
       messages(ptn, opts = {}) {
-        if (ptn.type === 'pear/updates') {
-          this._updatingTrigger() // TODO, remove when impl Pear.updating
-        }
-        opts.map = pickData
+        opts.map = pick
         const subscriber = this.sidecar.bus.sub(
           { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
           opts
@@ -344,7 +354,7 @@ class Sidecar extends ReadyResource {
         this.state = state
         this.startId = startId
         this.clients = new Set()
-        const opts = { relays: true, replay: true, map: pickData }
+        const opts = { retain: true, map: pick }
         const reporter = this.sidecar.bus.sub(
           { topic: 'reports', id: this.id },
           opts
@@ -354,11 +364,11 @@ class Sidecar extends ReadyResource {
           opts
         )
         const updates = this.messages({ type: 'pear/updates' }, opts)
-        this.cutover = () => {
+        this.cutover = (params) => {
           // closure scoped to keep cutover refs to top ancestor subs
-          reporter.replay = false
-          warming.replay = false
-          updates.replay = false
+          reporter.cutover(params.after ?? CUTOVER_DELAY)
+          warming.cutover(params.after ?? CUTOVER_DELAY)
+          updates.cutover(params.after ?? CUTOVER_DELAY)
         }
         this.reporter = reporter
         this.warming = warming
@@ -392,6 +402,28 @@ class Sidecar extends ReadyResource {
     this.gcInterval = setInterval(() => {
       gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
     }, gcCycleMs)
+  }
+
+  _onsub(sub) {
+    LOG.trace('bus', 'SUB', sub.pattern)
+    const isUpdateSub =
+      sub.pattern.id &&
+      Iambus.match(sub.pattern, {
+        topic: 'messages',
+        data: { type: 'pear/updates' }
+      })
+    if (isUpdateSub) {
+      const [id] = sub.pattern.id.split('@')
+      const client = this.ipc.client(id)
+      if (client.userData instanceof this.App === false) {
+        LOG.error(
+          'internal',
+          'subscriber pattern id invalid - no clients matched'
+        )
+        return
+      }
+      client.userData.onUpdatesSub(sub)
+    }
   }
 
   get clients() {
@@ -586,16 +618,13 @@ class Sidecar extends ReadyResource {
   cutover(params, client) {
     const app = client.userData
     if (app instanceof this.App === false) return
-    return app.cutover()
+    return app.cutover(params)
   }
 
   reports(params, client) {
     const app = client.userData
     if (app === null && params.id) {
-      return this.bus.sub(
-        { topic: 'reports', id: params.id },
-        { map: pickData }
-      )
+      return this.bus.sub({ topic: 'reports', id: params.id }, { map: pick })
     }
     if (app instanceof this.App === false) {
       LOG.error('reporting', 'invalid reports requests', params)
@@ -1033,6 +1062,7 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', CHECKMARK + ' Applied update')
       }
     }
+    this.bus.destroy()
   }
 
   deathClock(ms = 20000) {
@@ -1067,7 +1097,7 @@ class Sidecar extends ReadyResource {
   }
 }
 
-function pickData(msg) {
+function pick(msg) {
   return msg.data ?? msg
 }
 

@@ -202,9 +202,30 @@ module.exports = (ipc) =>
     })
 
     if (bundle.entrypoint.endsWith('.html')) {
-      throw ERR_LEGACY(
-        '[ LEGACY ] No longer booting app from HTML entrypoints\n  Solution: pear run pear://runtime/documentation/migration'
+      const updates = require('pear-updates')
+      console.log('Legacy application detected, attempting to heal')
+      console.log(
+        'Developer Solution: pear run pear://runtime/documentation/migration'
       )
+      console.log('Waiting 60 seconds for application updates...')
+      const timeout = setTimeout(() => {
+        throw ERR_LEGACY(
+          '[ LEGACY ] No longer booting app from HTML entrypoints\n  Developer Solution: pear run pear://runtime/documentation/migration'
+        )
+      }, 60_000)
+      updates({ app: true }, (update) => {
+        clearTimeout(timeout)
+        if (update.updating) {
+          console.log('Updating please wait...')
+        } else if (update.updated) {
+          console.log('Application update received')
+          console.log(
+            `pear://${update.version.fork}.${update.version.length}.${update.version.key}`
+          )
+          console.log('Rerun to open')
+        }
+      })
+      return
     }
 
     // clear global handlers
