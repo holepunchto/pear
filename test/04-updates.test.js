@@ -1293,7 +1293,7 @@ test('Pear.updates should start timer for clearing buffer when cutover is called
   const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
   ok(appFinal2.success, 'stage succeeded')
 
-  await new Promise((resolve) => setTimeout(resolve, CUTOVER_TIMEOUT + 500))
+  await new Promise((resolve) => setTimeout(resolve, CUTOVER_DELAY + 500))
 
   const untilUpdate = Helper.untilResult(pipe, {
     timeout: 1000,
