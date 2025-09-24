@@ -45,17 +45,10 @@ const testnet = await createTestnet(10)
 
 const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
-spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
-
 const cmd = pear(Bare.argv.slice(3))
 const logging = Object.entries(cmd.flags)
   .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
-  .map(
-    ([k, v]) =>
-      '--' +
-      cmd._definedFlags.get(k).aliases[0] +
-      (typeof v === 'boolean' ? '' : '=' + v)
-  )
+  .map(([k, v]) => '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v))
 
 if (cmd.flags.sidecar) {
   console.log(
@@ -64,7 +57,11 @@ if (cmd.flags.sidecar) {
   )
   console.log('waiting 7s for sidecar')
   await new Promise((resolve) => setTimeout(resolve, 7000))
+} else {
+  spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 }
+
+
 
 const tests = spawn(
   RUNTIME,
