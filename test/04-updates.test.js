@@ -877,135 +877,138 @@ test('state version and bundle drive version match', async function ({
   await rcvB.shutdown()
 })
 
-test('Pear.updates should replay updates when cutover is not called', async function (t) {
-  const { ok, is, plan, timeout, comment, teardown, pass } = t
-  plan(11)
-  timeout(80_000)
+test.solo(
+  'Pear.updates should replay updates when cutover is not called',
+  async function (t) {
+    const { ok, is, plan, timeout, comment, teardown, pass } = t
+    plan(11)
+    timeout(80_000)
 
-  const appStager = new Helper(rig)
-  teardown(() => appStager.close(), { order: Infinity })
-  await appStager.ready()
+    const appStager = new Helper(rig)
+    teardown(() => appStager.close(), { order: Infinity })
+    await appStager.ready()
 
-  const channel = 'test-fixture-no-cutover'
+    const channel = 'test-fixture-no-cutover'
 
-  comment('staging app')
-  const appStaging = appStager.stage({
-    channel,
-    name: channel,
-    dir: cutover,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(appStaging))
-  const appFinal = await Helper.pick(appStaging, { tag: 'final' })
-  ok(appFinal.success, 'stage succeeded')
+    comment('staging app')
+    const appStaging = appStager.stage({
+      channel,
+      name: channel,
+      dir: cutover,
+      dryRun: false
+    })
+    teardown(() => Helper.teardownStream(appStaging))
+    const appFinal = await Helper.pick(appStaging, { tag: 'final' })
+    ok(appFinal.success, 'stage succeeded')
 
-  comment('seeding app')
-  const appSeeder = new Helper(rig)
-  teardown(() => appSeeder.close(), { order: Infinity })
-  await appSeeder.ready()
-  const appSeeding = appSeeder.seed({
-    channel,
-    name: channel,
-    dir: cutover,
-    key: null,
-    cmdArgs: []
-  })
-  teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+    comment('seeding app')
+    const appSeeder = new Helper(rig)
+    teardown(() => appSeeder.close(), { order: Infinity })
+    await appSeeder.ready()
+    const appSeeding = appSeeder.seed({
+      channel,
+      name: channel,
+      dir: cutover,
+      key: null,
+      cmdArgs: []
+    })
+    teardown(() => Helper.teardownStream(appSeeding))
+    const untilApp = await Helper.pick(appSeeding, [
+      { tag: 'key' },
+      { tag: 'announced' }
+    ])
 
-  const appKey = await untilApp.key
-  const appAnnounced = await untilApp.announced
+    const appKey = await untilApp.key
+    const appAnnounced = await untilApp.announced
 
-  ok(hypercoreid.isValid(appKey), 'app key is valid')
-  ok(appAnnounced, 'seeding is announced')
+    ok(hypercoreid.isValid(appKey), 'app key is valid')
+    ok(appAnnounced, 'seeding is announced')
 
-  comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(rig.key, platformDirRcv)
-  comment('rcv platform bootstrapped')
+    comment('bootstrapping rcv platform...')
+    const platformDirRcv = path.join(tmp, 'rcv-pear')
+    await Helper.bootstrap(rig.key, platformDirRcv)
+    comment('rcv platform bootstrapped')
 
-  comment('running app from rcv platform')
-  const link = 'pear://' + appKey
-  const { pipe } = await Helper.run({
-    link,
-    platformDir: platformDirRcv,
-    args: ['--no-cutover'],
-    argv: ['-M']
-  })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
-  const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
-  is(appVersionKey, appKey, 'app version key matches staged key')
+    comment('running app from rcv platform')
+    const link = 'pear://' + appKey
+    const { pipe } = await Helper.run({
+      link,
+      platformDir: platformDirRcv,
+      args: ['--no-cutover'],
+      argv: ['-M']
+    })
+    const versions = await Helper.untilResult(pipe).then((data) =>
+      JSON.parse(data)
+    )
+    const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
+    is(appVersionKey, appKey, 'app version key matches staged key')
 
-  const untilUpdate = Helper.untilResult(pipe, {
-    timeout: 30_000,
-    runFn: () => {}
-  }).then((data) => JSON.parse(data.split('\n').at(-1))) // get last line as buffered data is combined into one string
+    const untilUpdate = Helper.untilResult(pipe, {
+      timeout: 30_000,
+      runFn: () => {}
+    }).then((data) => JSON.parse(data.split('\n').at(-1))) // get last line as buffered data is combined into one string
 
-  const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
-  const file = `${ts()}.tmp`
-  comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(cutover, file), 'test')
-  teardown(
-    () => {
-      fs.unlinkSync(path.join(cutover, file))
-    },
-    { order: -Infinity }
-  )
+    const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
+    const file = `${ts()}.tmp`
+    comment(`creating app test file (${file})`)
+    fs.writeFileSync(path.join(cutover, file), 'test')
+    teardown(
+      () => {
+        fs.unlinkSync(path.join(cutover, file))
+      },
+      { order: -Infinity }
+    )
 
-  comment('restaging app')
-  const appStager2 = new Helper(rig)
-  teardown(() => appStager2.close(), { order: Infinity })
-  await appStager2.ready()
-  const appStaging2 = appStager2.stage({
-    channel,
-    name: channel,
-    dir: cutover,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(appStaging2))
-  const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
-  ok(appFinal2.success, 'stage succeeded')
+    comment('restaging app')
+    const appStager2 = new Helper(rig)
+    teardown(() => appStager2.close(), { order: Infinity })
+    await appStager2.ready()
+    const appStaging2 = appStager2.stage({
+      channel,
+      name: channel,
+      dir: cutover,
+      dryRun: false
+    })
+    teardown(() => Helper.teardownStream(appStaging2))
+    const appFinal2 = await Helper.pick(appStaging2, { tag: 'final' })
+    ok(appFinal2.success, 'stage succeeded')
 
-  await new Promise((resolve) => setTimeout(resolve, 1000)) // allow update to buffer
+    await new Promise((resolve) => setTimeout(resolve, 1000)) // allow update to buffer
 
-  pipe.write('start-listener\n')
+    pipe.write('start-listener\n')
 
-  const update = await untilUpdate
-  pass('app has received replayed update')
-  is(update?.id, 1, 'app update id is 1 (first update subscription)')
-  const updateVersion = update?.data?.version
-  const appUpdateLength = updateVersion.length
-  ok(
-    appUpdateLength > appVersionLength,
-    `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`
-  )
+    const update = await untilUpdate
+    pass('app has received replayed update')
+    is(update?.id, 1, 'app update id is 1 (first update subscription)')
+    const updateVersion = update?.data?.version
+    const appUpdateLength = updateVersion.length
+    ok(
+      appUpdateLength > appVersionLength,
+      `app version.length incremented (v${updateVersion?.fork}.${updateVersion?.length})`
+    )
 
-  const untilUpdate2 = Helper.untilResult(pipe, {
-    timeout: 30_000,
-    info: 'start-listener\n'
-  }).then((data) => JSON.parse(data.split('\n').at(-1)))
+    const untilUpdate2 = Helper.untilResult(pipe, {
+      timeout: 30_000,
+      info: 'start-listener\n'
+    }).then((data) => JSON.parse(data.split('\n').at(-1)))
 
-  const update2 = await untilUpdate2
-  pass('app has received replayed update')
-  is(update2?.id, 2, 'app update id is 2 (second update subscription)')
-  const updateVersion2 = update?.data?.version
-  const appUpdateLength2 = updateVersion2.length
-  ok(
-    appUpdateLength2 > appVersionLength,
-    `app version.length incremented (v${updateVersion2?.fork}.${updateVersion2?.length})`
-  )
+    const update2 = await untilUpdate2
+    pass('app has received replayed update')
+    is(update2?.id, 2, 'app update id is 2 (second update subscription)')
+    const updateVersion2 = update?.data?.version
+    const appUpdateLength2 = updateVersion2.length
+    ok(
+      appUpdateLength2 > appVersionLength,
+      `app version.length incremented (v${updateVersion2?.fork}.${updateVersion2?.length})`
+    )
 
-  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
-  await rcv.ready()
-  await rcv.shutdown()
+    const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+    await rcv.ready()
+    await rcv.shutdown()
 
-  await Helper.untilClose(pipe)
-})
+    await Helper.untilClose(pipe)
+  }
+)
 
 test('Pear.updates should replay updates even when cutover is called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
