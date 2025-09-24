@@ -18,6 +18,7 @@ const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
+const { Transform, pipeline } = require('streamx')
 const plink = require('pear-link')
 const rundef = require('pear-cmd/run')
 const {
@@ -205,6 +206,7 @@ class Sidecar extends ReadyResource {
       unload = null
       unloader = null
       reporter = null
+      unwrapped = null
       cutover = null
       _pid = null
       _mapReport(report) {
@@ -278,7 +280,7 @@ class Sidecar extends ReadyResource {
         const userData = Object.create(this)
         userData.id = `${client.id}@${startId}`
         userData._pid = pid
-        const opts = { map: pick, retain: true }
+        const opts = { retain: true }
         userData.reporter = this.reporter.feed(
           this.sidecar.bus.sub({ topic: 'reports', id: userData.id }, opts)
         )
@@ -296,6 +298,10 @@ class Sidecar extends ReadyResource {
         this.updates.once('cutover', () => {
           userData.updates.cutover()
         })
+        userData.unwrapped = {
+          reporter: pipeline(userData.reporter, unwrap()),
+          warming: pipeline(userData.warming, unwrap())
+        }
         return userData
       }
 
@@ -325,7 +331,6 @@ class Sidecar extends ReadyResource {
       }
 
       messages(ptn, opts = {}) {
-        opts.map = pick
         const subscriber = this.sidecar.bus.sub(
           { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
           opts
@@ -363,7 +368,7 @@ class Sidecar extends ReadyResource {
         this.state = state
         this.startId = startId
         this.clients = new Set()
-        const opts = { retain: true, map: pick }
+        const opts = { retain: true }
         const reporter = this.sidecar.bus.sub(
           { topic: 'reports', id: this.id },
           opts
@@ -382,6 +387,10 @@ class Sidecar extends ReadyResource {
         this.reporter = reporter
         this.warming = warming
         this.updates = updates
+        this.unwrapped = {
+          reporter: pipeline(reporter, unwrap()),
+          warming: pipeline(warming, unwrap())
+        }
       }
 
       get closed() {
@@ -612,7 +621,7 @@ class Sidecar extends ReadyResource {
 
   warming(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.warming
+    return client.userData.unwrapped.warming
   }
 
   async versions(params, client) {
@@ -633,13 +642,16 @@ class Sidecar extends ReadyResource {
   reports(params, client) {
     const app = client.userData
     if (app === null && params.id) {
-      return this.bus.sub({ topic: 'reports', id: params.id }, { map: pick })
+      return pipeline(
+        this.bus.sub({ topic: 'reports', id: params.id }),
+        unwrap()
+      )
     }
     if (app instanceof this.App === false) {
       LOG.error('reporting', 'invalid reports requests', params)
       return null
     }
-    return app.reporter
+    return app.unwrapped.reporter
   }
 
   createReport(params, client) {
@@ -678,7 +690,7 @@ class Sidecar extends ReadyResource {
 
   messages(pattern, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.messages(pattern)
+    return pipeline(client.userData.messages(pattern), unwrap())
   }
 
   exists(params, client) {
@@ -1106,8 +1118,12 @@ class Sidecar extends ReadyResource {
   }
 }
 
-function pick(msg) {
-  return msg.data ?? msg
+function unwrap() {
+  return new Transform({
+    transform(msg, cb) {
+      cb(null, msg.data ?? msg)
+    }
+  })
 }
 
 module.exports = Sidecar
