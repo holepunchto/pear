@@ -932,8 +932,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   const { pipe } = await Helper.run({
     link,
     platformDir: platformDirRcv,
-    args: ['--no-cutover'],
-    argv: ['-M']
+    args: ['--no-cutover']
   })
   const versions = await Helper.untilResult(pipe).then((data) =>
     JSON.parse(data)

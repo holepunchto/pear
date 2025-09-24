@@ -6,6 +6,7 @@ import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
 import { isWindows } from 'which-runtime'
 const { default: checkout } = await import('../checkout')
+import pear from 'pear-cmd'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
