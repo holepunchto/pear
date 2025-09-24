@@ -8,6 +8,7 @@ const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
+const pear = require('pear-cmd')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
@@ -28,7 +29,7 @@ const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 const rigPear = path.join(tmp, 'rig-pear')
 const STOP_CHAR = '\n'
-
+const { RUNTIME_ARGV } = Pear.constructor
 Pear.teardown(async () => {
   console.log('# Teardown: Shutting Down Local Sidecar')
   const local = new Helper()
@@ -125,14 +126,22 @@ class Helper extends IPC.Client {
   static PLATFORM_DIR = PLATFORM_DIR
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
-    const log = global.Pear.config.args.includes('--log')
+    const cmd = pear(Pear.argv.slice(1))
+    const logging = Object.entries(cmd.flags)
+      .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
+      .map(
+        ([k, v]) =>
+          '--' +
+          cmd._definedFlags.get(k).aliases[0] +
+          (typeof v === 'boolean' ? '' : '=' + v)
+      )
+    const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
     const dhtBootstrap = Pear.config.dht.bootstrap
       .map((e) => `${e.host}:${e.port}`)
       .join(',')
-    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap]
-    if (log) args.push('--log')
+    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
       sodium.crypto_generichash(buf, b4a.from(s))
@@ -146,7 +155,7 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          if (log) spawn(runtime, args, { stdio: 'inherit' })
+          if (this.log) spawn(runtime, args, { stdio: 'inherit' })
           else daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
@@ -168,12 +177,18 @@ class Helper extends IPC.Client {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async run({ link, platformDir, args = [] }) {
-    if (platformDir)
+  static async run({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
+    if (platformDir) {
       Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
+      Pear.constructor.RUNTIME_ARGV = argv
+    }
+
     const pipe = run(link, args)
 
-    if (platformDir) Pear.constructor.RUNTIME = RUNTIME
+    if (platformDir) {
+      Pear.constructor.RUNTIME = RUNTIME
+      Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
+    }
 
     return { pipe }
   }

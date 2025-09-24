@@ -71,23 +71,6 @@ module.exports = class Run extends Opstream {
     try {
       const info = await running
       this.push({ tag: 'started', data: { id } })
-      if (sidecar.updateAvailable !== null) {
-        const { version, info } = sidecar.updateAvailable
-        LOG.info(
-          LOG_RUN_LINK,
-          app.id,
-          'application update available, notifying application',
-          version
-        )
-        app.message({
-          type: 'pear/updates',
-          app: true,
-          version,
-          diff: info.diff,
-          updating: false,
-          updated: true
-        })
-      }
       this.final = info
     } catch (err) {
       app.report({ err })
