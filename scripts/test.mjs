@@ -5,7 +5,6 @@ import { spawn, spawnSync } from 'bare-subprocess'
 import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
 import { isWindows } from 'which-runtime'
-import pear from 'pear-cmd'
 const { default: checkout } = await import('../checkout')
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -45,24 +44,8 @@ const testnet = await createTestnet(10)
 
 const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
-const cmd = pear(Bare.argv.slice(3))
-const logging = Object.entries(cmd.flags)
-  .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
-  .map(([k, v]) => '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v))
-
-if (cmd.flags.sidecar) {
-  console.log(
-    RUNTIME,
-    [...logging, '--dht-bootstrap', dhtBootstrap, 'sidecar'].join(' ')
-  )
-  console.log('waiting 7s for sidecar')
-  await new Promise((resolve) => setTimeout(resolve, 7000))
-} else {
-  spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
-}
-
-
-
+const logging = Bare.argv.filter((arg) => arg.startsWith('--log'))
+spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 const tests = spawn(
   RUNTIME,
   [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'],
