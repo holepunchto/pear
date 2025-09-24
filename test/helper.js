@@ -187,7 +187,7 @@ class Helper extends IPC.Client {
 
     if (platformDir) {
       Pear.constructor.RUNTIME = RUNTIME
-      Pear.constructor.RUNTIME = RUNTIME_ARGV
+      Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
     }
 
     return { pipe }
