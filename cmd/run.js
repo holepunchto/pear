@@ -213,7 +213,7 @@ module.exports = (ipc) =>
           '[ LEGACY ] No longer booting app from HTML entrypoints\n  Developer Solution: pear run pear://runtime/documentation/migration'
         )
       }, 60_000)
-      updates({ app: true }, (update) => {
+      const stream = updates({ app: true }, (update) => {
         clearTimeout(timeout)
         if (update.updating) {
           console.log('Updating please wait...')
@@ -223,6 +223,7 @@ module.exports = (ipc) =>
             `pear://${update.version.fork}.${update.version.length}.${update.version.key}`
           )
           console.log('Rerun to open')
+          stream.end()
         }
       })
       return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
