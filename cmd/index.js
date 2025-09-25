@@ -33,7 +33,8 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  data: require('./data')
+  data: require('./data'),
+  build: require('./build')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -321,6 +322,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
+  const build = command(
+    'build',
+    summary('Build appling for a Pear application'),
+    description`
+      Specify a remote link to build.
+    `,
+    arg('<link>', 'Pear link to build'),
+    arg('[dir]', 'Output directory path (default: .)'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.build(ipc)
+  )
+
   const help = command(
     'help',
     arg('[command]'),
@@ -345,6 +358,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     dump,
     touch,
     data,
+    build,
     shift,
     drop,
     reset,
