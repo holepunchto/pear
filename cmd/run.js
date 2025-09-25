@@ -225,7 +225,7 @@ module.exports = (ipc) =>
           console.log('Rerun to open')
         }
       })
-      return
+      return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
     }
 
     // clear global handlers
