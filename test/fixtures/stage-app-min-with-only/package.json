@@ -13,7 +13,9 @@
       "only": [
         "/package.json",
         "/index.js",
-        "/folder"
+        "/folder",
+        "/node_modules/ready-resource/index.js",
+        "/node_modules/ready-resource/package.json"
       ]
     }
   },
