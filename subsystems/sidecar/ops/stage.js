@@ -9,6 +9,7 @@ const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
 const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
 const Bundle = require('../lib/bundle')
 const State = require('../state')
@@ -96,8 +97,11 @@ module.exports = class Stage extends Opstream {
       only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
 
     const release = (await bundle.db.get('release'))?.value || 0
-    const z32 = hypercoreid.encode(bundle.drive.key)
-    const link = 'pear://' + z32
+
+    const link = plink.serialize(bundle.drive.key)
+    const z32 = link.slice(7)
+    const verlink = plink.serialize({ drive: bundle.drive })
+
     this.push({
       tag: 'staging',
       data: {
@@ -105,6 +109,7 @@ module.exports = class Stage extends Opstream {
         channel: bundle.channel,
         key: z32,
         link,
+        verlink: bundle.verlink(),
         current: currentVersion,
         release,
         dir
@@ -128,13 +133,7 @@ module.exports = class Stage extends Opstream {
     await glob.ready()
 
     const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
-    // TODO: each specified entrypoint could be for a different runtime, warmup for each entrypoint depends
-    //       on knowing the runtime (asset). builtins/overrides/mappings need to be declared statically
-    //       PER entrypoint PER asset so extend stage.entrypoints such that it's
-    //       [{ key: '/path/to/entrypoint', asset: 'ui' }]
-    //       if entrypoint is string, then it's bareBuiltins, if object then
-    //       ns = assets[entrypoint.asset]
-    //       makeBuiltins(ns.builtins, ns.overrides, ns.mappings) -> gunk.builtins equiv
+
     const builtins = state.options.assets?.ui
       ? sidecar.gunk.builtins
       : sidecar.gunk.bareBuiltins
@@ -268,7 +267,14 @@ module.exports = class Stage extends Opstream {
 
     this.push({
       tag: 'addendum',
-      data: { version: bundle.version, release, channel, key: z32, link }
+      data: {
+        version: bundle.version,
+        release,
+        channel,
+        key: z32,
+        link,
+        verlink: bundle.verlink()
+      }
     })
   }
 }
