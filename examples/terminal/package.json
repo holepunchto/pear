@@ -17,6 +17,8 @@
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
+    "pear-pipe": "^1.0.3",
+    "pear-run": "^1.0.0",
     "pear-updates": "^1.0.1"
   }
 }

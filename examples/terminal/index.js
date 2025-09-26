@@ -1,5 +1,7 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import updates from 'pear-updates'
+import run from 'pear-run'
+import b4a from 'b4a'
 updates((update) => {
   console.log('Application update available:', update)
 })
@@ -22,3 +24,10 @@ ${grn}           ▅
 
 `
 console.log('\n\x1b[s\x1b[J' + out)
+
+const pipe = run('./side.js')
+
+pipe.on('data', (data) =>{
+  console.log('reiceived data:', b4a.toString(data))
+  Pear.exit()
+})
