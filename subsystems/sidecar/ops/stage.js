@@ -100,7 +100,6 @@ module.exports = class Stage extends Opstream {
 
     const link = plink.serialize(bundle.drive.key)
     const z32 = link.slice(7)
-    const verlink = plink.serialize({ drive: bundle.drive })
 
     this.push({
       tag: 'staging',
