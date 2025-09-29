@@ -10,6 +10,7 @@ const Hyperdrive = require('hyperdrive')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
+const plink = require('pear-link')
 const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
@@ -184,6 +185,17 @@ module.exports = class Bundle {
     }
   }
 
+  verlink() {
+    if (!this.drive) return ''
+    return plink.serialize({
+      drive: {
+        length: this.drive.core.length,
+        fork: this.drive.core.fork,
+        key: this.drive.key
+      }
+    })
+  }
+
   get version() {
     return this.drive.version
   }
@@ -269,7 +281,6 @@ module.exports = class Bundle {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
 
-    // TODO: gc the old assets on bundle close and on platform boot
     const assets = this.drive.core
       ? `assets/${this.drive.core.fork}.${this.drive.core.length}.${this.drive.discoveryKey.toString('hex')}`
       : true // assets on localdrives are just passthrough per default

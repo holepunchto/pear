@@ -11,8 +11,8 @@ const Pre = require('../pre')
 let blocks = 0
 let total = 0
 const output = outputter('stage', {
-  staging: ({ name, channel, link, current, release }) => {
-    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[ ${ansi.dim(link)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
+  staging: ({ name, channel, link, verlink, current, release }) => {
+    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent version is ${current} with release set to ${release}\n`
   },
   skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
@@ -38,8 +38,8 @@ const output = outputter('stage', {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  addendum: ({ version, release, channel, link }) =>
-    `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`,
+  addendum: ({ version, release, channel, link, verlink }) =>
+    `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`,
   byteDiff,
   preIo({ from, output, index, fd }, { preIo }) {
     if (!preIo) return {}

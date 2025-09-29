@@ -152,7 +152,9 @@ test('basic stage min desktop app with only and include', async ({
     '/package.json',
     '/index.js',
     '/folder/foo.js',
-    '/folder/bar.js'
+    '/folder/bar.js',
+    '/node_modules/ready-resource/package.json',
+    '/node_modules/ready-resource/index.js'
   ]
 
   comment('Only files in the dependency tree and pear.stage.only are staged')

@@ -312,26 +312,34 @@ class Sidecar extends ReadyResource {
         this.reported = report
         return this.sidecar.bus.pub({
           topic: 'reports',
-          id: this.id,
+          id: this.startId,
           data: this._mapReport(report)
         })
       }
 
       warmup(data) {
-        return this.sidecar.bus.pub({ topic: 'warming', id: this.id, data })
+        return this.sidecar.bus.pub({
+          topic: 'warming',
+          id: this.startId,
+          data
+        })
       }
 
       message(msg) {
         return this.sidecar.bus.pub({
           topic: 'messages',
-          id: this.id,
+          id: this.startId,
           data: msg
         })
       }
 
       messages(ptn, opts = {}) {
         const subscriber = this.sidecar.bus.sub(
-          { topic: 'messages', id: this.id, ...(ptn ? { data: ptn } : {}) },
+          {
+            topic: 'messages',
+            id: this.startId,
+            ...(ptn ? { data: ptn } : {})
+          },
           opts
         )
         return subscriber
@@ -369,11 +377,11 @@ class Sidecar extends ReadyResource {
         this.clients = new Set()
         const opts = { retain: true }
         const reporter = this.sidecar.bus.sub(
-          { topic: 'reports', id: this.id },
+          { topic: 'reports', id: this.startId },
           opts
         )
         const warming = this.sidecar.bus.sub(
-          { topic: 'warming', id: this.id },
+          { topic: 'warming', id: this.startId },
           opts
         )
         const updates = this.messages({ type: 'pear/updates' }, opts)
@@ -430,16 +438,20 @@ class Sidecar extends ReadyResource {
         data: { type: 'pear/updates' }
       })
     if (isUpdateSub) {
-      const [id] = sub.pattern.id.split('@')
-      const client = this.ipc.client(id)
-      if (client.userData instanceof this.App === false) {
+      const startId = sub.pattern.id
+      const started = this.running.get(startId)
+
+      if (!started) return
+
+      if (started.client.userData instanceof this.App === false) {
         LOG.error(
           'internal',
           'subscriber pattern id invalid - no clients matched'
         )
         return
       }
-      client.userData.onUpdatesSub(sub)
+
+      started.client.userData.onUpdatesSub(sub)
     }
   }
 
