@@ -26,6 +26,7 @@
     "pear-electron": "^1.7.20",
     "pear-messages": "^1.0.3",
     "pear-pipe": "^1.0.1",
+    "pear-run": "^1.0.1",
     "pear-updates": "^1.0.1"
   }
 }
