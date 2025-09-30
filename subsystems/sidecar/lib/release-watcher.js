@@ -35,6 +35,7 @@ class DriveReleaseWatcher extends Readable {
       const length = this.drive.core.length
       const fork = this.drive.core.fork
       const node = await this.drive.db.get('release', { update: false })
+      console.log('_bump', node, length, this._checkout)
       if (this.destroying) return
 
       if (node) {

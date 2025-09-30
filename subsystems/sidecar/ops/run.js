@@ -255,25 +255,28 @@ module.exports = class Run extends Opstream {
     }
 
     const current = await sidecar.model.getCurrent(state.applink)
-    const checkoutLength = state.checkout ?? current?.checkout.length ?? null
+    console.log('CURRENT', current)
     const appBundle = new Bundle({
       swarm: sidecar.swarm,
       encryptionKey,
       corestore,
       appling: state.appling,
       channel: state.channel,
-      checkout: parsed.drive.length ? parsed.drive.length : checkoutLength,
+      current: current?.checkout.length,
+      checkout: state.checkout ?? parsed.drive.length ?? null,
       key: state.key,
       name: state.manifest?.name,
       dir: state.key ? null : state.dir,
       updatesDiff: state.updatesDiff,
       drive,
       updateNotify: async (version, info) => {
-        if (state.updates) sidecar.updateNotify(version, info)
-        await this.sidecar.model.setCurrent(state.applink, {
-          fork: version.fork,
-          length: version.length
-        })
+        if (state.updates) {
+          sidecar.updateNotify(version, info)
+          await this.sidecar.model.setCurrent(state.applink, {
+            fork: version.fork,
+            length: version.length
+          })
+        }
       },
       // pre.js file only runs on disk, so no need for conditional
       asset: (opts) => this.asset(opts, corestore),
@@ -299,7 +302,9 @@ module.exports = class Run extends Opstream {
     app.bundle = appBundle
 
     try {
-      const { fork, length } = await app.bundle.calibrate()
+      const { fork, length } = await app.bundle.calibrate({
+        updates: state.updates
+      })
       if (current === null)
         await this.sidecar.model.setCurrent(state.applink, { fork, length })
     } catch (err) {
@@ -408,7 +413,7 @@ module.exports = class Run extends Opstream {
       data: { link: asset.link, dir: asset.path }
     })
     try {
-      await bundle.calibrate()
+      await bundle.calibrate({ updates: false })
     } catch (err) {
       await this.session.close()
       throw err

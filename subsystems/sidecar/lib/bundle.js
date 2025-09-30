@@ -29,7 +29,8 @@ module.exports = class Bundle {
       corestore = false,
       swarm,
       drive = false,
-      checkout = 'release',
+      checkout,
+      current,
       appling,
       key,
       channel,
@@ -43,7 +44,7 @@ module.exports = class Bundle {
       encryptionKey = null
     } = opts
     this.swarm = swarm
-    this.checkout = checkout ?? null
+    this.checkout = checkout ?? 'release'
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
@@ -55,7 +56,8 @@ module.exports = class Bundle {
     this.stage = stage
     this.drive =
       drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
-    this.initLength = this.drive?.core?.length
+    this.head = this.drive
+    this.current = current ?? this.drive?.core?.length ?? 0
     this.updatesDiff = updatesDiff
     this.link = null
     this.watchingUpdates = null
@@ -115,7 +117,8 @@ module.exports = class Bundle {
     return assets
   }
 
-  watch() {
+  async watch() {
+    this.release = (await this.db?.get('release'))?.value ?? null
     return this.#updates()
   }
 
@@ -124,19 +127,24 @@ module.exports = class Bundle {
     if (typeof updateNotify !== 'function') return
     if (this.closed) return
 
-    if (this.checkout !== null && this.checkout < this.drive.version) {
+    const shouldNotify =
+      this.head?.core &&
+      (this.checkout === 'release' && this.release !== null
+        ? this.release > this.head.version
+        : this.current < this.head.version)
+
+    if (shouldNotify)
       await updateNotify(
         {
           key: this.hexKey,
-          length: this.drive.core.length,
-          fork: this.drive.core.fork
+          length: this.head.core.length,
+          fork: this.head.core.fork
         },
         {
           link: this.link,
           diff: null
         }
       )
-    }
 
     try {
       if (this.updatesDiff) {
@@ -151,8 +159,10 @@ module.exports = class Bundle {
           this.drive
         )
         for await (const upd of this.watchingUpdates) {
-          if (this.updater !== null)
+          if (this.updater !== null) {
             await this.updater.wait({ length: upd.length, fork: upd.fork })
+          }
+
           await updateNotify(
             { key: this.hexKey, length: upd.length, fork: upd.fork },
             { link: this.link, diff: null }
@@ -340,26 +350,36 @@ module.exports = class Bundle {
     return this.leaving
   }
 
-  async calibrate() {
+  async calibrate({ updates } = {}) {
     await this.ready()
 
     if (this.drive.core.length === 0) {
       await this.drive.core.update()
     }
-    if (this.stage === false) {
-      if (this.checkout === 'release') {
-        this.release = (await this.db.get('release'))?.value
-        if (this.release) this.checkout = this.release
-      }
+
+    updates = updates ?? this.stage === false
+
+    // no updates for checkout=n
+    if (this.checkout !== null)
+      updates = Number.isInteger(+this.checkout) === false
+
+    if (this.release === null)
+      this.release = (await this.db.get('release'))?.value ?? null
+
+    if (updates) {
       this.#updates().catch((err) => this.fatal(err))
-      if (this.checkout !== null && Number.isInteger(+this.checkout)) {
-        this.drive = this.drive.checkout(+this.checkout)
-      } else {
-        this.drive =
-          this.initLength > 0
-            ? this.drive.checkout(this.initLength)
-            : this.drive.checkout(this.drive.core.length)
-      }
+    }
+    if (this.stage === false) {
+      if (this.current === 0) this.current = this.drive.core.length
+      const length =
+        this.checkout === null
+          ? this.current
+          : this.checkout === 'release'
+            ? (this.release ?? this.current)
+            : Number.isInteger(+this.checkout)
+              ? +this.checkout
+              : this.current
+      this.drive = this.head.checkout?.(length) ?? this.drive
     }
 
     const { db } = this.drive

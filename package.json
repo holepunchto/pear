@@ -92,7 +92,7 @@
     "paparam": "^1.8.5",
     "pear-api": "^1.29.2",
     "pear-changelog": "^1.0.1",
-    "pear-cmd": "^1.0.0",
+    "pear-cmd": "^1.0.2",
     "pear-constants": "^1.0.0",
     "pear-crasher": "^1.0.1",
     "pear-errors": "^1.0.0",
