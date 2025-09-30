@@ -35,7 +35,7 @@ const PLATFORM_STAGE_TIMEOUT = 45_000
 
 test.hook('updates setup', rig.setup)
 
-test('Pear.updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({
+test('updates(listener) should notify when restaging and releasing application (same pear instance)', async function ({
   ok,
   is,
   plan,
@@ -136,7 +136,7 @@ test('Pear.updates(listener) should notify when restaging and releasing applicat
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
+test('updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
   const { ok, is, plan, comment, teardown } = t
   plan(7)
 
@@ -232,7 +232,7 @@ test('Pear.updates(listener) should notify twice when restaging application twic
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should notify Platform stage updates (different pear instances)', async function (t) {
+test('updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
   timeout(80_000)
@@ -363,7 +363,7 @@ test('Pear.updates should notify Platform stage updates (different pear instance
   await Helper.untilClose(pipeAfterUpdate)
 })
 
-test('Pear.updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
+test('updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(11)
   timeout(80_000)
@@ -506,7 +506,7 @@ test('Pear.updates should notify Platform stage, Platform release updates (diffe
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should notify App stage updates (different pear instances)', async function (t) {
+test('updates should notify App stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(6)
   timeout(80_000)
@@ -606,7 +606,7 @@ test('Pear.updates should notify App stage updates (different pear instances)', 
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should notify App stage, App release updates (different pear instances)', async function (t) {
+test('updates should notify App stage, App release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
   timeout(80_000)
@@ -844,7 +844,10 @@ test('state version and bundle drive version match', async function ({
   const resultB = await Helper.untilResult(pipeB)
   const version = JSON.parse(resultB)
 
-  const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+  const rcvB = new Helper({
+    platformDir: platformDirRcv,
+    expectSidecar: true
+  })
   await rcvB.ready()
 
   comment('inspect rcv platform')
@@ -877,7 +880,7 @@ test('state version and bundle drive version match', async function ({
   await rcvB.shutdown()
 })
 
-test('Pear.updates should replay updates when cutover is not called', async function (t) {
+test('updates should replay updates when cutover is not called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
   plan(11)
   timeout(80_000)
@@ -1006,7 +1009,7 @@ test('Pear.updates should replay updates when cutover is not called', async func
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should replay updates even when cutover is called', async function (t) {
+test('updates should replay updates even when cutover is called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
   plan(11)
   timeout(80_000)
@@ -1135,7 +1138,7 @@ test('Pear.updates should replay updates even when cutover is called', async fun
   await Helper.untilClose(pipe)
 })
 
-test('Pear.updates should start timer for clearing buffer when cutover is called', async (t) => {
+test('updates should start timer for clearing buffer when cutover is called', async (t) => {
   const { ok, is, absent, plan, timeout, comment, teardown, pass } = t
   plan(5)
   timeout(80_000)

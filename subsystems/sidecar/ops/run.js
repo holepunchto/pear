@@ -299,12 +299,9 @@ module.exports = class Run extends Opstream {
     })
 
     app.linker = linker
-    app.bundle = appBundle
 
     try {
-      const { fork, length } = await app.bundle.calibrate({
-        updates: state.updates
-      })
+      const { fork, length } = await appBundle.calibrate()
       const firstRun = current === null
       const rollback = current > length
       if (firstRun || rollback)
@@ -333,6 +330,8 @@ module.exports = class Run extends Opstream {
         throw err
       }
     }
+
+    app.bundle = appBundle
 
     LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
@@ -415,7 +414,7 @@ module.exports = class Run extends Opstream {
       data: { link: asset.link, dir: asset.path }
     })
     try {
-      await bundle.calibrate({ updates: false })
+      await bundle.calibrate()
     } catch (err) {
       await this.session.close()
       throw err
