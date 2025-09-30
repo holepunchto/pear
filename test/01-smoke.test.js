@@ -501,6 +501,89 @@ test('double stage and Pear.versions', async ({
   is(info.app.length, lengthA)
 })
 
+test('stage + release', async ({
+  teardown,
+  comment,
+  ok,
+  is
+}) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const id = Helper.getRandomId()
+
+  const from = new LocalDrive(versionsDir)
+  const to = new LocalDrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
+
+  const makeIndex = (version) => `const pipe = require('pear-pipe')()
+  Pear.versions().then((versions) => {
+    pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
+  })
+`
+  await to.put('/index.js', makeIndex('A'))
+
+  comment('staging A')
+  const stagingA = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumA = await stagedA.addendum
+  const lengthA = addendumA.version
+  await stagedA.final
+
+  const link = `pear://${addendumA.key}`
+
+  const release = helper.release({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir
+  })
+  teardown(() => Helper.teardownStream(release))
+  const releaseSStream = await Helper.pick(release, [
+    { tag: 'released' }
+  ])
+
+  const released = await releaseSStream.released
+  is(released.length, lengthA + 1)
+
+  comment('staging B')
+  await to.put('/index.js', makeIndex('B'))
+  const stagingB = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumB = await stagedB.addendum
+  const lengthB = addendumB.version
+  await stagedB.final
+
+  ok(lengthA < lengthB)
+
+  const run = await Helper.run({ link })
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+  await Helper.untilClose(run.pipe)
+  is(info.version, 'A')
+})
+
 test('routes and linkdata', async ({ teardown, comment, ok, is }) => {
   const dir = routesDir
 
