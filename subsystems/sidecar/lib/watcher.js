@@ -3,8 +3,8 @@ const debounceify = require('debounceify')
 const Localwatch = require('localwatch')
 const { Readable } = require('streamx')
 
-module.exports = function (checkout, drive) {
-  if (drive.key) return new DriveReleaseWatcher(checkout, drive)
+module.exports = function (checkout, drive, opts) {
+  if (drive.key) return new Watcher(checkout, drive, opts)
   return new Localwatch(drive.root, {
     mapReadable() {
       return { key: null, length: 0, fork: 0 }
@@ -12,11 +12,12 @@ module.exports = function (checkout, drive) {
   })
 }
 
-class DriveReleaseWatcher extends Readable {
-  constructor(checkout, drive) {
+class Watcher extends Readable {
+  constructor(checkout, drive, { releases } = {}) {
     super()
 
     this.drive = drive
+    this._releases = releases
     this._bumpBound = debounceify(this._bump.bind(this))
     this._checkout = checkout
 
@@ -34,8 +35,9 @@ class DriveReleaseWatcher extends Readable {
     try {
       const length = this.drive.core.length
       const fork = this.drive.core.fork
-      const node = await this.drive.db.get('release', { update: false })
-      console.log('_bump', node, length, this._checkout)
+      const node = this._releases
+        ? await this.drive.db.get('release', { update: false })
+        : null
       if (this.destroying) return
 
       if (node) {

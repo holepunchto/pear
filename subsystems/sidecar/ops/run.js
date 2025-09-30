@@ -255,7 +255,7 @@ module.exports = class Run extends Opstream {
     }
 
     const current = await sidecar.model.getCurrent(state.applink)
-    console.log('CURRENT', current)
+
     const appBundle = new Bundle({
       swarm: sidecar.swarm,
       encryptionKey,
@@ -305,7 +305,9 @@ module.exports = class Run extends Opstream {
       const { fork, length } = await app.bundle.calibrate({
         updates: state.updates
       })
-      if (current === null)
+      const firstRun = current === null
+      const rollback = current > length
+      if (firstRun || rollback)
         await this.sidecar.model.setCurrent(state.applink, { fork, length })
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
