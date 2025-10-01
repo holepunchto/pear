@@ -6,6 +6,7 @@ const fsx = require('fs-native-extensions')
 const crypto = require('hypercore-crypto')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
+const Iambus = require('iambus')
 const ScriptLinker = require('script-linker')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
@@ -18,7 +19,6 @@ const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const DriveMonitor = require('../lib/drive-monitor')
 const State = require('../state')
-const Iambus = require('iambus')
 
 module.exports = class Run extends Opstream {
   constructor(...args) {
