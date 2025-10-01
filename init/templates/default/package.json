@@ -3,8 +3,28 @@
   "main": "__main__",
   "pear": {
     "name": "__name__",
-    "type": "terminal"
-  },
+    "type": "terminal",
+    "build": {
+      "id": "",
+      "name": "",
+      "link": "",
+      "version": "",
+      "author": "",
+      "description": "",
+      "darwin": {
+        "identifier": "",
+        "category": "",
+        "signing-identity": ""
+      },
+      "win32": {
+        "signing-subject": "",
+        "signing-thumbprint": ""
+      },
+      "linux": {
+        "category": ""
+      }
+    }
+  }
   "type": "module",
   "license": "__license__",
   "scripts": {
