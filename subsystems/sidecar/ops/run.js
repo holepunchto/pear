@@ -6,6 +6,7 @@ const fsx = require('fs-native-extensions')
 const crypto = require('hypercore-crypto')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
+const Iambus = require('iambus')
 const ScriptLinker = require('script-linker')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
@@ -61,8 +62,15 @@ module.exports = class Run extends Opstream {
     })
     sidecar.running.set(startId, { client, running })
     session.teardown(() => {
-      const free = sidecar.running.get(startId)
       LOG.info(LOG_RUN_LINK, app.id, 'teardown')
+
+      for (const subscriber of sidecar.bus.subscribers) {
+        if (Iambus.match(subscriber.pattern, { id: startId })) {
+          subscriber.push(null)
+        }
+      }
+
+      const free = sidecar.running.get(startId)
       if (free.running === running) {
         sidecar.running.delete(startId)
         LOG.info(LOG_RUN_LINK, startId, 'removed from running set')

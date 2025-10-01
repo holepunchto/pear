@@ -283,13 +283,13 @@ class Sidecar extends ReadyResource {
         userData._pid = pid
         const opts = { retain: true }
         userData.reporter = this.reporter.feed(
-          this.sidecar.bus.sub({ topic: 'reports', id: userData.id }, opts)
+          this.sidecar.bus.sub({ topic: 'reports', id: userData.startId }, opts)
         )
         this.reporter.once('cutover', () => {
           userData.reporter.cutover()
         })
         userData.warming = this.warming.feed(
-          this.sidecar.bus.sub({ topic: 'warming', id: userData.id }, opts)
+          this.sidecar.bus.sub({ topic: 'warming', id: userData.startId }, opts)
         )
         this.warming.once('cutover', () => {
           userData.warming.cutover()
