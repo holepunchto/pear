@@ -68,6 +68,7 @@
     "bare-subprocess": "^5.1.4",
     "bare-tty": "^5.0.2",
     "bare-url": "^2.1.5",
+    "cmake-pear": "^3.0.0",
     "compact-encoding": "^2.16.0",
     "corestore": "^7.2.1",
     "crc-universal": "^1.0.4",
