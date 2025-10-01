@@ -18,6 +18,7 @@ const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const DriveMonitor = require('../lib/drive-monitor')
 const State = require('../state')
+const Iambus = require('iambus')
 
 module.exports = class Run extends Opstream {
   constructor(...args) {
@@ -61,8 +62,15 @@ module.exports = class Run extends Opstream {
     })
     sidecar.running.set(startId, { client, running })
     session.teardown(() => {
-      const free = sidecar.running.get(startId)
       LOG.info(LOG_RUN_LINK, app.id, 'teardown')
+
+      for (const subscriber of sidecar.bus.subscribers) {
+        if (Iambus.match(subscriber.pattern, { id: startId })) {
+          subscriber.push(null)
+        }
+      }
+
+      const free = sidecar.running.get(startId)
       if (free.running === running) {
         sidecar.running.delete(startId)
         LOG.info(LOG_RUN_LINK, startId, 'removed from running set')
