@@ -207,6 +207,7 @@ class Sidecar extends ReadyResource {
       reporter = null
       unwrapped = null
       cutover = null
+      head = true
       _pid = null
       _mapReport(report) {
         if (report.type === 'update') return reports.update(report)
@@ -277,6 +278,7 @@ class Sidecar extends ReadyResource {
       register(client, startId, pid = -1) {
         this.clients.add(client)
         const userData = Object.create(this)
+        userData.head = false
         userData.id = `${client.id}@${startId}`
         userData._pid = pid
         const opts = { retain: true }
@@ -467,8 +469,20 @@ class Sidecar extends ReadyResource {
     return Array.from(
       new Set(
         this.ipc.clients
-          .map(({ userData }) => userData)
-          .filter((userData) => userData instanceof this.App)
+          .filter((client) => client?.userData instanceof this.App)
+          .map((client) => client.userData)
+      )
+    )
+  }
+  get heads() {
+    return Array.from(
+      new Set(
+        this.ipc.clients
+          .filter(
+            (client) =>
+              client?.userData instanceof this.App && client.userData.head
+          )
+          .map((client) => client.userData)
       )
     )
   }
@@ -486,7 +500,7 @@ class Sidecar extends ReadyResource {
   }
 
   async updatingNotify(checkout = null) {
-    for await (const app of this.apps) {
+    for await (const app of this.heads) {
       if (!app) continue
 
       app.message({
@@ -523,7 +537,7 @@ class Sidecar extends ReadyResource {
     this.#spindownCountdown()
     const messaged = new Set()
 
-    for await (const app of this.apps) {
+    for await (const app of this.heads) {
       if (!app) continue
 
       if (messaged.has(app)) continue
@@ -996,11 +1010,11 @@ class Sidecar extends ReadyResource {
     const nodes = this.nodes ? undefined : knownNodes
     if (nodes) {
       LOG.info(
-        'sidecar',
+        'dht',
         '- DHT known-nodes read from database ' + nodes.length + ' nodes'
       )
       LOG.trace(
-        'sidecar',
+        'dht',
         nodes.map((node) => `  - ${node.host}:${node.port}`).join('\n')
       )
     }
@@ -1054,13 +1068,13 @@ class Sidecar extends ReadyResource {
         if (knownNodes.length) {
           await this.model.setDhtNodes(knownNodes)
           LOG.info(
-            'sidecar',
+            'dht',
             '- DHT known-nodes wrote to database ' +
               knownNodes.length +
               ' nodes'
           )
           LOG.trace(
-            'sidecar',
+            'dht',
             knownNodes.map((node) => `  - ${node.host}:${node.port}`).join('\n')
           )
         }
@@ -1110,12 +1124,9 @@ class Sidecar extends ReadyResource {
 
       // terminate any remaining unresponsive processes
       for (const app of this.apps) {
-        if (!app.state.pid) continue
-        LOG.info(
-          'sidecar',
-          `Killing unresponsive app with PID ${app.state.pid}`
-        )
-        os.kill(app.state.pid, 'SIGKILL')
+        if (!app.pid) continue
+        LOG.info('sidecar', `Killing unresponsive process with PID ${app.pid}`)
+        os.kill(app.pid, 'SIGKILL')
       }
 
       LOG.error(
