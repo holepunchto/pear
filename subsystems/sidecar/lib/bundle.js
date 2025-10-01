@@ -183,7 +183,7 @@ module.exports = class Bundle {
     }
 
     this.link = this.drive.key
-      ? 'pear://' + this.drive.core.id
+      ? plink.serialize(this.drive.key)
       : pathToFileURL(this.drive.root).href
 
     if (this.channel && this.drive.db.feed.writable) {
@@ -364,6 +364,13 @@ module.exports = class Bundle {
           : (this.release ?? this.current)
       this.#updates().catch((err) => this.fatal(err))
       this.drive = this.drive.checkout?.(length) ?? this.drive
+      await this.drive.ready()
+    }
+
+    this.ver = {
+      key: hypercoreid.decode(this.drive.key),
+      length: this.drive.version,
+      fork: this.drive.core.fork
     }
 
     const { db } = this.drive
@@ -383,11 +390,6 @@ module.exports = class Bundle {
       this.prefetch(ranges)
     }
 
-    this.ver = {
-      key: hypercoreid.decode(this.drive.key),
-      length: this.drive.core.length,
-      fork: this.drive.core.fork
-    }
     return this.ver
   }
 
