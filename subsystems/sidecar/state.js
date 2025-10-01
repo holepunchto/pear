@@ -84,7 +84,11 @@ module.exports = class State extends SharedState {
     }
     if (app?.reported) return
     if (this.key) {
-      this.version = bundle.ver
+      this.version = {
+        key: hypercoreid.encode(this.key),
+        fork: bundle.ver.fork,
+        length: bundle.ver.length
+      }
     }
   }
 }

@@ -736,7 +736,7 @@ test('updates should notify App stage, App release updates (different pear insta
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test.solo(
+test(
   'state version and bundle drive version match',
   async function ({ comment, teardown, is, timeout }) {
     timeout(90_000)
