@@ -40,6 +40,7 @@ module.exports = class Bundle {
       asset,
       updateNotify,
       updatesDiff = false,
+      ver = null,
       truncate,
       encryptionKey = null
     } = opts
@@ -382,11 +383,12 @@ module.exports = class Bundle {
       this.prefetch(ranges)
     }
 
-    return {
+    this.ver = {
       key: hypercoreid.decode(this.drive.key),
       length: this.drive.core.length,
       fork: this.drive.core.fork
     }
+    return this.ver
   }
 
   async *progresser() {

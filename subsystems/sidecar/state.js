@@ -84,11 +84,7 @@ module.exports = class State extends SharedState {
     }
     if (app?.reported) return
     if (this.key) {
-      this.version = {
-        key: hypercoreid.encode(this.key),
-        fork: bundle.drive.db.feed.fork,
-        length: bundle.drive.version
-      }
+      this.version = bundle.ver
     }
   }
 }

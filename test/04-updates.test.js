@@ -736,149 +736,147 @@ test('updates should notify App stage, App release updates (different pear insta
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test('state version and bundle drive version match', async function ({
-  comment,
-  teardown,
-  is,
-  timeout
-}) {
-  timeout(90_000)
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
+test.solo(
+  'state version and bundle drive version match',
+  async function ({ comment, teardown, is, timeout }) {
+    timeout(90_000)
+    const helper = new Helper()
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
 
-  const tmpdir = await testTmp()
+    const tmpdir = await testTmp()
 
-  const from = new LocalDrive(versions)
-  const to = new LocalDrive(tmpdir)
+    const from = new LocalDrive(versions)
+    const to = new LocalDrive(tmpdir)
 
-  const mirror = from.mirror(to)
-  await mirror.done()
+    const mirror = from.mirror(to)
+    await mirror.done()
 
-  const pkgA = {
-    name: 'tmp-app-a',
-    main: 'index.js',
-    pear: { name: 'tmp-app', type: 'terminal' }
-  }
-  await fs.promises.writeFile(
-    path.join(tmpdir, 'package.json'),
-    JSON.stringify(pkgA)
-  )
+    const pkgA = {
+      name: 'tmp-app-a',
+      main: 'index.js',
+      pear: { name: 'tmp-app' }
+    }
+    await fs.promises.writeFile(
+      path.join(tmpdir, 'package.json'),
+      JSON.stringify(pkgA)
+    )
 
-  const id = Helper.getRandomId()
+    const id = Helper.getRandomId()
 
-  comment('first stage')
-  const stagingA = helper.stage({
-    channel: `test-${id}`,
-    name: `test-${id}`,
-    dir: tmpdir,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(stagingA))
-  const stagedA = await Helper.pick(stagingA, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
-  const { key } = await stagedA.addendum
-  await stagedA.final
-
-  comment('seeding')
-  const seeding = helper.seed({
-    channel: `test-${id}`,
-    name: `test-${id}`,
-    dir: tmpdir,
-    key: null,
-    cmdArgs: []
-  })
-  teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
-  await until.announced
-
-  comment('bootstrapping rcv platform...')
-  const platformDirRcv = path.join(tmp, 'rcv-pear')
-  await Helper.bootstrap(rig.key, platformDirRcv)
-  comment('rcv platform bootstrapped')
-
-  comment('first run from rcv platform')
-  const link = 'pear://' + key
-  const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  await Helper.untilClose(pipe)
-  pipe.on('error', () => {})
-
-  comment('shutdown rcv platform')
-  const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
-  await rcv.ready()
-  await rcv.shutdown()
-
-  const pkgB = {
-    name: 'tmp-app-b',
-    main: 'index.js',
-    pear: { name: 'tmp-app', type: 'terminal' }
-  }
-  await fs.promises.writeFile(
-    path.join(tmpdir, 'package.json'),
-    JSON.stringify(pkgB)
-  )
-
-  comment('second stage')
-  const stagingB = helper.stage({
-    channel: `test-${id}`,
-    name: `test-${id}`,
-    dir: tmpdir,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(stagingB))
-  const stagedB = await Helper.pick(stagingB, [{ tag: 'final' }])
-  await stagedB.final
-
-  comment('second run from rcv platform')
-  const { pipe: pipeB } = await Helper.run({
-    link,
-    platformDir: platformDirRcv
-  })
-  pipeB.on('error', () => {})
-
-  const resultB = await Helper.untilResult(pipeB)
-  const version = JSON.parse(resultB)
-
-  const rcvB = new Helper({
-    platformDir: platformDirRcv,
-    expectSidecar: true
-  })
-  await rcvB.ready()
-
-  comment('inspect rcv platform')
-  const inspectorKey = await rcvB.inspect()
-  const session = new Session({ inspectorKey, bootstrap: null })
-  teardown(() => {
-    session.destroy()
-  })
-  session.connect()
-
-  const inspectorResult = new Promise((resolve) => {
-    session.on('message', ({ result }) => {
-      resolve(result)
+    comment('first stage')
+    const stagingA = helper.stage({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir: tmpdir,
+      dryRun: false
     })
-  })
+    teardown(() => Helper.teardownStream(stagingA))
+    const stagedA = await Helper.pick(stagingA, [
+      { tag: 'addendum' },
+      { tag: 'final' }
+    ])
+    const { key } = await stagedA.addendum
+    await stagedA.final
 
-  session.post({
-    method: 'Runtime.evaluate',
-    params: { expression: 'global.sidecar.apps[0].bundle.drive.core.length' }
-  })
+    comment('seeding')
+    const seeding = helper.seed({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir: tmpdir,
+      key: null,
+      cmdArgs: []
+    })
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [
+      { tag: 'key' },
+      { tag: 'announced' }
+    ])
+    await until.announced
 
-  const { result } = await inspectorResult
-  is(
-    result.value,
-    version.app.length,
-    'state.version matches bundle.drive.length'
-  )
+    comment('bootstrapping rcv platform...')
+    const platformDirRcv = path.join(tmp, 'rcv-pear')
+    await Helper.bootstrap(rig.key, platformDirRcv)
+    comment('rcv platform bootstrapped')
 
-  pipeB.end()
-  await rcvB.shutdown()
-})
+    comment('first run from rcv platform')
+    const link = 'pear://' + key
+    const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
+    await Helper.untilClose(pipe)
+    pipe.on('error', () => {})
+
+    comment('shutdown rcv platform')
+    const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
+    await rcv.ready()
+    await rcv.shutdown()
+
+    const pkgB = {
+      name: 'tmp-app-b',
+      main: 'index.js',
+      pear: { name: 'tmp-app' }
+    }
+    await fs.promises.writeFile(
+      path.join(tmpdir, 'package.json'),
+      JSON.stringify(pkgB)
+    )
+
+    comment('second stage')
+    const stagingB = helper.stage({
+      channel: `test-${id}`,
+      name: `test-${id}`,
+      dir: tmpdir,
+      dryRun: false
+    })
+    teardown(() => Helper.teardownStream(stagingB))
+    const stagedB = await Helper.pick(stagingB, [{ tag: 'final' }])
+    await stagedB.final
+
+    comment('second run from rcv platform')
+    const { pipe: pipeB } = await Helper.run({
+      link,
+      platformDir: platformDirRcv
+    })
+    pipeB.on('error', () => {})
+
+    const resultB = await Helper.untilResult(pipeB)
+    const version = JSON.parse(resultB)
+
+    const rcvB = new Helper({
+      platformDir: platformDirRcv,
+      expectSidecar: true
+    })
+    await rcvB.ready()
+
+    comment('inspect rcv platform')
+    const inspectorKey = await rcvB.inspect()
+    const session = new Session({ inspectorKey, bootstrap: null })
+    teardown(() => {
+      session.destroy()
+    })
+    session.connect()
+
+    const inspectorResult = new Promise((resolve) => {
+      session.on('message', ({ result }) => {
+        resolve(result)
+      })
+    })
+
+    session.post({
+      method: 'Runtime.evaluate',
+      params: { expression: 'global.sidecar.apps[0].bundle.drive.core.length' }
+    })
+
+    const { result } = await inspectorResult
+    is(
+      result.value,
+      version.app.length,
+      'state.version matches bundle.drive.length'
+    )
+
+    pipeB.end()
+    await rcvB.shutdown()
+  }
+)
 
 test('updates should replay updates when cutover is not called', async function (t) {
   const { ok, is, plan, timeout, comment, teardown, pass } = t
