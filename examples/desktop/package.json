@@ -24,16 +24,16 @@
       "author": "author",
       "description": "description",
       "darwin": {
-      "identifier": "identifier",
-      "category": "category",
-      "signing-identity": "signing-identity"
+        "identifier": "identifier",
+        "category": "category",
+        "signing-identity": "signing-identity"
       },
       "win32": {
-      "signing-subject": "signing-subject",
-      "signing-thumbprint": "signing-thumbprint"
+        "signing-subject": "signing-subject",
+        "signing-thumbprint": "signing-thumbprint"
       },
       "linux": {
-      "category": "category"
+        "category": "category"
       }
     }
   },
