@@ -4,7 +4,7 @@
   "pear": {
     "name": "__name__",
     "type": "terminal"
-  }
+  },
   "type": "module",
   "license": "__license__",
   "scripts": {
