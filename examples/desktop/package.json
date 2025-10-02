@@ -17,23 +17,21 @@
       "minWidth": 500
     },
     "build": {
-      "id": "id",
-      "name": "name",
-      "link": "link",
-      "version": "version",
-      "author": "author",
-      "description": "description",
+      "name": "deskex",
+      "version": "1.0.0",
+      "author": "",
+      "description": "",
       "darwin": {
-        "identifier": "identifier",
-        "category": "category",
-        "signing-identity": "signing-identity"
+        "identifier": "",
+        "category": "",
+        "signing-identity": ""
       },
       "win32": {
-        "signing-subject": "signing-subject",
-        "signing-thumbprint": "signing-thumbprint"
+        "signing-subject": "",
+        "signing-thumbprint": ""
       },
       "linux": {
-        "category": "category"
+        "category": ""
       }
     }
   },
