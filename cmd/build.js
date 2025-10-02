@@ -7,7 +7,7 @@ const output = outputter('build', {
   init: ({ dir }) => `\n${ansi.pear} Building appling into ${dir}\n`,
   generate: () => 'Generating project...\n',
   build: () => 'Building project...\n',
-  complete: ({ dir }) => `\n${ansi.tick} Build complete: ${dir}\n`,
+  complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
   error: ({ message }) => `Error: ${message}\n`
 })
 
@@ -16,6 +16,5 @@ module.exports = (ipc) =>
     const { json } = cmd.flags
     const link = cmd.args.link
     const { dir = os.cwd() } = cmd.args
-    await pearBuild({ link, dir })
-    // await output(json, build({ link, dir }))
+    await output(json, pearBuild({ link, dir }))
   }
