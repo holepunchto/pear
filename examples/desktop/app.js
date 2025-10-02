@@ -1,6 +1,8 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
+import run from 'pear-run'
+import b4a from 'b4a'
 import updates from 'pear-updates'
 console.log('link', Pear.config.link)
 console.log('linkData', Pear.config.linkData)
@@ -40,3 +42,9 @@ document.getElementById('platformLength').innerText = platform.length
 document.getElementById('appKey').innerText = app.key
 document.getElementById('appFork').innerText = app.fork
 document.getElementById('appLength').innerText = app.length
+
+const workerPipe = run('./worker.js')
+workerPipe.on('data', (data) => {
+  console.log('Data from child:', b4a.toString(data))
+})
+workerPipe.write('ping')
