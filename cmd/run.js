@@ -160,7 +160,8 @@ module.exports = (ipc) =>
     })
     stream.on('data', function ondata({ tag, data }) {
       if (tag !== 'initialized') return
-      const reporting = ipc.reports({ id: data.startId })
+      const [, startId] = data.id.split('@')
+      const reporting = ipc.reports({ id: startId })
       reporting.on('error', noop) // ignore rpc destroyed for unexpected run rejects
       reporting.on('data', (data) => reporter.display(data))
       stream.removeListener('data', ondata)
