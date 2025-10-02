@@ -420,6 +420,14 @@ class App {
           if (this.menu.globalReloaderActive === false) return
           if (wc.isDevToolsFocused() === false) this.menu.devtoolsReloaderUnlisten()
         }, 150)
+        wc.devToolsWebContents.executeJavaScript(`
+          document.addEventListener('keydown', (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+              event.preventDefault();
+              // TODO: notify main process to reload
+            }
+          }, true);
+        `);
       })
       wc.on('destroyed', () => {
         this.menu.render()
