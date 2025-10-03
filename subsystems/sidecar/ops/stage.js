@@ -159,13 +159,19 @@ module.exports = class Stage extends Opstream {
 
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
-      const files = await pearShake.run()
+      const { files, skips } = await pearShake.run({
+        defer: state.options.stage?.defer
+      })
       opts.ignore = compactStageIgnore(
         files,
         [...prefetch, ...include],
         select,
         main
       )
+      this.push({
+        tag: 'compact',
+        data: { files: files, ignore: opts.ignore, skips, success: true }
+      })
     }
 
     const mods = await linker.warmup(entrypoints)
@@ -247,12 +253,17 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
-      const warmup = await analyzer.analyze(entrypoints, prefetch)
+      const { warmup, skips } = await analyzer.analyze(entrypoints, prefetch, {
+        defer
+      })
       await bundle.db.put('warmup', warmup)
       const total =
         bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
       const blocks = warmup.meta.length + warmup.data.length
-      this.push({ tag: 'warming', data: { total, blocks, success: true } })
+      this.push({
+        tag: 'warmed',
+        data: { total, blocks, skips: skips, success: true }
+      })
     } else {
       this.push({
         tag: 'skipping',

@@ -8,8 +8,21 @@ const { permit, isTTY, byteDiff } = require('pear-terminal')
 const State = require('pear-state')
 const Pre = require('../pre')
 
-let blocks = 0
-let total = 0
+function hints(skips) {
+  return skips.length === 0
+    ? ''
+    : '\n' +
+        skips.map(({ specifier, referer }) => {
+          return (
+            `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referer}"\n` +
+            ansi.dim(
+              `If uninstalled optional or peer dependency add "${specifier}" to pear.stage.defer config array\n`
+            )
+          )
+        }) +
+        '\n'
+}
+
 const output = outputter('stage', {
   staging: ({ name, channel, link, verlink, current, release }) => {
     return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent version is ${current} with release set to ${release}\n`
@@ -19,17 +32,23 @@ const output = outputter('stage', {
   complete: ({ dryRun }) => {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
   },
-  warming: (data) => {
-    blocks = data.blocks || blocks
-    total = data.total || total
-    const message =
-      (data.success ? 'Warmed' : 'Warming') +
-      ' up app (used ' +
-      blocks +
-      '/' +
-      total +
-      ' blocks) ' // Adding a space as a hack for an issue with the outputter which duplicates the last char on done
-    return { output: 'status', message }
+  compact: (data) => {
+    const { files, ignore, skips } = data
+    return (
+      'Compact stage static-analysis:-\n' +
+      '- files: ' +
+      files.length +
+      '- ignore: ' +
+      ignore.length +
+      '- skips: ' +
+      skips.length
+    )
+  },
+  warmed: (data) => {
+    const { blocks, total, skips } = data
+    return (
+      'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
+    )
   },
   error: async (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
