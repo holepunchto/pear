@@ -63,6 +63,7 @@
     "bare-module": "^5.0.3",
     "bare-os": "^3.6.1",
     "bare-pipe": "^4.0.5",
+    "bare-prometheus-monitoring": "github:holepunchto/bare-prometheus-monitoring",
     "bare-readline": "^1.0.7",
     "bare-signals": "^4.0.2",
     "bare-subprocess": "^5.1.4",
