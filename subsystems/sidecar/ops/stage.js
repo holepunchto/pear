@@ -160,7 +160,7 @@ module.exports = class Stage extends Opstream {
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
       const { files, skips } = await pearShake.run({
-        defer: state.options.stage?.defer
+        defer: state.options?.stage?.defer
       })
       opts.ignore = compactStageIgnore(
         files,
@@ -254,7 +254,7 @@ module.exports = class Stage extends Opstream {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
       const { warmup, skips } = await analyzer.analyze(entrypoints, prefetch, {
-        defer
+        defer: state.options?.stage?.defer
       })
       await bundle.db.put('warmup', warmup)
       const total =
