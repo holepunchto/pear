@@ -12,9 +12,9 @@ function hints(skips) {
   return skips.length === 0
     ? ''
     : '\n' +
-        skips.map(({ specifier, referer }) => {
+        skips.map(({ specifier, referrer }) => {
           return (
-            `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referer}"\n` +
+            `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referrer}"\n` +
             ansi.dim(
               `If uninstalled optional or peer dependency add "${specifier}" to pear.stage.defer config array\n`
             )
