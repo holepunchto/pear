@@ -65,15 +65,15 @@ test('stage warmup with entrypoints', async function ({
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [
-    { tag: 'warming' },
+    { tag: 'warmed' },
     { tag: 'final' }
   ])
-  const warming = await staged.warming
+  const warmed = await staged.warmed
   ok((await staged.final).success, 'stage succeeded')
 
-  ok(warming.blocks > 0, 'Warmup contains some blocks')
-  ok(warming.total > 0, 'Warmup total is correct')
-  is(warming.success, true, 'Warmup completed')
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
 })
 
 test('stage warmup with prefetch', async function ({
@@ -105,15 +105,15 @@ test('stage warmup with prefetch', async function ({
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [
-    { tag: 'warming' },
+    { tag: 'warmed' },
     { tag: 'final' }
   ])
-  const warming = await staged.warming
+  const warmed = await staged.warmed
   ok((await staged.final).success, 'stage succeeded')
 
-  ok(warming.blocks > 0, 'Warmup contains some blocks')
-  ok(warming.total > 0, 'Warmup total is correct')
-  is(warming.success, true, 'Warmup completed')
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
 })
 
 test('stage with ignore', async function ({ ok, is, plan, teardown }) {
