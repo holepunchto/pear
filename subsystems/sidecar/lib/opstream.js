@@ -1,29 +1,34 @@
 'use strict'
 const streamx = require('streamx')
-const parseLink = require('pear-link')
+const plink = require('pear-link')
 const Session = require('./session')
 module.exports = class Opstream extends streamx.Readable {
-  constructor (op, params, client, sidecar = null) {
+  final = {}
+  constructor(op, params, client, sidecar = null, { autosession = true } = {}) {
     super({
-      read (cb) {
+      read(cb) {
         let success = true
         const error = (err) => {
           const { stack, code, message, info } = err
           success = false
-          this.push({ tag: 'error', data: { stack, code, message, success, info } })
+          this.push({
+            tag: 'error',
+            data: { stack, code, message, success, info }
+          })
         }
         const close = () => {
-          this.push({ tag: 'final', data: { success } })
+          this.push({ tag: 'final', data: { success, ...this.final } })
           this.push(null)
           cb(null)
-          return this.session.close()
+          if (autosession) return this.session.close()
         }
-        if (params.link) params.link = parseLink.normalize(params.link)
+
+        if (params.link) params.link = plink.normalize(params.link)
         op(params).catch(error).finally(close)
       }
     })
     this.client = client
     this.sidecar = sidecar
-    this.session = new Session(client)
+    this.session = autosession ? new Session(client) : null
   }
 }

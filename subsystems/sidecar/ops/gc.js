@@ -4,68 +4,74 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const streamx = require('streamx')
-const { PLATFORM_DIR } = require('../../../constants')
-const { ERR_INVALID_GC_RESOURCE } = require('../../../errors')
+const { PLATFORM_DIR } = require('pear-constants')
+const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
+const Opstream = require('../lib/opstream')
 
-module.exports = class GC extends streamx.Readable {
-  constructor ({ pid, resource }, client) {
-    super()
-    this.client = client
-    if (resource === 'releases') this.releases({ resource })
-    else if (resource === 'sidecars') this.sidecars({ pid, resource })
-    else throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
+module.exports = class GC extends Opstream {
+  constructor(...args) {
+    super((...args) => this.#op(...args), ...args)
   }
 
-  _destroy (cb) {
-    cb(null)
+  #op(params) {
+    if (params.resource === 'releases') return this.releases(params)
+    if (params.resource === 'sidecars') return this.sidecars(params)
+    if (params.resource === 'assets') return this.assets(params)
+    throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
-  async releases ({ resource }) {
+  async releases(params) {
+    const { resource } = params
+    let count = 0
+    const symlinkPath = path.join(PLATFORM_DIR, 'current')
+    const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
+
     try {
-      let count = 0
-      const symlinkPath = path.join(PLATFORM_DIR, 'current')
-      const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
-
-      try { await fs.promises.stat(dkeyDir) } catch {
-        this.push({ tag: 'complete', data: { resource, count } })
-        this.push({ tag: 'final', data: { success: true } })
-        this.push(null)
-      }
-
-      const current = await fs.promises.readlink(symlinkPath)
-      const currentDirPath = path.dirname(current)
-      const currentDirName = path.basename(currentDirPath)
-
-      const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
-
-      const dirNames = dirs
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
-
-      for (const dirName of dirNames) {
-        if (dirName !== currentDirName) {
-          const dirPath = path.join(dkeyDir, dirName)
-          await fs.promises.rm(dirPath, { recursive: true })
-          this.push({ tag: 'remove', data: { resource, id: dirName } })
-          count++
-        }
-      }
+      await fs.promises.stat(dkeyDir)
+    } catch {
       this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
-    } catch (error) {
-      this.#error(error)
+      return
     }
+
+    const current = await fs.promises.readlink(symlinkPath)
+    const currentDirPath = path.dirname(current)
+    const currentDirName = path.basename(currentDirPath)
+
+    const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
+
+    const dirNames = dirs
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name)
+
+    for (const dirName of dirNames) {
+      if (dirName !== currentDirName) {
+        const dirPath = path.join(dkeyDir, dirName)
+        await fs.promises.rm(dirPath, { recursive: true })
+        this.push({ tag: 'remove', data: { resource, id: dirName } })
+        count++
+      }
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
   }
 
-  sidecars ({ pid, resource }) {
+  sidecars(params) {
+    const { resource, data = {} } = params
+    const { pid } = data
     const name = 'pear-runtime'
     const flag = '--sidecar'
 
     const [sh, args] = isWindows
-      ? ['cmd.exe', ['/c', `wmic process where (name like '%${name}%') get name,executablepath,processid,commandline /format:csv`]]
-      : ['/bin/sh', ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]]
+      ? [
+          'cmd.exe',
+          [
+            '/c',
+            `wmic process where (name like '%${name}%') get name,executablepath,processid,commandline /format:csv`
+          ]
+        ]
+      : [
+          '/bin/sh',
+          ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]
+        ]
 
     const sp = spawn(sh, args)
     let output = ''
@@ -79,9 +85,11 @@ module.exports = class GC extends streamx.Readable {
       output = lines.pop()
       for (const line of lines) {
         if (!line.trim()) continue
-        const columns = line.split(isWindows ? ',' : ' ').filter(col => col)
+        const columns = line.split(isWindows ? ',' : ' ').filter((col) => col)
         if (isHeader && isWindows) {
-          const index = columns.findIndex(col => /processid/i.test(col.trim()))
+          const index = columns.findIndex((col) =>
+            /processid/i.test(col.trim())
+          )
           pidIndex = index !== -1 ? index : 4
           isHeader = false
         } else {
@@ -95,20 +103,47 @@ module.exports = class GC extends streamx.Readable {
       }
     })
 
-    sp.on('exit', (code, signal) => {
-      if (code !== 0 || signal) {
-        this.#error(new Error(`Process exited with code: ${code}, signal: ${signal}`))
-      }
-      this.push({ tag: 'complete', data: { resource, count } })
-      this.push({ tag: 'final', data: { success: true } })
-      this.push(null)
+    return new Promise((resolve, reject) => {
+      sp.on('exit', (code, signal) => {
+        if (code !== 0 || signal) {
+          reject(
+            new Error(`Process exited with code: ${code}, signal: ${signal}`)
+          )
+          return
+        }
+        this.push({ tag: 'complete', data: { resource, count } })
+        resolve()
+      })
     })
   }
 
-  #error (err) {
-    const { stack, code, message } = err
-    this.push({ tag: 'error', data: { stack, code, message, success: false } })
-    this.push({ tag: 'final', data: { success: false } })
-    this.push(null)
+  async assets(params) {
+    const { resource, data = {} } = params
+    const { link } = data
+    const { sidecar } = this
+    await sidecar.ready()
+    let count = 0
+    let removeAssets = []
+    if (link) {
+      const asset = await sidecar.model.getAsset(link)
+      if (asset) removeAssets = [asset]
+    } else {
+      const assets = await sidecar.model.allAssets()
+      if (assets) removeAssets = assets
+    }
+    for (const { client } of sidecar.running.values()) {
+      // skip running assets
+      if (client.userData instanceof sidecar.App === false) return
+      const links = Object.values(
+        client.userData.state.manifest.pear.assets
+      ).map((asset) => asset.link)
+      removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
+    }
+    for (const asset of removeAssets) {
+      await sidecar.model.removeAsset(asset.link)
+      this.push({ tag: 'remove', data: { resource, id: asset.link } })
+      count += 1
+    }
+    this.push({ tag: 'complete', data: { resource, count } })
   }
 }

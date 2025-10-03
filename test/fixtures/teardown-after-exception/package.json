@@ -1,0 +1,12 @@
+{
+  "name": "worker-teardown-after-exception",
+  "main": "index.js",
+  "pear": {
+    "name": "worker-teardown-after-exception",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.2",
+    "uncaughts": "^1.1.1"
+  }
+}

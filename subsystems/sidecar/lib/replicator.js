@@ -3,7 +3,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const { EventEmitter } = require('bare-events')
 
 module.exports = class Replicator extends EventEmitter {
-  constructor (drive, opts) {
+  constructor(drive, opts) {
     super()
     this.drive = drive
     this.appling = !!(opts && opts.appling)
@@ -11,13 +11,13 @@ module.exports = class Replicator extends EventEmitter {
     this.announcing = null
   }
 
-  join (swarm, opts) {
+  join(swarm, opts) {
     this.swarm = swarm
     if (!this.announcing) this.announcing = this._join(swarm, opts)
     return this.announcing
   }
 
-  async leave (swarm) {
+  async leave(swarm) {
     this.swarm = null
     if (!this.announcing) return
     await this.announcing
@@ -25,11 +25,19 @@ module.exports = class Replicator extends EventEmitter {
     swarm.leave(this.drive.discoveryKey)
   }
 
-  async _join (swarm, { server, client }) {
+  async _join(swarm, { server, client }) {
     let done = noop
     try {
       await this.drive.ready()
-      LOG.info('sidecar', '- Drive bundle ' + hypercoreid.encode(this.drive.key) + ' core length: ' + this.drive.core.length)
+      LOG.info(
+        'sidecar',
+        '- Replicator: drive = ' +
+          this.drive.core.fork +
+          '.' +
+          this.drive.core.length +
+          '.' +
+          hypercoreid.encode(this.drive.key)
+      )
       if (this.drive.core.length === 0) done = this.drive.findingPeers()
     } catch {
       done()
@@ -43,8 +51,15 @@ module.exports = class Replicator extends EventEmitter {
       done()
     }
 
-    LOG.info('sidecar', '- Sidecar swarm joining discovery key of ' + hypercoreid.encode(this.drive.key))
-    const topic = swarm.join(this.drive.discoveryKey, { server, client, limit: 16 })
+    LOG.info(
+      'sidecar',
+      '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key)
+    )
+    const topic = swarm.join(this.drive.discoveryKey, {
+      server,
+      client,
+      limit: 16
+    })
 
     try {
       await topic.flushed()
@@ -58,5 +73,4 @@ module.exports = class Replicator extends EventEmitter {
   }
 }
 
-function noop () {
-}
+function noop() {}

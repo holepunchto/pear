@@ -1,55 +1,86 @@
 'use strict'
 const { pipelinePromise, Readable } = require('streamx')
-const { pathToFileURL } = require('bare-url')
+const { pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
-const transform = require('../lib/transform')
 const Localdrive = require('localdrive')
-const Interact = require('../lib/interact')
-const parseLink = require('../lib/parse-link')
-const { ERR_PERMISSION_REQUIRED, ERR_OPERATION_FAILED, ERR_DIR_NONEMPTY, ERR_INVALID_TEMPLATE } = require('../errors')
-async function init (link, dir, { ipc, header, autosubmit, defaults, force = false } = {}) {
+const { Interact } = require('pear-terminal')
+const stamp = require('pear-stamp')
+const plink = require('pear-link')
+const { LOCALDEV } = require('pear-constants')
+const {
+  ERR_PERMISSION_REQUIRED,
+  ERR_OPERATION_FAILED,
+  ERR_DIR_NONEMPTY,
+  ERR_INVALID_TEMPLATE
+} = require('pear-errors')
+async function init(link = 'default', dir, opts = {}) {
+  const { cwd, ipc, header, autosubmit, defaults, force = false, pkg } = opts
+  let { ask = true } = opts
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
-  const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
-  const isType = !isPear && !isFile && !isPath
+  const isPath =
+    link[0] === '.' ||
+    link[0] === '/' ||
+    link[1] === ':' ||
+    link.startsWith('\\')
+  const isName = !isPear && !isFile && !isPath
 
-  if (isType) {
-    const { platform } = await ipc.versions()
-    if (platform.key.startsWith('/')) link = path.join(__dirname, 'templates', link)
-    else link = 'pear://' + platform.key + '/init/templates/' + link
+  if (isName) {
+    if (link === 'ui') {
+      link = 'pear://electron/template'
+      ask = false
+    } else if (link === 'default' || link === 'node-compat') {
+      if (LOCALDEV) link = path.join(__dirname, 'templates', link)
+      else link = './init/templates/' + link
+    } else {
+      return init('./' + link, dir, opts)
+    }
   }
+
   let params = null
-  if (isPear) {
-    if (await ipc.trusted(link) === false) {
-      const { drive } = parseLink(link)
-      throw new ERR_PERMISSION_REQUIRED('Permission required to use template', { key: drive.key })
+  if (isPear && ask) {
+    if ((await ipc.trusted(link)) === false) {
+      const { drive } = plink.parse(link)
+      throw ERR_PERMISSION_REQUIRED('Permission required to use template', {
+        key: drive.key
+      })
     }
   }
 
   if (isPath) {
-    let url = pathToFileURL(dir).toString()
+    let url = pathToFileURL(cwd).toString()
     if (url.slice(1) !== '/') url += '/'
     link = new URL(link, url).toString()
   }
 
-  for await (const { tag, data } of ipc.dump({ link: link + '/_template.json', dir: '-' })) {
+  for await (const { tag, data } of ipc.dump({
+    link: link + '/_template.json',
+    dir: '-'
+  })) {
     if (tag === 'error' && data.code === 'ERR_PERMISSION_REQUIRED') {
-      throw new ERR_PERMISSION_REQUIRED(data.message, data.info)
+      throw ERR_PERMISSION_REQUIRED(data.message, data.info)
     }
     if (tag !== 'file') continue
     try {
       const definition = JSON.parse(data.value)
       params = definition.params
       for (const prompt of params) {
+        defaults[prompt.name] = Array.isArray(prompt.override)
+          ? prompt.override.reduce((o, k) => o?.[k], pkg)
+          : (prompt.default ?? defaults[prompt.name])
         if (typeof prompt.validation !== 'string') continue
-        prompt.validation = new Function('value', 'return (' + prompt.validation + ')(value)') // eslint-disable-line
+        prompt.validation = new Function(
+          'value',
+          'return (' + prompt.validation + ')(value)'
+        ) // eslint-disable-line
       }
     } catch {
       params = null
     }
     break
   }
-  if (params === null) throw new ERR_INVALID_TEMPLATE('Invalid Template')
+  if (params === null)
+    throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -59,26 +90,34 @@ async function init (link, dir, { ipc, header, autosubmit, defaults, force = fal
         break
       }
     }
-    if (empty === false) throw new ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    if (empty === false)
+      throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
-  const locals = await prompt.run({ autosubmit })
+  const { fields, shave } = await prompt.run({ autosubmit })
   output.push({ tag: 'writing' })
   const promises = []
   for await (const { tag, data } of ipc.dump({ link, dir: '-' })) {
     if (tag === 'error') {
-      throw new ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
+      throw ERR_OPERATION_FAILED('Dump Failed: ' + data.stack)
     }
     if (tag !== 'file') continue
     const { key, value = null } = data
     if (key === '/_template.json') continue
     if (value === null) continue // dir
-    const file = transform.sync(key, locals)
+    const file = stamp.sync(key, fields)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(transform.stream(value, locals), writeStream)
-    promise.catch((err) => { output.push({ tag: 'error', data: err }) })
-    promise.then(() => { output.push({ tag: 'wrote', data: { path: file } }) })
+    const promise = pipelinePromise(
+      stamp.stream(value, fields, shave),
+      writeStream
+    )
+    promise.catch((err) => {
+      output.push({ tag: 'error', data: err })
+    })
+    promise.then(() => {
+      output.push({ tag: 'wrote', data: { path: file } })
+    })
     promises.push(promise)
   }
 

@@ -1,10 +1,10 @@
 'use strict'
-const parseLink = require('../lib/parse-link')
-const { outputter } = require('./iface')
+const plink = require('pear-link')
+const { outputter } = require('pear-terminal')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { ERR_INVALID_INPUT } = require('../errors')
-const { permit, isTTY } = require('./iface')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const { permit, isTTY } = require('pear-terminal')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -23,11 +23,13 @@ const info = ({ channel, release, name, length, byteLength, blobs, fork }) => `
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
- ${blobs
-  ? `blobs.length      ${blobs?.length}
+ ${
+   blobs
+     ? `blobs.length      ${blobs?.length}
  blobs.fork        ${blobs?.fork}
  blobs.byteLength  ${blobs?.byteLength}`
-  : ''}
+     : ''
+ }
 `
 
 const changelog = ({ changelog, full }) => `
@@ -51,26 +53,46 @@ const output = outputter('info', {
       return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  final (data, info) { return info.onlyShowKey && data.success ? {} : false }
+  manifest: (data) => {
+    return JSON.stringify(data.manifest, 0, 2)
+  },
+  final(data, info) {
+    return info.onlyShowKey && data.success ? {} : false
+  }
 })
 
-module.exports = (ipc) => async function info (cmd) {
-  const { json, changelog, fullChangelog: full, metadata, key: showKey } = cmd.flags
-  const isKey = cmd.args.link && parseLink(cmd.args.link).drive.key !== null
-  const channel = isKey ? null : cmd.args.link
-  const link = isKey ? cmd.args.link : null
-  if (link && isKey === false) throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-  let dir = cmd.args.dir || os.cwd()
-  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+module.exports = (ipc) =>
+  async function info(cmd) {
+    const {
+      json,
+      changelog,
+      fullChangelog: full,
+      metadata,
+      key: showKey,
+      manifest
+    } = cmd.flags
+    const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
+    const channel = isKey ? null : cmd.args.link
+    const link = isKey ? cmd.args.link : null
+    if (link && isKey === false)
+      throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+    let dir = cmd.args.dir || os.cwd()
+    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 
-  await output(json, ipc.info({
-    link,
-    channel,
-    dir,
-    showKey,
-    metadata,
-    changelog,
-    full,
-    cmdArgs: Bare.argv.slice(1)
-  }), { ask: cmd.flags.ask }, ipc)
-}
+    await output(
+      json,
+      ipc.info({
+        link,
+        channel,
+        dir,
+        showKey,
+        metadata,
+        changelog,
+        manifest,
+        full,
+        cmdArgs: Bare.argv.slice(1)
+      }),
+      { ask: cmd.flags.ask },
+      ipc
+    )
+  }

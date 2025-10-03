@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, ansi } = require('./iface')
+const { outputter, ansi } = require('pear-terminal')
 const { randomBytes } = require('hypercore-crypto')
 const os = require('bare-os')
 
@@ -12,9 +12,13 @@ const output = outputter('touch', {
   }
 })
 
-module.exports = (ipc) => async function touch (cmd) {
-  const dir = os.cwd()
-  const json = cmd.flags.json
-  const channel = cmd.args.channel || randomBytes(16).toString('hex')
-  await output(json, ipc.touch({ dir, channel }), { channel, header: cmd.command.header })
-}
+module.exports = (ipc) =>
+  async function touch(cmd) {
+    const dir = os.cwd()
+    const json = cmd.flags.json
+    const channel = cmd.args.channel || randomBytes(16).toString('hex')
+    await output(json, ipc.touch({ dir, channel }), {
+      channel,
+      header: cmd.command.header
+    })
+  }

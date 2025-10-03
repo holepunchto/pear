@@ -1,29 +1,45 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
-const parseLink = require('../../../lib/parse-link')
+const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
+const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Bundle = require('../lib/bundle')
-const State = require('../state')
 const Opstream = require('../lib/opstream')
-const { ERR_PERMISSION_REQUIRED } = require('../../../errors')
+const State = require('../state')
 
 module.exports = class Info extends Opstream {
-  constructor (...args) {
+  constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op ({ link, channel, dir, showKey, metadata, changelog, full, cmdArgs } = {}) {
+  async #op({
+    link,
+    channel,
+    dir,
+    showKey,
+    metadata,
+    changelog,
+    manifest,
+    full,
+    cmdArgs
+  } = {}) {
     const { session } = this
     let bundle = null
     let drive = null
-    const enabledFlags = new Set([changelog, full, metadata, showKey].filter((value) => value === true))
-    const isEnabled = (flag) => enabledFlags.size > 0 ? !!flag : !flag
+    const enabledFlags = new Set(
+      [changelog, full, metadata, showKey].filter((value) => value === true)
+    )
+    const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
     const state = new State({ flags: { channel, link }, dir, cmdArgs })
-    const corestore = link ? this.sidecar._getCorestore(null, null) : this.sidecar._getCorestore(state.name, channel)
+    const corestore = link
+      ? this.sidecar.getCorestore(null, null)
+      : this.sidecar.getCorestore(state.name, channel)
 
-    const key = link ? parseLink(link).drive.key : await Hyperdrive.getDriveKey(corestore)
+    const key = link
+      ? plink.parse(link).drive.key
+      : await Hyperdrive.getDriveKey(corestore)
 
     const query = link ? await this.sidecar.model.getBundle(link) : null
     const encryptionKey = query?.encryptionKey
@@ -34,14 +50,17 @@ module.exports = class Info extends Opstream {
         await drive.ready()
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
-        throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        throw ERR_PERMISSION_REQUIRED('Encryption key required', {
+          key,
+          encrypted: true
+        })
       }
     } else {
       drive = this.sidecar.drive
     }
 
     if (link || channel) {
-      bundle = new Bundle({ corestore, key, drive })
+      bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, drive })
       await bundle.ready()
     }
 
@@ -54,10 +73,24 @@ module.exports = class Info extends Opstream {
     await this.sidecar.ready()
     if (bundle) {
       await session.add(bundle)
-      await bundle.join(this.sidecar.swarm)
+      await bundle.join()
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
+      const appManifest = await drive.db.get('manifest').catch((error) => {
+        if (error.code === 'DECODING_ERROR')
+          throw ERR_PERMISSION_REQUIRED('Encryption key required', {
+            key,
+            encrypted: true
+          })
+      })
+
+      if (manifest) {
+        this.push({ tag: 'manifest', data: { manifest: appManifest.value } })
+        this.final = { manifest: appManifest.value }
+        return
+      }
+
       if (isEnabled(metadata)) {
         this.push({
           tag: 'keys',
@@ -68,33 +101,61 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const [channel, release, manifest] = await Promise.all([
+      const [channel, release] = await Promise.all([
         drive.db.get('channel'),
-        drive.db.get('release'),
-        drive.db.get('manifest')
+        drive.db.get('release')
       ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR') throw new ERR_PERMISSION_REQUIRED('Encryption key required', { key, encrypted: true })
+        if (error.code === 'DECODING_ERROR')
+          throw ERR_PERMISSION_REQUIRED('Encryption key required', {
+            key,
+            encrypted: true
+          })
       })
 
-      const name = manifest?.value?.pear?.name || manifest?.value?.holepunch?.name || manifest?.value?.name
-      const length = drive.core.length
-      const byteLength = drive.core.byteLength
-      const blobs = drive.blobs ? { length: drive.blobs.core.length, fork: drive.blobs.core.fork, byteLength: drive.blobs.core.byteLength } : null
-      const fork = drive.core.fork
-      if (isEnabled(metadata)) this.push({ tag: 'info', data: { channel: channel?.value, release: release?.value || ['Unreleased'], name, length, byteLength, blobs, fork } })
+      if (isEnabled(metadata)) {
+        const name = appManifest?.value?.pear?.name || appManifest?.value?.name
+        const length = drive.core.length
+        const byteLength = drive.core.byteLength
+        const blobs = drive.blobs
+          ? {
+              length: drive.blobs.core.length,
+              fork: drive.blobs.core.fork,
+              byteLength: drive.blobs.core.byteLength
+            }
+          : null
+        const fork = drive.core.fork
+        this.push({
+          tag: 'info',
+          data: {
+            channel: channel?.value,
+            release: release?.value || ['Unreleased'],
+            name,
+            length,
+            byteLength,
+            blobs,
+            fork
+          }
+        })
+      }
     }
-
-    const contents = await drive.get('/CHANGELOG.md')
 
     const type = full ? 'full' : 'latest'
     const showChangelog = isEnabled(changelog) || full ? type : false
-    const blank = '[ No Changelog ]'
-    const parsed = showChangelog === 'latest'
-      ? (clog.parse(contents).at(0)?.[1]) || blank
-      : showChangelog === 'full'
-        ? (clog.parse(contents).map(entry => entry[1]).join('\n\n')) || blank
-        : blank
 
-    if (showChangelog) this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+    if (showChangelog) {
+      const contents = await drive.get('/CHANGELOG.md')
+      const blank = '[ No Changelog ]'
+      const parsed =
+        showChangelog === 'latest'
+          ? clog.parse(contents).at(0)?.[1] || blank
+          : showChangelog === 'full'
+            ? clog
+                .parse(contents)
+                .map((entry) => entry[1])
+                .join('\n\n') || blank
+            : blank
+
+      this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+    }
   }
 }

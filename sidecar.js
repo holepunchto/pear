@@ -5,10 +5,8 @@ const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
-const subsystem = require('./subsystem.js')
-const crasher = require('./lib/crasher')
-const teardown = require('./lib/teardown')
-const Logger = require('./lib/logger')
+const crasher = require('pear-crasher')
+const gracedown = require('pear-gracedown')
 const {
   SWAP,
   GC,
@@ -18,58 +16,75 @@ const {
   UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
-} = require('./constants')
+} = require('pear-constants')
+const gunk = require('pear-gunk')
+const pear = require('pear-cmd')
 const registerUrlHandler = require('./url-handler')
-const gunk = require('./gunk')
-const { flags = {} } = require('./shell')(Bare.argv.slice(1))
-crasher('sidecar', SWAP, flags.log)
-global.LOG = new Logger({
-  level: flags.logLevel,
-  labels: flags.logLabels,
-  fields: flags.logFields,
-  stacks: flags.logStacks,
-  pretty: flags.log
-})
+const subsystem = require('./subsystem')
+crasher('sidecar', SWAP)
+
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
   LOG.error('internal', 'Sidecar Boot Failed', err)
   Bare.exit(1)
 })
-async function gc () {
-  try { await fs.promises.rm(GC, { recursive: true }) } catch {}
+async function gc() {
+  try {
+    await fs.promises.rm(GC, { recursive: true })
+  } catch {}
   await fs.promises.mkdir(GC, { recursive: true })
 }
 
-async function bootSidecar () {
+async function bootSidecar() {
   await gc()
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
-  const corestore = new Corestore(PLATFORM_CORESTORE, { globalCache, manifestVersion: 1, compat: false })
+  const nodes = pear(Bare.argv.slice(1))
+    .flags.dhtBootstrap?.split(',')
+    .map((tuple) => {
+      const [host, port] = tuple.split(':')
+      const int = +port
+      if (Number.isInteger(int) === false)
+        throw new Error(`Invalid port: ${port}`)
+      return { host, port: int }
+    })
+  const corestore = new Corestore(PLATFORM_CORESTORE, {
+    globalCache,
+    manifestVersion: 1,
+    compat: false
+  })
   await corestore.ready()
 
   const drive = await createPlatformDrive()
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
-
   const updater = createUpdater()
-  const sidecar = new Sidecar({ updater, drive, corestore, gunk, flags })
-  teardown(() => sidecar.close())
+
+  const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })
+  gracedown(() => sidecar.close())
   await sidecar.ipc.ready()
 
   registerUrlHandler(WAKEUP)
 
-  function createUpdater () {
+  function createUpdater() {
     if (LOCALDEV) return null
 
     const { checkout, swap } = getUpgradeTarget()
-    const updateDrive = checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
-      ? drive
-      : new Hyperdrive(corestore.session(), checkout.key)
+    const updateDrive =
+      checkout === CHECKOUT ||
+      hypercoreid.normalize(checkout.key) === CHECKOUT.key
+        ? drive
+        : new Hyperdrive(corestore.session(), checkout.key)
 
-    return new Sidecar.Updater(updateDrive, { directory: PLATFORM_DIR, swap, lock: UPGRADE_LOCK, checkout })
+    return new Sidecar.Updater(updateDrive, {
+      directory: PLATFORM_DIR,
+      swap,
+      lock: UPGRADE_LOCK,
+      checkout
+    })
   }
 
-  async function createPlatformDrive () {
+  async function createPlatformDrive() {
     if (LOCALDEV) return new Localdrive(SWAP)
 
     const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
@@ -80,7 +95,7 @@ async function bootSidecar () {
   }
 }
 
-function getUpgradeTarget () {
+function getUpgradeTarget() {
   if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
 
   let key = null
@@ -99,7 +114,8 @@ function getUpgradeTarget () {
     }
   }
 
-  if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
+  if (key === null || key === CHECKOUT.key)
+    return { checkout: CHECKOUT, swap: SWAP }
 
   return {
     checkout: { key, length: 0, fork: 0 },

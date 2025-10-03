@@ -1,25 +1,48 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('./iface')
-const parseLink = require('../lib/parse-link')
-const { ERR_INVALID_INPUT } = require('../errors')
-const { permit, isTTY } = require('./iface')
+const { outputter, ansi } = require('pear-terminal')
+const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const { permit, isTTY, byteDiff } = require('pear-terminal')
+const State = require('pear-state')
+const Pre = require('../pre')
 
-let blocks = 0
-let total = 0
+function hints(skips) {
+  return skips.length === 0
+    ? ''
+    : '\n\n' +
+        skips.map(({ specifier, referrer }, idx) => {
+          return `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referrer}"${idx < skips.length - 1 ? '\n' : ''}`
+        })
+}
+
 const output = outputter('stage', {
-  staging: ({ name, channel, link, current, release }) => {
-    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[ ${ansi.dim(link)} ]\n\nCurrent version is ${current} with release set to ${release}\n`
+  staging: ({ name, channel, link, verlink, current, release }) => {
+    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent version is ${current} with release set to ${release}\n`
   },
   skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
-  complete: ({ dryRun }) => { return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n' },
-  warming: (data) => {
-    blocks = data.blocks || blocks
-    total = data.total || total
-    const message = (data.success ? 'Warmed' : 'Warming') + ' up app (used ' + blocks + '/' + total + ' blocks) ' // Adding a space as a hack for an issue with the outputter which duplicates the last char on done
-    return { output: 'status', message }
+  complete: ({ dryRun }) => {
+    return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
+  },
+  compact: (data) => {
+    const { files, ignore, skips } = data
+    return (
+      'Compact stage static-analysis:-\n' +
+      '- files: ' +
+      files.length +
+      '- ignore: ' +
+      ignore.length +
+      '- skips: ' +
+      skips.length
+    )
+  },
+  warmed: (data) => {
+    const { blocks, total, skips } = data
+    return (
+      'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
+    )
   },
   error: async (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
@@ -28,17 +51,77 @@ const output = outputter('stage', {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  addendum: ({ version, release, channel, link }) => `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n[ ${ansi.dim(link)} ]\n`
+  addendum: ({ version, release, channel, link, verlink }) =>
+    `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`,
+  byteDiff,
+  preIo({ from, output, index, fd }, { preIo }) {
+    if (!preIo) return {}
+    const io = fd === 1 ? 'stdout' : 'stderr'
+    const pre = 'Pre-stage [' + index + ':' + from + ':' + io + ']: '
+    return pre + output
+  },
+  pre({ from, output, index, success }, { preQ }) {
+    if (preQ) return {}
+    const pre =
+      index > 0
+        ? 'Pre-stage [' + index + ':' + from + ']: '
+        : 'Pre-stage [' + from + ']: '
+    const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
+    if (success === false)
+      return {
+        success: false,
+        message: output?.stack || output?.message || 'Unknown Pre Error'
+      }
+    return pre + output.tag + suffix
+  },
+  final(data, info) {
+    if (info.pre) return {}
+    return data
+  }
 })
 
-module.exports = (ipc) => async function stage (cmd) {
-  const { dryRun, bare, json, ignore, name, truncate } = cmd.flags
-  const isKey = cmd.args.channel && parseLink(cmd.args.channel).drive.key !== null
-  const channel = isKey ? null : cmd.args.channel
-  const key = isKey ? cmd.args.channel : null
-  if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
-  let { dir = os.cwd() } = cmd.args
-  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-  const id = Bare.pid
-  await output(json, ipc.stage({ id, channel, key, dir, dryRun, bare, ignore, name, truncate, cmdArgs: Bare.argv.slice(1) }), { ask: cmd.flags.ask }, ipc)
-}
+module.exports = (ipc) =>
+  async function stage(cmd) {
+    const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } =
+      cmd.flags
+    const isKey =
+      cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
+    const channel = isKey ? null : cmd.args.channel
+    const key = isKey ? cmd.args.channel : null
+    if (!channel && !key)
+      throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
+    const cwd = os.cwd()
+    let { dir = cwd } = cmd.args
+    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+    const id = Bare.pid
+    const base = { cwd, dir }
+    let pkg = null
+    if (cmd.flags.pre) {
+      pkg = await State.localPkg(base)
+      if (pkg !== null) {
+        const pre = new Pre('stage', { dir, cwd }, pkg)
+        pkg = await output({ ctrlTTY: false, json }, pre, {
+          pre: true,
+          preQ: cmd.flags.preQ,
+          preIo: cmd.flags.preIo
+        })
+      }
+    }
+    const stream = ipc.stage({
+      id,
+      channel,
+      key,
+      dir,
+      dryRun,
+      bare,
+      ignore,
+      purge,
+      name,
+      truncate,
+      only,
+      compact,
+      cmdArgs: Bare.argv.slice(1),
+      pkg
+    })
+    await output(json, stream, { ask: cmd.flags.ask }, ipc)
+  }

@@ -1,0 +1,10 @@
+{
+  "name": "unresponsive",
+  "main": "index.js",
+  "pear": {
+    "name": "unresponsive"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}

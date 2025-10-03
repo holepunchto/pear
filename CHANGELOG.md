@@ -1,5 +1,88 @@
 # Pear Runtime Changelog
 
+## v2.0.0
+
+### Features
+
+* Internal - sidecar garbage collection of dangling filesystem resources
+* CLI - `pear gc assets` force clean-up of locally synced assets
+* CLI - `pear data` explore platform database collections `apps`, `dht`, `gc`, `manifest`, `assets`, `currents`
+* Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
+* CLI - `pear dump --only` - filter by paths
+* CLI - `pear dump --no-prune` - disallow removals
+* CLI - `pear dump` downloads & peers stats output status
+* CLI - `pear stage --compact` - tree-shaking static-analysis based stage
+* CLI - `pear stage --purge` - remove ignored files from app hypercore
+* CLI - `pear stage --only` - filter by paths
+* Config - `pear.stage.compact` - enable minimal static-analysis based stage
+* Config - `pear.stage.include` - to include any files missed from static-analysis of compact stage
+* Config - `pear.stage.only` - filter by paths on stage
+* Config - `pear.pre` - set to a project path or npm installed bin to run a pear app prior to staging or running an app from dir. The pre run app uses `pear-pipe` which receives initial config (per `package.json pear` field) as `compact-encoding` `any`, and can write back to the `pipe` in the form `{ tag, data }`. Repsonding with `{ tag: 'configure', data: mutatedConfig }` will update the application config. All tags will be displayed prior to run & stage output to indicate actions taken by the pre app. Enabling > log level `INF` will (`-L INF`) also output `data` with the `tag`
+* Config - `pear.stage.pre` - as `pear.pre` but for pre stage only
+* Config - `pear.run.pre` - as `pear.pre` but for pre run from dir only
+* CLI - `pear run --no-pre` - disallow any `pear.pre` apps to run prior to run from dir
+* CLI - `pear run --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear run --pre-q` - hide any pre tags from displaying
+* CLI - `pear run --preflight` - advanced, synchronize assets, exit without app execution
+* CLI - `pear stage --no-pre` - disallow any `pear.pre` apps to run prior to stage
+* CLI - `pear stage --pre-io` - for debugging pre apps. Show any writes to stdout/stderr from the pre app
+* CLI - `pear stage --pre-q` - hide any pre tags from displaying
+* CLI - `pear stage` `verlink` (versioned link) on `'staging'` and `'addendum` output tags
+set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, take config in from `pear-pipe` `data` and `pipe.write` the mutated config back
+* Config - pear.routes - route redirection to support pear://<key>/some/route -> path, `{"routes": {"/route": "/path"}`, `{"routes": "."}` catch-all
+* Config - pear.unrouted - rerouting opt-out array, `node_modules/.bin` is always unrouted
+* IPC/API - assets op, dump link to pear-dir/assets, record link<->path in db, w/ dl/peers stats output
+* CLI - `pear stage --ignore` notting & globbing (*, */**, !not/this/one)
+* CLI - `pear --log-labels|-l <list> <cmd>` new `-l` alias for `--log-labels` + setting `-l` flag now implies logging on
+* CLI - `pear --log-level|-L <level> <cmd>` new `-L` alias for `--log-level`
+* CLI - `pear --log-fields|-F <list> <cmd>`  new `-F` alias for `--log-fields`
+* CLI - `pear --log-stacks|-S <cmd>` new `-S` alias for `--log-stacks`
+* CLI - `pear --log-verbose|-V <cmd>` new flag, enables all `--log-fields` `date,time,level,label,delta`
+* CLI - `pear --log-max|-M <cmd>` new flag, log all levels and labels + implies `--log-verbose`
+
+### Fixes
+
+* Permissions - UID of Pear process must match Pear platform directory UID
+* `pear sidecar` - cursor reset on teardown
+* `pear sidecar` - corrected restart commands output
+* `pear run` - remove cwd reliance from project resolution algorithm
+* Internal - queue for bus subscribers that feed to new subsribers in from new clients in new processes that are part of the same app with a cutover phase. Ultimately ensures applications do not miss updates (or any bus messages) when listening in subprocesses.
+
+### Improvements
+
+* CLI - `pear run` - **MAJOR** only runs terminal (Bare) apps from JS entrypoints, will throw ERR_LEGACY for .html entrypoints
+* CLI - **MAJOR** `pear reset` **DEPRECATED & REMOVED** now `pear drop`
+* CLI - **MAJOR** `pear init`, `-t|--type` flag removed, replaced with `name` (default, node-compat, ui), in `[link|name]`
+* CLI - **MAJOR** `pear init` default generates a non-ui Pear app previously generated desktop app, also `--type|-t` flag removed, now use `pear init [link|name]` where `name` may be `default`, `ui`, or `node-compat`
+* CLI - `pear run` - introduced new application architecture: entrypoint is always a headless process, it may spawn a UI per `pear-electron` and communicate over a pipe such that the entry point process is the Pearend (backend equivalent) that the frontend UI process can interact with
+* CLI - **MAJOR** `pear dev` **DEPRECATED & REMOVED**  use `pear run --dev`
+* API - **MAJOR** `Pear.messages` **DEPRECATED** use `pear-messages`
+* API - **MAJOR** `Pear.message` **DEPRECATED** use `pear-message`
+* API - **MAJOR** `Pear.updated` **DEPRECATED** (redundant). Use `pear-updates`
+* API - **MAJOR** `Pear.updates` **DEPRECATED** use `pear-updates`
+* API - **MAJOR** `Pear.wakeups` **DEPRECATED** use `pear-wakeups`
+* API - **MAJOR** `Pear.restart` **DEPRECATED** use `pear-restart`
+* API - **MAJOR** `Pear.worker.run` **DEPRECATED** use `pear-run`
+* API - **MAJOR** `Pear.worker.pipe` **DEPRECATED** use `pear-pipe`
+* API - **MAJOR** `Pear.reload` **DEPRECATED** use `location.reload()` in UI (already unsupported in terminal)
+* API - **MAJOR** `Pear.config` **DEPRECATED** use `Pear.app`
+* Config - `pear.userAgent` **DEPRECATED** use `pear.gui.userAgent`
+* Externalization - `Pear` global now defined in [`pear-api`][v2.0.0:pear-api] allowing for API extension in other environments, such a Pear UI Libraries
+* Externalization - [`pear-api`][v2.0.0:pear-api] integration libraries for externalized integration
+* Externalization - GUI internals externalized to [`pear-electron`][v2.0.0:pear-electron] Pear UI Library
+* Internal - boot flow stripped decoupled from electron boot flow
+* Internal - internal dependencies switched to [`pear-api`][v2.0.0:pear-api]
+* Internal - gc op refactor
+* CLI - help output tweaks/clarifications
+* CLI - error output improvements (classifications for stacks/non-stacks)
+* Internal - versions cmd refactor
+* Internal - seed op tweak (seeds are not apps)
+* Examples - various tweaks, including desktop updated to use [`pear-electron`][v2.0.0:pear-electron]
+
+
+[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run 'pear://runtime/doc?pear://electron/CHANGELOG.md'"
+
+
 ## v1.18.0
 
 ### Improvements
@@ -72,14 +155,14 @@
 
 ### Features
 
-* CLI – The terminal app entrypoint can now be located inside the desktop app bundle.
+* CLI – The terminal app entrypoint can now be located inside the desktop app bundle
 
 ### Fixes
 
-* Internal - Fixed multi worker data piping.
-* Terminal - Fixed unhandled rejection handler for terminal apps.
-* Desktop - Fixed client restart after update nofification.
-* Desktop – Fixed missing traffic lights on macOS.
+* Internal - Fixed multi worker data piping
+* Terminal - Fixed unhandled rejection handler for terminal apps
+* Desktop - Fixed client restart after update nofification
+* Desktop – Fixed missing traffic lights on macOS
 
 ## v1.12.1
 
