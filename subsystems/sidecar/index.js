@@ -19,6 +19,7 @@ const { isMac, isWindows } = require('which-runtime')
 const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const { Transform, pipeline } = require('streamx')
+const BarePromMonitoring = require('bare-prometheus-monitoring')
 const plink = require('pear-link')
 const rundef = require('pear-cmd/run')
 const {
@@ -191,6 +192,8 @@ class Sidecar extends ReadyResource {
       inspector: bareInspector,
       bootstrap: this.nodes
     })
+
+    this._monitor = new BarePromMonitoring({ port: 9100 })
 
     const sidecar = this
     this.App = class App {
@@ -429,6 +432,12 @@ class Sidecar extends ReadyResource {
     this.gcInterval = setInterval(() => {
       gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
     }, gcCycleMs)
+
+    await this._monitor.ready()
+    LOG.info(
+      'sidecar',
+      ` - Monitor listening on ${this._monitor.address.address}:${this._monitor.address.port}`
+    )
   }
 
   _onsub(sub) {
