@@ -11,16 +11,10 @@ const Pre = require('../pre')
 function hints(skips) {
   return skips.length === 0
     ? ''
-    : '\n' +
-        skips.map(({ specifier, referrer }) => {
-          return (
-            `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referrer}"\n` +
-            ansi.dim(
-              `If uninstalled optional or peer dependency add "${specifier}" to pear.stage.defer config array\n`
-            )
-          )
-        }) +
-        '\n'
+    : '\n\n' +
+        skips.map(({ specifier, referrer }, idx) => {
+          return `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referrer}"${idx < skips.length - 1 ? '\n' : ''}`
+        })
 }
 
 const output = outputter('stage', {

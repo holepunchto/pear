@@ -159,8 +159,12 @@ module.exports = class Stage extends Opstream {
 
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
-      const { files, skips } = await pearShake.run({
+      let shake = await pearShake.run({
         defer: state.options?.stage?.defer
+      })
+      const { files } = shake
+      const skips = shake.skips.map(({ specifier, referrer }) => {
+        return { specifier, referrer: referrer.pathname }
       })
       opts.ignore = compactStageIgnore(
         files,
@@ -253,9 +257,14 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
-      const { warmup, skips } = await analyzer.analyze(entrypoints, prefetch, {
+      const analyzed = await analyzer.analyze(entrypoints, prefetch, {
         defer: state.options?.stage?.defer
       })
+      const { warmup } = analyzed
+      const skips = analyzed.skips.map(({ specifier, referrer }) => {
+        return { specifier, referrer: referrer.pathname }
+      })
+
       await bundle.db.put('warmup', warmup)
       const total =
         bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
