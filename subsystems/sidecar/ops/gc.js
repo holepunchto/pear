@@ -9,26 +9,19 @@ const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 
 module.exports = class GC extends Opstream {
-  constructor({ data = {}, resource } = {}, client, sidecar) {
-    super((params) => this.#op(params), data, client)
-    this.resource = resource
-    this.sidecar = sidecar
+  constructor(...args) {
+    super((...args) => this.#op(...args), ...args)
   }
 
-  _destroy(cb) {
-    cb(null)
-  }
-
-  #op(data) {
-    const { resource } = this
-    if (resource === 'releases') return this.releases(data)
-    if (resource === 'sidecars') return this.sidecars(data)
-    if (resource === 'assets') return this.assets(data)
+  #op(params) {
+    if (params.resource === 'releases') return this.releases(params)
+    if (params.resource === 'sidecars') return this.sidecars(params)
+    if (params.resource === 'assets') return this.assets(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
-  async releases() {
-    const { resource } = this
+  async releases(params) {
+    const { resource } = params
     let count = 0
     const symlinkPath = path.join(PLATFORM_DIR, 'current')
     const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
@@ -61,8 +54,9 @@ module.exports = class GC extends Opstream {
     this.push({ tag: 'complete', data: { resource, count } })
   }
 
-  sidecars({ pid }) {
-    const { resource } = this
+  sidecars(params) {
+    const { resource, data = {} } = params
+    const { pid } = data
     const name = 'pear-runtime'
     const flag = '--sidecar'
 
@@ -123,8 +117,10 @@ module.exports = class GC extends Opstream {
     })
   }
 
-  async assets({ link }) {
-    const { resource, sidecar } = this
+  async assets(params) {
+    const { resource, data = {} } = params
+    const { link } = data
+    const { sidecar } = this
     await sidecar.ready()
     let count = 0
     let removeAssets = []
