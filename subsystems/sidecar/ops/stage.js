@@ -174,7 +174,7 @@ module.exports = class Stage extends Opstream {
       )
       this.push({
         tag: 'compact',
-        data: { files: files, ignore: opts.ignore, skips, success: true }
+        data: { files: files, ignore, skips, success: true }
       })
     }
 
