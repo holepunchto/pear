@@ -24,6 +24,7 @@ const { isMac } = require('which-runtime')
 const { command } = require('paparam')
 const { pathToFileURL } = require('url-file-url')
 const deriveEncryptionKey = require('pw-to-ek')
+const BarePromMonitoring = require('bare-prometheus-monitoring')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Bundle = require('./lib/bundle')
@@ -148,6 +149,7 @@ class Sidecar extends ReadyResource {
     this.running = new Map()
 
     this._inspector = new Inspector({ inspector: bareInspector, bootstrap: this.dhtBootstrap })
+    this._monitor = new BarePromMonitoring({ port: 9102 })
 
     const sidecar = this
     this.App = class App {
@@ -317,6 +319,11 @@ class Sidecar extends ReadyResource {
     await this.http.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
+    await this._monitor.ready()
+    LOG.info(
+      'sidecar',
+      ` - Monitor listening on ${this._monitor.address.address}:${this._monitor.address.port}`
+    )
   }
 
   get clients () { return this.ipc.clients }
