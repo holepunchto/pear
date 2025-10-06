@@ -11,6 +11,8 @@ const {
   SWAP,
   GC,
   PLATFORM_CORESTORE,
+  EOLS,
+  ALIASES,
   CHECKOUT,
   LOCALDEV,
   UPGRADE_LOCK,
@@ -49,6 +51,7 @@ async function bootSidecar() {
         throw new Error(`Invalid port: ${port}`)
       return { host, port: int }
     })
+
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
     manifestVersion: 1,
@@ -68,7 +71,6 @@ async function bootSidecar() {
 
   function createUpdater() {
     if (LOCALDEV) return null
-
     const { checkout, swap } = getUpgradeTarget()
     const updateDrive =
       checkout === CHECKOUT ||
@@ -112,6 +114,11 @@ function getUpgradeTarget() {
       key = hypercoreid.normalize(Bare.argv[i + 1])
       break
     }
+  }
+
+  const cur = hypercoreid.decode(key ?? CHECKOUT.key)
+  if (EOLS.pear?.some((key) => cur.equals(key))) {
+    key = hypercoreid.encode(ALIASES.pear)
   }
 
   if (key === null || key === CHECKOUT.key)
