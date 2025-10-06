@@ -117,7 +117,7 @@ function getUpgradeTarget() {
   }
 
   const cur = hypercoreid.decode(key ?? CHECKOUT.key)
-  if (EOLS.pear.some((key) => cur.equals(key))) {
+  if (EOLS.pear?.some((key) => cur.equals(key))) {
     key = hypercoreid.encode(ALIASES.pear)
   }
 
