@@ -3,8 +3,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const Hyperdrive = require('hyperdrive')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
-const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
+const Replicator = require('../lib/replicator')
 const State = require('../state')
 
 module.exports = class Seed extends Opstream {
@@ -42,19 +42,12 @@ module.exports = class Seed extends Opstream {
     )
     const encryptionKey = query?.encryptionKey
 
-    const bundle = new Bundle({
-      swarm: this.sidecar.swarm,
-      corestore,
-      key,
-      channel,
-      status,
-      encryptionKey
-    })
+    const drive = new Hyperdrive(corestore, key, { encryptionKey })
+    session.add(drive)
 
     try {
-      await session.add(bundle)
-      await bundle.ready()
-      if (!bundle.drive.opened) throw new Error('Cannot open Hyperdrive')
+      await drive.ready()
+      if (!drive.opened) throw new Error('Cannot open Hyperdrive')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
       throw ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -63,16 +56,33 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    if (!link && bundle.drive.core.length === 0) {
+    const replicator = new Replicator(drive)
+    // session.add(replicator)
+
+    replicator.on('announce', () => status({ tag: 'announced' }))
+    drive.core.on('peer-add', (peer) => {
+      status({
+        tag: 'peer-add',
+        data: peer.remotePublicKey.toString('hex')
+      })
+    })
+    drive.core.on('peer-remove', (peer) => {
+      status({
+        tag: 'peer-remove',
+        data: peer.remotePublicKey.toString('hex')
+      })
+    })
+
+    if (!link && drive.core.length === 0) {
       throw ERR_INVALID_INPUT(
         'Invalid Channel "' + channel + '" - nothing to seed'
       )
     }
 
-    await bundle.join({ server: true })
+    await replicator.join(this.sidecar.swarm, { server: true, client: true })
 
     try {
-      await bundle.drive.get('/package.json')
+      await drive.get('/package.json')
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
       throw ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -81,13 +91,13 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    bundle.drive.core.download({ start: 0, end: -1 })
+    drive.core.download({ start: 0, end: -1 })
 
-    const blobs = await bundle.drive.getBlobs()
+    const blobs = await drive.getBlobs()
     blobs.core.download({ start: 0, end: -1 })
 
     if (verbose) {
-      this.push({ tag: 'meta-key', data: bundle.drive.key.toString('hex') })
+      this.push({ tag: 'meta-key', data: drive.key.toString('hex') })
       this.push({
         tag: 'meta-discovery-key',
         data: bundle.drive.discoveryKey.toString('hex')
@@ -98,7 +108,7 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    this.push({ tag: 'key', data: hypercoreid.encode(bundle.drive.key) })
+    this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
