@@ -7,7 +7,6 @@ const crypto = require('hypercore-crypto')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const Iambus = require('iambus')
-const ScriptLinker = require('script-linker')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
 const { pathToFileURL } = require('url-file-url')
@@ -199,16 +198,7 @@ module.exports = class Run extends Opstream {
           state.updates &&
           ((version, info) => sidecar.updateNotify(version, info))
       })
-      const linker = new ScriptLinker(appBundle, {
-        builtins: sidecar.gunk.builtins,
-        map: sidecar.gunk.app.map,
-        mapImport: sidecar.gunk.app.mapImport,
-        symbol: sidecar.gunk.app.symbol,
-        protocol: sidecar.gunk.app.protocol,
-        runtimes: sidecar.gunk.app.runtimes
-      })
       await session.add(appBundle)
-      app.linker = linker
       app.bundle = appBundle
       if (state.updates) app.bundle.watch()
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
@@ -296,17 +286,6 @@ module.exports = class Run extends Opstream {
     await session.add(appBundle)
 
     if (sidecar.swarm) appBundle.join() // note: no await is deliberate
-
-    const linker = new ScriptLinker(appBundle, {
-      builtins: sidecar.gunk.builtins,
-      map: sidecar.gunk.app.map,
-      mapImport: sidecar.gunk.app.mapImport,
-      symbol: sidecar.gunk.app.symbol,
-      protocol: sidecar.gunk.app.protocol,
-      runtimes: sidecar.gunk.app.runtimes
-    })
-
-    app.linker = linker
 
     try {
       const { fork, length } = await appBundle.calibrate()
