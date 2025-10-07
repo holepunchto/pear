@@ -366,14 +366,12 @@ class Sidecar extends ReadyResource {
         this.startId = startId
         this.clients = new Set()
         const opts = { retain: true }
-        const reporter = this.sidecar.bus.sub(
-          { topic: 'reports', id: this.startId },
-          opts
-        )
-        const warming = this.sidecar.bus.sub(
-          { topic: 'warming', id: this.startId },
-          opts
-        )
+        const reporter =
+          this.sidecar.bus.subof({ topic: 'reports', id: this.startId }) ??
+          this.sidecar.bus.sub({ topic: 'reports', id: this.startId }, opts)
+        const warming =
+          this.sidecar.bus.subof({ topic: 'warming', id: this.startId }) ??
+          this.sidecar.bus.sub({ topic: 'warming', id: this.startId }, opts)
         const updates = this.messages({ type: 'pear/updates' }, opts)
         this.cutover = (params) => {
           // closure scoped to keep cutover refs to top ancestor subs
