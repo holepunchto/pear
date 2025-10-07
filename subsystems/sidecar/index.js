@@ -6,7 +6,6 @@ const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
 const ReadyResource = require('ready-resource')
-const ScriptLinker = require('script-linker')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
@@ -173,16 +172,6 @@ class Sidecar extends ReadyResource {
       ? new Replicator(updater.drive, { appling: true })
       : null
 
-    this.linker = new ScriptLinker(this.drive, {
-      builtins: gunk.builtins,
-      map: gunk.platform.map,
-      mapImport: gunk.platform.mapImport,
-      symbol: gunk.platform.symbol,
-      protocol: gunk.platform.protocol,
-      runtimes: gunk.platform.runtimes,
-      bareBuiltins: gunk.bareBuiltins
-    })
-
     this.applings = new Applings(APPLINGS_PATH)
 
     this.running = new Map()
@@ -196,7 +185,6 @@ class Sidecar extends ReadyResource {
     this.App = class App {
       sidecar = sidecar
       handlers = null
-      linker = null
       bundle = null
       reported = null
       state = null
