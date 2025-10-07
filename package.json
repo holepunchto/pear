@@ -40,7 +40,11 @@
         "electron-main.crash.log",
         "cli.crash.log",
         "package-lock.json",
-        "node_modules/.package-lock.json"
+        "node_modules/.package-lock.json",
+        "node_modules/*/LICENSE",
+        "node_modules/*/*/LICENSE",
+        "node_modules/*/README.md",
+        "node_modules/*/*/README.md"
       ]
     },
     "platform": {
