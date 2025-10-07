@@ -20,5 +20,15 @@ module.exports = (ipc) =>
     const { drive }  = plink.parse(link)
     if (!drive.key) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     const { dir = os.cwd() } = cmd.args
+
+    const kIPC = Symbol('ipc')
+    await ipc.ready()
+    class API {
+      static IPC = kIPC
+      get [kIPC]() {
+        return ipc
+      }
+    }
+    global.Pear = new API()
     await output(json, pearBuild({ link, dir }))
   }
