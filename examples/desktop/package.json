@@ -15,6 +15,25 @@
       "width": 900,
       "height": 500,
       "minWidth": 500
+    },
+    "build": {
+      "name": "Pear App",
+      "version": "1.0.0",
+      "author": "Holepunch",
+      "description": "Pear Desktop Example",
+      "icons": "./icons",
+      "darwin": {
+        "identifier": "io.keet.deskex",
+        "category": "public.app-category.developer-tools",
+        "signing-identity": "-"
+      },
+      "win32": {
+        "signing-subject": "",
+        "signing-thumbprint": ""
+      },
+      "linux": {
+        "category": "AudioVideo"
+      }
     }
   },
   "devDependencies": {
