@@ -25,7 +25,8 @@
       "darwin": {
         "identifier": "io.keet.deskex",
         "category": "public.app-category.developer-tools",
-        "signing-identity": "-"
+        "signing-identity": "-",
+        "entitlements": []
       },
       "win32": {
         "signing-subject": "",
