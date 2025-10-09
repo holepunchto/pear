@@ -32,16 +32,20 @@ module.exports = (ipc) => {
       throw ERR_INVALID_INPUT(
         'A valid pear link or the channel name must be specified.'
       )
-    // TODO: handle channel case
-    const { drive }  = plink.parse(link)
+    if (channel) {
+      // TODO resolve link from channel arg
+      ipc.info({ link, channel, manifest: true })
+    }
+
+    // TODO get post processed manifest
+    ipc.info({ link, manifest: true })
+    const pkg = {} // TODO load it
+
+    const { drive } = plink.parse(link)
+    const build = pkg.default.pear.build
     const { dir = os.cwd() } = cmd.args
     const distributables = path.join(dir, 'distributables')
     await fs.promises.mkdir(distributables, { recursive: true })
-    const stream = await ipc.dump(link, { dir: distributables, list: ['package.json', 'icons'] })
-    await new Promise(resolve => stream.once('end', resolve))
-
-    const pkg = await import(path.join(distributables, 'package.json'), { assert: { type: 'json' } })
-    const build = pkg.default.pear.build
 
     const tmpl = 'init/templates/distributables'
     const defaults = { 
@@ -66,6 +70,11 @@ module.exports = (ipc) => {
           defaults,
           tmpl
         })
+
+    // overwrite default template icons
+    const stream = await ipc.dump(link, { dir: distributables, list: ['icons'] })
+    await new Promise(resolve => stream.once('end', resolve))
+
     await output(json, pearBuild({ link, dir }))
   }
 }
