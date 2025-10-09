@@ -21,7 +21,7 @@
       "version": "1.0.0",
       "author": "Holepunch",
       "description": "Pear Desktop Example",
-      "distributables": "distributables",
+      "distributables": "./distributables",
       "darwin": {
         "identifier": "io.keet.deskex",
         "category": "public.app-category.developer-tools",

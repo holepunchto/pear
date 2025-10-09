@@ -1,0 +1,56 @@
+{
+  "params": [
+    {
+      "name": "id",
+      "prompt": "id"
+    },
+    {
+      "name": "name",
+      "prompt": "name"
+    },
+    {
+      "name": "link",
+      "prompt": "link"
+    },
+    {
+      "name": "version",
+      "prompt": "version"
+    },
+    {
+      "name": "author",
+      "prompt": "author"
+    },
+    {
+      "name": "description",
+      "prompt": "description"
+    },
+    {
+      "name": "darwin_identifier",
+      "prompt": "darwin_identifier"
+    },
+    {
+      "name": "darwin_category",
+      "prompt": "darwin_category"
+    },
+    {
+      "name": "darwin_signing_identity",
+      "prompt": "darwin_signing_identity"
+    },
+    {
+      "name": "darwin_entitlements",
+      "prompt": "darwin_entitlements"
+    },
+    {
+      "name": "win32_signing_subject",
+      "prompt": "win32_signing_subject"
+    },
+    {
+      "name": "win32_signing_thumbprint",
+      "prompt": "win32_signing_thumbprint"
+    },
+    {
+      "name": "linux_category",
+      "prompt": "linux_category"
+    }
+  ]
+}
