@@ -1,0 +1,69 @@
+{
+  "params": [
+    {
+      "name": "id",
+      "prompt": "id",
+      "default": ""
+    },
+    {
+      "name": "name",
+      "prompt": "name",
+      "default": ""
+    },
+    {
+      "name": "link",
+      "prompt": "link",
+      "default": ""
+    },
+    {
+      "name": "version",
+      "prompt": "version",
+      "default": "1.0.0"
+    },
+    {
+      "name": "author",
+      "prompt": "author",
+      "default": ""
+    },
+    {
+      "name": "description",
+      "prompt": "description",
+      "default": ""
+    },
+    {
+      "name": "darwin.identifier",
+      "prompt": "darwin.identifier",
+      "default": ""
+    },
+    {
+      "name": "darwin.category",
+      "prompt": "darwin.category",
+      "default": ""
+    },
+    {
+      "name": "darwin.signingidentity",
+      "prompt": "darwin.signingidentity",
+      "default": "-"
+    },
+    {
+      "name": "darwin.entitlements",
+      "prompt": "darwin.entitlements",
+      "default": ""
+    },
+    {
+      "name": "win.signingsubject",
+      "prompt": "win.signingsubject",
+      "default": ""
+    },
+    {
+      "name": "win.signingthumbprint",
+      "prompt": "win.signingthumbprint",
+      "default": ""
+    },
+    {
+      "name": "linux.category",
+      "prompt": "linux_category",
+      "default": ""
+    }
+  ]
+}
