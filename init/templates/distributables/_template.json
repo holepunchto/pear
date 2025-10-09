@@ -2,55 +2,68 @@
   "params": [
     {
       "name": "id",
-      "prompt": "id"
+      "prompt": "id",
+      "default": ""
     },
     {
       "name": "name",
-      "prompt": "name"
+      "prompt": "name",
+      "default": ""
     },
     {
       "name": "link",
-      "prompt": "link"
+      "prompt": "link",
+      "default": ""
     },
     {
       "name": "version",
-      "prompt": "version"
+      "prompt": "version",
+      "default": "1.0.0"
     },
     {
       "name": "author",
-      "prompt": "author"
+      "prompt": "author",
+      "default": ""
     },
     {
       "name": "description",
-      "prompt": "description"
+      "prompt": "description",
+      "default": ""
     },
     {
-      "name": "darwin_identifier",
-      "prompt": "darwin_identifier"
+      "name": "darwin.identifier",
+      "prompt": "darwin.identifier",
+      "default": ""
     },
     {
-      "name": "darwin_category",
-      "prompt": "darwin_category"
+      "name": "darwin.category",
+      "prompt": "darwin.category",
+      "default": ""
     },
     {
-      "name": "darwin_signing_identity",
-      "prompt": "darwin_signing_identity"
+      "name": "darwin.signingidentity",
+      "prompt": "darwin.signingidentity",
+      "default": "-"
     },
     {
-      "name": "darwin_entitlements",
-      "prompt": "darwin_entitlements"
+      "name": "darwin.entitlements",
+      "prompt": "darwin.entitlements",
+      "default": ""
     },
     {
-      "name": "win32_signing_subject",
-      "prompt": "win32_signing_subject"
+      "name": "win.signingsubject",
+      "prompt": "win.signingsubject",
+      "default": ""
     },
     {
-      "name": "win32_signing_thumbprint",
-      "prompt": "win32_signing_thumbprint"
+      "name": "win.signingthumbprint",
+      "prompt": "win.signingthumbprint",
+      "default": ""
     },
     {
-      "name": "linux_category",
-      "prompt": "linux_category"
+      "name": "linux.category",
+      "prompt": "linux_category",
+      "default": ""
     }
   ]
 }

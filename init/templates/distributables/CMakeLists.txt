@@ -13,16 +13,16 @@ add_pear_appling(
   AUTHOR "__author__"
   DESCRIPTION "__description__"
 
-  MACOS_IDENTIFIER "__darwin_identifier__"
-  MACOS_CATEGORY "__darwin_category__"
-  MACOS_SIGNING_IDENTITY "__darwin_signing_identity__"
-  MACOS_ENTITLEMENTS "__darwin_entitlements__"
+  MACOS_IDENTIFIER "__darwin.identifier__"
+  MACOS_CATEGORY "__darwin.category__"
+  MACOS_SIGNING_IDENTITY "__darwin.signingidentity__"
+  MACOS_ENTITLEMENTS "__darwin.entitlements__"
   MACOS_ICON "icons/darwin/icon.png"
 
-  WINDOWS_SIGNING_SUBJECT "__win32_signing_subject__"
-  WINDOWS_SIGNING_THUMBPRINT "__win32_signing_thumbprint__"
+  WINDOWS_SIGNING_SUBJECT "__win.signingsubject__"
+  WINDOWS_SIGNING_THUMBPRINT "__win.signingthumbprint__"
   WINDOWS_ICON "icons/win32/icon.png"
 
-  LINUX_CATEGORY "__linux_category__"
+  LINUX_CATEGORY "__linux.category__"
   LINUX_ICON "icons/linux/icon.png"
 )
