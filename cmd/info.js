@@ -82,9 +82,8 @@ module.exports = (ipc) =>
         channel,
         showKey,
         metadata,
-        changelog,
+        changelog: full || changelog ? { full, max: 1 } : null,
         manifest,
-        full,
         cmdArgs: Bare.argv.slice(1)
       }),
       { ask: cmd.flags.ask },

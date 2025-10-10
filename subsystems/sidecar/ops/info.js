@@ -19,18 +19,18 @@ module.exports = class Info extends Opstream {
     channel,
     showKey,
     metadata,
-    changelog,
-    semverSpecifier = '^*',
     manifest,
-    full,
-    max = 5,
+    changelog = null,
     cmdArgs
   } = {}) {
     const { session } = this
     let bundle = null
     let drive = null
+    let { full = false, max = 5, semver = '^*' } = changelog ?? {}
+    if (full) max = Infinity
+
     const enabledFlags = new Set(
-      [changelog, full, metadata, showKey].filter((value) => value === true)
+      [full, metadata, showKey].filter((value) => value === true)
     )
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
@@ -142,34 +142,47 @@ module.exports = class Info extends Opstream {
       }
     }
 
-    if (full) max = Infinity
-    const type = full ? 'full' : 'latest'
-    const showChangelog = changelog || full ? type : false
+    if (!changelog) return
 
-    if (showChangelog) {
-      const contents = await drive.get('/CHANGELOG.md')
-      const blank = '[ No Changelog ]'
-      const parsed = clog.parse(contents)
-      const top = parsed[0]?.[0]
-      if (top && semverSpecifier === '^*') {
+    const contents = await drive.get('/CHANGELOG.md')
+    const blank = '[ No Changelog ]'
+    const parsed = clog.parse(contents)
+    const top = parsed[0]?.[0]
+    if (top && semver === '^*') {
+      if (full) {
+        semver = '*'
+      } else {
         let major = top.split(' ')[0].split('.')[0]
         if (major[0] === 'v') major = major.slice(1)
-        semverSpecifier = major.split('.')[0] + '.x.x'
+        semver = major.split('.')[0] + '.x.x'
       }
+    }
 
-      const filtered = parsed
-        .filter(([version]) => {
-          version = version.split(' ')[0]
-          if (version[0] === 'v') version = version.slice(1)
-          return semifies(version, semverSpecifier)
-        })
-        .slice(0, max)
-      const changelog =
-        filtered.length === 0
-          ? blank
-          : filtered.map((entry) => entry[1]).join('\n\n')
+    let count = 0
+    for (let [version, entry] of parsed) {
+      version = version.split(' ')[0]
+      if (version[0] === 'v') version = version.slice(1)
+      if (semifies(version, semver) === false) continue
+      this.push({
+        tag: 'changelog',
+        data: {
+          changelog: entry,
+          index: count++,
+          max
+        }
+      })
+      if (count === max) break
+    }
 
-      this.push({ tag: 'changelog', data: { changelog, full, max } })
+    if (count === 0) {
+      this.push({
+        tag: 'changelog',
+        data: {
+          changelog: blank,
+          index: count,
+          max
+        }
+      })
     }
   }
 }
