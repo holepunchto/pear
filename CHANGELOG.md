@@ -7,7 +7,7 @@
 * Internal - sidecar garbage collection of dangling filesystem resources
 * CLI - `pear gc assets` force clean-up of locally synced assets
 * CLI - `pear data` explore platform database collections `apps`, `dht`, `gc`, `manifest`, `assets`, `currents`
-* Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
+* Integration - `pear-api` `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
 * CLI - `pear dump --only` - filter by paths
 * CLI - `pear dump --no-prune` - disallow removals
 * CLI - `pear dump` downloads & peers stats output status
@@ -67,20 +67,17 @@ set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, 
 * API - **MAJOR** `Pear.reload` **DEPRECATED** use `location.reload()` in UI (already unsupported in terminal)
 * API - **MAJOR** `Pear.config` **DEPRECATED** use `Pear.app`
 * Config - `pear.userAgent` **DEPRECATED** use `pear.gui.userAgent`
-* Externalization - `Pear` global now defined in [`pear-api`][v2.0.0:pear-api] allowing for API extension in other environments, such a Pear UI Libraries
-* Externalization - [`pear-api`][v2.0.0:pear-api] integration libraries for externalized integration
-* Externalization - GUI internals externalized to [`pear-electron`][v2.0.0:pear-electron] Pear UI Library
+* Externalization - `Pear` global now defined in `pear-api` allowing for API extension in other environments, such a Pear UI Libraries
+* Externalization - `pear-api` integration libraries for externalized integration
+* Externalization - GUI internals externalized to `pear-electron` Pear UI Library
 * Internal - boot flow stripped decoupled from electron boot flow
-* Internal - internal dependencies switched to [`pear-api`][v2.0.0:pear-api]
+* Internal - internal dependencies switched to `pear-api`
 * Internal - gc op refactor
 * CLI - help output tweaks/clarifications
 * CLI - error output improvements (classifications for stacks/non-stacks)
 * Internal - versions cmd refactor
 * Internal - seed op tweak (seeds are not apps)
-* Examples - various tweaks, including desktop updated to use [`pear-electron`][v2.0.0:pear-electron]
-
-
-[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run 'pear://runtime/doc?pear://electron/CHANGELOG.md'"
+* Examples - various tweaks, including desktop updated to use `pear-electron`
 
 
 ## v1.18.0
