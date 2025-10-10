@@ -420,12 +420,12 @@ module.exports = class Run extends Opstream {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
       if (diff.op === 'add') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
         })
       } else if (diff.op === 'change') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: {
             type: 0,
             sizes: [-diff.bytesRemoved, diff.bytesAdded],
@@ -434,7 +434,7 @@ module.exports = class Run extends Opstream {
         })
       } else if (diff.op === 'remove') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
         })
       }

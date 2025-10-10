@@ -47,7 +47,7 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
@@ -95,7 +95,7 @@ test('basic stage min desktop app with entrypoints', async ({
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
@@ -140,7 +140,7 @@ test('basic stage min desktop app with only and include', async ({
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
@@ -181,7 +181,7 @@ test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
