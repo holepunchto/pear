@@ -135,7 +135,7 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
 
   const stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -177,7 +177,7 @@ test('stage with glob ignores', async function ({
 
   const stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -217,7 +217,7 @@ test('stage with ignore and unignore', async function ({
 
   let stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -248,7 +248,7 @@ test('stage with ignore and unignore', async function ({
 
   stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -298,7 +298,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
 
   const stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -362,7 +362,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff' && data?.data.type === -1) {
+    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       stagedFiles.push(data.data.message)
     }
   })
@@ -420,7 +420,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
 
   const removedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff' && data?.data.type === -1) {
+    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       removedFiles.push(data.data.message)
     }
   })
@@ -504,7 +504,7 @@ test('stage with purge config', async function ({
 
   const stagingFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
   })
@@ -536,7 +536,7 @@ test('stage with purge config', async function ({
 
   const removedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff' && data?.data.type === -1) {
+    if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       removedFiles.push(data.data.message)
     }
   })

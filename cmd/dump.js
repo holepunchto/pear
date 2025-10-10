@@ -41,7 +41,7 @@ const output = outputter('dump', {
     }
     return `Dumping Error (code: ${err.code || 'none'}) ${err.stack}`
   },
-  byteDiff
+  ['byte-diff']: byteDiff
 })
 
 module.exports = (ipc) =>

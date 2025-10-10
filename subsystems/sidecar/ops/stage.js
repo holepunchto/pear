@@ -188,7 +188,7 @@ module.exports = class Stage extends Opstream {
         if (glob.ignorer()(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({
-            tag: 'byteDiff',
+            tag: 'byte-diff',
             data: {
               type: -1,
               sizes: [-entry.value.blob.byteLength],
@@ -203,12 +203,12 @@ module.exports = class Stage extends Opstream {
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
         })
       } else if (diff.op === 'change') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: {
             type: 0,
             sizes: [-diff.bytesRemoved, diff.bytesAdded],
@@ -217,7 +217,7 @@ module.exports = class Stage extends Opstream {
         })
       } else if (diff.op === 'remove') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
         })
       }
