@@ -4,10 +4,9 @@ const { outputter } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
 
-const changelog = ({ changelog, full }) => `${changelog}`
-
 const output = outputter('changelog', {
-  changelog,
+  changelog: ({ changelog, index }) =>
+    (index > 0 ? '\n____________\n\n' : '') + changelog,
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'info')
@@ -38,10 +37,7 @@ module.exports = (ipc) =>
       ipc.info({
         link,
         channel,
-        changelog: true,
-        max: nmax,
-        semverSpecifier: cmd.flags.of,
-        full,
+        changelog: { max: nmax, semver: cmd.flags.of, full },
         cmdArgs: Bare.argv.slice(1)
       }),
       { ask: cmd.flags.ask },
