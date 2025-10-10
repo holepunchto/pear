@@ -30,11 +30,17 @@ const output = outputter('versions', {
   libraries: (versions, info) => {
     return {
       output: 'print',
-      message: vs({ pear: info.pear, bare: info.bare, ...versions }) + '\n\n' + v('link', info.verlink) + '\n'
+      message:
+        vs({ pear: info.pear, bare: info.bare, ...versions }) +
+        '\n\n' +
+        v('link', info.verlink) +
+        '\n'
     }
   },
   modules: (versions, info) => {
-    return info.modules ? vs(versions, '\n') + '\n' : `Use ${ansi.dim(ansi.bold('--modules|-m'))} flag for module versions\n`
+    return info.modules
+      ? vs(versions, '\n') + '\n'
+      : `Use ${ansi.dim(ansi.bold('--modules|-m'))} flag for module versions\n`
   }
 })
 
