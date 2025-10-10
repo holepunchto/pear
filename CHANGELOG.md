@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v2.1.1
+
+### Fixes
+
+* Internal - stray ref removed from compact stage
+* IPC/OPS - stage and dump output tags byteDiff -> byte-diff
+
 ## v2.1.0
 
 ### Features
