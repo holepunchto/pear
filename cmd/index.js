@@ -331,6 +331,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const versions = command(
     'versions',
     summary('View dependency versions'),
+    flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
     runners.versions(ipc)
   )
