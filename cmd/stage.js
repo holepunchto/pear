@@ -28,7 +28,7 @@ const output = outputter('stage', {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
   },
   compact: (data) => {
-    const { files, ignore, skips } = data
+    const { files, skips } = data
     return (
       'Compact stage static-analysis:-\n' +
       '- files: ' +
