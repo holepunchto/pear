@@ -65,8 +65,6 @@ module.exports = (ipc) =>
       json,
       changelog,
       fullChangelog: full,
-      changelogMax,
-      changelogOf,
       metadata,
       key: showKey,
       manifest
@@ -76,10 +74,6 @@ module.exports = (ipc) =>
     const link = isKey ? cmd.args.link : null
     if (link && isKey === false)
       throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-    const max = +changelogMax
-    if (Number.isInteger(max) === false) {
-      throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
-    }
 
     await output(
       json,
@@ -89,9 +83,7 @@ module.exports = (ipc) =>
         showKey,
         metadata,
         changelog,
-        changelogOf,
         manifest,
-        max,
         full,
         cmdArgs: Bare.argv.slice(1)
       }),

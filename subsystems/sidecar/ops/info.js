@@ -32,6 +32,7 @@ module.exports = class Info extends Opstream {
     const enabledFlags = new Set(
       [changelog, full, metadata, showKey].filter((value) => value === true)
     )
+
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
     const state = new State({ flags: { channel, link }, cmdArgs })
@@ -143,7 +144,7 @@ module.exports = class Info extends Opstream {
 
     if (full) max = Infinity
     const type = full ? 'full' : 'latest'
-    const showChangelog = isEnabled(changelog) || full ? type : false
+    const showChangelog = changelog || full ? type : false
 
     if (showChangelog) {
       const contents = await drive.get('/CHANGELOG.md')
