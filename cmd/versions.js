@@ -1,58 +1,70 @@
 'use strict'
+const plink = require('pear-link')
 const { outputter, ansi } = require('pear-terminal')
 const { dependencies } = require('../package.json')
 
+function v(name, version) {
+  return `${ansi.bold(name)}: ${version}`
+}
+function vs(data, delim = ' | ') {
+  return Object.entries(data)
+    .map(([name, version]) => v(name, version))
+    .join(delim)
+}
+
 const output = outputter('versions', {
-  header(str) {
-    return `${str}\n`
+  platform({ checkout }, info) {
+    try {
+      info.verlink = plink.serialize({ drive: checkout })
+    } catch (e) {
+      // localdev
+      info.verlink = 'pear://dev/' + checkout.key
+    }
+    return `${info.header}\n`
   },
-  v({ name, version }) {
-    return `${ansi.bold(name)}: ${version}`
+  runtimes: (versions, info) => {
+    info.bare = versions.bare
+    info.pear = versions.pear
+    return false
   },
-  vs(arr) {
-    return arr.map(([name, version]) => this.v({ name, version })).join(' | ')
+  libraries: (versions, info) => {
+    return {
+      output: 'print',
+      message:
+        vs({ pear: info.pear, bare: info.bare, ...versions }) +
+        '\n\n' +
+        v('link', info.verlink) +
+        '\n'
+    }
   },
-  json(data) {
-    return JSON.stringify(data, 0, 2)
-  },
-  newline() {
-    return ''
+  modules: (versions, info) => {
+    return info.modules
+      ? vs(versions, '\n') + '\n'
+      : `Use ${ansi.dim(ansi.bold('--modules|-m'))} flag for module versions\n`
   }
 })
 
 module.exports = (ipc) =>
   async function versions(cmd) {
     const json = cmd.flags.json
+    const modules = cmd.flags.modules
     const { runtimes, platform } = await ipc.versions()
-    const { pear, bare } = runtimes
-    const version =
-      ~~platform.fork + '.' + (platform.length || 'dev') + '.' + platform.key
+    const header = cmd.command.header
+    const { bare, ...libs } =
+      Bare.versions.bare !== runtimes.bare
+        ? {
+            ...Bare.versions,
+            bare: runtimes.bare + ' (sidecar) / ' + Bare.versions.bare
+          }
+        : Bare.versions
     await output(
-      false,
-      out({ json, platform: version, pear, bare, header: cmd.command.header })
+      json,
+      [
+        { tag: 'platform', data: { checkout: platform } },
+        { tag: 'runtimes', data: { pear: runtimes.pear, bare } },
+        { tag: 'libraries', data: libs },
+        { tag: 'modules', data: dependencies }
+      ],
+      { modules, header }
     )
   }
-
-function out({ json, platform, pear, bare, header }) {
-  const bareVersions = { ...Bare.versions }
-  if (bareVersions.bare !== bare)
-    bareVersions.bare = bare + ' (sidecar) / ' + bareVersions.bare
-  if (json)
-    return [
-      {
-        tag: 'json',
-        data: { platform, pear, ...bareVersions, ...dependencies }
-      }
-    ]
-  return [
-    { tag: 'header', data: header },
-    { tag: 'v', data: { name: 'pear', version: platform + ' / ' + pear } },
-    { tag: 'vs', data: Object.entries(bareVersions) },
-    { tag: 'newline' },
-    ...Object.entries(dependencies).map(([name, version]) => ({
-      tag: 'v',
-      data: { name, version }
-    })),
-    { tag: 'newline' }
-  ]
-}
