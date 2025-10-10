@@ -27,14 +27,14 @@ const runners = {
   info: require('./info'),
   dump: require('./dump'),
   touch: require('./touch'),
+  data: require('./data'),
+  changelog: require('./changelog'),
   shift: require('./shift'),
   drop: require('./drop'),
-  changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions'),
-  data: require('./data')
+  versions: require('./versions')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -189,6 +189,60 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.touch(ipc)
   )
 
+  const data = command(
+    'data',
+    summary('Explore platform database'),
+    command(
+      'apps',
+      summary('Installed apps'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).apps(cmd)
+    ),
+    command('dht', summary('DHT known-nodes cache'), (cmd) =>
+      runners.data(ipc).dht(cmd)
+    ),
+    command('gc', summary('Garbage collection records'), (cmd) =>
+      runners.data(ipc).gc(cmd)
+    ),
+    command('manifest', summary('Database internal versioning'), (cmd) =>
+      runners.data(ipc).manifest(cmd)
+    ),
+    command(
+      'assets',
+      summary('On-disk assets for app'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).assets(cmd)
+    ),
+    command(
+      'currents',
+      summary('Current working versions'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).currents(cmd)
+    ),
+    flag('--secrets', 'Show sensitive information'),
+    flag('--json', 'Newline delimited JSON output'),
+    () => {
+      console.log(data.help())
+    }
+  )
+
+  const changelog = command(
+    'changelog',
+    summary('View project changelog'),
+    description`
+      Supply a link or channel to view application changelog
+
+      Shows Pear changelog by default
+    `,
+    arg('[link|channel]', 'Project to view changelog of'),
+    flag('--max|-m <n=5>', 'Maximum entries to show'),
+    flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
+    flag('--full', 'Show entire changelog'),
+    flag('--no-ask', 'Suppress permission prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.changelog(ipc)
+  )
+
   const shift = command(
     'shift',
     summary('Advanced. Move storage between apps'),
@@ -213,23 +267,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     () => {
       console.log(drop.help())
     }
-  )
-
-  const changelog = command(
-    'changelog',
-    summary('View project changelog'),
-    description`
-      Supply a link or channel to view application changelog
-
-      Shows Pear changelog by default
-    `,
-    arg('[link|channel]', 'Project to view changelog of'),
-    flag('--max|-m <n=5>', 'Maximum entries to show'),
-    flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
-    flag('--full', 'Show entire changelog'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    flag('--json', 'Newline delimited JSON output'),
-    runners.changelog(ipc)
   )
 
   const reset = hiddenCommand('reset', arg('[link]'), () => {
@@ -298,43 +335,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
-  const data = command(
-    'data',
-    summary('Explore platform database'),
-    command(
-      'apps',
-      summary('Installed apps'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).apps(cmd)
-    ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      runners.data(ipc).dht(cmd)
-    ),
-    command('gc', summary('Garbage collection records'), (cmd) =>
-      runners.data(ipc).gc(cmd)
-    ),
-    command('manifest', summary('Database internal versioning'), (cmd) =>
-      runners.data(ipc).manifest(cmd)
-    ),
-    command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).assets(cmd)
-    ),
-    command(
-      'currents',
-      summary('Current working versions'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).currents(cmd)
-    ),
-    flag('--secrets', 'Show sensitive information'),
-    flag('--json', 'Newline delimited JSON output'),
-    () => {
-      console.log(data.help())
-    }
-  )
-
   const help = command(
     'help',
     arg('[command]'),
@@ -359,9 +359,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     dump,
     touch,
     data,
+    changelog,
     shift,
     drop,
-    changelog,
     reset,
     sidecar,
     gc,

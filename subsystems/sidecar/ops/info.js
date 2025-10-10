@@ -151,12 +151,16 @@ module.exports = class Info extends Opstream {
       const parsed = clog.parse(contents)
       const top = parsed[0]?.[0]
       if (top && semverSpecifier === '^*') {
-        semverSpecifier = top.slice(1).split('.')[0] + '.x.x'
+        let major = top.split(' ')[0].split('.')[0]
+        if (major[0] === 'v') major = major.slice(1)
+        semverSpecifier = major.split('.')[0] + '.x.x'
       }
 
       const filtered = parsed
         .filter(([version]) => {
-          return semifies(version.slice(1), semverSpecifier)
+          version = version.split(' ')[0]
+          if (version[0] === 'v') version = version.slice(1)
+          return semifies(version, semverSpecifier)
         })
         .slice(0, max)
       const changelog =
