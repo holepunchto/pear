@@ -14,26 +14,24 @@ const output = outputter('gc', {
     `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
-module.exports = (ipc) => new GC(ipc)
-
-class GC {
-  constructor(ipc) {
-    this.ipc = ipc
-  }
-
-  async #op(cmd, data = null) {
+module.exports = (ipc) => {
+  return async (cmd) => {
     const { command } = cmd
     const { json } = command.parent.flags
-    const stream = this.ipc.gc({ resource: command.name, data }, this.ipc)
+    const gc = new GC()
+    const data = (await gc[command.name](cmd)) ?? null
+    const stream = ipc.gc({ resource: command.name, data }, ipc)
     await output(json, stream)
   }
+}
 
-  releases(cmd) {
-    return this.#op(cmd)
+class GC {
+  releases() {
+    return null
   }
 
-  async sidecars(cmd) {
-    return this.#op(cmd, { pid: Bare.pid })
+  sidecars() {
+    return { pid: Bare.pid }
   }
 
   async assets(cmd) {
@@ -52,6 +50,6 @@ class GC {
     const validation = (v) => v === 'CLEAR'
     const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
-    return this.#op(cmd, { link })
+    return { link }
   }
 }
