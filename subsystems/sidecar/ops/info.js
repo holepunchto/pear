@@ -1,6 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
+const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
@@ -16,12 +17,13 @@ module.exports = class Info extends Opstream {
   async #op({
     link,
     channel,
-    dir,
     showKey,
     metadata,
     changelog,
+    semverSpecifier = '^*',
     manifest,
     full,
+    max = 5,
     cmdArgs
   } = {}) {
     const { session } = this
@@ -32,7 +34,7 @@ module.exports = class Info extends Opstream {
     )
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const state = new State({ flags: { channel, link }, dir, cmdArgs })
+    const state = new State({ flags: { channel, link }, cmdArgs })
     const corestore = link
       ? this.sidecar.getCorestore(null, null)
       : this.sidecar.getCorestore(state.name, channel)
@@ -139,23 +141,30 @@ module.exports = class Info extends Opstream {
       }
     }
 
+    if (full) max = Infinity
     const type = full ? 'full' : 'latest'
     const showChangelog = isEnabled(changelog) || full ? type : false
 
     if (showChangelog) {
       const contents = await drive.get('/CHANGELOG.md')
       const blank = '[ No Changelog ]'
-      const parsed =
-        showChangelog === 'latest'
-          ? clog.parse(contents).at(0)?.[1] || blank
-          : showChangelog === 'full'
-            ? clog
-                .parse(contents)
-                .map((entry) => entry[1])
-                .join('\n\n') || blank
-            : blank
+      const parsed = clog.parse(contents)
+      const top = parsed[0]?.[0]
+      if (top && semverSpecifier === '^*') {
+        semverSpecifier = top.slice(1).split('.')[0] + '.x.x'
+      }
 
-      this.push({ tag: 'changelog', data: { changelog: parsed, full } })
+      const filtered = parsed
+        .filter(([version]) => {
+          return semifies(version.slice(1), semverSpecifier)
+        })
+        .slice(0, max)
+      const changelog =
+        filtered.length === 0
+          ? blank
+          : filtered.map((entry) => entry[1]).join('\n\n')
+
+      this.push({ tag: 'changelog', data: { changelog, full, max } })
     }
   }
 }

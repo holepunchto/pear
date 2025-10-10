@@ -29,6 +29,7 @@ const runners = {
   touch: require('./touch'),
   shift: require('./shift'),
   drop: require('./drop'),
+  changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
@@ -143,10 +144,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Supply no argument to view platform information.
     `,
-    arg('[link|channel]', 'Pear link or channel name to view info for'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--changelog', 'View changelog only'),
-    flag('--full-changelog', 'Full record of changes'),
+    arg('[link|channel]', 'Project to view info for'),
+    flag('--changelog', 'View changelog only').hide(),
+    flag('--full-changelog', 'Full record of changes').hide(),
+    flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
     flag('--key', 'View key only'),
@@ -214,6 +215,23 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
+  const changelog = command(
+    'changelog',
+    summary('View project changelog'),
+    description`
+      Supply a link or channel to view application changelog
+
+      Shows Pear changelog by default
+    `,
+    arg('[link|channel]', 'Project to view changelog of'),
+    flag('--max|-m <n=5>', 'Maximum entries to show'),
+    flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
+    flag('--full', 'Show entire changelog'),
+    flag('--no-ask', 'Suppress permission prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.changelog(ipc)
+  )
+
   const reset = hiddenCommand('reset', arg('[link]'), () => {
     console.log(
       `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
@@ -259,17 +277,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), (cmd) =>
-      runners.gc(ipc).releases(cmd)
-    ),
-    command('sidecars', summary('Clear running sidecars'), (cmd) =>
-      runners.gc(ipc).sidecars(cmd)
-    ),
+    command('releases', summary('Clear inactive releases'), runners.gc(ipc)),
+    command('sidecars', summary('Clear running sidecars'), runners.gc(ipc)),
     command(
       'assets',
       summary('Clear synced assets'),
       arg('[link]', 'Clear asset by link'),
-      (cmd) => runners.gc(ipc).assets(cmd)
+      runners.gc(ipc)
     ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
@@ -347,6 +361,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     data,
     shift,
     drop,
+    changelog,
     reset,
     sidecar,
     gc,

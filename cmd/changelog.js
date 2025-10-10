@@ -1,0 +1,50 @@
+'use strict'
+const plink = require('pear-link')
+const { outputter } = require('pear-terminal')
+const { ERR_INVALID_INPUT } = require('pear-errors')
+const { permit, isTTY } = require('pear-terminal')
+
+const changelog = ({ changelog, full }) => `${changelog}`
+
+const output = outputter('changelog', {
+  changelog,
+  error: (err, info, ipc) => {
+    if (err.info && err.info.encrypted && info.ask && isTTY) {
+      return permit(ipc, err.info, 'info')
+    } else {
+      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
+    }
+  },
+  final(data) {
+    return data.success ? {} : false
+  }
+})
+
+module.exports = (ipc) =>
+  async function changelog(cmd) {
+    const { json, full, max = 5 } = cmd.flags
+    const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
+    const channel = isKey ? null : cmd.args.link
+    const link = isKey ? cmd.args.link : null
+    if (link && isKey === false)
+      throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+    const nmax = +max
+    if (Number.isInteger(nmax) === false) {
+      throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
+    }
+
+    await output(
+      json,
+      ipc.info({
+        link,
+        channel,
+        changelog: true,
+        max: nmax,
+        semverSpecifier: cmd.flags.of,
+        full,
+        cmdArgs: Bare.argv.slice(1)
+      }),
+      { ask: cmd.flags.ask },
+      ipc
+    )
+  }
