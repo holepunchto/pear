@@ -1,5 +1,23 @@
 # Pear Runtime Changelog
 
+## v2.1.0
+
+### Features
+
+* CLI - `pear changelog` command
+* CLI - `pear versions --modules|-m` flag prints dependency versions (now hidden) and JSON output alignment
+
+### Fixes
+
+* Internal - Changelog fixup
+* Internal - Windows restart fix via `bare-daemon` bump
+
+### Improvements
+
+* CLI - iteration of `pear stage` output
+* Native - Bare runtime updated from 1.21.7 to 1.23.4
+* CLI - `pear info --changelog` -> `pear changelog` and `pear info` defaults to not printing changelog
+
 ## v2.0.0
 
 ### Features
