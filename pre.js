@@ -79,6 +79,9 @@ module.exports = class Pre extends Readable {
       } catch {
         hasPipe = false
       }
+      if (!!global?.process?.channel) { // spawned by Node.js with stdio ipc set on stdio[3]
+        hasPipe = false
+      }
       if (hasPipe) {
         this.#final()
         return
