@@ -69,18 +69,22 @@ module.exports = class Pre extends Readable {
       this.#final()
       return
     }
-    let hasPipe
-    try {
-      hasPipe = isWindows
-        ? fs.fstatSync(3).isFIFO()
-        : fs.fstatSync(3).isSocket()
-    } catch {
-      hasPipe = false
+
+    if (this.op === 'run') {
+      let hasPipe
+      try {
+        hasPipe = isWindows
+          ? fs.fstatSync(3).isFIFO()
+          : fs.fstatSync(3).isSocket()
+      } catch {
+        hasPipe = false
+      }
+      if (hasPipe) {
+        this.#final()
+        return
+      }
     }
-    if (hasPipe) {
-      this.#final()
-      return
-    }
+
     for (let specifier of this.pre) {
       if (this.link.endsWith(specifier)) continue
       specifier = specifier[0] === '/' ? '.' + specifier : specifier
