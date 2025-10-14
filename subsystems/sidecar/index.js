@@ -55,7 +55,8 @@ const ops = {
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  Run: require('./ops/run')
+  Run: require('./ops/run'),
+  Presets: require('./ops/presets')
 }
 
 // ensure that we are registered as a link handler
@@ -621,6 +622,10 @@ class Sidecar extends ReadyResource {
   warming(params, client) {
     if (client.userData instanceof this.App === false) return
     return client.userData.unwrapped.warming
+  }
+
+  presets(params, client) {
+    return new ops.Presets(params, client, this)
   }
 
   async versions(params, client) {
