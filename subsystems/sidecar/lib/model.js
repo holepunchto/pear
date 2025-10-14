@@ -330,6 +330,30 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
+  async getPreset(link, cmd) {
+    const get = { link: applink(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
+    return bundle?.presets.find((p) => p.command === cmd)
+  }
+
+  async setPreset(link, command, configuration) {
+    const tx = await this.lock.enter()
+    const get = { link: applink(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
+    const presets = [
+      ...bundle.presets.filter((p) => p.command !== cmd),
+      { command, configuration }
+    ]
+    const update = { ...bundle, presets }
+    LOG.trace('db', 'INSERT', '@pear/bundle', update)
+    await tx.insert('@pear/bundle', update)
+    result = update
+    await this.lock.exit()
+    return update
+  }
+
   async close() {
     LOG.trace('db', 'CLOSE')
     await this.db.close()
