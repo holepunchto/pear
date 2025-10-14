@@ -811,7 +811,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients === false) return []
     const metadata = []
     const seen = new Set()
-    for (const client of this.clients.sort((a, b) => b.id - a.id)) {
+    for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       if (!params.inclusive && client === originClient) {
         continue
       }
@@ -1078,7 +1078,7 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     this.decomissioned = true
     await this._inspector.disable()
-    for (const client of this.clients.sort((a, b) => b.id - a.id)) {
+    for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       // TODO: can teardown be respected here?
       await this.#endRPCStreams(client)
     }
