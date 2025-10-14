@@ -1,5 +1,13 @@
 # Pear Runtime Changelog
 
+## v2.1.2
+
+### Fixes
+
+* Internal - teardown flow fix, close clients in reverse order
+* Internal - pre pipe check only for run ops
+* CLI - `pear gc` bug fix for running asset detection
+
 ## v2.1.1
 
 ### Fixes
