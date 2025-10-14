@@ -74,13 +74,20 @@ const currentsOutput = (records) => {
   return out
 }
 
+const presetsOutput = (result) => {
+  let out = ''
+  out += `Preset: ${ansi.green(result.preset.configuration)}`
+  return out
+}
+
 const output = outputter('data', {
   apps: (result) => appsOutput(result),
   dht: (result) => dhtOutput(result),
   gc: (result) => gcOutput(result),
   manifest: (result) => manifestOutput(result),
   assets: (result) => assetsOutput(result),
-  currents: (result) => currentsOutput(result)
+  currents: (result) => currentsOutput(result),
+  preset: (result) => presetsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -167,6 +174,18 @@ class Data {
       json,
       this.ipc.data({ resource: 'currents', link }),
       { tag: 'currents' },
+      this.ipc
+    )
+  }
+
+  async presets(cmd) {
+    const command = cmd.args.command
+    const link = cmd.args.link
+    const { json } = cmd.command.parent.flags
+    await output(
+      json,
+      this.ipc.preset({ command, link }),
+      { tag: 'preset' },
       this.ipc
     )
   }

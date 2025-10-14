@@ -27,6 +27,22 @@ pearSchema.register({
 })
 
 pearSchema.register({
+  name: 'preset',
+  fields: [
+    {
+      name: 'command',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'configuration',
+      type: 'string',
+      required: true
+    }
+  ]
+})
+
+pearSchema.register({
   name: 'checkout',
   fields: [
     {
@@ -159,6 +175,11 @@ pearSchema.register({
     {
       name: 'tags',
       type: 'string',
+      array: true
+    },
+    {
+      name: 'presets',
+      type: '@pear/preset',
       array: true
     }
   ]

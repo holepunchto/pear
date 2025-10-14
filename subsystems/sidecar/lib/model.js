@@ -339,6 +339,45 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
+  async getPreset(link, command) {
+    const get = { link: applink(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
+    const preset = bundle?.presets.find((p) => p.command === command)
+    return preset || null
+  }
+
+  async setPreset(link, command, configuration) {
+    const tx = await this.lock.enter()
+    const get = { link: applink(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
+    const preset = { command, configuration }
+    const presets = bundle.presets
+      ? [...bundle.presets.filter((p) => p.command !== command), preset]
+      : [preset]
+    const update = { ...bundle, presets }
+    LOG.trace('db', 'INSERT', '@pear/bundle', update)
+    await tx.insert('@pear/bundle', update)
+    await this.lock.exit()
+    return update
+  }
+
+  async resetPreset(link, command) {
+    const tx = await this.lock.enter()
+    const get = { link: applink(link) }
+    LOG.trace('db', 'GET', '@pear/bundle', get)
+    const bundle = await this.db.get('@pear/bundle', get)
+    const presets = bundle.presets
+      ? bundle.presets.filter((p) => p.command !== command)
+      : null
+    const update = { ...bundle, presets }
+    LOG.trace('db', 'INSERT', '@pear/bundle', update)
+    await tx.insert('@pear/bundle', update)
+    await this.lock.exit()
+    return update
+  }
+
   async close() {
     LOG.trace('db', 'CLOSE')
     await this.db.close()

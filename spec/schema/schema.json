@@ -77,6 +77,12 @@
           "array": true,
           "type": "string",
           "version": 1
+        },
+        {
+          "name": "presets",
+          "array": true,
+          "type": "@pear/preset",
+          "version": 1
         }
       ]
     },
@@ -222,6 +228,26 @@
           "name": "extensions",
           "required": false,
           "array": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "preset",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "command",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "configuration",
+          "required": true,
           "type": "string",
           "version": 1
         }

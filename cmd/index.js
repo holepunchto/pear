@@ -9,6 +9,7 @@ const {
   description,
   bail,
   sloppy,
+  rest,
   validate,
   hiddenCommand
 } = require('paparam')
@@ -34,7 +35,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  preset: require('./preset')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -220,6 +222,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       arg('[link]', 'Filter by link'),
       (cmd) => runners.data(ipc).currents(cmd)
     ),
+    command(
+      'presets',
+      summary('Preset by link and command'),
+      arg('[link]', 'Preset link'),
+      arg('[command]', 'Preset command'),
+      (cmd) => runners.data(ipc).presets(cmd)
+    ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     () => {
@@ -338,6 +347,17 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const preset = command(
+    'preset',
+    summary('Set default preset for app'),
+    arg('<command>', 'preset command'),
+    arg('<link>', 'preset link'),
+    flag('--json', 'Newline delimited JSON output'),
+    rest('[...preset-flags]', 'Preset flags'),
+    sloppy({ flags: true }),
+    runners.preset(ipc)
+  )
+
   const help = command(
     'help',
     arg('[command]'),
@@ -369,6 +389,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    preset,
     help,
     footer(usage.footer),
     bail(explain),
@@ -416,7 +437,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const program = cmd.parse(argv)
+  const presetArgs = await presets(cmd.parse(argv, { run: false }), ipc)
+  const combinedArgs = [argv[0], ...presetArgs, ...argv.slice(1)]
+  const program = cmd.parse(combinedArgs)
 
   if (program === null) {
     ipc.close()
@@ -480,5 +503,22 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
 
     print('\n' + bail.command.usage())
+  }
+}
+
+async function presets(cmd, ipc) {
+  if (!cmd || !cmd.args.link) return []
+  const command = cmd.name
+  const link = cmd.args.link
+  try {
+    const presetStream = await ipc.preset({ link, command })
+    const preset = await new Promise((resolve) => {
+      presetStream.on('data', (data) => {
+        if (data.tag === 'preset') resolve(data.data.preset)
+      })
+    })
+    return preset?.configuration ? preset.configuration.split(' ') : []
+  } catch (err) {
+    return []
   }
 }
