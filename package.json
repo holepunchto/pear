@@ -104,6 +104,7 @@
     "pear-ipc": "^6.6.0",
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
+    "pear-opwait": "^1.0.0",
     "pear-pipe": "^1.0.1",
     "pear-run": "^1.0.0",
     "pear-shake": "^2.0.0",
