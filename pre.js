@@ -57,15 +57,10 @@ module.exports = class Pre extends Readable {
     const pre = [...topPre, ...opPre]
     this.pre = pre.length > 0 ? pre : null
 
-    const dir = this.dir.endsWith('/') ? this.dir.slice(0, -1) : this.dir
     const state = new State()
     await State.build(state, this.pkg)
-    const isAppEntrypoint =
-      state.routed ||
-      this.link.endsWith(dir) ||
-      this.link.endsWith(dir + '/' + state.main)
 
-    if (this.pre === null || isAppEntrypoint === false) {
+    if (this.pre === null) {
       this.#final()
       return
     }
