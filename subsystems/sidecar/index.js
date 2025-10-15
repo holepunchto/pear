@@ -147,22 +147,8 @@ class Sidecar extends ReadyResource {
           }
           LOG.info(
             'sidecar',
-            `Killing unresponsive process with pid ${client.userData.pid}`
+            `Unresponsive process detected with pid ${client.userData.pid}`
           )
-          os.kill(client.userData.pid, 'SIGKILL') // force close unresponsive process
-          if (client.userData.state.parent) {
-            const parent = this.apps.find(
-              (app) => app.state?.config.id === client.userData.state.parent
-            )
-            if (parent) {
-              const link = client.userData.state.link
-              parent.message({
-                type: 'pear/subprocess-killed',
-                reason: 'unresponsive',
-                link
-              })
-            }
-          }
         }
         this.#spindownCountdown()
       })
