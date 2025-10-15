@@ -1,17 +1,26 @@
 'use strict'
 const os = require('bare-os')
 const fs = require('bare-fs')
+const path = require('bare-path')
 const pearBuild = require('pear-build')
 const plink = require('pear-link')
 const opwait = require('pear-opwait')
+const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
 
-const output = outputter('build', {
+const outputBuild = outputter('build', {
   init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
   generate: () => 'Generating project...\n',
   build: () => 'Compiling project...\n',
   complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
   error: ({ message }) => `Error: ${message}\n`
+})
+
+const outputInit = outputter('init', {
+  writing: () => '',
+  error: ({ code, stack }) => `Init Error (code: ${code || 'none'}) ${stack}`,
+  wrote: ({ path }) => `* ${path}`,
+  written: () => ''
 })
 
 module.exports = (ipc) => {
@@ -35,6 +44,7 @@ module.exports = (ipc) => {
       )
     if (channel) {
       const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
+      // @TODO support channel param
     }
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
@@ -42,9 +52,8 @@ module.exports = (ipc) => {
     const { dir = os.cwd() } = cmd.args
     const distributables = path.join(dir, 'distributables')
     await fs.promises.mkdir(distributables, { recursive: true })
-    const tmpl = 'init/templates/distributables'
     const defaults = { 
-      "id": `${drive.key}`,
+      "id": hypercoreid.encode(drive.key),
       "name": `${build.name || manifest.name}`,
       "link": `${link}`,
       "version": `${build.version || manifest.version}`,
@@ -58,16 +67,20 @@ module.exports = (ipc) => {
       "win.signingthumbprint": `${build.win32?.['signing-thumbprint'] || ''}`,
       "linux.category": `${build.linux?.category || ''}`
     }
-    await require('../init')(tmpl, dir, {
-          cwd: os.cwd(),
-          ipc,
-          force: true,
-          defaults,
-          tmpl
-        })
-
-    // overwrite default template icons using opwait
+    const tmpl = 'init/templates/distributables'
+    const initStream = await require('../init')(tmpl, distributables, {
+      cwd: os.cwd(),
+      ipc,
+      force: true,
+      defaults,
+      tmpl,
+      autosubmit: true,
+      ask: false,
+      header: 'pear-build'
+    })
+    await outputInit(json, initStream)
+    // overwrites default template icons if staged icons exist
     await opwait(ipc.dump(link, { dir: distributables, list: ['icons'] }))
-    await output(json, pearBuild({ link, dir }))
+    await outputBuild(json, pearBuild({ link, dir }))
   }
 }
