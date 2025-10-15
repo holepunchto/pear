@@ -14,7 +14,7 @@ const appWithAssetsDir = path.join(
   'app-with-assets'
 )
 
-test('can stage an application with pre', async (t) => {
+test('assets via pre stage', async (t) => {
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
   const tmpdir = await tmp()
@@ -33,7 +33,6 @@ test('can stage an application with pre', async (t) => {
   const assetBuffer = Buffer.allocUnsafe(4096)
   await drive.put('/asset', assetBuffer)
 
-  t.comment('patch app assets')
   const appPkgPath = path.join(appWithAssetsDir, 'package.json')
   const appPkg = JSON.parse(await fs.promises.readFile(appPkgPath, 'utf8'))
   const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
@@ -57,6 +56,9 @@ test('can stage an application with pre', async (t) => {
   await helper.ready()
 
   t.comment('running app')
+  const base = Pear.app.dir
+  Pear.app.dir = appWithAssetsDir
+  t.teardown(() => { Pear.app.dir = base })
   const run = await Helper.run({ link: appWithAssetsDir })
   await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
@@ -65,10 +67,9 @@ test('can stage an application with pre', async (t) => {
   const assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
   const assets = await assetsPipe.assets
 
-  t.comment('asset created')
   const asset = await assets.find((e) => e.link === link)
   t.ok(asset)
 
   const assetBin = await fs.promises.readFile(path.join(asset.path, 'asset'))
-  t.ok(assetBuffer.equals(assetBin), 'on disk asset equals fixture asset')
+  t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
