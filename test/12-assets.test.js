@@ -58,7 +58,9 @@ test('assets via pre stage', async (t) => {
   t.comment('running app')
   const base = Pear.app.dir
   Pear.app.dir = appWithAssetsDir
-  t.teardown(() => { Pear.app.dir = base })
+  t.teardown(() => {
+    Pear.app.dir = base
+  })
   const run = await Helper.run({ link: appWithAssetsDir })
   await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
