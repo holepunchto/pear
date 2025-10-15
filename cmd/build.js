@@ -79,8 +79,8 @@ module.exports = (ipc) => {
       header: 'pear-build'
     })
     await outputInit(json, initStream)
-    // overwrites default template icons if staged icons exist
-    await opwait(ipc.dump(link, { dir: distributables, list: ['icons'] }))
-    await outputBuild(json, pearBuild({ link, dir }))
+    // overwrites default template icons with staged icons if exists
+    await opwait(ipc.dump({ link: link + '/icons', dir: distributables, force: true }))
+    await outputBuild(json, await pearBuild({ link, dir }))
   }
 }
