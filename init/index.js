@@ -31,7 +31,13 @@ async function init(link = 'default', dir, opts = {}) {
       ask = false
     } else if (link === 'default' || link === 'node-compat') {
       if (LOCALDEV) link = path.join(__dirname, 'templates', link)
-      else link = './init/templates/' + link
+      else {
+        const { platform } = await ipc.versions()
+        link = plink.serialize({
+          drive: platform,
+          pathname: '/init/templates/' + link
+        })
+      }
     } else {
       return init('./' + link, dir, opts)
     }
