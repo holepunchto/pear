@@ -1,5 +1,14 @@
 # Pear Runtime Changelog
 
+## v2.1.3
+
+### Fixes
+
+* CLI - `pear init` default fix
+* Internal - teardown flow fix, ensure reverse order by timestamp
+* Sidecar - remove unresponsive sigkill, allows blocking processes, sigkilled on death anyway
+* Internal - pre fix on Windows, path resolution related
+
 ## v2.1.2
 
 ### Fixes
