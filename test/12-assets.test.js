@@ -14,7 +14,7 @@ const appWithAssetsDir = path.join(
   'app-with-assets'
 )
 
-test('can stage an application with pre', async (t) => {
+test('can stage/run an application with assets', async (t) => {
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
   const tmpdir = await tmp()
