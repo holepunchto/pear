@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.1.4
+
+### Fixes
+
+* IPC - heartbeat timeout should no longer close client in sidecar
+
 ## v2.1.3
 
 ### Fixes
