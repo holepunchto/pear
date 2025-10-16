@@ -12,6 +12,7 @@ add_pear_appling(
   VERSION "__version__"
   AUTHOR "__author__"
   DESCRIPTION "__description__"
+  SPLASH "icons/splash.png"
 
   MACOS_IDENTIFIER "__darwin.identifier__"
   MACOS_CATEGORY "__darwin.category__"

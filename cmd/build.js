@@ -10,6 +10,7 @@ const { outputter, ansi } = require('pear-terminal')
 
 const outputBuild = outputter('build', {
   init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
+  npm: () => 'Fetching dependencies...\n',
   generate: () => 'Generating project...\n',
   build: () => 'Compiling project...\n',
   complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
@@ -81,6 +82,6 @@ module.exports = (ipc) => {
     await outputInit(json, initStream)
     // overwrites default template icons with staged icons if exists
     await opwait(ipc.dump({ link: link + '/icons', dir: distributables, force: true }))
-    await outputBuild(json, await pearBuild({ link, dir }))
+    await outputBuild(json, await pearBuild({ dir }))
   }
 }
