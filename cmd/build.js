@@ -7,6 +7,7 @@ const plink = require('pear-link')
 const opwait = require('pear-opwait')
 const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
+const { arch, platform } = require('which-runtime')
 
 const outputBuild = outputter('build', {
   init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
@@ -45,13 +46,13 @@ module.exports = (ipc) => {
       )
     if (channel) {
       const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
-      // @TODO support channel param
+      // @TODO support channel param $ pear build <channel>
     }
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
     const build = manifest.pear.build
     const { dir = os.cwd() } = cmd.args
-    const distributables = path.join(dir, 'distributables')
+    const distributables = path.join(dir, 'distributables', platform + '-' + arch)
     await fs.promises.mkdir(distributables, { recursive: true })
     const defaults = { 
       "id": hypercoreid.encode(drive.key),
@@ -80,7 +81,7 @@ module.exports = (ipc) => {
       header: 'pear-build'
     })
     await outputInit(json, initStream)
-    // overwrites default template icons with staged icons if exists
+    // overwrites default template icons with staged icons (if exists)
     await opwait(ipc.dump({ link: link + '/icons', dir: distributables, force: true }))
     await outputBuild(json, await pearBuild({ dir }))
   }
