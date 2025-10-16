@@ -26,7 +26,7 @@ module.exports = class Info extends Opstream {
     const { session } = this
     let bundle = null
     let drive = null
-    let { full = false, max = 5, semver = '^*' } = changelog ?? {}
+    let { full = false, max = 7, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
 
     const enabledFlags = new Set(
