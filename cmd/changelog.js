@@ -21,7 +21,7 @@ const output = outputter('changelog', {
 
 module.exports = (ipc) =>
   async function changelog(cmd) {
-    const { json, full, max = 7 } = cmd.flags
+    const { json, full, max = 10 } = cmd.flags
     const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
     const channel = isKey ? null : cmd.args.link
     const link = isKey ? cmd.args.link : null

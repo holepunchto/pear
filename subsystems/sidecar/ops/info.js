@@ -26,7 +26,7 @@ module.exports = class Info extends Opstream {
     const { session } = this
     let bundle = null
     let drive = null
-    let { full = false, max = 7, semver = '^*' } = changelog ?? {}
+    let { full = false, max = 10, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
 
     const enabledFlags = new Set(
@@ -159,7 +159,7 @@ module.exports = class Info extends Opstream {
     }
 
     let count = 0
-    for (let [version, entry] of parsed) {
+    for (let [version, entry] of parsed.reverse()) {
       version = version.split(' ')[0]
       if (version[0] === 'v') version = version.slice(1)
       if (semifies(version, semver) === false) continue
