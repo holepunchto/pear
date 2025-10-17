@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.1.5
+
+### Fixes
+
+* CLI - `pear changelog` usage output fix for `--max` flag
+
 ## v2.1.4
 
 ### Fixes
