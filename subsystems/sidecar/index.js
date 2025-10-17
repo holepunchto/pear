@@ -849,7 +849,9 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        daemon.spawn(applingPath, opts)
+        if (isMac)
+          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+        else daemon.spawn(applingPath, opts)
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -889,7 +891,11 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        daemon.spawn(applingPath, opts)
+        if (isMac) {
+          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+        } else {
+          daemon.spawn(applingPath, opts)
+        }
       } else {
         const TARGET_RUNTIME =
           this.updater === null
