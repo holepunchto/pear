@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v2.1.6
+
+### Fixes
+
+* Sidecar - restart improvement for Mac, fix for appling spawning (appling should own cwd)
+* CLI - `pear changelog` reverse order fix
+
 ## v2.1.5
 
 ### Fixes
