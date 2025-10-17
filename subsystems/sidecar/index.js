@@ -835,7 +835,6 @@ class Sidecar extends ReadyResource {
       }
       const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { cwd, env }
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -851,12 +850,14 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        os.kill(client.userData.state.pid, 'SIGKILL')
-        await new Promise((resolve) => setTimeout(resolve, 100)) // make sure the process is dead for good
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        if (client.userData.state.pid) {
+          os.kill(client.userData.state.pid, 'SIGKILL')
+        }
         if (isMac) {
-          spawn('open', [applingPath.split('.app')[0] + '.app'], { env })
+          spawn('open', [applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
         } else {
-          daemon.spawn(applingPath, { env })
+          daemon.spawn(applingPath, { env }) // appling owns cwd
         }
       } else {
         const cmd = command('run', ...rundef)
@@ -871,7 +872,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(RUNTIME, cmdArgs, opts)
+        daemon.spawn(RUNTIME, cmdArgs, { cwd, env })
       }
 
       return
@@ -893,7 +894,6 @@ class Sidecar extends ReadyResource {
     await sidecarClosed
 
     for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
-      const opts = { env, cwd }
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
@@ -902,10 +902,10 @@ class Sidecar extends ReadyResource {
             'open',
             [applingPath.split('.app')[0] + '.app'],
             { env }
-          )
+          ) // appling owns cwd
           await once(openProc, 'exit')
         } else {
-          daemon.spawn(applingPath, { env })
+          daemon.spawn(applingPath, { env }) // appling owns cwd
         }
       } else {
         const TARGET_RUNTIME =
@@ -925,7 +925,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(TARGET_RUNTIME, cmdArgs, opts)
+        daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
       }
     }
   }
