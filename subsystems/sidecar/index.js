@@ -5,6 +5,7 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
+const { spawn } = require('bare-subprocess')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
@@ -850,7 +851,7 @@ class Sidecar extends ReadyResource {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
         if (isMac)
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+          spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
         else daemon.spawn(applingPath, opts)
       } else {
         const cmd = command('run', ...rundef)
@@ -892,7 +893,7 @@ class Sidecar extends ReadyResource {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
         if (isMac) {
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+          spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
         } else {
           daemon.spawn(applingPath, opts)
         }
