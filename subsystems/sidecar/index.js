@@ -1,5 +1,6 @@
 'use strict'
 const bareInspector = require('bare-inspector')
+const { once } = require('bare-events')
 const { Inspector } = require('pear-inspect')
 const fs = require('bare-fs')
 const path = require('bare-path')
@@ -832,9 +833,9 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', 'Invalid restart request from non-app client')
         return
       }
-      const { dir, cmdArgs, env } = client.userData.state
+      const { dir, cwd, cmdArgs, env } = client.userData.state
       const appling = client.userData.state.appling
-      const opts = { env }
+      const opts = { cwd, env }
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -850,9 +851,13 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        if (isMac)
-          spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon.spawn(applingPath, opts)
+        os.kill(client.userData.state.pid, 'SIGKILL')
+        await new Promise((resolve) => setTimeout(resolve, 100)) // make sure the process is dead for good
+        if (isMac) {
+          spawn('open', [applingPath.split('.app')[0] + '.app'], { env })
+        } else {
+          daemon.spawn(applingPath, { env })
+        }
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -887,15 +892,20 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { dir, appling, cmdArgs, env } of restarts) {
-      const opts = { env }
+    for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
+      const opts = { env, cwd }
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
         if (isMac) {
-          spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
+          const openProc = spawn(
+            'open',
+            [applingPath.split('.app')[0] + '.app'],
+            { env }
+          )
+          await once(openProc, 'exit')
         } else {
-          daemon.spawn(applingPath, opts)
+          daemon.spawn(applingPath, { env })
         }
       } else {
         const TARGET_RUNTIME =
