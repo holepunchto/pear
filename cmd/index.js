@@ -235,7 +235,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Shows Pear changelog by default
     `,
     arg('[link|channel]', 'Project to view changelog of'),
-    flag('--max|-m <n=7>', 'Maximum entries to show'),
+    flag('--max|-m <n=10>', 'Maximum entries to show'),
     flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
     flag('--full', 'Show entire changelog'),
     flag('--no-ask', 'Suppress permission prompt'),
