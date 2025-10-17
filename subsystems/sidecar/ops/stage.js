@@ -157,11 +157,18 @@ module.exports = class Stage extends Opstream {
         )
     }
 
+    // Cached versions of files and skips for warmup map generation,
+    // preventing a second round of static analysis
+    let compactFiles = null
+    let compactSkips = null
+
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
       let shake = await pearShake.run({
         defer: state.options?.stage?.defer
       })
+      compactFiles = shake.files
+      compactSkips = shake.skips
       const { files } = shake
       const skips = shake.skips.map(({ specifier, referrer }) => {
         return { specifier, referrer: referrer.pathname }
@@ -258,7 +265,9 @@ module.exports = class Stage extends Opstream {
       const analyzer = new DriveAnalyzer(bundle.drive)
       await analyzer.ready()
       const analyzed = await analyzer.analyze(entrypoints, prefetch, {
-        defer: state.options?.stage?.defer
+        defer: state.options?.stage?.defer,
+        files: compact ? await stagedFiles(bundle.drive) : null,
+        skips: compact ? compactSkips : null
       })
       const { warmup } = analyzed
       const skips = analyzed.skips.map(({ specifier, referrer }) => {
@@ -400,4 +409,11 @@ function compactStageIgnore(files, prefetchAndInclude, selectFilter, main) {
       !isSelected
     )
   }
+}
+
+// Lists all staged files without reprocessing ignore
+async function stagedFiles(drive) {
+  const files = []
+  for await (const file of drive.list()) files.push(file)
+  return files
 }
