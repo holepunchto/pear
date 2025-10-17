@@ -1,10 +1,12 @@
 'use strict'
 const bareInspector = require('bare-inspector')
+const { once } = require('bare-events')
 const { Inspector } = require('pear-inspect')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
+const { spawn } = require('bare-subprocess')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
@@ -831,9 +833,7 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', 'Invalid restart request from non-app client')
         return
       }
-      const { dir, cwd, cmdArgs, env } = client.userData.state
-      const appling = client.userData.state.appling
-      const opts = { cwd, env }
+      const { appling, dir, cwd, cmdArgs, env, pid } = client.userData.state
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -849,9 +849,15 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        if (isMac)
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon.spawn(applingPath, opts)
+        if (isMac) {
+          if (pid) {
+            os.kill(pid, 'SIGKILL')
+            await new Promise((resolve) => setTimeout(resolve, 100)) // allow for process close time
+          }
+          spawn('open', [applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
+        } else {
+          daemon.spawn(applingPath, { env }) // appling owns cwd
+        }
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -865,7 +871,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(RUNTIME, cmdArgs, opts)
+        daemon.spawn(RUNTIME, cmdArgs, { cwd, env })
       }
 
       return
@@ -886,14 +892,20 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd, env }
+    for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        if (isMac)
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon.spawn(applingPath, opts)
+        if (isMac) {
+          const openProc = spawn(
+            'open',
+            [applingPath.split('.app')[0] + '.app'],
+            { env }
+          ) // appling owns cwd
+          await once(openProc, 'exit')
+        } else {
+          daemon.spawn(applingPath, { env }) // appling owns cwd
+        }
       } else {
         const TARGET_RUNTIME =
           this.updater === null
@@ -912,7 +924,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(TARGET_RUNTIME, cmdArgs, opts)
+        daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
       }
     }
   }
