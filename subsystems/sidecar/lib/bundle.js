@@ -151,7 +151,14 @@ module.exports = class Bundle {
         this.watchingUpdates = watch(this.drive)
         for await (const { key, length, fork, diff } of this.watchingUpdates) {
           if (this.updater !== null) await this.updater.wait({ length, fork })
-          await updateNotify({ key, length, fork }, { link: this.link, diff })
+          await updateNotify(
+            {
+              key: key === null ? null : hypercoreid.encode(key),
+              length,
+              fork
+            },
+            { link: this.link, diff }
+          )
         }
       } else {
         this.watchingUpdates = watcher(this.drive.version || 0, this.drive, {
