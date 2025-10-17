@@ -852,7 +852,7 @@ class Sidecar extends ReadyResource {
         if (isMac) {
           if (pid) {
             os.kill(pid, 'SIGKILL')
-            await new Promise((resolve) => setTimeout(resolve, 100))
+            await new Promise((resolve) => setTimeout(resolve, 100)) // allow for process close time
           }
           spawn('open', [applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
         } else {
