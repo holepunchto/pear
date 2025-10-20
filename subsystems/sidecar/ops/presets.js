@@ -16,12 +16,22 @@ module.exports = class Presets extends Opstream {
       if (!bundle) {
         await this.model.addBundle(link, State.storageFromLink(link))
       }
-      this.sidecar.model.setPreset(link, command, configuration)
+      const updatedBundle = await this.sidecar.model.setPreset(
+        link,
+        command,
+        configuration
+      )
+      this.push({
+        tag: 'preset',
+        data: updatedBundle
+      })
     } else {
       const bundle = await this.sidecar.model.getBundle(link)
       this.push({
         tag: 'preset',
-        data: bundle.presets.find((p) => p.command === command)
+        data: bundle.presets
+          ? bundle.presets.find((p) => p.command === command)
+          : null
       })
     }
   }
