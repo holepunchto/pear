@@ -171,7 +171,7 @@ module.exports = class Dump extends Opstream {
     }
   }
 
-  async checkPathnameExists(src, pathname, link){
+  async checkPathnameExists(src, pathname, link) {
     for await (const entry of src.list(pathname)) {
       if (entry) return
     }
