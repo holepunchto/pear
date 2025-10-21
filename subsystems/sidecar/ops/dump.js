@@ -110,7 +110,7 @@ module.exports = class Dump extends Opstream {
           : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
-    await this.checkPathnameExists(src, pathname, link)
+    await this.checkPathnameExists(src, pathname, entry, link)
 
     if (dir === '-') {
       if (entry !== null) {
@@ -171,8 +171,10 @@ module.exports = class Dump extends Opstream {
     }
   }
 
-  async checkPathnameExists(src, pathname, link) {
+  async checkPathnameExists(src, pathname, entry, link) {
+    if (entry !== null) return
     for await (const entry of src.list(pathname)) {
+      console.log(entry)
       if (entry) return
     }
     throw ERR_FILE_NOT_FOUND(`no content in ${link}`)
