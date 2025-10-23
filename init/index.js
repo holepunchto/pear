@@ -107,9 +107,12 @@ async function init(link = 'default', dir, opts = {}) {
     if (key === '/_template.json') continue
     if (value === null) continue // dir
     const file = stamp.sync(key, fields)
+    const ext = path.extname(file).toLowerCase()
+    const skipStamping = ['.png']
+    const fileData = skipStamping.includes(ext) ? Readable.from([value]) : stamp.stream(value, fields, shave)
     const writeStream = dst.createWriteStream(file)
     const promise = pipelinePromise(
-      stamp.stream(value, fields, shave),
+      fileData,
       writeStream
     )
     promise.catch((err) => {
