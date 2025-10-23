@@ -30,7 +30,7 @@ module.exports = class Presets extends Opstream {
       this.push({
         tag: 'preset',
         data: bundle.presets
-          ? bundle.presets.find((p) => p.command === command)
+          ? bundle.presets.find((p) => p.command === command).trim()
           : null
       })
     }

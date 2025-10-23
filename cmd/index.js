@@ -414,7 +414,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const program = cmd.parse(argv)
+  const preset = await presets(cmd.parse(argv), ipc)
+  // Combine: command, preset args, then the rest — allowing manual args to override
+  const combinedArgs = [argv[0], ...preset, ...argv.slice(1)]
+  const program = cmd.parse(combinedArgs)
 
   if (program === null) {
     ipc.close()
@@ -471,4 +474,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     print('\n' + bail.command.usage())
     Bare.exitCode = 1
   }
+}
+
+async function presets(cmd, ipc) {
+  if (!cmd.args.link) return []
+  const command = cmd.name
+  const link = cmd.args.link
+  const preset = await ipc.presets({ link, command })
+  return preset ? preset.split(' ') : []
 }
