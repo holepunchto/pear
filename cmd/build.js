@@ -10,20 +10,19 @@ const { outputter, ansi } = require('pear-terminal')
 const { arch, platform } = require('which-runtime')
 const { ERR_INVALID_INPUT, ERR_INVALID_MANIFEST } = require('pear-errors')
 
-const outputBuild = outputter('build', {
-  init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
-  npm: () => 'Fetching dependencies...\n',
-  generate: () => 'Generating project...\n',
-  build: () => 'Compiling project...\n',
-  complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
-  error: ({ message }) => `Error: ${message}\n`
-})
-
 const outputInit = outputter('init', {
   writing: () => '',
   error: ({ code, stack }) => `Init Error (code: ${code || 'none'}) ${stack}`,
   wrote: ({ path }) => `* ${path}`,
   written: () => ''
+})
+
+const outputBuild = outputter('build', {
+  init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
+  generate: () => 'Generating project...\n',
+  build: () => 'Compiling project...\n',
+  complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
+  error: ({ message }) => `Error: ${message}\n`
 })
 
 module.exports = (ipc) => {
@@ -49,16 +48,18 @@ module.exports = (ipc) => {
       const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
       // @TODO support channel param $ pear build <channel>
     }
+
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
     const build = manifest.pear?.build
     if (!build) {
       throw ERR_INVALID_MANIFEST(
-        'Missing pear.build specification at package.json'
+        'Missing pear.build definition at package.json'
       )
     }
     const { dir = os.cwd() } = cmd.args
-    const distributables = path.join(dir, build.distributables || 'distributables', platform + '-' + arch)
+    const host = platform + '-' + arch
+    const distributables = path.join(dir, build.distributables || 'distributables', host)
     await fs.promises.mkdir(distributables, { recursive: true })
     const defaults = {
       "id": hypercoreid.encode(drive.key),
@@ -69,7 +70,7 @@ module.exports = (ipc) => {
       "description": `${build.description || manifest.description}`,
       "darwin.identifier": `${build.darwin?.identifier || ''}`,
       "darwin.category": `${build.darwin?.category || ''}`,
-      "darwin.signingidentity": `${build.darwin?.['signing-identity'] || ''}`,
+      "darwin.signingidentity": `${build.darwin?.['signing-identity'] || '-'}`,
       "darwin.entitlements": `${build.darwin?.entitlements || ''}`,
       "win.signingsubject": `${build.win32?.['signing-subject'] || ''}`,
       "win.signingthumbprint": `${build.win32?.['signing-thumbprint'] || ''}`,
@@ -87,9 +88,11 @@ module.exports = (ipc) => {
       header: 'pear-build'
     })
     await outputInit(json, initStream)
-    fs.renameSync(path.join(distributables, '__node_modules'), path.join(distributables, 'node_modules'))
-    // overwrites default template icons with staged icons (if exists)
-    await opwait(ipc.dump({ link: link + '/icons', dir: distributables, force: true }))
-    await outputBuild(json, await pearBuild({ dir }))
+
+    const nodeModules = path.join(distributables, 'node_modules')
+    if (!fs.existsSync(nodeModules)) fs.renameSync(path.join(distributables, '__node_modules'), nodeModules)
+    await opwait(ipc.dump({ link: link + '/distributables/icons', dir: distributables, force: true }))
+    const buildStream = await pearBuild({ dir: distributables })
+    await outputBuild(json, buildStream)
   }
 }

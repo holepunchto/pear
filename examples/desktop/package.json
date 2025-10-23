@@ -23,7 +23,7 @@
       "description": "Pear Desktop Example",
       "distributables": "./distributables",
       "darwin": {
-        "identifier": "io.keet.deskex",
+        "identifier": "com.pears.deskex",
         "category": "public.app-category.developer-tools",
         "signing-identity": "-",
         "entitlements": ""
@@ -33,7 +33,7 @@
         "signing-thumbprint": ""
       },
       "linux": {
-        "category": "AudioVideo"
+        "category": "Development"
       }
     }
   },
