@@ -113,8 +113,8 @@ module.exports = class Dump extends Opstream {
     if (entry === null) {
       let found = false
       for await (const entry of src.list(pathname)) {
-        if (entry) { 
-          found = true 
+        if (entry) {
+          found = true
           break
         }
       }
