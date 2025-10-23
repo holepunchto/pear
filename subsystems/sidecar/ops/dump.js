@@ -111,14 +111,12 @@ module.exports = class Dump extends Opstream {
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {
-      let found = false
+      let isDir = false
       for await (const entry of src.list(pathname)) {
-        if (entry) {
-          found = true
-          break
-        }
+        isDir = true
+        break
       }
-      if (!found) throw ERR_INVALID_LINK('not found', { link })
+      if (!isDir) throw ERR_INVALID_LINK('not found', { link })
     }
 
     if (dir === '-') {
