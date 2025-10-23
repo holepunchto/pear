@@ -474,8 +474,7 @@ test('pear dump should throw when dumping non-existant filepath', async function
     channel: `test-${id}`,
     name: `test-${id}`,
     dir: storageDir,
-    dryRun: false,
-    bare: true
+    dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [
@@ -514,8 +513,7 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
     channel: `test-${id}`,
     name: `test-${id}`,
     dir: storageDir,
-    dryRun: false,
-    bare: true
+    dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [

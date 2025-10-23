@@ -8,7 +8,7 @@ const {
   ERR_PERMISSION_REQUIRED,
   ERR_DIR_NONEMPTY,
   ERR_INVALID_INPUT,
-  ERR_FILE_NOT_FOUND
+  ERR_INVALID_LINK
 } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -110,7 +110,16 @@ module.exports = class Dump extends Opstream {
           : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
-    await this.checkPathnameExists(src, pathname, entry, link)
+    if (entry === null) {
+      let found = false
+      for await (const entry of src.list(pathname)) {
+        if (entry) { 
+          found = true 
+          break
+        }
+      }
+      if (!found) throw ERR_INVALID_LINK('not found', { link })
+    }
 
     if (dir === '-') {
       if (entry !== null) {
@@ -169,13 +178,5 @@ module.exports = class Dump extends Opstream {
         })
       }
     }
-  }
-
-  async checkPathnameExists(src, pathname, entry, link) {
-    if (entry !== null) return
-    for await (const entry of src.list(pathname)) {
-      if (entry) return
-    }
-    throw ERR_FILE_NOT_FOUND(`no content in ${link}`)
   }
 }
