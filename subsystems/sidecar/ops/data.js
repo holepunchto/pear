@@ -14,7 +14,7 @@ module.exports = class Data extends Opstream {
       let bundles
       if (link) {
         const bundle = await this.sidecar.model.getBundle(link)
-        if (bundle === null) throw ERR_NOT_FOUND(link + 'not found', { link })
+        if (bundle === null) throw ERR_NOT_FOUND(link + ' not found', { link })
         bundles = [bundle]
       } else {
         bundles = await this.sidecar.model.allBundles()
@@ -43,7 +43,7 @@ module.exports = class Data extends Opstream {
       let assets
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
-        if (asset === null) throw ERR_NOT_FOUND(link + 'not found', { link })
+        if (asset === null) throw ERR_NOT_FOUND(link + ' not found', { link })
         assets = [asset]
         this.push({ tag: 'assets', data: assets })
       } else {
