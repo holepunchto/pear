@@ -46,7 +46,6 @@ module.exports = (ipc) => {
       )
     if (channel) {
       const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
-      // @TODO support channel param $ pear build <channel>
     }
 
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
