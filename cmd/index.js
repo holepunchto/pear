@@ -468,8 +468,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     const nouse = [messageOnly, opFail]
     const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
     const ref = codemap.get(code)
-    const reason = codemap.has(code) ? codemap.get(code)(bail) : bail.reason
-
+    const reason = codemap.has(code)
+      ? (codemap.get(code)(bail) ?? bail.reason)
+      : bail.reason
     Bare.exitCode = 1
 
     print(reason, false)

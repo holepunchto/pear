@@ -287,12 +287,15 @@ module.exports = class Run extends Opstream {
 
     if (sidecar.swarm) appBundle.join() // note: no await is deliberate
 
+    const firstRun = current === null
+    let checkout = null
     try {
-      const { fork, length } = await appBundle.calibrate()
-      const firstRun = current === null
+      checkout = await appBundle.calibrate()
+      const { fork, length } = checkout
       const rollback = current > length
-      if (firstRun || rollback)
+      if (rollback) {
         await this.sidecar.model.setCurrent(state.applink, { fork, length })
+      }
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
         LOG.info(
@@ -340,6 +343,11 @@ module.exports = class Run extends Opstream {
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
+
+    if (firstRun) {
+      const { fork, length } = checkout
+      await this.sidecar.model.setCurrent(state.applink, { fork, length })
+    }
 
     if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
 
