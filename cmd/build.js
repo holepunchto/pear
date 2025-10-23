@@ -89,8 +89,6 @@ module.exports = (ipc) => {
     })
     await outputInit(json, initStream)
 
-    const nodeModules = path.join(distributables, 'node_modules')
-    if (!fs.existsSync(nodeModules)) fs.renameSync(path.join(distributables, '__node_modules'), nodeModules)
     await opwait(ipc.dump({ link: link + '/distributables/icons', dir: distributables, force: true }))
     const buildStream = await pearBuild({ dir: distributables })
     await outputBuild(json, buildStream)
