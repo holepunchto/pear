@@ -8,6 +8,7 @@ const opwait = require('pear-opwait')
 const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
 const { arch, platform } = require('which-runtime')
+const { ERR_INVALID_INPUT, ERR_INVALID_MANIFEST } = require('pear-errors')
 
 const outputBuild = outputter('build', {
   init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
@@ -50,11 +51,16 @@ module.exports = (ipc) => {
     }
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
-    const build = manifest.pear.build
+    const build = manifest.pear?.build
+    if (!build) {
+      throw ERR_INVALID_MANIFEST(
+        'Missing pear.build specification at package.json'
+      )
+    }
     const { dir = os.cwd() } = cmd.args
-    const distributables = path.join(dir, 'distributables', platform + '-' + arch)
+    const distributables = path.join(dir, build.distributables || 'distributables', platform + '-' + arch)
     await fs.promises.mkdir(distributables, { recursive: true })
-    const defaults = { 
+    const defaults = {
       "id": hypercoreid.encode(drive.key),
       "name": `${build.name || manifest.name}`,
       "link": `${link}`,
@@ -81,6 +87,7 @@ module.exports = (ipc) => {
       header: 'pear-build'
     })
     await outputInit(json, initStream)
+    fs.renameSync(path.join(distributables, '__node_modules'), path.join(distributables, 'node_modules'))
     // overwrites default template icons with staged icons (if exists)
     await opwait(ipc.dump({ link: link + '/icons', dir: distributables, force: true }))
     await outputBuild(json, await pearBuild({ dir }))
