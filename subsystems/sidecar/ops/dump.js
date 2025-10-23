@@ -174,7 +174,6 @@ module.exports = class Dump extends Opstream {
   async checkPathnameExists(src, pathname, entry, link) {
     if (entry !== null) return
     for await (const entry of src.list(pathname)) {
-      console.log(entry)
       if (entry) return
     }
     throw ERR_FILE_NOT_FOUND(`no content in ${link}`)
