@@ -457,3 +457,81 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
   is(dumpedFiles.length, 1, 'should dump only one file')
   absent(dumpedFiles.includes('index.js'), 'should not print out index.js')
 })
+
+test('pear dump should throw when dumping non-existant filepath', async function ({
+  plan,
+  teardown,
+  exception
+}) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: storageDir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}/doesnt-exists.js`
+
+  const dir = path.join(Helper.tmp, 'pear-dump-throw-test')
+
+  teardown(() => Helper.gc(dir))
+  await exception(async () => {
+    const dump = helper.dump({ link, dir })
+    teardown(() => Helper.teardownStream(dump))
+    const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+    await untilDump.complete
+  })
+})
+
+test('pear dump should throw when dumping non-existant dirpath', async function ({
+  plan,
+  teardown,
+  exception
+}) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: storageDir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}/no-dir`
+
+  const dir = path.join(Helper.tmp, 'pear-dump-throw-test-dir')
+
+  teardown(() => Helper.gc(dir))
+  await exception(async () => {
+    const dump = helper.dump({ link, dir })
+    teardown(() => Helper.teardownStream(dump))
+    const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+    await untilDump.complete
+  })
+})
