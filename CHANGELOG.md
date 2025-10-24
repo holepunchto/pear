@@ -1,5 +1,20 @@
 # Pear Runtime Changelog
 
+## v2.1.7
+
+### Fixes
+
+* CLI - `pear data [cmd] <link>` throws if not link not found
+* CLI `pear dump <link>` throws if link not found
+* Sidecar - on app first run current only set after asset sync
+* Sidecar - updates during first run excluded from setting current
+* Sidecar - derisk with dedicated platform lock instead of using rocksdb lock
+* Sidecar - update logs fix when using `--updates-diff` when running from key
+
+### Improvements
+
+* Sidecar - `pear stage --compact` operation optimizations
+
 ## v2.1.6
 
 ### Fixes
