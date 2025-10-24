@@ -271,7 +271,8 @@ module.exports = class Run extends Opstream {
       updateNotify: async (version, info) => {
         if (state.updates) {
           sidecar.updateNotify(version, info)
-          if (firstRun) return
+          const current = await sidecar.model.getCurrent(state.applink)
+          if (current === null) return // background updates cannot happen until after first current
           await this.sidecar.model.setCurrent(state.applink, {
             fork: version.fork,
             length: version.length
