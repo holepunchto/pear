@@ -73,7 +73,7 @@
     "crc-universal": "^1.0.4",
     "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
-    "drive-analyzer": "^2.0.0",
+    "drive-analyzer": "^2.0.2",
     "drive-bundler": "^2.4.4",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.4.2",
