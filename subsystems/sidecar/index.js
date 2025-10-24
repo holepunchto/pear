@@ -499,16 +499,8 @@ class Sidecar extends ReadyResource {
         'Platform Force update (' + version.force.reason + '). Updating to:'
       )
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
-    LOG.info(
-      'sidecar',
-      ' v' +
-        version.fork +
-        '.' +
-        version.length +
-        '.' +
-        version.key +
-        (info.link ? ' (' + info.link + ')' : '')
-    )
+    if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
+    else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
     if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
