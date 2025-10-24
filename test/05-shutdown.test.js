@@ -34,7 +34,7 @@ test('lock released after shutdown', async function ({
   const helper = new Helper(rig)
   await helper.ready()
 
-  const lock = path.join(rig.platformDir, 'platform_lock')
+  const lock = path.join(rig.platformDir, 'pear.lock')
 
   comment('checking file lock is not free')
   const platformLock = new LockFile(lock)
