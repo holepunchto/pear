@@ -253,6 +253,7 @@ module.exports = class Run extends Opstream {
     }
 
     const current = await sidecar.model.getCurrent(state.applink)
+    const firstRun = current === null
 
     const appBundle = new Bundle({
       swarm: sidecar.swarm,
@@ -270,6 +271,7 @@ module.exports = class Run extends Opstream {
       updateNotify: async (version, info) => {
         if (state.updates) {
           sidecar.updateNotify(version, info)
+          if (firstRun) return
           await this.sidecar.model.setCurrent(state.applink, {
             fork: version.fork,
             length: version.length
@@ -287,7 +289,6 @@ module.exports = class Run extends Opstream {
 
     if (sidecar.swarm) appBundle.join() // note: no await is deliberate
 
-    const firstRun = current === null
     let checkout = null
     try {
       checkout = await appBundle.calibrate()
