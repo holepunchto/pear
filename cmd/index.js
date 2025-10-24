@@ -428,7 +428,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   return program
 
-  function explain(bail) {
+  function explain(bail = {}) {
     if (!bail.reason && bail.err) {
       const known = errors.known()
       if (known.includes(bail.err.code) === false) {
@@ -446,6 +446,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
     const messageUsage = (bail) => bail.err.message
     const messageOnly = (bail) => bail.err.message
+    const opFail = (cmd) => cmd.err.info.message
     const codemap = new Map([
       ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
       [
@@ -461,14 +462,21 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       ['ERR_INVALID_INPUT', messageUsage],
       ['ERR_LEGACY', messageOnly],
       ['ERR_INVALID_TEMPLATE', messageOnly],
-      ['ERR_DIR_NONEMPTY', messageOnly]
+      ['ERR_DIR_NONEMPTY', messageOnly],
+      ['ERR_OPERATION_FAILED', opFail]
     ])
+    const nouse = [messageOnly, opFail]
     const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
-    const reason = codemap.has(code) ? codemap.get(code)(bail) : bail.reason
+    const ref = codemap.get(code)
+    const reason = codemap.has(code)
+      ? (codemap.get(code)(bail) ?? bail.reason)
+      : bail.reason
+    Bare.exitCode = 1
 
     print(reason, false)
-    if (codemap.get(code) === messageOnly || codemap.has(code) === false) return
+
+    if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
+
     print('\n' + bail.command.usage())
-    Bare.exitCode = 1
   }
 }
