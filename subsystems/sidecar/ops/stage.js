@@ -82,6 +82,7 @@ module.exports = class Stage extends Opstream {
     await session.add(bundle)
 
     const currentVersion = bundle.version
+    const verlink = bundle.verlink()
     await state.initialize({ bundle, dryRun })
 
     await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
@@ -108,7 +109,7 @@ module.exports = class Stage extends Opstream {
         channel: bundle.channel,
         key: z32,
         link,
-        verlink: bundle.verlink(),
+        verlink: verlink,
         current: currentVersion,
         release,
         dir
