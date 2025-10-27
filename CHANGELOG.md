@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.1.8
+
+### Fixes
+
+* CLI - `pear stage` - initial output versioned link length fix
+
 ## v2.1.7
 
 ### Fixes
