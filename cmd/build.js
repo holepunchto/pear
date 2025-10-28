@@ -56,6 +56,7 @@ module.exports = (ipc) => {
         'Missing pear.build definition at package.json'
       )
     }
+    // @TODO: be sure pear in manifest exists
     const { dir = os.cwd() } = cmd.args
     const host = platform + '-' + arch
     const distributables = path.join(dir, build.distributables || 'distributables', host)
@@ -65,7 +66,7 @@ module.exports = (ipc) => {
       "name": `${build.name || manifest.name}`,
       "link": `${link}`,
       "version": `${build.version || manifest.version}`,
-      "author": `${build.author || manifest.author}`,
+      "author": `${build.author || manifest.pear.author || manifest.author}`,
       "description": `${build.description || manifest.description}`,
       "darwin.identifier": `${build.darwin?.identifier || ''}`,
       "darwin.category": `${build.darwin?.category || ''}`,
@@ -89,7 +90,7 @@ module.exports = (ipc) => {
     await outputInit(json, initStream)
 
     await opwait(ipc.dump({ link: link + '/distributables/icons', dir: distributables, force: true }))
-    const buildStream = await pearBuild({ dir: distributables })
+    const buildStream = pearBuild({ dir: distributables })
     await outputBuild(json, buildStream)
   }
 }
