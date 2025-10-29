@@ -847,7 +847,7 @@ class Sidecar extends ReadyResource {
             os.kill(pid, 'SIGKILL')
             await new Promise((resolve) => setTimeout(resolve, 100)) // allow for process close time
           }
-          spawn('open', [applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
+          spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
         } else {
           daemon.spawn(applingPath, { env }) // appling owns cwd
         }
@@ -892,7 +892,7 @@ class Sidecar extends ReadyResource {
         if (isMac) {
           const openProc = spawn(
             'open',
-            [applingPath.split('.app')[0] + '.app'],
+            ['-n', applingPath.split('.app')[0] + '.app'],
             { env }
           ) // appling owns cwd
           await once(openProc, 'exit')
