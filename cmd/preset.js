@@ -1,8 +1,13 @@
 'use strict'
 const { outputter, ansi } = require('pear-terminal')
 const output = outputter('preset', {
-  result: ({ preset }, { link }) => {
-    let out = `Preset for ${ansi.bold(link)} ${ansi.bold(preset.command)}: ${ansi.green(preset.configuration)}\n`
+  preset: ({ preset }, { link }) => {
+    let out = ''
+    if (preset) {
+      out += `Preset for ${ansi.bold(link)} ${ansi.bold(preset.command)}: ${ansi.green(preset.configuration)}\n`
+    } else {
+      out += `Preset reset for ${ansi.bold(link)}\n`
+    }
     return out
   },
   error: ({ message }) => {
@@ -18,7 +23,7 @@ module.exports = (ipc) =>
     const json = cmd.flags.json
     await output(
       json,
-      ipc.preset({ link, command, configuration, reset: !!configuration }),
+      ipc.preset({ link, command, configuration, reset: !configuration }),
       { link }
     )
   }

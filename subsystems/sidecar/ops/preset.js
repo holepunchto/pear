@@ -1,6 +1,7 @@
 'use strict'
 const Opstream = require('../lib/opstream')
 const plink = require('pear-link')
+const State = require('../state')
 
 module.exports = class Preset extends Opstream {
   constructor(...args) {
@@ -16,7 +17,7 @@ module.exports = class Preset extends Opstream {
     if (configuration) {
       let bundle = await this.sidecar.model.getBundle(link)
       if (!bundle) {
-        await this.model.addBundle(link, State.storageFromLink(link))
+        await this.sidecar.model.addBundle(link, State.storageFromLink(link))
       }
       const updatedBundle = await this.sidecar.model.setPreset(
         link,
