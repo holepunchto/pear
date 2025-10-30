@@ -35,7 +35,6 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  data: require('./data'),
   build: require('./build')
 }
 
