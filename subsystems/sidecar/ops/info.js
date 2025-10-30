@@ -158,14 +158,21 @@ module.exports = class Info extends Opstream {
       }
     }
 
+    const entries = parsed
+      .filter(([version]) => {
+        version = version.split(' ')[0]
+        if (version[0] === 'v') version = version.slice(1)
+        return semifies(version, semver)
+      })
+      .slice(0, max)
+      .reverse()
+
     let count = 0
-    for (let [version, entry] of parsed.reverse()) {
-      version = version.split(' ')[0]
-      if (version[0] === 'v') version = version.slice(1)
-      if (semifies(version, semver) === false) continue
+    for (const [version, entry] of entries) {
       this.push({
         tag: 'changelog',
         data: {
+          version,
           changelog: entry,
           index: count++,
           max
@@ -178,6 +185,7 @@ module.exports = class Info extends Opstream {
       this.push({
         tag: 'changelog',
         data: {
+          version: null,
           changelog: blank,
           index: count,
           max

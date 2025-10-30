@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v2.1.9
+
+### Fixes
+
+* Sidecar - Mac update restart fix with `open -n`
+* CLI - `pear changelog` max fix latest entries
+
 ## v2.1.8
 
 ### Fixes

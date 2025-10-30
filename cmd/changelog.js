@@ -5,8 +5,10 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
 
 const output = outputter('changelog', {
-  changelog: ({ changelog, index }) =>
-    (index > 0 ? '\n____________\n\n' : '') + changelog,
+  changelog: ({ changelog, index, max }) =>
+    (index > 0 ? '\n____________\n\n' : '') +
+    changelog +
+    (index === max - 1 ? '\n' : ''),
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'info')
