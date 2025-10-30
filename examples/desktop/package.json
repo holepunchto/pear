@@ -17,7 +17,7 @@
       "minWidth": 500
     },
     "build": {
-      "name": "Pear App",
+      "name": "PearApp",
       "version": "1.0.0",
       "author": "Holepunch",
       "description": "Pear Desktop Example",
