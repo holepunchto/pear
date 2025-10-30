@@ -826,7 +826,7 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', 'Invalid restart request from non-app client')
         return
       }
-      const { appling, dir, cwd, cmdArgs, env, pid } = client.userData.state
+      const { appling, dir, cwd, cmdArgs, env } = client.userData.state
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -843,10 +843,6 @@ class Sidecar extends ReadyResource {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
         if (isMac) {
-          if (pid) {
-            os.kill(pid, 'SIGKILL')
-            await new Promise((resolve) => setTimeout(resolve, 100)) // allow for process close time
-          }
           spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
         } else {
           daemon.spawn(applingPath, { env }) // appling owns cwd
