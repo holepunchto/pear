@@ -338,43 +338,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
-  const data = command(
-    'data',
-    summary('Explore platform database'),
-    command(
-      'apps',
-      summary('Installed apps'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).apps(cmd)
-    ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      runners.data(ipc).dht(cmd)
-    ),
-    command('gc', summary('Garbage collection records'), (cmd) =>
-      runners.data(ipc).gc(cmd)
-    ),
-    command('manifest', summary('Database internal versioning'), (cmd) =>
-      runners.data(ipc).manifest(cmd)
-    ),
-    command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).assets(cmd)
-    ),
-    command(
-      'currents',
-      summary('Current working versions'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).currents(cmd)
-    ),
-    flag('--secrets', 'Show sensitive information'),
-    flag('--json', 'Newline delimited JSON output'),
-    () => {
-      console.log(data.help())
-    }
-  )
-
   const build = command(
     'build',
     summary('Build appling for a Pear application'),
