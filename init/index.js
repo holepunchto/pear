@@ -13,6 +13,7 @@ const {
   ERR_DIR_NONEMPTY,
   ERR_INVALID_TEMPLATE
 } = require('pear-errors')
+const hasNullByte = (buf) => Buffer.isBuffer(buf) && buf.includes(0x00)
 async function init(link = 'default', dir, opts = {}) {
   const { cwd, ipc, header, autosubmit, defaults, force = false, pkg } = opts
   let { ask = true } = opts
@@ -107,9 +108,7 @@ async function init(link = 'default', dir, opts = {}) {
     if (key === '/_template.json') continue
     if (value === null) continue // dir
     const file = stamp.sync(key, fields)
-    const ext = path.extname(file).toLowerCase()
-    const skip = ['.png']
-    const fileData = skip.includes(ext) ? Readable.from([value]) : stamp.stream(value, fields, shave)
+    const fileData = hasNullByte(value) ? Readable.from([value]) : stamp.stream(value, fields, shave)
     const writeStream = dst.createWriteStream(file)
     const promise = pipelinePromise(
       fileData,
