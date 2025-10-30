@@ -10,18 +10,11 @@ const { outputter, ansi } = require('pear-terminal')
 const { arch, platform } = require('which-runtime')
 const { ERR_INVALID_INPUT, ERR_INVALID_MANIFEST } = require('pear-errors')
 
-const outputInit = outputter('init', {
-  writing: () => '',
-  error: ({ code, stack }) => `Init Error (code: ${code || 'none'}) ${stack}`,
-  wrote: ({ path }) => `* ${path}`,
-  written: () => ''
-})
-
-const outputBuild = outputter('build', {
-  init: ({ dir }) => `\n${ansi.pear} Building into ${dir}\n`,
+const output = outputter('build', {
+  init: ({ dir }) => `\n${ansi.pear} Build target ${ansi.dim(dir)}\n`,
   generate: () => 'Generating project...\n',
-  build: () => 'Compiling project...\n',
-  complete: ({ dir }) => `\n${ansi.tick} Built appling at ${dir}\n`,
+  build: () => 'Compiling...\n',
+  complete: ({ dir }) => `Build completed ${ansi.dim(dir)}\n`,
   error: ({ message }) => `Error: ${message}\n`
 })
 
@@ -46,28 +39,35 @@ module.exports = (ipc) => {
       )
     if (channel) {
       const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
+      // @TODO <channel>
     }
 
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
-    const build = manifest.pear?.build
-    if (!build) {
+
+    if (!manifest.pear) {
       throw ERR_INVALID_MANIFEST(
-        'Missing pear.build definition at package.json'
+        'Missing required "pear" field in package.json'
       )
     }
-    // @TODO: be sure pear in manifest exists
+    const build = manifest.pear.build
+    if (!build) {
+      throw ERR_INVALID_MANIFEST(
+        'Missing required "pear.build" field in package.json'
+      )
+    }
+
     const { dir = os.cwd() } = cmd.args
     const host = platform + '-' + arch
     const distributables = path.join(dir, build.distributables || 'distributables', host)
     await fs.promises.mkdir(distributables, { recursive: true })
     const defaults = {
       "id": hypercoreid.encode(drive.key),
-      "name": `${build.name || manifest.name}`,
+      "name": `${build.name || manifest.pear.name || manifest.name}`,
       "link": `${link}`,
-      "version": `${build.version || manifest.version}`,
+      "version": `${build.version || manifest.pear.version || manifest.version}`,
       "author": `${build.author || manifest.pear.author || manifest.author}`,
-      "description": `${build.description || manifest.description}`,
+      "description": `${build.description || manifest.pear.description || manifest.description}`,
       "darwin.identifier": `${build.darwin?.identifier || ''}`,
       "darwin.category": `${build.darwin?.category || ''}`,
       "darwin.signingidentity": `${build.darwin?.['signing-identity'] || '-'}`,
@@ -76,21 +76,16 @@ module.exports = (ipc) => {
       "win.signingthumbprint": `${build.win32?.['signing-thumbprint'] || ''}`,
       "linux.category": `${build.linux?.category || ''}`
     }
-    const tmpl = 'init/templates/distributables'
-    const initStream = await require('../init')(tmpl, distributables, {
+    await opwait(await require('../init')('init/templates/distributables', distributables, {
       cwd: os.cwd(),
       ipc,
       force: true,
       defaults,
-      tmpl,
       autosubmit: true,
       ask: false,
       header: 'pear-build'
-    })
-    await outputInit(json, initStream)
-
+    }))
     await opwait(ipc.dump({ link: link + '/distributables/icons', dir: distributables, force: true }))
-    const buildStream = pearBuild({ dir: distributables })
-    await outputBuild(json, buildStream)
+    await output(json, pearBuild({ dir: distributables }))
   }
 }
