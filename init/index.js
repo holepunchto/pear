@@ -114,7 +114,7 @@ async function init(link = 'default', dir, opts = {}) {
     if (value === null) continue // dir
     const file = stamp.sync(key, fields)
     const ext = path.extname(file).toLowerCase()
-    const allow = ['.js', '.json']
+    const allow = ['.js', '.json', '.txt', '.md']
     const fileData = allow.includes(ext) ? stamp.stream(value, fields, shave) : Readable.from([value])
     const writeStream = dst.createWriteStream(file)
     const promise = pipelinePromise(
