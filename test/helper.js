@@ -147,7 +147,7 @@ class Helper extends IPC.Client {
       sodium.crypto_generichash(buf, b4a.from(s))
       return b4a.toString(buf, 'hex')
     }
-    const lock = path.join(platformDir, 'corestores', 'platform', 'db', 'LOCK')
+    const lock = path.join(platformDir, 'pear.lock')
     const socketPath = isWindows
       ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
       : `${platformDir}/pear.sock`

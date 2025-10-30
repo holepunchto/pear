@@ -71,14 +71,6 @@ pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
 pear://pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
 ```
 
-### Stage Build
-
-```
-pear://qb83jybcd65og3rwa96sb6axp1adf6ks5udfkngx61x1i75yng9y
-```
-
-Note: Always use the production build unless you are sure of what you are doing. The stage build may introduce untested breaking changes that could affect other Pear apps.
-
 ## License
 
 Apache-2.0

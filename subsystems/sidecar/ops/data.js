@@ -1,4 +1,5 @@
 'use strict'
+const { ERR_NOT_FOUND } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Data extends Opstream {
@@ -13,7 +14,8 @@ module.exports = class Data extends Opstream {
       let bundles
       if (link) {
         const bundle = await this.sidecar.model.getBundle(link)
-        bundles = bundle ? [bundle] : []
+        if (bundle === null) throw ERR_NOT_FOUND(link + ' not found', { link })
+        bundles = [bundle]
       } else {
         bundles = await this.sidecar.model.allBundles()
       }
@@ -41,7 +43,8 @@ module.exports = class Data extends Opstream {
       let assets
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
-        assets = asset ? [asset] : []
+        if (asset === null) throw ERR_NOT_FOUND(link + ' not found', { link })
+        assets = [asset]
         this.push({ tag: 'assets', data: assets })
       } else {
         const assets = await this.sidecar.model.allAssets()
@@ -53,7 +56,8 @@ module.exports = class Data extends Opstream {
       let records
       if (link) {
         const record = await this.sidecar.model.getCurrent(link)
-        records = record ? [record] : []
+        if (record === null) throw ERR_NOT_FOUND(link + ' not found', { link })
+        records = [record]
       } else {
         records = await this.sidecar.model.allCurrents()
       }

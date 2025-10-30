@@ -103,7 +103,7 @@ class Data {
     const link = command.args.link
     if (link) {
       const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
     }
     await output(
       json,
@@ -152,7 +152,7 @@ class Data {
     const link = command.args.link
     if (link) {
       const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
     }
     await output(
       json,
@@ -168,7 +168,7 @@ class Data {
     const link = command.args.link
     if (link) {
       const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
     }
     await output(
       json,

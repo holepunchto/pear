@@ -7,7 +7,8 @@ const plink = require('pear-link')
 const {
   ERR_PERMISSION_REQUIRED,
   ERR_DIR_NONEMPTY,
-  ERR_INVALID_INPUT
+  ERR_INVALID_INPUT,
+  ERR_NOT_FOUND
 } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -108,6 +109,15 @@ module.exports = class Dump extends Opstream {
           ? path.basename(parsed.pathname)
           : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
+
+    if (entry === null) {
+      let isDir = false
+      for await (const entry of src.list(pathname)) {
+        isDir = true
+        break
+      }
+      if (!isDir) throw ERR_NOT_FOUND('not found', { link })
+    }
 
     if (dir === '-') {
       if (entry !== null) {

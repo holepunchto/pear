@@ -80,7 +80,7 @@ class Sidecar extends ReadyResource {
     global.Bare.exit()
   }
 
-  constructor({ updater, drive, corestore, nodes, gunk }) {
+  constructor({ updater, drive, corestore, nodes, gunk, platformLock }) {
     super()
 
     this.model = new Model(corestore.session())
@@ -121,6 +121,7 @@ class Sidecar extends ReadyResource {
     this.corestore = corestore
     this.nodes = nodes
     this.gunk = gunk
+    this._platformLock = platformLock
 
     this.ipc = new IPC.Server({
       handlers: this,
@@ -499,16 +500,8 @@ class Sidecar extends ReadyResource {
         'Platform Force update (' + version.force.reason + '). Updating to:'
       )
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
-    LOG.info(
-      'sidecar',
-      ' v' +
-        version.fork +
-        '.' +
-        version.length +
-        '.' +
-        version.key +
-        (info.link ? ' (' + info.link + ')' : '')
-    )
+    if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
+    else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
     if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
@@ -1074,6 +1067,7 @@ class Sidecar extends ReadyResource {
     }
     await this.model.close()
     if (this.corestore) await this.corestore.close()
+    this._platformLock.unlock()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
 

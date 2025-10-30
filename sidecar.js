@@ -17,10 +17,12 @@ const {
   LOCALDEV,
   UPGRADE_LOCK,
   PLATFORM_DIR,
-  WAKEUP
+  WAKEUP,
+  PLATFORM_LOCK
 } = require('pear-constants')
 const gunk = require('pear-gunk')
 const pear = require('pear-cmd')
+const LockFile = require('fs-native-lock')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
 crasher('sidecar', SWAP)
@@ -52,6 +54,9 @@ async function bootSidecar() {
       return { host, port: int }
     })
 
+  const platformLock = new LockFile(PLATFORM_LOCK)
+  await platformLock.lock()
+
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
     manifestVersion: 1,
@@ -63,7 +68,14 @@ async function bootSidecar() {
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
   const updater = createUpdater()
 
-  const sidecar = new Sidecar({ updater, drive, corestore, nodes, gunk })
+  const sidecar = new Sidecar({
+    updater,
+    drive,
+    corestore,
+    nodes,
+    gunk,
+    platformLock
+  })
   gracedown(() => sidecar.close())
   await sidecar.ipc.ready()
 

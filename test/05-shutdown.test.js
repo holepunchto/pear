@@ -2,7 +2,7 @@
 const test = require('brittle')
 const fs = require('bare-fs')
 const path = require('bare-path')
-const fsext = require('fs-native-extensions')
+const LockFile = require('fs-native-lock')
 const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
@@ -23,36 +23,36 @@ const BY_ARCH = path.join(
 test.hook('shutdown setup', rig.setup)
 
 test('lock released after shutdown', async function ({
-  ok,
+  pass,
   plan,
+  exception,
   comment,
   teardown
 }) {
-  plan(1)
+  plan(2)
   comment('shutting down sidecar')
   const helper = new Helper(rig)
   await helper.ready()
-  await helper.shutdown()
-  comment('sidecar shutdown')
-  comment('checking file lock is free')
-  const lock = path.join(
-    rig.platformDir,
-    'corestores',
-    'platform',
-    'db',
-    'LOCK'
-  )
-  const fd = fs.openSync(lock, 'r+')
+
+  const lock = path.join(rig.platformDir, 'pear.lock')
+
+  comment('checking file lock is not free')
+  const platformLock = new LockFile(lock)
 
   teardown(async () => {
-    if (granted) fsext.unlock(fd)
-    comment('closing file descriptor')
-    fs.closeSync(fd)
-    comment('file descriptor closed')
+    await platformLock.unlock()
   })
 
-  const granted = fsext.tryLock(fd)
-  ok(granted, 'file lock is free')
+  exception(
+    async () => await platformLock.lock(),
+    'platform lock throws because is not free'
+  )
+
+  comment('sidecar shutdown')
+  await helper.shutdown()
+
+  await platformLock.lock()
+  pass('file lock is free after platform shutdown')
 })
 
 let platformDirLs

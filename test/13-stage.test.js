@@ -28,7 +28,7 @@ const stagePearMain = path.join(
   'stage-pear-main'
 )
 
-test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
+test('basic stage min desktop app', async ({ teardown, ok, is, comment }) => {
   const dir = stageAppMin
 
   const helper = new Helper()
@@ -52,7 +52,15 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
+
   await staged.final
 
   const expectedStagedFiles = [
@@ -75,6 +83,7 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 test('basic stage min desktop app with entrypoints', async ({
   teardown,
   ok,
+  is,
   comment
 }) => {
   const dir = stageAppMinWithEntrypoints
@@ -100,7 +109,14 @@ test('basic stage min desktop app with entrypoints', async ({
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
   await staged.final
 
   const expectedStagedFiles = [
@@ -120,6 +136,7 @@ test('basic stage min desktop app with entrypoints', async ({
 test('basic stage min desktop app with only and include', async ({
   teardown,
   ok,
+  is,
   comment
 }) => {
   const dir = stageAppMinWithOnly
@@ -145,7 +162,14 @@ test('basic stage min desktop app with only and include', async ({
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
   await staged.final
 
   const expectedStagedFiles = [
