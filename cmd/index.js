@@ -34,7 +34,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  build: require('./build')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -336,6 +337,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const build = command(
+    'build',
+    summary('Build appling for a Pear application'),
+    description`
+      Specify channel or link to build a project.
+    `,
+    arg('<channel|link>', 'Channel name or Pear link to build'),
+    arg('[dir]', 'Output directory path (default: .)'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.build(ipc)
+  )
+
   const help = command(
     'help',
     arg('[command]'),
@@ -360,6 +373,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     dump,
     touch,
     data,
+    build,
     changelog,
     shift,
     drop,
