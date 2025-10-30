@@ -1,8 +1,6 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
-const os = require('bare-os')
-const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
 
@@ -76,20 +74,16 @@ module.exports = (ipc) =>
     const link = isKey ? cmd.args.link : null
     if (link && isKey === false)
       throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-    let dir = cmd.args.dir || os.cwd()
-    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
 
     await output(
       json,
       ipc.info({
         link,
         channel,
-        dir,
         showKey,
         metadata,
-        changelog,
+        changelog: full || changelog ? { full, max: 1 } : null,
         manifest,
-        full,
         cmdArgs: Bare.argv.slice(1)
       }),
       { ask: cmd.flags.ask },

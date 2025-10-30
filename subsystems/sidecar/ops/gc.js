@@ -135,7 +135,7 @@ module.exports = class GC extends Opstream {
       // skip running assets
       if (client.userData instanceof sidecar.App === false) return
       const links = Object.values(
-        client.userData.state.manifest.pear.assets
+        client.userData.state.manifest.pear?.assets ?? {}
       ).map((asset) => asset.link)
       removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
     }

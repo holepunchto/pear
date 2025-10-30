@@ -1,10 +1,12 @@
 'use strict'
 const bareInspector = require('bare-inspector')
+const { once } = require('bare-events')
 const { Inspector } = require('pear-inspect')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const daemon = require('bare-daemon')
+const { spawn } = require('bare-subprocess')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
@@ -77,7 +79,7 @@ class Sidecar extends ReadyResource {
     global.Bare.exit()
   }
 
-  constructor({ updater, drive, corestore, nodes, gunk }) {
+  constructor({ updater, drive, corestore, nodes, gunk, platformLock }) {
     super()
 
     this.model = new Model(corestore.session())
@@ -118,6 +120,7 @@ class Sidecar extends ReadyResource {
     this.corestore = corestore
     this.nodes = nodes
     this.gunk = gunk
+    this._platformLock = platformLock
 
     this.ipc = new IPC.Server({
       handlers: this,
@@ -147,22 +150,8 @@ class Sidecar extends ReadyResource {
           }
           LOG.info(
             'sidecar',
-            `Killing unresponsive process with pid ${client.userData.pid}`
+            `Unresponsive process detected with pid ${client.userData.pid}`
           )
-          os.kill(client.userData.pid, 'SIGKILL') // force close unresponsive process
-          if (client.userData.state.parent) {
-            const parent = this.apps.find(
-              (app) => app.state?.config.id === client.userData.state.parent
-            )
-            if (parent) {
-              const link = client.userData.state.link
-              parent.message({
-                type: 'pear/subprocess-killed',
-                reason: 'unresponsive',
-                link
-              })
-            }
-          }
         }
         this.#spindownCountdown()
       })
@@ -510,16 +499,8 @@ class Sidecar extends ReadyResource {
         'Platform Force update (' + version.force.reason + '). Updating to:'
       )
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
-    LOG.info(
-      'sidecar',
-      ' v' +
-        version.fork +
-        '.' +
-        version.length +
-        '.' +
-        version.key +
-        (info.link ? ' (' + info.link + ')' : '')
-    )
+    if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
+    else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
     if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
@@ -811,7 +792,7 @@ class Sidecar extends ReadyResource {
     if (this.hasClients === false) return []
     const metadata = []
     const seen = new Set()
-    for (const client of this.clients) {
+    for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       if (!params.inclusive && client === originClient) {
         continue
       }
@@ -845,9 +826,7 @@ class Sidecar extends ReadyResource {
         LOG.info('sidecar', 'Invalid restart request from non-app client')
         return
       }
-      const { dir, cwd, cmdArgs, env } = client.userData.state
-      const appling = client.userData.state.appling
-      const opts = { cwd, env }
+      const { appling, dir, cwd, cmdArgs, env, pid } = client.userData.state
       if (!client.closed) {
         const tearingDown = client.userData.teardown()
         if (tearingDown) {
@@ -863,9 +842,15 @@ class Sidecar extends ReadyResource {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        if (isMac)
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon.spawn(applingPath, opts)
+        if (isMac) {
+          if (pid) {
+            os.kill(pid, 'SIGKILL')
+            await new Promise((resolve) => setTimeout(resolve, 100)) // allow for process close time
+          }
+          spawn('open', [applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
+        } else {
+          daemon.spawn(applingPath, { env }) // appling owns cwd
+        }
       } else {
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -879,7 +864,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(RUNTIME, cmdArgs, opts)
+        daemon.spawn(RUNTIME, cmdArgs, { cwd, env })
       }
 
       return
@@ -900,14 +885,20 @@ class Sidecar extends ReadyResource {
 
     await sidecarClosed
 
-    for (const { cwd, dir, appling, cmdArgs, env } of restarts) {
-      const opts = { cwd, env }
+    for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
       if (appling) {
         const applingPath =
           typeof appling === 'string' ? appling : appling?.path
-        if (isMac)
-          daemon.spawn('open', [applingPath.split('.app')[0] + '.app'], opts)
-        else daemon.spawn(applingPath, opts)
+        if (isMac) {
+          const openProc = spawn(
+            'open',
+            [applingPath.split('.app')[0] + '.app'],
+            { env }
+          ) // appling owns cwd
+          await once(openProc, 'exit')
+        } else {
+          daemon.spawn(applingPath, { env }) // appling owns cwd
+        }
       } else {
         const TARGET_RUNTIME =
           this.updater === null
@@ -926,7 +917,7 @@ class Sidecar extends ReadyResource {
           cmdArgs.push(dir)
         }
 
-        daemon.spawn(TARGET_RUNTIME, cmdArgs, opts)
+        daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
       }
     }
   }
@@ -1071,6 +1062,7 @@ class Sidecar extends ReadyResource {
     }
     await this.model.close()
     if (this.corestore) await this.corestore.close()
+    this._platformLock.unlock()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
 
@@ -1078,7 +1070,7 @@ class Sidecar extends ReadyResource {
     if (this.decomissioned) return
     this.decomissioned = true
     await this._inspector.disable()
-    for (const client of this.clients) {
+    for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       // TODO: can teardown be respected here?
       await this.#endRPCStreams(client)
     }

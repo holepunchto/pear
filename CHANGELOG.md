@@ -1,5 +1,87 @@
 # Pear Runtime Changelog
 
+## v2.1.8
+
+### Fixes
+
+* CLI - `pear stage` - initial output versioned link length fix
+
+## v2.1.7
+
+### Fixes
+
+* CLI - `pear data [cmd] <link>` throws if not link not found
+* CLI `pear dump <link>` throws if link not found
+* Sidecar - on app first run current only set after asset sync
+* Sidecar - updates during first run excluded from setting current
+* Sidecar - derisk with dedicated platform lock instead of using rocksdb lock
+* Sidecar - update logs fix when using `--updates-diff` when running from key
+
+### Improvements
+
+* Sidecar - `pear stage --compact` operation optimizations
+
+## v2.1.6
+
+### Fixes
+
+* Sidecar - restart improvement for Mac, fix for appling spawning (appling should own cwd)
+* CLI - `pear changelog` reverse order fix
+
+## v2.1.5
+
+### Fixes
+
+* CLI - `pear changelog` usage output fix for `--max` flag
+
+## v2.1.4
+
+### Fixes
+
+* IPC - heartbeat timeout should no longer close client in sidecar
+
+## v2.1.3
+
+### Fixes
+
+* CLI - `pear init` default fix
+* Internal - teardown flow fix, ensure reverse order by timestamp
+* Sidecar - remove unresponsive sigkill, allows blocking processes, sigkilled on death anyway
+* Internal - pre fix on Windows, path resolution related
+
+## v2.1.2
+
+### Fixes
+
+* Internal - teardown flow fix, close clients in reverse order
+* Internal - pre pipe check only for run ops
+* CLI - `pear gc` bug fix for running asset detection
+
+## v2.1.1
+
+### Fixes
+
+* Internal - stray ref removed from compact stage
+* IPC/OPS - stage and dump output tags byteDiff -> byte-diff
+
+## v2.1.0
+
+### Features
+
+* CLI - `pear changelog` command
+* CLI - `pear versions --modules|-m` flag prints dependency versions (now hidden) and JSON output alignment
+
+### Fixes
+
+* Internal - Changelog fixup
+* Internal - Windows restart fix via `bare-daemon` bump
+
+### Improvements
+
+* CLI - iteration of `pear stage` output
+* Native - Bare runtime updated from 1.21.7 to 1.23.4
+* CLI - `pear info --changelog` -> `pear changelog` and `pear info` defaults to not printing changelog
+
 ## v2.0.0
 
 ### Features
@@ -7,7 +89,7 @@
 * Internal - sidecar garbage collection of dangling filesystem resources
 * CLI - `pear gc assets` force clean-up of locally synced assets
 * CLI - `pear data` explore platform database collections `apps`, `dht`, `gc`, `manifest`, `assets`, `currents`
-* Integration - [`pear-api`][v2.0.0:pear-api] `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
+* Integration - `pear-api` `Pear.constructor.RTI`, `Pear.constructor.IPC`, `Pear.constructor.RUNTIME`
 * CLI - `pear dump --only` - filter by paths
 * CLI - `pear dump --no-prune` - disallow removals
 * CLI - `pear dump` downloads & peers stats output status
@@ -67,20 +149,17 @@ set to module bin (e.g. `pear-electron`), which must use `#!/usr/bin/env pear`, 
 * API - **MAJOR** `Pear.reload` **DEPRECATED** use `location.reload()` in UI (already unsupported in terminal)
 * API - **MAJOR** `Pear.config` **DEPRECATED** use `Pear.app`
 * Config - `pear.userAgent` **DEPRECATED** use `pear.gui.userAgent`
-* Externalization - `Pear` global now defined in [`pear-api`][v2.0.0:pear-api] allowing for API extension in other environments, such a Pear UI Libraries
-* Externalization - [`pear-api`][v2.0.0:pear-api] integration libraries for externalized integration
-* Externalization - GUI internals externalized to [`pear-electron`][v2.0.0:pear-electron] Pear UI Library
+* Externalization - `Pear` global now defined in `pear-api` allowing for API extension in other environments, such a Pear UI Libraries
+* Externalization - `pear-api` integration libraries for externalized integration
+* Externalization - GUI internals externalized to `pear-electron` Pear UI Library
 * Internal - boot flow stripped decoupled from electron boot flow
-* Internal - internal dependencies switched to [`pear-api`][v2.0.0:pear-api]
+* Internal - internal dependencies switched to `pear-api`
 * Internal - gc op refactor
 * CLI - help output tweaks/clarifications
 * CLI - error output improvements (classifications for stacks/non-stacks)
 * Internal - versions cmd refactor
 * Internal - seed op tweak (seeds are not apps)
-* Examples - various tweaks, including desktop updated to use [`pear-electron`][v2.0.0:pear-electron]
-
-
-[v2.0.0:pear-electron]: pear://runtime/doc?pear://electron/CHANGELOG.md "pear run 'pear://runtime/doc?pear://electron/CHANGELOG.md'"
+* Examples - various tweaks, including desktop updated to use `pear-electron`
 
 
 ## v1.18.0

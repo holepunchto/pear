@@ -28,7 +28,7 @@ const stagePearMain = path.join(
   'stage-pear-main'
 )
 
-test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
+test('basic stage min desktop app', async ({ teardown, ok, is, comment }) => {
   const dir = stageAppMin
 
   const helper = new Helper()
@@ -47,12 +47,20 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
+
   await staged.final
 
   const expectedStagedFiles = [
@@ -75,6 +83,7 @@ test('basic stage min desktop app', async ({ teardown, ok, comment }) => {
 test('basic stage min desktop app with entrypoints', async ({
   teardown,
   ok,
+  is,
   comment
 }) => {
   const dir = stageAppMinWithEntrypoints
@@ -95,12 +104,19 @@ test('basic stage min desktop app with entrypoints', async ({
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
   await staged.final
 
   const expectedStagedFiles = [
@@ -120,6 +136,7 @@ test('basic stage min desktop app with entrypoints', async ({
 test('basic stage min desktop app with only and include', async ({
   teardown,
   ok,
+  is,
   comment
 }) => {
   const dir = stageAppMinWithOnly
@@ -140,12 +157,19 @@ test('basic stage min desktop app with only and include', async ({
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })
 
-  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
   await staged.final
 
   const expectedStagedFiles = [
@@ -181,7 +205,7 @@ test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    if (data?.tag === 'byteDiff') {
+    if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
   })

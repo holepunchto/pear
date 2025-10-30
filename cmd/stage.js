@@ -19,7 +19,8 @@ function hints(skips) {
 
 const output = outputter('stage', {
   staging: ({ name, channel, link, verlink, current, release }) => {
-    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent version is ${current} with release set to ${release}\n`
+    const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
+    return `\n${ansi.pear} Staging ${name} into ${channel}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n${rel}\n`
   },
   skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
@@ -27,13 +28,11 @@ const output = outputter('stage', {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
   },
   compact: (data) => {
-    const { files, ignore, skips } = data
+    const { files, skips } = data
     return (
       'Compact stage static-analysis:-\n' +
       '- files: ' +
       files.length +
-      '- ignore: ' +
-      ignore.length +
       '- skips: ' +
       skips.length
     )
@@ -51,9 +50,11 @@ const output = outputter('stage', {
       return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   },
-  addendum: ({ version, release, channel, link, verlink }) =>
-    `Latest version is now ${version} with release set to ${release}\n\nUse \`pear release ${channel}\` to set release to latest version\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`,
-  byteDiff,
+  addendum: ({ version, release, channel, link, verlink }) => {
+    const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
+    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\nUse ${ansi.bold(`pear release ${channel}`)} to set release to latest\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
+  },
+  ['byte-diff']: byteDiff,
   preIo({ from, output, index, fd }, { preIo }) {
     if (!preIo) return {}
     const io = fd === 1 ? 'stdout' : 'stderr'

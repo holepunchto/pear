@@ -27,6 +27,8 @@ const runners = {
   info: require('./info'),
   dump: require('./dump'),
   touch: require('./touch'),
+  data: require('./data'),
+  changelog: require('./changelog'),
   shift: require('./shift'),
   drop: require('./drop'),
   sidecar: require('./sidecar'),
@@ -144,10 +146,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Supply no argument to view platform information.
     `,
-    arg('[link|channel]', 'Pear link or channel name to view info for'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--changelog', 'View changelog only'),
-    flag('--full-changelog', 'Full record of changes'),
+    arg('[link|channel]', 'Project to view info for'),
+    flag('--changelog', 'View changelog only').hide(),
+    flag('--full-changelog', 'Full record of changes').hide(),
+    flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
     flag('--key', 'View key only'),
@@ -187,6 +189,60 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
     runners.touch(ipc)
+  )
+
+  const data = command(
+    'data',
+    summary('Explore platform database'),
+    command(
+      'apps',
+      summary('Installed apps'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).apps(cmd)
+    ),
+    command('dht', summary('DHT known-nodes cache'), (cmd) =>
+      runners.data(ipc).dht(cmd)
+    ),
+    command('gc', summary('Garbage collection records'), (cmd) =>
+      runners.data(ipc).gc(cmd)
+    ),
+    command('manifest', summary('Database internal versioning'), (cmd) =>
+      runners.data(ipc).manifest(cmd)
+    ),
+    command(
+      'assets',
+      summary('On-disk assets for app'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).assets(cmd)
+    ),
+    command(
+      'currents',
+      summary('Current working versions'),
+      arg('[link]', 'Filter by link'),
+      (cmd) => runners.data(ipc).currents(cmd)
+    ),
+    flag('--secrets', 'Show sensitive information'),
+    flag('--json', 'Newline delimited JSON output'),
+    () => {
+      console.log(data.help())
+    }
+  )
+
+  const changelog = command(
+    'changelog',
+    summary('View project changelog'),
+    description`
+      Supply a link or channel to view application changelog
+
+      Shows Pear changelog by default
+    `,
+    arg('[link|channel]', 'Project to view changelog of'),
+    flag('--max|-m <n=10>', 'Maximum entries to show'),
+    flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
+    flag('--full', 'Show entire changelog'),
+    flag('--no-ask', 'Suppress permission prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.changelog(ipc)
   )
 
   const shift = command(
@@ -260,17 +316,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), (cmd) =>
-      runners.gc(ipc).releases(cmd)
-    ),
-    command('sidecars', summary('Clear running sidecars'), (cmd) =>
-      runners.gc(ipc).sidecars(cmd)
-    ),
+    command('releases', summary('Clear inactive releases'), runners.gc(ipc)),
+    command('sidecars', summary('Clear running sidecars'), runners.gc(ipc)),
     command(
       'assets',
       summary('Clear synced assets'),
       arg('[link]', 'Clear asset by link'),
-      (cmd) => runners.gc(ipc).assets(cmd)
+      runners.gc(ipc)
     ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
@@ -281,6 +333,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const versions = command(
     'versions',
     summary('View dependency versions'),
+    flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
     runners.versions(ipc)
   )
@@ -359,6 +412,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     touch,
     data,
     build,
+    changelog,
     shift,
     drop,
     reset,
@@ -426,7 +480,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   return program
 
-  function explain(bail) {
+  function explain(bail = {}) {
     if (!bail.reason && bail.err) {
       const known = errors.known()
       if (known.includes(bail.err.code) === false) {
@@ -444,6 +498,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
     const messageUsage = (bail) => bail.err.message
     const messageOnly = (bail) => bail.err.message
+    const opFail = (cmd) => cmd.err.info.message
     const codemap = new Map([
       ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
       [
@@ -459,14 +514,21 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       ['ERR_INVALID_INPUT', messageUsage],
       ['ERR_LEGACY', messageOnly],
       ['ERR_INVALID_TEMPLATE', messageOnly],
-      ['ERR_DIR_NONEMPTY', messageOnly]
+      ['ERR_DIR_NONEMPTY', messageOnly],
+      ['ERR_OPERATION_FAILED', opFail]
     ])
+    const nouse = [messageOnly, opFail]
     const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
-    const reason = codemap.has(code) ? codemap.get(code)(bail) : bail.reason
+    const ref = codemap.get(code)
+    const reason = codemap.has(code)
+      ? (codemap.get(code)(bail) ?? bail.reason)
+      : bail.reason
+    Bare.exitCode = 1
 
     print(reason, false)
-    if (codemap.get(code) === messageOnly || codemap.has(code) === false) return
+
+    if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
+
     print('\n' + bail.command.usage())
-    Bare.exitCode = 1
   }
 }

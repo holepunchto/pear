@@ -7,7 +7,8 @@ const plink = require('pear-link')
 const {
   ERR_PERMISSION_REQUIRED,
   ERR_DIR_NONEMPTY,
-  ERR_INVALID_INPUT
+  ERR_INVALID_INPUT,
+  ERR_NOT_FOUND
 } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
@@ -109,6 +110,15 @@ module.exports = class Dump extends Opstream {
           : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
+    if (entry === null) {
+      let isDir = false
+      for await (const entry of src.list(pathname)) {
+        isDir = true
+        break
+      }
+      if (!isDir) throw ERR_NOT_FOUND('not found', { link })
+    }
+
     if (dir === '-') {
       if (entry !== null) {
         const key = entry.key.split('/').pop()
@@ -147,12 +157,12 @@ module.exports = class Dump extends Opstream {
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
         })
       } else if (diff.op === 'change') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: {
             type: 0,
             sizes: [-diff.bytesRemoved, diff.bytesAdded],
@@ -161,7 +171,7 @@ module.exports = class Dump extends Opstream {
         })
       } else if (diff.op === 'remove') {
         this.push({
-          tag: 'byteDiff',
+          tag: 'byte-diff',
           data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
         })
       }

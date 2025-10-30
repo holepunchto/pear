@@ -100,11 +100,11 @@ module.exports = (ipc) =>
         )
       base.entrypoint = dir.slice(base.dir.length)
       dir = base.dir
-      if (dir.length > 1 && dir.endsWith('/')) dir = dir.slice(0, -1)
+      if (dir.length > 1 && dir.endsWith(path.sep)) dir = dir.slice(0, -1)
       if (isPath)
         link =
           plink.normalize(
-            pathToFileURL(path.join(dir, base.entrypoint || '/')).href
+            pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href
           ) +
           search +
           hash
