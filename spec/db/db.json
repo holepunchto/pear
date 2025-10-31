@@ -53,6 +53,7 @@
       "type": 2,
       "collection": "@pear/bundle",
       "unique": false,
+      "deprecated": false,
       "key": {
         "type": "string",
         "map": "tags"
@@ -79,6 +80,27 @@
       "derived": false,
       "key": ["link"],
       "trigger": null
+    },
+    {
+      "name": "preset",
+      "namespace": "pear",
+      "id": 7,
+      "type": 1,
+      "indexes": ["@pear/preset-by-command"],
+      "schema": "@pear/preset",
+      "derived": false,
+      "key": ["link"],
+      "trigger": null
+    },
+    {
+      "name": "preset-by-command",
+      "namespace": "pear",
+      "id": 8,
+      "type": 2,
+      "collection": "@pear/preset",
+      "unique": false,
+      "deprecated": false,
+      "key": ["link", "command"]
     }
   ]
 }

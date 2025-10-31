@@ -2,6 +2,7 @@
 // Schema Version: 1
 /* eslint-disable camelcase */
 /* eslint-disable quotes */
+/* eslint-disable space-before-function-paren */
 
 const { c } = require('hyperschema/runtime')
 
@@ -223,6 +224,31 @@ const encoding7 = {
   }
 }
 
+// @pear/preset
+const encoding8 = {
+  preencode(state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.command)
+    c.string.preencode(state, m.flags)
+  },
+  encode(state, m) {
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.command)
+    c.string.encode(state, m.flags)
+  },
+  decode(state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+
+    return {
+      link: r0,
+      command: r1,
+      flags: r2
+    }
+  }
+}
+
 function setVersion(v) {
   version = v
 }
@@ -262,6 +288,8 @@ function getEncoding(name) {
       return encoding6
     case '@pear/current':
       return encoding7
+    case '@pear/preset':
+      return encoding8
     default:
       throw new Error('Encoder not found ' + name)
   }
