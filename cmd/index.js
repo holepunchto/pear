@@ -353,7 +353,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<link>', 'Preset link'),
     arg('<command>', 'Preset command'),
     flag('--json', 'Newline delimited JSON output'),
-    rest('[...preset-flags]', 'Preset flags'),
+    rest('[...flags]', 'Flag presets'),
     sloppy({ flags: true }),
     runners.preset(ipc)
   )
