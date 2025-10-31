@@ -340,42 +340,29 @@ module.exports = class Model {
   }
 
   async getPreset(link, command) {
-    const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await this.db.get('@pear/bundle', get)
-    const preset = bundle?.presets.find((p) => p.command === command)
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/preset-by-command', get)
+    const preset = await this.db.get('@pear/preset-by-command', get)
     return preset || null
   }
 
-  async setPreset(link, command, configuration) {
+  async setPreset(link, command, flags) {
     const tx = await this.lock.enter()
-    const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await this.db.get('@pear/bundle', get)
-    const preset = { command, configuration }
-    const presets = bundle.presets
-      ? [...bundle.presets.filter((p) => p.command !== command), preset]
-      : [preset]
-    const update = { ...bundle, presets }
-    LOG.trace('db', 'INSERT', '@pear/bundle', update)
-    await tx.insert('@pear/bundle', update)
+    const preset = { link, command, flags }
+    LOG.trace('db', 'INSERT', '@pear/preset', preset)
+    await tx.insert('@pear/preset', preset)
     await this.lock.exit()
-    return update
+    return preset
   }
 
   async resetPreset(link, command) {
     const tx = await this.lock.enter()
-    const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await this.db.get('@pear/bundle', get)
-    const presets = bundle.presets
-      ? bundle.presets.filter((p) => p.command !== command)
-      : null
-    const update = { ...bundle, presets }
-    LOG.trace('db', 'INSERT', '@pear/bundle', update)
-    await tx.insert('@pear/bundle', update)
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/preset-by-command', get)
+    const del = await tx.get('@pear/preset-by-command', get)
+    LOG.trace('db', 'DELETE', '@pear/preset-by-command', del)
+    await tx.delete('@pear/preset', del)
     await this.lock.exit()
-    return update
   }
 
   async close() {

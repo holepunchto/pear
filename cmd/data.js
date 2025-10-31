@@ -77,7 +77,7 @@ const currentsOutput = (records) => {
 const presetsOutput = (result) => {
   let out = ''
   if (result.preset) {
-    out += `Preset: ${ansi.green(result.preset.configuration)}\n`
+    out += `Preset: ${ansi.green(result.preset.flags)}\n`
   } else {
     out += `No preset found.\n`
   }

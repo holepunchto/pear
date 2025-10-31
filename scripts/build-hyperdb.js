@@ -30,12 +30,17 @@ pearSchema.register({
   name: 'preset',
   fields: [
     {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
       name: 'command',
       type: 'string',
       required: true
     },
     {
-      name: 'configuration',
+      name: 'flags',
       type: 'string',
       required: true
     }
@@ -176,11 +181,6 @@ pearSchema.register({
       name: 'tags',
       type: 'string',
       array: true
-    },
-    {
-      name: 'presets',
-      type: '@pear/preset',
-      array: true
     }
   ]
 })
@@ -256,6 +256,12 @@ pearDB.collections.register({
   key: ['link']
 })
 
+pearDB.collections.register({
+  name: 'preset',
+  schema: '@pear/preset',
+  key: ['link']
+})
+
 pearDB.indexes.register({
   name: 'traits-by-tags',
   collection: '@pear/traits',
@@ -264,6 +270,12 @@ pearDB.indexes.register({
     type: 'string',
     map: 'tags'
   }
+})
+
+pearDB.indexes.register({
+  name: 'preset-by-command',
+  collection: '@pear/preset',
+  key: ['link', 'command']
 })
 
 Builder.toDisk(db)

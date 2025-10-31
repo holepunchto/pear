@@ -517,7 +517,7 @@ async function presets(cmd, ipc) {
         if (data.tag === 'preset') resolve(data.data.preset)
       })
     })
-    return preset?.configuration ? preset.configuration.split(' ') : []
+    return preset?.flags ? preset.flags.split(' ') : []
   } catch (err) {
     return []
   }

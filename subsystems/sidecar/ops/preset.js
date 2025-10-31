@@ -8,32 +8,18 @@ module.exports = class Preset extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, command, configuration, reset = false }) {
+  async #op({ link, command, flags, reset = false }) {
     const { sidecar } = this
     await sidecar.ready()
 
     link = plink.normalize(link)
 
-    if (configuration) {
-      let bundle = await this.sidecar.model.getBundle(link)
-      if (!bundle) {
-        await this.sidecar.model.addBundle(link, State.storageFromLink(link))
-      }
-      const updatedBundle = await this.sidecar.model.setPreset(
-        link,
-        command,
-        configuration
-      )
-      const preset = updatedBundle.presets.find((p) => p.command === command)
+    if (flags) {
+      const preset = await this.sidecar.model.setPreset(link, command, flags)
       this.push({ tag: 'preset', data: { preset } })
     } else {
       if (!reset) {
-        const bundle = await this.sidecar.model.getBundle(link)
-        const preset = bundle?.presets
-          ? command
-            ? bundle.presets.find((p) => p.command === command) || null
-            : bundle.presets || null
-          : null
+        const preset = await this.sidecar.model.getPreset(link, command)
         this.push({ tag: 'preset', data: { preset } })
       } else {
         await this.sidecar.model.resetPreset(link, command)

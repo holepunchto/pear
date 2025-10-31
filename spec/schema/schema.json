@@ -77,12 +77,6 @@
           "array": true,
           "type": "string",
           "version": 1
-        },
-        {
-          "name": "presets",
-          "array": true,
-          "type": "@pear/preset",
-          "version": 1
         }
       ]
     },
@@ -240,13 +234,19 @@
       "flagsPosition": -1,
       "fields": [
         {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
           "name": "command",
           "required": true,
           "type": "string",
           "version": 1
         },
         {
-          "name": "configuration",
+          "name": "flags",
           "required": true,
           "type": "string",
           "version": 1
