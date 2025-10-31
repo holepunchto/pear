@@ -349,7 +349,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const preset = command(
     'preset',
-    summary('Set app preset by link and command'),
+    summary('Preset flags per pear <cmd> <link>'),
     arg('<link>', 'Preset link'),
     arg('<command>', 'Preset command'),
     flag('--json', 'Newline delimited JSON output'),
