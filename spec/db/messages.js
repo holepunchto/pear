@@ -83,15 +83,13 @@ const encoding3 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.appStorage)
-    state.end++ // max flag is 4 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
     if (m.tags) encoding3_3.preencode(state, m.tags)
-    if (m.presets) encoding3_4.preencode(state, m.presets)
   },
   encode(state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0) | (m.presets ? 4 : 0)
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -99,7 +97,6 @@ const encoding3 = {
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
     if (m.tags) encoding3_3.encode(state, m.tags)
-    if (m.presets) encoding3_4.encode(state, m.presets)
   },
   decode(state) {
     const r0 = c.string.decode(state)
@@ -110,8 +107,7 @@ const encoding3 = {
       link: r0,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding3_3.decode(state) : null,
-      presets: (flags & 4) !== 0 ? encoding3_4.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding3_3.decode(state) : null
     }
   }
 }
@@ -231,20 +227,24 @@ const encoding7 = {
 // @pear/preset
 const encoding8 = {
   preencode(state, m) {
+    c.string.preencode(state, m.link)
     c.string.preencode(state, m.command)
-    c.string.preencode(state, m.configuration)
+    c.string.preencode(state, m.flags)
   },
   encode(state, m) {
+    c.string.encode(state, m.link)
     c.string.encode(state, m.command)
-    c.string.encode(state, m.configuration)
+    c.string.encode(state, m.flags)
   },
   decode(state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
 
     return {
-      command: r0,
-      configuration: r1
+      link: r0,
+      command: r1,
+      flags: r2
     }
   }
 }
@@ -267,22 +267,19 @@ const encoding10_3 = encoding3_3
 const encoding10 = {
   preencode(state, m) {
     c.string.preencode(state, m.appStorage)
-    state.end++ // max flag is 4 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
     if (m.tags) encoding10_3.preencode(state, m.tags)
-    if (m.presets) encoding10_4.preencode(state, m.presets)
   },
   encode(state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0) | (m.presets ? 4 : 0)
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.appStorage)
     c.uint.encode(state, flags)
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
     if (m.tags) encoding10_3.encode(state, m.tags)
-    if (m.presets) encoding10_4.encode(state, m.presets)
   },
   decode(state) {
     const r1 = c.string.decode(state)
@@ -292,8 +289,7 @@ const encoding10 = {
       link: null,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding10_3.decode(state) : null,
-      presets: (flags & 4) !== 0 ? encoding10_4.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding10_3.decode(state) : null
     }
   }
 }
@@ -366,10 +362,27 @@ const encoding12 = {
   }
 }
 
-// @pear/bundle.presets, deferred due to recusive use
-const encoding3_4 = c.array(c.frame(encoding8))
-// @pear/bundle/hyperdb#3.presets, deferred due to recusive use
-const encoding10_4 = encoding3_4
+// @pear/preset/hyperdb#7
+const encoding13 = {
+  preencode(state, m) {
+    c.string.preencode(state, m.command)
+    c.string.preencode(state, m.flags)
+  },
+  encode(state, m) {
+    c.string.encode(state, m.command)
+    c.string.encode(state, m.flags)
+  },
+  decode(state) {
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+
+    return {
+      link: null,
+      command: r1,
+      flags: r2
+    }
+  }
+}
 
 function setVersion(v) {
   version = v
@@ -420,6 +433,8 @@ function getEncoding(name) {
       return encoding11
     case '@pear/current/hyperdb#6':
       return encoding12
+    case '@pear/preset/hyperdb#7':
+      return encoding13
     default:
       throw new Error('Encoder not found ' + name)
   }

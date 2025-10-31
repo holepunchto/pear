@@ -83,15 +83,13 @@ const encoding3 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
     c.string.preencode(state, m.appStorage)
-    state.end++ // max flag is 4 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
     if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
     if (m.tags) encoding3_3.preencode(state, m.tags)
-    if (m.presets) encoding3_4.preencode(state, m.presets)
   },
   encode(state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0) | (m.presets ? 4 : 0)
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -99,7 +97,6 @@ const encoding3 = {
 
     if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
     if (m.tags) encoding3_3.encode(state, m.tags)
-    if (m.presets) encoding3_4.encode(state, m.presets)
   },
   decode(state) {
     const r0 = c.string.decode(state)
@@ -110,8 +107,7 @@ const encoding3 = {
       link: r0,
       appStorage: r1,
       encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding3_3.decode(state) : null,
-      presets: (flags & 4) !== 0 ? encoding3_4.decode(state) : null
+      tags: (flags & 2) !== 0 ? encoding3_3.decode(state) : null
     }
   }
 }
@@ -231,26 +227,27 @@ const encoding7 = {
 // @pear/preset
 const encoding8 = {
   preencode(state, m) {
+    c.string.preencode(state, m.link)
     c.string.preencode(state, m.command)
-    c.string.preencode(state, m.configuration)
+    c.string.preencode(state, m.flags)
   },
   encode(state, m) {
+    c.string.encode(state, m.link)
     c.string.encode(state, m.command)
-    c.string.encode(state, m.configuration)
+    c.string.encode(state, m.flags)
   },
   decode(state) {
     const r0 = c.string.decode(state)
     const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
 
     return {
-      command: r0,
-      configuration: r1
+      link: r0,
+      command: r1,
+      flags: r2
     }
   }
 }
-
-// @pear/bundle.presets, deferred due to recusive use
-const encoding3_4 = c.array(c.frame(encoding8))
 
 function setVersion(v) {
   version = v
