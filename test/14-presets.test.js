@@ -40,20 +40,20 @@ test('set preset and get preset', async ({
   preset = await presets({
     link,
     command: 'run',
-    configuration: '--dev --no-ask'
+    flags: '--dev --no-ask'
   })
 
   ok(preset, 'should have one preset')
   is(preset.command, 'run', 'preset command should be "run"')
-  is(preset.configuration, '--dev --no-ask', 'preset config should match')
+  is(preset.flags, '--dev --no-ask', 'preset flags should match')
 
   preset = await presets({ link, command: 'run' })
 
   is(preset.command, 'run', 'stored preset command should be "run"')
   is(
-    preset.configuration,
+    preset.flags,
     '--dev --no-ask',
-    'stored preset config should be "--dev --no-ask"'
+    'stored preset flags should be "--dev --no-ask"'
   )
 
   const run = await Helper.run({ link })
@@ -63,20 +63,19 @@ test('set preset and get preset', async ({
   is(flags.ask, false, 'no-ask flag is set')
   await Helper.untilClose(run.pipe)
 
-  await presets({
+  preset = await presets({
     link,
     command: 'run',
     reset: true
   })
-
   preset = await presets({ link, command: 'run' })
   is(preset, null, 'initial run preset should be null after reset')
 
-  async function presets({ link, command, configuration, reset }) {
+  async function presets({ link, command, flags, reset }) {
     const presetStream = await helper.preset({
       link,
       command,
-      configuration,
+      flags,
       reset
     })
     teardown(() => Helper.teardownStream(presetStream))
