@@ -360,8 +360,10 @@ module.exports = class Model {
     const get = { link: applink(link), command }
     LOG.trace('db', 'GET', '@pear/presets-by-command', get)
     const del = await tx.get('@pear/presets-by-command', get)
-    LOG.trace('db', 'DELETE', '@pear/presets-by-command', del)
-    await tx.delete('@pear/presets', del)
+    if (del) {
+      LOG.trace('db', 'DELETE', '@pear/presets-by-command', del)
+      await tx.delete('@pear/presets', del)
+    }
     await this.lock.exit()
   }
 

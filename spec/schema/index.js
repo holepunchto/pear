@@ -89,9 +89,7 @@ const encoding3 = {
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) |
-      (m.tags ? 2 : 0)
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)

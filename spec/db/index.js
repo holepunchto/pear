@@ -7,10 +7,9 @@ const { version, getEncoding, setVersion } = require('./messages.js')
 const helpers0 = require('../helpers.js')
 
 // '@pear/manifest' collection key
-const collection0_key = new IndexEncoder([
-], { prefix: 0 })
+const collection0_key = new IndexEncoder([], { prefix: 0 })
 
-function collection0_indexify (record) {
+function collection0_indexify(record) {
   return []
 }
 
@@ -18,13 +17,13 @@ function collection0_indexify (record) {
 const collection0_enc = getEncoding('@pear/manifest')
 
 // '@pear/manifest' reconstruction function
-function collection0_reconstruct (version, keyBuf, valueBuf) {
+function collection0_reconstruct(version, keyBuf, valueBuf) {
   setVersion(version)
   const record = c.decode(collection0_enc, valueBuf)
   return record
 }
 // '@pear/manifest' key reconstruction function
-function collection0_reconstruct_key (keyBuf) {
+function collection0_reconstruct_key(keyBuf) {
   return {}
 }
 
@@ -32,11 +31,11 @@ function collection0_reconstruct_key (keyBuf) {
 const collection0 = {
   name: '@pear/manifest',
   id: 0,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = []
     return collection0_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection0_key.encodeRange({
       gt: gt ? collection0_indexify(gt) : null,
       lt: lt ? collection0_indexify(lt) : null,
@@ -44,7 +43,7 @@ const collection0 = {
       lte: lte ? collection0_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection0_enc, record)
   },
@@ -55,10 +54,9 @@ const collection0 = {
 }
 
 // '@pear/dht' collection key
-const collection1_key = new IndexEncoder([
-], { prefix: 1 })
+const collection1_key = new IndexEncoder([], { prefix: 1 })
 
-function collection1_indexify (record) {
+function collection1_indexify(record) {
   return []
 }
 
@@ -66,13 +64,13 @@ function collection1_indexify (record) {
 const collection1_enc = getEncoding('@pear/dht')
 
 // '@pear/dht' reconstruction function
-function collection1_reconstruct (version, keyBuf, valueBuf) {
+function collection1_reconstruct(version, keyBuf, valueBuf) {
   setVersion(version)
   const record = c.decode(collection1_enc, valueBuf)
   return record
 }
 // '@pear/dht' key reconstruction function
-function collection1_reconstruct_key (keyBuf) {
+function collection1_reconstruct_key(keyBuf) {
   return {}
 }
 
@@ -80,11 +78,11 @@ function collection1_reconstruct_key (keyBuf) {
 const collection1 = {
   name: '@pear/dht',
   id: 1,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = []
     return collection1_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection1_key.encodeRange({
       gt: gt ? collection1_indexify(gt) : null,
       lt: lt ? collection1_indexify(lt) : null,
@@ -92,7 +90,7 @@ const collection1 = {
       lte: lte ? collection1_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection1_enc, record)
   },
@@ -103,11 +101,9 @@ const collection1 = {
 }
 
 // '@pear/gc' collection key
-const collection2_key = new IndexEncoder([
-  IndexEncoder.STRING
-], { prefix: 2 })
+const collection2_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 2 })
 
-function collection2_indexify (record) {
+function collection2_indexify(record) {
   const a = record.path
   return a === undefined ? [] : [a]
 }
@@ -116,7 +112,7 @@ function collection2_indexify (record) {
 const collection2_enc = getEncoding('@pear/gc/hyperdb#2')
 
 // '@pear/gc' reconstruction function
-function collection2_reconstruct (version, keyBuf, valueBuf) {
+function collection2_reconstruct(version, keyBuf, valueBuf) {
   const key = collection2_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection2_enc, valueBuf)
@@ -124,7 +120,7 @@ function collection2_reconstruct (version, keyBuf, valueBuf) {
   return record
 }
 // '@pear/gc' key reconstruction function
-function collection2_reconstruct_key (keyBuf) {
+function collection2_reconstruct_key(keyBuf) {
   const key = collection2_key.decode(keyBuf)
   return {
     path: key[0]
@@ -135,11 +131,11 @@ function collection2_reconstruct_key (keyBuf) {
 const collection2 = {
   name: '@pear/gc',
   id: 2,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = [record.path]
     return collection2_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection2_key.encodeRange({
       gt: gt ? collection2_indexify(gt) : null,
       lt: lt ? collection2_indexify(lt) : null,
@@ -147,7 +143,7 @@ const collection2 = {
       lte: lte ? collection2_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection2_enc, record)
   },
@@ -160,7 +156,7 @@ const collection2 = {
 // '@pear/traits' collection key
 const collection3_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 3 })
 
-function collection3_indexify (record) {
+function collection3_indexify(record) {
   const a = record.link
   return a === undefined ? [] : [a]
 }
@@ -188,11 +184,11 @@ function collection3_reconstruct_key(keyBuf) {
 const collection3 = {
   name: '@pear/traits',
   id: 3,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = [record.link]
     return collection3_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection3_key.encodeRange({
       gt: gt ? collection3_indexify(gt) : null,
       lt: lt ? collection3_indexify(lt) : null,
@@ -200,7 +196,7 @@ const collection3 = {
       lte: lte ? collection3_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection3_enc, record)
   },
@@ -294,11 +290,11 @@ function collection5_reconstruct_key(keyBuf) {
 const collection5 = {
   name: '@pear/current',
   id: 5,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = [record.link]
     return collection5_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection5_key.encodeRange({
       gt: gt ? collection5_indexify(gt) : null,
       lt: lt ? collection5_indexify(lt) : null,
@@ -306,7 +302,7 @@ const collection5 = {
       lte: lte ? collection5_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection5_enc, record)
   },
@@ -362,11 +358,9 @@ const index6 = {
 collection3.indexes.push(index6)
 
 // '@pear/presets' collection key
-const collection7_key = new IndexEncoder([
-  IndexEncoder.STRING
-], { prefix: 7 })
+const collection7_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 7 })
 
-function collection7_indexify (record) {
+function collection7_indexify(record) {
   const a = record.link
   return a === undefined ? [] : [a]
 }
@@ -375,7 +369,7 @@ function collection7_indexify (record) {
 const collection7_enc = getEncoding('@pear/presets/hyperdb#7')
 
 // '@pear/presets' reconstruction function
-function collection7_reconstruct (version, keyBuf, valueBuf) {
+function collection7_reconstruct(version, keyBuf, valueBuf) {
   const key = collection7_key.decode(keyBuf)
   setVersion(version)
   const record = c.decode(collection7_enc, valueBuf)
@@ -383,7 +377,7 @@ function collection7_reconstruct (version, keyBuf, valueBuf) {
   return record
 }
 // '@pear/presets' key reconstruction function
-function collection7_reconstruct_key (keyBuf) {
+function collection7_reconstruct_key(keyBuf) {
   const key = collection7_key.decode(keyBuf)
   return {
     link: key[0]
@@ -394,11 +388,11 @@ function collection7_reconstruct_key (keyBuf) {
 const collection7 = {
   name: '@pear/presets',
   id: 7,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = [record.link]
     return collection7_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection7_key.encodeRange({
       gt: gt ? collection7_indexify(gt) : null,
       lt: lt ? collection7_indexify(lt) : null,
@@ -406,7 +400,7 @@ const collection7 = {
       lte: lte ? collection7_indexify(lte) : null
     })
   },
-  encodeValue (version, record) {
+  encodeValue(version, record) {
     setVersion(version)
     return c.encode(collection7_enc, record)
   },
@@ -417,13 +411,12 @@ const collection7 = {
 }
 
 // '@pear/presets-by-command' collection key
-const index8_key = new IndexEncoder([
-  IndexEncoder.STRING,
-  IndexEncoder.STRING,
-  IndexEncoder.STRING
-], { prefix: 8 })
+const index8_key = new IndexEncoder(
+  [IndexEncoder.STRING, IndexEncoder.STRING, IndexEncoder.STRING],
+  { prefix: 8 }
+)
 
-function index8_indexify (record) {
+function index8_indexify(record) {
   const arr = []
 
   const a0 = record.link
@@ -445,10 +438,10 @@ function index8_indexify (record) {
 const index8 = {
   name: '@pear/presets-by-command',
   id: 8,
-  encodeKey (record) {
+  encodeKey(record) {
     return index8_key.encode(index8_indexify(record))
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return index8_key.encodeRange({
       gt: gt ? index8_indexify(gt) : null,
       lt: lt ? index8_indexify(lt) : null,
@@ -457,7 +450,7 @@ const index8 = {
     })
   },
   encodeValue: (doc) => index8.collection.encodeKey(doc),
-  encodeIndexKeys (record, context) {
+  encodeIndexKeys(record, context) {
     return [index8_key.encode([record.link, record.command, record.link])]
   },
   reconstruct: (keyBuf, valueBuf) => valueBuf,
@@ -477,9 +470,15 @@ const collections = [
 
 const indexes = [index6]
 
-module.exports = { version, collections, indexes, resolveCollection, resolveIndex }
+module.exports = {
+  version,
+  collections,
+  indexes,
+  resolveCollection,
+  resolveIndex
+}
 
-function resolveCollection (name) {
+function resolveCollection(name) {
   switch (name) {
     case '@pear/manifest':
       return collection0
@@ -498,7 +497,7 @@ function resolveCollection (name) {
   }
 }
 
-function resolveIndex (name) {
+function resolveIndex(name) {
   switch (name) {
     case '@pear/traits-by-tags':
       return index6
