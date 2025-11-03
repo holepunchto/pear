@@ -89,7 +89,9 @@ const encoding3 = {
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
+    const flags =
+      (m.encryptionKey ? 1 : 0) |
+      (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -145,7 +147,10 @@ const encoding5 = {
     if (m.bytes) c.uint.preencode(state, m.bytes)
   },
   encode(state, m) {
-    const flags = (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0)
+    const flags =
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -224,7 +229,7 @@ const encoding7 = {
   }
 }
 
-// @pear/preset
+// @pear/presets
 const encoding8 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
@@ -288,7 +293,7 @@ function getEncoding(name) {
       return encoding6
     case '@pear/current':
       return encoding7
-    case '@pear/preset':
+    case '@pear/presets':
       return encoding8
     default:
       throw new Error('Encoder not found ' + name)
