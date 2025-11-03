@@ -33,23 +33,8 @@ test('staged manifest assets fetched by run', async (t) => {
   const assetBuffer = Buffer.allocUnsafe(4096)
   await drive.put('/asset', assetBuffer)
 
-  const appPkgPath = path.join(appWithAssetsDir, 'package.json')
-  const appPkg = JSON.parse(await fs.promises.readFile(appPkgPath, 'utf8'))
-  const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
-  appPkg.pear.assets.ui.link = link
-  await fs.promises.writeFile(
-    path.join(appWithAssetsDir, 'package.json'),
-    JSON.stringify(appPkg, null, 2)
-  )
-
-  t.teardown(async () => {
-    // revert change in package.json
-    appPkg.pear.assets.ui.link = ''
-    await fs.promises.writeFile(
-      path.join(appWithAssetsDir, 'package.json'),
-      JSON.stringify(appPkg, null, 2)
-    )
-  })
+  let link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
+  await updateAsset(link)
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
@@ -61,17 +46,63 @@ test('staged manifest assets fetched by run', async (t) => {
   t.teardown(() => {
     Pear.app.dir = base
   })
-  const run = await Helper.run({ link: appWithAssetsDir })
+  let run = await Helper.run({ link: appWithAssetsDir })
   await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
 
-  const data = await helper.data({ resource: 'assets' })
-  const assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
-  const assets = await assetsPipe.assets
+  let data = await helper.data({ resource: 'assets' })
+  let assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
+  let assets = await assetsPipe.assets
 
   const asset = await assets.find((e) => e.link === link)
   t.ok(asset)
 
-  const assetBin = await fs.promises.readFile(path.join(asset.path, 'asset'))
+  let assetBin = await fs.promises.readFile(path.join(asset.path, 'asset'))
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
+
+  t.comment('update asset')
+  const assetBufferUpdate = Buffer.allocUnsafe(4096)
+  await drive.put('/asset', assetBufferUpdate)
+  link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
+  await updateAsset(link)
+
+  t.comment('run app with updated asset')
+  run = await Helper.run({ link: appWithAssetsDir })
+  await Helper.untilResult(run.pipe)
+  await Helper.untilClose(run.pipe)
+
+  data = await helper.data({ resource: 'assets' })
+  assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
+  assets = await assetsPipe.assets
+
+  const assetUpdate = await assets.find((e) => e.link === link)
+  t.ok(assetUpdate)
+
+  const assetBinUpdate = await fs.promises.readFile(
+    path.join(assetUpdate.path, 'asset')
+  )
+  t.is(assetBufferUpdate.equals(assetBuffer), false, 'asset was updated')
+  t.ok(
+    assetBufferUpdate.equals(assetBinUpdate),
+    'on disk asset is updated fixture asset'
+  )
+
+  async function updateAsset(link) {
+    const appPkgPath = path.join(appWithAssetsDir, 'package.json')
+    const appPkg = JSON.parse(await fs.promises.readFile(appPkgPath, 'utf8'))
+    appPkg.pear.assets.ui.link = link
+    await fs.promises.writeFile(
+      path.join(appWithAssetsDir, 'package.json'),
+      JSON.stringify(appPkg, null, 2)
+    )
+
+    t.teardown(async () => {
+      // revert change in package.json
+      appPkg.pear.assets.ui.link = ''
+      await fs.promises.writeFile(
+        path.join(appWithAssetsDir, 'package.json'),
+        JSON.stringify(appPkg, null, 2)
+      )
+    })
+  }
 })
