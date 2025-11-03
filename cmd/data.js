@@ -76,10 +76,10 @@ const currentsOutput = (records) => {
 
 const presetsOutput = (result) => {
   let out = ''
-  if (result.preset) {
-    out += `Preset: ${ansi.green(result.preset.flags)}\n`
+  if (result.presets) {
+    out += `Presets: ${ansi.green(result.presets.flags)}\n`
   } else {
-    out += `No preset found.\n`
+    out += `No presets found.\n`
   }
   return out
 }
@@ -91,7 +91,7 @@ const output = outputter('data', {
   manifest: (result) => manifestOutput(result),
   assets: (result) => assetsOutput(result),
   currents: (result) => currentsOutput(result),
-  preset: (result) => presetsOutput(result)
+  presets: (result) => presetsOutput(result)
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -188,8 +188,8 @@ class Data {
     const { json } = cmd.command.parent.flags
     await output(
       json,
-      this.ipc.preset({ command, link }),
-      { tag: 'preset' },
+      this.ipc.presets({ command, link }),
+      { tag: 'presets' },
       this.ipc
     )
   }

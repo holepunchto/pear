@@ -176,7 +176,7 @@
       ]
     },
     {
-      "name": "preset",
+      "name": "presets",
       "namespace": "pear",
       "compact": false,
       "flagsPosition": -1,

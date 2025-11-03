@@ -55,7 +55,7 @@ const ops = {
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Run: require('./ops/run'),
-  Preset: require('./ops/preset')
+  Presets: require('./ops/presets')
 }
 
 // ensure that we are registered as a link handler
@@ -623,8 +623,8 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  preset(params, client) {
-    return new ops.Preset(params, client, this)
+  presets(params, client) {
+    return new ops.Presets(params, client, this)
   }
 
   cutover(params, client) {

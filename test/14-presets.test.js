@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
 
-test('set preset and get preset', async ({
+test('set presets and get presets', async ({
   teardown,
   plan,
   comment,
@@ -34,26 +34,26 @@ test('set preset and get preset', async ({
   const { key } = await staged.addendum
   const link = `pear://${key}`
 
-  let preset = await presets({ link, command: 'run' })
-  is(preset, null, 'initial run preset should be null')
+  let presets = await getPresets({ link, command: 'run' })
+  is(presets, null, 'initial run presets should be null')
 
-  preset = await presets({
+  presets = await getPresets({
     link,
     command: 'run',
     flags: '--dev --no-ask'
   })
 
-  ok(preset, 'should have one preset')
-  is(preset.command, 'run', 'preset command should be "run"')
-  is(preset.flags, '--dev --no-ask', 'preset flags should match')
+  ok(presets, 'should have one presets')
+  is(presets.command, 'run', 'presets command should be "run"')
+  is(presets.flags, '--dev --no-ask', 'presets flags should match')
 
-  preset = await presets({ link, command: 'run' })
+  presets = await getPresets({ link, command: 'run' })
 
-  is(preset.command, 'run', 'stored preset command should be "run"')
+  is(presets.command, 'run', 'stored presets command should be "run"')
   is(
-    preset.flags,
+    presets.flags,
     '--dev --no-ask',
-    'stored preset flags should be "--dev --no-ask"'
+    'stored presets flags should be "--dev --no-ask"'
   )
 
   const run = await Helper.run({ link })
@@ -63,23 +63,23 @@ test('set preset and get preset', async ({
   is(flags.ask, false, 'no-ask flag is set')
   await Helper.untilClose(run.pipe)
 
-  preset = await presets({
+  presets = await getPresets({
     link,
     command: 'run',
     reset: true
   })
-  preset = await presets({ link, command: 'run' })
-  is(preset, null, 'initial run preset should be null after reset')
+  presets = await getPresets({ link, command: 'run' })
+  is(presets, null, 'initial run presets should be null after reset')
 
-  async function presets({ link, command, flags, reset }) {
-    const presetStream = await helper.preset({
+  async function getPresets({ link, command, flags, reset }) {
+    const presetsStream = await helper.presets({
       link,
       command,
       flags,
       reset
     })
-    teardown(() => Helper.teardownStream(presetStream))
-    const result = await Helper.pick(presetStream, { tag: 'preset' })
-    return result.preset
+    teardown(() => Helper.teardownStream(presetsStream))
+    const result = await Helper.pick(presetsStream, { tag: 'presets' })
+    return result.presets
   }
 })

@@ -32,7 +32,9 @@
       "indexes": [],
       "schema": "@pear/gc",
       "derived": false,
-      "key": ["path"],
+      "key": [
+        "path"
+      ],
       "trigger": null
     },
     {
@@ -40,10 +42,14 @@
       "namespace": "pear",
       "id": 3,
       "type": 1,
-      "indexes": ["@pear/bundle-by-tags"],
+      "indexes": [
+        "@pear/bundle-by-tags"
+      ],
       "schema": "@pear/bundle",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
@@ -67,7 +73,9 @@
       "indexes": [],
       "schema": "@pear/assets",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
@@ -78,29 +86,38 @@
       "indexes": [],
       "schema": "@pear/current",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
-      "name": "preset",
+      "name": "presets",
       "namespace": "pear",
       "id": 7,
       "type": 1,
-      "indexes": ["@pear/preset-by-command"],
-      "schema": "@pear/preset",
+      "indexes": [
+        "@pear/presets-by-command"
+      ],
+      "schema": "@pear/presets",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
-      "name": "preset-by-command",
+      "name": "presets-by-command",
       "namespace": "pear",
       "id": 8,
       "type": 2,
-      "collection": "@pear/preset",
+      "collection": "@pear/presets",
       "unique": false,
       "deprecated": false,
-      "key": ["link", "command"]
+      "key": [
+        "link",
+        "command"
+      ]
     }
   ]
 }
