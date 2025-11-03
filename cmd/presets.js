@@ -4,9 +4,9 @@ const output = outputter('presets', {
   presets: ({ presets }, { link }) => {
     let out = ''
     if (presets) {
-      out += `Presets for ${ansi.bold(link)} ${ansi.bold(presets.command)}: ${ansi.green(presets.flags)}\n`
+      out += `${presets.flags}\n`
     } else {
-      out += `Presets reset for ${ansi.bold(link)}\n`
+      out += `[ none set ]\n`
     }
     return out
   },
