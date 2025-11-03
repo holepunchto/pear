@@ -32,7 +32,9 @@
       "indexes": [],
       "schema": "@pear/gc",
       "derived": false,
-      "key": ["path"],
+      "key": [
+        "path"
+      ],
       "trigger": null
     },
     {
@@ -43,7 +45,9 @@
       "indexes": ["@pear/traits-by-tags"],
       "schema": "@pear/traits",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
@@ -54,7 +58,9 @@
       "indexes": [],
       "schema": "@pear/assets",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {
@@ -65,7 +71,9 @@
       "indexes": [],
       "schema": "@pear/current",
       "derived": false,
-      "key": ["link"],
+      "key": [
+        "link"
+      ],
       "trigger": null
     },
     {

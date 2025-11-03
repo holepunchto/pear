@@ -89,7 +89,9 @@ const encoding3 = {
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
+    const flags =
+      (m.encryptionKey ? 1 : 0) |
+      (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -278,8 +280,12 @@ const encoding8 = {
 
 // @pear/gc/hyperdb#2
 const encoding9 = {
-  preencode(state, m) {},
-  encode(state, m) {},
+  preencode(state, m) {
+
+  },
+  encode(state, m) {
+
+  },
   decode(state) {
     return {
       path: null
@@ -300,7 +306,9 @@ const encoding10 = {
     if (m.tags) encoding10_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
+    const flags =
+      (m.encryptionKey ? 1 : 0) |
+      (m.tags ? 2 : 0)
 
     c.string.encode(state, m.appStorage)
     c.uint.encode(state, flags)
@@ -450,7 +458,7 @@ function getEncoding(name) {
       return encoding11
     case '@pear/current/hyperdb#5':
       return encoding12
-    case '@pear/preset/hyperdb#7':
+    case '@pear/presets/hyperdb#7':
       return encoding13
     default:
       throw new Error('Encoder not found ' + name)

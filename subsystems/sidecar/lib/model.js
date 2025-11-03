@@ -339,29 +339,29 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
-  async getPreset(link, command) {
+  async getPresets(link, command) {
     const get = { link: applink(link), command }
-    LOG.trace('db', 'GET', '@pear/preset-by-command', get)
-    const preset = await this.db.get('@pear/preset-by-command', get)
-    return preset || null
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const presets = await this.db.get('@pear/presets-by-command', get)
+    return presets || null
   }
 
-  async setPreset(link, command, flags) {
+  async setPresets(link, command, flags) {
     const tx = await this.lock.enter()
-    const preset = { link, command, flags }
-    LOG.trace('db', 'INSERT', '@pear/preset', preset)
-    await tx.insert('@pear/preset', preset)
+    const presets = { link, command, flags }
+    LOG.trace('db', 'INSERT', '@pear/presets', presets)
+    await tx.insert('@pear/presets', presets)
     await this.lock.exit()
-    return preset
+    return presets
   }
 
-  async resetPreset(link, command) {
+  async resetPresets(link, command) {
     const tx = await this.lock.enter()
     const get = { link: applink(link), command }
-    LOG.trace('db', 'GET', '@pear/preset-by-command', get)
-    const del = await tx.get('@pear/preset-by-command', get)
-    LOG.trace('db', 'DELETE', '@pear/preset-by-command', del)
-    await tx.delete('@pear/preset', del)
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const del = await tx.get('@pear/presets-by-command', get)
+    LOG.trace('db', 'DELETE', '@pear/presets-by-command', del)
+    await tx.delete('@pear/presets', del)
     await this.lock.exit()
   }
 

@@ -27,7 +27,7 @@ pearSchema.register({
 })
 
 pearSchema.register({
-  name: 'preset',
+  name: 'presets',
   fields: [
     {
       name: 'link',
@@ -257,8 +257,8 @@ pearDB.collections.register({
 })
 
 pearDB.collections.register({
-  name: 'preset',
-  schema: '@pear/preset',
+  name: 'presets',
+  schema: '@pear/presets',
   key: ['link']
 })
 
@@ -273,8 +273,8 @@ pearDB.indexes.register({
 })
 
 pearDB.indexes.register({
-  name: 'preset-by-command',
-  collection: '@pear/preset',
+  name: 'presets-by-command',
+  collection: '@pear/presets',
   key: ['link', 'command']
 })
 

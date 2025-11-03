@@ -36,7 +36,7 @@ const runners = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  preset: require('./preset')
+  presets: require('./presets')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -224,9 +224,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ),
     command(
       'presets',
-      summary('Preset by link and command'),
-      arg('[link]', 'Preset link'),
-      arg('[command]', 'Preset command'),
+      summary('Presets by link and command'),
+      arg('[link]', 'Presets link'),
+      arg('[command]', 'Presets command'),
       (cmd) => runners.data(ipc).presets(cmd)
     ),
     flag('--secrets', 'Show sensitive information'),
@@ -347,7 +347,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
-  const preset = command(
+  const presets = command(
     'preset',
     summary('Preset flags per pear <cmd> <link>'),
     arg('<link>', 'App pear or file link to preset flags for'),
@@ -355,7 +355,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     rest('[...flags]', 'Flag presets'),
     sloppy({ flags: true }),
-    runners.preset(ipc)
+    runners.presets(ipc)
   )
 
   const help = command(
@@ -389,7 +389,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
-    preset,
+    presets,
     help,
     footer(usage.footer),
     bail(explain),
@@ -437,8 +437,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const presetArgs = await presets(cmd.parse(argv, { run: false }), ipc)
-  const combinedArgs = [argv[0], ...presetArgs, ...argv.slice(1)]
+  const presetsArgs = await getPresets(cmd.parse(argv, { run: false }), ipc)
+  const combinedArgs = [argv[0], ...presetsArgs, ...argv.slice(1)]
   const program = cmd.parse(combinedArgs)
 
   if (program === null) {
@@ -506,18 +506,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 }
 
-async function presets(cmd, ipc) {
+async function getPresets(cmd, ipc) {
   if (!cmd || !cmd.args.link) return []
   const command = cmd.name
   const link = cmd.args.link
   try {
-    const presetStream = await ipc.preset({ link, command })
-    const preset = await new Promise((resolve) => {
-      presetStream.on('data', (data) => {
-        if (data.tag === 'preset') resolve(data.data.preset)
+    const presetsStream = await ipc.presets({ link, command })
+    const presets = await new Promise((resolve) => {
+      presetsStream.on('data', (data) => {
+        if (data.tag === 'presets') resolve(data.data.presets)
       })
     })
-    return preset?.flags ? preset.flags.split(' ') : []
+    return presets?.flags ? presets.flags.split(' ') : []
   } catch (err) {
     return []
   }
