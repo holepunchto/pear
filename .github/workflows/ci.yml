@@ -33,7 +33,7 @@ jobs:
         run: npm install
 
       - name: Bootstrap
-        run: npm run bootstrap -- --external-corestore
+        run: npm run bootstrap
 
       - name: Install Bare
         run: npm i -g bare-runtime
