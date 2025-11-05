@@ -34,7 +34,7 @@ test('pre should update config when running locally', async function ({
   plan(4)
 
   comment('\trunning')
-  const { pipe } = await Helper.runStdio({ link: preConfigure })
+  const { pipe } = await Helper.rawRun({ link: preConfigure })
 
   const preResult = await Helper.untilData(pipe)
   is(preResult.tag, 'stdout', 'should output to stdout')
@@ -75,7 +75,7 @@ test('pre should not update config when running staged', async function ({
   await until.final
 
   comment('\trunning')
-  const { pipe } = await Helper.runStdio({ link })
+  const { pipe } = await Helper.rawRun({ link })
 
   const result = await Helper.untilData(pipe)
   is(result.tag, 'stdout', 'should output to stdout')
