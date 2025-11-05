@@ -38,13 +38,15 @@ async function run({ link, args = [], argv = [] }) {
   const pipe = new Duplex()
   sp.once('exit', (exitCode) => {
     if (exitCode !== 0) pipe.emit('crash', { exitCode })
-    pipe.push(null)
   })
   sp.stdout.on('data', (data) => {
     for (const line of data.toString().split(/\r?\n/g)) {
       if (trimAnsi(line).trim().length === 0) continue
       pipe.push({ type: 'stdout', data: line })
     }
+  })
+  sp.stdout.on('end', () => {
+    pipe.end()
   })
 
   return { pipe }
