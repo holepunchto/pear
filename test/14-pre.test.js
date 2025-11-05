@@ -2,9 +2,6 @@
 const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
-const { spawn } = require('bare-subprocess')
-const { RUNTIME } = require('pear-constants')
-const { Duplex } = require('streamx')
 const preConfigure = path.join(
   Helper.localDir,
   'test',
@@ -25,32 +22,6 @@ const stageOpts = (id, dir) => ({
 })
 
 const rig = new Helper.Rig()
-function trimAnsi(str) {
-  return str.replaceAll('\x1b[?25l', '').replaceAll('\x1b[?25h', '')
-}
-
-async function run({ link, args = [], argv = [] }) {
-  const sp = spawn(RUNTIME, ['run', ...argv, '--trusted', link, ...args], {
-    stdio: ['inherit', 'pipe', 'inherit'],
-    windowsHide: true
-  })
-
-  const pipe = new Duplex()
-  sp.once('exit', (exitCode) => {
-    if (exitCode !== 0) pipe.emit('crash', { exitCode })
-  })
-  sp.stdout.on('data', (data) => {
-    for (const line of data.toString().split(/\r?\n/g)) {
-      if (trimAnsi(line).trim().length === 0) continue
-      pipe.push({ type: 'stdout', data: line })
-    }
-  })
-  sp.stdout.on('end', () => {
-    pipe.end()
-  })
-
-  return { pipe }
-}
 
 test.hook('pre setup', rig.setup)
 
@@ -63,14 +34,14 @@ test('pre should update config when running locally', async function ({
   plan(4)
 
   comment('\trunning')
-  const { pipe } = await run({ link: preConfigure })
+  const { pipe } = await Helper.runStdio({ link: preConfigure })
 
   const preResult = await Helper.untilData(pipe)
-  is(preResult.type, 'stdout', 'should output to stdout')
+  is(preResult.tag, 'stdout', 'should output to stdout')
   ok(preResult.data.includes('configure'), 'pre should run configure step')
 
   const result = await Helper.untilData(pipe)
-  is(result.type, 'stdout', 'should output to stdout')
+  is(result.tag, 'stdout', 'should output to stdout')
   is(
     result.data,
     '{"name":"pre-configure-success"}',
@@ -104,10 +75,10 @@ test('pre should not update config when running staged', async function ({
   await until.final
 
   comment('\trunning')
-  const { pipe } = await run({ link })
+  const { pipe } = await Helper.runStdio({ link })
 
   const result = await Helper.untilData(pipe)
-  is(result.type, 'stdout', 'should output to stdout')
+  is(result.tag, 'stdout', 'should output to stdout')
   is(
     result.data,
     '{"name":"pre-configure-did-not-run"}',
