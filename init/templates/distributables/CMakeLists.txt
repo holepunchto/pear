@@ -8,7 +8,6 @@ add_pear_appling(
   pear_appling
   ID "__id__"
   NAME "__name__"
-  LINK "__link__"
   VERSION "__version__"
   AUTHOR "__author__"
   DESCRIPTION "__description__"

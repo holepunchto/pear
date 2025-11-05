@@ -64,7 +64,6 @@ module.exports = (ipc) => {
     const defaults = {
       "id": hypercoreid.encode(drive.key),
       "name": `${build.name || manifest.pear.name || manifest.name}`,
-      "link": `${link}`,
       "version": `${build.version || manifest.pear.version || manifest.version}`,
       "author": `${build.author || manifest.pear.author || manifest.author}`,
       "description": `${build.description || manifest.pear.description || manifest.description}`,

@@ -9,10 +9,6 @@
       "prompt": "name"
     },
     {
-      "name": "link",
-      "prompt": "link"
-    },
-    {
       "name": "version",
       "prompt": "version"
     },
