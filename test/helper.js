@@ -200,7 +200,7 @@ class Helper extends IPC.Client {
       ? path.join(platformDir, 'current', BY_ARCH)
       : RUNTIME
     const sp = spawn(runtime, ['run', ...argv, '--trusted', link, ...args], {
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['pipe', 'pipe', 'pipe'], // NOTE: fd 3 deliberately unset so that pre runs
       windowsHide: true
     })
 
