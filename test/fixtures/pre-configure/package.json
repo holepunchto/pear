@@ -1,8 +1,8 @@
 {
-  "name": "pre",
+  "name": "pre-configure",
   "main": "index.js",
   "pear": {
-    "name": "pre-did-not-run",
+    "name": "pre-configure-did-not-run",
     "type": "terminal",
     "pre": "./pre.js"
   },

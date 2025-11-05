@@ -5,12 +5,17 @@ const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
 const { RUNTIME } = require('pear-constants')
 const { Duplex } = require('streamx')
-const pre = path.join(Helper.localDir, 'test', 'fixtures', 'pre')
-const seedOpts = (id) => ({
+const preConfigure = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'pre-configure'
+)
+const seedOpts = (id, dir) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
   key: null,
-  dir: pre,
+  dir,
   cmdArgs: []
 })
 const stageOpts = (id, dir) => ({
@@ -25,14 +30,10 @@ function trimAnsi(str) {
 }
 
 async function run({ link, args = [], argv = [] }) {
-  const sp = spawn(
-    RUNTIME,
-    ['run', ...argv, '--pre-io', '--trusted', link, ...args],
-    {
-      stdio: ['inherit', 'pipe', 'inherit'],
-      windowsHide: true
-    }
-  )
+  const sp = spawn(RUNTIME, ['run', ...argv, '--trusted', link, ...args], {
+    stdio: ['inherit', 'pipe', 'inherit'],
+    windowsHide: true
+  })
 
   const pipe = new Duplex()
   sp.once('exit', (exitCode) => {
@@ -51,7 +52,7 @@ async function run({ link, args = [], argv = [] }) {
 
 test.hook('pre setup', rig.setup)
 
-test('should execute pre and update config when running locally', async function ({
+test('pre should update config when running locally', async function ({
   ok,
   is,
   plan,
@@ -60,7 +61,7 @@ test('should execute pre and update config when running locally', async function
   plan(4)
 
   comment('\trunning')
-  const { pipe } = await run({ link: pre })
+  const { pipe } = await run({ link: preConfigure })
 
   const preResult = await Helper.untilData(pipe)
   is(preResult.type, 'stdout', 'should output to stdout')
@@ -70,14 +71,14 @@ test('should execute pre and update config when running locally', async function
   is(result.type, 'stdout', 'should output to stdout')
   is(
     result.data,
-    '{"name":"pre-success"}',
+    '{"name":"pre-configure-success"}',
     'pre should have updated name in config'
   )
 
   await Helper.untilClose(pipe)
 })
 
-test('should not execute pre and update config when running locally', async function ({
+test('pre should not update config when running staged', async function ({
   is,
   plan,
   comment,
@@ -91,7 +92,7 @@ test('should not execute pre and update config when running locally', async func
   await stager.ready()
 
   comment('\tstaging')
-  const staging = stager.stage(stageOpts(testId))
+  const staging = stager.stage(stageOpts(testId, preConfigure))
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [
     { tag: 'staging' },
@@ -107,8 +108,8 @@ test('should not execute pre and update config when running locally', async func
   is(result.type, 'stdout', 'should output to stdout')
   is(
     result.data,
-    '{"name":"pre-did-not-run"}',
-    'pre should have updated name in config'
+    '{"name":"pre-configure-did-not-run"}',
+    'pre should have original name in config'
   )
 
   await Helper.untilClose(pipe)
