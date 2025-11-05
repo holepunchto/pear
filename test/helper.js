@@ -195,7 +195,7 @@ class Helper extends IPC.Client {
     return { pipe }
   }
 
-  static async runStdio({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
+  static async rawRun({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
     const runtime = platformDir
       ? path.join(platformDir, 'current', BY_ARCH)
       : RUNTIME
