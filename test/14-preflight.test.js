@@ -14,7 +14,8 @@ const appWithAssetsDir = path.join(
   'app-with-assets'
 )
 
-test('staged manifest assets fetched by run', async (t) => {
+test('preflight downloads staged assets', async (t) => {
+  t.plan(3)
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.config.dht.bootstrap })
   const tmpdir = await tmp()
@@ -55,17 +56,22 @@ test('staged manifest assets fetched by run', async (t) => {
   t.teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  t.comment('running app')
+  t.comment('running app with preflight flag')
   const base = Pear.app.dir
   Pear.app.dir = appWithAssetsDir
   t.teardown(() => {
     Pear.app.dir = base
   })
-  const run = await Helper.run({ link: appWithAssetsDir })
-  const result = await Helper.untilResult(run.pipe)
-  t.is(result, 'hello')
-  await Helper.untilClose(run.pipe)
-
+  const run = await Helper.run({
+    link: appWithAssetsDir,
+    flags: ['--preflight']
+  })
+  try {
+    await Helper.untilBail(run.pipe)
+    t.pass()
+  } catch (e) {
+    t.fail(e.message)
+  }
   const data = await helper.data({ resource: 'assets' })
   const assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
   const assets = await assetsPipe.assets

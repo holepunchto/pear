@@ -20,6 +20,7 @@ async function runTests() {
   await import('./11-inspect.test.js')
   await import('./12-assets.test.js')
   await import('./13-stage.test.js')
+  await import('./14-preflight.test.js')
 
   test.resume()
 }

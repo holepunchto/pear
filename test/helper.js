@@ -177,11 +177,18 @@ class Helper extends IPC.Client {
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
 
-  static async run({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
+  static async run({
+    link,
+    platformDir,
+    args = [],
+    argv = RUNTIME_ARGV,
+    flags = []
+  }) {
     if (platformDir) {
       Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
       Pear.constructor.RUNTIME_ARGV = argv
     }
+    Pear.constructor.RUNTIME_FLAGS = flags
 
     const pipe = run(link, args)
 
@@ -189,6 +196,7 @@ class Helper extends IPC.Client {
       Pear.constructor.RUNTIME = RUNTIME
       Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
     }
+    Pear.constructor.RUNTIME_FLAGS = flags
 
     return { pipe }
   }
@@ -233,6 +241,29 @@ class Helper extends IPC.Client {
         resolve(data)
       })
     })
+  }
+
+  static async untilBail(pipe, timeout = 5000) {
+    const res = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(
+        () => reject(new Error('timed out')),
+        timeout
+      )
+      pipe.once('data', () => {
+        reject('unexpected data')
+      })
+      pipe.on('close', () => {
+        clearTimeout(timeoutId)
+        resolve('closed')
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        resolve('ended')
+      })
+      pipe.write('start')
+    })
+    pipe.end()
+    return res
   }
 
   static async untilClose(pipe, timeout = 5000) {
