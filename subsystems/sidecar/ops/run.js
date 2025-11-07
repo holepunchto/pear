@@ -416,39 +416,16 @@ module.exports = class Run extends Opstream {
       await this.session.close()
       throw err
     }
-    let only = opts.only
-    let select = null
-    if (only) {
-      only = (Array.isArray(only) ? only : only.split(',')).map((s) =>
-        s.trim().replace(/%%HOST%%/g, require.addon.host)
-      )
-      select = (key) =>
-        only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
-    }
-    const mirror = src.mirror(dst, { filter: select })
-    for await (const diff of mirror) {
-      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
-      if (diff.op === 'add') {
-        this.push({
-          tag: 'byte-diff',
-          data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
-        })
-      } else if (diff.op === 'change') {
-        this.push({
-          tag: 'byte-diff',
-          data: {
-            type: 0,
-            sizes: [-diff.bytesRemoved, diff.bytesAdded],
-            message: diff.key
-          }
-        })
-      } else if (diff.op === 'remove') {
-        this.push({
-          tag: 'byte-diff',
-          data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
-        })
-      }
-    }
+    const only = Array.isArray(opts.only) ? opts.only : opts.only?.split(',')
+
+    const prefixes = only.map((path) => {
+      path = path.trim().replace(/%%HOST%%/g, require.addon.host)
+      path = path[0] === '/' ? path : '/' + path
+      return path
+    })
+    console.log('PREFIXES', prefixes)
+    if (prefixes.length === 0) prefixes.push('/')
+    await this.mirrors(src, dst, prefixes)
     await this.sidecar.model.addAsset(opts.link, asset)
     LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
     return asset
@@ -482,6 +459,40 @@ module.exports = class Run extends Opstream {
     } catch (err) {
       LOG.error('internal', 'gc orphan workers error', err)
     }
+  }
+
+  async mirror(src, dst, prefix) {
+    for await (const diff of src.mirror(dst, { prefix })) {
+      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
+      if (diff.op === 'add') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
+        })
+      } else if (diff.op === 'change') {
+        this.push({
+          tag: 'byte-diff',
+          data: {
+            type: 0,
+            sizes: [-diff.bytesRemoved, diff.bytesAdded],
+            message: diff.key
+          }
+        })
+      } else if (diff.op === 'remove') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
+        })
+      }
+    }
+  }
+
+  async mirrors(src, dst, prefixes) {
+    console.log('MIRRORING', prefixes)
+    const promises = prefixes.map((prefix) => this.mirror(src, dst, prefix))
+    const result = await Promise.allSettled(promises)
+    for (const { status, reason } of result)
+      if (status === 'rejected') throw reason // throw first error
   }
 
   async #updatePearInterface(drive) {
