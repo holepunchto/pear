@@ -488,7 +488,6 @@ module.exports = class Run extends Opstream {
   }
 
   async mirrors(src, dst, prefixes) {
-
     const promises = prefixes.map((prefix) => this.mirror(src, dst, prefix))
     const result = await Promise.allSettled(promises)
     for (const { status, reason } of result)
