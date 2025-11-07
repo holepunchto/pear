@@ -130,27 +130,34 @@ async function download(key, all = false) {
 
   console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
+  const bins = [
+    '/by-arch/linux-x64/bin/pear-runtime',
+    '/by-arch/linux-arm64/bin/pear-runtime',
+    '/by-arch/darwin-x64/bin/pear-runtime',
+    '/by-arch/darwin-arm64/bin/pear-runtime',
+    '/by-arch/win32-x64/bin/pear-runtime.exe'
+  ]
+  const lib = [
+    '/by-arch/linux-x64/lib',
+    '/by-arch/linux-arm64/lib',
+    '/by-arch/darwin-x64/lib',
+    '/by-arch/darwin-arm64/lib',
+    '/by-arch/win32-x64/lib'
+  ]
+  const wakeup = [
+    '/by-arch/linux-x64/bin/pear',
+    '/by-arch/linux-arm64/bin/pear',
+    '/by-arch/darwin-x64/bin/Pear.app',
+    '/by-arch/darwin-arm64/bin/Pear.app',
+    '/by-arch/win32-x64/bin/pear.exe'
+  ]
+
   const runtime = runtimes.mirror(new Localdrive(SWAP), {
     prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST),
-    filter: (key) => {
-      const runtimes = [
-        '/by-arch/linux-x64/bin/pear-runtime',
-        '/by-arch/linux-arm64/bin/pear-runtime',
-        '/by-arch/darwin-x64/bin/pear-runtime',
-        '/by-arch/darwin-arm64/bin/pear-runtime',
-        '/by-arch/win32-x64/bin/pear-runtime.exe'
-      ]
-      const lib = [
-        '/by-arch/linux-x64/lib',
-        '/by-arch/linux-arm64/lib',
-        '/by-arch/darwin-x64/lib',
-        '/by-arch/darwin-arm64/lib',
-        '/by-arch/win32-x64/lib'
-      ]
-      return (
-        runtimes.some((r) => key === r) || lib.some((l) => key.startsWith(l))
-      )
-    }
+    filter: (key) =>
+      bins.some((r) => key === r) ||
+      lib.some((l) => key.startsWith(l)) ||
+      wakeup.some((w) => key === w)
   })
 
   const monitor = monitorDrive(runtimes)
