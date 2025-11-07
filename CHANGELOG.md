@@ -1,5 +1,16 @@
 # Pear Runtime Changelog
 
+## v2.1.10
+
+### Fixes
+
+* Internal - include wakeup app (Pear.app, pear.exe, pear) in by-arch
+
+### Improvements
+
+* Internal - update production key
+* Run - preflight optimization
+
 ## v2.1.9
 
 ### Fixes
