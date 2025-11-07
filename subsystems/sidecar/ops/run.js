@@ -423,7 +423,7 @@ module.exports = class Run extends Opstream {
       path = path[0] === '/' ? path : '/' + path
       return path
     })
-    console.log('PREFIXES', prefixes)
+
     if (prefixes.length === 0) prefixes.push('/')
     await this.mirrors(src, dst, prefixes)
     await this.sidecar.model.addAsset(opts.link, asset)
@@ -488,7 +488,7 @@ module.exports = class Run extends Opstream {
   }
 
   async mirrors(src, dst, prefixes) {
-    console.log('MIRRORING', prefixes)
+
     const promises = prefixes.map((prefix) => this.mirror(src, dst, prefix))
     const result = await Promise.allSettled(promises)
     for (const { status, reason } of result)
