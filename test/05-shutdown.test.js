@@ -7,6 +7,7 @@ const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
 const LocalDrive = require('localdrive')
+const Corestore = require('corestore')
 
 const rig = new Helper.Rig({ keepAlive: false })
 
@@ -34,25 +35,20 @@ test('lock released after shutdown', async function ({
   const helper = new Helper(rig)
   await helper.ready()
 
-  const lock = path.join(rig.platformDir, 'pear.lock')
+  const corestorePath = path.join(rig.platformDir, 'corestores', 'platform')
 
-  comment('checking file lock is not free')
-  const platformLock = new LockFile(lock)
-
-  teardown(async () => {
-    await platformLock.unlock()
-  })
-
-  exception(
-    async () => await platformLock.lock(),
-    'platform lock throws because is not free'
-  )
+  exception(async () => {
+    const corestore = new Corestore(corestorePath)
+    await corestore.ready()
+  }, 'platform corestore is locked')
 
   comment('sidecar shutdown')
   await helper.shutdown()
 
-  await platformLock.lock()
-  pass('file lock is free after platform shutdown')
+  const store = new Corestore(corestorePath, { wait: true })
+  teardown(() => store.close())
+  await store.ready()
+  pass('platform corestore is free after platform shutdown')
 })
 
 let platformDirLs
