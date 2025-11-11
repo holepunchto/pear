@@ -61,19 +61,20 @@ module.exports = (ipc) => {
     const host = platform + '-' + arch
     const distributables = path.join(dir, build.distributables || 'distributables', host)
     await fs.promises.mkdir(distributables, { recursive: true })
+    const z32 = hypercoreid.encode(drive.key)
     const defaults = {
-      "id": hypercoreid.encode(drive.key),
+      "id": z32,
       "name": `${build.name || manifest.pear.name || manifest.name}`,
       "version": `${build.version || manifest.pear.version || manifest.version}`,
       "author": `${build.author || manifest.pear.author || manifest.author}`,
       "description": `${build.description || manifest.pear.description || manifest.description}`,
-      "darwin.identifier": `${build.darwin?.identifier || ''}`,
-      "darwin.category": `${build.darwin?.category || ''}`,
+      "darwin.identifier": `${build.darwin?.identifier || `pear.${z32}`}`,
+      "darwin.category": `${build.darwin?.category || 'public.app-category.developer-tools'}`,
       "darwin.signingidentity": `${build.darwin?.['signing-identity'] || '-'}`,
       "darwin.entitlements": `${build.darwin?.entitlements || ''}`,
       "win.signingsubject": `${build.win32?.['signing-subject'] || ''}`,
       "win.signingthumbprint": `${build.win32?.['signing-thumbprint'] || ''}`,
-      "linux.category": `${build.linux?.category || ''}`
+      "linux.category": `${build.linux?.category || 'Development'}`
     }
     await opwait(await require('../init')('init/templates/distributables', distributables, {
       cwd: os.cwd(),
