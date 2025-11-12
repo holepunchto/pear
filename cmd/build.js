@@ -30,16 +30,10 @@ module.exports = (ipc) => {
 
   return async function build(cmd) {
     const { json } = cmd.flags
-    const isKey = plink.parse(cmd.args.channel).drive.key !== null
-    const channel = isKey ? cmd.args.link : cmd.args.channel
-    const link = isKey ? cmd.args.channel : null
-    if (!channel && !link)
-      throw ERR_INVALID_INPUT(
-        'A valid pear link or the channel name must be specified.'
-      )
-    if (channel) {
-      const { manifest } = await opwait(ipc.info({ link, channel, manifest: true }))
-      // @TODO <channel>
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
     }
 
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))

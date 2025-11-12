@@ -270,13 +270,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
-  const reset = hiddenCommand('reset', arg('[link]'), () => {
+  const reset = command('reset', arg('[link]'), () => {
     console.log(
       `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
     )
     console.log(drop.help())
     Bare.exit(1)
-  })
+  }).hide()
 
   const sidecar = command(
     'sidecar',
@@ -341,13 +341,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'build',
     summary('Build appling for a Pear application'),
     description`
-      Specify channel or link to build a project.
+      Specify link to build a project.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to build'),
+    arg('<link>', 'Pear link to build'),
     arg('[dir]', 'Output directory path (default: .)'),
     flag('--json', 'Newline delimited JSON output'),
     runners.build(ipc)
-  )
+  ).hide()
 
   const help = command(
     'help',
