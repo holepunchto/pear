@@ -35,10 +35,8 @@ module.exports = (ipc) => {
       const parsed = plink.parse(link)
       if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
     }
-
     const { manifest } = await opwait(ipc.info({ link, manifest: true }))
     const { drive } = plink.parse(link)
-
     if (!manifest.pear) {
       throw ERR_INVALID_MANIFEST(
         'Missing required "pear" field in package.json'

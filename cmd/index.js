@@ -340,9 +340,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const build = command(
     'build',
     summary('Build appling for a Pear application'),
-    description`
-      Specify link to build a project.
-    `,
+    description('Specify link to build a project.'),
     arg('<link>', 'Pear link to build'),
     arg('[dir]', 'Output directory path (default: .)'),
     flag('--json', 'Newline delimited JSON output'),
