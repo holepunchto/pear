@@ -187,7 +187,6 @@ module.exports = (ipc) =>
 
     state.update({ config })
     global.Pear = new API(ipc, state)
-
     const protocol = new Module.Protocol({
       exists(url) {
         if (url.href.endsWith('.bare') || url.href.endsWith('.node'))
