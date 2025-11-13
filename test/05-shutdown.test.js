@@ -2,7 +2,6 @@
 const test = require('brittle')
 const fs = require('bare-fs')
 const path = require('bare-path')
-const LockFile = require('fs-native-lock')
 const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
