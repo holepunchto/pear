@@ -150,7 +150,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   }
 })
 
-test('sidecar should not spindown until ongoing update is finished', async (t) => {
+test.solo('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 
@@ -293,6 +293,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
   t.is(peerAdded, true, 'sidecar successfully connected to paused seeder')
 
+  console.log("!!", hasSpunDown)
   if (hasSpunDown !== false) {
     t.fail('sidecar failed to prevent spindown during update')
   } else {

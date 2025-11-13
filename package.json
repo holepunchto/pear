@@ -101,7 +101,7 @@
     "pear-gunk": "^1.0.0",
     "pear-inspect": "^1.2.5",
     "pear-interface": "^1.1.0",
-    "pear-ipc": "^6.7.0",
+    "pear-ipc": "github:holepunchto/pear-ipc#replace-platform-lock",
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
     "pear-pipe": "^1.0.1",
