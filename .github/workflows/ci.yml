@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - next
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   repository_dispatch:
@@ -22,14 +21,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            platform: linux
-            arch: x64
           - os: macos-latest
-            platform: darwin
-            arch: x64
           - os: windows-latest
-            platform: win32
-            arch: x64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -39,14 +32,8 @@ jobs:
       - name: Install w/ dev deps
         run: npm install
 
-      - name: Cache corestore
-        uses: actions/cache@v4
-        with:
-          path: /tmp/pear-archdump
-          key: ${{ matrix.os }}-corestore
-
       - name: Bootstrap
-        run: npm run bootstrap -- --external-corestore
+        run: npm run bootstrap
 
       - name: Install Bare
         run: npm i -g bare-runtime
