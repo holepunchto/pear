@@ -157,7 +157,7 @@ async function download(key, all = false) {
     filter: (key) =>
       bins.some((r) => key === r) ||
       lib.some((l) => key.startsWith(l)) ||
-      wakeup.some((w) => key === w)
+      wakeup.some((w) => key.startsWith(w))
   })
 
   const monitor = monitorDrive(runtimes)
