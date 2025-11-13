@@ -117,11 +117,11 @@ module.exports = class Model {
     return result
   }
 
-  async addAsset(link, { ns, name, only, path }) {
+  async addAsset(link, { ns, name, only, pack, path }) {
     if (!plink.parse(link)?.drive?.length)
       throw ERR_INVALID_LINK(link + ' asset links must include length')
     const tx = await this.lock.enter()
-    const asset = { link, ns, name, only, path }
+    const asset = { link, ns, name, only, pack, path }
     LOG.trace('db', 'INSERT', '@pear/assets', asset)
     await tx.insert('@pear/assets', asset)
     await this.lock.exit()
