@@ -1,0 +1,20 @@
+{
+  "name": "cmake-macos",
+  "version": "1.0.0",
+  "description": "macOS utilities for CMake",
+  "files": [
+    "*.cmake",
+    "*.plist",
+    "PkgInfo"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/cmake-macos.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/cmake-macos/issues"
+  },
+  "homepage": "https://github.com/holepunchto/cmake-macos#readme"
+}

@@ -1,0 +1,1 @@
+$ pear build --help
