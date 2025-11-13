@@ -45,6 +45,8 @@ test('preflight downloads staged assets', async (t) => {
 
   t.teardown(async () => {
     // revert change in package.json
+    console.log('TEARDOWN A')
+    console.log(appPkg)
     appPkg.pear.assets.ui.link = ''
     await fs.promises.writeFile(
       path.join(appWithAssetsDir, 'package.json'),
@@ -53,13 +55,21 @@ test('preflight downloads staged assets', async (t) => {
   })
 
   const helper = new Helper()
-  t.teardown(() => helper.close(), { order: Infinity })
+  t.teardown(
+    () => {
+      console.log('TEARDOWN B')
+      helper.close()
+    },
+    { order: Infinity }
+  )
+
   await helper.ready()
 
   t.comment('running app with preflight flag')
   const base = Pear.app.dir
   Pear.app.dir = appWithAssetsDir
   t.teardown(() => {
+    console.log('TEARDOWN C')
     Pear.app.dir = base
   })
   const run = await Helper.run({
@@ -67,14 +77,20 @@ test('preflight downloads staged assets', async (t) => {
     flags: ['--preflight']
   })
   try {
+    console.log('A')
     await Helper.untilBail(run.pipe)
+    console.log('B')
     t.pass()
   } catch (e) {
     t.fail(e.message)
   }
+  console.log('C')
   const data = await helper.data({ resource: 'assets' })
+  console.log('D')
   const assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
+  console.log('E')
   const assets = await assetsPipe.assets
+  console.log('F')
 
   const asset = await assets.find((e) => e.link === link)
   t.ok(asset)

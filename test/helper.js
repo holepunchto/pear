@@ -253,13 +253,15 @@ class Helper extends IPC.Client {
         reject('unexpected data')
       })
       pipe.on('close', () => {
+        console.log('CLOSE')
         clearTimeout(timeoutId)
         resolve('closed')
       })
-      pipe.on('end', () => {
-        clearTimeout(timeoutId)
-        resolve('ended')
-      })
+      // pipe.on('end', () => {
+      //   console.log('END')
+      //   clearTimeout(timeoutId)
+      //   resolve('ended')
+      // })
       pipe.write('start')
     })
     pipe.end()
@@ -307,6 +309,8 @@ class Helper extends IPC.Client {
 
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
+    console.log('PICK STREAM')
+    console.log(stream)
     for await (const output of stream) {
       if (ptn?.[by] !== 'error' && output[by] === 'error')
         throw new OperationError(output.data)
