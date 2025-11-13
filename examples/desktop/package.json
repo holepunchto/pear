@@ -17,12 +17,12 @@
       "minWidth": 500
     },
     "build": {
-      "name": "PearApp",
+      "name": "Deskex",
       "version": "1.0.0",
       "author": "Holepunch",
-      "description": "Pear Desktop Example",
+      "description": "Pear desktop application example",
       "darwin": {
-        "identifier": "com.pears.deskex",
+        "identifier": "pear.deskex",
         "category": "public.app-category.developer-tools",
         "signing-identity": "-",
         "entitlements": ""

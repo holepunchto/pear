@@ -10,7 +10,6 @@ const {
   bail,
   sloppy,
   validate,
-  hiddenCommand
 } = require('paparam')
 const { usage, print, ansi } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
