@@ -7,6 +7,8 @@ const { Readable } = require('streamx')
 const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
+const Localdrive = require('localdrive')
+const Bundle = require('bare-bundle')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
@@ -14,14 +16,16 @@ const plink = require('pear-link')
 const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
+const pack = require('pear-pack')
 const { SWAP } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
+const { ERR_INVALID_CONFIG } = require('pear-errors')
 const noop = Function.prototype
 
 const ABI = 0
 
-module.exports = class Bundle {
+module.exports = class PodBundle {
   // TODO: rename to Pod
   platformVersion = null
   constructor(opts = {}) {
@@ -62,7 +66,7 @@ module.exports = class Bundle {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    this._asset = asset
+    this._asset = this._assetBundle(asset)
     if (this.corestore) {
       this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
@@ -99,6 +103,26 @@ module.exports = class Bundle {
     this.initializing = this.#init()
 
     this.updateNotify = updateNotify
+  }
+
+  _assetBundle (fn) {
+    return async (...args) => {
+      const asset = await fn(...args)
+      console.log('meow', asset)
+      if (asset === null) return null
+      if (Array.isArray(asset.pack) === false) {
+        if (typeof asset.pack === 'object' && asset.pack !== null) asset.pack = [asset.pack]
+        if (Array.isArray(asset.pack) === false) return asset
+      }
+      const folder = new Localdrive(asset.path)
+      for (const { bundle, entry, builtins = [] } of asset.pack) {
+        const hosts = [require.addon.host]
+        const packed = await pack(this.drive, { entry, hosts, builtins, prebuildPrefix: asset.path })
+        await folder.put(bundle, Bundle.from(packed.bundle)) 
+      }
+      console.log('RETURNING ASSET', asset)
+      return asset
+    }
   }
 
   async assets(manifest) {
