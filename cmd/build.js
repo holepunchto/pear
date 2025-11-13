@@ -8,13 +8,13 @@ const opwait = require('pear-opwait')
 const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
 const { arch, platform } = require('which-runtime')
-const { ERR_INVALID_LINK, ERR_INVALID_INPUT, ERR_INVALID_MANIFEST } = require('pear-errors')
+const { ERR_INVALID_MANIFEST } = require('pear-errors')
 
 const output = outputter('build', {
-  init: ({ dir }) => `\n${ansi.pear} Build target ${ansi.dim(dir)}\n`,
+  init: ({ dir }) => `Build target ${ansi.dim(dir)}\n`,
   generate: () => 'Generating project...\n',
   build: () => 'Compiling...\n',
-  complete: ({ dir }) => `Build completed ${ansi.dim(dir)}\n`,
+  complete: ({ dir }) => `\n${ansi.pear} Build completed ${ansi.dim(dir)}\n`,
   error: ({ message }) => `Error: ${message}\n`
 })
 
@@ -67,7 +67,13 @@ module.exports = (ipc) => {
       ask: false,
       header: 'pear-build'
     }))
-    await opwait(ipc.dump({ link: link + '/distributables/icons', dir: distributables, force: true }))
+    // use staged icons when available
+    await opwait(ipc.dump({
+      link,
+      dir: distributables,
+      only: 'distributables/icons',
+      force: true
+    }))
     await output(json, pearBuild({ dir: distributables }))
   }
 }

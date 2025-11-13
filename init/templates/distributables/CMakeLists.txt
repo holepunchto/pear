@@ -11,18 +11,18 @@ add_pear_appling(
   VERSION "__version__"
   AUTHOR "__author__"
   DESCRIPTION "__description__"
-  SPLASH "icons/splash.png"
+  SPLASH "distributables/icons/splash.png"
 
   MACOS_IDENTIFIER "__darwin.identifier__"
   MACOS_CATEGORY "__darwin.category__"
   MACOS_SIGNING_IDENTITY "__darwin.signingidentity__"
   MACOS_ENTITLEMENTS "__darwin.entitlements__"
-  MACOS_ICON "icons/darwin/icon.png"
+  MACOS_ICON "distributables/icons/darwin/icon.png"
 
   WINDOWS_SIGNING_SUBJECT "__win.signingsubject__"
   WINDOWS_SIGNING_THUMBPRINT "__win.signingthumbprint__"
-  WINDOWS_ICON "icons/win32/icon.png"
+  WINDOWS_ICON "distributables/icons/win32/icon.png"
 
   LINUX_CATEGORY "__linux.category__"
-  LINUX_ICON "icons/linux/icon.png"
+  LINUX_ICON "distributables/icons/linux/icon.png"
 )
