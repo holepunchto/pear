@@ -1,5 +1,15 @@
 # Pear Runtime Changelog
 
+## v2.1.11
+
+### Fixes
+
+* Internal - wakeup inclusion fix
+
+### Improvements
+
+* Internal - move to using new Corestore wait API instead of managing lock file
+
 ## v2.1.10
 
 ### Fixes
