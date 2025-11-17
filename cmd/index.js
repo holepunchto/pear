@@ -145,6 +145,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Supply no argument to view platform information.
     `,
     arg('[link|channel]', 'Project to view info for'),
+    arg('[dir]', 'Project directory path (default: .)'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
