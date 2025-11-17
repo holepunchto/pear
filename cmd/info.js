@@ -3,6 +3,7 @@ const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
+const os = require('bare-os')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -84,7 +85,8 @@ module.exports = (ipc) =>
         metadata,
         changelog: full || changelog ? { full, max: 1 } : null,
         manifest,
-        cmdArgs: Bare.argv.slice(1)
+        cmdArgs: Bare.argv.slice(1),
+        dir: os.cwd()
       }),
       { ask: cmd.flags.ask },
       ipc
