@@ -130,48 +130,44 @@ async function download(key, all = false) {
 
   console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
 
-  const runtime = runtimes.mirror(new Localdrive(SWAP), {
-    prefix: '/by-arch' + (all ? '' : '/' + ADDON_HOST),
-    filter: (key) => {
-      const runtimes = [
-        '/by-arch/linux-x64/bin/pear-runtime',
-        '/by-arch/linux-arm64/bin/pear-runtime',
-        '/by-arch/darwin-x64/bin/pear-runtime',
-        '/by-arch/darwin-arm64/bin/pear-runtime',
-        '/by-arch/win32-x64/bin/pear-runtime.exe'
-      ]
-      const lib = [
-        '/by-arch/linux-x64/lib',
-        '/by-arch/linux-arm64/lib',
-        '/by-arch/darwin-x64/lib',
-        '/by-arch/darwin-arm64/lib',
-        '/by-arch/win32-x64/lib'
-      ]
-      return (
-        runtimes.some((r) => key === r) || lib.some((l) => key.startsWith(l))
-      )
-    }
-  })
+  const bin = [
+    '/by-arch/linux-x64/bin/pear-runtime',
+    '/by-arch/linux-arm64/bin/pear-runtime',
+    '/by-arch/darwin-x64/bin/pear-runtime',
+    '/by-arch/darwin-arm64/bin/pear-runtime',
+    '/by-arch/win32-x64/bin/pear-runtime.exe'
+  ]
+  const lib = [
+    '/by-arch/linux-x64/lib',
+    '/by-arch/linux-arm64/lib',
+    '/by-arch/darwin-x64/lib',
+    '/by-arch/darwin-arm64/lib',
+    '/by-arch/win32-x64/lib'
+  ]
+  const wakeup = [
+    '/by-arch/linux-x64/bin/pear',
+    '/by-arch/linux-arm64/bin/pear',
+    '/by-arch/darwin-x64/bin/Pear.app',
+    '/by-arch/darwin-arm64/bin/Pear.app',
+    '/by-arch/win32-x64/bin/pear.exe'
+  ]
 
   const monitor = monitorDrive(runtimes)
   goodbye(() => monitor.stop())
-
-  for await (const { op, key, bytesAdded } of runtime) {
+  const onloop = () => {
     if (isTTY) monitor.clear()
-    if (op === 'add') {
-      console.log(
-        '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
-      )
-    } else if (op === 'change') {
-      console.log(
-        '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
-      )
-    } else if (op === 'remove') {
-      console.log(
-        '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+  }
+  const promises = []
+  for (const prefix of [...bin, ...lib, ...wakeup]) {
+    if (all || prefix.startsWith('/by-arch/' + ADDON_HOST)) {
+      promises.push(
+        output(runtimes.mirror(new Localdrive(SWAP), { prefix }), onloop)
       )
     }
   }
+
+  for (const { reason } of await Promise.allSettled(promises))
+    if (reason) throw reason
 
   monitor.stop()
 
@@ -190,6 +186,25 @@ async function download(key, all = false) {
         tick +
         '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
     )
+}
+
+async function output(mirror, onloop) {
+  for await (const { op, key, bytesAdded } of mirror) {
+    onloop()
+    if (op === 'add') {
+      console.log(
+        '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
+    } else if (op === 'change') {
+      console.log(
+        '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
+    } else if (op === 'remove') {
+      console.log(
+        '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
+      )
+    }
+  }
 }
 
 /**
