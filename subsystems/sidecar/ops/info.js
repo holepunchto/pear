@@ -36,10 +36,9 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const pkg = await State.localPkg({ dir })
     const corestore = link
       ? this.sidecar.getCorestore(null, null)
-      : this.sidecar.getCorestore(pkg.name, channel)
+      : this.sidecar.getCorestore((await State.localPkg({ dir })).name, channel)
 
     const key = link
       ? plink.parse(link).drive.key
