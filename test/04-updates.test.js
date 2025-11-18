@@ -8,17 +8,24 @@ const Corestore = require('corestore')
 const testTmp = require('test-tmp')
 const { Session } = require('pear-inspect')
 const Helper = require('./helper')
+const { Readable } = require('streamx')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
+const updateRestart = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'update-restart'
+)
 const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 const cutover = path.join(Helper.localDir, 'test', 'fixtures', 'cutover')
-const seedOpts = (id) => ({
+const seedOpts = (id, dir = updates) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
   key: null,
-  dir: updates,
+  dir,
   cmdArgs: []
 })
-const stageOpts = (id, dir) => ({
+const stageOpts = (id, dir = updates) => ({
   ...seedOpts(id, dir),
   dryRun: false,
   ignore: []
@@ -1321,6 +1328,103 @@ test('updates should start timer for clearing buffer when cutover is called', as
   await rcv.shutdown()
 
   await Helper.untilClose(pipe)
+})
+
+test('restart on update should work correctly for app stage updates', async function (t) {
+  const { ok, is, plan, comment, teardown, timeout, pass } = t
+  timeout(60_000)
+  plan(7)
+  const dir = updateRestart
+  const testId = Helper.getRandomId()
+
+  comment('1. Create and tail output file')
+  const tmpdir = await testTmp()
+  teardown(() => Helper.gc(tmpdir), { order: Infinity })
+  const tmpfile = path.join(tmpdir, 'output.log')
+  fs.writeFileSync(tmpfile, '')
+
+  const logStream = new Readable()
+  let lastRead = 0
+  const watcher = fs.watch(tmpfile, () => {
+    fs.createReadStream(tmpfile, {
+      start: lastRead,
+      end: Infinity
+    }).on('data', (data) => {
+      lastRead += data.length
+      logStream.push(data)
+    })
+  })
+  teardown(() => logStream.push(null), { order: Infinity })
+  teardown(() => watcher.close(), { order: -Infinity })
+
+  comment('2. Stage and run app')
+  let link
+  {
+    comment('\tstaging')
+    const stager = new Helper(rig)
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+    const staging = stager.stage(stageOpts(testId, dir))
+    teardown(() => Helper.teardownStream(staging))
+    const until = await Helper.pick(staging, [
+      { tag: 'staging' },
+      { tag: 'final' }
+    ])
+    link = (await until.staging).link
+    await until.final
+  }
+
+  comment('\trunning')
+  const runner = await Helper.run({ link, args: [tmpfile] })
+  const { pipe } = runner
+  const initialVersion = await Helper.untilResult(logStream, {
+    runFn: () => {}
+  }).then((data) => JSON.parse(data.trim()))
+  ok(initialVersion?.app, 'app started and reported version')
+
+  comment('3. Create new file and restage')
+
+  const file = `${ts()}.tmp`
+  comment(`\tcreating test file (${file})`)
+  fs.writeFileSync(path.join(dir, file), 'test')
+  teardown(() => Helper.gc(tmpfile), { order: -Infinity })
+
+  comment('\trestaging')
+  {
+    const stager = new Helper(rig)
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+
+    const staging = stager.stage(stageOpts(testId, dir))
+    teardown(() => Helper.teardownStream(staging))
+    await Helper.pick(staging, { tag: 'final' })
+    fs.unlinkSync(path.join(dir, file))
+  }
+
+  comment('\twaiting for restart')
+  await Helper.untilClose(pipe)
+  pass('first app exited')
+
+  comment('\twaiting for version')
+  const secondVersion = await Helper.untilResult(logStream, {
+    runFn: () => {}
+  }).then((data) => JSON.parse(data.trim()))
+  ok(secondVersion?.app, 'app restarted and reported version')
+
+  is(
+    hypercoreid.normalize(initialVersion?.app?.key),
+    hypercoreid.normalize(secondVersion?.app?.key),
+    'app updated with matching key'
+  )
+  is(secondVersion?.app?.fork, 0, 'app version.fork is 0')
+  ok(
+    secondVersion?.app?.length > 0,
+    `app version.length is non-zero (v${secondVersion?.app?.fork}.${secondVersion?.app?.length})`
+  )
+  ok(
+    secondVersion?.app?.length > initialVersion?.app?.length,
+    'app version.length incremented'
+  )
 })
 
 test.hook('updates cleanup', rig.cleanup)
