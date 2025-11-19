@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v2.1.12
+
+### Improvements
+
+* Internal - dependencies bump, includes production keys for pear://runtime, pear://templates & pear://doctor
+* Internal - bump bare version in by-arch pear-runtime build
+
 ## v2.1.11
 
 ### Fixes
