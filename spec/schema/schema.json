@@ -172,6 +172,11 @@
           "name": "checkout",
           "type": "@pear/checkout",
           "version": 1
+        },
+        {
+          "name": "key",
+          "type": "fixed32",
+          "version": 1
         }
       ]
     }

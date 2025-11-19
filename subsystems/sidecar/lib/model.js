@@ -1,4 +1,5 @@
 'use strict'
+const b4a = require('b4a')
 const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
@@ -182,9 +183,17 @@ module.exports = class Model {
   }
 
   async getCurrent(link) {
-    const get = { link: applink(link, { alias: false }) }
+    const parsed = typeof link === 'string' ? plink.parse(link) : { ...link }
+    const get = { link: parsed.origin }
     LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
+    if (current !== null) {
+      current.checkout.length =
+        !current.key || !b4a.equals(current.key, parsed.drive.key)
+          ? 0
+          : current.checkout.length
+    }
+
     return current
   }
 

@@ -2,6 +2,7 @@
 // Schema Version: 1
 /* eslint-disable camelcase */
 /* eslint-disable quotes */
+/* eslint-disable space-before-function-paren */
 
 const { c } = require('hyperschema/runtime')
 
@@ -200,17 +201,19 @@ const encoding7_1 = c.frame(encoding6)
 const encoding7 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
-    state.end++ // max flag is 1 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
     if (m.checkout) encoding7_1.preencode(state, m.checkout)
+    if (m.key) c.fixed32.preencode(state, m.key)
   },
   encode(state, m) {
-    const flags = m.checkout ? 1 : 0
+    const flags = (m.checkout ? 1 : 0) | (m.key ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.uint.encode(state, flags)
 
     if (m.checkout) encoding7_1.encode(state, m.checkout)
+    if (m.key) c.fixed32.encode(state, m.key)
   },
   decode(state) {
     const r0 = c.string.decode(state)
@@ -218,7 +221,8 @@ const encoding7 = {
 
     return {
       link: r0,
-      checkout: (flags & 1) !== 0 ? encoding7_1.decode(state) : null
+      checkout: (flags & 1) !== 0 ? encoding7_1.decode(state) : null,
+      key: (flags & 2) !== 0 ? c.fixed32.decode(state) : null
     }
   }
 }
@@ -315,23 +319,26 @@ const encoding11_1 = encoding7_1
 // @pear/current/hyperdb#6
 const encoding11 = {
   preencode(state, m) {
-    state.end++ // max flag is 1 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
     if (m.checkout) encoding11_1.preencode(state, m.checkout)
+    if (m.key) c.fixed32.preencode(state, m.key)
   },
   encode(state, m) {
-    const flags = m.checkout ? 1 : 0
+    const flags = (m.checkout ? 1 : 0) | (m.key ? 2 : 0)
 
     c.uint.encode(state, flags)
 
     if (m.checkout) encoding11_1.encode(state, m.checkout)
+    if (m.key) c.fixed32.encode(state, m.key)
   },
   decode(state) {
     const flags = c.uint.decode(state)
 
     return {
       link: null,
-      checkout: (flags & 1) !== 0 ? encoding11_1.decode(state) : null
+      checkout: (flags & 1) !== 0 ? encoding11_1.decode(state) : null,
+      key: (flags & 2) !== 0 ? c.fixed32.decode(state) : null
     }
   }
 }
