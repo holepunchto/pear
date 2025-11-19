@@ -53,6 +53,7 @@
       "type": 2,
       "collection": "@pear/bundle",
       "unique": false,
+      "deprecated": false,
       "key": {
         "type": "string",
         "map": "tags"

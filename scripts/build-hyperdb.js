@@ -147,6 +147,10 @@ pearSchema.register({
     {
       name: 'checkout',
       type: '@pear/checkout'
+    },
+    {
+      name: 'key',
+      type: 'fixed32'
     }
   ]
 })
