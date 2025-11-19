@@ -27,6 +27,27 @@ pearSchema.register({
 })
 
 pearSchema.register({
+  name: 'presets',
+  fields: [
+    {
+      name: 'link',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'command',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'flags',
+      type: 'string',
+      required: true
+    }
+  ]
+})
+
+pearSchema.register({
   name: 'checkout',
   fields: [
     {
@@ -192,6 +213,12 @@ pearDB.collections.register({
   key: ['link']
 })
 
+pearDB.collections.register({
+  name: 'presets',
+  schema: '@pear/presets',
+  key: ['link']
+})
+
 pearDB.indexes.register({
   name: 'bundle-by-tags',
   collection: '@pear/bundle',
@@ -200,6 +227,12 @@ pearDB.indexes.register({
     type: 'string',
     map: 'tags'
   }
+})
+
+pearDB.indexes.register({
+  name: 'presets-by-command',
+  collection: '@pear/presets',
+  key: ['link', 'command']
 })
 
 Builder.toDisk(db)
