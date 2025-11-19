@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.1.13
+
+### Fixes
+
+* Internal - aliased currents fix
+
 ## v2.1.12
 
 ### Improvements
