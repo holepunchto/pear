@@ -187,10 +187,13 @@ module.exports = class Model {
     const get = { link: parsed.origin }
     LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
-    current.checkout.length =
-      !current.key || !b4a.equals(current.key, parsed.drive.key)
-        ? 0
-        : current.checkout.length
+    if (current !== null) {
+      current.checkout.length =
+        !current.key || !b4a.equals(current.key, parsed.drive.key)
+          ? 0
+          : current.checkout.length
+    }
+
     return current
   }
 
