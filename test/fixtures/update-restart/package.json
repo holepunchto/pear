@@ -1,0 +1,13 @@
+{
+  "name": "update-restart",
+  "main": "index.js",
+  "pear": {
+    "name": "update-restart",
+    "type": "terminal"
+  },
+  "dependencies": {
+    "bare-fs": "^4.5.1",
+    "pear-restart": "^1.0.0",
+    "pear-updates": "^1.1.0"
+  }
+}

@@ -8,17 +8,30 @@ const Corestore = require('corestore')
 const testTmp = require('test-tmp')
 const { Session } = require('pear-inspect')
 const Helper = require('./helper')
+const { Readable } = require('streamx')
 const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
+const updateRestart = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'update-restart'
+)
+const updateRestartPlatform = path.join(
+  Helper.localDir,
+  'test',
+  'fixtures',
+  'update-restart-platform'
+)
 const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
 const cutover = path.join(Helper.localDir, 'test', 'fixtures', 'cutover')
-const seedOpts = (id) => ({
+const seedOpts = (id, dir = updates) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
   key: null,
-  dir: updates,
+  dir,
   cmdArgs: []
 })
-const stageOpts = (id, dir) => ({
+const stageOpts = (id, dir = updates) => ({
   ...seedOpts(id, dir),
   dryRun: false,
   ignore: []
@@ -1321,6 +1334,236 @@ test('updates should start timer for clearing buffer when cutover is called', as
   await rcv.shutdown()
 
   await Helper.untilClose(pipe)
+})
+
+test('restart on update should work correctly for app stage updates', async function (t) {
+  const { ok, is, plan, comment, teardown, timeout, pass } = t
+  timeout(60_000)
+  plan(7)
+  const dir = updateRestart
+  const testId = Helper.getRandomId()
+
+  comment('1. Create and tail output file')
+  const tmpdir = await testTmp()
+  teardown(() => Helper.gc(tmpdir), { order: Infinity })
+  const tmpfile = path.join(tmpdir, 'output.log')
+  fs.writeFileSync(tmpfile, '')
+
+  const logStream = new Readable()
+  let lastRead = 0
+  const watcher = fs.watch(tmpfile, () => {
+    fs.createReadStream(tmpfile, {
+      start: lastRead,
+      end: Infinity
+    }).on('data', (data) => {
+      lastRead += data.length
+      logStream.push(data)
+    })
+  })
+  teardown(() => logStream.push(null), { order: Infinity })
+  teardown(() => watcher.close(), { order: -Infinity })
+
+  comment('2. Stage and run app')
+  let link
+  {
+    comment('\tstaging')
+    const stager = new Helper(rig)
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+    const staging = stager.stage(stageOpts(testId, dir))
+    teardown(() => Helper.teardownStream(staging))
+    const until = await Helper.pick(staging, [
+      { tag: 'staging' },
+      { tag: 'final' }
+    ])
+    link = (await until.staging).link
+    await until.final
+  }
+
+  comment('\trunning')
+  const runner = await Helper.run({ link, args: [tmpfile] })
+  const { pipe } = runner
+  const initialVersion = await Helper.untilResult(logStream, {
+    runFn: () => {}
+  }).then((data) => JSON.parse(data.trim()))
+  ok(initialVersion?.app, 'app started and reported version')
+
+  comment('3. Create new file and restage')
+
+  const file = `${ts()}.tmp`
+  comment(`\tcreating test file (${file})`)
+  fs.writeFileSync(path.join(dir, file), 'test')
+  teardown(() => Helper.gc(tmpfile), { order: -Infinity })
+
+  comment('\trestaging')
+  {
+    const stager = new Helper(rig)
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+
+    const staging = stager.stage(stageOpts(testId, dir))
+    teardown(() => Helper.teardownStream(staging))
+    await Helper.pick(staging, { tag: 'final' })
+    fs.unlinkSync(path.join(dir, file))
+  }
+
+  comment('\twaiting for restart')
+  await Helper.untilClose(pipe)
+  pass('first app exited')
+
+  comment('\twaiting for version')
+  const secondVersion = await Helper.untilResult(logStream, {
+    runFn: () => {}
+  }).then((data) => JSON.parse(data.trim()))
+  ok(secondVersion?.app, 'app restarted and reported version')
+
+  is(
+    hypercoreid.normalize(initialVersion?.app?.key),
+    hypercoreid.normalize(secondVersion?.app?.key),
+    'app updated with matching key'
+  )
+  is(secondVersion?.app?.fork, 0, 'app version.fork is 0')
+  ok(
+    secondVersion?.app?.length > 0,
+    `app version.length is non-zero (v${secondVersion?.app?.fork}.${secondVersion?.app?.length})`
+  )
+  ok(
+    secondVersion?.app?.length > initialVersion?.app?.length,
+    'app version.length incremented'
+  )
+})
+
+test('restart on update should work correctly for platform updates', async function (t) {
+  const { ok, is, plan, comment, teardown, timeout, pass } = t
+  timeout(60_000)
+  plan(9)
+  const dir = updateRestartPlatform
+  const testId = Helper.getRandomId()
+
+  comment('1. Create and tail output file')
+  const tmpdir = await testTmp()
+  teardown(() => Helper.gc(tmpdir), { order: Infinity })
+  const tmpfile = path.join(tmpdir, 'output.log')
+  fs.writeFileSync(tmpfile, '')
+
+  const logStream = new Readable()
+  let lastRead = 0
+  const watcher = fs.watch(tmpfile, () => {
+    fs.createReadStream(tmpfile, {
+      start: lastRead,
+      end: Infinity
+    }).on('data', (data) => {
+      lastRead += data.length
+      logStream.push(data)
+    })
+  })
+  teardown(() => logStream.push(null), { order: Infinity })
+  teardown(() => watcher.close(), { order: -Infinity })
+
+  comment('2. staging and seed app')
+  let link
+  {
+    comment('staging app')
+    const stager = new Helper(rig)
+    teardown(() => stager.close(), { order: Infinity })
+    await stager.ready()
+
+    const staging = stager.stage(stageOpts(testId, dir))
+    teardown(() => Helper.teardownStream(staging))
+    const until = await Helper.pick(staging, [
+      { tag: 'staging' },
+      { tag: 'final' }
+    ])
+    link = (await until.staging).link
+    const final = await until.final
+    ok(final.success, 'stage succeeded')
+  }
+
+  {
+    comment('seeding app')
+    const seeder = new Helper(rig)
+    teardown(() => seeder.close(), { order: Infinity })
+    await seeder.ready()
+
+    const seeding = seeder.seed(seedOpts(testId, dir))
+    teardown(() => Helper.teardownStream(seeding))
+    const until = await Helper.pick(seeding, [{ tag: 'announced' }])
+
+    const announced = await until.announced
+    ok(announced, 'seeding is announced')
+  }
+
+  comment('3. bootstrapping rcv platform')
+  const platformDirRcv = path.join(tmp, 'rcv-pear')
+  await Helper.bootstrap(rig.key, platformDirRcv)
+  comment('\trcv platform bootstrapped')
+
+  comment('4. running app from rcv platform')
+  comment('\trunning')
+  const runner = await Helper.run({
+    link,
+    platformDir: platformDirRcv,
+    args: [tmpfile]
+  })
+  const { pipe } = runner
+  const initialVersion = await Helper.untilResult(logStream, {
+    runFn: () => {}
+  }).then((data) => JSON.parse(data.trim()))
+  ok(initialVersion?.app, 'app started and reported version')
+
+  comment('5. create new file in rcv platform and restage platform')
+  {
+    const file = `${ts()}.tmp`
+    comment(`\tcreating platform test file (${file})`)
+    fs.writeFileSync(path.join(rig.artefactDir, file), 'test')
+    teardown(
+      () => {
+        try {
+          fs.unlinkSync(path.join(rig.artefactDir, file))
+        } catch {
+          /* ignore */
+        }
+      },
+      { order: -Infinity }
+    )
+
+    comment('\trestaging platform')
+    const staging = rig.local.stage({
+      channel: `test-${rig.id}`,
+      name: `test-${rig.id}`,
+      dir: rig.artefactDir,
+      dryRun: false
+    })
+    teardown(() => Helper.teardownStream(staging))
+    await Helper.pick(staging, { tag: 'final' })
+    comment('rig platform restaged')
+  }
+
+  comment('\twaiting for app restart')
+  await Helper.untilClose(pipe)
+  pass('first app exited')
+
+  comment('\twaiting for version')
+  const secondVersion = await Helper.untilResult(logStream, {
+    runFn: () => {},
+    timeout: 60_000
+  }).then((data) => JSON.parse(data.trim()))
+  ok(secondVersion?.app, 'app restarted and reported version')
+
+  is(
+    hypercoreid.normalize(initialVersion?.app?.key),
+    hypercoreid.normalize(secondVersion?.app?.key),
+    'app updated with matching key'
+  )
+  is(secondVersion?.platform?.fork, 0, 'platform version.fork is 0')
+  ok(
+    secondVersion?.platform?.length > 0,
+    `platform version.length is non-zero (v${secondVersion?.platform?.fork}.${secondVersion?.platform?.length})`
+  )
+  ok(
+    secondVersion?.platform?.length > initialVersion?.platform?.length,
+    'platform version.length incremented'
+  )
 })
 
 test.hook('updates cleanup', rig.cleanup)
