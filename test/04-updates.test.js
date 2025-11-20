@@ -1511,7 +1511,7 @@ test('restart on update should work correctly for platform updates', async funct
   }).then((data) => JSON.parse(data.trim()))
   ok(initialVersion?.app, 'app started and reported version')
 
-  comment('4. create new file in rcv platform and restage platform')
+  comment('5. create new file in rcv platform and restage platform')
   {
     const file = `${ts()}.tmp`
     comment(`\tcreating platform test file (${file})`)
