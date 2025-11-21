@@ -160,6 +160,7 @@ class Helper extends IPC.Client {
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
+    this.runtime = runtime
   }
 
   static getRandomId() {
