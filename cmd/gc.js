@@ -2,6 +2,7 @@
 const plink = require('pear-link')
 const { outputter, confirm, ansi } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { discoveryKey } = require('hypercore-crypto')
 
 const output = outputter('gc', {
   remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
@@ -11,7 +12,9 @@ const output = outputter('gc', {
       : `No ${resource} removed`
   },
   error: ({ code, message, stack }) =>
-    `GC Error (code: ${code || 'none'}) ${message} ${stack}`
+    `GC Error (code: ${code || 'none'}) ${message} ${stack}`,
+  clear: ({ discoveryKey, length }) =>
+    `Cleared ${length} blocks of ${discoveryKey}`
 })
 
 module.exports = (ipc) => {
@@ -51,5 +54,9 @@ class GC {
     const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
     return { link }
+  }
+
+  corestore() {
+    return null
   }
 }
