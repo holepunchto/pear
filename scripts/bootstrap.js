@@ -42,7 +42,6 @@ const ROOT = global.Pear
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
-const HOST = path.join(SWAP, 'by-arch', ADDON_HOST)
 try {
   fs.symlinkSync(
     '..',
@@ -55,6 +54,7 @@ try {
 }
 
 const clear = () => {
+  if (!isTTY) return
   process.stdout.clearLine()
   process.stdout.cursorTo(0)
 }
@@ -181,7 +181,7 @@ async function download(key, all = false) {
 
 async function output(mirror) {
   for await (const { op, key, bytesAdded } of mirror) {
-    if (isTTY) clear()
+    clear()
     if (op === 'add') {
       console.log(
         '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
