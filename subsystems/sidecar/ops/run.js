@@ -16,7 +16,6 @@ const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
-const Monitor = require('../lib/monitor')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -417,34 +416,30 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    const monitor = new Monitor(mirror)
-    monitor.on('stats', (stats) => this.push({ tag: 'stats', data: stats }))
-    try {
-      for await (const diff of mirror) {
-        LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
-        if (diff.op === 'add') {
-          this.push({
-            tag: 'byte-diff',
-            data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
-          })
-        } else if (diff.op === 'change') {
-          this.push({
-            tag: 'byte-diff',
-            data: {
-              type: 0,
-              sizes: [-diff.bytesRemoved, diff.bytesAdded],
-              message: diff.key
-            }
-          })
-        } else if (diff.op === 'remove') {
-          this.push({
-            tag: 'byte-diff',
-            data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
-          })
-        }
+    const monitor = mirror.monitor()
+    monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
+    for await (const diff of mirror) {
+      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
+      if (diff.op === 'add') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
+        })
+      } else if (diff.op === 'change') {
+        this.push({
+          tag: 'byte-diff',
+          data: {
+            type: 0,
+            sizes: [-diff.bytesRemoved, diff.bytesAdded],
+            message: diff.key
+          }
+        })
+      } else if (diff.op === 'remove') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
+        })
       }
-    } finally {
-      monitor.stop()
     }
 
     await this.sidecar.model.addAsset(opts.link, asset)

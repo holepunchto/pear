@@ -140,7 +140,7 @@ module.exports = class Dump extends Opstream {
         (s) => (prefix.endsWith('/') ? prefix : prefix + '/') + s.trim()
       )
     }
-    console.log(prefix, prefixes, only)
+
     const mirror = src.mirror(dst, {
       progress: true,
       dryRun,
@@ -148,8 +148,8 @@ module.exports = class Dump extends Opstream {
       prefix: prefixes
     })
     if (!isFileLink) {
-      // const monitor = mirror.monitor()
-      // monitor.on('stats', (stats) => this.push({ tag: 'stats', data: stats }))
+      const monitor = mirror.monitor()
+      monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
     }
 
     for await (const diff of mirror) {

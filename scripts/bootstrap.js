@@ -15,7 +15,6 @@ const byteSize = require('tiny-byte-size')
 const { decode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const Rache = require('rache')
-const speedometer = require('speedometer')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
 const argv =
@@ -31,7 +30,6 @@ const parser = command(
 const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
-const DLRUNTIME = cmd.flags.dlruntime === true
 const RUNTIMES_DRIVE_KEY =
   cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
 const CORESTORE =
@@ -56,6 +54,11 @@ try {
   safetyCatch(err)
 }
 
+const clear = () => {
+  process.stdout.clearLine()
+  process.stdout.cursorTo(0)
+}
+
 const runtime = path.join('by-arch', ADDON_HOST, 'bin', 'pear-runtime')
 if (isWindows === false) {
   try {
@@ -75,16 +78,7 @@ if (isWindows === false) {
   fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
-if (ARCHDUMP) {
-  const downloading = download(RUNTIMES_DRIVE_KEY, true)
-  downloading.catch(console.error).then(advise)
-} else if (DLRUNTIME || fs.existsSync(HOST) === false) {
-  const downloading = download(RUNTIMES_DRIVE_KEY, false)
-  downloading.catch(console.error)
-  if (DLRUNTIME === false) downloading.catch(console.error).then(advise)
-} else {
-  console.log('Now run ./pear.dev')
-}
+download(RUNTIMES_DRIVE_KEY, ARCHDUMP).then(advise, console.error)
 
 function advise() {
   if (isWindows === false) {
@@ -94,7 +88,7 @@ function advise() {
     return
   }
   console.log(
-    '🍐 The pear.cmd and pear.ps1 scripts wrap the runtime. Use pear.cmd or pear.ps1 as localdev pear.'
+    '* The pear.cmd and pear.ps1 scripts wrap the runtime. Use pear.cmd or pear.ps1 as localdev pear.'
   )
 }
 
@@ -128,7 +122,7 @@ async function download(key, all = false) {
   runtimes = runtimes.checkout(runtimes.version)
   goodbye(() => runtimes.close())
 
-  console.log(`\n  Extracting platform runtime${all ? 's' : ''} to disk`)
+  console.log(`\n  Syncing platform runtime${all ? 's' : ''} to disk`)
 
   const bin = [
     '/by-arch/linux-x64/bin/pear-runtime',
@@ -152,26 +146,23 @@ async function download(key, all = false) {
     '/by-arch/win32-x64/bin/pear.exe'
   ]
 
-  const monitor = monitorDrive(runtimes)
-  goodbye(() => monitor.stop())
-  const onloop = () => {
-    if (isTTY) monitor.clear()
-  }
-  const promises = []
-  for (const prefix of [...bin, ...lib, ...wakeup]) {
-    if (all || prefix.startsWith('/by-arch/' + ADDON_HOST)) {
-      promises.push(
-        output(runtimes.mirror(new Localdrive(SWAP), { prefix }), onloop)
-      )
-    }
-  }
+  let prefixes = [...bin, ...lib, ...wakeup]
+  if (!all)
+    prefixes = prefixes.filter((prefix) =>
+      prefix.startsWith('/by-arch/' + ADDON_HOST)
+    )
+  const mirror = runtimes.mirror(new Localdrive(SWAP), { prefix: prefixes })
+  const monitor = mirror.monitor()
+  monitor.on('update', (stats) => {
+    clear()
+    const { peers, download } = stats
+    process.stdout.write(
+      `[ Peers: ${peers} ] [⬇ ${byteSize(download.bytes)} - ${byteSize(download.speed)}/s ]`
+    )
+  })
+  await output(mirror)
 
-  for (const { reason } of await Promise.allSettled(promises))
-    if (reason) throw reason
-
-  monitor.stop()
-
-  console.log('\x1B[2K\x1B[200D  Runtime extraction complete\x1b[K\n')
+  console.log('\x1B[2K\x1B[200D  Runtime sync complete\x1b[K\n')
 
   await runtimes.close()
   await swarm.destroy()
@@ -188,9 +179,9 @@ async function download(key, all = false) {
     )
 }
 
-async function output(mirror, onloop) {
+async function output(mirror) {
   for await (const { op, key, bytesAdded } of mirror) {
-    onloop()
+    if (isTTY) clear()
     if (op === 'add') {
       console.log(
         '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
@@ -204,67 +195,5 @@ async function output(mirror, onloop) {
         '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
       )
     }
-  }
-}
-
-/**
- * @param {Hyperdrive} drive
- */
-function monitorDrive(drive) {
-  if (!isTTY) {
-    return {
-      clear: () => null,
-      stop: () => null
-    }
-  }
-
-  const downloadSpeedometer = speedometer()
-  const uploadSpeedometer = speedometer()
-  let peers = 0
-  let downloadedBytes = 0
-  let uploadedBytes = 0
-
-  drive
-    .getBlobs()
-    .then((blobs) => {
-      blobs.core.on('download', (_index, bytes) => {
-        downloadedBytes += bytes
-        downloadSpeedometer(bytes)
-      })
-      blobs.core.on('upload', (_index, bytes) => {
-        uploadedBytes += bytes
-        uploadSpeedometer(bytes)
-      })
-      blobs.core.on('peer-add', () => {
-        peers = blobs.core.peers.length
-      })
-      blobs.core.on('peer-remove', () => {
-        peers = blobs.core.peers.length
-      })
-    })
-    .catch(() => {
-      // ignore
-    })
-
-  const clear = () => {
-    process.stdout.clearLine()
-    process.stdout.cursorTo(0)
-  }
-
-  const interval = setInterval(() => {
-    clear()
-    process.stdout.write(
-      `[⬇ ${byteSize(downloadedBytes)} - ${byteSize(downloadSpeedometer())}/s - ${peers} peers] [⬆ ${byteSize(uploadedBytes)} - ${byteSize(uploadSpeedometer())}/s - ${peers} peers]`
-    )
-  }, 500)
-
-  const stop = () => {
-    clearInterval(interval)
-    clear()
-  }
-
-  return {
-    clear,
-    stop
   }
 }
