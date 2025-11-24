@@ -16,7 +16,6 @@ const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
-const DriveMonitor = require('../lib/drive-monitor')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -400,16 +399,6 @@ module.exports = class Run extends Opstream {
     })
     await this.session.add(bundle)
     bundle.join()
-    const monitor = new DriveMonitor(bundle.drive)
-    this.on('end', () => monitor.destroy())
-    monitor.on('error', (err) =>
-      this.push({ tag: 'assetStatsErr', data: { err } })
-    )
-    monitor.on('data', (stats) => this.push({ tag: 'assetStats', data: stats }))
-    this.push({
-      tag: 'assetSyncing',
-      data: { link: asset.link, dir: asset.path }
-    })
     try {
       await bundle.calibrate()
     } catch (err) {
@@ -425,7 +414,34 @@ module.exports = class Run extends Opstream {
     })
 
     if (prefixes.length === 0) prefixes.push('/')
-    await this.mirrors(src, dst, prefixes)
+
+    const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
+    const monitor = mirror.monitor()
+    monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
+    for await (const diff of mirror) {
+      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
+      if (diff.op === 'add') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
+        })
+      } else if (diff.op === 'change') {
+        this.push({
+          tag: 'byte-diff',
+          data: {
+            type: 0,
+            sizes: [-diff.bytesRemoved, diff.bytesAdded],
+            message: diff.key
+          }
+        })
+      } else if (diff.op === 'remove') {
+        this.push({
+          tag: 'byte-diff',
+          data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
+        })
+      }
+    }
+
     await this.sidecar.model.addAsset(opts.link, asset)
     LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
     return asset
@@ -459,39 +475,6 @@ module.exports = class Run extends Opstream {
     } catch (err) {
       LOG.error('internal', 'gc orphan workers error', err)
     }
-  }
-
-  async mirror(src, dst, prefix) {
-    for await (const diff of src.mirror(dst, { prefix })) {
-      LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
-      if (diff.op === 'add') {
-        this.push({
-          tag: 'byte-diff',
-          data: { type: 1, sizes: [diff.bytesAdded], message: diff.key }
-        })
-      } else if (diff.op === 'change') {
-        this.push({
-          tag: 'byte-diff',
-          data: {
-            type: 0,
-            sizes: [-diff.bytesRemoved, diff.bytesAdded],
-            message: diff.key
-          }
-        })
-      } else if (diff.op === 'remove') {
-        this.push({
-          tag: 'byte-diff',
-          data: { type: -1, sizes: [-diff.bytesRemoved], message: diff.key }
-        })
-      }
-    }
-  }
-
-  async mirrors(src, dst, prefixes) {
-    const promises = prefixes.map((prefix) => this.mirror(src, dst, prefix))
-    const result = await Promise.allSettled(promises)
-    for (const { status, reason } of result)
-      if (status === 'rejected') throw reason // throw first error
   }
 
   async #updatePearInterface(drive) {
