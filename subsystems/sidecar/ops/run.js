@@ -421,13 +421,13 @@ module.exports = class Run extends Opstream {
         const data = {
           peers: mirror.peers.length,
           download: {
-            total: mirror.downloadedBytes,
+            bytes: mirror.downloadedBytes,
             blocks: mirror.downloadedBlocks,
             speed: mirror.downloadSpeed(),
             progress: mirror.downloadProgress
           },
           upload: {
-            total: mirror.uploadedBytes,
+            bytes: mirror.uploadedBytes,
             speed: mirror.uploadSpeed()
           }
         }
