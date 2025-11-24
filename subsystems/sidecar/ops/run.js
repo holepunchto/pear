@@ -422,6 +422,7 @@ module.exports = class Run extends Opstream {
           peers: mirror.peers.length,
           download: {
             total: mirror.downloadedBytes,
+            blocks: mirror.downloadedBlocks,
             speed: mirror.downloadSpeed(),
             progress: mirror.downloadProgress
           },
@@ -431,7 +432,7 @@ module.exports = class Run extends Opstream {
           }
         }
         this.push({ tag: 'stats', data })
-      }, 30)
+      }, 250)
       for await (const diff of mirror) {
         LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
         if (diff.op === 'add') {
