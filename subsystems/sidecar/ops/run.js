@@ -16,6 +16,7 @@ const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
+const Monitor = require('../lib/monitor')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -414,26 +415,11 @@ module.exports = class Run extends Opstream {
     })
 
     if (prefixes.length === 0) prefixes.push('/')
-    let stats = null
+
+    const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
+    const monitor = new Monitor(mirror)
+    monitor.on('data', (data) => this.push({ tag: 'stats', data }))
     try {
-      const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-      stats = setInterval(() => {
-        const data = {
-          peers: mirror.peers.length,
-          download: {
-            bytes: mirror.downloadedBytes,
-            blocks: mirror.downloadedBlocks,
-            speed: mirror.downloadSpeed(),
-            progress: mirror.downloadProgress
-          },
-          upload: {
-            bytes: mirror.uploadedBytes,
-            blocks: mirror.uploadedBlocks,
-            speed: mirror.uploadSpeed()
-          }
-        }
-        this.push({ tag: 'stats', data })
-      }, 250)
       for await (const diff of mirror) {
         LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
         if (diff.op === 'add') {
@@ -458,7 +444,7 @@ module.exports = class Run extends Opstream {
         }
       }
     } finally {
-      clearInterval(stats)
+      monitor.stop()
     }
 
     await this.sidecar.model.addAsset(opts.link, asset)
