@@ -1,5 +1,19 @@
 # Pear Runtime Changelog
 
+## v2.2.0
+
+### Features
+
+* CLI - `pear gc corestore` - clear platform corestore to reduce disk space usage
+
+### Fixes
+
+* CLI - `pear stage --pre-io` fix to show pre I/O during stage when flag is used
+
+### Improvements
+
+* Internal - ratified stats object for mirror monitoring, includes progress stat
+
 ## v2.1.13
 
 ### Fixes
