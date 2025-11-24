@@ -428,6 +428,7 @@ module.exports = class Run extends Opstream {
           },
           upload: {
             bytes: mirror.uploadedBytes,
+            blocks: mirror.uploadedBlocks,
             speed: mirror.uploadSpeed()
           }
         }
