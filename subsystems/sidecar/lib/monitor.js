@@ -1,7 +1,7 @@
 'use strict'
-const { Readable } = require('streamx')
+const EventEmitter = require('events')
 
-class Monitor extends Readable {
+class Monitor extends EventEmitter {
   static timer = null
   static monitors = new Set()
   static stats(mirror) {
@@ -23,7 +23,7 @@ class Monitor extends Readable {
   }
   static sweep() {
     for (const monitor of this.monitors) {
-      monitor.push(this.stats(monitor.mirror))
+      monitor.emit('stats', this.stats(monitor.mirror))
     }
   }
   constructor(mirror) {

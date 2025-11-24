@@ -418,7 +418,7 @@ module.exports = class Run extends Opstream {
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
     const monitor = new Monitor(mirror)
-    monitor.on('data', (data) => this.push({ tag: 'stats', data }))
+    monitor.on('stats', (stats) => this.push({ tag: 'stats', data: stats }))
     try {
       for await (const diff of mirror) {
         LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
