@@ -104,7 +104,7 @@ module.exports = (ipc) =>
         pkg = await output({ ctrlTTY: false, json }, pre, {
           pre: true,
           preQ: cmd.flags.preQ,
-          preio: cmd.flags.preio
+          preio: cmd.flags.preIo
         })
       }
     }
