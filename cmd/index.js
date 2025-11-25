@@ -322,7 +322,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       arg('[link]', 'Clear asset by link'),
       runners.gc(ipc)
     ),
-    command('corestore', summary('Clear platform corestore'), runners.gc(ipc)),
+    command('cores', summary('Clear corestore cores'), runners.gc(ipc)),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
