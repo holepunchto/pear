@@ -55,8 +55,7 @@ async function bootSidecar() {
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
     manifestVersion: 1,
-    compat: false,
-    wait: true
+    compat: false
   })
   await corestore.ready()
 
