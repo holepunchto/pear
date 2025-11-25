@@ -7,7 +7,6 @@ const { spawn } = require('bare-subprocess')
 const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
-const crypto = require('hypercore-crypto')
 const b4a = require('b4a')
 const hypercoreid = require('hypercore-id-encoding')
 
@@ -20,7 +19,7 @@ module.exports = class GC extends Opstream {
     if (params.resource === 'releases') return this.releases(params)
     if (params.resource === 'sidecars') return this.sidecars(params)
     if (params.resource === 'assets') return this.assets(params)
-    if (params.resource === 'corestore') return this.corestore(params)
+    if (params.resource === 'cores') return this.cores(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
@@ -151,17 +150,18 @@ module.exports = class GC extends Opstream {
     this.push({ tag: 'complete', data: { resource, count } })
   }
 
-  async corestore() {
-    const platformDiscoveryKey = b4a.isBuffer(this.sidecar.version.key)
-      ? crypto.discoveryKey(hypercoreid.decode(this.sidecar.version.key))
-      : null
-    let i = 0
+  async cores(params) {
+    const { resource } = params
+
+    const ignore = !this.sidecar.drive.core
+      ? new Set()
+      : new Set([
+          this.sidecar.drive.core.discoveryKey,
+          this.sidecar.drive.blobs.core.discoveryKey
+        ])
+
     for await (const discoveryKey of this.sidecar.corestore.list()) {
-      if (
-        platformDiscoveryKey &&
-        b4a.equals(platformDiscoveryKey, discoveryKey)
-      )
-        continue
+      if (ignore.has(hypercoreid.encode(discoveryKey))) continue
       const info = await this.sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
       const core = this.sidecar.corestore.get({
@@ -170,14 +170,15 @@ module.exports = class GC extends Opstream {
       })
       await core.ready()
       await core.clear(0, core.length)
-      await core.close()
       this.push({
-        tag: 'clear',
+        tag: 'remove',
         data: {
-          discoveryKey: hypercoreid.encode(discoveryKey),
-          length: core.length
+          operation: 'cleared',
+          resource: resource,
+          id: hypercoreid.encode(discoveryKey)
         }
       })
+      await core.close()
     }
   }
 }
