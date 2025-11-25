@@ -52,13 +52,22 @@ async function bootSidecar() {
       return { host, port: int }
     })
 
+  const maxLockWait = 2500
+  const lockFail = setTimeout(() => {
+    console.error('Lock wait (corestore) failed')
+    Bare.exit(1)
+  }, maxLockWait)
+
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
     manifestVersion: 1,
     compat: false,
     wait: true
   })
+
   await corestore.ready()
+
+  clearTimeout(lockFail)
 
   const drive = await createPlatformDrive()
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
