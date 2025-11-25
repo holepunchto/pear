@@ -5,16 +5,15 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { discoveryKey } = require('hypercore-crypto')
 
 const output = outputter('gc', {
-  remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
+  remove: ({ resource, id, operation = 'removed' }) =>
+    `${operation[0].toUpperCase() + operation.slice(1)} ${resource.slice(0, -1)} '${id}'`,
   complete: ({ resource, count }) => {
     return count > 0
       ? `Total ${resource} removed: ${count}`
       : `No ${resource} removed`
   },
   error: ({ code, message, stack }) =>
-    `GC Error (code: ${code || 'none'}) ${message} ${stack}`,
-  clear: ({ discoveryKey, length }) =>
-    `Cleared ${length} blocks of ${discoveryKey}`
+    `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
 module.exports = (ipc) => {
@@ -56,7 +55,7 @@ class GC {
     return { link }
   }
 
-  corestore() {
+  cores() {
     return null
   }
 }
