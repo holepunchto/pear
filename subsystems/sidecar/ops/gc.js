@@ -152,19 +152,19 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { resource } = params
-
-    const ignore = !this.sidecar.drive.core
+    const { sidecar } = this
+    const ignore = !sidecar.drive.core
       ? new Set()
       : new Set([
-          this.sidecar.drive.core.discoveryKey,
-          this.sidecar.drive.blobs.core.discoveryKey
+          sidecar.drive.core.discoveryKey,
+          sidecar.drive.blobs.core.discoveryKey
         ])
 
-    for await (const discoveryKey of this.sidecar.corestore.list()) {
+    for await (const discoveryKey of sidecar.corestore.list()) {
       if (ignore.has(hypercoreid.encode(discoveryKey))) continue
-      const info = await this.sidecar.corestore.storage.getInfo(discoveryKey)
+      const info = await sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
-      const core = this.sidecar.corestore.get({
+      const core = sidecar.corestore.get({
         discoveryKey: info.discoveryKey,
         active: false
       })
@@ -180,5 +180,6 @@ module.exports = class GC extends Opstream {
       })
       await core.close()
     }
+    await sidecar.corestore.storage.compact()
   }
 }
