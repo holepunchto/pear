@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v2.2.1
+
+### Fixes
+
+* CLI - `pear gc cores` ignore platform blobs key, compact corestore on clear (was:`pear gc corestore`)
+* CLI - `pear sidecar` MAX_SAFE_INTEGER spindown - manually started sidecar should stay alive
+
 ## v2.2.0
 
 ### Features
