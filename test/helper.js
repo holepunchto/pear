@@ -21,6 +21,7 @@ const BY_ARCH = path.join(
 )
 const constants = require('pear-constants')
 const run = require('pear-run')
+const { Duplex } = require('streamx')
 const { PLATFORM_DIR, RUNTIME } = constants
 const { pathname } = new URL(global.Pear.config.applink)
 const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
@@ -190,6 +191,44 @@ class Helper extends IPC.Client {
       Pear.constructor.RUNTIME = RUNTIME
       Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
     }
+
+    return { pipe }
+  }
+
+  static async rawRun({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
+    const runtime = platformDir
+      ? path.join(platformDir, 'current', BY_ARCH)
+      : RUNTIME
+    const sp = spawn(runtime, ['run', ...argv, '--trusted', link, ...args], {
+      stdio: ['pipe', 'pipe', 'pipe'], // NOTE: fd 3 deliberately unset so that pre runs
+      windowsHide: true
+    })
+
+    const pipe = new Duplex()
+    sp.once('exit', (exitCode) => {
+      if (exitCode !== 0) pipe.emit('crash', { exitCode })
+    })
+
+    sp.stdout.on('data', (data) => {
+      for (const line of data.toString().split(/\r?\n/g)) {
+        pipe.push({ tag: 'stdout', data: line })
+      }
+    })
+
+    sp.stderr.on('data', (data) => {
+      for (const line of data.toString().split(/\r?\n/g)) {
+        pipe.push({ tag: 'stderr', data: line })
+      }
+    })
+
+    pipe._write = (chunk, cb) => {
+      sp.stdin.write(chunk)
+      cb()
+    }
+
+    sp.stdout.on('end', () => {
+      pipe.push(null)
+    })
 
     return { pipe }
   }

@@ -1,0 +1,13 @@
+{
+  "name": "pre-configure",
+  "main": "index.js",
+  "pear": {
+    "name": "pre-configure-did-not-run",
+    "type": "terminal",
+    "pre": "./pre.js"
+  },
+  "dependencies": {
+    "compact-encoding": "^2.18.0",
+    "pear-pipe": "^1.0.6"
+  }
+}
