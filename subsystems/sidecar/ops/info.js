@@ -38,7 +38,10 @@ module.exports = class Info extends Opstream {
 
     const corestore = link
       ? this.sidecar.getCorestore(null, null)
-      : this.sidecar.getCorestore((await State.localPkg({ dir })).name, channel)
+      : this.sidecar.getCorestore(
+          State.appname(await State.localPkg({ dir })),
+          channel
+        )
 
     const key = link
       ? plink.parse(link).drive.key
