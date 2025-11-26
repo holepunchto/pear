@@ -4,7 +4,7 @@ const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
@@ -21,9 +21,11 @@ module.exports = class Info extends Opstream {
     metadata,
     manifest,
     changelog = null,
-    dir,
-    cmdArgs
+    dir
   } = {}) {
+    if (link && channel)
+      throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
+
     const { session } = this
     let bundle = null
     let drive = null
@@ -36,12 +38,12 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const corestore = link
-      ? this.sidecar.getCorestore(null, null)
-      : this.sidecar.getCorestore(
+    const corestore = channel
+      ? this.sidecar.getCorestore(
           State.appname(await State.localPkg({ dir })),
           channel
         )
+      : this.sidecar.getCorestore(null, null)
 
     const key = link
       ? plink.parse(link).drive.key
