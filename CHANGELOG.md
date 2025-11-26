@@ -1,5 +1,15 @@
 # Pear Runtime Changelog
 
+## v2.2.2
+
+### Fixes
+
+* CLI - `pear info [link|channel] [dir]` - channel support
+
+### Improvements
+
+* Internal - dependencies bump
+
 ## v2.2.1
 
 ### Fixes
