@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.3
+
+### Fixes
+
+* Internal - stop bundle memory-leak in run op
+
 ## v2.2.2
 
 ### Fixes
