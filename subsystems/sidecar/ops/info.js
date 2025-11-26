@@ -21,6 +21,7 @@ module.exports = class Info extends Opstream {
     metadata,
     manifest,
     changelog = null,
+    dir,
     cmdArgs
   } = {}) {
     const { session } = this
@@ -35,10 +36,12 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const state = new State({ flags: { channel, link }, cmdArgs })
     const corestore = link
       ? this.sidecar.getCorestore(null, null)
-      : this.sidecar.getCorestore(state.name, channel)
+      : this.sidecar.getCorestore(
+          State.appname(await State.localPkg({ dir })),
+          channel
+        )
 
     const key = link
       ? plink.parse(link).drive.key
