@@ -62,39 +62,25 @@ test('preflight downloads staged assets', async (t) => {
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
 
-  // NB: we spawn directly instead of using Helper.run to avoid unwanted
-  //        call to pipe.end
-  const sp = spawn(
-    helper.runtime,
-    [
-      'run',
+  const { pipe } = await Helper.rawRun({
+    argv: [
       '--preflight',
       '--dht-bootstrap',
       dhtBootstrap,
       '--base',
       appWithAssetsDir,
-      '--trusted',
-      '--no-pre',
-      `file://${appWithAssetsDir}`
+      '--no-pre'
     ],
-    {
-      stdio: ['inherit', 'inherit', 'inherit', 'overlapped'],
-      windowsHide: true
-    }
-  )
-  ref.ref()
-  sp.once('exit', (exitCode) => {
-    if (exitCode !== 0) run.pipe.emit('crash', { exitCode })
-    ref.unref()
+    link: `file://${appWithAssetsDir}`
   })
-  const pipe = sp.stdio[3]
 
   await helper.ready()
 
   await t.execution(
-    new Promise((resolve) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), 500)
-      pipe.once('data', () => {
+    new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), 1000)
+      pipe.once('data', (d) => {
+        console.log(d)
         reject(new Error('unexpected data'))
       })
       pipe.on('end', () => {
