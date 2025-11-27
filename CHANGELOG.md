@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.6
+
+### Fixes
+
+* Fixes - Fixed hyperswarm connectivity
+
 ## v2.2.5
 
 ### Improvements
