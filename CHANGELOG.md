@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.5
+
+### Improvements
+
+* Internal - added progress to installer in new launch dynamic library
+
 ## v2.2.4
 
 ### Improvements
