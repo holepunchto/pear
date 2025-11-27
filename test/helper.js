@@ -199,6 +199,7 @@ class Helper extends IPC.Client {
     const runtime = platformDir
       ? path.join(platformDir, 'current', BY_ARCH)
       : RUNTIME
+    console.log(['run', ...argv, '--trusted', link, ...args])
     const sp = spawn(runtime, ['run', ...argv, '--trusted', link, ...args], {
       stdio: ['pipe', 'pipe', 'pipe'], // NOTE: fd 3 deliberately unset so that pre runs
       windowsHide: true
