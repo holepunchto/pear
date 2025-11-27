@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.4
+
+### Improvements
+
+* Internal - dependencies bump
+
 ## v2.2.3
 
 ### Fixes
