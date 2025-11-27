@@ -5,7 +5,7 @@
     "name": "app-with-assets",
     "assets": {
       "ui": {
-        "link": "",
+        "link": "pear://0.2.7r3jjw6kz1m5rkrqduyz8h5i1ryxfd15hqp5zbdbxyopz93ontto",
         "name": "Pear Fixture Asset",
         "only": [
           "/asset"
