@@ -18,12 +18,14 @@
     }
   },
   "devDependencies": {
+    "bare-inspector": "^5.0.0",
     "brittle": "^3.0.0",
+    "pear-inspect": "^1.2.5",
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
     "pear-bridge": "^1.2.1",
-    "pear-electron": "^1.7.20",
+    "pear-electron": "^1.7.25",
     "pear-messages": "^1.0.3",
     "pear-pipe": "^1.0.1",
     "pear-updates": "^1.0.1"
