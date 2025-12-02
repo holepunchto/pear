@@ -1,6 +1,5 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
-const fs = require('bare-fs')
 const path = require('bare-path')
 const ref = require('pear-ref')
 const Hyperdrive = require('hyperdrive')
