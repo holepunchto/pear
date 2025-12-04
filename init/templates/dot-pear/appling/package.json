@@ -1,0 +1,11 @@
+{
+  "name": "__name__",
+  "version": "1.0.0",
+  "dependencies": {
+    "appling-native": "^1.4.0",
+    "bare-thread": "^1.1.3",
+    "fx-native": "^1.1.1",
+    "pear-updater-bootstrap": "^2.3.0",
+    "prettier-bytes": "^1.0.4"
+  }
+}
