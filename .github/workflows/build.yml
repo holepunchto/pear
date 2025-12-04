@@ -19,7 +19,6 @@ on:
           - stage
           - rc
           - next
-          - v1rc
       custom-commit:
         type: string
         description: Custom commit
