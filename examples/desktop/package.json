@@ -15,6 +15,22 @@
       "width": 900,
       "height": 500,
       "minWidth": 500
+    },
+    "build": {
+      "darwin": {
+        "identifier": "pear.deskex",
+        "category": "public.app-category.developer-tools",
+        "signing-identity": "",
+        "entitlements": ["com.apple.security.device.microphone"]
+      },
+      "win32": {
+        "subject": "",
+        "subject-name": "",
+        "thumbprint": ""
+      },
+      "linux": {
+        "category": "Development"
+      }
     }
   },
   "devDependencies": {
