@@ -21,7 +21,12 @@ async function runTests() {
   await import('./12-assets.test.js')
   await import('./13-stage.test.js')
   await import('./14-preflight.test.js')
-  await import('./15-opstream.test.js')
+  await import('./15-gc.test.js')
+  await import('./16-info.test.js')
+  await import('./17-release.test.js')
+  await import('./18-run.test.js')
+  await import('./19-seed.test.js')
+  await import('./20-touch.test.js')
 
   test.resume()
 }

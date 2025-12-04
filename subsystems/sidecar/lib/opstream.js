@@ -1,8 +1,8 @@
 'use strict'
 const streamx = require('streamx')
 const plink = require('pear-link')
-const { ERR_INVALID_LINK } = require('pear-errors')
 const Session = require('./session')
+
 module.exports = class Opstream extends streamx.Readable {
   final = {}
   constructor(op, params, client, sidecar = null, { autosession = true } = {}) {
@@ -28,10 +28,10 @@ module.exports = class Opstream extends streamx.Readable {
         if (params.link !== undefined) {
           try {
             params.link = plink.normalize(params.link)
-          } catch (e) {
-            e.code = ERR_INVALID_LINK.name
-            error(e)
-            return close()
+          } catch (err) {
+            error(err)
+            close()
+            return
           }
         }
         op(params).catch(error).finally(close)
