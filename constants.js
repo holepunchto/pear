@@ -44,11 +44,13 @@ const WAKEUP_EXEC = isWindows
 const ALIASES = {
   keet: hypercoreid.decode('oeeoz3w6fjjt7bym3ndpa6hhicm8f8naxyk11z4iypeoupn6jzpo'),
   runtime: hypercoreid.decode('nkw138nybdx6mtf98z497czxogzwje5yzu585c66ofba854gw3ro'),
-  doctor: hypercoreid.decode('3ih5k1t15xb9hrnz1mkd4jhamefis7ni4nwuus8f1w3j94yu831y')
+  doctor: hypercoreid.decode('3ih5k1t15xb9hrnz1mkd4jhamefis7ni4nwuus8f1w3j94yu831y'),
+  pear: hypercoreid.decode('pzcjqmpoo6szkoc4bpkw65ib9ctnrq7b6mneeinbhbheihaq6p6o')
 }
 
 const EOLS = {
-  keet: hypercoreid.decode('jc38t9nr7fasay4nqfxwfaawywfd3y14krnsitj67ymoubiezqdy')
+  keet: hypercoreid.decode('jc38t9nr7fasay4nqfxwfaawywfd3y14krnsitj67ymoubiezqdy'),
+  pear: hypercoreid.decode('pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy')
 }
 
 exports.LOCALDEV = LOCALDEV

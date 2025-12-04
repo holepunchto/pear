@@ -12,6 +12,8 @@ const Logger = require('./lib/logger')
 const {
   SWAP,
   GC,
+  EOLS,
+  ALIASES,
   PLATFORM_CORESTORE,
   CHECKOUT,
   LOCALDEV,
@@ -98,6 +100,9 @@ function getUpgradeTarget () {
       break
     }
   }
+
+  const cur = hypercoreid.decode(key ?? CHECKOUT.key)
+  if (cur.equals(EOLS.pear)) key = hypercoreid.encode(ALIASES.pear)
 
   if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
 
