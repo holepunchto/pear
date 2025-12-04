@@ -19,6 +19,7 @@ module.exports = class Opstream extends streamx.Readable {
         const close = () => {
           this.push({ tag: 'final', data: { success, ...this.final } })
           this.push(null)
+          this.final = null
           cb(null)
           if (autosession) return this.session.close()
         }

@@ -62,7 +62,8 @@ test('staged manifest assets fetched by run', async (t) => {
     Pear.app.dir = base
   })
   const run = await Helper.run({ link: appWithAssetsDir })
-  await Helper.untilResult(run.pipe)
+  const result = await Helper.untilResult(run.pipe)
+  t.is(result, 'hello')
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'assets' })

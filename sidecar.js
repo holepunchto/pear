@@ -61,6 +61,7 @@ async function bootSidecar() {
   await corestore.ready()
 
   const drive = await createPlatformDrive()
+
   const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
   const updater = createUpdater()
 

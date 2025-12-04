@@ -12,7 +12,6 @@ const {
 } = require('pear-errors')
 const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
-const DriveMonitor = require('../lib/drive-monitor')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -75,15 +74,7 @@ module.exports = class Dump extends Opstream {
 
     await session.add(bundle)
 
-    if (sidecar.swarm && !isFileLink) {
-      bundle.join()
-      const monitor = new DriveMonitor(bundle.drive)
-      this.on('end', () => monitor.destroy())
-      monitor.on('error', (err) =>
-        this.push({ tag: 'stats-error', data: { err } })
-      )
-      monitor.on('data', (stats) => this.push({ tag: 'stats', data: stats }))
-    }
+    if (sidecar.swarm && !isFileLink) bundle.join()
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
@@ -143,17 +134,24 @@ module.exports = class Dump extends Opstream {
 
     const dst = new LocalDrive(dir)
 
-    let select = null
+    let prefixes = [prefix || '/']
     if (only) {
-      only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())
-      select = (key) =>
-        only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+      prefixes = (Array.isArray(only) ? only : only.split(',')).map(
+        (s) => (prefix.endsWith('/') ? prefix : prefix + '/') + s.trim()
+      )
     }
-    const extraOpts =
-      entry === null
-        ? { prefix, filter: select }
-        : { filter: select || ((key) => key === prefix) }
-    const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
+
+    const mirror = src.mirror(dst, {
+      progress: true,
+      dryRun,
+      prune,
+      prefix: prefixes
+    })
+    if (!isFileLink) {
+      const monitor = mirror.monitor()
+      monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
+    }
+
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({

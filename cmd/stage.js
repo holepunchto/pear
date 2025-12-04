@@ -55,8 +55,8 @@ const output = outputter('stage', {
     return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\nUse ${ansi.bold(`pear release ${channel}`)} to set release to latest\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
   },
   ['byte-diff']: byteDiff,
-  preIo({ from, output, index, fd }, { preIo }) {
-    if (!preIo) return {}
+  preio({ from, output, index, fd }, { preio }) {
+    if (!preio) return {}
     const io = fd === 1 ? 'stdout' : 'stderr'
     const pre = 'Pre-stage [' + index + ':' + from + ':' + io + ']: '
     return pre + output
@@ -104,7 +104,7 @@ module.exports = (ipc) =>
         pkg = await output({ ctrlTTY: false, json }, pre, {
           pre: true,
           preQ: cmd.flags.preQ,
-          preIo: cmd.flags.preIo
+          preio: cmd.flags.preIo
         })
       }
     }
