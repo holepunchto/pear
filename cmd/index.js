@@ -9,8 +9,7 @@ const {
   description,
   bail,
   sloppy,
-  validate,
-  hiddenCommand
+  validate
 } = require('paparam')
 const { usage, print, ansi } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
@@ -34,7 +33,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  build: require('./build')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -269,13 +269,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
-  const reset = hiddenCommand('reset', arg('[link]'), () => {
+  const reset = command('reset', arg('[link]'), () => {
     console.log(
       `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
     )
     console.log(drop.help())
     Bare.exit(1)
-  })
+  }).hide()
 
   const sidecar = command(
     'sidecar',
@@ -336,6 +336,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     runners.versions(ipc)
   )
 
+  const build = command(
+    'build',
+    summary('Build appling for a Pear application'),
+    description('Specify link to build a project.'),
+    arg('<link>', 'Pear link to build'),
+    arg('[dir]', 'Output directory path (default: .)'),
+    flag('--json', 'Newline delimited JSON output'),
+    runners.build(ipc)
+  ).hide()
+
   const help = command(
     'help',
     arg('[command]'),
@@ -367,6 +377,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    build,
     help,
     footer(usage.footer),
     bail(explain),
