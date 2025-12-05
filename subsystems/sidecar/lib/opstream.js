@@ -2,6 +2,7 @@
 const streamx = require('streamx')
 const plink = require('pear-link')
 const Session = require('./session')
+
 module.exports = class Opstream extends streamx.Readable {
   final = {}
   constructor(op, params, client, sidecar = null, { autosession = true } = {}) {
@@ -24,7 +25,15 @@ module.exports = class Opstream extends streamx.Readable {
           if (autosession) return this.session.close()
         }
 
-        if (params.link) params.link = plink.normalize(params.link)
+        if (params.link !== undefined) {
+          try {
+            params.link = plink.normalize(params.link)
+          } catch (err) {
+            error(err)
+            close()
+            return
+          }
+        }
         op(params).catch(error).finally(close)
       }
     })

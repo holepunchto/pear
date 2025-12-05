@@ -3,6 +3,7 @@ const test = require('brittle')
 const path = require('bare-path')
 const Helper = require('./helper')
 const fs = require('bare-fs')
+const b4a = require('b4a')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'dump')
 
 const exists = (path) =>
@@ -534,4 +535,37 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
     const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
     await untilDump.complete
   })
+})
+
+test('pear dump: link validation', async (t) => {
+  t.plan(2)
+
+  const links = [
+    {},
+    { id: 'invalid-link' },
+    0,
+    1,
+    null,
+    true,
+    false,
+    b4a.allocUnsafe(8)
+  ]
+  const expectedErrors = links.map(() => 'ERR_INVALID_LINK')
+
+  const helper = new Helper()
+  t.teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const actualErrors = []
+  for (const link of links) {
+    const stream = helper.dump({ link })
+    try {
+      await Helper.pick(stream, { tag: 'final' })
+      actualErrors.push(null)
+    } catch (e) {
+      actualErrors.push(e.code)
+    }
+  }
+  t.alike(actualErrors, expectedErrors, 'links validated')
+  t.is(helper.closed, false)
 })

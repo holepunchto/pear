@@ -1,6 +1,7 @@
 'use strict'
 const test = require('brittle')
 const path = require('bare-path')
+const b4a = require('b4a')
 const Helper = require('./helper')
 
 const stageAppMin = path.join(
@@ -220,4 +221,37 @@ test.skip('stage pear.main file', async ({ teardown, ok, comment }) => {
   comment('Only files in the dependency tree are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
+})
+
+test('pear stage: link validation', async (t) => {
+  t.plan(2)
+
+  const links = [
+    {},
+    { id: 'invalid-link' },
+    0,
+    1,
+    null,
+    true,
+    false,
+    b4a.allocUnsafe(8)
+  ]
+  const expectedErrors = links.map(() => 'ERR_INVALID_LINK')
+
+  const helper = new Helper()
+  t.teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const actualErrors = []
+  for (const link of links) {
+    const stream = helper.stage({ link })
+    try {
+      await Helper.pick(stream, { tag: 'final' })
+      actualErrors.push(null)
+    } catch (e) {
+      actualErrors.push(e.code)
+    }
+  }
+  t.alike(actualErrors, expectedErrors, 'links validated')
+  t.is(helper.closed, false)
 })
