@@ -60,6 +60,18 @@ pearSchema.register({
       type: 'string',
       array: true,
       required: false
+    },
+    {
+      name: 'conditions',
+      type: 'string',
+      array: true,
+      required: false
+    },
+    {
+      name: 'extensions',
+      type: 'string',
+      array: true,
+      required: false
     }
   ]
 })

@@ -115,17 +115,27 @@ module.exports = class PodBundle {
       }
 
       const folder = new Localdrive(asset.path)
-
-      for (const { bundle, entry, builtins = [] } of asset.pack) {
+      for (const {
+        bundle,
+        entry,
+        builtins = [],
+        conditions,
+        extensions
+      } of asset.pack) {
         const hosts = [require.addon.host]
         const packed = await pack(this.drive, {
           entry,
           hosts,
           builtins,
+          conditions,
+          extensions,
           prebuildPrefix: pathToFileURL(asset.path)
         })
         for (const [prebuild, addon] of packed.prebuilds)
-          await folder.put('/prebuilds/' + path.basename(prebuild), addon)
+          await folder.put(
+            '/prebuilds/' + require.addon.host + '/' + path.basename(prebuild),
+            addon
+          )
         await folder.put(bundle, packed.bundle)
       }
 
