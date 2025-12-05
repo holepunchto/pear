@@ -1,5 +1,6 @@
 'use strict'
 const fs = require('bare-fs')
+const path = require('bare-path')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -8,7 +9,6 @@ const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const Localdrive = require('localdrive')
-const Bundle = require('bare-bundle')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
@@ -20,7 +20,6 @@ const pack = require('pear-pack')
 const { SWAP } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
-const { ERR_INVALID_CONFIG } = require('pear-errors')
 const noop = Function.prototype
 
 const ABI = 0
@@ -123,8 +122,10 @@ module.exports = class PodBundle {
           entry,
           hosts,
           builtins,
-          prebuildPrefix: asset.path
+          prebuildPrefix: pathToFileURL(asset.path)
         })
+        for (const [prebuild, addon] of packed.prebuilds)
+          await folder.put('/prebuilds/' + path.basename(prebuild), addon)
         await folder.put(bundle, packed.bundle)
       }
 
