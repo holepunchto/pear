@@ -130,7 +130,7 @@ module.exports = class Model {
 
   async getAsset(link) {
     if (!plink.parse(link)?.drive?.length)
-      throw ERR_INVALID_LINK(link + ' asset links must include length')
+      throw ERR_INVALID_LINK('asset links must include length', { link })
     const get = { link }
     LOG.trace('db', 'GET', '@pear/assets', get)
     const asset = await this.db.get('@pear/assets', get)
