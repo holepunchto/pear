@@ -49,8 +49,8 @@ module.exports = class Info extends Opstream {
       ? plink.parse(link).drive.key
       : await Hyperdrive.getDriveKey(corestore)
 
-    const meta = link ? await this.sidecar.model.getTraits(link) : null
-    const encryptionKey = meta?.encryptionKey
+    const traits = link ? await this.sidecar.model.getTraits(link) : null
+    const encryptionKey = traits?.encryptionKey
 
     if (link || channel) {
       try {
