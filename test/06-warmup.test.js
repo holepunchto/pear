@@ -142,7 +142,6 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
 
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
-
   is(stagingFiles.length, 5)
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
@@ -192,13 +191,7 @@ test('stage with glob ignores', async function ({
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
 })
 
-test('stage with ignore and unignore', async function ({
-  ok,
-  is,
-  plan,
-  comment,
-  teardown
-}) {
+test('stage with ignore and unignore', async function ({ ok, is, teardown }) {
   const dir = appWithUnignore
 
   const helper = new Helper()
@@ -273,7 +266,7 @@ test('stage with ignore and unignore', async function ({
   )
 })
 
-test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
+test('stage with purge', async function ({ ok, is, comment, teardown }) {
   const exists = (path) =>
     fs.promises.stat(path).then(
       () => true,
@@ -478,13 +471,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   )
 })
 
-test('stage with purge config', async function ({
-  ok,
-  is,
-  plan,
-  comment,
-  teardown
-}) {
+test('stage with purge config', async function ({ ok, is, comment, teardown }) {
   const dir = appWithPurge
 
   const helper = new Helper()

@@ -140,7 +140,7 @@ pearSchema.register({
 })
 
 pearSchema.register({
-  name: 'bundle',
+  name: 'traits',
   fields: [
     {
       name: 'link',
@@ -218,8 +218,8 @@ pearDB.collections.register({
 })
 
 pearDB.collections.register({
-  name: 'bundle',
-  schema: '@pear/bundle',
+  name: 'traits',
+  schema: '@pear/traits',
   key: ['link']
 })
 
@@ -236,8 +236,8 @@ pearDB.collections.register({
 })
 
 pearDB.indexes.register({
-  name: 'bundle-by-tags',
-  collection: '@pear/bundle',
+  name: 'traits-by-tags',
+  collection: '@pear/traits',
   unique: false,
   key: {
     type: 'string',

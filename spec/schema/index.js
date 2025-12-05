@@ -276,6 +276,43 @@ const encoding8 = {
   }
 }
 
+// @pear/traits.tags
+const encoding9_3 = encoding3_3
+
+// @pear/traits
+const encoding9 = {
+  preencode(state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.appStorage)
+    state.end++ // max flag is 2 so always one byte
+
+    if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
+    if (m.tags) encoding9_3.preencode(state, m.tags)
+  },
+  encode(state, m) {
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
+
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.appStorage)
+    c.uint.encode(state, flags)
+
+    if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
+    if (m.tags) encoding9_3.encode(state, m.tags)
+  },
+  decode(state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+    const flags = c.uint.decode(state)
+
+    return {
+      link: r0,
+      appStorage: r1,
+      encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
+      tags: (flags & 2) !== 0 ? encoding9_3.decode(state) : null
+    }
+  }
+}
+
 // @pear/assets.pack, deferred due to recusive use
 const encoding5_6 = c.array(c.frame(encoding8))
 
@@ -320,6 +357,8 @@ function getEncoding(name) {
       return encoding7
     case '@pear/pack':
       return encoding8
+    case '@pear/traits':
+      return encoding9
     default:
       throw new Error('Encoder not found ' + name)
   }

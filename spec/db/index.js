@@ -357,16 +357,115 @@ const collection6 = {
   indexes: []
 }
 
+// '@pear/traits' collection key
+const collection7_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 7 })
+
+function collection7_indexify(record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/traits' value encoding
+const collection7_enc = getEncoding('@pear/traits/hyperdb#7')
+
+// '@pear/traits' reconstruction function
+function collection7_reconstruct(version, keyBuf, valueBuf) {
+  const key = collection7_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection7_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/traits' key reconstruction function
+function collection7_reconstruct_key(keyBuf) {
+  const key = collection7_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/traits'
+const collection7 = {
+  name: '@pear/traits',
+  id: 7,
+  encodeKey(record) {
+    const key = [record.link]
+    return collection7_key.encode(key)
+  },
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+    return collection7_key.encodeRange({
+      gt: gt ? collection7_indexify(gt) : null,
+      lt: lt ? collection7_indexify(lt) : null,
+      gte: gte ? collection7_indexify(gte) : null,
+      lte: lte ? collection7_indexify(lte) : null
+    })
+  },
+  encodeValue(version, record) {
+    setVersion(version)
+    return c.encode(collection7_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection7_reconstruct,
+  reconstructKey: collection7_reconstruct_key,
+  indexes: []
+}
+
+// '@pear/traits-by-tags' collection key
+const index8_key = new IndexEncoder(
+  [IndexEncoder.STRING, IndexEncoder.STRING],
+  { prefix: 8 }
+)
+
+// '@pear/traits-by-tags' has the following schema defined key map
+const index8_map = helpers0.tags
+
+function index8_indexify(record) {
+  const a = record
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/traits-by-tags'
+const index8 = {
+  name: '@pear/traits-by-tags',
+  id: 8,
+  encodeKey(record) {
+    return index8_key.encode(index8_indexify(record))
+  },
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+    return index8_key.encodeRange({
+      gt: gt || gt === '' ? index8_indexify(gt) : null,
+      lt: lt || lt === '' ? index8_indexify(lt) : null,
+      gte: gte || gte === '' ? index8_indexify(gte) : null,
+      lte: lte || lte === '' ? index8_indexify(lte) : null
+    })
+  },
+  encodeValue: (doc) => index8.collection.encodeKey(doc),
+  encodeIndexKeys(record, context) {
+    const mapped = index8_map(record, context)
+    const keys = new Array(mapped.length)
+    for (let i = 0; i < mapped.length; i++) {
+      const mappedRecord = mapped[i]
+      keys[i] = index8_key.encode([mappedRecord, record.link])
+    }
+    return keys
+  },
+  reconstruct: (keyBuf, valueBuf) => valueBuf,
+  offset: collection7.indexes.length,
+  collection: collection7
+}
+collection7.indexes.push(index8)
+
 const collections = [
   collection0,
   collection1,
   collection2,
   collection3,
   collection5,
-  collection6
+  collection6,
+  collection7
 ]
 
-const indexes = [index4]
+const indexes = [index4, index8]
 
 module.exports = {
   version,
@@ -390,6 +489,8 @@ function resolveCollection(name) {
       return collection5
     case '@pear/current':
       return collection6
+    case '@pear/traits':
+      return collection7
     default:
       return null
   }
@@ -399,6 +500,8 @@ function resolveIndex(name) {
   switch (name) {
     case '@pear/bundle-by-tags':
       return index4
+    case '@pear/traits-by-tags':
+      return index8
     default:
       return null
   }

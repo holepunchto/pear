@@ -743,7 +743,7 @@ test('updates should notify App stage, App release updates (different pear insta
 
 // IMPORTANT: AVOID INSPECTING SIDECAR IN TESTS. THIS IS AN EXCEPTION TO THE RULE
 
-test('state version and bundle drive version match', async function ({
+test('state version and pod drive version match', async function ({
   comment,
   teardown,
   is,
@@ -873,14 +873,14 @@ test('state version and bundle drive version match', async function ({
 
   session.post({
     method: 'Runtime.evaluate',
-    params: { expression: 'global.sidecar.apps[0].bundle.drive.version' }
+    params: { expression: 'global.sidecar.apps[0].pod.drive.version' }
   })
 
   const { result } = await inspectorResult
   is(
     result.value,
     version.app.length,
-    'state.version.length matches bundle.drive.version'
+    'state.version.length matches pod.drive.version'
   )
 
   pipeB.end()

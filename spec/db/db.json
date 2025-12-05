@@ -80,6 +80,30 @@
       "derived": false,
       "key": ["link"],
       "trigger": null
+    },
+    {
+      "name": "traits",
+      "namespace": "pear",
+      "id": 7,
+      "type": 1,
+      "indexes": ["@pear/traits-by-tags"],
+      "schema": "@pear/traits",
+      "derived": false,
+      "key": ["link"],
+      "trigger": null
+    },
+    {
+      "name": "traits-by-tags",
+      "namespace": "pear",
+      "id": 8,
+      "type": 2,
+      "collection": "@pear/traits",
+      "unique": false,
+      "deprecated": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
     }
   ]
 }

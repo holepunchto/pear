@@ -24,8 +24,7 @@ const noop = Function.prototype
 
 const ABI = 0
 
-module.exports = class PodBundle {
-  // TODO: rename to Pod
+module.exports = class Pod {
   platformVersion = null
   constructor(opts = {}) {
     const {
@@ -65,7 +64,7 @@ module.exports = class PodBundle {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    this._asset = this._assetBundle(asset)
+    this._asset = this._assetify(asset)
     if (this.corestore) {
       this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
@@ -104,7 +103,7 @@ module.exports = class PodBundle {
     this.updateNotify = updateNotify
   }
 
-  _assetBundle(fn) {
+  _assetify(fn) {
     return async (...args) => {
       const asset = await fn(...args)
       if (asset === null) return null
