@@ -105,22 +105,29 @@ module.exports = class PodBundle {
     this.updateNotify = updateNotify
   }
 
-  _assetBundle (fn) {
+  _assetBundle(fn) {
     return async (...args) => {
       const asset = await fn(...args)
-      console.log('meow', asset)
       if (asset === null) return null
       if (Array.isArray(asset.pack) === false) {
-        if (typeof asset.pack === 'object' && asset.pack !== null) asset.pack = [asset.pack]
+        if (typeof asset.pack === 'object' && asset.pack !== null)
+          asset.pack = [asset.pack]
         if (Array.isArray(asset.pack) === false) return asset
       }
+
       const folder = new Localdrive(asset.path)
+
       for (const { bundle, entry, builtins = [] } of asset.pack) {
         const hosts = [require.addon.host]
-        const packed = await pack(this.drive, { entry, hosts, builtins, prebuildPrefix: asset.path })
-        await folder.put(bundle, Bundle.from(packed.bundle)) 
+        const packed = await pack(this.drive, {
+          entry,
+          hosts,
+          builtins,
+          prebuildPrefix: asset.path
+        })
+        await folder.put(bundle, packed.bundle)
       }
-      console.log('RETURNING ASSET', asset)
+
       return asset
     }
   }

@@ -93,6 +93,10 @@ pearSchema.register({
       array: true
     },
     {
+      name: 'bytes',
+      type: 'uint'
+    },
+    {
       name: 'pack',
       type: '@pear/pack',
       array: true
