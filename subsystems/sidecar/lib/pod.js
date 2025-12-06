@@ -116,13 +116,13 @@ module.exports = class Pod {
       const folder = new Localdrive(asset.path)
       const prebuildPrefix = pathToFileURL(asset.path)
       const configs = asset.pack
-      for await (const [ bundle, packed ] of this.packer({
+      for await (const [ name, packed ] of this.packer({
         configs,
         prebuildPrefix
       })) {
         for (const [prebuild, addon] of packed.prebuilds)
           await folder.put(prebuild, addon)
-        await folder.put(bundle, packed.bundle)
+        await folder.put(name, packed.bundle)
       }
 
       return asset
