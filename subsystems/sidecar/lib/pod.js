@@ -114,31 +114,43 @@ module.exports = class Pod {
       }
 
       const folder = new Localdrive(asset.path)
-      for (const {
-        bundle,
-        entry,
-        builtins = [],
-        conditions,
-        extensions
-      } of asset.pack) {
-        const hosts = [require.addon.host]
-        const packed = await pack(this.drive, {
-          entry,
-          hosts,
-          builtins,
-          conditions,
-          extensions,
-          prebuildPrefix: pathToFileURL(asset.path)
-        })
-        for (const [prebuild, addon] of packed.prebuilds)
-          await folder.put(
-            '/prebuilds/' + require.addon.host + '/' + path.basename(prebuild),
-            addon
-          )
+      for await (const { bundle, prebuilds, packed } of await this.pack(
+        asset.path,
+        asset.pack
+      )) {
+        for (const [prebuild, addon] of prebuilds)
+          await folder.put(prebuild, addon)
         await folder.put(bundle, packed.bundle)
       }
 
       return asset
+    }
+  }
+
+  async *pack(prefix, configs = []) {
+    for (const {
+      bundle,
+      entry,
+      builtins = [],
+      conditions,
+      extensions
+    } of configs) {
+      const hosts = [require.addon.host]
+      const packed = await pack(this.drive, {
+        entry,
+        hosts,
+        builtins,
+        conditions,
+        extensions,
+        prebuildPrefix: pathToFileURL(prefix)
+      })
+      const prebuilds = new Map()
+      for (const [prebuild, addon] of packed.prebuilds)
+        prebuilds.set(
+          '/prebuilds/' + require.addon.host + '/' + path.basename(prebuild),
+          addon
+        )
+      yield { bundle, prebuilds, packed }
     }
   }
 
