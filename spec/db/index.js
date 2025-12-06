@@ -153,7 +153,7 @@ const collection2 = {
   indexes: []
 }
 
-// '@pear/bundle' collection key
+// '@pear/traits' collection key
 const collection3_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 3 })
 
 function collection3_indexify(record) {
@@ -161,10 +161,10 @@ function collection3_indexify(record) {
   return a === undefined ? [] : [a]
 }
 
-// '@pear/bundle' value encoding
-const collection3_enc = getEncoding('@pear/bundle/hyperdb#3')
+// '@pear/traits' value encoding
+const collection3_enc = getEncoding('@pear/traits/hyperdb#3')
 
-// '@pear/bundle' reconstruction function
+// '@pear/traits' reconstruction function
 function collection3_reconstruct(version, keyBuf, valueBuf) {
   const key = collection3_key.decode(keyBuf)
   setVersion(version)
@@ -172,7 +172,7 @@ function collection3_reconstruct(version, keyBuf, valueBuf) {
   record.link = key[0]
   return record
 }
-// '@pear/bundle' key reconstruction function
+// '@pear/traits' key reconstruction function
 function collection3_reconstruct_key(keyBuf) {
   const key = collection3_key.decode(keyBuf)
   return {
@@ -180,9 +180,9 @@ function collection3_reconstruct_key(keyBuf) {
   }
 }
 
-// '@pear/bundle'
+// '@pear/traits'
 const collection3 = {
-  name: '@pear/bundle',
+  name: '@pear/traits',
   id: 3,
   encodeKey(record) {
     const key = [record.link]
@@ -206,13 +206,13 @@ const collection3 = {
   indexes: []
 }
 
-// '@pear/bundle-by-tags' collection key
+// '@pear/traits-by-tags' collection key
 const index4_key = new IndexEncoder(
   [IndexEncoder.STRING, IndexEncoder.STRING],
   { prefix: 4 }
 )
 
-// '@pear/bundle-by-tags' has the following schema defined key map
+// '@pear/traits-by-tags' has the following schema defined key map
 const index4_map = helpers0.tags
 
 function index4_indexify(record) {
@@ -220,9 +220,9 @@ function index4_indexify(record) {
   return a === undefined ? [] : [a]
 }
 
-// '@pear/bundle-by-tags'
+// '@pear/traits-by-tags'
 const index4 = {
-  name: '@pear/bundle-by-tags',
+  name: '@pear/traits-by-tags',
   id: 4,
   encodeKey(record) {
     return index4_key.encode(index4_indexify(record))
@@ -483,7 +483,7 @@ function resolveCollection(name) {
       return collection1
     case '@pear/gc':
       return collection2
-    case '@pear/bundle':
+    case '@pear/traits':
       return collection3
     case '@pear/assets':
       return collection5
@@ -498,7 +498,7 @@ function resolveCollection(name) {
 
 function resolveIndex(name) {
   switch (name) {
-    case '@pear/bundle-by-tags':
+    case '@pear/traits-by-tags':
       return index4
     case '@pear/traits-by-tags':
       return index8

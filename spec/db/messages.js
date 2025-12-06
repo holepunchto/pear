@@ -75,10 +75,10 @@ const encoding2 = {
   }
 }
 
-// @pear/bundle.tags
+// @pear/traits.tags
 const encoding3_3 = c.array(c.string)
 
-// @pear/bundle
+// @pear/traits
 const encoding3 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
@@ -324,10 +324,10 @@ const encoding10 = {
   }
 }
 
-// @pear/bundle/hyperdb#3.tags
+// @pear/traits/hyperdb#3.tags
 const encoding11_3 = encoding3_3
 
-// @pear/bundle/hyperdb#3
+// @pear/traits/hyperdb#3
 const encoding11 = {
   preencode(state, m) {
     c.string.preencode(state, m.appStorage)
@@ -501,7 +501,7 @@ function getEncoding(name) {
       return encoding1
     case '@pear/dht':
       return encoding2
-    case '@pear/bundle':
+    case '@pear/traits':
       return encoding3
     case '@pear/gc':
       return encoding4
@@ -517,7 +517,7 @@ function getEncoding(name) {
       return encoding9
     case '@pear/gc/hyperdb#2':
       return encoding10
-    case '@pear/bundle/hyperdb#3':
+    case '@pear/traits/hyperdb#3':
       return encoding11
     case '@pear/assets/hyperdb#5':
       return encoding12

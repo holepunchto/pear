@@ -75,10 +75,10 @@ const encoding2 = {
   }
 }
 
-// @pear/bundle.tags
+// @pear/traits.tags
 const encoding3_3 = c.array(c.string)
 
-// @pear/bundle
+// @pear/traits
 const encoding3 = {
   preencode(state, m) {
     c.string.preencode(state, m.link)
@@ -89,7 +89,9 @@ const encoding3 = {
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
+    const flags =
+      (m.encryptionKey ? 1 : 0) |
+      (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -147,7 +149,10 @@ const encoding5 = {
   },
   encode(state, m) {
     const flags =
-      (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0) | (m.pack ? 8 : 0)
+      (m.name ? 1 : 0) |
+      (m.only ? 2 : 0) |
+      (m.bytes ? 4 : 0) |
+      (m.pack ? 8 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -211,7 +216,9 @@ const encoding7 = {
     if (m.key) c.fixed32.preencode(state, m.key)
   },
   encode(state, m) {
-    const flags = (m.checkout ? 1 : 0) | (m.key ? 2 : 0)
+    const flags =
+      (m.checkout ? 1 : 0) |
+      (m.key ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.uint.encode(state, flags)
@@ -251,7 +258,9 @@ const encoding8 = {
   },
   encode(state, m) {
     const flags =
-      (m.builtins ? 1 : 0) | (m.conditions ? 2 : 0) | (m.extensions ? 4 : 0)
+      (m.builtins ? 1 : 0) |
+      (m.conditions ? 2 : 0) |
+      (m.extensions ? 4 : 0)
 
     c.string.encode(state, m.bundle)
     c.string.encode(state, m.entry)
@@ -272,43 +281,6 @@ const encoding8 = {
       builtins: (flags & 1) !== 0 ? encoding8_2.decode(state) : null,
       conditions: (flags & 2) !== 0 ? encoding8_3.decode(state) : null,
       extensions: (flags & 4) !== 0 ? encoding8_4.decode(state) : null
-    }
-  }
-}
-
-// @pear/traits.tags
-const encoding9_3 = encoding3_3
-
-// @pear/traits
-const encoding9 = {
-  preencode(state, m) {
-    c.string.preencode(state, m.link)
-    c.string.preencode(state, m.appStorage)
-    state.end++ // max flag is 2 so always one byte
-
-    if (m.encryptionKey) c.fixed32.preencode(state, m.encryptionKey)
-    if (m.tags) encoding9_3.preencode(state, m.tags)
-  },
-  encode(state, m) {
-    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
-
-    c.string.encode(state, m.link)
-    c.string.encode(state, m.appStorage)
-    c.uint.encode(state, flags)
-
-    if (m.encryptionKey) c.fixed32.encode(state, m.encryptionKey)
-    if (m.tags) encoding9_3.encode(state, m.tags)
-  },
-  decode(state) {
-    const r0 = c.string.decode(state)
-    const r1 = c.string.decode(state)
-    const flags = c.uint.decode(state)
-
-    return {
-      link: r0,
-      appStorage: r1,
-      encryptionKey: (flags & 1) !== 0 ? c.fixed32.decode(state) : null,
-      tags: (flags & 2) !== 0 ? encoding9_3.decode(state) : null
     }
   }
 }
@@ -345,7 +317,7 @@ function getEncoding(name) {
       return encoding1
     case '@pear/dht':
       return encoding2
-    case '@pear/bundle':
+    case '@pear/traits':
       return encoding3
     case '@pear/gc':
       return encoding4
@@ -357,8 +329,6 @@ function getEncoding(name) {
       return encoding7
     case '@pear/pack':
       return encoding8
-    case '@pear/traits':
-      return encoding9
     default:
       throw new Error('Encoder not found ' + name)
   }
