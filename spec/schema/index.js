@@ -89,9 +89,7 @@ const encoding3 = {
     if (m.tags) encoding3_3.preencode(state, m.tags)
   },
   encode(state, m) {
-    const flags =
-      (m.encryptionKey ? 1 : 0) |
-      (m.tags ? 2 : 0)
+    const flags = (m.encryptionKey ? 1 : 0) | (m.tags ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.appStorage)
@@ -149,10 +147,7 @@ const encoding5 = {
   },
   encode(state, m) {
     const flags =
-      (m.name ? 1 : 0) |
-      (m.only ? 2 : 0) |
-      (m.bytes ? 4 : 0) |
-      (m.pack ? 8 : 0)
+      (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0) | (m.pack ? 8 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -216,9 +211,7 @@ const encoding7 = {
     if (m.key) c.fixed32.preencode(state, m.key)
   },
   encode(state, m) {
-    const flags =
-      (m.checkout ? 1 : 0) |
-      (m.key ? 2 : 0)
+    const flags = (m.checkout ? 1 : 0) | (m.key ? 2 : 0)
 
     c.string.encode(state, m.link)
     c.uint.encode(state, flags)
@@ -258,9 +251,7 @@ const encoding8 = {
   },
   encode(state, m) {
     const flags =
-      (m.builtins ? 1 : 0) |
-      (m.conditions ? 2 : 0) |
-      (m.extensions ? 4 : 0)
+      (m.builtins ? 1 : 0) | (m.conditions ? 2 : 0) | (m.extensions ? 4 : 0)
 
     c.string.encode(state, m.bundle)
     c.string.encode(state, m.entry)
