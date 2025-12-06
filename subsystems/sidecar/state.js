@@ -21,18 +21,18 @@ module.exports = class State extends SharedState {
     this.reconfigure()
   }
 
-  async initialize({ bundle, app, dryRun = false, pkg = null } = {}) {
+  async initialize({ pod, app, dryRun = false, pkg = null } = {}) {
     if (app?.reported) return
-    await bundle.ready()
+    await pod.ready()
     if (app?.reported) return
-    this.applink = bundle.link
+    this.applink = pod.link
 
     if (this.key !== null) {
-      if (bundle.drive.core.length === 0) {
-        await bundle.drive.core.update()
+      if (pod.drive.core.length === 0) {
+        await pod.drive.core.update()
         if (app?.reported) return
       }
-      const result = await bundle.db.get('manifest')
+      const result = await pod.db.get('manifest')
       if (app?.reported) return
       if (result === null) {
         throw ERR_INVALID_MANIFEST(
@@ -51,10 +51,10 @@ module.exports = class State extends SharedState {
       if (app?.reported) return
 
       if (this.stage && dryRun === false && this.manifest) {
-        const result = await bundle.db.get('manifest')
+        const result = await pod.db.get('manifest')
         if (app?.reported) return
         if (!result || !sameData(result.value, this.manifest))
-          await bundle.db.put('manifest', this.manifest)
+          await pod.db.put('manifest', this.manifest)
         if (app?.reported) return
       }
     }
@@ -68,7 +68,7 @@ module.exports = class State extends SharedState {
 
     const { dependencies } = this.manifest
     const options = this.options
-    const { channel, release } = bundle
+    const { channel, release } = pod
     const { main = 'index.js' } = this.manifest
 
     this.update({ main, options, dependencies, channel, release })
@@ -86,8 +86,8 @@ module.exports = class State extends SharedState {
     if (this.key) {
       this.version = {
         key: hypercoreid.encode(this.key),
-        fork: bundle.ver.fork,
-        length: bundle.ver.length
+        fork: pod.ver.fork,
+        length: pod.ver.length
       }
     }
   }

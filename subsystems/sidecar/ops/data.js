@@ -11,16 +11,16 @@ module.exports = class Data extends Opstream {
     await this.sidecar.ready()
 
     if (resource === 'apps') {
-      let bundles
+      let data
       if (link) {
-        const bundle = await this.sidecar.model.getBundle(link)
-        if (bundle === null) throw ERR_NOT_FOUND(link + ' not found', { link })
-        bundles = [bundle]
+        const traits = await this.sidecar.model.getTraits(link)
+        if (traits === null) throw ERR_NOT_FOUND('app not found', { link })
+        data = [traits]
       } else {
-        bundles = await this.sidecar.model.allBundles()
+        data = await this.sidecar.model.allTraits()
       }
-      if (!secrets) bundles = bundles.map(({ encryptionKey, ...rest }) => rest)
-      this.push({ tag: 'apps', data: bundles })
+      if (!secrets) data = data.map(({ encryptionKey, ...rest }) => rest)
+      this.push({ tag: 'apps', data })
     }
 
     if (resource === 'dht') {

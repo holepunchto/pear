@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "b4a": "^1.6.7",
-    "bare-bundle": "^1.8.3",
+    "bare-bundle": "^1.10.0",
     "bare-daemon": "^1.1.0",
     "bare-env": "^3.0.0",
     "bare-events": "^2.5.4",
@@ -104,6 +104,7 @@
     "pear-ipc": "^6.7.0",
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
+    "pear-pack": "^1.1.2",
     "pear-pipe": "^1.0.1",
     "pear-run": "^1.0.8",
     "pear-shake": "^2.0.1",

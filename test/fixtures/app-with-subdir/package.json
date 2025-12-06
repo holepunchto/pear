@@ -3,6 +3,8 @@
   "main": "index.js",
   "pear": {
     "name": "app-with-purge",
-    "type": "terminal"
+    "stage": {
+      "ignore": ["package-lock.json"]
+    }
   }
 }

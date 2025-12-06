@@ -42,6 +42,40 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'pack',
+  fields: [
+    {
+      name: 'bundle',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'entry',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'builtins',
+      type: 'string',
+      array: true,
+      required: false
+    },
+    {
+      name: 'conditions',
+      type: 'string',
+      array: true,
+      required: false
+    },
+    {
+      name: 'extensions',
+      type: 'string',
+      array: true,
+      required: false
+    }
+  ]
+})
+
 // both structs & custom types
 pearSchema.register({
   name: 'assets',
@@ -73,6 +107,11 @@ pearSchema.register({
     {
       name: 'bytes',
       type: 'uint'
+    },
+    {
+      name: 'pack',
+      type: '@pear/pack',
+      array: true
     }
   ]
 })
@@ -101,7 +140,7 @@ pearSchema.register({
 })
 
 pearSchema.register({
-  name: 'bundle',
+  name: 'traits',
   fields: [
     {
       name: 'link',
@@ -179,8 +218,8 @@ pearDB.collections.register({
 })
 
 pearDB.collections.register({
-  name: 'bundle',
-  schema: '@pear/bundle',
+  name: 'traits',
+  schema: '@pear/traits',
   key: ['link']
 })
 
@@ -197,8 +236,8 @@ pearDB.collections.register({
 })
 
 pearDB.indexes.register({
-  name: 'bundle-by-tags',
-  collection: '@pear/bundle',
+  name: 'traits-by-tags',
+  collection: '@pear/traits',
   unique: false,
   key: {
     type: 'string',

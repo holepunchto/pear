@@ -171,7 +171,7 @@ class Sidecar extends ReadyResource {
     this.App = class App {
       sidecar = sidecar
       handlers = null
-      bundle = null
+      pod = null
       reported = null
       state = null
       session = null
@@ -341,12 +341,12 @@ class Sidecar extends ReadyResource {
         id = '',
         startId = '',
         state = null,
-        bundle = null,
+        pod = null,
         session
       }) {
         this.app = this
         this.session = session
-        this.bundle = bundle
+        this.pod = pod
         this.id = id
         this.state = state
         this.startId = startId
@@ -509,7 +509,7 @@ class Sidecar extends ReadyResource {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (info.link && info.link === app.bundle?.link) {
+      if (info.link && info.link === app.pod?.link) {
         app.message({
           type: 'pear/updates',
           app: true,
@@ -684,28 +684,28 @@ class Sidecar extends ReadyResource {
 
   exists(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.exists(params.key)
+    return client.userData.pod.exists(params.key)
   }
 
   list(params, client) {
     if (client.userData instanceof this.App === false) return
     const { key, ...opts } = params
-    return client.userData.bundle.list(key, opts)
+    return client.userData.pod.list(key, opts)
   }
 
   get(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.get(params.key)
+    return client.userData.pod.get(params.key)
   }
 
   entry(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.entry(params.key)
+    return client.userData.pod.entry(params.key)
   }
 
   compare(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.drive.compare(params.keyA, params.keyB)
+    return client.userData.pod.drive.compare(params.keyA, params.keyB)
   }
 
   async permit(params) {
@@ -717,9 +717,9 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = `pear://${hypercoreid.encode(params.key)}`
-      const bundle = await this.model.getBundle(link)
-      if (!bundle) {
-        await this.model.addBundle(link, State.storageFromLink(link))
+      const traits = await this.model.getTraits(link)
+      if (!traits) {
+        await this.model.addTraits(link, State.storageFromLink(link))
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
@@ -733,7 +733,7 @@ class Sidecar extends ReadyResource {
     return (
       aliases.includes(link) ||
       aliasesKeys.includes(link) ||
-      (await this.model.getBundle(link)) !== null
+      (await this.model.getTraits(link)) !== null
     )
   }
 
