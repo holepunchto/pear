@@ -262,7 +262,7 @@ const collection4 = {
 // '@pear/current' collection key
 const collection5_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 5 })
 
-function collection5_indexify (record) {
+function collection5_indexify(record) {
   const a = record.link
   return a === undefined ? [] : [a]
 }
@@ -465,10 +465,11 @@ const collections = [
   collection2,
   collection3,
   collection4,
-  collection5
+  collection5,
+  collection7
 ]
 
-const indexes = [index6]
+const indexes = [index6, index8]
 
 module.exports = {
   version,
@@ -492,6 +493,8 @@ function resolveCollection(name) {
       return collection4
     case '@pear/current':
       return collection5
+    case '@pear/presets':
+      return collection7
     default:
       return null
   }
@@ -501,6 +504,8 @@ function resolveIndex(name) {
   switch (name) {
     case '@pear/traits-by-tags':
       return index6
+    case '@pear/presets-by-command':
+      return index8
     default:
       return null
   }
