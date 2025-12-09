@@ -47,9 +47,22 @@
       "trigger": null
     },
     {
-      "name": "assets",
+      "name": "traits-by-tags",
       "namespace": "pear",
       "id": 4,
+      "type": 2,
+      "collection": "@pear/traits",
+      "unique": false,
+      "deprecated": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
+    },
+    {
+      "name": "assets",
+      "namespace": "pear",
+      "id": 5,
       "type": 1,
       "indexes": [],
       "schema": "@pear/assets",
@@ -60,26 +73,13 @@
     {
       "name": "current",
       "namespace": "pear",
-      "id": 5,
+      "id": 6,
       "type": 1,
       "indexes": [],
       "schema": "@pear/current",
       "derived": false,
       "key": ["link"],
       "trigger": null
-    },
-    {
-      "name": "traits-by-tags",
-      "namespace": "pear",
-      "id": 6,
-      "type": 2,
-      "collection": "@pear/traits",
-      "unique": false,
-      "deprecated": false,
-      "key": {
-        "type": "string",
-        "map": "tags"
-      }
     }
   ]
 }

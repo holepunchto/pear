@@ -206,60 +206,52 @@ const collection3 = {
   indexes: []
 }
 
-// '@pear/assets' collection key
-const collection4_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 4 })
+// '@pear/traits-by-tags' collection key
+const index4_key = new IndexEncoder(
+  [IndexEncoder.STRING, IndexEncoder.STRING],
+  { prefix: 4 }
+)
 
-function collection4_indexify(record) {
-  const a = record.link
+// '@pear/traits-by-tags' has the following schema defined key map
+const index4_map = helpers0.tags
+
+function index4_indexify(record) {
+  const a = record
   return a === undefined ? [] : [a]
 }
 
-// '@pear/assets' value encoding
-const collection4_enc = getEncoding('@pear/assets/hyperdb#4')
-
-// '@pear/assets' reconstruction function
-function collection4_reconstruct(version, keyBuf, valueBuf) {
-  const key = collection4_key.decode(keyBuf)
-  setVersion(version)
-  const record = c.decode(collection4_enc, valueBuf)
-  record.link = key[0]
-  return record
-}
-// '@pear/assets' key reconstruction function
-function collection4_reconstruct_key(keyBuf) {
-  const key = collection4_key.decode(keyBuf)
-  return {
-    link: key[0]
-  }
-}
-
-// '@pear/assets'
-const collection4 = {
-  name: '@pear/assets',
+// '@pear/traits-by-tags'
+const index4 = {
+  name: '@pear/traits-by-tags',
   id: 4,
   encodeKey(record) {
-    const key = [record.link]
-    return collection4_key.encode(key)
+    return index4_key.encode(index4_indexify(record))
   },
   encodeKeyRange({ gt, lt, gte, lte } = {}) {
-    return collection4_key.encodeRange({
-      gt: gt ? collection4_indexify(gt) : null,
-      lt: lt ? collection4_indexify(lt) : null,
-      gte: gte ? collection4_indexify(gte) : null,
-      lte: lte ? collection4_indexify(lte) : null
+    return index4_key.encodeRange({
+      gt: gt || gt === '' ? index4_indexify(gt) : null,
+      lt: lt || lt === '' ? index4_indexify(lt) : null,
+      gte: gte || gte === '' ? index4_indexify(gte) : null,
+      lte: lte || lte === '' ? index4_indexify(lte) : null
     })
   },
-  encodeValue(version, record) {
-    setVersion(version)
-    return c.encode(collection4_enc, record)
+  encodeValue: (doc) => index4.collection.encodeKey(doc),
+  encodeIndexKeys(record, context) {
+    const mapped = index4_map(record, context)
+    const keys = new Array(mapped.length)
+    for (let i = 0; i < mapped.length; i++) {
+      const mappedRecord = mapped[i]
+      keys[i] = index4_key.encode([mappedRecord, record.link])
+    }
+    return keys
   },
-  trigger: null,
-  reconstruct: collection4_reconstruct,
-  reconstructKey: collection4_reconstruct_key,
-  indexes: []
+  reconstruct: (keyBuf, valueBuf) => valueBuf,
+  offset: collection3.indexes.length,
+  collection: collection3
 }
+collection3.indexes.push(index4)
 
-// '@pear/current' collection key
+// '@pear/assets' collection key
 const collection5_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 5 })
 
 function collection5_indexify(record) {
@@ -267,10 +259,10 @@ function collection5_indexify(record) {
   return a === undefined ? [] : [a]
 }
 
-// '@pear/current' value encoding
-const collection5_enc = getEncoding('@pear/current/hyperdb#5')
+// '@pear/assets' value encoding
+const collection5_enc = getEncoding('@pear/assets/hyperdb#5')
 
-// '@pear/current' reconstruction function
+// '@pear/assets' reconstruction function
 function collection5_reconstruct(version, keyBuf, valueBuf) {
   const key = collection5_key.decode(keyBuf)
   setVersion(version)
@@ -278,7 +270,7 @@ function collection5_reconstruct(version, keyBuf, valueBuf) {
   record.link = key[0]
   return record
 }
-// '@pear/current' key reconstruction function
+// '@pear/assets' key reconstruction function
 function collection5_reconstruct_key(keyBuf) {
   const key = collection5_key.decode(keyBuf)
   return {
@@ -286,9 +278,9 @@ function collection5_reconstruct_key(keyBuf) {
   }
 }
 
-// '@pear/current'
+// '@pear/assets'
 const collection5 = {
-  name: '@pear/current',
+  name: '@pear/assets',
   id: 5,
   encodeKey(record) {
     const key = [record.link]
@@ -312,61 +304,69 @@ const collection5 = {
   indexes: []
 }
 
-// '@pear/traits-by-tags' collection key
-const index6_key = new IndexEncoder(
-  [IndexEncoder.STRING, IndexEncoder.STRING],
-  { prefix: 6 }
-)
+// '@pear/current' collection key
+const collection6_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 6 })
 
-// '@pear/traits-by-tags' has the following schema defined key map
-const index6_map = helpers0.tags
-
-function index6_indexify(record) {
-  const a = record
+function collection6_indexify(record) {
+  const a = record.link
   return a === undefined ? [] : [a]
 }
 
-// '@pear/traits-by-tags'
-const index6 = {
-  name: '@pear/traits-by-tags',
+// '@pear/current' value encoding
+const collection6_enc = getEncoding('@pear/current/hyperdb#6')
+
+// '@pear/current' reconstruction function
+function collection6_reconstruct(version, keyBuf, valueBuf) {
+  const key = collection6_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection6_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/current' key reconstruction function
+function collection6_reconstruct_key(keyBuf) {
+  const key = collection6_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/current'
+const collection6 = {
+  name: '@pear/current',
   id: 6,
   encodeKey(record) {
-    return index6_key.encode(index6_indexify(record))
+    const key = [record.link]
+    return collection6_key.encode(key)
   },
   encodeKeyRange({ gt, lt, gte, lte } = {}) {
-    return index6_key.encodeRange({
-      gt: gt || gt === '' ? index6_indexify(gt) : null,
-      lt: lt || lt === '' ? index6_indexify(lt) : null,
-      gte: gte || gte === '' ? index6_indexify(gte) : null,
-      lte: lte || lte === '' ? index6_indexify(lte) : null
+    return collection6_key.encodeRange({
+      gt: gt ? collection6_indexify(gt) : null,
+      lt: lt ? collection6_indexify(lt) : null,
+      gte: gte ? collection6_indexify(gte) : null,
+      lte: lte ? collection6_indexify(lte) : null
     })
   },
-  encodeValue: (doc) => index6.collection.encodeKey(doc),
-  encodeIndexKeys(record, context) {
-    const mapped = index6_map(record, context)
-    const keys = new Array(mapped.length)
-    for (let i = 0; i < mapped.length; i++) {
-      const mappedRecord = mapped[i]
-      keys[i] = index6_key.encode([mappedRecord, record.link])
-    }
-    return keys
+  encodeValue(version, record) {
+    setVersion(version)
+    return c.encode(collection6_enc, record)
   },
-  reconstruct: (keyBuf, valueBuf) => valueBuf,
-  offset: collection3.indexes.length,
-  collection: collection3
+  trigger: null,
+  reconstruct: collection6_reconstruct,
+  reconstructKey: collection6_reconstruct_key,
+  indexes: []
 }
-collection3.indexes.push(index6)
 
 const collections = [
   collection0,
   collection1,
   collection2,
   collection3,
-  collection4,
-  collection5
+  collection5,
+  collection6
 ]
 
-const indexes = [index6]
+const indexes = [index4]
 
 module.exports = {
   version,
@@ -387,9 +387,9 @@ function resolveCollection(name) {
     case '@pear/traits':
       return collection3
     case '@pear/assets':
-      return collection4
-    case '@pear/current':
       return collection5
+    case '@pear/current':
+      return collection6
     default:
       return null
   }
@@ -398,7 +398,7 @@ function resolveCollection(name) {
 function resolveIndex(name) {
   switch (name) {
     case '@pear/traits-by-tags':
-      return index6
+      return index4
     default:
       return null
   }
