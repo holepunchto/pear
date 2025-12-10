@@ -9,6 +9,7 @@ const Helper = require('./helper')
 test('smoke', async function ({
   ok,
   is,
+  pass,
   alike,
   plan,
   comment,
@@ -65,7 +66,7 @@ test('smoke', async function ({
     is(versions.app.key, key, 'app version matches staged key')
 
     await Helper.untilClose(run.pipe)
-    ok(true, 'ended')
+    pass('ended')
   }
 
   const testDhtBootstrap = async () => {
@@ -119,7 +120,7 @@ test('smoke', async function ({
     )
 
     await Helper.untilClose(run.pipe)
-    ok(true, 'ended')
+    pass('ended')
   }
 
   const testStorage = async () => {
@@ -168,7 +169,7 @@ test('smoke', async function ({
     ok(appStorage.includes('by-dkey'))
     is(appStorage, appStorageWithFragment)
 
-    ok(true, 'ended')
+    pass('ended')
   }
 
   await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
@@ -177,6 +178,7 @@ test('smoke', async function ({
 test('app with assets', async function ({
   ok,
   is,
+  pass,
   plan,
   comment,
   teardown,
@@ -234,12 +236,13 @@ test('app with assets', async function ({
   )
 
   await Helper.untilClose(run.pipe)
-  ok(true, 'ended')
+  pass('ended')
 })
 
 test('app with assets in sub dep', async function ({
   ok,
   is,
+  pass,
   plan,
   comment,
   teardown,
@@ -297,7 +300,7 @@ test('app with assets in sub dep', async function ({
   )
 
   await Helper.untilClose(run.pipe)
-  ok(true, 'ended')
+  pass('ended')
 })
 
 test('local app', async function ({ ok, is, teardown }) {
@@ -331,6 +334,4 @@ test('local app', async function ({ ok, is, teardown }) {
     'application by storage has been generate randomly and persisted'
   )
   is(bundle.encryptionKey, undefined, 'application has no encryption key')
-
-  ok(true, 'ended')
 })
