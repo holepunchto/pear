@@ -167,6 +167,109 @@ test('pear run preflight downloads staged assets', async (t) => {
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
 
+test('pear run entrypoint and fragment', async function ({
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
+  timeout(180000)
+  plan(2)
+
+  const dir = Helper.fixture('entrypoint-and-fragment')
+  const entrypoint = '/entrypoint.js'
+  const fragment = Helper.getRandomId().toString()
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const link = `pear://${key}${entrypoint}#${fragment}`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+
+  is(info.entrypoint, entrypoint)
+  is(info.fragment, fragment)
+
+  await Helper.untilClose(run.pipe)
+})
+
+test('pear run app linkData', async ({ teardown, comment, ok, is }) => {
+  const dir = Helper.fixture('app-linkData')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const linkData = 'link-data'
+  const link = `pear://${key}/${linkData}`
+  const run = await Helper.run({ link })
+
+  const result = await Helper.untilResult(run.pipe)
+  await Helper.untilClose(run.pipe)
+  is(result, linkData)
+
+  const routeLink = `pear://${key}/subdir/index.js`
+  const routeRun = await Helper.run({ link: routeLink })
+  const expected = 'this-is-subdir'
+  const routeResult = await Helper.untilResult(routeRun.pipe)
+  is(routeResult, expected)
+  await Helper.untilClose(routeRun.pipe)
+})
+
 test.hook('encrypted run setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({

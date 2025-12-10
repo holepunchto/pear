@@ -264,7 +264,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('3. Start sidecar and update using rcv-seeded key')
   t.comment('Starting sidecar')
-  const dhtBootstrap = global.Pear.config.dht.bootstrap
+  const dhtBootstrap = global.Pear.app.dht.bootstrap
     .map((e) => `${e.host}:${e.port}`)
     .join(',')
   const sidecar = spawn(

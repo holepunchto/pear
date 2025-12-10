@@ -1,6 +1,6 @@
 'use strict'
 const test = require('brittle')
-const path = require('bare-path')
+const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
@@ -443,7 +443,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   comment('check dump')
   const { key } = await staged.addendum
   const link = `pear://${key}`
-  const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
+  const dumpDir = await tmp()
 
   let dump = await helper.dump({ link, dir: dumpDir, force: true })
   teardown(() => Helper.teardownStream(dump))
@@ -680,4 +680,93 @@ test('pear stage warmup with prefetch', async function ({
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
   is(warmed.success, true, 'Warmup completed')
+})
+
+test('pear stage double stage reported versions', async ({
+  teardown,
+  comment,
+  ok,
+  is
+}) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const id = Helper.getRandomId()
+
+  const from = new Localdrive(Helper.fixture('versions'))
+  const to = new Localdrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
+
+  const makeIndex = (version) => `const pipe = require('pear-pipe')()
+  Pear.versions().then((versions) => {
+    pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
+  })
+`
+  await to.put('/index.js', makeIndex('A'))
+
+  comment('staging A')
+  const stagingA = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumA = await stagedA.addendum
+  const lengthA = addendumA.version
+  await stagedA.final
+
+  const link = `pear://${addendumA.key}`
+
+  const runA = await Helper.run({ link })
+  const resultA = await Helper.untilResult(runA.pipe)
+  const infoA = JSON.parse(resultA)
+  await Helper.untilClose(runA.pipe)
+  is(infoA.version, 'A')
+
+  comment('staging B')
+  await to.put('/index.js', makeIndex('B'))
+  const stagingB = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumB = await stagedB.addendum
+  const lengthB = addendumB.version
+  await stagedB.final
+
+  ok(lengthA < lengthB)
+
+  // runAA Needed for update
+  const runAA = await Helper.run({ link })
+  await Helper.untilResult(runAA.pipe)
+  await Helper.untilClose(runAA.pipe)
+
+  const runB = await Helper.run({ link })
+  const resultB = await Helper.untilResult(runB.pipe)
+  const infoB = JSON.parse(resultB)
+  await Helper.untilClose(runB.pipe)
+  is(infoB.version, 'B')
+
+  const run = await Helper.run({ link: `pear://0.${lengthA}.${addendumA.key}` })
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+  await Helper.untilClose(run.pipe)
+
+  is(info.version, 'A')
+  is(info.app.length, lengthA)
 })
