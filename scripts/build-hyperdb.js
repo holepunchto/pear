@@ -42,40 +42,6 @@ pearSchema.register({
   ]
 })
 
-pearSchema.register({
-  name: 'pack',
-  fields: [
-    {
-      name: 'bundle',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'entry',
-      type: 'string',
-      required: true
-    },
-    {
-      name: 'builtins',
-      type: 'string',
-      array: true,
-      required: false
-    },
-    {
-      name: 'conditions',
-      type: 'string',
-      array: true,
-      required: false
-    },
-    {
-      name: 'extensions',
-      type: 'string',
-      array: true,
-      required: false
-    }
-  ]
-})
-
 // both structs & custom types
 pearSchema.register({
   name: 'assets',
@@ -107,11 +73,6 @@ pearSchema.register({
     {
       name: 'bytes',
       type: 'uint'
-    },
-    {
-      name: 'pack',
-      type: '@pear/pack',
-      array: true
     }
   ]
 })
