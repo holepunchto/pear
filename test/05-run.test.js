@@ -215,8 +215,13 @@ test('pear run entrypoint and fragment', async function ({
   await Helper.untilClose(run.pipe)
 })
 
-test('pear run app linkData', async ({ teardown, comment, ok, is }) => {
-  const dir = Helper.fixture('app-linkData')
+test('pear run app routes + linkData', async ({
+  teardown,
+  comment,
+  ok,
+  is
+}) => {
+  const dir = Helper.fixture('routes')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
