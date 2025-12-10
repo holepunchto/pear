@@ -353,7 +353,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<command>', 'Pear command to preset flags for'),
     arg('<link>', 'App pear or file link to preset flags for'),
     flag('--json', 'Newline delimited JSON output'),
-    rest('[...flags]', 'Sets defaults flags. Omit flags to reset'),
+    rest('[...flags]', 'Defaults flags to set. Omit flags to reset'),
     sloppy({ flags: true }),
     runners.presets(ipc)
   )
