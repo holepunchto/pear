@@ -245,6 +245,18 @@ module.exports = (ipc) =>
       })
     })
 
+    // open the inspector when in devmode
+    // (except if we're opening the pear://runtime app to avoid loop)
+    const PEAR_RUNTIME_KEY = constants.ALIASES.runtime.toString('hex')
+
+    if (flags.dev && key !== PEAR_RUNTIME_KEY) {
+      const inspectorKey = (await ipc.inspect()).toString('hex')
+      daemon(constants.RUNTIME, [
+        'run',
+        `pear://${PEAR_RUNTIME_KEY}/dev?${inspectorKey}`
+      ])
+    }
+
     return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
   }
 
