@@ -121,6 +121,9 @@ class OperationError extends Error {
 }
 
 class Helper extends IPC.Client {
+  static fixture(name) {
+    return path.join(Helper.localDir, 'test', 'fixtures', name)
+  }
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR

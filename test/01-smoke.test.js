@@ -1,38 +1,10 @@
 'use strict'
 const tmp = require('test-tmp')
 const test = require('brittle')
-const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const LocalDrive = require('localdrive')
 const { pathToFileURL } = require('url-file-url')
 const Helper = require('./helper')
-const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-const dhtBootstrapDir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'dht-bootstrap'
-)
-const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
-const requireAssets = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'require-assets'
-)
-const subDepRequireAssets = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'sub-dep-require-assets'
-)
-const entrypointAndFragment = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'entrypoint-and-fragment'
-)
-const routesDir = path.join(Helper.localDir, 'test', 'fixtures', 'routes')
 
 test('smoke', async function ({
   ok,
@@ -48,7 +20,7 @@ test('smoke', async function ({
   plan(14)
 
   const testVersions = async () => {
-    const dir = versionsDir
+    const dir = Helper.fixture('versions')
 
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
@@ -98,7 +70,7 @@ test('smoke', async function ({
   }
 
   const testDhtBootstrap = async () => {
-    const dir = dhtBootstrapDir
+    const dir = Helper.fixture('dht-bootstrap')
 
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
@@ -152,7 +124,7 @@ test('smoke', async function ({
   }
 
   const testStorage = async () => {
-    const dir = storageDir
+    const dir = Helper.fixture('storage')
 
     const testAppStorage = Pear.config.storage
     ok(testAppStorage.includes('by-random'))
@@ -214,7 +186,7 @@ test('app with assets', async function ({
   timeout(180000)
   plan(5)
 
-  const dir = requireAssets
+  const dir = Helper.fixture('require-assets')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -277,7 +249,7 @@ test('app with assets in sub dep', async function ({
   timeout(180000)
   plan(5)
 
-  const dir = subDepRequireAssets
+  const dir = Helper.fixture('sub-dep-require-assets')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -335,7 +307,7 @@ test('local app', async function ({ ok, is, teardown }) {
   await helper.ready()
 
   const tmpdir = await tmp()
-  const from = new LocalDrive(versionsDir)
+  const from = new LocalDrive(Helper.fixture('versions'))
   const to = new LocalDrive(tmpdir)
 
   const mirror = from.mirror(to)
@@ -374,7 +346,7 @@ test('entrypoint and fragment', async function ({
   timeout(180000)
   plan(2)
 
-  const dir = entrypointAndFragment
+  const dir = Helper.fixture('entrypoint-and-fragment')
   const entrypoint = '/entrypoint.js'
   const fragment = Helper.getRandomId().toString()
 
@@ -425,7 +397,7 @@ test('double stage and Pear.versions', async ({
   const tmpdir = await tmp()
   const id = Helper.getRandomId()
 
-  const from = new LocalDrive(versionsDir)
+  const from = new LocalDrive(Helper.fixture('versions'))
   const to = new LocalDrive(tmpdir)
 
   const mirror = from.mirror(to)
@@ -502,7 +474,7 @@ test('double stage and Pear.versions', async ({
 })
 
 test('routes and linkdata', async ({ teardown, comment, ok, is }) => {
-  const dir = routesDir
+  const dir = Helper.fixture('routes')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

@@ -1,7 +1,5 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
-const fs = require('bare-fs')
-const path = require('bare-path')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Corestore = require('corestore')
@@ -13,18 +11,9 @@ const { pathToFileURL } = require('bare-url')
 const { spawn } = require('bare-subprocess')
 const Helper = require('./helper')
 
-const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
-
-const appWithAssetsDir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'app-with-assets'
-)
-
 const rig = new Helper.Rig()
 
-test('run - staged manifest assets fetched', async (t) => {
+test('pear run staged manifest assets fetched', async (t) => {
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
   const tmpdir = await tmp()
@@ -40,25 +29,19 @@ test('run - staged manifest assets fetched', async (t) => {
 
   swarm.join(drive.discoveryKey)
   await new Promise((resolve) => setTimeout(resolve, 500))
-  const assetBuffer = Buffer.allocUnsafe(4096)
+  const assetBuffer = crypto.randomBytes(4096)
   await drive.put('/asset', assetBuffer)
-
-  const appPkgPath = path.join(appWithAssetsDir, 'package.json')
-  const appPkg = JSON.parse(await fs.promises.readFile(appPkgPath, 'utf8'))
+  const dir = Helper.fixture('app-with-assets')
+  const fixture = new Localdrive(dir)
+  const appPkg = JSON.parse(await fixture.get('/package.json'))
   const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
   appPkg.pear.assets.ui.link = link
-  await fs.promises.writeFile(
-    path.join(appWithAssetsDir, 'package.json'),
-    JSON.stringify(appPkg, null, 2)
-  )
+  await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
 
   t.teardown(async () => {
     // revert change in package.json
     appPkg.pear.assets.ui.link = ''
-    await fs.promises.writeFile(
-      path.join(appWithAssetsDir, 'package.json'),
-      JSON.stringify(appPkg, null, 2)
-    )
+    await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
   })
 
   const helper = new Helper()
@@ -67,11 +50,12 @@ test('run - staged manifest assets fetched', async (t) => {
 
   t.comment('running app')
   const base = Pear.app.dir
-  Pear.app.dir = appWithAssetsDir
+  Pear.app.dir = dir
   t.teardown(() => {
     Pear.app.dir = base
   })
-  const run = await Helper.run({ link: appWithAssetsDir })
+
+  const run = await Helper.run({ link: dir })
   const result = await Helper.untilResult(run.pipe)
   t.is(result, 'hello')
   await Helper.untilClose(run.pipe)
@@ -83,11 +67,12 @@ test('run - staged manifest assets fetched', async (t) => {
   const asset = await assets.find((e) => e.link === link)
   t.ok(asset)
 
-  const assetBin = await fs.promises.readFile(path.join(asset.path, 'asset'))
+  const assetTarget = new Localdrive(asset.path)
+  const assetBin = await assetTarget.get('asset')
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
 
-test('run - preflight downloads staged assets', async (t) => {
+test('pear run preflight downloads staged assets', async (t) => {
   t.plan(3)
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
@@ -97,7 +82,8 @@ test('run - preflight downloads staged assets', async (t) => {
   const drive = new Hyperdrive(store)
   await drive.ready()
   t.teardown(() => swarm.destroy())
-  const appWithAssetsDrive = new Localdrive(appWithAssetsDir)
+  const dir = Helper.fixture('app-with-assets')
+  const fixture = new Localdrive(dir)
 
   swarm.on('connection', (conn) => {
     drive.corestore.replicate(conn)
@@ -108,18 +94,15 @@ test('run - preflight downloads staged assets', async (t) => {
   const assetBuffer = Buffer.allocUnsafe(4096)
   await drive.put('/asset', assetBuffer)
 
-  const appPkg = JSON.parse(await appWithAssetsDrive.get('/package.json'))
+  const appPkg = JSON.parse(await fixture.get('/package.json'))
   const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
   appPkg.pear.assets.ui.link = link
-  await appWithAssetsDrive.put('/package.json', JSON.stringify(appPkg, null, 2))
+  await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
 
   t.teardown(async () => {
     // revert change in package.json
     appPkg.pear.assets.ui.link = ''
-    await appWithAssetsDrive.put(
-      '/package.json',
-      JSON.stringify(appPkg, null, 2)
-    )
+    await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
   })
 
   t.comment('running app with preflight flag')
@@ -142,10 +125,10 @@ test('run - preflight downloads staged assets', async (t) => {
       '--dht-bootstrap',
       dhtBootstrap,
       '--base',
-      appWithAssetsDir,
+      dir,
       '--trusted',
       '--no-pre',
-      pathToFileURL(appWithAssetsDir)
+      pathToFileURL(dir)
     ],
     {
       stdio: ['inherit', 'inherit', 'inherit', 'overlapped'],
@@ -184,7 +167,7 @@ test('run - preflight downloads staged assets', async (t) => {
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
 
-test.hook('run encrypted setup', rig.setup)
+test.hook('encrypted run setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({
   ok,
@@ -197,7 +180,7 @@ test('stage, seed and run encrypted app', async function ({
   timeout(180000)
   plan(6)
 
-  const dir = encrypted
+  const dir = Helper.fixture('encrypted')
 
   const helper = new Helper(rig)
   teardown(() => helper.close(), { order: Infinity })
@@ -266,4 +249,4 @@ test('stage, seed and run encrypted app', async function ({
   ok(true, 'ended')
 })
 
-test.hook('run encrypted cleanup', rig.cleanup)
+test.hook('encrypted run cleanup', rig.cleanup)
