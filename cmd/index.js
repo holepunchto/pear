@@ -225,8 +225,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command(
       'presets',
       summary('Presets by link and command'),
-      arg('[link]', 'Presets link'),
-      arg('[command]', 'Presets command'),
+      arg('[link]', 'Filter by link'),
+      arg('[command]', 'Filter by command'),
       (cmd) => runners.data(ipc).presets(cmd)
     ),
     flag('--secrets', 'Show sensitive information'),
