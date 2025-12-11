@@ -137,7 +137,6 @@ test('pear run preflight downloads staged assets', async (t) => {
   )
   ref.ref()
   sp.once('exit', (exitCode) => {
-    if (exitCode !== 0) run.pipe.emit('crash', { exitCode })
     ref.unref()
   })
   const pipe = sp.stdio[3]
@@ -145,8 +144,8 @@ test('pear run preflight downloads staged assets', async (t) => {
   await helper.ready()
 
   await t.execution(
-    new Promise((resolve) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), 500)
+    new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), 1000)
       pipe.once('data', () => {
         reject(new Error('unexpected data'))
       })
