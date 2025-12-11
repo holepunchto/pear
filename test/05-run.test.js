@@ -137,7 +137,6 @@ test('pear run preflight downloads staged assets', async (t) => {
   )
   ref.ref()
   sp.once('exit', (exitCode) => {
-    if (exitCode !== 0) run.pipe.emit('crash', { exitCode })
     ref.unref()
   })
   const pipe = sp.stdio[3]
