@@ -17,7 +17,7 @@ test('pear data', async function ({
   teardown
 }) {
   timeout(180000)
-  plan(14)
+  plan(17)
 
   const dir = Helper.fixture('encrypted')
   const helper = new Helper()
@@ -40,6 +40,8 @@ test('pear data', async function ({
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  await Helper.untilClose(pipe)
+  pass('App has finished running')
 
   comment('pear data apps')
   let data = await helper.data({ resource: 'apps' })
@@ -74,22 +76,20 @@ test('pear data', async function ({
   is(bundle.link, link, 'Link matches to the one just created')
   is(typeof bundle.appStorage, 'string', 'Field appStorage is a string')
 
-  // comment('pear data dht')
-  // data = await helper.data({ resource: 'dht' })
-  // result = await Helper.pick(data, [{ tag: 'dht' }])
-  // const dht = await result.dht
-  // ok(dht.length > 0, 'DHT array exists')
-  // is(typeof dht[0].host, 'string', 'Field host is a string')
-  // is(typeof dht[0].port, 'number', 'Field port is a number')
+  comment('pear data dht')
+  data = await helper.data({ resource: 'dht' })
+  data.on('data', (d) => console.log('data', d))
+  result = await Helper.pick(data, [{ tag: 'dht' }])
+  const dht = await result.dht
+  ok(dht.length > 0, 'DHT array exists')
+  is(typeof dht[0].host, 'string', 'Field host is a string')
+  is(typeof dht[0].port, 'number', 'Field port is a number')
 
   comment('pear data manifest')
   data = await helper.data({ resource: 'manifest' })
   result = await Helper.pick(data, [{ tag: 'manifest' }])
   const manifest = await result.manifest
   is(manifest, null, 'Manifest does not exist yet')
-
-  await Helper.untilClose(pipe)
-  pass('ended')
 })
 
 test('pear data no duplicated bundle', async function ({
