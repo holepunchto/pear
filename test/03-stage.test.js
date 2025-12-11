@@ -158,7 +158,6 @@ test('pear stage min desktop app with only and include', async ({
   ]
 
   comment('Only files in the dependency tree and pear.stage.only are staged')
-  console.log(stagedFiles)
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
