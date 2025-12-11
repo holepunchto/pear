@@ -1,5 +1,5 @@
 const pipe = require('pear-pipe')()
 
 pipe.on('data', () => {
-  pipe.write(Pear.config.linkData + '\n')
+  pipe.write(Pear.app.linkData + '\n')
 })

@@ -3,19 +3,16 @@ const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
-const LocalDrive = require('localdrive')
+const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const testTmp = require('test-tmp')
 const { Session } = require('pear-inspect')
 const Helper = require('./helper')
-const updates = path.join(Helper.localDir, 'test', 'fixtures', 'updates')
-const versions = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-const cutover = path.join(Helper.localDir, 'test', 'fixtures', 'cutover')
 const seedOpts = (id) => ({
   channel: `test-${id}`,
   name: `test-${id}`,
   key: null,
-  dir: updates,
+  dir: Helper.fixture('updates'),
   cmdArgs: []
 })
 const stageOpts = (id, dir) => ({
@@ -44,7 +41,7 @@ test('updates(listener) should notify when restaging and releasing application (
   teardown
 }) {
   plan(7)
-
+  const dir = Helper.fixture('updates')
   const testId = Helper.getRandomId()
   const stager1 = new Helper(rig)
   teardown(() => stager1.close(), { order: Infinity })
@@ -52,7 +49,7 @@ test('updates(listener) should notify when restaging and releasing application (
 
   comment('1. Stage and run app')
 
-  comment('\tstaging')
+  comment('staging')
   const staging = stager1.stage(stageOpts(testId))
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [
@@ -62,7 +59,7 @@ test('updates(listener) should notify when restaging and releasing application (
   const { key, link } = await until.staging
   await until.final
 
-  comment('\trunning')
+  comment('running')
   const { pipe } = await Helper.run({ link })
   const versions = await Helper.untilResult(pipe).then((data) =>
     JSON.parse(data)
@@ -78,16 +75,16 @@ test('updates(listener) should notify when restaging and releasing application (
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(updates, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(() => {
     try {
-      fs.unlinkSync(path.join(updates, file))
+      fs.unlinkSync(path.join(dir, file))
     } catch {
       /* ignore */
     }
   })
 
-  comment('\tstaging')
+  comment('staging')
   const stager2 = new Helper(rig)
   teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
@@ -96,7 +93,7 @@ test('updates(listener) should notify when restaging and releasing application (
   teardown(() => Helper.teardownStream(staging2))
   await Helper.pick(staging2, { tag: 'final' })
 
-  fs.unlinkSync(path.join(updates, file))
+  fs.unlinkSync(path.join(dir, file))
 
   const update1 = await untilUpdate1
   const update1Version = update1?.version
@@ -111,7 +108,7 @@ test('updates(listener) should notify when restaging and releasing application (
     `app version.length is non-zero (v${update1Version?.fork}.${update1Version?.length})`
   )
 
-  comment('\treleasing')
+  comment('releasing')
   const releaser = new Helper(rig)
   teardown(() => releaser.close(), { order: Infinity })
   await releaser.ready()
@@ -120,7 +117,7 @@ test('updates(listener) should notify when restaging and releasing application (
   teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'released' })
 
-  comment('\twaiting for update')
+  comment('waiting for update')
   const update2 = await untilUpdate2
   const update2Version = update2?.version
   is(
@@ -140,12 +137,12 @@ test('updates(listener) should notify when restaging and releasing application (
 test('updates(listener) should notify twice when restaging application twice (same pear instance)', async function (t) {
   const { ok, is, plan, comment, teardown } = t
   plan(7)
-
+  const dir = Helper.fixture('updates')
   const testId = Helper.getRandomId()
 
   comment('1. Stage and run app')
 
-  comment('\tstaging')
+  comment('staging')
   const stager1 = new Helper(rig)
   teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
@@ -158,7 +155,7 @@ test('updates(listener) should notify twice when restaging application twice (sa
   const { key, link } = await until.staging
   await until.final
 
-  comment('\trunning')
+  comment('running')
   const { pipe } = await Helper.run({ link })
   const versions = await Helper.untilResult(pipe).then((data) =>
     JSON.parse(data)
@@ -174,9 +171,9 @@ test('updates(listener) should notify twice when restaging application twice (sa
 
   const file = `${ts()}.tmp`
   comment(`\tcreating test file (${file})`)
-  fs.writeFileSync(path.join(updates, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
 
-  comment('\trestaging')
+  comment('restaging')
   const stager2 = new Helper(rig)
   teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
@@ -184,9 +181,9 @@ test('updates(listener) should notify twice when restaging application twice (sa
   const staging2 = stager2.stage(stageOpts(testId))
   teardown(() => Helper.teardownStream(staging2))
   await Helper.pick(staging2, { tag: 'final' })
-  fs.unlinkSync(path.join(updates, file))
+  fs.unlinkSync(path.join(dir, file))
 
-  comment('\twaiting for update')
+  comment('waiting for update')
   const update1 = await untilUpdate1
   const update1Version = update1?.version
   is(
@@ -204,9 +201,9 @@ test('updates(listener) should notify twice when restaging application twice (sa
 
   const file2 = `${ts()}.tmp`
   comment(`\tcreating another test file (${file2})`)
-  fs.writeFileSync(path.join(updates, file2), 'test')
+  fs.writeFileSync(path.join(dir, file2), 'test')
 
-  comment('\trestaging')
+  comment('restaging')
   const stager3 = new Helper(rig)
   teardown(() => stager3.close(), { order: Infinity })
   await stager3.ready()
@@ -214,9 +211,9 @@ test('updates(listener) should notify twice when restaging application twice (sa
   teardown(() => Helper.teardownStream(staging3))
   await Helper.pick(staging3, { tag: 'final' })
 
-  fs.unlinkSync(path.join(updates, file2))
+  fs.unlinkSync(path.join(dir, file2))
 
-  comment('\twaiting for update')
+  comment('waiting for update')
   const update2 = await untilUpdate2
   const update2Version = update2?.version
   is(
@@ -237,7 +234,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
   timeout(80_000)
-
+  const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -248,7 +245,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -263,7 +260,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -352,9 +349,8 @@ test('updates should notify Platform stage updates (different pear instances)', 
   await store.close()
 
   comment('rcv platform runs after updater.applyUpdate')
-  const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
   const { pipe: pipeAfterUpdate } = await Helper.run({
-    link: versionsDir,
+    link: Helper.fixture('versions'),
     platformDir: platformDirRcv
   })
   const { platform } = await Helper.untilResult(pipeAfterUpdate).then((data) =>
@@ -374,7 +370,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(11)
   timeout(80_000)
-
+  const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -385,7 +381,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -400,7 +396,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -517,7 +513,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(6)
   timeout(80_000)
-
+  const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -527,7 +523,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -541,7 +537,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -576,10 +572,10 @@ test('updates should notify App stage updates (different pear instances)', async
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(updates, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(
     () => {
-      fs.unlinkSync(path.join(updates, file))
+      fs.unlinkSync(path.join(dir, file))
     },
     { order: -Infinity }
   )
@@ -591,7 +587,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -617,7 +613,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
   timeout(80_000)
-
+  const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -628,7 +624,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -642,7 +638,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -680,10 +676,10 @@ test('updates should notify App stage, App release updates (different pear insta
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(updates, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(
     () => {
-      fs.unlinkSync(path.join(updates, file))
+      fs.unlinkSync(path.join(dir, file))
     },
     { order: -Infinity }
   )
@@ -695,7 +691,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: updates,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -750,14 +746,15 @@ test('state version and pod drive version match', async function ({
   timeout
 }) {
   timeout(90_000)
+
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
   const tmpdir = await testTmp()
 
-  const from = new LocalDrive(versions)
-  const to = new LocalDrive(tmpdir)
+  const from = new Localdrive(Helper.fixture('versions'))
+  const to = new Localdrive(tmpdir)
 
   const mirror = from.mirror(to)
   await mirror.done()
@@ -891,7 +888,7 @@ test('updates should replay updates when cutover is not called', async function 
   const { ok, is, plan, timeout, comment, teardown, pass } = t
   plan(11)
   timeout(80_000)
-
+  const dir = Helper.fixture('cutover')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -902,7 +899,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -916,7 +913,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -942,7 +939,7 @@ test('updates should replay updates when cutover is not called', async function 
   const { pipe } = await Helper.run({
     link,
     platformDir: platformDirRcv,
-    args: ['--no-cutover']
+    args: ['--no-dirs']
   })
   const versions = await Helper.untilResult(pipe).then((data) =>
     JSON.parse(data)
@@ -958,10 +955,10 @@ test('updates should replay updates when cutover is not called', async function 
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(cutover, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(
     () => {
-      fs.unlinkSync(path.join(cutover, file))
+      fs.unlinkSync(path.join(dir, file))
     },
     { order: -Infinity }
   )
@@ -973,7 +970,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -1020,7 +1017,7 @@ test('updates should replay updates even when cutover is called', async function
   const { ok, is, plan, timeout, comment, teardown, pass } = t
   plan(11)
   timeout(80_000)
-
+  const dir = Helper.fixture('cutover')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
@@ -1031,7 +1028,7 @@ test('updates should replay updates even when cutover is called', async function
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -1045,7 +1042,7 @@ test('updates should replay updates even when cutover is called', async function
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -1087,10 +1084,10 @@ test('updates should replay updates even when cutover is called', async function
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`creating app test file (${file})`)
-  fs.writeFileSync(path.join(cutover, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(
     () => {
-      fs.unlinkSync(path.join(cutover, file))
+      fs.unlinkSync(path.join(dir, file))
     },
     { order: -Infinity }
   )
@@ -1102,7 +1099,7 @@ test('updates should replay updates even when cutover is called', async function
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -1149,7 +1146,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const { ok, is, absent, plan, timeout, comment, teardown, pass } = t
   plan(5)
   timeout(80_000)
-
+  const dir = Helper.fixture('cutover')
   const CUTOVER_DELAY = 2_000
 
   comment('1. Prepare reduced timeout platform as rcv')
@@ -1157,8 +1154,8 @@ test('updates should start timer for clearing buffer when cutover is called', as
   comment(`\tCopying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new LocalDrive(rig.artefactDir).mirror(
-    new LocalDrive(patchedArtefactDir),
+  const mirror = new Localdrive(rig.artefactDir).mirror(
+    new Localdrive(patchedArtefactDir),
     {
       prune: false,
       ignore: ['/pear', '/.git', '/test']
@@ -1166,7 +1163,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   )
   await mirror.done()
 
-  comment('\tPatching sidecar to have reduced timeout')
+  comment('Patching sidecar to have reduced timeout')
   const sidecarPath = path.join(
     patchedArtefactDir,
     'subsystems',
@@ -1181,7 +1178,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   )
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
-  comment('\tStaging patched platform')
+  comment('Staging patched platform')
   const rigHelper = new Helper(rig)
   teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
@@ -1197,7 +1194,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   ])
   await patchedStagerUntil.final
 
-  comment('\tSeeding patched platform')
+  comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
     channel: 'test-reduced-cutover',
     name: 'test-reduced-cutover',
@@ -1213,7 +1210,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   await patchedSeederUntil.announced
   teardown(() => Helper.teardownStream(patchedSeeder))
 
-  comment('\tBootstrapping patched platform')
+  comment('Bootstrapping patched platform')
   const platformDirRcv = path.join(Helper.tmp, 'prcv-pear')
   await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
   teardown(() => Helper.gc(platformDirRcv))
@@ -1222,32 +1219,32 @@ test('updates should start timer for clearing buffer when cutover is called', as
   await rigHelper.close()
 
   comment('2. Start patched rcv platform')
-  comment('\tStarting rcv platform')
+  comment('Starting rcv platform')
   const rcvHelper = new Helper({ platformDir: platformDirRcv })
   teardown(() => rcvHelper.close(), { order: Infinity })
   await rcvHelper.ready()
 
   comment('3. Stage and start app using rig')
-  comment('\tStaging app using rig')
+  comment('Staging app using rig')
   const channel = 'test-fixture-no-cutover'
   const appStager = new Helper(rig)
   await appStager.ready()
   const staging = appStager.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   const stagingUntil = await Helper.pick(staging, [{ tag: 'final' }])
   await stagingUntil.final
 
-  comment('\tSeeding staged app using rcv')
+  comment('Seeding staged app using rcv')
   const appSeeder = new Helper(rig)
   await appSeeder.ready()
   const seeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -1258,13 +1255,13 @@ test('updates should start timer for clearing buffer when cutover is called', as
     { tag: 'key' }
   ])
   await seedingUntil.announced
-  pass('\tApp seeded and announced')
+  pass('App seeded and announced')
   const appKey = await seedingUntil.key
 
   ok(hypercoreid.isValid(appKey), 'app key is valid')
 
   comment('4. Start app using rcv platform')
-  comment('\tStarting app using rcv platform')
+  comment('Starting app using rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({
     link,
@@ -1275,28 +1272,28 @@ test('updates should start timer for clearing buffer when cutover is called', as
     JSON.parse(data)
   )
   const { key: appVersionKey } = versions?.app || {}
-  is(appVersionKey, appKey, '\tapp version key matches staged key')
+  is(appVersionKey, appKey, 'app version key matches staged key')
 
   comment('5. Update app')
   const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
   const file = `${ts()}.tmp`
   comment(`\tCreating app test file (${file})`)
-  fs.writeFileSync(path.join(cutover, file), 'test')
+  fs.writeFileSync(path.join(dir, file), 'test')
   teardown(
     () => {
-      fs.unlinkSync(path.join(cutover, file))
+      fs.unlinkSync(path.join(dir, file))
     },
     { order: -Infinity }
   )
 
-  comment('\tRestaging app')
+  comment('Restaging app')
   const appStager2 = new Helper(rig)
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: cutover,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
