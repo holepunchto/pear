@@ -14,3 +14,12 @@ pear/current
 
 examples/desktop/package-lock.json
 examples/terminal/package-lock.json
+!test/fixtures/never/.git
+!test/fixtures/never/.github
+!test/fixtures/never/.DS_Store
+!test/fixtures/app-with-never/.git
+!test/fixtures/app-with-never/.github
+!test/fixtures/app-with-never/.DS_Store
+!test/fixtures/always/.git
+!test/fixtures/always/.github
+!test/fixtures/always/.DS_Store

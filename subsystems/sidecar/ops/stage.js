@@ -86,11 +86,25 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ pod, dryRun })
 
     await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
-    const defaultIgnore = ['**.git', '**.github', '**.DS_Store']
+    const defaultNever = ['**.git', '**.github', '**.DS_Store']
+    const always = Array.isArray(state.options?.stage?.always)
+      ? state.options.stage.always
+      : []
+    const never = [
+      ...new Set([
+        ...(Array.isArray(state.options?.stage?.never)
+          ? state.options.stage.never
+          : []),
+        ...defaultNever
+      ])
+    ]
+
+    const defaultIgnore = []
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
     if (state.options?.stage?.ignore)
       ignore.push(...state.options.stage?.ignore)
+
     ignore = [...new Set([...ignore, ...defaultIgnore])]
 
     if (state.options?.stage?.only) only = state.options?.stage?.only
@@ -129,7 +143,8 @@ module.exports = class Stage extends Opstream {
             key.startsWith(path[0] === '/' ? path : '/' + path)
           )
       : null
-    const glob = new GlobDrive(src, ignore)
+    const unignoreAlways = always.map((glob) => glob[0] === '!' ? glob : '!' + glob)
+    const glob = new GlobDrive(src, [...never, ...ignore, ...unignoreAlways ])
     await glob.ready()
 
     const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }

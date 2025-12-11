@@ -158,6 +158,7 @@ test('pear stage min desktop app with only and include', async ({
   ]
 
   comment('Only files in the dependency tree and pear.stage.only are staged')
+  console.log(stagedFiles)
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
@@ -181,7 +182,6 @@ test.skip('pear stage pear.main file', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    console.log(data)
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
@@ -196,6 +196,103 @@ test.skip('pear stage pear.main file', async ({ teardown, ok, comment }) => {
 
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
+})
+
+test('pear stage never defaults', async function ({ absent, is, teardown }) {
+  const dir = Helper.fixture('never')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+  is(stagingFiles.length, 3)
+  absent(stagingFiles.includes('/.git/dummy'))
+  absent(stagingFiles.includes('/.github/dummy'))
+  absent(stagingFiles.includes('/.DS_Store/dummy'))
+})
+
+test('pear stage always overides never', async function ({ absent, ok, is, teardown }) {
+  const dir = Helper.fixture('always')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+  is(stagingFiles.length, 4)
+  absent(stagingFiles.includes('/.git/dummy'))
+  ok(stagingFiles.includes('/.github/dummy'))
+  absent(stagingFiles.includes('/.DS_Store/dummy'))
+})
+
+test('pear stage never extends default never', async function ({ absent, ok, is, teardown }) {
+  const dir = Helper.fixture('app-with-never')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+  is(stagingFiles.length, 3)
+  absent(stagingFiles.includes('/.git/dummy'))
+  absent(stagingFiles.includes('/.github/dummy'))
+  absent(stagingFiles.includes('/.DS_Store/dummy'))
+  absent(stagingFiles.includes('/never'))
 })
 
 test('pear stage with ignore', async function ({ ok, is, teardown }) {
@@ -344,6 +441,40 @@ test('pear stage with ignore and unignore', async function ({
       '/modules-test/dir4/subdir/prebuilds-example/file2.js'
     )
   )
+})
+
+test('pear stage ignore does not override never', async function ({ absent, ok, is, teardown }) {
+  const dir = Helper.fixture('app-with-never-and-ignore')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagingFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagingFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+  is(stagingFiles.length, 3)
+  absent(stagingFiles.includes('/.git/dummy'))
+  absent(stagingFiles.includes('/.github/dummy'))
+  absent(stagingFiles.includes('/.DS_Store/dummy'))
+  absent(stagingFiles.includes('/never'))
+  absent(stagingFiles.includes('/ignore'))
 })
 
 test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
