@@ -54,7 +54,12 @@ test(
     const run = await Helper.run({ link })
     const { pipe } = run
 
-    const td = await Helper.untilResult(pipe, { timeout: 5000 })
+    const td = await Helper.untilResult(pipe, {
+      timeout: 5000,
+      runFn: () => {
+        pipe.end()
+      }
+    })
     is(td, 'teardown', 'teardown executed')
   }
 )
