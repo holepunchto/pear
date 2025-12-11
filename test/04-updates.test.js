@@ -245,7 +245,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -260,7 +260,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -381,7 +381,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -396,7 +396,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -523,7 +523,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -537,7 +537,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -587,7 +587,7 @@ test('updates should notify App stage updates (different pear instances)', async
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -624,7 +624,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -638,7 +638,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -691,7 +691,7 @@ test('updates should notify App stage, App release updates (different pear insta
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -899,7 +899,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -913,7 +913,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -970,7 +970,7 @@ test('updates should replay updates when cutover is not called', async function 
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -1028,7 +1028,7 @@ test('updates should replay updates even when cutover is called', async function
   const appStaging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging))
@@ -1042,7 +1042,7 @@ test('updates should replay updates even when cutover is called', async function
   const appSeeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -1099,7 +1099,7 @@ test('updates should replay updates even when cutover is called', async function
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))
@@ -1232,7 +1232,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const staging = appStager.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   const stagingUntil = await Helper.pick(staging, [{ tag: 'final' }])
@@ -1244,7 +1244,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const seeding = appSeeder.seed({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     key: null,
     cmdArgs: []
   })
@@ -1293,7 +1293,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const appStaging2 = appStager2.stage({
     channel,
     name: channel,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(appStaging2))

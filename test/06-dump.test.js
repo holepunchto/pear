@@ -17,7 +17,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -110,7 +110,7 @@ test('pear dump dumping to existing dir', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -158,7 +158,7 @@ test('pear dump dumping to existing dir with force', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -201,7 +201,7 @@ test('pear dump dumping a single file', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -247,7 +247,7 @@ test('pear dump dumping a single file in a subdirectory', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -287,7 +287,7 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -331,7 +331,7 @@ test('pear dump dumping subdirectory to stdout', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -381,7 +381,7 @@ test('pear dump dumping a single file to stdout', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -429,7 +429,7 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -472,7 +472,7 @@ test('pear dump should throw when dumping non-existant filepath', async function
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
@@ -512,7 +512,7 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: dir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
