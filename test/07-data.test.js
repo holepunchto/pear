@@ -78,7 +78,6 @@ test('pear data', async function ({
 
   comment('pear data dht')
   data = await helper.data({ resource: 'dht' })
-  data.on('data', (d) => console.log('data', d))
   result = await Helper.pick(data, [{ tag: 'dht' }])
   const dht = await result.dht
   ok(dht.length > 0, 'DHT array exists')
