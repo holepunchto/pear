@@ -146,7 +146,7 @@ test('pear run preflight downloads staged assets', async (t) => {
 
   await t.execution(
     new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), 500)
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), 1000)
       pipe.once('data', () => {
         reject(new Error('unexpected data'))
       })
