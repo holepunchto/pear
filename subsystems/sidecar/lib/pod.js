@@ -1,5 +1,6 @@
 'use strict'
 const fs = require('bare-fs')
+const path = require('bare-path')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -7,6 +8,7 @@ const { Readable } = require('streamx')
 const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
+const Localdrive = require('localdrive')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const { pathToFileURL } = require('url-file-url')
@@ -14,6 +16,7 @@ const plink = require('pear-link')
 const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
+const pack = require('pear-pack')
 const { SWAP } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
@@ -21,8 +24,7 @@ const noop = Function.prototype
 
 const ABI = 0
 
-module.exports = class Bundle {
-  // TODO: rename to Pod
+module.exports = class Pod {
   platformVersion = null
   constructor(opts = {}) {
     const {
@@ -62,7 +64,7 @@ module.exports = class Bundle {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    this._asset = asset
+    this._asset = this._assetify(asset)
     if (this.corestore) {
       this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
@@ -99,6 +101,65 @@ module.exports = class Bundle {
     this.initializing = this.#init()
 
     this.updateNotify = updateNotify
+  }
+
+  _assetify(fn) {
+    return async (...args) => {
+      const asset = await fn(...args)
+      if (asset === null) return null
+      if (Array.isArray(asset.pack) === false) {
+        if (typeof asset.pack === 'object' && asset.pack !== null)
+          asset.pack = [asset.pack]
+        if (Array.isArray(asset.pack) === false) return asset
+      }
+
+      const folder = new Localdrive(asset.path)
+      const prebuildPrefix = pathToFileURL(asset.path)
+      const configs = asset.pack
+      for await (const [name, packed] of this.packer({
+        configs,
+        prebuildPrefix
+      })) {
+        for (const [prebuild, addon] of packed.prebuilds)
+          await folder.put(prebuild, addon)
+        await folder.put(name, packed.bundle)
+      }
+
+      return asset
+    }
+  }
+
+  async pack({
+    entry,
+    builtins = [],
+    conditions,
+    extensions,
+    prebuildPrefix
+  } = {}) {
+    const hosts = [require.addon.host]
+    const packed = await pack(this.drive, {
+      entry,
+      hosts,
+      builtins,
+      conditions,
+      extensions,
+      prebuildPrefix
+    })
+    const prebuilds = new Map()
+    for (const [prebuild, addon] of packed.prebuilds)
+      prebuilds.set(
+        '/prebuilds/' + require.addon.host + '/' + path.basename(prebuild),
+        addon
+      )
+    packed.prebuilds = prebuilds
+    return packed
+  }
+
+  async *packer({ prebuildPrefix, configs = [] }) {
+    for (const { bundle, ...opts } of configs) {
+      const packed = await this.pack({ prebuildPrefix, ...opts })
+      yield [bundle, packed]
+    }
   }
 
   async assets(manifest) {

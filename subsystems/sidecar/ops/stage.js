@@ -11,7 +11,7 @@ const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const State = require('../state')
 const PearShake = require('pear-shake')
 const ReadyResource = require('ready-resource')
@@ -59,10 +59,10 @@ module.exports = class Stage extends Opstream {
       : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-    const persistedBundle = await this.sidecar.model.getBundle(
+    const traits = await this.sidecar.model.getTraits(
       `pear://${hypercoreid.encode(key)}`
     )
-    const encryptionKey = persistedBundle?.encryptionKey
+    const encryptionKey = traits?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -71,7 +71,7 @@ module.exports = class Stage extends Opstream {
       })
     }
 
-    const bundle = new Bundle({
+    const pod = new Pod({
       key,
       corestore,
       channel,
@@ -79,13 +79,13 @@ module.exports = class Stage extends Opstream {
       stage: true,
       encryptionKey
     })
-    await session.add(bundle)
+    await session.add(pod)
 
-    const currentVersion = bundle.version
-    const verlink = bundle.verlink()
-    await state.initialize({ bundle, dryRun })
+    const currentVersion = pod.version
+    const verlink = pod.verlink()
+    await state.initialize({ pod, dryRun })
 
-    await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
+    await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
     const defaultIgnore = ['**.git', '**.github', '**.DS_Store']
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
@@ -97,16 +97,16 @@ module.exports = class Stage extends Opstream {
     else
       only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
 
-    const release = (await bundle.db.get('release'))?.value || 0
+    const release = (await pod.db.get('release'))?.value || 0
 
-    const link = plink.serialize(bundle.drive.key)
+    const link = plink.serialize(pod.drive.key)
     const z32 = link.slice(7)
 
     this.push({
       tag: 'staging',
       data: {
         name: state.name,
-        channel: bundle.channel,
+        channel: pod.channel,
         key: z32,
         link,
         verlink: verlink,
@@ -122,7 +122,7 @@ module.exports = class Stage extends Opstream {
       followExternalLinks: true,
       metadata: new Map()
     })
-    const dst = bundle.drive
+    const dst = pod.drive
     const select = only
       ? (key) =>
           only.some((path) =>
@@ -249,7 +249,7 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    const isTemplate = (await bundle.drive.entry('/_template.json')) !== null
+    const isTemplate = (await pod.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (state.options?.stage?.skipWarmup) {
@@ -263,11 +263,11 @@ module.exports = class Stage extends Opstream {
         data: { reason: 'template', success: true }
       })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const analyzer = new DriveAnalyzer(bundle.drive)
+      const analyzer = new DriveAnalyzer(pod.drive)
       await analyzer.ready()
       const analyzed = await analyzer.analyze(entrypoints, prefetch, {
         defer: state.options?.stage?.defer,
-        files: compact ? await stagedFiles(bundle.drive) : null,
+        files: compact ? await stagedFiles(pod.drive) : null,
         skips: compact ? compactSkips : null
       })
       const { warmup } = analyzed
@@ -275,9 +275,8 @@ module.exports = class Stage extends Opstream {
         return { specifier, referrer: referrer.pathname }
       })
 
-      await bundle.db.put('warmup', warmup)
-      const total =
-        bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
+      await pod.db.put('warmup', warmup)
+      const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
       const blocks = warmup.meta.length + warmup.data.length
       this.push({
         tag: 'warmed',
@@ -297,12 +296,12 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: bundle.version,
+        version: pod.version,
         release,
         channel,
         key: z32,
         link,
-        verlink: bundle.verlink()
+        verlink: pod.verlink()
       }
     })
   }

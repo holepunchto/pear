@@ -2,9 +2,9 @@
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
 import updates from 'pear-updates'
-console.log('link', Pear.config.link)
-console.log('linkData', Pear.config.linkData)
-console.log('key', Pear.config.key)
+console.log('link', Pear.app.link)
+console.log('linkData', Pear.app.linkData)
+console.log('key', Pear.app.key)
 const pipe = pearPipe()
 pipe.on('data', (data) => {
   const cmd = Buffer.from(data).toString()
@@ -31,8 +31,8 @@ Pear.teardown(async () => {
   await new Promise((resolve) => setTimeout(resolve, 500)) // example async work
 })
 
-document.getElementById('channel').innerText = Pear.config.channel || 'none [ dev ]'
-document.getElementById('release').innerText = Pear.config.release || (Pear.config.dev ? 'none [ dev ]' : '0')
+document.getElementById('channel').innerText = Pear.app.channel || 'none [ dev ]'
+document.getElementById('release').innerText = Pear.app.release || (Pear.app.dev ? 'none [ dev ]' : '0')
 const { app, platform } = await Pear.versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork

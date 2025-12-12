@@ -1,6 +1,5 @@
 #!/usr/bin/env bare
 'use strict'
-
 const { platform, arch, isWindows, isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
@@ -17,8 +16,7 @@ const safetyCatch = require('safety-catch')
 const Rache = require('rache')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
-const argv =
-  global.Pear?.config.args || global.Bare?.argv || global.process.argv
+const argv = global.Pear?.app.args || global.Bare?.argv || global.process.argv
 
 const parser = command(
   'bootstrap',
@@ -37,7 +35,7 @@ const CORESTORE =
   path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear
-  ? path.join(new URL(global.Pear.config.applink).pathname, __dirname)
+  ? path.join(new URL(global.Pear.app.applink).pathname, __dirname)
   : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')

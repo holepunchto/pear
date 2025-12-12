@@ -3,7 +3,7 @@ const Hyperdrive = require('hyperdrive')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_UNSTAGED } = require('pear-errors')
 const plink = require('pear-link')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
 
@@ -37,9 +37,9 @@ module.exports = class Release extends Opstream {
 
     if (key === null) await Hyperdrive.getDriveKey(corestore)
 
-    const bundle = new Bundle({ corestore, channel, key })
-    await session.add(bundle)
-    const manifest = await bundle.db.get('manifest')
+    const pod = new Pod({ corestore, channel, key })
+    await session.add(pod)
+    const manifest = await pod.db.get('manifest')
 
     if (manifest === null) {
       throw ERR_UNSTAGED(
@@ -47,16 +47,16 @@ module.exports = class Release extends Opstream {
       )
     }
 
-    const currentLength = bundle.db.feed.length
+    const currentLength = pod.db.feed.length
     const releaseLength = checkout || currentLength + 1
 
     this.push({ tag: 'updating-to', data: { currentLength, releaseLength } })
 
-    await bundle.db.put('release', releaseLength)
+    await pod.db.put('release', releaseLength)
 
     this.push({
       tag: 'released',
-      data: { name, channel, link, length: bundle.db.feed.length }
+      data: { name, channel, link, length: pod.db.feed.length }
     })
   }
 }
