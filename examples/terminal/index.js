@@ -10,7 +10,7 @@ const out = `
 ${grn}           ▅
            ▀
         ▂▂▄▟▙▃
-       ▄▄▄▄▆▆▆▆         ${Pear.config.name}
+       ▄▄▄▄▆▆▆▆         ${Pear.app.name}
       ▄▄▄▄▄▆▆▆▆▆        ${dim}${v(app)}${rst}${grn}
       ▄▄▄▄▄▆▆▆▆▆
      ▄▄▄▄▄▄▆▆▆▆▆▆       ${rst}${grn}pear
