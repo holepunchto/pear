@@ -9,10 +9,9 @@ const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
 
 const output = outputter('build', {
-  init: ({ dir }) => `Build target ${ansi.dim(dir)}\n`,
-  generate: () => 'Generating project...\n',
-  build: () => 'Compiling...\n',
-  complete: ({ dir }) => `\n${ansi.pear} Build completed ${ansi.dim(dir)}\n`,
+  init: ({ dorPear }) => `Init ${ansi.dim(dorPear)}\n`,
+  build: ({ target }) => `Building ${ansi.dim(target)}\n`,
+  complete: () => `\n${ansi.pear} Completed\n`,
   error: ({ message }) => `Error: ${message}\n`
 })
 
@@ -30,25 +29,19 @@ module.exports = (ipc) => {
     const { json } = cmd.flags
     const link = cmd.args.link
     const { drive } = plink.parse(link)
-    const { manifest } = await opwait(ipc.info({ link, manifest: true }))
+    const z32 = hypercoreid.encode(drive.key)
+    const { manifest: pkg } = await opwait(ipc.info({ link, manifest: true }))
     const { dir = os.cwd() } = cmd.args
-    const build = manifest.pear.build
+    const build = pkg.pear.build
     const dotPear = path.join(dir, '.pear')
     await fs.promises.mkdir(dotPear, { recursive: true })
-    const z32 = hypercoreid.encode(drive.key)
     const defaults = {
       "id": z32,
-      "name": `${build?.name || manifest.pear.name || manifest.name}`,
-      "version": `${build?.version || manifest.pear.version || manifest.version}`,
-      "author": `${build?.author || manifest.pear.author || manifest.author}`,
-      "description": `${build?.description || manifest.pear.description || manifest.description}`,
-      "darwin.identifier": `${build?.darwin?.identifier || `pear.${z32}`}`,
-      "darwin.category": `${build?.darwin?.category || 'public.app-category.developer-tools'}`,
-      "darwin.signingidentity": `${build?.darwin?.['signing-identity'] || '-'}`,
-      "darwin.entitlements": `${build?.darwin?.entitlements || ''}`,
-      "win.signingsubject": `${build?.win32?.['signing-subject'] || ''}`,
-      "win.signingthumbprint": `${build?.win32?.['signing-thumbprint'] || ''}`,
-      "linux.category": `${build?.linux?.category || 'Development'}`
+      "name": `${build?.name || pkg.pear?.name || pkg.name}`,
+      "version": `${build?.version || pkg.pear?.version || pkg.version}`,
+      "author": `${build?.author || pkg.pear?.author || pkg.author}`,
+      "description": `${build?.description || pkg.pear?.description || pkg.description}`,
+      "identifier": `${build?.identifier || `pear.${z32}`}`
     }
     await opwait(await require('../init')('init/templates/dot-pear', dotPear, {
       cwd: os.cwd(),
@@ -57,7 +50,7 @@ module.exports = (ipc) => {
       defaults,
       autosubmit: true,
       ask: false,
-      header: 'pear-build'
+      header: 'dot-pear'
     }))
     // use staged icons when available
     await opwait(ipc.dump({
@@ -66,6 +59,6 @@ module.exports = (ipc) => {
       only: '.pear/brand/icons',
       force: true
     }))
-    await output(json, pearBuild({ dir: dotPear, manifest: defaults }))
+    await output(json, pearBuild({ dotPear }))
   }
 }
