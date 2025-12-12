@@ -2,9 +2,11 @@
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
 import updates from 'pear-updates'
-console.log('link', Pear.app.link)
-console.log('linkData', Pear.app.linkData)
-console.log('key', Pear.app.key)
+import wakeups from 'pear-wakeups'
+
+console.log('link', Pear.config.link)
+console.log('linkData', Pear.config.linkData)
+console.log('key', Pear.config.key)
 const pipe = pearPipe()
 pipe.on('data', (data) => {
   const cmd = Buffer.from(data).toString()
@@ -21,7 +23,7 @@ updates((update) => {
   action.innerText = 'Restart ' + (update.app ? 'App' : 'Pear') + ' [' + update.version.fork + '.' + update.version.length + ']'
 })
 
-Pear.wakeups(async (wakeup) => {
+wakeups(async (wakeup) => {
   console.log('GOT WAKEUP', wakeup)
   await ui.app.focus({ steal: true })
 })

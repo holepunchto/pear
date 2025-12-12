@@ -11,18 +11,20 @@ const Hyperdrive = require('hyperdrive')
 const Localdrive = require('localdrive')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
+const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
 const plink = require('pear-link')
 const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
 const pack = require('pear-pack')
-const { SWAP } = require('pear-constants')
+const { SWAP, PLATFORM_DIR } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
 const noop = Function.prototype
 
 const ABI = 0
+const bundles = new Localdrive(path.join(PLATFORM_DIR, 'bundles'))
 
 module.exports = class Pod {
   platformVersion = null
@@ -42,7 +44,6 @@ module.exports = class Pod {
       asset,
       updateNotify,
       updatesDiff = false,
-      ver = null,
       truncate,
       encryptionKey = null
     } = opts
@@ -64,9 +65,9 @@ module.exports = class Pod {
     this.link = null
     this.watchingUpdates = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
-    this._asset = this._assetify(asset)
+    this._asset = asset
     if (this.corestore) {
-      this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
+      this.updater = this.stage ? null : new PodUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
@@ -103,40 +104,29 @@ module.exports = class Pod {
     this.updateNotify = updateNotify
   }
 
-  _assetify(fn) {
-    return async (...args) => {
-      const asset = await fn(...args)
-      if (asset === null) return null
-      if (Array.isArray(asset.pack) === false) {
-        if (typeof asset.pack === 'object' && asset.pack !== null)
-          asset.pack = [asset.pack]
-        if (Array.isArray(asset.pack) === false) return asset
-      }
-
-      const folder = new Localdrive(asset.path)
-      const prebuildPrefix = pathToFileURL(asset.path)
-      const configs = asset.pack
-      for await (const [name, packed] of this.packer({
-        configs,
-        prebuildPrefix
-      })) {
-        for (const [prebuild, addon] of packed.prebuilds)
-          await folder.put(prebuild, addon)
-        await folder.put(name, packed.bundle)
-      }
-
-      return asset
-    }
-  }
-
   async pack({
+    cache = false,
+    prebuilds,
     entry,
     builtins = [],
     conditions,
-    extensions,
-    prebuildPrefix
+    extensions
   } = {}) {
+    let filename = null
+    let metadata = null
+
+    if (cache) {
+      filename =
+        crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') +
+        '.bundle'
+      metadata = {
+        file: pathToFileURL(path.join(bundles.root, filename)).toString()
+      }
+      if (this.drive.core && (await bundles.exists(filename))) return metadata
+    }
+
     const hosts = [require.addon.host]
+    const prebuildPrefix = pathToFileURL(prebuilds)
     const packed = await pack(this.drive, {
       entry,
       hosts,
@@ -145,21 +135,17 @@ module.exports = class Pod {
       extensions,
       prebuildPrefix
     })
-    const prebuilds = new Map()
-    for (const [prebuild, addon] of packed.prebuilds)
-      prebuilds.set(
-        '/prebuilds/' + require.addon.host + '/' + path.basename(prebuild),
-        addon
-      )
-    packed.prebuilds = prebuilds
-    return packed
-  }
 
-  async *packer({ prebuildPrefix, configs = [] }) {
-    for (const { bundle, ...opts } of configs) {
-      const packed = await this.pack({ prebuildPrefix, ...opts })
-      yield [bundle, packed]
+    const addons = new Localdrive(prebuilds)
+    for (const [prebuild, addon] of packed.prebuilds)
+      await addons.put(prebuild, addon)
+
+    if (cache) {
+      await bundles.put(filename, packed.bundle)
+      return metadata
     }
+
+    return packed
   }
 
   async assets(manifest) {
@@ -172,6 +158,7 @@ module.exports = class Pod {
         name: 'Pear Runtime'
       }
     }
+
     for (const [ns, asset] of Object.entries(assets)) {
       assets[ns] = await this._asset({ ns, ...asset })
     }
@@ -264,6 +251,7 @@ module.exports = class Pod {
 
   verlink() {
     if (!this.drive) return ''
+    if (!this.drive.core) return 'pear://dev'
     return plink.serialize({
       drive: {
         length: this.drive.core.length,
@@ -495,7 +483,7 @@ module.exports = class Pod {
   }
 }
 
-class AppUpdater extends ReadyResource {
+class PodUpdater extends ReadyResource {
   static Watcher = class Watcher extends Readable {
     constructor(updater, opts) {
       super(opts)
