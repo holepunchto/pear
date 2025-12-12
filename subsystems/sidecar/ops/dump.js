@@ -10,7 +10,7 @@ const {
   ERR_INVALID_INPUT,
   ERR_NOT_FOUND
 } = require('pear-errors')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Dump extends Opstream {
@@ -44,8 +44,8 @@ module.exports = class Dump extends Opstream {
     checkout =
       checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
-    const query = await this.sidecar.model.getBundle(link)
-    const encryptionKey = query?.encryptionKey
+    const traits = await this.sidecar.model.getTraits(link)
+    const encryptionKey = traits?.encryptionKey
 
     const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
     let drive = null
@@ -64,7 +64,7 @@ module.exports = class Dump extends Opstream {
       }
     }
     const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
-    const bundle = new Bundle({
+    const pod = new Pod({
       corestore,
       drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
       key,
@@ -72,9 +72,9 @@ module.exports = class Dump extends Opstream {
       swarm: sidecar.swarm
     })
 
-    await session.add(bundle)
+    await session.add(pod)
 
-    if (sidecar.swarm && !isFileLink) bundle.join()
+    if (sidecar.swarm && !isFileLink) pod.join()
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
@@ -82,14 +82,14 @@ module.exports = class Dump extends Opstream {
 
     if (!isFileLink) {
       try {
-        await bundle.calibrate()
+        await pod.calibrate()
       } catch (err) {
         await session.close()
         throw err
       }
     }
 
-    const src = bundle.drive
+    const src = pod.drive
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname

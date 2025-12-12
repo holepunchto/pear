@@ -22,8 +22,8 @@ const BY_ARCH = path.join(
 const constants = require('pear-constants')
 const run = require('pear-run')
 const { PLATFORM_DIR, RUNTIME } = constants
-const { pathname } = new URL(global.Pear.config.applink)
-const NO_GC = global.Pear.config.args.includes('--no-tmp-gc')
+const { pathname } = new URL(global.Pear.app.applink)
+const NO_GC = global.Pear.app.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
@@ -121,6 +121,9 @@ class OperationError extends Error {
 }
 
 class Helper extends IPC.Client {
+  static fixture(name) {
+    return path.join(Helper.localDir, 'test', 'fixtures', name)
+  }
   static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
@@ -138,7 +141,7 @@ class Helper extends IPC.Client {
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.config.dht.bootstrap
+    const dhtBootstrap = Pear.app.dht.bootstrap
       .map((e) => `${e.host}:${e.port}`)
       .join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
@@ -358,7 +361,7 @@ class Helper extends IPC.Client {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
-    await updaterBootstrap(key, dir, { bootstrap: Pear.config.dht.bootstrap })
+    await updaterBootstrap(key, dir, { bootstrap: Pear.app.dht.bootstrap })
   }
 
   static async gc(dir) {

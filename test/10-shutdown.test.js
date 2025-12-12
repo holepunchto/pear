@@ -2,7 +2,6 @@
 const test = require('brittle')
 const fs = require('bare-fs')
 const path = require('bare-path')
-const LockFile = require('fs-native-lock')
 const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
@@ -156,7 +155,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('1. Prepare throttled platform as rcv')
   const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
-  t.comment(`\tCopying platform code to ${patchedArtefactDir}`)
+  t.comment(`Copying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   t.teardown(() => Helper.gc(patchedArtefactDir))
   const mirror = new LocalDrive(rig.artefactDir).mirror(
@@ -168,7 +167,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   )
   await mirror.done()
 
-  t.comment('\tPatching sidecar to throttle seeding')
+  t.comment('Patching sidecar to throttle seeding')
   const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
@@ -184,7 +183,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const patchedSidecarCode = patch + sidecarCode
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
-  t.comment('\tStaging patched platform')
+  t.comment('Staging patched platform')
   const rigHelper = new Helper(rig)
   t.teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
@@ -200,7 +199,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   ])
   await patchedStagerUntil.final
 
-  t.comment('\tSeeding patched platform')
+  t.comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
     channel: 'test-spindown-throttled',
     name: 'test-spindown-throttled',
@@ -216,7 +215,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   await patchedSeederUntil.announced
   t.teardown(() => Helper.teardownStream(patchedSeeder))
 
-  t.comment('\tBootstrapping patched platform')
+  t.comment('Bootstrapping patched platform')
   const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
   await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
   t.teardown(() => Helper.gc(platformDirRcv))
@@ -225,12 +224,12 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   await rigHelper.close()
 
   t.comment('2. Start patched rcv platform')
-  t.comment('\tStarting rcv platform')
+  t.comment('Starting rcv platform')
   const rcvHelper = new Helper({ platformDir: platformDirRcv })
   t.teardown(() => rcvHelper.close(), { order: Infinity })
   await rcvHelper.ready()
 
-  t.comment('\tStaging platform using rcv')
+  t.comment('Staging platform using rcv')
   const stager = rcvHelper.stage({
     channel: 'test-spindown',
     name: 'test-spindown',
@@ -244,7 +243,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const staged = await stagerUntil.addendum
   await stagerUntil.final
 
-  t.comment('\tSeeding staged platform using rcv')
+  t.comment('Seeding staged platform using rcv')
   const seeder = rcvHelper.seed({
     channel: 'test-spindown',
     name: 'test-spindown',
@@ -264,8 +263,8 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(() => Helper.teardownStream(seeder))
 
   t.comment('3. Start sidecar and update using rcv-seeded key')
-  t.comment('\tStarting sidecar')
-  const dhtBootstrap = global.Pear.config.dht.bootstrap
+  t.comment('Starting sidecar')
+  const dhtBootstrap = global.Pear.app.dht.bootstrap
     .map((e) => `${e.host}:${e.port}`)
     .join(',')
   const sidecar = spawn(
@@ -280,7 +279,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.teardown(async () => untilExit, { order: Infinity })
 
   t.comment(
-    `\tWaiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`
+    `Waiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`
   )
   const timeoutUntil = new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)

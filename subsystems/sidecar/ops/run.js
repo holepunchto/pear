@@ -13,7 +13,7 @@ const { pathToFileURL } = require('url-file-url')
 const { randomBytes } = require('hypercore-crypto')
 const { ERR_PERMISSION_REQUIRED, ERR_CONNECTION } = require('pear-errors')
 const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const State = require('../state')
@@ -144,8 +144,8 @@ module.exports = class Run extends Opstream {
     link = plink.normalize(link)
 
     const { encryptionKey, appStorage } =
-      (await sidecar.model.getBundle(link)) ||
-      (await sidecar.model.addBundle(link, State.storageFromLink(parsed)))
+      (await sidecar.model.getTraits(link)) ||
+      (await sidecar.model.addTraits(link, State.storageFromLink(parsed)))
 
     await fs.promises.mkdir(appStorage, { recursive: true })
 
@@ -187,7 +187,7 @@ module.exports = class Run extends Opstream {
         followLinks: state.followSymlinks
       })
       this.#updatePearInterface(drive)
-      const appBundle = new Bundle({
+      const pod = new Pod({
         drive,
         updatesDiff: state.updatesDiff,
         // asset method doesnt get/add assets when running pre.js file
@@ -197,12 +197,12 @@ module.exports = class Run extends Opstream {
           state.updates &&
           ((version, info) => sidecar.updateNotify(version, info))
       })
-      await session.add(appBundle)
-      app.bundle = appBundle
-      if (state.updates) app.bundle.watch()
+      await session.add(pod)
+      app.pod = pod
+      if (state.updates) app.pod.watch()
       LOG.info(LOG_RUN_LINK, id, 'initializing state')
       try {
-        await state.initialize({ bundle: app.bundle, app, pkg })
+        await state.initialize({ pod, app, pkg })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
         LOG.error(
@@ -215,10 +215,10 @@ module.exports = class Run extends Opstream {
       }
 
       LOG.info(LOG_RUN_LINK, id, 'determining assets')
-      state.update({ assets: await app.bundle.assets(state.manifest) })
+      state.update({ assets: await app.pod.assets(state.manifest) })
       LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
       if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
-      const bundle = await app.bundle.bundle(state.entrypoint)
+      const bundle = await app.pod.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
     }
@@ -254,7 +254,7 @@ module.exports = class Run extends Opstream {
     const current = await sidecar.model.getCurrent(state.applink)
     const firstRun = current === null
 
-    const appBundle = new Bundle({
+    const pod = new Pod({
       swarm: sidecar.swarm,
       encryptionKey,
       corestore,
@@ -285,13 +285,13 @@ module.exports = class Run extends Opstream {
       }
     })
 
-    await session.add(appBundle)
+    await session.add(pod)
 
-    if (sidecar.swarm) appBundle.join() // note: no await is deliberate
+    if (sidecar.swarm) pod.join() // note: no await is deliberate
 
     let checkout = null
     try {
-      checkout = await appBundle.calibrate()
+      checkout = await pod.calibrate()
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -322,11 +322,11 @@ module.exports = class Run extends Opstream {
       }
     }
 
-    app.bundle = appBundle
+    app.pod = pod
 
     LOG.info(LOG_RUN_LINK, id, 'initializing state')
     try {
-      await state.initialize({ bundle: app.bundle, app })
+      await state.initialize({ pod, app })
       LOG.info(LOG_RUN_LINK, id, 'state initialized')
     } catch (err) {
       LOG.error(
@@ -341,7 +341,7 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    state.update({ assets: await app.bundle.assets(state.manifest) })
+    state.update({ assets: await app.pod.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
 
@@ -352,16 +352,16 @@ module.exports = class Run extends Opstream {
 
     if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
 
-    if (app.bundle.platformVersion !== null) {
+    if (app.pod.platformVersion !== null) {
       app.report({ type: 'upgrade' })
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-      const bundle = await app.bundle.bundle(state.entrypoint)
+      const bundle = await app.pod.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-    const bundle = await app.bundle.bundle(state.entrypoint)
+    const bundle = await app.pod.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
     return { id, startId, bundle }
     // start is tied to the lifecycle of the client itself so we don't tear it down
@@ -390,7 +390,7 @@ module.exports = class Run extends Opstream {
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
     }
-    const bundle = new Bundle({
+    const bundle = new Pod({
       key,
       corestore,
       drive: src,
