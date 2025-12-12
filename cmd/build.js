@@ -9,9 +9,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const { outputter, ansi } = require('pear-terminal')
 
 const output = outputter('build', {
-  init: ({ dorPear }) => `Init ${ansi.dim(dorPear)}\n`,
-  build: ({ target }) => `Building ${ansi.dim(target)}\n`,
-  complete: () => `\n${ansi.pear} Completed\n`,
+  build: ({ target }) => `\nBuilding target... ${ansi.dim(target)}`,
+  complete: () => 'Completed!',
   error: ({ message }) => `Error: ${message}\n`
 })
 
