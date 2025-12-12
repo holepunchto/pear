@@ -2,7 +2,6 @@
 const plink = require('pear-link')
 const { outputter, confirm, ansi } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { discoveryKey } = require('hypercore-crypto')
 
 const output = outputter('gc', {
   remove: ({ resource, id, operation = 'removed' }) =>
