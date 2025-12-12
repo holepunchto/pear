@@ -2,13 +2,15 @@
   "name": "stage-app-min",
   "pear": {
     "name": "stage-app-min",
-    "type": "desktop",
     "gui": {
       "main": "index.html"
     },
     "stage": {
       "entrypoints": [
         "/app.js"
+      ],
+      "ignore": [
+        "package-lock.json"
       ]
     }
   },
