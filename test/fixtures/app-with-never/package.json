@@ -1,0 +1,15 @@
+{
+  "name": "never",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "pear": {
+    "name": "never",
+    "stage": {
+      "never": ["never"]
+    }
+  },
+  "keywords": [],
+  "author": "Holepunch"
+}
