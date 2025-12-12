@@ -21,32 +21,8 @@
       "prompt": "description"
     },
     {
-      "name": "darwin.identifier",
-      "prompt": "darwin.identifier"
-    },
-    {
-      "name": "darwin.category",
-      "prompt": "darwin.category"
-    },
-    {
-      "name": "darwin.signingidentity",
-      "prompt": "darwin.signingidentity"
-    },
-    {
-      "name": "darwin.entitlements",
-      "prompt": "darwin.entitlements"
-    },
-    {
-      "name": "win.signingsubject",
-      "prompt": "win.signingsubject"
-    },
-    {
-      "name": "win.signingthumbprint",
-      "prompt": "win.signingthumbprint"
-    },
-    {
-      "name": "linux.category",
-      "prompt": "linux_category"
+      "name": "identifier",
+      "prompt": "identifier"
     }
   ]
 }

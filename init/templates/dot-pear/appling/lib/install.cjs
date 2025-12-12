@@ -1,6 +1,7 @@
 const Thread = require('bare-thread')
 const { App, Screen, Window, WebView } = require('fx-native')
 const appling = require('appling-native')
+const { ALIASES } = require('pear-aliases')
 const { encode, decode } = require('./utils')
 const { preflight } = require('./preflight')
 const html = require('./view.html')
@@ -9,7 +10,7 @@ const WINDOW_HEIGHT = 548
 const WINDOW_WIDTH = 500
 
 async function install(id, opts = {}) {
-  const { platform = 'pzcjqmpoo6szkoc4bpkw65ib9ctnrq7b6mneeinbhbheihaq6p6o' } = opts
+  const { platform = ALIASES.pear } = opts
 
   using lock = await preflight(id)
 
