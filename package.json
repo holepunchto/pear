@@ -109,6 +109,7 @@
     "pear-pipe": "^1.0.1",
     "pear-run": "^1.0.8",
     "pear-shake": "^2.0.1",
+    "pear-stamp": "^1.0.2",
     "pear-state": "^1.0.2",
     "pear-terminal": "^1.0.1",
     "pear-tryboot": "^1.0.0",
