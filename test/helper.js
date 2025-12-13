@@ -27,6 +27,7 @@ const NO_GC = global.Pear.app.args.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
+
 const rigPear = path.join(tmp, 'rig-pear')
 const STOP_CHAR = '\n'
 const { RUNTIME_ARGV } = Pear.constructor
@@ -432,3 +433,88 @@ class Reiterate {
     return this._tail()
   }
 }
+
+class Restack {
+  static at = (link, line, col) => `${link}:${line}:${col}`
+
+  constructor({ at = this.constructor.at } = {}) {
+    this.at =
+      at === this.constructor.at
+        ? at
+        : (link, line, col) => at(link, line, col, this.constructor.at)
+
+    const { prepareStackTrace } = Error
+    this.restore = () => {
+      Error.prepareStackTrace = prepareStackTrace
+    }
+
+    Error.prepareStackTrace = (err, frames) => {
+      const name = err && err.name ? err.name : 'Error'
+      const msg = err && err.message != null ? String(err.message) : ''
+      const head = msg ? `${name}: ${msg}` : name
+      return head + '\n' + frames.map((cs) => this._callsite(cs)).join('\n')
+    }
+  }
+
+  _callsite(cs) {
+    const frm = this._frame(cs)
+    const loc = this._location(cs)
+    if (frm && loc) return `    at ${frm} (${loc})`
+    if (frm) return `    at ${frm}`
+    return `    at ${loc}`
+  }
+
+  _frame(cs) {
+    const frm = cs.getFunctionName()
+    const meth = cs.getMethodName()
+    const type = cs.getTypeName()
+
+    if (cs.isConstructor()) return frm ? `new ${frm}` : 'new <anonymous>'
+
+    if (meth) {
+      if (type && frm)
+        return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
+      if (type) return `${type}.${meth}`
+      return meth
+    }
+
+    if (type && frm)
+      return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
+
+    return frm || ''
+  }
+
+  _location(cs) {
+    if (cs.isNative()) return 'native'
+
+    let link = cs.getFileName()
+    const line = cs.getLineNumber()
+    const col = cs.getColumnNumber()
+
+    if (cs.isEval()) {
+      const origin = cs.getEvalOrigin()
+      const inner = link ? this._pos(link, line, col) : ''
+      return inner ? `eval at ${origin}, ${inner}` : `eval at ${origin}`
+    }
+
+    if (!link) link = '<anonymous>'
+    return this._pos(link, line, col)
+  }
+
+  _pos(link, line, col) {
+    link = link ? String(link) : '<anonymous>'
+    if (line == null) return link
+    if (col == null) return `${link}:${line}`
+    return this.at(link, line, col)
+  }
+}
+
+function restack(opts) {
+  return new Restack(opts)
+}
+
+restack({
+  at(link, line, col, at) {
+    return at(link.startsWith('pear://dev/') ? link.slice(11) : link, line, col)
+  }
+})
