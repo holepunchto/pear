@@ -276,6 +276,31 @@ const encoding8 = {
   }
 }
 
+// @pear/presets
+const encoding9 = {
+  preencode(state, m) {
+    c.string.preencode(state, m.link)
+    c.string.preencode(state, m.command)
+    c.string.preencode(state, m.flags)
+  },
+  encode(state, m) {
+    c.string.encode(state, m.link)
+    c.string.encode(state, m.command)
+    c.string.encode(state, m.flags)
+  },
+  decode(state) {
+    const r0 = c.string.decode(state)
+    const r1 = c.string.decode(state)
+    const r2 = c.string.decode(state)
+
+    return {
+      link: r0,
+      command: r1,
+      flags: r2
+    }
+  }
+}
+
 // @pear/assets.pack, deferred due to recusive use
 const encoding5_6 = c.array(c.frame(encoding8))
 
@@ -320,6 +345,8 @@ function getEncoding(name) {
       return encoding7
     case '@pear/pack':
       return encoding8
+    case '@pear/presets':
+      return encoding9
     default:
       throw new Error('Encoder not found ' + name)
   }

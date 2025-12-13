@@ -80,6 +80,27 @@
         "type": "string",
         "map": "tags"
       }
+    },
+    {
+      "name": "presets",
+      "namespace": "pear",
+      "id": 7,
+      "type": 1,
+      "indexes": ["@pear/presets-by-command"],
+      "schema": "@pear/presets",
+      "derived": false,
+      "key": ["link"],
+      "trigger": null
+    },
+    {
+      "name": "presets-by-command",
+      "namespace": "pear",
+      "id": 8,
+      "type": 2,
+      "collection": "@pear/presets",
+      "unique": false,
+      "deprecated": false,
+      "key": ["link", "command"]
     }
   ]
 }

@@ -357,16 +357,119 @@ const index6 = {
 }
 collection3.indexes.push(index6)
 
+// '@pear/presets' collection key
+const collection7_key = new IndexEncoder([IndexEncoder.STRING], { prefix: 7 })
+
+function collection7_indexify(record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/presets' value encoding
+const collection7_enc = getEncoding('@pear/presets/hyperdb#7')
+
+// '@pear/presets' reconstruction function
+function collection7_reconstruct(version, keyBuf, valueBuf) {
+  const key = collection7_key.decode(keyBuf)
+  setVersion(version)
+  const record = c.decode(collection7_enc, valueBuf)
+  record.link = key[0]
+  return record
+}
+// '@pear/presets' key reconstruction function
+function collection7_reconstruct_key(keyBuf) {
+  const key = collection7_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/presets'
+const collection7 = {
+  name: '@pear/presets',
+  id: 7,
+  encodeKey(record) {
+    const key = [record.link]
+    return collection7_key.encode(key)
+  },
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+    return collection7_key.encodeRange({
+      gt: gt ? collection7_indexify(gt) : null,
+      lt: lt ? collection7_indexify(lt) : null,
+      gte: gte ? collection7_indexify(gte) : null,
+      lte: lte ? collection7_indexify(lte) : null
+    })
+  },
+  encodeValue(version, record) {
+    setVersion(version)
+    return c.encode(collection7_enc, record)
+  },
+  trigger: null,
+  reconstruct: collection7_reconstruct,
+  reconstructKey: collection7_reconstruct_key,
+  indexes: []
+}
+
+// '@pear/presets-by-command' collection key
+const index8_key = new IndexEncoder(
+  [IndexEncoder.STRING, IndexEncoder.STRING, IndexEncoder.STRING],
+  { prefix: 8 }
+)
+
+function index8_indexify(record) {
+  const arr = []
+
+  const a0 = record.link
+  if (a0 === undefined) return arr
+  arr.push(a0)
+
+  const a1 = record.command
+  if (a1 === undefined) return arr
+  arr.push(a1)
+
+  const a2 = record.link
+  if (a2 === undefined) return arr
+  arr.push(a2)
+
+  return arr
+}
+
+// '@pear/presets-by-command'
+const index8 = {
+  name: '@pear/presets-by-command',
+  id: 8,
+  encodeKey(record) {
+    return index8_key.encode(index8_indexify(record))
+  },
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+    return index8_key.encodeRange({
+      gt: gt ? index8_indexify(gt) : null,
+      lt: lt ? index8_indexify(lt) : null,
+      gte: gte ? index8_indexify(gte) : null,
+      lte: lte ? index8_indexify(lte) : null
+    })
+  },
+  encodeValue: (doc) => index8.collection.encodeKey(doc),
+  encodeIndexKeys(record, context) {
+    return [index8_key.encode([record.link, record.command, record.link])]
+  },
+  reconstruct: (keyBuf, valueBuf) => valueBuf,
+  offset: collection7.indexes.length,
+  collection: collection7
+}
+collection7.indexes.push(index8)
+
 const collections = [
   collection0,
   collection1,
   collection2,
   collection3,
   collection4,
-  collection5
+  collection5,
+  collection7
 ]
 
-const indexes = [index6]
+const indexes = [index6, index8]
 
 module.exports = {
   version,
@@ -390,6 +493,8 @@ function resolveCollection(name) {
       return collection4
     case '@pear/current':
       return collection5
+    case '@pear/presets':
+      return collection7
     default:
       return null
   }
@@ -399,6 +504,8 @@ function resolveIndex(name) {
   switch (name) {
     case '@pear/traits-by-tags':
       return index6
+    case '@pear/presets-by-command':
+      return index8
     default:
       return null
   }

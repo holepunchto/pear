@@ -339,6 +339,34 @@ module.exports = class Model {
     await this.lock.exit()
   }
 
+  async getPresets(link, command) {
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const presets = await this.db.get('@pear/presets-by-command', get)
+    return presets || null
+  }
+
+  async setPresets(link, command, flags) {
+    const tx = await this.lock.enter()
+    const presets = { link, command, flags }
+    LOG.trace('db', 'INSERT', '@pear/presets', presets)
+    await tx.insert('@pear/presets', presets)
+    await this.lock.exit()
+    return presets
+  }
+
+  async resetPresets(link, command) {
+    const tx = await this.lock.enter()
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const del = await tx.get('@pear/presets-by-command', get)
+    if (del) {
+      LOG.trace('db', 'DELETE', '@pear/presets-by-command', del)
+      await tx.delete('@pear/presets', del)
+    }
+    await this.lock.exit()
+  }
+
   async close() {
     LOG.trace('db', 'CLOSE')
     await this.db.close()
