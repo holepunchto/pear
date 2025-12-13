@@ -1,6 +1,6 @@
 {
-  "name": "appling-next",
-  "version": "1.0.0",
+  "name": "appling",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "dependencies": {
     "appling-native": "^1.4.1",
@@ -16,7 +16,22 @@
       "version": "__version__",
       "author": "__author__",
       "description": "__description__",
-      "identifier": "__identifier__"
+      "identifier": "__identifier__",
+      "darwin": {
+        "standalone": false,
+        "package": false,
+        "sign": false
+      },
+      "win32": {
+        "standalone": false,
+        "package": false,
+        "sign": false
+      },
+      "linux": {
+        "standalone": false,
+        "package": false,
+        "sign": false
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-const splash = require('./images/splash.svg', { with: { type: 'text' } })
+const splash = require('./images/pear.svg', { with: { type: 'text' } })
 const pear = require('./images/pear.svg', { with: { type: 'text' } })
 
 const inter400 = require('./fonts/inter/400.woff2', { with: { type: 'binary' } })
@@ -107,10 +107,6 @@ module.exports = html`
       align-items: center;
       flex-direction: column;
       text-align: center;
-    }
-
-    header svg {
-      max-width: 120px;
     }
 
     article {
