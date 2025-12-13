@@ -29,18 +29,18 @@ module.exports = (ipc) => {
     const link = cmd.args.link
     const { drive } = plink.parse(link)
     const z32 = hypercoreid.encode(drive.key)
-    const { manifest: pkg } = await opwait(ipc.info({ link, manifest: true }))
+    const { manifest } = await opwait(ipc.info({ link, manifest: true }))
+    const pkgPear = manifest?.pear
     const { dir = os.cwd() } = cmd.args
-    const build = pkg.pear.build
     const dotPear = path.join(dir, '.pear')
     await fs.promises.mkdir(dotPear, { recursive: true })
     const defaults = {
       "id": z32,
-      "name": `${build?.name || pkg.pear?.name || pkg.name}`,
-      "version": `${build?.version || pkg.pear?.version || pkg.version}`,
-      "author": `${build?.author || pkg.pear?.author || pkg.author}`,
-      "description": `${build?.description || pkg.pear?.description || pkg.description}`,
-      "identifier": `${build?.identifier || `pear.${z32}`}`
+      "name": `${pkgPear.build?.name || pkgPear.name || manifest.name}`,
+      "version": `${pkgPear.build?.version || pkgPear.version || manifest.version}`,
+      "author": `${pkgPear.build?.author || pkgPear.author || manifest.author}`,
+      "description": `${pkgPear.build?.description || pkgPear.description || manifest.description}`,
+      "identifier": `${pkgPear.build?.identifier || `pear.${z32}`}`
     }
     await opwait(await require('../init')('init/templates/dot-pear', dotPear, {
       cwd: os.cwd(),
