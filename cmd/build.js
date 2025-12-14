@@ -33,31 +33,29 @@ module.exports = (ipc) => {
     const pkgPear = manifest?.pear
     const { dir = os.cwd() } = cmd.args
     const dotPear = path.join(dir, '.pear')
-    await fs.promises.mkdir(dotPear, { recursive: true })
-    const defaults = {
-      "id": z32,
-      "name": `${pkgPear.build?.name || pkgPear.name || manifest.name}`,
-      "version": `${pkgPear.build?.version || pkgPear.version || manifest.version}`,
-      "author": `${pkgPear.build?.author || pkgPear.author || manifest.author}`,
-      "description": `${pkgPear.build?.description || pkgPear.description || manifest.description}`,
-      "identifier": `${pkgPear.build?.identifier || `pear.${z32}`}`
+    if (fs.existsSync(dotPear) === false) {
+      await opwait(ipc.dump({ link, dir, only: '.pear', force: true }))
+      if (fs.existsSync(dotPear) === false) {
+        await fs.promises.mkdir(dotPear, { recursive: true })
+        const defaults = {
+          "id": z32,
+          "name": `${pkgPear.build?.name || pkgPear.name || manifest.name}`,
+          "version": `${pkgPear.build?.version || pkgPear.version || manifest.version}`,
+          "author": `${pkgPear.build?.author || pkgPear.author || manifest.author}`,
+          "description": `${pkgPear.build?.description || pkgPear.description || manifest.description}`,
+          "identifier": `${pkgPear.build?.identifier || `pear.${z32}`}`
+        }
+        await opwait(await require('../init')('init/templates/dot-pear', dotPear, {
+          cwd: os.cwd(),
+          ipc,
+          force: true,
+          defaults,
+          autosubmit: true,
+          ask: false,
+          header: 'dot-pear'
+        }))
+      }
     }
-    await opwait(await require('../init')('init/templates/dot-pear', dotPear, {
-      cwd: os.cwd(),
-      ipc,
-      force: true,
-      defaults,
-      autosubmit: true,
-      ask: false,
-      header: 'dot-pear'
-    }))
-    // use staged icons when available
-    await opwait(ipc.dump({
-      link,
-      dir: dotPear,
-      only: '.pear/brand/icons',
-      force: true
-    }))
     await output(json, pearBuild({ dotPear }))
   }
 }
