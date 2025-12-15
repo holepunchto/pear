@@ -65,6 +65,7 @@ const runout = outputter('run', {
 module.exports = (ipc) =>
   async function run(cmd, devrun = false) {
     const { flags } = cmd
+    if (flags.store && !path.isAbsolute(flags.store)) flags.store = path.resolve(os.cwd(), flags.store)
 
     const { detached, store: storage } = flags
 
