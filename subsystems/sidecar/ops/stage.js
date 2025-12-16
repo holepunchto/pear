@@ -160,6 +160,9 @@ module.exports = class Stage extends Opstream {
         )
     }
 
+    const glob = new GlobDrive(src, ignore)
+    await glob.ready()
+    const ignored = glob.ignorer()
     // Cached versions of files and skips for warmup map generation,
     // preventing a second round of static analysis
     let compactFiles = null
@@ -181,7 +184,7 @@ module.exports = class Stage extends Opstream {
         if (main.startsWith('/') === false) main = '/' + main
         only.push(main)
       }
-      only.push(...files, ...include)
+      only.push(...files.filter((file) => !ignored(file)), ...include)
       this.push({
         tag: 'compact',
         data: { files: files, skips, success: true }
@@ -189,11 +192,10 @@ module.exports = class Stage extends Opstream {
     }
 
     const dst = pod.drive
-    const glob = new GlobDrive(src, ignore)
-    await glob.ready()
+
     const prefix = only.length > 0 ? only : undefined
 
-    const opts = { prefix, ignore: glob.ignorer(), dryRun, batch: true }
+    const opts = { prefix, ignore: ignored, dryRun, batch: true }
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods)
@@ -202,7 +204,7 @@ module.exports = class Stage extends Opstream {
       purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (glob.ignorer()(entry.key)) {
+        if (ignored(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({
             tag: 'byte-diff',
