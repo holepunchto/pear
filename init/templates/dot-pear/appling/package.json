@@ -19,7 +19,7 @@
       "identifier": "__identifier__",
       "darwin": {
         "standalone": false,
-        "package": false,
+        "package": true,
         "sign": false
       },
       "win32": {
