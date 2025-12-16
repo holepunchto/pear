@@ -112,8 +112,7 @@ test('pear stage min desktop app with entrypoints', async ({
 test('pear stage min desktop app with only and include', async ({
   teardown,
   ok,
-  is,
-  comment
+  is
 }) => {
   const dir = Helper.fixture('stage-app-min-with-only')
 
@@ -154,10 +153,10 @@ test('pear stage min desktop app with only and include', async ({
     '/folder/foo.js',
     '/folder/bar.js',
     '/node_modules/ready-resource/package.json',
-    '/node_modules/ready-resource/index.js'
+    '/node_modules/ready-resource/index.js',
+    '/index.html',
+    '/app.js'
   ]
-
-  comment('Only files in the dependency tree and pear.stage.only are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
