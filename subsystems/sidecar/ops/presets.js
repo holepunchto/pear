@@ -1,4 +1,5 @@
 'use strict'
+const { ERR_INVALID_LINK } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const plink = require('pear-link')
 
@@ -11,18 +12,20 @@ module.exports = class Presets extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
+    if (!link) throw ERR_INVALID_LINK('Link required')
+
     link = plink.normalize(link)
 
     if (flags) {
       const presets = await this.sidecar.model.setPresets(link, command, flags)
-      this.push({ tag: 'presets', data: { presets } })
+      this.final = { presets }
     } else {
       if (!reset) {
         const presets = await this.sidecar.model.getPresets(link, command)
-        this.push({ tag: 'presets', data: { presets } })
+        this.final = { presets }
       } else {
         await this.sidecar.model.resetPresets(link, command)
-        this.push({ tag: 'presets', data: { presets: null } })
+        this.final = { presets: null }
       }
     }
   }
