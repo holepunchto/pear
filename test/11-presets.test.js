@@ -1,5 +1,6 @@
 'use strict'
 const test = require('brittle')
+const opwait = require('pear-opwait')
 const path = require('bare-path')
 const Helper = require('./helper')
 const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
@@ -78,8 +79,7 @@ test('set presets and get presets', async ({
       flags,
       reset
     })
-    teardown(() => Helper.teardownStream(presetsStream))
-    const result = await Helper.pick(presetsStream, { tag: 'presets' })
-    return result.presets
+    const { presets } = await opwait(presetsStream)
+    return presets
   }
 })
