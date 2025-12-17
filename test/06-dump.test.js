@@ -1,15 +1,9 @@
 'use strict'
 const test = require('brittle')
-const path = require('bare-path')
-const Helper = require('./helper')
-const fs = require('bare-fs')
-const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'dump')
+const tmp = require('test-tmp')
+const Localdrive = require('localdrive')
 
-const exists = (path) =>
-  fs.promises.stat(path).then(
-    () => true,
-    () => false
-  )
+const Helper = require('./helper')
 
 test('pear dump', async function ({ ok, plan, teardown }) {
   plan(2)
@@ -19,10 +13,11 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -36,16 +31,16 @@ test('pear dump', async function ({ ok, plan, teardown }) {
 
   const link = `pear://${key}`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-1')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
   teardown(() => Helper.teardownStream(dump))
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
-  ok(await exists(path.join(dir, 'index.js')), 'index.js should exist')
-  ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
+  const dumped = new Localdrive(out)
+  ok(await dumped.exists('/index.js'), 'index.js should exist')
+  ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
 test('pear dump dumping subdirectory', async function ({
@@ -55,7 +50,13 @@ test('pear dump dumping subdirectory', async function ({
   teardown
 }) {
   plan(4)
-
+  const path = require('bare-path')
+  const fs = require('bare-fs')
+  const exists = (path) =>
+    fs.promises.stat(path).then(
+      () => true,
+      () => false
+    )
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -64,7 +65,7 @@ test('pear dump dumping subdirectory', async function ({
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir: Helper.fixture('dump'),
     dryRun: false,
     bare: true
   })
@@ -78,21 +79,18 @@ test('pear dump dumping subdirectory', async function ({
 
   const link = `pear://${key}/lib`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-2')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
   teardown(() => Helper.teardownStream(dump))
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
-  absent(await exists(path.join(dir, 'index.js')), 'index.js should not exist')
-  absent(
-    await exists(path.join(dir, 'package.json')),
-    'package.json should not exist'
-  )
-  ok(await exists(path.join(dir, 'lib', 'dump.js')), 'lib/dump.js should exist')
-  ok(await exists(path.join(dir, 'lib', 'pear.js')), 'lib/pear.js should exist')
+  const dumped = new Localdrive(out)
+  absent(await dumped.exists('/index.js'), 'index.js should not exist')
+  absent(await dumped.exists('/package.json'), 'package.json should not exist')
+  ok(await dumped.exists('/lib/dump.js'), 'lib/dump.js should exist')
+  ok(await dumped.exists('/lib/pear.js'), 'lib/pear.js should exist')
 })
 
 test('pear dump dumping to existing dir', async function ({
@@ -108,10 +106,11 @@ test('pear dump dumping to existing dir', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -125,12 +124,12 @@ test('pear dump dumping to existing dir', async function ({
 
   const link = `pear://${key}`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-3')
-  await fs.promises.mkdir(dir)
-  await fs.promises.writeFile(path.join(dir, 'test.txt'), 'hello')
+  const out = await tmp()
+  const dumped = new Localdrive(out)
+  await dumped.put('/test.txt', 'hello')
 
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
   teardown(() => Helper.teardownStream(dump))
   try {
     const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
@@ -139,11 +138,8 @@ test('pear dump dumping to existing dir', async function ({
     is(e.code, 'ERR_DIR_NONEMPTY', 'should error with non-empty directory')
   }
 
-  absent(await exists(path.join(dir, 'index.js')), 'index.js should not exist')
-  absent(
-    await exists(path.join(dir, 'package.json')),
-    'package.json should not exist'
-  )
+  absent(await dumped.exists('/index.js'), 'index.js should not exist')
+  absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
 test('pear dump dumping to existing dir with force', async function ({
@@ -158,10 +154,11 @@ test('pear dump dumping to existing dir with force', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -174,18 +171,16 @@ test('pear dump dumping to existing dir with force', async function ({
   await staged.final
 
   const link = `pear://${key}`
+  const out = await tmp()
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-4')
-  await fs.promises.mkdir(dir)
-
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir, force: true })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out, force: true })
   teardown(() => Helper.teardownStream(dump))
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
-  ok(await exists(path.join(dir, 'index.js')), 'index.js should exist')
-  ok(await exists(path.join(dir, 'package.json')), 'package.json should exist')
+  const dumped = new Localdrive(out)
+  ok(await dumped.exists('/index.js'), 'index.js should exist')
+  ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
 test('pear dump dumping a single file', async function ({
@@ -202,10 +197,11 @@ test('pear dump dumping a single file', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -219,20 +215,19 @@ test('pear dump dumping a single file', async function ({
 
   const link = `pear://${key}/index.js`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-5')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
   teardown(() => Helper.teardownStream(dump))
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
-  ok(await exists(path.join(dir, 'index.js')), 'index.js should exist')
-  is((await fs.promises.readdir(dir)).length, 1)
-  absent(
-    await exists(path.join(dir, 'package.json')),
-    'package.json should not exist'
-  )
+  const dumped = new Localdrive(out)
+  ok(await dumped.exists('/index.js'), 'index.js should exist')
+  let dirCount = 0
+  for await (const _ of dumped.readdir()) dirCount++
+  is(dirCount, 1)
+  absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
 test('pear dump dumping a single file in a subdirectory', async function ({
@@ -248,10 +243,11 @@ test('pear dump dumping a single file in a subdirectory', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -265,20 +261,18 @@ test('pear dump dumping a single file in a subdirectory', async function ({
 
   const link = `pear://${key}/lib/dump.js`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-test-6')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
-  const dump = await helper.dump({ link, dir })
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
   teardown(() => Helper.teardownStream(dump))
   const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
-  ok(await exists(path.join(dir, 'lib/dump.js')), 'lib/dump.js should exist')
-  is(
-    (await fs.promises.readdir(path.join(dir, 'lib'))).length,
-    1,
-    'should have only one file in the lib directory'
-  )
+  const dumped = new Localdrive(out)
+  let dirCount = 0
+  for await (const _ of dumped.readdir()) dirCount++
+  ok(await dumped.exists('/lib/dump.js'), 'lib/dump.js should exist')
+  is(dirCount, 1, 'should have only one file in the lib directory')
 })
 
 test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
@@ -289,10 +283,11 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -332,10 +327,11 @@ test('pear dump dumping subdirectory to stdout', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -381,10 +377,11 @@ test('pear dump dumping a single file to stdout', async function ({
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -428,10 +425,11 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false,
     bare: true
   })
@@ -470,10 +468,11 @@ test('pear dump should throw when dumping non-existant filepath', async function
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
@@ -486,11 +485,11 @@ test('pear dump should throw when dumping non-existant filepath', async function
 
   const link = `pear://${key}/doesnt-exists.js`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-throw-test')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
+  teardown(() => Helper.gc(out))
   await exception(async () => {
-    const dump = helper.dump({ link, dir })
+    const dump = helper.dump({ link, dir: out })
     teardown(() => Helper.teardownStream(dump))
     const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
     await untilDump.complete
@@ -509,10 +508,11 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const dir = Helper.fixture('dump')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
-    dir: storageDir,
+    dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
@@ -525,11 +525,11 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
 
   const link = `pear://${key}/no-dir`
 
-  const dir = path.join(Helper.tmp, 'pear-dump-throw-test-dir')
+  const out = await tmp()
 
-  teardown(() => Helper.gc(dir))
+  teardown(() => Helper.gc(out))
   await exception(async () => {
-    const dump = helper.dump({ link, dir })
+    const dump = helper.dump({ link, dir: out })
     teardown(() => Helper.teardownStream(dump))
     const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
     await untilDump.complete

@@ -1,12 +1,16 @@
 # 🍐 Pear
 
-## Getting Started
-
-### Install:
+## Setup
+ 
+Via Node.js's npm's `npx`:
 
 ```sh
-npm install -g pear
+npx pear
 ```
+
+This installs Pear onto the system. 
+
+To complete the setup, be sure to follow instructions for setting `PATH` as output by the `npx pear` command.
 
 ### Help
 

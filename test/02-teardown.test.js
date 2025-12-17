@@ -1,48 +1,9 @@
 'use strict'
 const { isWindows } = require('which-runtime')
 const test = require('brittle')
-const path = require('bare-path')
 const os = require('bare-os')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-const teardownDir = path.join(Helper.localDir, 'test', 'fixtures', 'teardown')
-const unloadingDir = path.join(Helper.localDir, 'test', 'fixtures', 'unloading')
-const runOfIdentifyDir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'run-of-identify-unloading'
-)
-const teardownOsKillDir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'teardown-os-kill'
-)
-const teardownExitCodeDir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'teardown-exit-code'
-)
-const teardownTimeout = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'teardown-timeout'
-)
-const teardownAfterException = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'teardown-after-exception'
-)
-const teardownException = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'teardown-exception'
-)
 
 test(
   'teardown on pipe end',
@@ -51,7 +12,7 @@ test(
     timeout(180000)
     plan(4)
 
-    const dir = teardownDir
+    const dir = Helper.fixture('teardown')
 
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
@@ -95,7 +56,9 @@ test(
 
     const td = await Helper.untilResult(pipe, {
       timeout: 5000,
-      runFn: () => pipe.end()
+      runFn: () => {
+        pipe.end()
+      }
     })
     is(td, 'teardown', 'teardown executed')
   }
@@ -108,7 +71,7 @@ test(
     timeout(180000)
     plan(5)
 
-    const dir = teardownOsKillDir
+    const dir = Helper.fixture('teardown-os-kill')
 
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
@@ -172,7 +135,7 @@ test(
     timeout(180000)
     plan(6)
 
-    const dir = teardownExitCodeDir
+    const dir = Helper.fixture('teardown-exit-code')
 
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
@@ -249,7 +212,7 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
 }) {
   plan(4)
 
-  const dir = unloadingDir
+  const dir = Helper.fixture('unloading')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -308,7 +271,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
 }) {
   plan(4)
 
-  const dir = runOfIdentifyDir
+  const dir = Helper.fixture('run-of-identify-unloading')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -368,7 +331,7 @@ test('forced teardown', async function ({
   timeout(30000)
   plan(4)
 
-  const dir = teardownTimeout
+  const dir = Helper.fixture('teardown-timeout')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -430,7 +393,7 @@ test('teardown after exception', async function ({
   timeout(10000)
   plan(4)
 
-  const dir = teardownAfterException
+  const dir = Helper.fixture('teardown-after-exception')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -489,7 +452,7 @@ test('exception during teardown', async function ({
   timeout(10000)
   plan(4)
 
-  const dir = teardownException
+  const dir = Helper.fixture('teardown-exception')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

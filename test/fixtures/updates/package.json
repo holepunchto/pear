@@ -6,6 +6,7 @@
     "type": "terminal"
   },
   "dependencies": {
-    "pear-pipe": "^1.0.1"
+    "pear-pipe": "^1.0.1",
+    "pear-updates": "^1.1.0"
   }
 }

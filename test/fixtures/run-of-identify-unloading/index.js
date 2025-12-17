@@ -2,7 +2,7 @@ const run = require('pear-run')
 const parentPipe = require('pear-pipe')()
 
 parentPipe.on('data', () => parentPipe.write(`${Bare.pid}\n`))
-const pipe = run(Pear.config.applink + '/identify?' + Pear.config.startId)
+const pipe = run(Pear.app.applink + '/identify?' + Pear.app.startId)
 pipe.on('data', async (data) => { 
   pipe.on('data', (data) => {
     if (data.toString() === 'unloading') {

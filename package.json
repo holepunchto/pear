@@ -40,7 +40,8 @@
         "electron-main.crash.log",
         "cli.crash.log",
         "package-lock.json",
-        "node_modules/.package-lock.json"
+        "node_modules/.package-lock.json",
+        "node_modules/.bin"
       ]
     },
     "platform": {
@@ -77,7 +78,6 @@
     "drive-bundler": "^2.4.4",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.4.2",
-    "fs-native-lock": "^1.1.0",
     "hypercore-crypto": "^3.5.0",
     "hypercore-id-encoding": "^1.3.0",
     "hyperdb": "^4.10.1",
@@ -101,14 +101,15 @@
     "pear-gunk": "^1.0.0",
     "pear-inspect": "^1.2.5",
     "pear-interface": "^1.1.0",
-    "pear-ipc": "^6.7.0",
+    "pear-ipc": "^6.9.0",
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
-    "pear-pack": "^1.1.2",
+    "pear-opstream": "^1.0.0",
+    "pear-pack": "^1.1.3",
     "pear-pipe": "^1.0.1",
     "pear-run": "^1.0.8",
     "pear-shake": "^2.0.1",
-    "pear-stamp": "^1.0.1",
+    "pear-stamp": "^1.0.2",
     "pear-state": "^1.0.2",
     "pear-terminal": "^1.0.1",
     "pear-tryboot": "^1.0.0",

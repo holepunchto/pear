@@ -713,6 +713,11 @@ class Sidecar extends ReadyResource {
     return client.userData.pod.drive.compare(params.keyA, params.keyB)
   }
 
+  bundle(params, client) {
+    if (client.userData instanceof this.App === false) return
+    return client.userData.pod.pack(params)
+  }
+
   async permit(params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {

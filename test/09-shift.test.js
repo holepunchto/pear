@@ -4,7 +4,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const storageDir = path.join(Helper.localDir, 'test', 'fixtures', 'storage')
 
-test('shift', async function ({ not, is, plan, comment, teardown }) {
+test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -74,7 +74,7 @@ test('shift', async function ({ not, is, plan, comment, teardown }) {
   not(oldSrc, newSrc, 'src app storage should be different after shift')
 })
 
-test('shift should fail with invalid src', async function ({
+test('pear shift should fail with invalid src', async function ({
   absent,
   plan,
   comment,
@@ -112,7 +112,7 @@ test('shift should fail with invalid src', async function ({
   absent(error.success, 'should error')
 })
 
-test('shift should fail with invalid dst', async function ({
+test('pear shift should fail with invalid dst', async function ({
   absent,
   plan,
   comment,
@@ -150,7 +150,7 @@ test('shift should fail with invalid dst', async function ({
   absent(error.success, 'should error')
 })
 
-test('shift should fail when src app storage does not exist', async function ({
+test('pear shift should fail when src app storage does not exist', async function ({
   absent,
   plan,
   comment,
@@ -188,7 +188,7 @@ test('shift should fail when src app storage does not exist', async function ({
   absent(error.success, 'should error')
 })
 
-test('shift should fail when dst app storage already exists without force', async function ({
+test('pear shift should fail when dst app storage already exists without force', async function ({
   absent,
   plan,
   comment,
