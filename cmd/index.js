@@ -511,11 +511,7 @@ async function getPresets(cmd, ipc) {
   if (!cmd || !cmd.args.link) return []
   const command = cmd.name
   const link = cmd.args.link
-  try {
-    const presetsStream = await ipc.presets({ link, command })
-    const { presets } = await opwait(presetsStream)
-    return presets?.flags ? presets.flags.split(' ') : []
-  } catch {
-    return []
-  }
+  const presetsStream = await ipc.presets({ link, command })
+  const { presets } = await opwait(presetsStream)
+  return presets?.flags ? presets.flags.split(' ') : []
 }
