@@ -515,7 +515,7 @@ async function getPresets(cmd, ipc) {
     const presetsStream = await ipc.presets({ link, command })
     const { presets } = await opwait(presetsStream)
     return presets?.flags ? presets.flags.split(' ') : []
-  } catch (err) {
+  } catch {
     return []
   }
 }
