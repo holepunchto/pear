@@ -1,4 +1,5 @@
 'use strict'
+const opwait = require('pear-opwait')
 const tmp = require('test-tmp')
 const test = require('brittle')
 const hypercoreid = require('hypercore-id-encoding')
@@ -322,8 +323,8 @@ test('local app', async function ({ ok, is, teardown }) {
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'apps', link: tmpdir })
-  const dataResult = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundle = (await dataResult.apps)[0]
+  const appsResult = await opwait(data)
+  const bundle = appsResult.data[0]
   is(
     bundle.link,
     pathToFileURL(tmpdir).href,

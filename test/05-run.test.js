@@ -1,4 +1,5 @@
 const test = require('brittle')
+const opwait = require('pear-opwait')
 const tmp = require('test-tmp')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
@@ -61,8 +62,7 @@ test('pear run staged manifest assets fetched', async (t) => {
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'assets' })
-  const assetsPipe = await Helper.pick(data, [{ tag: 'assets' }])
-  const assets = await assetsPipe.assets
+  const { assets } = await opwait(data)
 
   const asset = await assets.find((e) => e.link === link)
   t.ok(asset)
@@ -158,8 +158,9 @@ test('pear run preflight downloads staged assets', async (t) => {
   )
 
   const data = await helper.data({ resource: 'assets' })
-  const assetData = await Helper.pick(data, [{ tag: 'assets' }])
-  const asset = (await assetData.assets).find((a) => a.link === link)
+  const { assets } = await opwait(data)
+  const asset = assets.find((a) => a.link === link)
+
   t.ok(asset)
 
   const assetBin = await new Localdrive(asset.path).get('/asset')

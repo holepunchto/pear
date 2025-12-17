@@ -226,6 +226,32 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "presets",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "command",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "flags",
+          "required": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
     }
   ]
 }
