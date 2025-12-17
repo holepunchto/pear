@@ -349,9 +349,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const presets = command(
     'presets',
-    summary('Presets flags per pear <cmd> <link>'),
-    arg('<command>', 'Pear command to preset flags for'),
-    arg('<link>', 'App pear or file link to preset flags for'),
+    summary('Default flags for apps per command & link'),
+    arg('<command>', 'Command to apply default flags to'),
+    arg('<link>', 'App link to apply default flags to'),
     flag('--json', 'Newline delimited JSON output'),
     rest('[...flags]', 'Default flags to set. Omit flags to reset'),
     sloppy({ flags: true }),
