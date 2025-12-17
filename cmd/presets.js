@@ -1,7 +1,7 @@
 'use strict'
 const { outputter, ansi } = require('pear-terminal')
 const output = outputter('presets', {
-  presets: ({ presets }, { link }) => {
+  final: ({ presets }, { link }) => {
     let out = ''
     if (presets) {
       out += `${presets.flags}\n`

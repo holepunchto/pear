@@ -16,6 +16,7 @@ const {
 const { usage, print, ansi } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const errors = require('pear-errors')
+const opwait = require('pear-opwait')
 const def = {
   run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
@@ -512,11 +513,7 @@ async function getPresets(cmd, ipc) {
   const link = cmd.args.link
   try {
     const presetsStream = await ipc.presets({ link, command })
-    const presets = await new Promise((resolve) => {
-      presetsStream.on('data', (data) => {
-        if (data.tag === 'presets') resolve(data.data.presets)
-      })
-    })
+    const { presets } = await opwait(presetsStream)
     return presets?.flags ? presets.flags.split(' ') : []
   } catch (err) {
     return []
