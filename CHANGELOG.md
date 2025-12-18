@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.7
+
+### Fixes
+
+* libappling launch lib
+
 ## v2.2.6
 
 ### Fixes
