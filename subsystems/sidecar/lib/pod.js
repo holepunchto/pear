@@ -401,7 +401,7 @@ module.exports = class Pod {
     return this.leaving
   }
 
-  async calibrate() {
+  async calibrate(preflight = false) {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -443,7 +443,11 @@ module.exports = class Pod {
 
     if (warmup) {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
+      if (preflight) {
+        await this.prefetch(ranges)
+      } else {
+        this.prefetch(ranges)
+      }
     }
 
     return this.ver

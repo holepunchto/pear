@@ -291,7 +291,7 @@ module.exports = class Run extends Opstream {
 
     let checkout = null
     try {
-      checkout = await pod.calibrate()
+      checkout = await pod.calibrate(flags.preflight)
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
