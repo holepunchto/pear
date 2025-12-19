@@ -8,7 +8,6 @@ const State = require('pear-state')
 
 const output = outputter('init', {
   writing: () => '',
-  error: ({ code, stack }) => `Init Error (code: ${code || 'none'}) ${stack}`,
   wrote: ({ path }) => `* ${path}`,
   written: () => ''
 })
@@ -17,7 +16,7 @@ module.exports = (ipc) =>
   async function init(cmd) {
     const cwd = os.cwd()
 
-    const { yes, force, tmpl, ask } = cmd.flags
+    const { yes, force, ask } = cmd.flags
     const dir = cmd.args.dir ? resolve(cwd, cmd.args.dir) : cwd
     let dirStat = null
     try {
@@ -34,23 +33,22 @@ module.exports = (ipc) =>
 
     const cfg = pkg?.pear || {}
     const name = cfg?.name || pkg?.name || basename(dir)
-    const link = cmd.args.link || tmpl
+    const link = cmd.args.link || 'default'
 
     const defaults = { name }
 
     const banner = `${ansi.bold(name)} ~ ${ansi.dim('Welcome to the Internet of Peers')}`
     let header = `\n${banner}${ansi.dim('›')}\n\n`
     if (force) header += ansi.bold('FORCE MODE\n\n')
-    
-      const cmdArgs = cmd.command.argv
+
+    const cmdArgs = cmd.command.argv
     const state = new State({ flags: cmd.flags, link, dir, cmdArgs, cwd })
     await ipc.ready()
     const config = await ipc.config()
     state.update({ config })
     global.Pear = new API(ipc, state)
-    const Init = require('pear-init')
-    const stream = new Init({
-      link,
+    const init = require('pear-init')
+    const stream = init(link, {
       dir,
       cwd,
       autosubmit: yes,
@@ -58,10 +56,8 @@ module.exports = (ipc) =>
       force,
       defaults,
       header,
-      tmpl,
       pkg
     })
-
     try {
       await output(false, stream)
     } catch (err) {
