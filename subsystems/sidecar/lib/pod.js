@@ -443,10 +443,10 @@ module.exports = class Pod {
 
     if (warmup) {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
+      return { checkout: this.ver, prefetch: this.prefetch(ranges) }
+    } else {
+      return { checkout: this.ver, prefetch: null }
     }
-
-    return this.ver
   }
 
   async *progresser() {
@@ -471,7 +471,8 @@ module.exports = class Pod {
   } = {}) {
     if (Array.isArray(meta) === false) meta = [meta]
     if (Array.isArray(data) === false) data = [data]
-    await this.drive.downloadRange(meta, data)
+    const download = await this.drive.downloadRange(meta, data)
+    return download.done()
   }
 
   async close() {

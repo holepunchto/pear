@@ -216,6 +216,7 @@ module.exports = class Run extends Opstream {
 
       LOG.info(LOG_RUN_LINK, id, 'determining assets')
       state.update({ assets: await app.pod.assets(state.manifest) })
+
       LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
       if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
       const bundle = await app.pod.bundle(state.entrypoint)
@@ -290,8 +291,11 @@ module.exports = class Run extends Opstream {
     if (sidecar.swarm) pod.join() // note: no await is deliberate
 
     let checkout = null
+    let prefetch = null
     try {
-      checkout = await pod.calibrate()
+      const calibrate = await pod.calibrate()
+      checkout = calibrate.checkout
+      prefetch = calibrate.prefetch
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -341,7 +345,12 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    state.update({ assets: await app.pod.assets(state.manifest) })
+    if (flags.preflight) {
+      const [assets] = Promise.all(app.pod.assets(state.manifest), prefetch)
+      state.update({ assets })
+    } else {
+      state.update({ assets: await app.pod.assets(state.manifest) })
+    }
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
 
