@@ -80,14 +80,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'init',
     summary('Create initial project files'),
     description`
-    Links:
-      pear://electron/template
-      ${ansi.italic(ansi.dim('pear://your.key.here/your/path/here'))}
-
     Names:
       default, ui, node-compat
     `,
-    arg('[link|name]', 'Link or core template to init from'),
+    arg('[link|name]', 'Link or named template to init from'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--yes|-y', 'Autoselect all defaults'),
     flag('--force|-f', 'Force overwrite existing files'),
