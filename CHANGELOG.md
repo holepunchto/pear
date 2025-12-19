@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.8
+
+### Fixes
+
+* libappling bump for win fix
+
 ## v2.2.7
 
 ### Fixes
