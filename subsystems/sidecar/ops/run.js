@@ -346,7 +346,10 @@ module.exports = class Run extends Opstream {
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
-      const [assets] = await Promise.all(app.pod.assets(state.manifest), prefetch)
+      const [assets] = await Promise.all([
+        app.pod.assets(state.manifest),
+        prefetch
+      ])
       state.update({ assets })
     } else {
       state.update({ assets: await app.pod.assets(state.manifest) })
