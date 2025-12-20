@@ -16,6 +16,14 @@
         "/folder",
         "/node_modules/ready-resource/index.js",
         "/node_modules/ready-resource/package.json"
+      ],
+      "ignore": [
+        "package-lock.json",
+        "/index.html",
+        "/node_modules/bare-events/index.js",
+        "/node_modules/bare-events/package.json",
+        "/node_modules/bare-events/lib/errors.js",
+        "/app.js"
       ]
     }
   },

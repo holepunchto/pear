@@ -1,5 +1,6 @@
 'use strict'
 const test = require('brittle')
+const opwait = require('pear-opwait')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const { isWindows } = require('which-runtime')
@@ -45,8 +46,8 @@ test('pear data', async function ({
 
   comment('pear data apps')
   let data = await helper.data({ resource: 'apps' })
-  let result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
   ok(bundles.length > 0, 'Bundle array exists')
   is(typeof bundles[0].link, 'string', 'Field link is a string')
   is(typeof bundles[0].appStorage, 'string', 'Field appStorage is a string')
@@ -54,7 +55,8 @@ test('pear data', async function ({
   comment('pear data apps [link]')
   data = await helper.data({ resource: 'apps', link })
   result = await Helper.pick(data, [{ tag: 'apps' }])
-  let bundle = (await result.apps)[0]
+  result = await opwait(data)
+  let bundle = result.data[0]
   ok(
     bundle.encryptionKey === undefined,
     'Encryption key is hidden without --secrets'
@@ -65,8 +67,8 @@ test('pear data', async function ({
 
   comment('pear data --secrets apps [link]')
   data = await helper.data({ resource: 'apps', link, secrets: true })
-  result = await Helper.pick(data, [{ tag: 'apps' }])
-  bundle = (await result.apps)[0]
+  result = await opwait(data)
+  bundle = result.data[0]
   is(
     bundle.encryptionKey.toString('hex'),
     ek.toString('hex'),
@@ -78,15 +80,15 @@ test('pear data', async function ({
 
   comment('pear data dht')
   data = await helper.data({ resource: 'dht' })
-  result = await Helper.pick(data, [{ tag: 'dht' }])
-  const dht = await result.dht
+  result = await opwait(data)
+  const dht = await result.nodes
   ok(dht.length > 0, 'DHT array exists')
   is(typeof dht[0].host, 'string', 'Field host is a string')
   is(typeof dht[0].port, 'number', 'Field port is a number')
 
   comment('pear data manifest')
   data = await helper.data({ resource: 'manifest' })
-  result = await Helper.pick(data, [{ tag: 'manifest' }])
+  result = await opwait(data)
   const manifest = await result.manifest
   is(manifest, null, 'Manifest does not exist yet')
 })
@@ -127,8 +129,8 @@ test('pear data no duplicated bundle', async function ({
   await Helper.untilClose(runB.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  const result = await opwait(data)
+  const bundles = await result.data
 
   const persistedBundles = bundles.filter((e) =>
     e.link.startsWith(`pear://${key}`)
@@ -172,8 +174,8 @@ test('pear data bundle persisted with z32 encoded key', async function ({
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
 
   const persistedBundles = bundles.filter((e) =>
     e.link.startsWith(`pear://${key}`)
@@ -204,8 +206,8 @@ test('pear data no duplicated bundle local app', async function ({
   await Helper.untilClose(runC.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
 
   const key = isWindows
     ? `file:///${dir.replaceAll('\\', '/')}`
