@@ -16,22 +16,7 @@
       "version": "__version__",
       "author": "__author__",
       "description": "__description__",
-      "identifier": "__identifier__",
-      "darwin": {
-        "standalone": false,
-        "package": true,
-        "sign": false
-      },
-      "win32": {
-        "standalone": false,
-        "package": true,
-        "sign": false
-      },
-      "linux": {
-        "standalone": false,
-        "package": true,
-        "sign": false
-      }
+      "identifier": "__identifier__"
     }
   }
 }
