@@ -401,7 +401,7 @@ module.exports = class Pod {
     return this.leaving
   }
 
-  async calibrate() {
+  async calibrate(opts = {}) {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -441,12 +441,12 @@ module.exports = class Pod {
 
     const warmup = warmupNode?.value
 
-    if (warmup) {
+    if (warmup && !opts.isDump) {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
+      return { checkout: this.ver, prefetch: this.prefetch(ranges) }
+    } else {
+      return { checkout: this.ver, prefetch: null }
     }
-
-    return this.ver
   }
 
   async *progresser() {
@@ -471,7 +471,8 @@ module.exports = class Pod {
   } = {}) {
     if (Array.isArray(meta) === false) meta = [meta]
     if (Array.isArray(data) === false) data = [data]
-    await this.drive.downloadRange(meta, data)
+    const download = await this.drive.downloadRange(meta, data)
+    return download.done()
   }
 
   async close() {
