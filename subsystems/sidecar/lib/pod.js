@@ -471,8 +471,7 @@ module.exports = class Pod {
   } = {}) {
     if (Array.isArray(meta) === false) meta = [meta]
     if (Array.isArray(data) === false) data = [data]
-    const download = await this.drive.downloadRange(meta, data)
-    return download.done()
+    return await this.drive.downloadRange(meta, data)
   }
 
   async close() {

@@ -16,6 +16,7 @@ const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
+const DownloadMonitor = require('../lib/download')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -346,9 +347,12 @@ module.exports = class Run extends Opstream {
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
+      const download = await prefetch
+      const downloadMonitor = new DownloadMonitor(download, app.pod)
+      await downloadMonitor.ready()
+      await download.done()
       const [assets] = await Promise.all([
-        app.pod.assets(state.manifest),
-        prefetch
+        app.pod.assets(state.manifest)
       ])
       state.update({ assets })
     } else {
