@@ -82,7 +82,7 @@ module.exports = class Dump extends Opstream {
 
     if (!isFileLink) {
       try {
-        await pod.calibrate()
+        await pod.calibrate({ isDump: true })
       } catch (err) {
         await session.close()
         throw err
