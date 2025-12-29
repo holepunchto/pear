@@ -436,8 +436,10 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    this._downloadMonitor.addMirror(mirror)
-    this._downloadMonitor.start()
+    if (this._downloadMonitor) {
+      this._downloadMonitor.addMirror(mirror)
+      this._downloadMonitor.start()
+    }
     for await (const diff of mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
       if (diff.op === 'add') {
