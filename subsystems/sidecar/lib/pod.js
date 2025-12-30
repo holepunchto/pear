@@ -431,23 +431,15 @@ module.exports = class Pod {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode, warmupNode] = await Promise.all([
+    const [platformVersionNode, channelNode] = await Promise.all([
       db.get('platformVersion'),
-      db.get('channel'),
-      db.get('warmup')
+      db.get('channel')
     ])
     this.platformVersion = platformVersionNode?.value || null
 
     if (this.channel === null) this.channel = channelNode?.value || ''
 
-    const warmup = warmupNode?.value
-
-    if (warmup) {
-      const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      return { checkout: this.ver, prefetch: this.prefetch(ranges) }
-    } else {
-      return { checkout: this.ver, prefetch: null }
-    }
+    return this.ver
   }
 
   async *progresser() {
@@ -466,13 +458,15 @@ module.exports = class Pod {
     yield 100
   }
 
-  async prefetch({
-    meta = { start: 0, end: -1 },
-    data = { start: 0, end: -1 }
-  } = {}) {
-    if (Array.isArray(meta) === false) meta = [meta]
-    if (Array.isArray(data) === false) data = [data]
-    return await this.drive.downloadRange(meta, data)
+  async prefetch() {
+    const warmupNode = await this.drive.db.get('warmup')
+    const warmup = warmupNode?.value
+    if (warmup) {
+      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      if (Array.isArray(meta) === false) meta = [meta]
+      if (Array.isArray(data) === false) data = [data]
+      return await this.drive.downloadRange(meta, data)
+    }
   }
 
   monitor() {

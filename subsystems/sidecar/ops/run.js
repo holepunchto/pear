@@ -292,9 +292,7 @@ module.exports = class Run extends Opstream {
 
     let checkout = null
     try {
-      const calibrate = await pod.calibrate()
-      checkout = calibrate.checkout
-      this._prefetch = calibrate.prefetch
+      checkout = await pod.calibrate()
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -346,7 +344,7 @@ module.exports = class Run extends Opstream {
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
       this._monitor = pod.monitor()
-      this._warmupDownload = await this._prefetch
+      this._warmupDownload = await pod.prefetch()
       this._monitor.on('progress', (progress) =>
         this.push({ tag: 'stats', data: progress })
       )
