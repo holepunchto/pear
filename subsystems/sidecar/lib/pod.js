@@ -469,8 +469,8 @@ module.exports = class Pod {
     }
   }
 
-  monitor() {
-    const monitor = new DownloadMonitor(this.drive)
+  monitor(prefetch, promises) {
+    const monitor = new DownloadMonitor(this.drive, prefetch, promises)
     return monitor
   }
 
@@ -749,17 +749,19 @@ function closeFd(fd) {
 }
 
 class DownloadMonitor extends EventEmitter {
-  constructor(drive, intervalMs = 1000) {
+  constructor(drive, prefetch, promises) {
     super()
     this._downloaded = 0
     this._interval = null
-    this._intervalMs = intervalMs
+    this._intervalMs = 1000
     this._drive = drive
+    this._prefetch = prefetch
+    this._promises = promises
   }
 
-  start(prefetch, mirror) {
+  start(mirror) {
     const dbKey = this._drive.db.core.id
-    const prefetchEstimate = prefetch.downloads.reduce((acc, dl) => {
+    const prefetchEstimate = this._prefetch.downloads.reduce((acc, dl) => {
       if (dl.session.id === dbKey) {
         // count only blob blocks
         return acc
@@ -777,7 +779,9 @@ class DownloadMonitor extends EventEmitter {
     }, this._intervalMs)
   }
 
-  async close() {
+  async done() {
+    await Promise.all([this._prefetch.done(), ...this._promises])
+    this.emit('progress', 1)
     clearInterval(this._interval)
   }
 }

@@ -343,18 +343,15 @@ module.exports = class Run extends Opstream {
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
-      this._monitor = pod.monitor()
-      this._warmupDownload = await pod.prefetch()
+      const assetsDownloading = app.pod.assets(state.manifest)
+      const prefetchDownloading = await pod.prefetch()
+      this._monitor = pod.monitor(prefetchDownloading, [assetsDownloading])
       this._monitor.on('progress', (progress) =>
         this.push({ tag: 'stats', data: progress })
       )
-      const [assets] = await Promise.all([
-        app.pod.assets(state.manifest),
-        this._warmupDownload.done()
-      ])
+      const assets = await assetsDownloading
       state.update({ assets })
-      this._monitor.close()
-      this.push({ tag: 'stats', data: 1 }) // preflight finished
+      await this._monitor.done()
     } else {
       state.update({ assets: await app.pod.assets(state.manifest) })
     }
@@ -433,7 +430,7 @@ module.exports = class Run extends Opstream {
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
     if (this._monitor) {
-      this._monitor.start(this._warmupDownload, mirror)
+      this._monitor.start(mirror)
     }
     for await (const diff of mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
