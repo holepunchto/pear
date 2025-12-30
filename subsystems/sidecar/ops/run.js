@@ -16,7 +16,6 @@ const { KNOWN_NODES_LIMIT, PLATFORM_DIR } = require('pear-constants')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
-const DownloadMonitor = require('../lib/download')
 const State = require('../state')
 
 module.exports = class Run extends Opstream {
@@ -292,11 +291,10 @@ module.exports = class Run extends Opstream {
     if (sidecar.swarm) pod.join() // note: no await is deliberate
 
     let checkout = null
-    let prefetch = null
     try {
       const calibrate = await pod.calibrate()
       checkout = calibrate.checkout
-      prefetch = calibrate.prefetch
+      this._prefetch = calibrate.prefetch
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -347,18 +345,18 @@ module.exports = class Run extends Opstream {
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
-      const download = await prefetch
-      this._downloadMonitor = new DownloadMonitor(download, app.pod)
-      await this._downloadMonitor.ready()
-      this._downloadMonitor.on('update', (progress) =>
-        this.push({ tag: 'download-monitor', data: progress })
+      this._monitor = pod.monitor()
+      this._warmupDownload = await this._prefetch
+      this._monitor.on('update', (progress) =>
+        this.push({ tag: 'stats', data: progress })
       )
       const [assets] = await Promise.all([
         app.pod.assets(state.manifest),
-        download.done()
+        this._warmupDownload.done()
       ])
       state.update({ assets })
-      this._downloadMonitor.close()
+      this._monitor.close()
+      this.push({ tag: 'stats', data: 100 }) // preflight finished
     } else {
       state.update({ assets: await app.pod.assets(state.manifest) })
     }
@@ -436,9 +434,8 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    if (this._downloadMonitor) {
-      this._downloadMonitor.addMirror(mirror)
-      this._downloadMonitor.start()
+    if (this._monitor) {
+      this._monitor.start(this._warmupDownload, mirror)
     }
     for await (const diff of mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)

@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
+const { EventEmitter } = require('bare-events')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -474,6 +475,11 @@ module.exports = class Pod {
     return await this.drive.downloadRange(meta, data)
   }
 
+  monitor() {
+    const monitor = new DownloadMonitor(this.drive)
+    return monitor
+  }
+
   async close() {
     this.closed = true
     if (this.watchingUpdates) this.watchingUpdates.destroy()
@@ -746,4 +752,39 @@ function closeFd(fd) {
   return new Promise((resolve) => {
     fs.close(fd, () => resolve())
   })
+}
+
+class DownloadMonitor extends EventEmitter {
+  constructor(drive, intervalMs = 1000) {
+    super()
+    this._downloaded = 0
+    this._interval = null
+    this._intervalMs = intervalMs
+    this._drive = drive
+  }
+
+  start(prefetch, mirror) {
+    const dbKey = this._drive.db.core.id
+    const prefetchEstimate = prefetch.downloads.reduce((acc, dl) => {
+      if (dl.session.id === dbKey) {
+        // count only blob blocks
+        return acc
+      } else {
+        return acc + (dl.range.end - dl.range.start)
+      }
+    }, 0)
+
+    this._drive.blobs.core.on('download', () => this._downloaded++)
+
+    this._interval = setInterval(() => {
+      const downloaded = this._downloaded + mirror.downloadedBlocks
+      const estimated = prefetchEstimate + mirror.downloadedBlocksEstimate
+      console.log(`${downloaded} / ${estimated}`)
+      this.emit('update', Math.min(downloaded / estimated, 0.99))
+    }, this._intervalMs)
+  }
+
+  async close() {
+    clearInterval(this._interval)
+  }
 }
