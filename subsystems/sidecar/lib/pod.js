@@ -779,8 +779,7 @@ class DownloadMonitor extends EventEmitter {
     this._interval = setInterval(() => {
       const downloaded = this._downloaded + mirror.downloadedBlocks
       const estimated = prefetchEstimate + mirror.downloadedBlocksEstimate
-      console.log(`${downloaded} / ${estimated}`)
-      this.emit('update', Math.min(downloaded / estimated, 0.99))
+      this.emit('progress', Math.min(downloaded / estimated, 0.99))
     }, this._intervalMs)
   }
 

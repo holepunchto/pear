@@ -347,7 +347,7 @@ module.exports = class Run extends Opstream {
     if (flags.preflight) {
       this._monitor = pod.monitor()
       this._warmupDownload = await this._prefetch
-      this._monitor.on('update', (progress) =>
+      this._monitor.on('progress', (progress) =>
         this.push({ tag: 'stats', data: progress })
       )
       const [assets] = await Promise.all([
@@ -356,7 +356,7 @@ module.exports = class Run extends Opstream {
       ])
       state.update({ assets })
       this._monitor.close()
-      this.push({ tag: 'stats', data: 100 }) // preflight finished
+      this.push({ tag: 'stats', data: 1 }) // preflight finished
     } else {
       state.update({ assets: await app.pod.assets(state.manifest) })
     }
