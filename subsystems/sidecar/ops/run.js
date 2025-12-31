@@ -344,8 +344,8 @@ module.exports = class Run extends Opstream {
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     if (flags.preflight) {
       const assetsDownloading = app.pod.assets(state.manifest)
-      const prefetchDownloading = await pod.prefetch()
-      this._monitor = pod.monitor(prefetchDownloading, [assetsDownloading])
+      const download = await pod.prefetch()
+      this._monitor = pod.monitor(download, assetsDownloading)
       this._monitor.on('progress', (progress) =>
         this.push({ tag: 'stats', data: progress })
       )
