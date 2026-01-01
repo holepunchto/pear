@@ -773,8 +773,12 @@ class DownloadMonitor extends EventEmitter {
     this._drive.blobs.core.on('download', () => this._downloaded++)
 
     this._interval = setInterval(() => {
-      const downloaded = this._downloaded + mirror.downloadedBlocks
-      const estimated = downloadEstimate + mirror.downloadedBlocksEstimate
+      const downloaded = mirror
+        ? this._downloaded + mirror.downloadedBlocks
+        : this._downloaded
+      const estimated = mirror
+        ? downloadEstimate + mirror.downloadedBlocksEstimate
+        : downloadEstimate
       this.emit('progress', Math.min(downloaded / estimated, 0.99))
     }, this._intervalMs)
   }
