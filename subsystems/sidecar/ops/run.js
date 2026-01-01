@@ -385,7 +385,10 @@ module.exports = class Run extends Opstream {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
-    if (asset !== null) return asset
+    if (asset !== null) {
+      this._monitor.start()
+      return asset
+    }
 
     asset = {
       ...opts,
