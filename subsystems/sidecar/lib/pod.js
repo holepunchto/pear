@@ -779,8 +779,12 @@ class DownloadMonitor extends EventEmitter {
     }, this._intervalMs)
   }
 
-  async done() {
-    await Promise.all([this._download.done(), ...this._promises])
+  async done(timeout = 20000) {
+    const warmupPromise = Promise.race([
+      this._download.done(),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+    ])
+    await Promise.all([warmupPromise, ...this._promises])
     this.emit('progress', 1)
     clearInterval(this._interval)
   }
