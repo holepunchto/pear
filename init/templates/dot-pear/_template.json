@@ -1,0 +1,28 @@
+{
+  "params": [
+    {
+      "name": "id",
+      "prompt": "id"
+    },
+    {
+      "name": "name",
+      "prompt": "name"
+    },
+    {
+      "name": "version",
+      "prompt": "version"
+    },
+    {
+      "name": "author",
+      "prompt": "author"
+    },
+    {
+      "name": "description",
+      "prompt": "description"
+    },
+    {
+      "name": "identifier",
+      "prompt": "identifier"
+    }
+  ]
+}
