@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
+const { EventEmitter } = require('bare-events')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -430,21 +431,13 @@ module.exports = class Pod {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode, warmupNode] = await Promise.all([
+    const [platformVersionNode, channelNode] = await Promise.all([
       db.get('platformVersion'),
-      db.get('channel'),
-      db.get('warmup')
+      db.get('channel')
     ])
     this.platformVersion = platformVersionNode?.value || null
 
     if (this.channel === null) this.channel = channelNode?.value || ''
-
-    const warmup = warmupNode?.value
-
-    if (warmup) {
-      const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
-    }
 
     return this.ver
   }
@@ -465,13 +458,20 @@ module.exports = class Pod {
     yield 100
   }
 
-  async prefetch({
-    meta = { start: 0, end: -1 },
-    data = { start: 0, end: -1 }
-  } = {}) {
-    if (Array.isArray(meta) === false) meta = [meta]
-    if (Array.isArray(data) === false) data = [data]
-    await this.drive.downloadRange(meta, data)
+  async prefetch() {
+    const warmupNode = await this.drive.db.get('warmup')
+    const warmup = warmupNode?.value
+    if (warmup) {
+      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      if (Array.isArray(meta) === false) meta = [meta]
+      if (Array.isArray(data) === false) data = [data]
+      return await this.drive.downloadRange(meta, data)
+    }
+  }
+
+  monitor(download, ...promises) {
+    const monitor = new DownloadMonitor(this.drive, download, promises)
+    return monitor
   }
 
   async close() {
@@ -746,4 +746,42 @@ function closeFd(fd) {
   return new Promise((resolve) => {
     fs.close(fd, () => resolve())
   })
+}
+
+class DownloadMonitor extends EventEmitter {
+  constructor(drive, download, promises) {
+    super()
+    this._downloaded = 0
+    this._interval = null
+    this._intervalMs = 1000
+    this._drive = drive
+    this._download = download
+    this._promises = promises
+  }
+
+  start(mirror) {
+    const dbKey = this._drive.db.core.id
+    const downloadEstimate = this._download.downloads.reduce((acc, dl) => {
+      if (dl.session.id === dbKey) {
+        // count only blob blocks
+        return acc
+      } else {
+        return acc + (dl.range.end - dl.range.start)
+      }
+    }, 0)
+
+    this._drive.blobs.core.on('download', () => this._downloaded++)
+
+    this._interval = setInterval(() => {
+      const downloaded = this._downloaded + mirror.downloadedBlocks
+      const estimated = downloadEstimate + mirror.downloadedBlocksEstimate
+      this.emit('progress', Math.min(downloaded / estimated, 0.99))
+    }, this._intervalMs)
+  }
+
+  async done() {
+    await Promise.all([this._download.done(), ...this._promises])
+    this.emit('progress', 1)
+    clearInterval(this._interval)
+  }
 }
