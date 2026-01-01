@@ -353,6 +353,7 @@ module.exports = class Run extends Opstream {
       state.update({ assets })
       await this._monitor.done()
     } else {
+      pod.prefetch()
       state.update({ assets: await app.pod.assets(state.manifest) })
     }
 
