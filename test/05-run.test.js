@@ -1,6 +1,7 @@
 const test = require('brittle')
 const opwait = require('pear-opwait')
 const tmp = require('test-tmp')
+const { Transform, pipeline } = require('streamx')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Corestore = require('corestore')
@@ -156,6 +157,134 @@ test('pear run preflight downloads staged assets', async (t) => {
     }),
     'stream ends without sending data'
   )
+
+  const data = await helper.data({ resource: 'assets' })
+  const { assets } = await opwait(data)
+  const asset = assets.find((a) => a.link === link)
+
+  t.ok(asset)
+
+  const assetBin = await new Localdrive(asset.path).get('/asset')
+  t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
+})
+
+test('pear run preflight downloads staged assets from key', async (t) => {
+  t.plan(4)
+  t.comment('creating test asset')
+  const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
+  const tmpdir = await tmp()
+  const store = new Corestore(tmpdir)
+  await store.ready()
+  const drive = new Hyperdrive(store)
+  await drive.ready()
+  t.teardown(() => swarm.destroy())
+  const dir = Helper.fixture('app-with-assets')
+  const fixture = new Localdrive(dir)
+
+  swarm.on('connection', (conn) => {
+    drive.corestore.replicate(conn)
+  })
+
+  swarm.join(drive.discoveryKey)
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  const assetBuffer = Buffer.allocUnsafe(4096)
+  await drive.put('/asset', assetBuffer)
+
+  const appPkg = JSON.parse(await fixture.get('/package.json'))
+  const link = `pear://0.${drive.core.length}.${hypercoreid.encode(drive.key)}`
+  appPkg.pear.assets.ui.link = link
+  await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
+
+  t.teardown(async () => {
+    // revert change in package.json
+    appPkg.pear.assets.ui.link = ''
+    await fixture.put('/package.json', JSON.stringify(appPkg, null, 2))
+  })
+
+  t.comment('running app with preflight flag')
+
+  const dhtBootstrap = Pear.app.dht.bootstrap
+    .map((e) => `${e.host}:${e.port}`)
+    .join(',')
+
+  const helper = new Helper()
+  t.teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  t.comment('staging')
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
+  t.teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const { key } = await staged.addendum
+  await staged.final
+
+  const sp = spawn(
+    helper.runtime,
+    [
+      'run',
+      '--preflight',
+      '--json',
+      '--dht-bootstrap',
+      dhtBootstrap,
+      '--base',
+      dir,
+      '--trusted',
+      '--no-pre',
+      `pear://${key}`
+    ],
+    {
+      stdio: ['inherit', 'pipe', 'inherit', 'overlapped'],
+      windowsHide: true
+    }
+  )
+  ref.ref()
+  sp.once('exit', () => {
+    ref.unref()
+  })
+  const pipe = sp.stdio[3]
+
+  await helper.ready()
+
+  await t.execution(
+    new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), 1000)
+      pipe.once('data', () => {
+        reject(new Error('unexpected data'))
+      })
+      pipe.on('end', () => {
+        clearTimeout(timeoutId)
+        resolve()
+      })
+    }),
+    'stream ends without sending data'
+  )
+
+  const transform = new Transform({
+    transform(from, cb) {
+      try {
+        this.push(JSON.parse(from.toString()))
+      } catch {
+      } finally {
+        cb()
+      }
+    }
+  })
+
+  const stats = await Helper.pick(pipeline(sp.stdio[1], transform), {
+    tag: 'stats'
+  })
+  t.is(stats, 1, 'preflight emits 1 when is finished')
 
   const data = await helper.data({ resource: 'assets' })
   const { assets } = await opwait(data)
