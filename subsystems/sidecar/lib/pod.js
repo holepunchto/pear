@@ -19,7 +19,7 @@ const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
 const pack = require('pear-pack')
-const { SWAP, PLATFORM_DIR, WARMUP_DOWNLOAD_TIMEOUT } = require('pear-constants')
+const { SWAP, PLATFORM_DIR } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
 const noop = Function.prototype
@@ -783,7 +783,7 @@ class DownloadMonitor extends EventEmitter {
     }, this._intervalMs)
   }
 
-  async done(timeout = WARMUP_DOWNLOAD_TIMEOUT) {
+  async done(timeout = 20000) {
     const warmupPromise = Promise.race([
       this._download.done(),
       new Promise((resolve) => setTimeout(resolve, timeout))
