@@ -51,7 +51,7 @@ class Plugin {
 }
 
 const commands = {
-  init: require('./init'),
+  init: new Plugin('pear://templates'),
   stage: require('./stage'),
   seed: require('./seed'),
   release: require('./release'),
@@ -79,16 +79,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const init = command(
     'init',
     summary('Create initial project files'),
-    description`
-    Names:
-      default, ui, node-compat
-    `,
-    arg('[link|name]', 'Link or named template to init from'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--force|-f', 'Force overwrite existing files'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    commands.init
+    commands.init.runner()
   )
 
   const dev = command('dev', sloppy({ args: true, flags: true }), () => {
