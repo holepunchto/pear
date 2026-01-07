@@ -175,7 +175,7 @@ module.exports = (ipc) =>
       if (bail.code === 'PREFLIGHT') return // done
       if (bail.code === 'ERR_CONNECTION') return // handled by reporter
       if (bail.code === 'ERR_PERMISSION_REQUIRED')
-        return permit(ipc, bail.info, 'run')
+        return permit(bail.info, 'run', ipc)
       throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
     }
 
