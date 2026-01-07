@@ -353,6 +353,7 @@ module.exports = class Run extends Opstream {
       state.update({ assets })
       await this._monitor.done()
     } else {
+      pod.prefetch()
       state.update({ assets: await app.pod.assets(state.manifest) })
     }
 
@@ -384,7 +385,13 @@ module.exports = class Run extends Opstream {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
-    if (asset !== null) return asset
+    if (asset !== null) {
+      if (this._monitor) {
+        // only in preflight
+        this._monitor.start()
+      }
+      return asset
+    }
 
     asset = {
       ...opts,

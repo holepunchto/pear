@@ -438,9 +438,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const presetsArgs = await getPresets(cmd.parse(argv, { run: false }), ipc)
-  const combinedArgs = [argv[0], ...presetsArgs, ...argv.slice(1)]
-  const program = cmd.parse(combinedArgs)
+  const presetsArgs = await getPresets(
+    cmd.parse(argv, { run: false, silent: true }),
+    ipc
+  )
+  const args = [...argv.slice(0, 1), ...presetsArgs, ...argv.slice(1)]
+  const program = cmd.parse(args)
 
   if (program === null) {
     ipc.close()
