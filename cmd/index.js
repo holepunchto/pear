@@ -78,7 +78,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const init = command(
     'init',
-    summary('Create initial project files'),
     commands.init.runner()
   )
 
@@ -307,11 +306,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const sidecar = command(
     'sidecar',
-    command(
-      'shutdown',
-      commands.sidecar,
-      summary('Shutdown running sidecar')
-    ),
+    command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     command(
       'inspect',
       commands.sidecar,
@@ -324,11 +319,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       The pear sidecar command shuts down any existing sidecar process
       and then becomes the sidecar.
     `,
-    command(
-      'shutdown',
-      commands.sidecar,
-      summary('Shutdown running sidecar')
-    ),
+    command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     flag('--mem', 'Memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
