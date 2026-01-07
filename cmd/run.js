@@ -62,191 +62,190 @@ const runout = outputter('run', {
   final: {} // hide "{tick} Success"
 })
 
-module.exports = (ipc) =>
-  async function run(cmd, devrun = false) {
-    const { flags } = cmd
+module.exports = async function run(cmd, devrun = false) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { flags } = cmd
 
-    const { detached, store: storage } = flags
+  const { detached, store: storage } = flags
 
-    if (devrun && !cmd.args.link) {
-      cmd.args.link = '.'
-      Bare.argv.push('.')
-    }
+  if (devrun && !cmd.args.link) {
+    cmd.args.link = '.'
+    Bare.argv.push('.')
+  }
 
-    const cmdArgs = cmd.command.argv
-    let args = cmdArgs.slice(1)
-    const appArgs = cmd.rest || []
-    let link = cmd.args.link
-    const { drive, pathname, search, hash } = plink.parse(link)
-    const { key } = drive
-    const isPear = link.startsWith('pear://')
-    const isFile = link.startsWith('file://')
-    const isPath = isPear === false && isFile === false
-    const onDisk = key === null
+  const cmdArgs = cmd.command.argv
+  let args = cmdArgs.slice(1)
+  const appArgs = cmd.rest || []
+  let link = cmd.args.link
+  const { drive, pathname, search, hash } = plink.parse(link)
+  const { key } = drive
+  const isPear = link.startsWith('pear://')
+  const isFile = link.startsWith('file://')
+  const isPath = isPear === false && isFile === false
+  const onDisk = key === null
 
-    if (onDisk === false && isPear === false)
-      throw ERR_INVALID_INPUT('Key must start with pear://')
+  if (onDisk === false && isPear === false)
+    throw ERR_INVALID_INPUT('Key must start with pear://')
 
-    const cwd = os.cwd()
-    let dir = normalize(flags.base || (onDisk ? pathname : cwd))
-    let pkg = null
+  const cwd = os.cwd()
+  let dir = normalize(flags.base || (onDisk ? pathname : cwd))
+  let pkg = null
 
-    if (onDisk) {
-      const base = { cwd, dir, entrypoint: '/' }
-      pkg = await State.localPkg(base) // may modify base.dir
-      if (pkg === null)
-        throw ERR_INVALID_PROJECT_DIR(
-          `A valid package.json must exist (checked from "${dir}" to "${base.dir}")`
-        )
-      base.entrypoint = dir.slice(base.dir.length)
-      dir = base.dir
-      if (dir.length > 1 && dir.endsWith(path.sep)) dir = dir.slice(0, -1)
-      if (isPath)
-        link =
-          plink.normalize(
-            pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href
-          ) +
-          search +
-          hash
-      if (flags.pre) {
-        const pre = new Pre('run', base, pkg)
-        pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, {
-          io: flags.preIo,
-          quiet: flags.preQ
-        })
-      }
-    }
-
-    if (detached) {
-      const { wokeup, appling } = await ipc.detached({
-        key,
-        link,
-        storage,
-        appdev: onDisk ? dir : null,
-        pkg
-      })
-      if (wokeup) return ipc.close().catch(console.error)
-      args = args.filter((arg) => arg !== '--detached')
-      const opts = { cwd }
-      if (!appling) args.unshift('run', '--detach')
-      else args.unshift('run', '--appling', appling)
-      daemon(constants.RUNTIME, args, opts)
-      return ipc.close().catch(console.error)
-    }
-
-    class Reporter {
-      display(rpt) {
-        if (rpt.type === 'permission-required') return // handled in bail
-        console.error(ansi.warning, ansi.bold(rpt.headline.content))
-        console.error(rpt.tagline.content)
-        if (rpt.message) console.error(rpt.message)
-        if (rpt.stack) console.error(rpt.stack)
-        if (rpt.info) console.error(rpt.info)
-        if (rpt.reason) console.error('reason:', rpt.reason)
-      }
-    }
-
-    const reporter = new Reporter()
-    const stream = ipc.run({
-      flags,
-      env: ENV,
-      dir,
-      link,
-      cwd,
-      args: appArgs,
-      cmdArgs,
-      pkg,
-      pid: os.pid()
-    })
-    stream.on('data', function ondata({ tag, data }) {
-      if (tag !== 'initialized') return
-      const [, startId] = data.id.split('@')
-      const reporting = ipc.reports({ id: startId })
-      reporting.on('error', noop) // ignore rpc destroyed for unexpected run rejects
-      reporting.on('data', (data) => reporter.display(data))
-      stream.removeListener('data', ondata)
-    })
-
-    const result = await runout({ json: flags.json }, stream)
-    if (result === null) throw ERR_INTERNAL_ERROR('run failure unknown')
-    const { startId, id, bundle, bail } = result
-
-    if (bail) {
-      if (bail.code === 'PREFLIGHT') return // done
-      if (bail.code === 'ERR_CONNECTION') return // handled by reporter
-      if (bail.code === 'ERR_PERMISSION_REQUIRED')
-        return permit(bail.info, 'run', ipc)
-      throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
-    }
-
-    const state = new State({ startId, id, flags, link, dir, cmdArgs, cwd })
-
-    await ipc.ready()
-
-    const config = await ipc.config()
-
-    state.update({ config })
-    global.Pear = new API(ipc, state)
-    const protocol = new Module.Protocol({
-      exists(url) {
-        if (url.href.endsWith('.bare') || url.href.endsWith('.node'))
-          return true
-        return (
-          Object.hasOwn(bundle.sources, url.href) ||
-          Object.hasOwn(bundle.assets, url.href)
-        )
-      },
-      read(url) {
-        return bundle.sources[url.href]
-      }
-    })
-
-    if (bundle.entrypoint.endsWith('.html')) {
-      const updates = require('pear-updates')
-      console.log('Legacy application detected, attempting to heal')
-      console.log(
-        'Developer Solution: pear run pear://runtime/documentation/migration'
+  if (onDisk) {
+    const base = { cwd, dir, entrypoint: '/' }
+    pkg = await State.localPkg(base) // may modify base.dir
+    if (pkg === null)
+      throw ERR_INVALID_PROJECT_DIR(
+        `A valid package.json must exist (checked from "${dir}" to "${base.dir}")`
       )
-      console.log('Waiting 60 seconds for application updates...')
-      const timeout = setTimeout(() => {
-        throw ERR_LEGACY(
-          '[ LEGACY ] No longer booting app from HTML entrypoints\n  Developer Solution: pear run pear://runtime/documentation/migration'
-        )
-      }, 60_000)
-      const stream = updates({ app: true }, (update) => {
-        clearTimeout(timeout)
-        if (update.updating) {
-          console.log('Updating please wait...')
-        } else if (update.updated) {
-          console.log('Application update received')
-          console.log(
-            `pear://${update.version.fork}.${update.version.length}.${update.version.key}`
-          )
-          console.log('Rerun to open')
-          stream.end()
-        }
+    base.entrypoint = dir.slice(base.dir.length)
+    dir = base.dir
+    if (dir.length > 1 && dir.endsWith(path.sep)) dir = dir.slice(0, -1)
+    if (isPath)
+      link =
+        plink.normalize(
+          pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href
+        ) +
+        search +
+        hash
+    if (flags.pre) {
+      const pre = new Pre('run', base, pkg)
+      pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, {
+        io: flags.preIo,
+        quiet: flags.preQ
       })
-      return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
     }
+  }
 
-    // clear global handlers
-    Bare.removeAllListeners('uncaughtException')
-    Bare.removeAllListeners('unhandledRejection')
-
-    // preserves uncaught exceptions (otherwise they become unhandled rejections)
-    setImmediate(() => {
-      Module.load(new URL(bundle.entrypoint), {
-        protocol,
-        resolutions: bundle.resolutions
-      })
-      setImmediate(() => {
-        // stops replaying & relaying subscriber streams between clients
-        if (Pear.constructor.CUTOVER === true) ipc.cutover()
-      })
+  if (detached) {
+    const { wokeup, appling } = await ipc.detached({
+      key,
+      link,
+      storage,
+      appdev: onDisk ? dir : null,
+      pkg
     })
+    if (wokeup) return ipc.close().catch(console.error)
+    args = args.filter((arg) => arg !== '--detached')
+    const opts = { cwd }
+    if (!appling) args.unshift('run', '--detach')
+    else args.unshift('run', '--appling', appling)
+    daemon(constants.RUNTIME, args, opts)
+    return ipc.close().catch(console.error)
+  }
 
+  class Reporter {
+    display(rpt) {
+      if (rpt.type === 'permission-required') return // handled in bail
+      console.error(ansi.warning, ansi.bold(rpt.headline.content))
+      console.error(rpt.tagline.content)
+      if (rpt.message) console.error(rpt.message)
+      if (rpt.stack) console.error(rpt.stack)
+      if (rpt.info) console.error(rpt.info)
+      if (rpt.reason) console.error('reason:', rpt.reason)
+    }
+  }
+
+  const reporter = new Reporter()
+  const stream = ipc.run({
+    flags,
+    env: ENV,
+    dir,
+    link,
+    cwd,
+    args: appArgs,
+    cmdArgs,
+    pkg,
+    pid: os.pid()
+  })
+  stream.on('data', function ondata({ tag, data }) {
+    if (tag !== 'initialized') return
+    const [, startId] = data.id.split('@')
+    const reporting = ipc.reports({ id: startId })
+    reporting.on('error', noop) // ignore rpc destroyed for unexpected run rejects
+    reporting.on('data', (data) => reporter.display(data))
+    stream.removeListener('data', ondata)
+  })
+
+  const result = await runout({ json: flags.json }, stream)
+  if (result === null) throw ERR_INTERNAL_ERROR('run failure unknown')
+  const { startId, id, bundle, bail } = result
+
+  if (bail) {
+    if (bail.code === 'PREFLIGHT') return // done
+    if (bail.code === 'ERR_CONNECTION') return // handled by reporter
+    if (bail.code === 'ERR_PERMISSION_REQUIRED')
+      return permit(ipc, bail.info, 'run')
+    throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
+  }
+
+  const state = new State({ startId, id, flags, link, dir, cmdArgs, cwd })
+
+  await ipc.ready()
+
+  const config = await ipc.config()
+
+  state.update({ config })
+  global.Pear = new API(ipc, state)
+  const protocol = new Module.Protocol({
+    exists(url) {
+      if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
+      return (
+        Object.hasOwn(bundle.sources, url.href) ||
+        Object.hasOwn(bundle.assets, url.href)
+      )
+    },
+    read(url) {
+      return bundle.sources[url.href]
+    }
+  })
+
+  if (bundle.entrypoint.endsWith('.html')) {
+    const updates = require('pear-updates')
+    console.log('Legacy application detected, attempting to heal')
+    console.log(
+      'Developer Solution: pear run pear://runtime/documentation/migration'
+    )
+    console.log('Waiting 60 seconds for application updates...')
+    const timeout = setTimeout(() => {
+      throw ERR_LEGACY(
+        '[ LEGACY ] No longer booting app from HTML entrypoints\n  Developer Solution: pear run pear://runtime/documentation/migration'
+      )
+    }, 60_000)
+    const stream = updates({ app: true }, (update) => {
+      clearTimeout(timeout)
+      if (update.updating) {
+        console.log('Updating please wait...')
+      } else if (update.updated) {
+        console.log('Application update received')
+        console.log(
+          `pear://${update.version.fork}.${update.version.length}.${update.version.key}`
+        )
+        console.log('Rerun to open')
+        stream.end()
+      }
+    })
     return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
   }
+
+  // clear global handlers
+  Bare.removeAllListeners('uncaughtException')
+  Bare.removeAllListeners('unhandledRejection')
+
+  // preserves uncaught exceptions (otherwise they become unhandled rejections)
+  setImmediate(() => {
+    Module.load(new URL(bundle.entrypoint), {
+      protocol,
+      resolutions: bundle.resolutions
+    })
+    setImmediate(() => {
+      // stops replaying & relaying subscriber streams between clients
+      if (Pear.constructor.CUTOVER === true) ipc.cutover()
+    })
+  })
+
+  return new Promise((resolve) => global.Pear.teardown(resolve, Infinity))
+}
 
 function normalize(pathname) {
   if (pathname[0] === '/' && pathname[2] === ':')

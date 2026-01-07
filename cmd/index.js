@@ -101,7 +101,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.seed(ipc)
+    commands.seed
   )
 
   const stage = command(
@@ -127,7 +127,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--pre-io', 'Show stdout & stderr of pre scripts'),
     flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.stage(ipc)
+    commands.stage
   )
 
   const release = command(
@@ -142,7 +142,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.release(ipc)
+    commands.release
   )
 
   const run = command(
@@ -153,7 +153,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     `,
     ...def.run,
-    commands.run(ipc)
+    commands.run
   )
 
   const info = command(
@@ -174,7 +174,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.info(ipc)
+    commands.info
   )
 
   const dump = command(
@@ -198,7 +198,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       return true
     }),
     validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
-    commands.dump(ipc)
+    commands.dump
   )
 
   const touch = command(
@@ -207,7 +207,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     description("Initialize a project Pear link if it doesn't already exist."),
     arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.touch(ipc)
+    commands.touch
   )
 
   const data = command(
@@ -217,35 +217,35 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'apps',
       summary('Installed apps'),
       arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(ipc).apps(cmd)
+      (cmd) => commands.data(cmd, 'apps')
     ),
     command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      commands.data(ipc).dht(cmd)
+      commands.data(cmd, 'dht')
     ),
     command('gc', summary('Garbage collection records'), (cmd) =>
-      commands.data(ipc).gc(cmd)
+      commands.data(cmd, 'gc')
     ),
     command('manifest', summary('Database internal versioning'), (cmd) =>
-      commands.data(ipc).manifest(cmd)
+      commands.data(cmd, 'manifest')
     ),
     command(
       'assets',
       summary('On-disk assets for app'),
       arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(ipc).assets(cmd)
+      (cmd) => commands.data(cmd, 'assets')
     ),
     command(
       'currents',
       summary('Current working versions'),
       arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(ipc).currents(cmd)
+      (cmd) => commands.data(cmd, 'currents')
     ),
     command(
       'presets',
       summary('Presets by link and command'),
       arg('[link]', 'Filter by link'),
       arg('[command]', 'Filter by command'),
-      (cmd) => commands.data(ipc).presets(cmd)
+      (cmd) => commands.data(cmd, 'presets')
     ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
@@ -268,7 +268,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--full', 'Show entire changelog'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.changelog(ipc)
+    commands.changelog
   )
 
   const shift = command(
@@ -278,7 +278,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<destination>', 'Destination application Pear link'),
     flag('--force', 'Overwrite existing application storage if present'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.shift(ipc)
+    commands.shift
   )
 
   const drop = command(
@@ -290,7 +290,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       description('Clear application storage for supplied link.'),
       arg('<link>', 'Application link'),
       flag('--json', 'Newline delimited JSON output'),
-      commands.drop(ipc)
+      commands.drop
     ),
     () => {
       console.log(drop.help())
@@ -309,12 +309,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'sidecar',
     command(
       'shutdown',
-      commands.sidecar(ipc),
+      commands.sidecar,
       summary('Shutdown running sidecar')
     ),
     command(
       'inspect',
-      commands.sidecar(ipc),
+      commands.sidecar,
       summary('Enable running sidecar inspector')
     ),
     summary('Advanced. Run sidecar in terminal'),
@@ -326,7 +326,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     `,
     command(
       'shutdown',
-      commands.sidecar(ipc),
+      commands.sidecar,
       summary('Shutdown running sidecar')
     ),
     flag('--mem', 'Memory mode: RAM corestore'),
@@ -336,21 +336,21 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
     flag('--log-stacks', 'Add a stack trace to each log message'),
     flag('--dht-bootstrap <nodes>').hide(),
-    commands.sidecar(ipc)
+    commands.sidecar
   )
 
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), commands.gc(ipc)),
-    command('sidecars', summary('Clear running sidecars'), commands.gc(ipc)),
+    command('releases', summary('Clear inactive releases'), commands.gc),
+    command('sidecars', summary('Clear running sidecars'), commands.gc),
     command(
       'assets',
       summary('Clear synced assets'),
       arg('[link]', 'Clear asset by link'),
-      commands.gc(ipc)
+      commands.gc
     ),
-    command('cores', summary('Clear corestore cores'), commands.gc(ipc)),
+    command('cores', summary('Clear corestore cores'), commands.gc),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
@@ -362,7 +362,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('View dependency versions'),
     flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.versions(ipc)
+    commands.versions
   )
 
   const presets = command(
@@ -373,7 +373,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     rest('[...flags]', 'Default flags to set. Omit flags to reset'),
     sloppy({ flags: true }),
-    commands.presets(ipc)
+    commands.presets
   )
 
   const help = command(
