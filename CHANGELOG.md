@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.2.10
+
+### Fixes
+
+* runtime bump
+
 ## v2.2.9
 
 ### Fixes
