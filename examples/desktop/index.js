@@ -2,6 +2,9 @@
 import Runtime from 'pear-electron'
 import Bridge from 'pear-bridge'
 import updates from 'pear-updates'
+import bareInspector from 'bare-inspector'
+import { Inspector } from 'pear-inspect'
+
 
 updates((update) => {
   console.log('Application update available:', update)
@@ -13,6 +16,10 @@ await bridge.ready()
 const runtime = new Runtime()
 const pipe = await runtime.start({ bridge })
 pipe.on('close', () => Pear.exit())
+
+const inspector = new Inspector({ inspector: bareInspector })
+const inspectorKey = await inspector.enable() // Pass the public key to the Session
+console.log(`Add this key to Pear Runtime: ${inspectorKey.toString('hex')}`)
 
 pipe.on('data', (data) => {
   const cmd = Buffer.from(data).toString()

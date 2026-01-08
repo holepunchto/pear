@@ -18,7 +18,9 @@
     }
   },
   "devDependencies": {
+    "bare-inspector": "^5.0.0",
     "brittle": "^3.0.0",
+    "pear-inspect": "^1.2.5",
     "pear-interface": "^1.0.0"
   },
   "dependencies": {
