@@ -107,14 +107,16 @@ const output = outputter('data', {
   }
 })
 
-module.exports = (ipc) => new Data(ipc)
+module.exports = (cmd, sub) => new Data(cmd)[sub]()
 
 class Data {
-  constructor(ipc) {
-    this.ipc = ipc
+  constructor(cmd) {
+    this.cmd = cmd
+    this.ipc = global.Pear[global.Pear.constructor.IPC]
   }
 
-  async apps(cmd) {
+  async apps() {
+    const { cmd } = this
     const { command } = cmd
     const { secrets, json } = command.parent.flags
     const link = command.args.link
@@ -130,7 +132,8 @@ class Data {
     )
   }
 
-  async dht(cmd) {
+  async dht() {
+    const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
     await output(
@@ -141,7 +144,8 @@ class Data {
     )
   }
 
-  async gc(cmd) {
+  async gc() {
+    const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
     await output(
@@ -152,7 +156,8 @@ class Data {
     )
   }
 
-  async manifest(cmd) {
+  async manifest() {
+    const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
     await output(
@@ -163,7 +168,8 @@ class Data {
     )
   }
 
-  async assets(cmd) {
+  async assets() {
+    const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
@@ -179,7 +185,8 @@ class Data {
     )
   }
 
-  async currents(cmd) {
+  async currents() {
+    const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
@@ -195,7 +202,7 @@ class Data {
     )
   }
 
-  async presets(cmd) {
+  async presets() {
     const command = cmd.args.command
     const link = cmd.args.link
     const { json } = cmd.command.parent.flags

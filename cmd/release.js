@@ -21,32 +21,32 @@ const output = outputter('release', {
   })
 })
 
-module.exports = (ipc) =>
-  async function release(cmd) {
-    const { checkout, name, json } = cmd.flags
-    const isKey = plink.parse(cmd.args.channel).drive.key !== null
-    const channel = isKey ? null : cmd.args.channel
-    const link = isKey ? cmd.args.channel : null
-    if (!channel && !link)
-      throw ERR_INVALID_INPUT(
-        'A valid pear link or the channel name must be specified.'
-      )
-    let dir = cmd.args.dir || os.cwd()
-    if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
-    if (checkout !== undefined && Number.isInteger(+checkout) === false) {
-      throw ERR_INVALID_INPUT('--checkout flag must supply an integer if set')
-    }
-    const id = Bare.pid
-    await output(
-      json,
-      ipc.release({
-        id,
-        name,
-        channel,
-        link,
-        checkout,
-        dir,
-        cmdArgs: Bare.argv.slice(1)
-      })
+module.exports = async function release(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { checkout, name, json } = cmd.flags
+  const isKey = plink.parse(cmd.args.channel).drive.key !== null
+  const channel = isKey ? null : cmd.args.channel
+  const link = isKey ? cmd.args.channel : null
+  if (!channel && !link)
+    throw ERR_INVALID_INPUT(
+      'A valid pear link or the channel name must be specified.'
     )
+  let dir = cmd.args.dir || os.cwd()
+  if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
+  if (checkout !== undefined && Number.isInteger(+checkout) === false) {
+    throw ERR_INVALID_INPUT('--checkout flag must supply an integer if set')
   }
+  const id = Bare.pid
+  await output(
+    json,
+    ipc.release({
+      id,
+      name,
+      channel,
+      link,
+      checkout,
+      dir,
+      cmdArgs: Bare.argv.slice(1)
+    })
+  )
+}

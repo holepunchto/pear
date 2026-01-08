@@ -81,48 +81,48 @@ const output = outputter('stage', {
   }
 })
 
-module.exports = (ipc) =>
-  async function stage(cmd) {
-    const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } =
-      cmd.flags
-    const isKey =
-      cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
-    const channel = isKey ? null : cmd.args.channel
-    const key = isKey ? cmd.args.channel : null
-    if (!channel && !key)
-      throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
-    const cwd = os.cwd()
-    let { dir = cwd } = cmd.args
-    if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
-    const id = Bare.pid
-    const base = { cwd, dir }
-    let pkg = null
-    if (cmd.flags.pre) {
-      pkg = await State.localPkg(base)
-      if (pkg !== null) {
-        const pre = new Pre('stage', { dir, cwd }, pkg)
-        pkg = await output({ ctrlTTY: false, json }, pre, {
-          pre: true,
-          preQ: cmd.flags.preQ,
-          preio: cmd.flags.preIo
-        })
-      }
+module.exports = async function stage(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } =
+    cmd.flags
+  const isKey =
+    cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
+  const channel = isKey ? null : cmd.args.channel
+  const key = isKey ? cmd.args.channel : null
+  if (!channel && !key)
+    throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
+  const cwd = os.cwd()
+  let { dir = cwd } = cmd.args
+  if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+  const id = Bare.pid
+  const base = { cwd, dir }
+  let pkg = null
+  if (cmd.flags.pre) {
+    pkg = await State.localPkg(base)
+    if (pkg !== null) {
+      const pre = new Pre('stage', { dir, cwd }, pkg)
+      pkg = await output({ ctrlTTY: false, json }, pre, {
+        pre: true,
+        preQ: cmd.flags.preQ,
+        preio: cmd.flags.preIo
+      })
     }
-    const stream = ipc.stage({
-      id,
-      channel,
-      key,
-      dir,
-      dryRun,
-      bare,
-      ignore,
-      purge,
-      name,
-      truncate,
-      only,
-      compact,
-      cmdArgs: Bare.argv.slice(1),
-      pkg
-    })
-    await output(json, stream, { ask: cmd.flags.ask }, ipc)
   }
+  const stream = ipc.stage({
+    id,
+    channel,
+    key,
+    dir,
+    dryRun,
+    bare,
+    ignore,
+    purge,
+    name,
+    truncate,
+    only,
+    compact,
+    cmdArgs: Bare.argv.slice(1),
+    pkg
+  })
+  await output(json, stream, { ask: cmd.flags.ask }, ipc)
+}

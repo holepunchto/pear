@@ -15,23 +15,23 @@ const output = outputter('shift', {
   }
 })
 
-module.exports = (ipc) =>
-  async function shift(cmd) {
-    const { force, json } = cmd.flags
-    const src = cmd.args.source
-    const dst = cmd.args.destination
+module.exports = async function shift(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { force, json } = cmd.flags
+  const src = cmd.args.source
+  const dst = cmd.args.destination
 
-    if (plink.parse(src).drive.key === null) {
-      throw ERR_INVALID_INPUT(
-        'A valid source application link must be specified.'
-      )
-    }
-
-    if (plink.parse(dst).drive.key === null) {
-      throw ERR_INVALID_INPUT(
-        'A valid destination application link must be specified.'
-      )
-    }
-
-    await output(json, ipc.shift({ src, dst, force }))
+  if (plink.parse(src).drive.key === null) {
+    throw ERR_INVALID_INPUT(
+      'A valid source application link must be specified.'
+    )
   }
+
+  if (plink.parse(dst).drive.key === null) {
+    throw ERR_INVALID_INPUT(
+      'A valid destination application link must be specified.'
+    )
+  }
+
+  await output(json, ipc.shift({ src, dst, force }))
+}

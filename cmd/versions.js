@@ -44,27 +44,27 @@ const output = outputter('versions', {
   }
 })
 
-module.exports = (ipc) =>
-  async function versions(cmd) {
-    const json = cmd.flags.json
-    const modules = cmd.flags.modules
-    const { runtimes, platform } = await ipc.versions()
-    const header = cmd.command.header
-    const { bare, ...libs } =
-      Bare.versions.bare !== runtimes.bare
-        ? {
-            ...Bare.versions,
-            bare: runtimes.bare + ' (sidecar) / ' + Bare.versions.bare
-          }
-        : Bare.versions
-    await output(
-      json,
-      [
-        { tag: 'platform', data: { checkout: platform } },
-        { tag: 'runtimes', data: { pear: runtimes.pear, bare } },
-        { tag: 'libraries', data: libs },
-        { tag: 'modules', data: dependencies }
-      ],
-      { modules, header }
-    )
-  }
+module.exports = async function versions(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const json = cmd.flags.json
+  const modules = cmd.flags.modules
+  const { runtimes, platform } = await ipc.versions()
+  const header = cmd.command.header
+  const { bare, ...libs } =
+    Bare.versions.bare !== runtimes.bare
+      ? {
+          ...Bare.versions,
+          bare: runtimes.bare + ' (sidecar) / ' + Bare.versions.bare
+        }
+      : Bare.versions
+  await output(
+    json,
+    [
+      { tag: 'platform', data: { checkout: platform } },
+      { tag: 'runtimes', data: { pear: runtimes.pear, bare } },
+      { tag: 'libraries', data: libs },
+      { tag: 'modules', data: dependencies }
+    ],
+    { modules, header }
+  )
+}
