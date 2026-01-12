@@ -4,8 +4,8 @@ const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
-const Bundle = require('../lib/bundle')
+const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
+const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
 
@@ -21,10 +21,13 @@ module.exports = class Info extends Opstream {
     metadata,
     manifest,
     changelog = null,
-    cmdArgs
+    dir
   } = {}) {
+    if (link && channel)
+      throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
+
     const { session } = this
-    let bundle = null
+    let pod = null
     let drive = null
     let { full = false, max = 10, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
@@ -35,17 +38,19 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const state = new State({ flags: { channel, link }, cmdArgs })
-    const corestore = link
-      ? this.sidecar.getCorestore(null, null)
-      : this.sidecar.getCorestore(state.name, channel)
+    const corestore = channel
+      ? this.sidecar.getCorestore(
+          State.appname(await State.localPkg({ dir })),
+          channel
+        )
+      : this.sidecar.getCorestore(null, null)
 
     const key = link
       ? plink.parse(link).drive.key
       : await Hyperdrive.getDriveKey(corestore)
 
-    const query = link ? await this.sidecar.model.getBundle(link) : null
-    const encryptionKey = query?.encryptionKey
+    const traits = link ? await this.sidecar.model.getTraits(link) : null
+    const encryptionKey = traits?.encryptionKey
 
     if (link || channel) {
       try {
@@ -63,8 +68,8 @@ module.exports = class Info extends Opstream {
     }
 
     if (link || channel) {
-      bundle = new Bundle({ swarm: this.sidecar.swarm, corestore, key, drive })
-      await bundle.ready()
+      pod = new Pod({ swarm: this.sidecar.swarm, corestore, key, drive })
+      await pod.ready()
     }
 
     const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
@@ -74,9 +79,9 @@ module.exports = class Info extends Opstream {
     }
 
     await this.sidecar.ready()
-    if (bundle) {
-      await session.add(bundle)
-      await bundle.join()
+    if (pod) {
+      await session.add(pod)
+      await pod.join()
     }
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {

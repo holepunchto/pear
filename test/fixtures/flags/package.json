@@ -1,8 +1,9 @@
 {
-  "name": "teardown-unloading",
+  "name": "flags",
   "main": "index.js",
   "pear": {
-    "name": "teardown-unloading"
+    "name": "flags",
+    "type": "terminal"
   },
   "dependencies": {
     "pear-pipe": "^1.0.1"

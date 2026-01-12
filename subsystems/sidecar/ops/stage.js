@@ -11,7 +11,7 @@ const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const State = require('../state')
 const PearShake = require('pear-shake')
 const ReadyResource = require('ready-resource')
@@ -59,10 +59,10 @@ module.exports = class Stage extends Opstream {
       : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-    const persistedBundle = await this.sidecar.model.getBundle(
+    const traits = await this.sidecar.model.getTraits(
       `pear://${hypercoreid.encode(key)}`
     )
-    const encryptionKey = persistedBundle?.encryptionKey
+    const encryptionKey = traits?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
       throw new ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -71,7 +71,7 @@ module.exports = class Stage extends Opstream {
       })
     }
 
-    const bundle = new Bundle({
+    const pod = new Pod({
       key,
       corestore,
       channel,
@@ -79,34 +79,48 @@ module.exports = class Stage extends Opstream {
       stage: true,
       encryptionKey
     })
-    await session.add(bundle)
+    await session.add(pod)
 
-    const currentVersion = bundle.version
-    const verlink = bundle.verlink()
-    await state.initialize({ bundle, dryRun })
+    const currentVersion = pod.version
+    const verlink = pod.verlink()
+    await state.initialize({ pod, dryRun })
 
-    await sidecar.permit({ key: bundle.drive.key, encryptionKey }, client)
-    const defaultIgnore = ['**.git', '**.github', '**.DS_Store']
+    await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
+    const defaultIgnore = [
+      '**.git',
+      '**.github',
+      '**.DS_Store',
+      'node_modules/.package-lock.json'
+    ]
+
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
     if (state.options?.stage?.ignore)
       ignore.push(...state.options.stage?.ignore)
-    ignore = [...new Set([...ignore, ...defaultIgnore])]
+    ignore = [...new Set([...defaultIgnore, ...ignore])]
 
-    if (state.options?.stage?.only) only = state.options?.stage?.only
-    else
-      only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim())
+    only = Array.isArray(only)
+      ? only
+      : only?.split(',').map((s) => s.trim()) || []
+    let cfgOnly = state.options?.stage?.only
+    if (cfgOnly) {
+      only.push(
+        ...(Array.isArray(cfgOnly)
+          ? cfgOnly
+          : cfgOnly?.split(',').map((s) => s.trim()) || [])
+      )
+    }
 
-    const release = (await bundle.db.get('release'))?.value || 0
+    const release = (await pod.db.get('release'))?.value || 0
 
-    const link = plink.serialize(bundle.drive.key)
+    const link = plink.serialize(pod.drive.key)
     const z32 = link.slice(7)
 
     this.push({
       tag: 'staging',
       data: {
         name: state.name,
-        channel: bundle.channel,
+        channel: pod.channel,
         key: z32,
         link,
         verlink: verlink,
@@ -117,23 +131,10 @@ module.exports = class Stage extends Opstream {
     })
 
     if (dryRun) this.push({ tag: 'dry' })
-
     const src = new LocalDrive(state.dir, {
       followExternalLinks: true,
       metadata: new Map()
     })
-    const dst = bundle.drive
-    const select = only
-      ? (key) =>
-          only.some((path) =>
-            key.startsWith(path[0] === '/' ? path : '/' + path)
-          )
-      : null
-    const glob = new GlobDrive(src, ignore)
-    await glob.ready()
-
-    const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
-
     const builtins = state.options.assets?.ui
       ? sidecar.gunk.builtins
       : sidecar.gunk.bareBuiltins
@@ -146,9 +147,10 @@ module.exports = class Stage extends Opstream {
       ...(state.options?.stage?.entrypoints || [])
     ].map((entrypoint) => unixPathResolve('/', entrypoint))
 
-    const prefetch = state.options?.stage?.prefetch || []
-    const include = state.options?.stage?.include || []
-    const main = state.options?.gui?.main || null
+    const include = [
+      ...(state.options?.stage?.include || []),
+      ...(state.options?.stage?.prefetch || [])
+    ]
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
@@ -158,6 +160,9 @@ module.exports = class Stage extends Opstream {
         )
     }
 
+    const glob = new GlobDrive(src, ignore)
+    await glob.ready()
+    const ignored = glob.ignorer()
     // Cached versions of files and skips for warmup map generation,
     // preventing a second round of static analysis
     let compactFiles = null
@@ -174,17 +179,23 @@ module.exports = class Stage extends Opstream {
       const skips = shake.skips.map(({ specifier, referrer }) => {
         return { specifier, referrer: referrer.pathname }
       })
-      opts.ignore = compactStageIgnore(
-        files,
-        [...prefetch, ...include],
-        select,
-        main
-      )
+      let main = state.options?.gui?.main || null
+      if (typeof main === 'string') {
+        if (main.startsWith('/') === false) main = '/' + main
+        only.push(main)
+      }
+      only.push(...files.filter((file) => !ignored(file)), ...include)
       this.push({
         tag: 'compact',
         data: { files: files, skips, success: true }
       })
     }
+
+    const dst = pod.drive
+
+    const prefix = only.length > 0 ? only : undefined
+
+    const opts = { prefix, ignore: ignored, dryRun, batch: true }
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods)
@@ -193,7 +204,7 @@ module.exports = class Stage extends Opstream {
       purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
-        if (glob.ignorer()(entry.key)) {
+        if (ignored(entry.key)) {
           if (!dryRun) await dst.del(entry.key)
           this.push({
             tag: 'byte-diff',
@@ -249,7 +260,7 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    const isTemplate = (await bundle.drive.entry('/_template.json')) !== null
+    const isTemplate = (await pod.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
     } else if (state.options?.stage?.skipWarmup) {
@@ -263,11 +274,11 @@ module.exports = class Stage extends Opstream {
         data: { reason: 'template', success: true }
       })
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const analyzer = new DriveAnalyzer(bundle.drive)
+      const analyzer = new DriveAnalyzer(pod.drive)
       await analyzer.ready()
-      const analyzed = await analyzer.analyze(entrypoints, prefetch, {
+      const analyzed = await analyzer.analyze(entrypoints, include, {
         defer: state.options?.stage?.defer,
-        files: compact ? await stagedFiles(bundle.drive) : null,
+        files: compact ? await stagedFiles(pod.drive) : null,
         skips: compact ? compactSkips : null
       })
       const { warmup } = analyzed
@@ -275,9 +286,8 @@ module.exports = class Stage extends Opstream {
         return { specifier, referrer: referrer.pathname }
       })
 
-      await bundle.db.put('warmup', warmup)
-      const total =
-        bundle.drive.core.length + (bundle.drive.blobs?.core.length || 0)
+      await pod.db.put('warmup', warmup)
+      const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
       const blocks = warmup.meta.length + warmup.data.length
       this.push({
         tag: 'warmed',
@@ -297,12 +307,12 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: bundle.version,
+        version: pod.version,
         release,
         channel,
         key: z32,
         link,
-        verlink: bundle.verlink()
+        verlink: pod.verlink()
       }
     })
   }
@@ -390,25 +400,6 @@ class GlobDrive extends ReadyResource {
       return false
     }
     return this.ignore
-  }
-}
-
-function compactStageIgnore(files, prefetchAndInclude, selectFilter, main) {
-  const dirs = files.map((e) => dirname(e))
-  return (key) => {
-    const isPrefetchOrInclude =
-      prefetchAndInclude.length > 0 &&
-      prefetchAndInclude.some((e) => key.startsWith(unixPathResolve('/', e))) // supports dir
-    const isMain = main ? key === unixPathResolve('/', main) : false
-    const isParentDir = dirs.some((e) => e.startsWith(key))
-    const isSelected = selectFilter ? selectFilter(key) : false
-    return (
-      !files.includes(key) &&
-      !isPrefetchOrInclude &&
-      !isMain &&
-      !isParentDir &&
-      !isSelected
-    )
   }
 }
 

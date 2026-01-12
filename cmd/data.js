@@ -74,13 +74,37 @@ const currentsOutput = (records) => {
   return out
 }
 
+const presetsOutput = (presets) => {
+  let out = ''
+  if (presets) {
+    out += `${presets.flags}\n`
+  } else {
+    out += `[ none ]\n`
+  }
+  return out
+}
+
 const output = outputter('data', {
-  apps: (result) => appsOutput(result),
-  dht: (result) => dhtOutput(result),
-  gc: (result) => gcOutput(result),
-  manifest: (result) => manifestOutput(result),
-  assets: (result) => assetsOutput(result),
-  currents: (result) => currentsOutput(result)
+  final: (result, { tag }) => {
+    switch (tag) {
+      case 'apps':
+        return appsOutput(result.data)
+      case 'dht':
+        return dhtOutput(result.nodes)
+      case 'gc':
+        return gcOutput(result.records)
+      case 'manifest':
+        return manifestOutput(result.manifest)
+      case 'assets':
+        return assetsOutput(result.assets)
+      case 'currents':
+        return currentsOutput(result.records)
+      case 'presets':
+        return presetsOutput(result.presets)
+      default:
+        throw new Error(`Unknown output tag: ${tag}`)
+    }
+  }
 })
 
 module.exports = (ipc) => new Data(ipc)
@@ -167,6 +191,18 @@ class Data {
       json,
       this.ipc.data({ resource: 'currents', link }),
       { tag: 'currents' },
+      this.ipc
+    )
+  }
+
+  async presets(cmd) {
+    const command = cmd.args.command
+    const link = cmd.args.link
+    const { json } = cmd.command.parent.flags
+    await output(
+      json,
+      this.ipc.presets({ command, link }),
+      { tag: 'presets' },
       this.ipc
     )
   }

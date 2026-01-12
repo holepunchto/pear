@@ -20,13 +20,13 @@ const output = outputter('dump', {
   },
   stats({ upload, download, peers }) {
     const dl =
-      download.total + download.speed === 0
+      download.bytes + download.speed === 0
         ? ''
-        : `[${ansi.down} ${byteSize(download.total)} - ${byteSize(download.speed)}/s ] `
+        : `[${ansi.down} ${byteSize(download.bytes)} - ${byteSize(download.speed)}/s ] `
     const ul =
-      upload.total + upload.speed === 0
+      upload.bytes + upload.speed === 0
         ? ''
-        : `[${ansi.up} ${byteSize(upload.total)} - ${byteSize(upload.speed)}/s ] `
+        : `[${ansi.up} ${byteSize(upload.bytes)} - ${byteSize(upload.speed)}/s ] `
     return {
       output: 'status',
       message: `[ Peers: ${peers} ] ${dl}${ul}`

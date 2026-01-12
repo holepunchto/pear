@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "module",
   "pear": {
-    "name": "minimal",
-    "type": "terminal"
+    "name": "minimal"
   },
   "keywords": [],
   "author": "Holepunch"

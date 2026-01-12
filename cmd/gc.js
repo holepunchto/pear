@@ -4,7 +4,8 @@ const { outputter, confirm, ansi } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
-  remove: ({ resource, id }) => `Removed ${resource.slice(0, -1)} '${id}'`,
+  remove: ({ resource, id, operation = 'removed' }) =>
+    `${operation[0].toUpperCase() + operation.slice(1)} ${resource.slice(0, -1)} '${id}'`,
   complete: ({ resource, count }) => {
     return count > 0
       ? `Total ${resource} removed: ${count}`
@@ -51,5 +52,9 @@ class GC {
     const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
     return { link }
+  }
+
+  cores() {
+    return null
   }
 }

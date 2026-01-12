@@ -10,9 +10,8 @@ const {
   ERR_INVALID_INPUT,
   ERR_NOT_FOUND
 } = require('pear-errors')
-const Bundle = require('../lib/bundle')
+const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
-const DriveMonitor = require('../lib/drive-monitor')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -45,8 +44,8 @@ module.exports = class Dump extends Opstream {
     checkout =
       checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
-    const query = await this.sidecar.model.getBundle(link)
-    const encryptionKey = query?.encryptionKey
+    const traits = await this.sidecar.model.getTraits(link)
+    const encryptionKey = traits?.encryptionKey
 
     const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
     let drive = null
@@ -65,7 +64,7 @@ module.exports = class Dump extends Opstream {
       }
     }
     const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
-    const bundle = new Bundle({
+    const pod = new Pod({
       corestore,
       drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
       key,
@@ -73,17 +72,9 @@ module.exports = class Dump extends Opstream {
       swarm: sidecar.swarm
     })
 
-    await session.add(bundle)
+    await session.add(pod)
 
-    if (sidecar.swarm && !isFileLink) {
-      bundle.join()
-      const monitor = new DriveMonitor(bundle.drive)
-      this.on('end', () => monitor.destroy())
-      monitor.on('error', (err) =>
-        this.push({ tag: 'stats-error', data: { err } })
-      )
-      monitor.on('data', (stats) => this.push({ tag: 'stats', data: stats }))
-    }
+    if (sidecar.swarm && !isFileLink) pod.join()
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
@@ -91,14 +82,14 @@ module.exports = class Dump extends Opstream {
 
     if (!isFileLink) {
       try {
-        await bundle.calibrate()
+        await pod.calibrate()
       } catch (err) {
         await session.close()
         throw err
       }
     }
 
-    const src = bundle.drive
+    const src = pod.drive
     await src.ready()
 
     const prefix = isFileLink ? '/' : parsed.pathname
@@ -143,17 +134,24 @@ module.exports = class Dump extends Opstream {
 
     const dst = new LocalDrive(dir)
 
-    let select = null
+    let prefixes = [prefix || '/']
     if (only) {
-      only = Array.isArray(only) ? only : only.split(',').map((s) => s.trim())
-      select = (key) =>
-        only.some((path) => key.startsWith(path[0] === '/' ? path : '/' + path))
+      prefixes = (Array.isArray(only) ? only : only.split(',')).map(
+        (s) => (prefix.endsWith('/') ? prefix : prefix + '/') + s.trim()
+      )
     }
-    const extraOpts =
-      entry === null
-        ? { prefix, filter: select }
-        : { filter: select || ((key) => key === prefix) }
-    const mirror = src.mirror(dst, { dryRun, prune, ...extraOpts })
+
+    const mirror = src.mirror(dst, {
+      progress: true,
+      dryRun,
+      prune,
+      prefix: prefixes
+    })
+    if (!isFileLink) {
+      const monitor = mirror.monitor()
+      monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
+    }
+
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({

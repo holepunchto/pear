@@ -6,7 +6,6 @@
   "type": "module",
   "pear": {
     "name": "termex",
-    "type": "terminal",
     "bin": "termex"
   },
   "keywords": [],

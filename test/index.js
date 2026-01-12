@@ -7,19 +7,18 @@ async function runTests() {
 
   test.pause()
 
+  await import('./00-inspect.test.js')
   await import('./01-smoke.test.js')
   await import('./02-teardown.test.js')
-  await import('./03-encrypted.test.js')
+  await import('./03-stage.test.js')
   await import('./04-updates.test.js')
-  await import('./05-shutdown.test.js')
-  await import('./06-warmup.test.js')
-  await import('./07-drop.test.js')
-  await import('./08-shift.test.js')
-  await import('./09-data.test.js')
-  await import('./10-dump.test.js')
-  await import('./11-inspect.test.js')
-  await import('./12-assets.test.js')
-  await import('./13-stage.test.js')
+  await import('./05-run.test.js')
+  await import('./06-dump.test.js')
+  await import('./07-data.test.js')
+  await import('./08-drop.test.js')
+  await import('./09-shift.test.js')
+  await import('./10-shutdown.test.js')
+  await import('./11-presets.test.js')
 
   test.resume()
 }

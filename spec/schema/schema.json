@@ -50,7 +50,7 @@
       ]
     },
     {
-      "name": "bundle",
+      "name": "traits",
       "namespace": "pear",
       "compact": false,
       "flagsPosition": 2,
@@ -133,6 +133,12 @@
           "name": "bytes",
           "type": "uint",
           "version": 1
+        },
+        {
+          "name": "pack",
+          "array": true,
+          "type": "@pear/pack",
+          "version": 1
         }
       ]
     },
@@ -171,6 +177,78 @@
         {
           "name": "checkout",
           "type": "@pear/checkout",
+          "version": 1
+        },
+        {
+          "name": "key",
+          "type": "fixed32",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "pack",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": 2,
+      "fields": [
+        {
+          "name": "bundle",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "entry",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "builtins",
+          "required": false,
+          "array": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "conditions",
+          "required": false,
+          "array": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "extensions",
+          "required": false,
+          "array": true,
+          "type": "string",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "presets",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "link",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "command",
+          "required": true,
+          "type": "string",
+          "version": 1
+        },
+        {
+          "name": "flags",
+          "required": true,
+          "type": "string",
           "version": 1
         }
       ]

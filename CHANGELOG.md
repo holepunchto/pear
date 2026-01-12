@@ -1,5 +1,94 @@
 # Pear Runtime Changelog
 
+## v2.2.6
+
+### Fixes
+
+* Fixes - Fixed hyperswarm connectivity
+
+## v2.2.5
+
+### Improvements
+
+* Internal - added progress to installer in new launch dynamic library
+
+## v2.2.4
+
+### Improvements
+
+* Internal - dependencies bump
+
+## v2.2.3
+
+### Fixes
+
+* Internal - stop bundle memory-leak in run op
+
+## v2.2.2
+
+### Fixes
+
+* CLI - `pear info [link|channel] [dir]` - channel support
+
+### Improvements
+
+* Internal - dependencies bump
+
+## v2.2.1
+
+### Fixes
+
+* CLI - `pear gc cores` ignore platform blobs key, compact corestore on clear (was:`pear gc corestore`)
+* CLI - `pear sidecar` MAX_SAFE_INTEGER spindown - manually started sidecar should stay alive
+
+## v2.2.0
+
+### Features
+
+* CLI - `pear gc corestore` - clear platform corestore to reduce disk space usage
+
+### Fixes
+
+* CLI - `pear stage --pre-io` fix to show pre I/O during stage when flag is used
+
+### Improvements
+
+* Internal - ratified stats object for mirror monitoring, includes progress stat
+
+## v2.1.13
+
+### Fixes
+
+* Internal - aliased currents fix
+
+## v2.1.12
+
+### Improvements
+
+* Internal - dependencies bump, includes production keys for pear://runtime, pear://templates & pear://doctor
+* Internal - bump bare version in by-arch pear-runtime build
+
+## v2.1.11
+
+### Fixes
+
+* Internal - wakeup inclusion fix
+
+### Improvements
+
+* Internal - move to using new Corestore wait API instead of managing lock file
+
+## v2.1.10
+
+### Fixes
+
+* Internal - include wakeup app (Pear.app, pear.exe, pear) in by-arch
+
+### Improvements
+
+* Internal - update production key
+* Run - preflight optimization
+
 ## v2.1.9
 
 ### Fixes

@@ -1,4 +1,5 @@
 'use strict'
+const b4a = require('b4a')
 const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
 const DBLock = require('db-lock')
@@ -56,39 +57,39 @@ module.exports = class Model {
     this.lock = new Lock(this.db)
   }
 
-  async getBundle(link) {
+  async getTraits(link) {
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await this.db.get('@pear/bundle', get)
-    return bundle
+    LOG.trace('db', 'GET', '@pear/traits', get)
+    const traits = await this.db.get('@pear/traits', get)
+    return traits
   }
 
-  async allBundles() {
-    LOG.trace('db', 'FIND', '@pear/bundle')
-    return await this.db.find('@pear/bundle').toArray()
+  async allTraits() {
+    LOG.trace('db', 'FIND', '@pear/traits')
+    return await this.db.find('@pear/traits').toArray()
   }
 
-  async addBundle(link, appStorage) {
+  async addTraits(link, appStorage) {
     const tx = await this.lock.enter()
-    const bundle = { link: applink(link), appStorage }
-    LOG.trace('db', 'INSERT', '@pear/bundle', bundle)
-    await tx.insert('@pear/bundle', bundle)
+    const traits = { link: applink(link), appStorage }
+    LOG.trace('db', 'INSERT', '@pear/traits', traits)
+    await tx.insert('@pear/traits', traits)
     await this.lock.exit()
-    return bundle
+    return traits
   }
 
   async updateEncryptionKey(link, encryptionKey) {
     let result
     const tx = await this.lock.enter()
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await tx.get('@pear/bundle', get)
-    if (!bundle) {
+    LOG.trace('db', 'GET', '@pear/traits', get)
+    const traits = await tx.get('@pear/traits', get)
+    if (!traits) {
       result = null
     } else {
-      const update = { ...bundle, encryptionKey }
-      LOG.trace('db', 'INSERT', '@pear/bundle', update)
-      await tx.insert('@pear/bundle', update)
+      const update = { ...traits, encryptionKey }
+      LOG.trace('db', 'INSERT', '@pear/traits', update)
+      await tx.insert('@pear/traits', update)
       result = update
     }
     await this.lock.exit()
@@ -99,14 +100,14 @@ module.exports = class Model {
     let result
     const tx = await this.lock.enter()
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await tx.get('@pear/bundle', get)
-    if (!bundle) {
+    LOG.trace('db', 'GET', '@pear/traits', get)
+    const traits = await tx.get('@pear/traits', get)
+    if (!traits) {
       result = null
     } else {
-      const insert = { ...bundle, appStorage: newAppStorage }
-      LOG.trace('db', 'INSERT', '@pear/bundle', insert)
-      await tx.insert('@pear/bundle', insert)
+      const insert = { ...traits, appStorage: newAppStorage }
+      LOG.trace('db', 'INSERT', '@pear/traits', insert)
+      await tx.insert('@pear/traits', insert)
       const gc = { path: oldStorage }
       LOG.trace('db', 'INSERT', '@pear/gc', gc)
       await tx.insert('@pear/gc', gc)
@@ -116,11 +117,11 @@ module.exports = class Model {
     return result
   }
 
-  async addAsset(link, { ns, name, only, path }) {
+  async addAsset(link, { ns, name, only, pack, path }) {
     if (!plink.parse(link)?.drive?.length)
       throw ERR_INVALID_LINK(link + ' asset links must include length')
     const tx = await this.lock.enter()
-    const asset = { link, ns, name, only, path }
+    const asset = { link, ns, name, only, pack, path }
     LOG.trace('db', 'INSERT', '@pear/assets', asset)
     await tx.insert('@pear/assets', asset)
     await this.lock.exit()
@@ -129,7 +130,7 @@ module.exports = class Model {
 
   async getAsset(link) {
     if (!plink.parse(link)?.drive?.length)
-      throw ERR_INVALID_LINK(link + ' asset links must include length')
+      throw ERR_INVALID_LINK('asset links must include length', { link })
     const get = { link }
     LOG.trace('db', 'GET', '@pear/assets', get)
     const asset = await this.db.get('@pear/assets', get)
@@ -182,9 +183,17 @@ module.exports = class Model {
   }
 
   async getCurrent(link) {
-    const get = { link: applink(link, { alias: false }) }
+    const parsed = typeof link === 'string' ? plink.parse(link) : { ...link }
+    const get = { link: parsed.origin }
     LOG.trace('db', 'GET', '@pear/current', get)
     const current = await this.db.get('@pear/current', get)
+    if (current !== null) {
+      current.checkout.length =
+        !current.key || !b4a.equals(current.key, parsed.drive.key)
+          ? 0
+          : current.checkout.length
+    }
+
     return current
   }
 
@@ -220,22 +229,22 @@ module.exports = class Model {
 
   async getTags(link) {
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get, '[tags]')
-    return (await this.db.get('@pear/bundle', get))?.tags || []
+    LOG.trace('db', 'GET', '@pear/traits', get, '[tags]')
+    return (await this.db.get('@pear/traits', get))?.tags || []
   }
 
   async updateTags(link, tags) {
     let result
     const tx = await this.lock.enter()
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    const bundle = await tx.get('@pear/bundle', get)
-    if (!bundle) {
+    LOG.trace('db', 'GET', '@pear/traits', get)
+    const traits = await tx.get('@pear/traits', get)
+    if (!traits) {
       result = null
     } else {
-      const update = { ...bundle, tags }
-      LOG.trace('db', 'INSERT', '@pear/bundle', update)
-      await tx.insert('@pear/bundle', update)
+      const update = { ...traits, tags }
+      LOG.trace('db', 'INSERT', '@pear/traits', update)
+      await tx.insert('@pear/traits', update)
       result = update
     }
     await this.lock.exit()
@@ -244,18 +253,18 @@ module.exports = class Model {
 
   async getAppStorage(link) {
     const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/bundle', get)
-    return (await this.db.get('@pear/bundle', get))?.appStorage
+    LOG.trace('db', 'GET', '@pear/traits', get)
+    return (await this.db.get('@pear/traits', get))?.appStorage
   }
 
   async shiftAppStorage(srcLink, dstLink, newSrcAppStorage = null) {
     const tx = await this.lock.enter()
     const src = { link: applink(srcLink) }
-    LOG.trace('db', 'GET', '@pear/bundle', src)
-    const srcBundle = await tx.get('@pear/bundle', src)
+    LOG.trace('db', 'GET', '@pear/traits', src)
+    const srcBundle = await tx.get('@pear/traits', src)
     const dst = { link: applink(dstLink) }
-    LOG.trace('db', 'GET', '@pear/bundle', dst)
-    const dstBundle = await tx.get('@pear/bundle', dst)
+    LOG.trace('db', 'GET', '@pear/traits', dst)
+    const dstBundle = await tx.get('@pear/traits', dst)
 
     if (!srcBundle || !dstBundle) {
       await this.lock.exit()
@@ -263,15 +272,15 @@ module.exports = class Model {
     }
 
     const dstUpdate = { ...dstBundle, appStorage: srcBundle.appStorage }
-    LOG.trace('db', 'INSERT', '@pear/bundle', dstUpdate)
-    await tx.insert('@pear/bundle', dstUpdate)
+    LOG.trace('db', 'INSERT', '@pear/traits', dstUpdate)
+    await tx.insert('@pear/traits', dstUpdate)
     const gc = { path: dstBundle.appStorage }
     LOG.trace('db', 'INSERT', '@pear/gc', gc)
     await tx.insert('@pear/gc', gc)
 
     const srcUpdate = { ...srcBundle, appStorage: newSrcAppStorage }
     LOG.trace('db', 'INSERT', '@pear/gc', srcUpdate)
-    await tx.insert('@pear/bundle', srcUpdate)
+    await tx.insert('@pear/traits', srcUpdate)
 
     await this.lock.exit()
 
@@ -327,6 +336,34 @@ module.exports = class Model {
     const tx = await this.lock.enter()
     LOG.trace('db', 'INSERT', '@pear/manifest', manifest)
     await tx.insert('@pear/manifest', manifest)
+    await this.lock.exit()
+  }
+
+  async getPresets(link, command) {
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const presets = await this.db.get('@pear/presets-by-command', get)
+    return presets || null
+  }
+
+  async setPresets(link, command, flags) {
+    const tx = await this.lock.enter()
+    const presets = { link, command, flags }
+    LOG.trace('db', 'INSERT', '@pear/presets', presets)
+    await tx.insert('@pear/presets', presets)
+    await this.lock.exit()
+    return presets
+  }
+
+  async resetPresets(link, command) {
+    const tx = await this.lock.enter()
+    const get = { link: applink(link), command }
+    LOG.trace('db', 'GET', '@pear/presets-by-command', get)
+    const del = await tx.get('@pear/presets-by-command', get)
+    if (del) {
+      LOG.trace('db', 'DELETE', '@pear/presets-by-command', del)
+      await tx.delete('@pear/presets', del)
+    }
     await this.lock.exit()
   }
 

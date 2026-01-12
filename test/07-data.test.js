@@ -1,6 +1,6 @@
 'use strict'
 const test = require('brittle')
-const path = require('bare-path')
+const opwait = require('pear-opwait')
 const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const { isWindows } = require('which-runtime')
@@ -8,13 +8,11 @@ const deriveEncryptionKey = require('pw-to-ek')
 const { SALT } = require('pear-constants')
 const Helper = require('./helper')
 
-const encrypted = path.join(Helper.localDir, 'test', 'fixtures', 'encrypted')
-const versionsDir = path.join(Helper.localDir, 'test', 'fixtures', 'versions')
-
 test('pear data', async function ({
   ok,
   is,
   plan,
+  pass,
   comment,
   timeout,
   teardown
@@ -22,7 +20,7 @@ test('pear data', async function ({
   timeout(180000)
   plan(17)
 
-  const dir = encrypted
+  const dir = Helper.fixture('encrypted')
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -43,11 +41,13 @@ test('pear data', async function ({
 
   const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
+  await Helper.untilClose(pipe)
+  pass('App has finished running')
 
   comment('pear data apps')
   let data = await helper.data({ resource: 'apps' })
-  let result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
   ok(bundles.length > 0, 'Bundle array exists')
   is(typeof bundles[0].link, 'string', 'Field link is a string')
   is(typeof bundles[0].appStorage, 'string', 'Field appStorage is a string')
@@ -55,7 +55,8 @@ test('pear data', async function ({
   comment('pear data apps [link]')
   data = await helper.data({ resource: 'apps', link })
   result = await Helper.pick(data, [{ tag: 'apps' }])
-  let bundle = (await result.apps)[0]
+  result = await opwait(data)
+  let bundle = result.data[0]
   ok(
     bundle.encryptionKey === undefined,
     'Encryption key is hidden without --secrets'
@@ -66,8 +67,8 @@ test('pear data', async function ({
 
   comment('pear data --secrets apps [link]')
   data = await helper.data({ resource: 'apps', link, secrets: true })
-  result = await Helper.pick(data, [{ tag: 'apps' }])
-  bundle = (await result.apps)[0]
+  result = await opwait(data)
+  bundle = result.data[0]
   is(
     bundle.encryptionKey.toString('hex'),
     ek.toString('hex'),
@@ -79,28 +80,25 @@ test('pear data', async function ({
 
   comment('pear data dht')
   data = await helper.data({ resource: 'dht' })
-  result = await Helper.pick(data, [{ tag: 'dht' }])
-  const dht = await result.dht
+  result = await opwait(data)
+  const dht = await result.nodes
   ok(dht.length > 0, 'DHT array exists')
   is(typeof dht[0].host, 'string', 'Field host is a string')
   is(typeof dht[0].port, 'number', 'Field port is a number')
 
   comment('pear data manifest')
   data = await helper.data({ resource: 'manifest' })
-  result = await Helper.pick(data, [{ tag: 'manifest' }])
+  result = await opwait(data)
   const manifest = await result.manifest
   is(manifest, null, 'Manifest does not exist yet')
-
-  await Helper.untilClose(pipe)
-  ok(true, 'ended')
 })
 
-test('pear data: no duplicated bundle', async function ({
+test('pear data no duplicated bundle', async function ({
   is,
   comment,
   teardown
 }) {
-  const dir = versionsDir
+  const dir = Helper.fixture('versions')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -131,8 +129,8 @@ test('pear data: no duplicated bundle', async function ({
   await Helper.untilClose(runB.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  const result = await opwait(data)
+  const bundles = await result.data
 
   const persistedBundles = bundles.filter((e) =>
     e.link.startsWith(`pear://${key}`)
@@ -141,12 +139,12 @@ test('pear data: no duplicated bundle', async function ({
   is(persistedBundles[0].link, `pear://${key}`, 'bundle key is origin key')
 })
 
-test('pear data: bundle persisted with z32 encoded key', async function ({
+test('pear data bundle persisted with z32 encoded key', async function ({
   is,
   comment,
   teardown
 }) {
-  const dir = versionsDir
+  const dir = Helper.fixture('versions')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -176,8 +174,8 @@ test('pear data: bundle persisted with z32 encoded key', async function ({
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
 
   const persistedBundles = bundles.filter((e) =>
     e.link.startsWith(`pear://${key}`)
@@ -186,7 +184,7 @@ test('pear data: bundle persisted with z32 encoded key', async function ({
   is(persistedBundles[0].link, `pear://${key}`, 'encoded key persisted')
 })
 
-test('pear data: no duplicated bundle local app', async function ({
+test('pear data no duplicated bundle local app', async function ({
   is,
   comment,
   teardown
@@ -194,26 +192,26 @@ test('pear data: no duplicated bundle local app', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  comment(`running ${versionsDir}`)
-  const runA = await Helper.run({ link: versionsDir })
+  const dir = Helper.fixture('versions')
+  comment(`running ${dir}`)
+  const runA = await Helper.run({ link: dir })
   await Helper.untilClose(runA.pipe)
 
-  comment(`running ${versionsDir}#fragment`)
-  const runB = await Helper.run({ link: versionsDir + '#fragment' })
+  comment(`running ${dir}#fragment`)
+  const runB = await Helper.run({ link: dir + '#fragment' })
   await Helper.untilClose(runB.pipe)
 
-  comment(`running file://${versionsDir}`)
-  const runC = await Helper.run({ link: 'file://' + versionsDir })
+  comment(`running file://${dir}`)
+  const runC = await Helper.run({ link: 'file://' + dir })
   await Helper.untilClose(runC.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  const result = await Helper.pick(data, [{ tag: 'apps' }])
-  const bundles = await result.apps
+  let result = await opwait(data)
+  const bundles = result.data
 
   const key = isWindows
-    ? `file:///${versionsDir.replaceAll('\\', '/')}`
-    : `file://${versionsDir}`
+    ? `file:///${dir.replaceAll('\\', '/')}`
+    : `file://${dir}`
   const persistedBundles = bundles.filter((e) => e.link.startsWith(key))
   is(persistedBundles.length, 1, 'single bundle persisted')
   is(persistedBundles[0].link, key, 'bundle key is origin key')

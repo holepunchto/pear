@@ -80,5 +80,6 @@ module.exports = class Session {
     for (const { status, reason } of await Promise.allSettled(closing)) {
       if (status === 'rejected') throw reason
     }
+    this._teardowns = []
   }
 }

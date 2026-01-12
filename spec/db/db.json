@@ -36,32 +36,20 @@
       "trigger": null
     },
     {
-      "name": "bundle",
+      "name": "traits",
       "namespace": "pear",
       "id": 3,
       "type": 1,
-      "indexes": ["@pear/bundle-by-tags"],
-      "schema": "@pear/bundle",
+      "indexes": ["@pear/traits-by-tags"],
+      "schema": "@pear/traits",
       "derived": false,
       "key": ["link"],
       "trigger": null
     },
     {
-      "name": "bundle-by-tags",
-      "namespace": "pear",
-      "id": 4,
-      "type": 2,
-      "collection": "@pear/bundle",
-      "unique": false,
-      "key": {
-        "type": "string",
-        "map": "tags"
-      }
-    },
-    {
       "name": "assets",
       "namespace": "pear",
-      "id": 5,
+      "id": 4,
       "type": 1,
       "indexes": [],
       "schema": "@pear/assets",
@@ -72,13 +60,47 @@
     {
       "name": "current",
       "namespace": "pear",
-      "id": 6,
+      "id": 5,
       "type": 1,
       "indexes": [],
       "schema": "@pear/current",
       "derived": false,
       "key": ["link"],
       "trigger": null
+    },
+    {
+      "name": "traits-by-tags",
+      "namespace": "pear",
+      "id": 6,
+      "type": 2,
+      "collection": "@pear/traits",
+      "unique": false,
+      "deprecated": false,
+      "key": {
+        "type": "string",
+        "map": "tags"
+      }
+    },
+    {
+      "name": "presets",
+      "namespace": "pear",
+      "id": 7,
+      "type": 1,
+      "indexes": ["@pear/presets-by-command"],
+      "schema": "@pear/presets",
+      "derived": false,
+      "key": ["link"],
+      "trigger": null
+    },
+    {
+      "name": "presets-by-command",
+      "namespace": "pear",
+      "id": 8,
+      "type": 2,
+      "collection": "@pear/presets",
+      "unique": false,
+      "deprecated": false,
+      "key": ["link", "command"]
     }
   ]
 }

@@ -24,7 +24,6 @@ const plink = require('pear-link')
 const rundef = require('pear-cmd/run')
 const {
   PLATFORM_DIR,
-  PLATFORM_LOCK,
   SOCKET_PATH,
   CHECKOUT,
   APPLINGS_PATH,
@@ -55,7 +54,8 @@ const ops = {
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  Run: require('./ops/run')
+  Run: require('./ops/run'),
+  Presets: require('./ops/presets')
 }
 
 // ensure that we are registered as a link handler
@@ -79,7 +79,7 @@ class Sidecar extends ReadyResource {
     global.Bare.exit()
   }
 
-  constructor({ updater, drive, corestore, nodes, gunk, platformLock }) {
+  constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
     this.model = new Model(corestore.session())
@@ -120,11 +120,9 @@ class Sidecar extends ReadyResource {
     this.corestore = corestore
     this.nodes = nodes
     this.gunk = gunk
-    this._platformLock = platformLock
 
     this.ipc = new IPC.Server({
       handlers: this,
-      lock: PLATFORM_LOCK,
       socketPath: SOCKET_PATH
     })
 
@@ -174,7 +172,7 @@ class Sidecar extends ReadyResource {
     this.App = class App {
       sidecar = sidecar
       handlers = null
-      bundle = null
+      pod = null
       reported = null
       state = null
       session = null
@@ -312,12 +310,12 @@ class Sidecar extends ReadyResource {
         id = '',
         startId = '',
         state = null,
-        bundle = null,
+        pod = null,
         session
       }) {
         this.app = this
         this.session = session
-        this.bundle = bundle
+        this.pod = pod
         this.id = id
         this.state = state
         this.startId = startId
@@ -480,7 +478,7 @@ class Sidecar extends ReadyResource {
       if (messaged.has(app)) continue
       messaged.add(app)
 
-      if (info.link && info.link === app.bundle?.link) {
+      if (info.link && info.link === app.pod?.link) {
         app.message({
           type: 'pear/updates',
           app: true,
@@ -593,6 +591,10 @@ class Sidecar extends ReadyResource {
     }
   }
 
+  presets(params, client) {
+    return new ops.Presets(params, client, this)
+  }
+
   cutover(params, client) {
     const app = client.userData
     if (app instanceof this.App === false) return
@@ -655,28 +657,33 @@ class Sidecar extends ReadyResource {
 
   exists(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.exists(params.key)
+    return client.userData.pod.exists(params.key)
   }
 
   list(params, client) {
     if (client.userData instanceof this.App === false) return
     const { key, ...opts } = params
-    return client.userData.bundle.list(key, opts)
+    return client.userData.pod.list(key, opts)
   }
 
   get(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.get(params.key)
+    return client.userData.pod.get(params.key)
   }
 
   entry(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.entry(params.key)
+    return client.userData.pod.entry(params.key)
   }
 
   compare(params, client) {
     if (client.userData instanceof this.App === false) return
-    return client.userData.bundle.drive.compare(params.keyA, params.keyB)
+    return client.userData.pod.drive.compare(params.keyA, params.keyB)
+  }
+
+  bundle(params, client) {
+    if (client.userData instanceof this.App === false) return
+    return client.userData.pod.pack(params)
   }
 
   async permit(params) {
@@ -688,9 +695,9 @@ class Sidecar extends ReadyResource {
     }
     if (params.key !== null) {
       const link = `pear://${hypercoreid.encode(params.key)}`
-      const bundle = await this.model.getBundle(link)
-      if (!bundle) {
-        await this.model.addBundle(link, State.storageFromLink(link))
+      const traits = await this.model.getTraits(link)
+      if (!traits) {
+        await this.model.addTraits(link, State.storageFromLink(link))
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
@@ -704,7 +711,7 @@ class Sidecar extends ReadyResource {
     return (
       aliases.includes(link) ||
       aliasesKeys.includes(link) ||
-      (await this.model.getBundle(link)) !== null
+      (await this.model.getTraits(link)) !== null
     )
   }
 
@@ -1026,7 +1033,6 @@ class Sidecar extends ReadyResource {
     }
     await this.model.close()
     if (this.corestore) await this.corestore.close()
-    this._platformLock.unlock()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
 

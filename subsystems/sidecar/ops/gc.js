@@ -7,6 +7,8 @@ const { spawn } = require('bare-subprocess')
 const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
+const b4a = require('b4a')
+const hypercoreid = require('hypercore-id-encoding')
 
 module.exports = class GC extends Opstream {
   constructor(...args) {
@@ -17,6 +19,7 @@ module.exports = class GC extends Opstream {
     if (params.resource === 'releases') return this.releases(params)
     if (params.resource === 'sidecars') return this.sidecars(params)
     if (params.resource === 'assets') return this.assets(params)
+    if (params.resource === 'cores') return this.cores(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
   }
 
@@ -145,5 +148,38 @@ module.exports = class GC extends Opstream {
       count += 1
     }
     this.push({ tag: 'complete', data: { resource, count } })
+  }
+
+  async cores(params) {
+    const { resource } = params
+    const { sidecar } = this
+    const ignore = !sidecar.drive.core
+      ? new Set()
+      : new Set([
+          sidecar.drive.core.discoveryKey,
+          sidecar.drive.blobs.core.discoveryKey
+        ])
+
+    for await (const discoveryKey of sidecar.corestore.list()) {
+      if (ignore.has(hypercoreid.encode(discoveryKey))) continue
+      const info = await sidecar.corestore.storage.getInfo(discoveryKey)
+      if (info.auth && info.auth.keyPair) continue
+      const core = sidecar.corestore.get({
+        discoveryKey: info.discoveryKey,
+        active: false
+      })
+      await core.ready()
+      await core.clear(0, core.length)
+      this.push({
+        tag: 'remove',
+        data: {
+          operation: 'cleared',
+          resource: resource,
+          id: hypercoreid.encode(discoveryKey)
+        }
+      })
+      await core.close()
+    }
+    await sidecar.corestore.storage.compact()
   }
 }

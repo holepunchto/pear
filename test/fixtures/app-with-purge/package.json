@@ -4,11 +4,11 @@
   "pear": {
     "stage": {
       "ignore": [
-        "ignored-from-start.js"
+        "ignored-from-start.js",
+        "package-lock.json"
       ],
       "purge": true
     },
-    "name": "app-with-purge",
-    "type": "terminal"
+    "name": "app-with-purge"
   }
 }

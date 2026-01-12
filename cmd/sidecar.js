@@ -48,6 +48,7 @@ module.exports = (ipc) =>
       global.LOG = new Logger({ pretty: true })
     }
 
+    Pear.constructor.CONSTANTS.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
     require('../sidecar')
 
     print(

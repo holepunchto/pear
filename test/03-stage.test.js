@@ -1,123 +1,203 @@
 'use strict'
 const test = require('brittle')
-const path = require('bare-path')
-const fs = require('bare-fs')
+const tmp = require('test-tmp')
+const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
-const warmup = path.join(Helper.localDir, 'test', 'fixtures', 'warmup')
-const prefetch = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'warmup-with-prefetch'
-)
-const appWithIgnore = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'app-with-ignore'
-)
-const appWithSubdir = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'app-with-subdir'
-)
-const appWithPurge = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'app-with-purge'
-)
-const appWithUnignore = path.join(
-  Helper.localDir,
-  'test',
-  'fixtures',
-  'app-with-unignore'
-)
-
-test('stage warmup with entrypoints', async function ({
-  ok,
-  is,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
-  timeout(180000)
-  plan(4)
-
-  const dir = warmup
+test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
+  const dir = Helper.fixture('stage-app-min')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
   const id = Helper.getRandomId()
-
-  comment('staging')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
     dir,
-    dryRun: false
+    dryRun: false,
+    compact: true
   })
   teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagedFiles.push(data.data.message)
+    }
+  })
 
   const staged = await Helper.pick(staging, [
     { tag: 'warmed' },
     { tag: 'final' }
   ])
   const warmed = await staged.warmed
-  ok((await staged.final).success, 'stage succeeded')
-
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
   is(warmed.success, true, 'Warmup completed')
+
+  await staged.final
+
+  const expectedStagedFiles = [
+    '/package.json',
+    '/app.js',
+    '/index.js',
+    '/index.html',
+    '/node_modules/bare-events/package.json',
+    '/node_modules/bare-events/index.js',
+    '/node_modules/bare-events/lib/errors.js',
+    '/node_modules/ready-resource/package.json',
+    '/node_modules/ready-resource/index.js'
+  ]
+
+  comment('Only files in the dependency tree are staged')
+  ok(stagedFiles.length === expectedStagedFiles.length)
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('stage warmup with prefetch', async function ({
+test('pear stage min desktop app with entrypoints', async ({
+  teardown,
   ok,
   is,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
-  timeout(180000)
-  plan(4)
-
-  const dir = prefetch
+  comment
+}) => {
+  const dir = Helper.fixture('stage-app-min-with-entrypoints')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
   const id = Helper.getRandomId()
-
-  comment('staging')
   const staging = helper.stage({
     channel: `test-${id}`,
     name: `test-${id}`,
     dir,
-    dryRun: false
+    dryRun: false,
+    compact: true
   })
   teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagedFiles.push(data.data.message)
+    }
+  })
 
   const staged = await Helper.pick(staging, [
     { tag: 'warmed' },
     { tag: 'final' }
   ])
   const warmed = await staged.warmed
-  ok((await staged.final).success, 'stage succeeded')
-
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
   is(warmed.success, true, 'Warmup completed')
+  await staged.final
+
+  const expectedStagedFiles = [
+    '/package.json',
+    '/index.js',
+    '/entrypoint.js',
+    '/dep.js',
+    '/assets/file1.txt',
+    '/assets/file2.txt'
+  ]
+
+  comment('Only files in the dependency tree and assets are staged')
+  ok(stagedFiles.length === expectedStagedFiles.length)
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('stage with ignore', async function ({ ok, is, plan, teardown }) {
-  const dir = appWithIgnore
+test('pear stage min desktop app with only and include', async ({
+  teardown,
+  ok,
+  is
+}) => {
+  const dir = Helper.fixture('stage-app-min-with-only')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagedFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
+  await staged.final
+
+  const expectedStagedFiles = [
+    '/package.json',
+    '/index.js',
+    '/folder/foo.js',
+    '/folder/bar.js',
+    '/node_modules/ready-resource/package.json',
+    '/node_modules/ready-resource/index.js',
+    '/index.html',
+    '/app.js'
+  ]
+  ok(stagedFiles.length === expectedStagedFiles.length)
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
+})
+
+test('pear stage pear.main file', async ({ teardown, ok, comment }) => {
+  const dir = Helper.fixture('stage-pear-main')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false,
+    compact: true
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', async (data) => {
+    if (data?.tag === 'byte-diff') {
+      stagedFiles.push(data.data.message)
+    }
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  const expectedStagedFiles = ['/package.json', '/app.js']
+
+  comment('Only files in the dependency tree are staged')
+
+  ok(stagedFiles.length === expectedStagedFiles.length)
+  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
+})
+
+test('pear stage with ignore', async function ({ ok, is, teardown }) {
+  const dir = Helper.fixture('app-with-ignore')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -142,7 +222,6 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
 
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
-
   is(stagingFiles.length, 5)
   ok(stagingFiles.includes('/package.json'))
   ok(stagingFiles.includes('/dep.js'))
@@ -151,14 +230,8 @@ test('stage with ignore', async function ({ ok, is, plan, teardown }) {
   ok(stagingFiles.includes('/ignore-dir1/deep-glob-ignore.js'))
 })
 
-test('stage with glob ignores', async function ({
-  ok,
-  is,
-  plan,
-  comment,
-  teardown
-}) {
-  const dir = appWithIgnore
+test('pear stage with glob ignores', async function ({ ok, is, teardown }) {
+  const dir = Helper.fixture('app-with-ignore')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -192,14 +265,12 @@ test('stage with glob ignores', async function ({
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
 })
 
-test('stage with ignore and unignore', async function ({
+test('pear stage with ignore and unignore', async function ({
   ok,
   is,
-  plan,
-  comment,
   teardown
 }) {
-  const dir = appWithUnignore
+  const dir = Helper.fixture('app-with-unignore')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -273,13 +344,8 @@ test('stage with ignore and unignore', async function ({
   )
 })
 
-test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
-  const exists = (path) =>
-    fs.promises.stat(path).then(
-      () => true,
-      () => false
-    )
-  const dir = appWithSubdir
+test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
+  const dir = Helper.fixture('app-with-subdir')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -310,7 +376,7 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   await staged.final
 
   is(stagingFiles.length, 6, 'should stage 6 files')
-  ok(stagingFiles.includes('/package.json'), 'package.json should exists')
+  ok(stagingFiles.includes('/package.json'), 'package.json should exist')
   ok(stagingFiles.includes('/index.js'), 'index.js should exist')
   ok(stagingFiles.includes('/purge-file.js'), 'purge-file.js should exist')
   ok(
@@ -375,35 +441,27 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   comment('check dump')
   const { key } = await staged.addendum
   const link = `pear://${key}`
-  const dumpDir = path.join(Helper.tmp, 'pear-dump-purge')
+  const dumpDir = await tmp()
 
   let dump = await helper.dump({ link, dir: dumpDir, force: true })
   teardown(() => Helper.teardownStream(dump))
 
   let untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
-
+  const dumped = new Localdrive(dumpDir)
+  ok(await dumped.exists('/package.json'), 'package.json should exist')
+  ok(await dumped.exists('/index.js'), 'index.js should exist')
+  ok(await dumped.exists('/purge-file.js'), 'purge-file.js should exist')
   ok(
-    await exists(path.join(dumpDir, 'package.json')),
-    'package.json should exist'
-  )
-  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
-  ok(
-    await exists(path.join(dumpDir, 'purge-file.js')),
-    'purge-file.js should exist'
-  )
-  ok(
-    await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js')),
+    await dumped.exists('/purge-dir1/purge-dir1-file.js'),
     'purge-dir1/purge-dir1-file.js should exist'
   )
   ok(
-    await exists(
-      path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')
-    ),
+    await dumped.exists('/purge-dir1/purge-subdir/purge-subdir-file.js'),
     'purge-dir1/purge-subdir/purge-subdir-file.js should exist'
   )
   ok(
-    await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js')),
+    await dumped.exists('/purge-dir2/purge-dir2-file.js'),
     'purge-dir2/purge-dir2-file.js should exist'
   )
 
@@ -453,39 +511,30 @@ test('stage with purge', async function ({ ok, is, plan, comment, teardown }) {
   untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
   await untilDump.complete
 
+  ok(await dumped.exists('/package.json'), 'package.json should exist')
+  ok(await dumped.exists('/index.js'), 'index.js should exist')
+  ok(!(await dumped.exists('/purge-file.js')), 'purge-file.js should NOT exist')
   ok(
-    await exists(path.join(dumpDir, 'package.json')),
-    'package.json should exist'
-  )
-  ok(await exists(path.join(dumpDir, 'index.js')), 'index.js should exist')
-  ok(
-    !(await exists(path.join(dumpDir, 'purge-file.js'))),
-    'purge-file.js should NOT exist'
-  )
-  ok(
-    !(await exists(path.join(dumpDir, 'purge-dir1', 'purge-dir1-file.js'))),
+    !(await dumped.exists('/purge-dir1/purge-dir1-file.js')),
     'purge-dir1/purge-dir1-file.js should NOT exist'
   )
   ok(
-    !(await exists(
-      path.join(dumpDir, 'purge-dir1', 'purge-subdir', 'purge-subdir-file.js')
-    )),
+    !(await dumped.exists('purge-dir1/purge-subdir/purge-subdir-file.js')),
     'purge-dir1/purge-subdir/purge-subdir-file.js should NOT exist'
   )
   ok(
-    !(await exists(path.join(dumpDir, 'purge-dir2', 'purge-dir2-file.js'))),
+    !(await dumped.exists('/purge-dir2/purge-dir2-file.js')),
     'purge-dir2/purge-dir2-file.js should NOT exist'
   )
 })
 
-test('stage with purge config', async function ({
+test('pear stage with purge config', async function ({
   ok,
   is,
-  plan,
   comment,
   teardown
 }) {
-  const dir = appWithPurge
+  const dir = Helper.fixture('app-with-purge')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -516,7 +565,7 @@ test('stage with purge config', async function ({
   await staged.final
 
   is(stagingFiles.length, 4, 'should stage 4 files')
-  ok(stagingFiles.includes('/package.json'), 'package.json should exists')
+  ok(stagingFiles.includes('/package.json'), 'package.json should exist')
   ok(stagingFiles.includes('/index.js'), 'index.js should exist')
   ok(stagingFiles.includes('/not-purged.js'), 'not-purged.js should exist')
   ok(
@@ -549,4 +598,173 @@ test('stage with purge config', async function ({
     removedFiles.includes('/config-purge-file.js'),
     'config-purge-file.js should be purged'
   )
+})
+
+test('pear stage warmup with entrypoints', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
+  timeout(180000)
+  plan(4)
+
+  const dir = Helper.fixture('warmup')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok((await staged.final).success, 'stage succeeded')
+
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
+})
+
+test('pear stage warmup with prefetch', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
+  timeout(180000)
+  plan(4)
+
+  const dir = Helper.fixture('warmup-with-prefetch')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  comment('staging')
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+
+  const staged = await Helper.pick(staging, [
+    { tag: 'warmed' },
+    { tag: 'final' }
+  ])
+  const warmed = await staged.warmed
+  ok((await staged.final).success, 'stage succeeded')
+
+  ok(warmed.blocks > 0, 'Warmup contains some blocks')
+  ok(warmed.total > 0, 'Warmup total is correct')
+  is(warmed.success, true, 'Warmup completed')
+})
+
+test('pear stage double stage reported versions', async ({
+  teardown,
+  comment,
+  ok,
+  is
+}) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const id = Helper.getRandomId()
+
+  const from = new Localdrive(Helper.fixture('versions'))
+  const to = new Localdrive(tmpdir)
+
+  const mirror = from.mirror(to)
+  await mirror.done()
+
+  const makeIndex = (version) => `const pipe = require('pear-pipe')()
+  Pear.versions().then((versions) => {
+    pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
+  })
+`
+  await to.put('/index.js', makeIndex('A'))
+
+  comment('staging A')
+  const stagingA = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumA = await stagedA.addendum
+  const lengthA = addendumA.version
+  await stagedA.final
+
+  const link = `pear://${addendumA.key}`
+
+  const runA = await Helper.run({ link })
+  const resultA = await Helper.untilResult(runA.pipe)
+  const infoA = JSON.parse(resultA)
+  await Helper.untilClose(runA.pipe)
+  is(infoA.version, 'A')
+
+  comment('staging B')
+  await to.put('/index.js', makeIndex('B'))
+  const stagingB = helper.stage({
+    channel: `test-${id}`,
+    name: `test-${id}`,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+  const addendumB = await stagedB.addendum
+  const lengthB = addendumB.version
+  await stagedB.final
+
+  ok(lengthA < lengthB)
+
+  // runAA Needed for update
+  const runAA = await Helper.run({ link })
+  await Helper.untilResult(runAA.pipe)
+  await Helper.untilClose(runAA.pipe)
+
+  const runB = await Helper.run({ link })
+  const resultB = await Helper.untilResult(runB.pipe)
+  const infoB = JSON.parse(resultB)
+  await Helper.untilClose(runB.pipe)
+  is(infoB.version, 'B')
+
+  const run = await Helper.run({ link: `pear://0.${lengthA}.${addendumA.key}` })
+  const result = await Helper.untilResult(run.pipe)
+  const info = JSON.parse(result)
+  await Helper.untilClose(run.pipe)
+
+  is(info.version, 'A')
+  is(info.app.length, lengthA)
 })

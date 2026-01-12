@@ -21,9 +21,6 @@ Newer contributors are encouraged to start small and simple. Tests - both failin
 - Ensure tests are passing: `npm test`
   - except, of course, any added failing tests
 
-## Code Style
-
-Please follow the [StandardJS](https://standardjs.com/) code style.
 
 ## License
 

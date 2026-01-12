@@ -9,12 +9,14 @@ const {
   description,
   bail,
   sloppy,
+  rest,
   validate,
   hiddenCommand
 } = require('paparam')
 const { usage, print, ansi } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const errors = require('pear-errors')
+const opwait = require('pear-opwait')
 const def = {
   run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
@@ -34,7 +36,8 @@ const runners = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   run: require('./run'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  presets: require('./presets')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -145,6 +148,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Supply no argument to view platform information.
     `,
     arg('[link|channel]', 'Project to view info for'),
+    arg('[dir]', 'Project directory path (default: .)'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
@@ -218,6 +222,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       summary('Current working versions'),
       arg('[link]', 'Filter by link'),
       (cmd) => runners.data(ipc).currents(cmd)
+    ),
+    command(
+      'presets',
+      summary('Presets by link and command'),
+      arg('[link]', 'Filter by link'),
+      arg('[command]', 'Filter by command'),
+      (cmd) => runners.data(ipc).presets(cmd)
     ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
@@ -322,6 +333,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       arg('[link]', 'Clear asset by link'),
       runners.gc(ipc)
     ),
+    command('cores', summary('Clear corestore cores'), runners.gc(ipc)),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
@@ -334,6 +346,17 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
     runners.versions(ipc)
+  )
+
+  const presets = command(
+    'presets',
+    summary('Default flags for apps per command & link'),
+    arg('<command>', 'Command to apply default flags to'),
+    arg('<link>', 'App link to apply default flags to'),
+    flag('--json', 'Newline delimited JSON output'),
+    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
+    sloppy({ flags: true }),
+    runners.presets(ipc)
   )
 
   const help = command(
@@ -367,6 +390,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     sidecar,
     gc,
     versions,
+    presets,
     help,
     footer(usage.footer),
     bail(explain),
@@ -414,7 +438,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const program = cmd.parse(argv)
+  const presetsArgs = await getPresets(
+    cmd.parse(argv, { run: false, silent: true }),
+    ipc
+  )
+  const args = [...argv.slice(0, 1), ...presetsArgs, ...argv.slice(1)]
+  const program = cmd.parse(args)
 
   if (program === null) {
     ipc.close()
@@ -479,4 +508,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
     print('\n' + bail.command.usage())
   }
+}
+
+async function getPresets(cmd, ipc) {
+  if (!cmd || !cmd.args.link) return []
+  const command = cmd.name
+  const link = cmd.args.link
+  const presetsStream = await ipc.presets({ link, command })
+  const { presets } = await opwait(presetsStream)
+  return presets?.flags ? presets.flags.split(' ') : []
 }

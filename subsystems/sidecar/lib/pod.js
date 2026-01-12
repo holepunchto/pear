@@ -1,5 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
+const path = require('bare-path')
+const { EventEmitter } = require('bare-events')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -7,22 +9,25 @@ const { Readable } = require('streamx')
 const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
+const Localdrive = require('localdrive')
 const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
+const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
 const plink = require('pear-link')
 const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
-const { SWAP } = require('pear-constants')
+const pack = require('pear-pack')
+const { SWAP, PLATFORM_DIR } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
 const noop = Function.prototype
 
 const ABI = 0
+const bundles = new Localdrive(path.join(PLATFORM_DIR, 'bundles'))
 
-module.exports = class Bundle {
-  // TODO: rename to Pod
+module.exports = class Pod {
   platformVersion = null
   constructor(opts = {}) {
     const {
@@ -40,7 +45,6 @@ module.exports = class Bundle {
       asset,
       updateNotify,
       updatesDiff = false,
-      ver = null,
       truncate,
       encryptionKey = null
     } = opts
@@ -64,7 +68,7 @@ module.exports = class Bundle {
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
     this._asset = asset
     if (this.corestore) {
-      this.updater = this.stage ? null : new AppUpdater(this.drive, { asset })
+      this.updater = this.stage ? null : new PodUpdater(this.drive, { asset })
       this.replicator = new Replicator(this.drive, { appling: this.appling })
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
@@ -101,6 +105,50 @@ module.exports = class Bundle {
     this.updateNotify = updateNotify
   }
 
+  async pack({
+    cache = false,
+    prebuilds,
+    entry,
+    builtins = [],
+    conditions,
+    extensions
+  } = {}) {
+    let filename = null
+    let metadata = null
+
+    if (cache) {
+      filename =
+        crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') +
+        '.bundle'
+      metadata = {
+        file: pathToFileURL(path.join(bundles.root, filename)).toString()
+      }
+      if (this.drive.core && (await bundles.exists(filename))) return metadata
+    }
+
+    const hosts = [require.addon.host]
+    const prebuildPrefix = pathToFileURL(prebuilds)
+    const packed = await pack(this.drive, {
+      entry,
+      hosts,
+      builtins,
+      conditions,
+      extensions,
+      prebuildPrefix
+    })
+
+    const addons = new Localdrive(prebuilds)
+    for (const [prebuild, addon] of packed.prebuilds)
+      await addons.put(prebuild, addon)
+
+    if (cache) {
+      await bundles.put(filename, packed.bundle)
+      return metadata
+    }
+
+    return packed
+  }
+
   async assets(manifest) {
     const assets = manifest.pear?.assets || {}
     // TODO: remove some time after v2 release
@@ -111,6 +159,7 @@ module.exports = class Bundle {
         name: 'Pear Runtime'
       }
     }
+
     for (const [ns, asset] of Object.entries(assets)) {
       assets[ns] = await this._asset({ ns, ...asset })
     }
@@ -203,6 +252,7 @@ module.exports = class Bundle {
 
   verlink() {
     if (!this.drive) return ''
+    if (!this.drive.core) return 'pear://dev'
     return plink.serialize({
       drive: {
         length: this.drive.core.length,
@@ -381,21 +431,13 @@ module.exports = class Bundle {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode, warmupNode] = await Promise.all([
+    const [platformVersionNode, channelNode] = await Promise.all([
       db.get('platformVersion'),
-      db.get('channel'),
-      db.get('warmup')
+      db.get('channel')
     ])
     this.platformVersion = platformVersionNode?.value || null
 
     if (this.channel === null) this.channel = channelNode?.value || ''
-
-    const warmup = warmupNode?.value
-
-    if (warmup) {
-      const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
-    }
 
     return this.ver
   }
@@ -416,13 +458,20 @@ module.exports = class Bundle {
     yield 100
   }
 
-  async prefetch({
-    meta = { start: 0, end: -1 },
-    data = { start: 0, end: -1 }
-  } = {}) {
-    if (Array.isArray(meta) === false) meta = [meta]
-    if (Array.isArray(data) === false) data = [data]
-    await this.drive.downloadRange(meta, data)
+  async prefetch() {
+    const warmupNode = await this.drive.db.get('warmup')
+    const warmup = warmupNode?.value
+    if (warmup) {
+      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      if (Array.isArray(meta) === false) meta = [meta]
+      if (Array.isArray(data) === false) data = [data]
+      return await this.drive.downloadRange(meta, data)
+    }
+  }
+
+  monitor(download, ...promises) {
+    const monitor = new DownloadMonitor(this.drive, download, promises)
+    return monitor
   }
 
   async close() {
@@ -434,7 +483,7 @@ module.exports = class Bundle {
   }
 }
 
-class AppUpdater extends ReadyResource {
+class PodUpdater extends ReadyResource {
   static Watcher = class Watcher extends Readable {
     constructor(updater, opts) {
       super(opts)
@@ -697,4 +746,50 @@ function closeFd(fd) {
   return new Promise((resolve) => {
     fs.close(fd, () => resolve())
   })
+}
+
+class DownloadMonitor extends EventEmitter {
+  constructor(drive, download, promises) {
+    super()
+    this._downloaded = 0
+    this._interval = null
+    this._intervalMs = 1000
+    this._drive = drive
+    this._download = download
+    this._promises = promises
+  }
+
+  start(mirror) {
+    const dbKey = this._drive.db.core.id
+    const downloadEstimate = this._download.downloads.reduce((acc, dl) => {
+      if (dl.session.id === dbKey) {
+        // count only blob blocks
+        return acc
+      } else {
+        return acc + (dl.range.end - dl.range.start)
+      }
+    }, 0)
+
+    this._drive.blobs.core.on('download', () => this._downloaded++)
+
+    this._interval = setInterval(() => {
+      const downloaded = mirror
+        ? this._downloaded + mirror.downloadedBlocks
+        : this._downloaded
+      const estimated = mirror
+        ? downloadEstimate + mirror.downloadedBlocksEstimate
+        : downloadEstimate
+      this.emit('progress', Math.min(downloaded / estimated, 0.99))
+    }, this._intervalMs)
+  }
+
+  async done(timeout = 20000) {
+    const warmupPromise = Promise.race([
+      this._download.done(),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+    ])
+    await Promise.all([warmupPromise, ...this._promises])
+    this.emit('progress', 1)
+    clearInterval(this._interval)
+  }
 }
