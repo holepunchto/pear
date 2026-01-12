@@ -18,7 +18,7 @@ on:
           - dev
           - stage
           - rc
-          - v1rc
+          - patchover
       custom-commit:
         type: string
         description: Custom commit
