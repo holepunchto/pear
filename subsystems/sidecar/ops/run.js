@@ -386,7 +386,10 @@ module.exports = class Run extends Opstream {
 
     let asset = await this.sidecar.model.getAsset(opts.link)
     if (asset !== null) {
-      this._monitor.start()
+      if (this._monitor) {
+        // only in preflight
+        this._monitor.start()
+      }
       return asset
     }
 

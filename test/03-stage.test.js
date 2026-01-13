@@ -161,7 +161,7 @@ test('pear stage min desktop app with only and include', async ({
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test.skip('pear stage pear.main file', async ({ teardown, ok, comment }) => {
+test('pear stage pear.main file', async ({ teardown, ok, comment }) => {
   const dir = Helper.fixture('stage-pear-main')
 
   const helper = new Helper()
@@ -180,7 +180,6 @@ test.skip('pear stage pear.main file', async ({ teardown, ok, comment }) => {
 
   const stagedFiles = []
   staging.on('data', async (data) => {
-    console.log(data)
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
