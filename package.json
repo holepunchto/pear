@@ -75,7 +75,7 @@
     "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
     "drive-analyzer": "^2.0.2",
-    "drive-bundler": "^2.4.4",
+    "drive-bundler": "github:holepunchto/drive-bundler#asset-output",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.4.2",
     "hypercore-crypto": "^3.5.0",
