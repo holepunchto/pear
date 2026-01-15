@@ -2,6 +2,9 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
+const fs = require('bare-fs')
+const path = require('bare-path')
+const { isWindows } = require('which-runtime')
 
 const Helper = require('./helper')
 
@@ -43,20 +46,13 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping subdirectory', async function ({
+test('pear dump dumping subdirectory from pear drive', async function ({
   ok,
   absent,
   plan,
   teardown
 }) {
   plan(4)
-  const path = require('bare-path')
-  const fs = require('bare-fs')
-  const exists = (path) =>
-    fs.promises.stat(path).then(
-      () => true,
-      () => false
-    )
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -79,6 +75,35 @@ test('pear dump dumping subdirectory', async function ({
 
   const link = `pear://${key}/lib`
 
+  const out = await tmp()
+
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
+  teardown(() => Helper.teardownStream(dump))
+  const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+  await untilDump.complete
+  const dumped = new Localdrive(out)
+  absent(await dumped.exists('/index.js'), 'index.js should not exist')
+  absent(await dumped.exists('/package.json'), 'package.json should not exist')
+  ok(await dumped.exists('/lib/dump.js'), 'lib/dump.js should exist')
+  ok(await dumped.exists('/lib/pear.js'), 'lib/pear.js should exist')
+})
+
+test('pear dump dumping subdirectory from local drive', async function ({
+  ok,
+  absent,
+  plan,
+  teardown
+}) {
+  plan(4)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const src = Helper.fixture('dump')
+  const link = isWindows
+    ? `file://${src.split(path.win32.sep).join(path.posix.sep)}/lib`
+    : `file://${src}/lib`
   const out = await tmp()
 
   teardown(() => Helper.gc(out))
@@ -230,7 +255,7 @@ test('pear dump dumping a single file', async function ({
   absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
-test('pear dump dumping a single file in a subdirectory', async function ({
+test('pear dump dumping a single file in a subdirectory from pear drive', async function ({
   ok,
   is,
   plan,
@@ -260,6 +285,73 @@ test('pear dump dumping a single file in a subdirectory', async function ({
   await staged.final
 
   const link = `pear://${key}/lib/dump.js`
+
+  const out = await tmp()
+
+  teardown(() => Helper.gc(out))
+  const dump = await helper.dump({ link, dir: out })
+  teardown(() => Helper.teardownStream(dump))
+  const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+  await untilDump.complete
+  const dumped = new Localdrive(out)
+  let dirCount = 0
+  for await (const _ of dumped.readdir()) dirCount++
+  ok(await dumped.exists('/lib/dump.js'), 'lib/dump.js should exist')
+  is(dirCount, 1, 'should have only one file in the lib directory')
+})
+
+test('pear dump should throw when dumping file outside a pear project', async function ({
+  plan,
+  teardown,
+  exception
+}) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const src = await tmp()
+  const out = await tmp()
+  teardown(async () => {
+    await Helper.gc(out)
+    await Helper.gc(src)
+  })
+  await fs.promises.writeFile(
+    path.join(src, 'test.js'),
+    'console.log("test")',
+    {
+      encoding: 'utf-8'
+    }
+  )
+  const link = isWindows
+    ? `file://${src.split(path.win32.sep).join(path.posix.sep)}/test.js`
+    : `file://${src}/test.js`
+
+  await exception(async () => {
+    const dump = helper.dump({ link, dir: out })
+    teardown(() => Helper.teardownStream(dump))
+    const untilDump = await Helper.pick(dump, [{ tag: 'complete' }])
+    await untilDump.complete
+  })
+})
+
+test('pear dump dumping a single file in a subdirectory from local drive', async function ({
+  ok,
+  is,
+  plan,
+  teardown
+}) {
+  plan(2)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const src = Helper.fixture('dump')
+  const link = isWindows
+    ? `file://${src.split(path.win32.sep).join(path.posix.sep)}/lib/dump.js`
+    : `file://${src}/lib/dump.js`
 
   const out = await tmp()
 

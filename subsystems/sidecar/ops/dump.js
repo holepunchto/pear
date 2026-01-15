@@ -4,6 +4,7 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
+const State = require('pear-state')
 const {
   ERR_PERMISSION_REQUIRED,
   ERR_DIR_NONEMPTY,
@@ -12,6 +13,7 @@ const {
 } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
+const { isWindows } = require('which-runtime')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -36,9 +38,18 @@ module.exports = class Dump extends Opstream {
     }
 
     const parsed = plink.parse(link)
+
     const isFileLink = parsed.protocol === 'file:'
+    const fsPathname = isWindows
+      ? (parsed.pathname.startsWith('/')
+          ? parsed.pathname.slice(1)
+          : parsed.pathname
+        )
+          .split(path.posix.sep)
+          .join(path.win32.sep)
+      : parsed.pathname
     const isFile =
-      isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+      isFileLink && (await fsp.stat(fsPathname)).isDirectory() === false
 
     const key = parsed.drive.key
     checkout =
@@ -48,13 +59,16 @@ module.exports = class Dump extends Opstream {
     const encryptionKey = traits?.encryptionKey
 
     const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
-    let drive = null
 
-    if (corestore) {
+    let prefix
+    let drive
+
+    if (!isFileLink) {
       await corestore.ready()
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
+        prefix = parsed.pathname
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
         throw ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -62,11 +76,23 @@ module.exports = class Dump extends Opstream {
           encrypted: true
         })
       }
+    } else {
+      const state = new State({
+        dir: isFile ? path.dirname(fsPathname) : fsPathname
+      })
+      await State.localPkg(state)
+      prefix = path.join('/', path.relative(state.dir, fsPathname))
+      drive = new LocalDrive(state.dir, { followLinks: true })
+      const isRoot = isWindows
+        ? /[a-zA-Z]:\\$/.test(state.dir)
+        : state.dir === '/'
+      if (isRoot) throw ERR_NOT_FOUND('No pear project found')
     }
-    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
+    const pathname = prefix === '/' ? '' : prefix
+
     const pod = new Pod({
       corestore,
-      drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
+      drive,
       key,
       checkout,
       swarm: sidecar.swarm
@@ -92,13 +118,6 @@ module.exports = class Dump extends Opstream {
     const src = pod.drive
     await src.ready()
 
-    const prefix = isFileLink ? '/' : parsed.pathname
-    const pathname =
-      !isFileLink && parsed.pathname === '/'
-        ? ''
-        : isFile
-          ? path.basename(parsed.pathname)
-          : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {
