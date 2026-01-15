@@ -29,7 +29,7 @@ const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
 const rig = new Helper.Rig()
 const { tmp } = rig
 
-const PLATFORM_STAGE_TIMEOUT = 120_000
+const PLATFORM_STAGE_TIMEOUT = 45_000
 
 test.hook('updates setup', rig.setup)
 
@@ -233,7 +233,7 @@ test('updates(listener) should notify twice when restaging application twice (sa
 test('updates should notify Platform stage updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(8)
-  timeout(PLATFORM_STAGE_TIMEOUT)
+  timeout(80_000)
   const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
@@ -369,7 +369,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
 test('updates should notify Platform stage, Platform release updates (different pear instances)', async function (t) {
   const { ok, is, plan, timeout, comment, teardown } = t
   plan(11)
-  timeout(PLATFORM_STAGE_TIMEOUT)
+  timeout(80_000)
   const dir = Helper.fixture('updates')
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
