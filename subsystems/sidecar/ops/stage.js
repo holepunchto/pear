@@ -276,26 +276,23 @@ module.exports = class Stage extends Opstream {
     } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
       const analyzer = new DriveAnalyzer(pod.drive)
       await analyzer.ready()
-      try {
-        const analyzed = await analyzer.analyze(entrypoints, include, {
-          defer: state.options?.stage?.defer,
-          files: compact ? await stagedFiles(pod.drive) : null,
-          skips: compact ? compactSkips : null
-        })
-        const { warmup } = analyzed
-        const skips = analyzed.skips.map(({ specifier, referrer }) => {
-          return { specifier, referrer: referrer.pathname }
-        })
-        await pod.db.put('warmup', warmup)
-        const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
-        const blocks = warmup.meta.length + warmup.data.length
-        this.push({
-          tag: 'warmed',
-          data: { total, blocks, skips: skips, success: true }
-        })
-      } catch (err) {
-        if (err.code !== 'ASSET_NOT_FOUND') throw err
-      }
+      const analyzed = await analyzer.analyze(entrypoints, include, {
+        defer: state.options?.stage?.defer,
+        files: compact ? await stagedFiles(pod.drive) : null,
+        skips: compact ? compactSkips : null
+      })
+      const { warmup } = analyzed
+      const skips = analyzed.skips.map(({ specifier, referrer }) => {
+        return { specifier, referrer: referrer.pathname }
+      })
+
+      await pod.db.put('warmup', warmup)
+      const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
+      const blocks = warmup.meta.length + warmup.data.length
+      this.push({
+        tag: 'warmed',
+        data: { total, blocks, skips: skips, success: true }
+      })
     } else {
       this.push({
         tag: 'skipping',
