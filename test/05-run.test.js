@@ -500,7 +500,7 @@ test('run app after not found', async function ({ is, ok, timeout, teardown }) {
 
   const id = Helper.getRandomId()
 
-  const touch = await helper.touch({ dir, channel: `test-${id}`, name: `test-${id}` })
+  const touch = await helper.touch({ dir, channel: `test-${id}` })
   const { key } = await Helper.pick(touch, { tag: 'result' })
 
   const link = `pear://${key}`
