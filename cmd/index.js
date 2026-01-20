@@ -76,10 +76,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ipc.close()
   })
 
-  const init = command(
-    'init',
-    commands.init.runner()
-  )
+  const init = command('init', commands.init.runner())
 
   const dev = command('dev', sloppy({ args: true, flags: true }), () => {
     print('pear dev has been removed, use pear run --dev instead.', false)
