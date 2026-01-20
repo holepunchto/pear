@@ -46,7 +46,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping subdirectory from pear drive', async function ({
+test('pear dump dumping subdirectory from drive', async function ({
   ok,
   absent,
   plan,
@@ -89,7 +89,7 @@ test('pear dump dumping subdirectory from pear drive', async function ({
   ok(await dumped.exists('/lib/pear.js'), 'lib/pear.js should exist')
 })
 
-test('pear dump dumping subdirectory from local drive', async function ({
+test('pear dump dumping subdirectory from disk', async function ({
   ok,
   absent,
   plan,
@@ -255,7 +255,7 @@ test('pear dump dumping a single file', async function ({
   absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
-test('pear dump dumping a single file in a subdirectory from pear drive', async function ({
+test('pear dump dumping a single file in a subdirectory from drive', async function ({
   ok,
   is,
   plan,
@@ -336,7 +336,7 @@ test('pear dump should throw when dumping file outside a pear project', async fu
   })
 })
 
-test('pear dump dumping a single file in a subdirectory from local drive', async function ({
+test('pear dump dumping a single file in a subdirectory from disk', async function ({
   ok,
   is,
   plan,

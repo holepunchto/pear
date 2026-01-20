@@ -40,16 +40,11 @@ module.exports = class Dump extends Opstream {
     const parsed = plink.parse(link)
 
     const isFileLink = parsed.protocol === 'file:'
-    const fsPathname = isWindows
-      ? (parsed.pathname.startsWith('/')
-          ? parsed.pathname.slice(1)
-          : parsed.pathname
-        )
-          .split(path.posix.sep)
-          .join(path.win32.sep)
+    const filepath = isWindows
+      ? parsed.pathname.slice(1).split(path.posix.sep).join(path.win32.sep)
       : parsed.pathname
     const isFile =
-      isFileLink && (await fsp.stat(fsPathname)).isDirectory() === false
+      isFileLink && (await fsp.stat(filepath)).isDirectory() === false
 
     const key = parsed.drive.key
     checkout =
@@ -78,15 +73,12 @@ module.exports = class Dump extends Opstream {
       }
     } else {
       const state = new State({
-        dir: isFile ? path.dirname(fsPathname) : fsPathname
+        dir: isFile ? path.dirname(filepath) : filepath
       })
-      await State.localPkg(state)
-      prefix = path.join('/', path.relative(state.dir, fsPathname))
+      const pkg = await State.localPkg(state)
+      if (pkg === null) throw ERR_NOT_FOUND('No pear project found')
+      prefix = path.join('/', path.relative(state.dir, filepath))
       drive = new LocalDrive(state.dir, { followLinks: true })
-      const isRoot = isWindows
-        ? /[a-zA-Z]:\\$/.test(state.dir)
-        : state.dir === '/'
-      if (isRoot) throw ERR_NOT_FOUND('No pear project found')
     }
     const pathname = prefix === '/' ? '' : prefix
 
