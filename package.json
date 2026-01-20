@@ -96,6 +96,7 @@
     "pear-cmd": "^1.0.2",
     "pear-constants": "^1.1.0",
     "pear-crasher": "^1.0.1",
+    "pear-dump": "^1.0.0",
     "pear-errors": "^1.0.1",
     "pear-gracedown": "^1.0.1",
     "pear-gunk": "^1.0.0",
