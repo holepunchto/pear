@@ -25,32 +25,32 @@ const output = outputter('seed', {
   }
 })
 
-module.exports = (ipc) =>
-  async function seed(cmd) {
-    const { json, verbose, ask } = cmd.flags
-    const { dir = os.cwd() } = cmd.args
-    const isKey = plink.parse(cmd.args.channel).drive.key !== null
-    const channel = isKey ? null : cmd.args.channel
-    const link = isKey ? cmd.args.channel : null
-    let { name } = cmd.flags
-    if (!name && !link) {
-      const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
-      name = pkg.pear?.name || pkg.name
-    }
-    const id = Bare.pid
-
-    await output(
-      json,
-      ipc.seed({
-        id,
-        name,
-        channel,
-        link,
-        verbose,
-        dir,
-        cmdArgs: Bare.argv.slice(1)
-      }),
-      { ask },
-      ipc
-    )
+module.exports = async function seed(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { json, verbose, ask } = cmd.flags
+  const { dir = os.cwd() } = cmd.args
+  const isKey = plink.parse(cmd.args.channel).drive.key !== null
+  const channel = isKey ? null : cmd.args.channel
+  const link = isKey ? cmd.args.channel : null
+  let { name } = cmd.flags
+  if (!name && !link) {
+    const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
+    name = pkg.pear?.name || pkg.name
   }
+  const id = Bare.pid
+
+  await output(
+    json,
+    ipc.seed({
+      id,
+      name,
+      channel,
+      link,
+      verbose,
+      dir,
+      cmdArgs: Bare.argv.slice(1)
+    }),
+    { ask },
+    ipc
+  )
+}

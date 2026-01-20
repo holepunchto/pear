@@ -44,26 +44,26 @@ const output = outputter('dump', {
   ['byte-diff']: byteDiff
 })
 
-module.exports = (ipc) =>
-  async function dump(cmd) {
-    const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
-    const { link } = cmd.args
-    let { dir } = cmd.args
-    dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
-    await output(
-      json,
-      ipc.dump({
-        id: Bare.pid,
-        link,
-        dir,
-        dryRun,
-        checkout,
-        only,
-        force,
-        prune,
-        list
-      }),
-      { ask },
-      ipc
-    )
-  }
+module.exports = async function dump(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
+  const { link } = cmd.args
+  let { dir } = cmd.args
+  dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
+  await output(
+    json,
+    ipc.dump({
+      id: Bare.pid,
+      link,
+      dir,
+      dryRun,
+      checkout,
+      only,
+      force,
+      prune,
+      list
+    }),
+    { ask },
+    ipc
+  )
+}
