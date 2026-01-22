@@ -61,38 +61,38 @@ const output = outputter('info', {
   }
 })
 
-module.exports = (ipc) =>
-  async function info(cmd) {
-    const {
-      json,
-      changelog,
-      fullChangelog: full,
-      metadata,
-      key: showKey,
-      manifest
-    } = cmd.flags
-    const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
-    const channel = isKey ? null : cmd.args.link
-    const link = isKey ? cmd.args.link : null
-    if (link && isKey === false)
-      throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-    let dir = cmd.args.dir
-    if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
-    if (!dir) dir = os.cwd()
+module.exports = async function info(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const {
+    json,
+    changelog,
+    fullChangelog: full,
+    metadata,
+    key: showKey,
+    manifest
+  } = cmd.flags
+  const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
+  const channel = isKey ? null : cmd.args.link
+  const link = isKey ? cmd.args.link : null
+  if (link && isKey === false)
+    throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+  let dir = cmd.args.dir
+  if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
+  if (!dir) dir = os.cwd()
 
-    await output(
-      json,
-      ipc.info({
-        link,
-        channel,
-        showKey,
-        metadata,
-        changelog: full || changelog ? { full, max: 1 } : null,
-        manifest,
-        cmdArgs: Bare.argv.slice(1),
-        dir
-      }),
-      { ask: cmd.flags.ask },
-      ipc
-    )
-  }
+  await output(
+    json,
+    ipc.info({
+      link,
+      channel,
+      showKey,
+      metadata,
+      changelog: full || changelog ? { full, max: 1 } : null,
+      manifest,
+      cmdArgs: Bare.argv.slice(1),
+      dir
+    }),
+    { ask: cmd.flags.ask },
+    ipc
+  )
+}

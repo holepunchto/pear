@@ -15,15 +15,14 @@ const output = outputter('gc', {
     `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
 
-module.exports = (ipc) => {
-  return async (cmd) => {
-    const { command } = cmd
-    const { json } = command.parent.flags
-    const gc = new GC()
-    const data = (await gc[command.name](cmd)) ?? null
-    const stream = ipc.gc({ resource: command.name, data }, ipc)
-    await output(json, stream)
-  }
+module.exports = async function gc(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { command } = cmd
+  const { json } = command.parent.flags
+  const gc = new GC()
+  const data = (await gc[command.name](cmd)) ?? null
+  const stream = ipc.gc({ resource: command.name, data }, ipc)
+  await output(json, stream)
 }
 
 class GC {

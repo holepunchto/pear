@@ -12,13 +12,13 @@ const output = outputter('touch', {
   }
 })
 
-module.exports = (ipc) =>
-  async function touch(cmd) {
-    const dir = os.cwd()
-    const json = cmd.flags.json
-    const channel = cmd.args.channel || randomBytes(16).toString('hex')
-    await output(json, ipc.touch({ dir, channel }), {
-      channel,
-      header: cmd.command.header
-    })
-  }
+module.exports = async function touch(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const dir = os.cwd()
+  const json = cmd.flags.json
+  const channel = cmd.args.channel || randomBytes(16).toString('hex')
+  await output(json, ipc.touch({ dir, channel }), {
+    channel,
+    header: cmd.command.header
+  })
+}

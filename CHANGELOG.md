@@ -1,5 +1,22 @@
 # Pear Runtime Changelog
 
+## v2.3.0
+
+### Features
+
+* Internal - tweaks, test refactors, 
+* CLI - `pear presets` - set default flags for apps per pear command & link
+
+### Fixes
+
+* CLI - `pear stage` - tweaks of `--ignore`, `--only`, `--compact` 
+* CLI - `pear run` - ensure prefetch when without preflight
+* CLI - `pear run` - preflight warmup timeout
+
+### Improvements
+
+* Internal - tweaks, test refactors
+
 ## v2.2.6
 
 ### Fixes
