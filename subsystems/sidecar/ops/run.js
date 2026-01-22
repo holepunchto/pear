@@ -388,7 +388,7 @@ module.exports = class Run extends Opstream {
     if (asset !== null) {
       if (this._monitor) {
         // only in preflight
-        this._monitor.start()
+        await this._monitor.start()
       }
       return asset
     }
@@ -437,7 +437,7 @@ module.exports = class Run extends Opstream {
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
     if (this._monitor) {
-      this._monitor.start(mirror)
+      await this._monitor.start(mirror)
     }
     for await (const diff of mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)

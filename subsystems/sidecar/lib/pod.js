@@ -761,7 +761,7 @@ class DownloadMonitor extends EventEmitter {
     this._downloadEstimate = 0
   }
 
-  start(mirror) {
+  async start(mirror) {
     this._mirror = mirror
     const dbKey = this._drive.db.core.id
     this._downloadEstimate = this._download.downloads.reduce((acc, dl) => {
@@ -775,6 +775,7 @@ class DownloadMonitor extends EventEmitter {
 
     this._drive.blobs.core.on('download', () => this._downloaded++)
     this._driveMonitor = this._drive.monitor('preflight-monitor')
+    await this._driveMonitor.ready()
 
     this._interval = setInterval(() => {
       this.emit('progress', this._getStats())
