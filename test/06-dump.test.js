@@ -2,7 +2,6 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
-const fs = require('bare-fs')
 const path = require('bare-path')
 const { isWindows } = require('which-runtime')
 
@@ -317,13 +316,10 @@ test('pear dump should throw when dumping file outside a pear project', async fu
     await Helper.gc(out)
     await Helper.gc(src)
   })
-  await fs.promises.writeFile(
-    path.join(src, 'test.js'),
-    'console.log("test")',
-    {
-      encoding: 'utf-8'
-    }
-  )
+  const local = new Localdrive(src)
+  await local.put('test.js', 'console.log("test")', {
+    encoding: 'utf-8'
+  })
   const link = isWindows
     ? `file://${src.split(path.win32.sep).join(path.posix.sep)}/test.js`
     : `file://${src}/test.js`
