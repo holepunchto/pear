@@ -757,12 +757,12 @@ class DownloadMonitor extends EventEmitter {
     this._drive = drive
     this._download = download
     this._promises = promises
-    this._mirror = null
+    this._assetsMirror = null
     this._downloadEstimate = 0
   }
 
-  async start(mirror) {
-    this._mirror = mirror
+  async start(assetsMirror) {
+    this._assetsMirror = assetsMirror
     const dbKey = this._drive.db.core.id
     this._downloadEstimate = this._download.downloads.reduce((acc, dl) => {
       if (dl.session.id === dbKey) {
@@ -797,24 +797,25 @@ class DownloadMonitor extends EventEmitter {
 
   _getStats() {
     const downloadedBlocks =
-      this._downloaded + (this._mirror?.downloadedBlocks || 0)
+      this._downloaded + (this._assetsMirror?.downloadedBlocks || 0)
     const estimatedBlocks =
-      this._downloadEstimate + (this._mirror?.downloadedBlocksEstimate || 0)
+      this._downloadEstimate +
+      (this._assetsMirror?.downloadedBlocksEstimate || 0)
 
     return {
       peers:
         this._driveMonitor.downloadStats.peers +
-        (this._mirror?.peers?.length || 0),
+        (this._assetsMirror?.peers?.length || 0),
       download: {
         bytes:
           this._driveMonitor.downloadStats.totalBytes +
-          (this._mirror?.downloadedBytes || 0),
+          (this._assetsMirror?.downloadedBytes || 0),
         blocks:
           this._driveMonitor.downloadStats.blocks +
-          (this._mirror?.downloadedBlocks || 0),
+          (this._assetsMirror?.downloadedBlocks || 0),
         speed:
           this._driveMonitor.downloadStats.speed +
-          (this._mirror?.downloadSpeed() || 0),
+          (this._assetsMirror?.downloadSpeed() || 0),
         progress:
           estimatedBlocks > 0
             ? Math.min(downloadedBlocks / estimatedBlocks, 0.99)
@@ -823,13 +824,13 @@ class DownloadMonitor extends EventEmitter {
       upload: {
         bytes:
           this._driveMonitor.uploadStats.totalBytes +
-          (this._mirror?.uploadedBytes || 0),
+          (this._assetsMirror?.uploadedBytes || 0),
         blocks:
           this._driveMonitor.uploadStats.blocks +
-          (this._mirror?.uploadedBlocks || 0),
+          (this._assetsMirror?.uploadedBlocks || 0),
         speed:
           this._driveMonitor.uploadStats.speed +
-          (this._mirror?.uploadSpeed() || 0)
+          (this._assetsMirror?.uploadSpeed() || 0)
       }
     }
   }
