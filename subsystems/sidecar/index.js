@@ -932,7 +932,7 @@ class Sidecar extends ReadyResource {
         const matches = [...this.apps].filter((app) => {
           if (!app || !app.state) return false
           if (startId === app.startId) return false
-          if (this.apps.every(e => isSnap(e.state.cmdArgs))) return false // HACK, check if clients are ONLY unterminated snap apps
+          if (this.apps.every((e) => isSnap(e.state.cmdArgs))) return false // HACK, check if clients are ONLY unterminated snap apps
           return (
             app.state.storage === (storage || appStorage) &&
             (appdev
@@ -1119,8 +1119,13 @@ function unwrap() {
   })
 }
 
-function isSnap (args) {
-  return args[0] === 'run' && args[1] === '--trusted' && args[2] === '--appling' && args[3]?.startsWith('/snap/')
+function isSnap(args) {
+  return (
+    args[0] === 'run' &&
+    args[1] === '--trusted' &&
+    args[2] === '--appling' &&
+    args[3]?.startsWith('/snap/')
+  )
 }
 
 module.exports = Sidecar
