@@ -931,7 +931,7 @@ class Sidecar extends ReadyResource {
         }
 
         if (this.apps.every((e) => isSnapEntrypoint(e.state.cmdArgs))) {
-          // HACK, check if clients are ONLY unterminated snap apps
+          // TODO: remove once native fix - HACK, check if clients are ONLY unterminated snap apps
           resolve(false)
           return
         }
