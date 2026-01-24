@@ -1125,7 +1125,7 @@ function unwrap() {
   })
 }
 
-function isSnapEntrypoint(args) {
+function isSnapEntrypoint(args = []) {
   return (
     args[0] === 'run' &&
     args[1] === '--trusted' &&
