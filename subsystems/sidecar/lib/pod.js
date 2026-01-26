@@ -410,7 +410,14 @@ module.exports = class Pod {
     }
 
     if (this.release === null)
-      this.release = (await this.db.get('release'))?.value ?? null
+      // warmup all data on the latest checkout, very likely the same as release
+      const [releaseNode] = await Promise.all([
+        this.db.get('release'),
+        this.db.get('platformVersion'),
+        this.db.get('channel'),
+        this.db.get('warmup')
+      ])
+      this.release = releaseNode?.value ?? null
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
