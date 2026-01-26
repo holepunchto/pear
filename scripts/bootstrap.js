@@ -1,6 +1,5 @@
 #!/usr/bin/env bare
 'use strict'
-
 const { platform, arch, isWindows, isBare } = require('which-runtime')
 const os = isBare ? require('bare-os') : require('os')
 const fs = isBare ? require('bare-fs') : require('fs')
@@ -12,13 +11,14 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const goodbye = global.Pear?.teardown || require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
-const { decode } = require('hypercore-id-encoding')
+const { decode, encode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
+const link = require('pear-link')
+const pkg = require('../package.json')
 const Rache = require('rache')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
-const argv =
-  global.Pear?.config.args || global.Bare?.argv || global.process.argv
+const argv = global.Pear?.app.args || global.Bare?.argv || global.process.argv
 
 const parser = command(
   'bootstrap',
@@ -30,15 +30,15 @@ const parser = command(
 const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
-const RUNTIMES_DRIVE_KEY =
-  cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
-const RUNTIMES_VERSION = 3272
+const RUNTIMES = link.parse(cmd.rest?.[0] || pkg.pear.platform.runtimes)
+const RUNTIMES_DRIVE_KEY = encode(RUNTIMES.drive.key)
+const RUNTIMES_VERSION = RUNTIMES.drive.length
 const CORESTORE =
   cmd.flags.externalCorestore &&
   path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear
-  ? path.join(new URL(global.Pear.config.applink).pathname, __dirname)
+  ? path.join(new URL(global.Pear.app.applink).pathname, __dirname)
   : __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
@@ -79,7 +79,10 @@ if (isWindows === false) {
   fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
-download(RUNTIMES_DRIVE_KEY, ARCHDUMP).then(advise, console.error)
+download(RUNTIMES_DRIVE_KEY, ARCHDUMP, link.serialize(RUNTIMES)).then(
+  advise,
+  console.error
+)
 
 function advise() {
   if (isWindows === false) {
@@ -93,9 +96,12 @@ function advise() {
   )
 }
 
-async function download(key, all = false) {
-  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + key)
-  else console.log('🍐 [ localdev ] - no local runtime: fetching runtime')
+async function download(key, all = false, link) {
+  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + link)
+  else
+    console.log(
+      '🍐 [ localdev ] - no local runtime: fetching runtime from: \n   ' + link
+    )
 
   const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
