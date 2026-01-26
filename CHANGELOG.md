@@ -1,28 +1,40 @@
 # Pear Runtime Changelog
 
+## v2.2.12
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
+## v2.2.11
+
+### Fixes
+
+* Internal - hyperbee bump
+
 ## v2.2.10
 
 ### Fixes
 
-* runtime bump
+* Internal - runtime bump
 
 ## v2.2.9
 
 ### Fixes
 
-* libappling launch lib
+* Internal - libappling launch lib
 
 ## v2.2.8
 
 ### Fixes
 
-* libappling bump for win fix
+* Internal -libappling bump for win fix
 
 ## v2.2.7
 
 ### Fixes
 
-* libappling launch lib
+* Internal -libappling launch lib
 
 ## v2.2.6
 
