@@ -167,7 +167,12 @@ module.exports = async function run(cmd, devrun = false) {
     stream.removeListener('data', ondata)
   })
 
-  const result = await runout({ json: flags.json }, stream)
+  const replacer = flags.json ? (key, value) => {
+    if (key === 'data' && value?.bundle) return { ...value, bundle: undefined } // prevent bundle from hitting stdio
+    return value
+  } : null
+
+  const result = await runout({ json: replacer }, stream)
   if (result === null) throw ERR_INTERNAL_ERROR('run failure unknown')
   const { startId, id, bundle, bail } = result
 
