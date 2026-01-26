@@ -279,7 +279,7 @@ module.exports = class Run extends Opstream {
         }
       },
       // pre.js file only runs on disk, so no need for conditional
-      asset: (opts) => this.asset(opts, corestore),
+      asset: (opts) => this.asset(opts, corestore, appBundle),
       failure(err) {
         app.report({ err })
       }
@@ -291,7 +291,7 @@ module.exports = class Run extends Opstream {
 
     let checkout = null
     try {
-      checkout = await appBundle.calibrate()
+      checkout = await appBundle.calibrate({ prefetch: false })
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -367,7 +367,7 @@ module.exports = class Run extends Opstream {
     // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 
-  async asset(opts, corestore) {
+  async asset(opts, corestore, appBundle) {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
@@ -400,7 +400,7 @@ module.exports = class Run extends Opstream {
     await this.session.add(bundle)
     bundle.join()
     try {
-      await bundle.calibrate()
+      await bundle.calibrate({ prefetch: false })
     } catch (err) {
       await this.session.close()
       throw err
@@ -417,6 +417,11 @@ module.exports = class Run extends Opstream {
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
     const monitor = mirror.monitor()
+
+    monitor.on('preloaded', () => {
+      bundle.prefetch()
+      if (appBundle) appBundle.prefetch()
+    })
     monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
     for await (const diff of mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)

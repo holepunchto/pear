@@ -90,7 +90,7 @@
     "localdrive": "^2.2.0",
     "localwatch": "^1.4.3",
     "mime-db": "^1.54.0",
-    "mirror-drive": "^1.10.0",
+    "mirror-drive": "^1.11.1",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.5",
     "pear-api": "^1.30.0",
