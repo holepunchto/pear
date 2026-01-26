@@ -85,6 +85,7 @@ module.exports = class Bundle {
     }
 
     this.release = null
+    this.prefetching = null
 
     this.batch = null
     this.ranges = null
@@ -92,6 +93,7 @@ module.exports = class Bundle {
     this.closed = false
 
     this.progress = this.progresser()
+    this.prefetching = null
 
     this.announcing = null
     this.leaving = null
@@ -352,7 +354,7 @@ module.exports = class Bundle {
     return this.leaving
   }
 
-  async calibrate() {
+  async calibrate({ prefetch = true } = {}) {
     await this.ready()
 
     if (this.drive.core.length === 0) {
@@ -390,7 +392,7 @@ module.exports = class Bundle {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode, warmupNode] = await Promise.all([
+    const [platformVersionNode, channelNode] = await Promise.all([
       db.get('platformVersion'),
       db.get('channel'),
       db.get('warmup'),
@@ -400,14 +402,38 @@ module.exports = class Bundle {
 
     if (this.channel === null) this.channel = channelNode?.value || ''
 
+    if (prefetch) this.prefetch()
+
+    return this.ver
+  }
+
+  prefetch() {
+    try {
+      if (!this.prefetching) this.prefetching = this._prefetchFromDb()
+      await this.prefetching
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async _prefetchFromDb() {
+    const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
 
     if (warmup) {
       const ranges = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      this.prefetch(ranges)
+      await this._prefetchRanges(ranges)
     }
+  }
 
-    return this.ver
+  async _prefetchRanges({
+    meta = { start: 0, end: -1 },
+    data = { start: 0, end: -1 }
+  } = {}) {
+    if (Array.isArray(meta) === false) meta = [meta]
+    if (Array.isArray(data) === false) data = [data]
+    await this.drive.downloadRange(meta, data)
   }
 
   async *progresser() {
@@ -417,22 +443,9 @@ module.exports = class Bundle {
       return
     }
 
-    if (this.ranges) {
-      await this.prefetch(this.ranges)
-    }
-
     // TODO calculate percentage (need hypercore api updates to be able to do this)
 
     yield 100
-  }
-
-  async prefetch({
-    meta = { start: 0, end: -1 },
-    data = { start: 0, end: -1 }
-  } = {}) {
-    if (Array.isArray(meta) === false) meta = [meta]
-    if (Array.isArray(data) === false) data = [data]
-    await this.drive.downloadRange(meta, data)
   }
 
   async close() {
