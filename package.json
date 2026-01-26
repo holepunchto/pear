@@ -81,7 +81,7 @@
     "hypercore-crypto": "^3.5.0",
     "hypercore-id-encoding": "^1.3.0",
     "hyperdb": "^4.10.1",
-    "hyperdrive": "^13.1.1",
+    "hyperdrive": "^13.1.2",
     "hyperswarm": "^4.11.1",
     "iambus": "^2.0.4",
     "listen-async": "^1.0.0",
