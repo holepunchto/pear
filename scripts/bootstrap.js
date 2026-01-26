@@ -32,6 +32,7 @@ const cmd = parser.parse(argv.slice(2), { sync: true })
 const ARCHDUMP = cmd.flags.archdump === true
 const RUNTIMES_DRIVE_KEY =
   cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+const RUNTIMES_VERSION = 3272
 const CORESTORE =
   cmd.flags.externalCorestore &&
   path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
@@ -119,7 +120,7 @@ async function download(key, all = false) {
 
   await runtimes.core.update() // make sure we have latest version
 
-  runtimes = runtimes.checkout(runtimes.version)
+  runtimes = runtimes.checkout(RUNTIMES_VERSION)
   goodbye(() => runtimes.close())
 
   console.log(`\n  Syncing platform runtime${all ? 's' : ''} to disk`)
