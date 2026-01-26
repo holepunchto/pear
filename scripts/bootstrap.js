@@ -11,8 +11,10 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const goodbye = global.Pear?.teardown || require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
-const { decode } = require('hypercore-id-encoding')
+const { decode, encode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
+const link = require('pear-link')
+const pkg = require('../package.json')
 const Rache = require('rache')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
@@ -28,8 +30,9 @@ const parser = command(
 const cmd = parser.parse(argv.slice(2), { sync: true })
 
 const ARCHDUMP = cmd.flags.archdump === true
-const RUNTIMES_DRIVE_KEY =
-  cmd.rest?.[0] || 'gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho'
+const RUNTIMES = link.parse(cmd.rest?.[0] || pkg.pear.platform.runtimes)
+const RUNTIMES_DRIVE_KEY = encode(RUNTIMES.drive.key)
+const RUNTIMES_VERSION = RUNTIMES.drive.length
 const CORESTORE =
   cmd.flags.externalCorestore &&
   path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
@@ -76,7 +79,10 @@ if (isWindows === false) {
   fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
-download(RUNTIMES_DRIVE_KEY, ARCHDUMP).then(advise, console.error)
+download(RUNTIMES_DRIVE_KEY, ARCHDUMP, link.serialize(RUNTIMES)).then(
+  advise,
+  console.error
+)
 
 function advise() {
   if (isWindows === false) {
@@ -90,9 +96,12 @@ function advise() {
   )
 }
 
-async function download(key, all = false) {
-  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + key)
-  else console.log('🍐 [ localdev ] - no local runtime: fetching runtime')
+async function download(key, all = false, link) {
+  if (all) console.log('🍐 Fetching all runtimes from: \n   ' + link)
+  else
+    console.log(
+      '🍐 [ localdev ] - no local runtime: fetching runtime from: \n   ' + link
+    )
 
   const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
@@ -117,7 +126,7 @@ async function download(key, all = false) {
 
   await runtimes.core.update() // make sure we have latest version
 
-  runtimes = runtimes.checkout(runtimes.version)
+  runtimes = runtimes.checkout(RUNTIMES_VERSION)
   goodbye(() => runtimes.close())
 
   console.log(`\n  Syncing platform runtime${all ? 's' : ''} to disk`)
