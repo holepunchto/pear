@@ -7,6 +7,7 @@ const fs = require('bare-fs')
 const Rache = require('rache')
 const crasher = require('pear-crasher')
 const gracedown = require('pear-gracedown')
+const os = require('bare-os')
 const {
   SWAP,
   GC,
@@ -25,6 +26,7 @@ const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
 crasher('sidecar', SWAP)
 
+os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
   LOG.error('internal', 'Sidecar Boot Failed', err)
