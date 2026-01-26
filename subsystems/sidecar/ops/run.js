@@ -417,6 +417,7 @@ module.exports = class Run extends Opstream {
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
     const monitor = mirror.monitor()
+
     monitor.on('preloaded', () => {
       bundle.prefetch()
       if (appBundle) appBundle.prefetch()

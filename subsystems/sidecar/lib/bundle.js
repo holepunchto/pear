@@ -93,7 +93,6 @@ module.exports = class Bundle {
     this.closed = false
 
     this.progress = this.progresser()
-    this.prefetching = null
 
     this.announcing = null
     this.leaving = null
@@ -407,7 +406,7 @@ module.exports = class Bundle {
     return this.ver
   }
 
-  prefetch() {
+  async prefetch() {
     try {
       if (!this.prefetching) this.prefetching = this._prefetchFromDb()
       await this.prefetching
