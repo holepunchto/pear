@@ -1,5 +1,13 @@
 # Pear Runtime Changelog
 
+## v2.2.13
+
+* Run Prefetch - network ops reording to solve slow installer ux
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
 ## v2.2.12
 
 ### Fixes
