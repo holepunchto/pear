@@ -287,7 +287,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
 
   t.is(stats.download.progress, 1, 'preflight progress is 1 when is finished')
   t.is(stats.peers, 1, 'asset was downloaded from single peer')
-  t.ok(stats.download.bytes < 0, 'asset size is a number higher than 0')
+  t.ok(stats.download.bytes > 0, 'asset size is a number higher than 0')
   t.ok(stats.download.blocks, 'download blocks stats is defined')
 
   t.is(stats.upload.bytes, 0, 'upload bytes stats is defined')
