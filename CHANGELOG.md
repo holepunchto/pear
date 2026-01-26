@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.3.2
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
 ## v2.3.1
 
 ### Fixes
