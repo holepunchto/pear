@@ -757,11 +757,14 @@ class DownloadMonitor extends EventEmitter {
     this._drive = drive
     this._download = download
     this._promises = promises
+    this._assetsMirror = null
+    this._downloadEstimate = 0
   }
 
-  start(mirror) {
+  async start(assetsMirror) {
+    this._assetsMirror = assetsMirror
     const dbKey = this._drive.db.core.id
-    const downloadEstimate = this._download.downloads.reduce((acc, dl) => {
+    this._downloadEstimate = this._download.downloads.reduce((acc, dl) => {
       if (dl.session.id === dbKey) {
         // count only blob blocks
         return acc
@@ -771,15 +774,11 @@ class DownloadMonitor extends EventEmitter {
     }, 0)
 
     this._drive.blobs.core.on('download', () => this._downloaded++)
+    this._driveMonitor = this._drive.monitor('preflight-monitor')
+    await this._driveMonitor.ready()
 
     this._interval = setInterval(() => {
-      const downloaded = mirror
-        ? this._downloaded + mirror.downloadedBlocks
-        : this._downloaded
-      const estimated = mirror
-        ? downloadEstimate + mirror.downloadedBlocksEstimate
-        : downloadEstimate
-      this.emit('progress', Math.min(downloaded / estimated, 0.99))
+      this.emit('progress', this._getStats())
     }, this._intervalMs)
   }
 
@@ -789,7 +788,50 @@ class DownloadMonitor extends EventEmitter {
       new Promise((resolve) => setTimeout(resolve, timeout))
     ])
     await Promise.all([warmupPromise, ...this._promises])
-    this.emit('progress', 1)
+    const stats = this._getStats()
+    stats.download.progress = 1
+    this.emit('progress', stats)
+    this._driveMonitor.close()
     clearInterval(this._interval)
+  }
+
+  _getStats() {
+    const downloadedBlocks =
+      this._downloaded + (this._assetsMirror?.downloadedBlocks || 0)
+    const estimatedBlocks =
+      this._downloadEstimate +
+      (this._assetsMirror?.downloadedBlocksEstimate || 0)
+
+    return {
+      peers:
+        this._driveMonitor.downloadStats.peers +
+        (this._assetsMirror?.peers?.length || 0),
+      download: {
+        bytes:
+          this._driveMonitor.downloadStats.totalBytes +
+          (this._assetsMirror?.downloadedBytes || 0),
+        blocks:
+          this._driveMonitor.downloadStats.blocks +
+          (this._assetsMirror?.downloadedBlocks || 0),
+        speed:
+          this._driveMonitor.downloadStats.speed +
+          (this._assetsMirror?.downloadSpeed() || 0),
+        progress:
+          estimatedBlocks > 0
+            ? Math.min(downloadedBlocks / estimatedBlocks, 0.99)
+            : 0
+      },
+      upload: {
+        bytes:
+          this._driveMonitor.uploadStats.totalBytes +
+          (this._assetsMirror?.uploadedBytes || 0),
+        blocks:
+          this._driveMonitor.uploadStats.blocks +
+          (this._assetsMirror?.uploadedBlocks || 0),
+        speed:
+          this._driveMonitor.uploadStats.speed +
+          (this._assetsMirror?.uploadSpeed() || 0)
+      }
+    }
   }
 }

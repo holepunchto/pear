@@ -169,7 +169,7 @@ test('pear run preflight downloads staged assets', async (t) => {
 })
 
 test('pear run preflight downloads staged assets from key', async (t) => {
-  t.plan(4)
+  t.plan(10)
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
   const tmpdir = await tmp()
@@ -284,7 +284,15 @@ test('pear run preflight downloads staged assets from key', async (t) => {
   const stats = await Helper.pick(pipeline(sp.stdio[1], transform), {
     tag: 'stats'
   })
-  t.is(stats, 1, 'preflight emits 1 when is finished')
+
+  t.is(stats.download.progress, 1, 'preflight progress is 1 when is finished')
+  t.is(stats.peers, 1, 'asset was downloaded from single peer')
+  t.ok(stats.download.bytes > 0, 'asset size is a number higher than 0')
+  t.ok(stats.download.blocks, 'download blocks stats is defined')
+
+  t.is(stats.upload.bytes, 0, 'upload bytes stats is defined')
+  t.is(stats.upload.blocks, 0, 'upload blocks stats is defined')
+  t.is(stats.upload.speed, 0, 'upload speed stats is defined')
 
   const data = await helper.data({ resource: 'assets' })
   const { assets } = await opwait(data)
