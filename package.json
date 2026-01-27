@@ -6,7 +6,7 @@
   "scripts": {
     "test:gen": "brittle -r test/index.js test/*.test.js",
     "test": "bare scripts/test.mjs",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && lunte",
     "format": "prettier --write .",
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
@@ -142,7 +142,8 @@
     "brittle": "^3.5.2",
     "graceful-goodbye": "^1.3.3",
     "hyperschema": "^1.10.4",
-    "prettier": "^3.6.2",
+    "lunte": "^1.4.0",
+    "prettier": "^3.8.1",
     "prettier-config-holepunch": "^1.0.0",
     "test-tmp": "^1.4.0"
   },
