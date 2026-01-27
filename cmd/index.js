@@ -51,7 +51,7 @@ class Plugin {
 }
 
 const commands = {
-  init: require('./init'),
+  init: new Plugin('pear://templates'),
   stage: require('./stage'),
   seed: require('./seed'),
   release: require('./release'),
@@ -76,24 +76,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ipc.close()
   })
 
-  const init = command(
-    'init',
-    summary('Create initial project files'),
-    description`
-    Links:
-      pear://electron/template
-      ${ansi.italic(ansi.dim('pear://your.key.here/your/path/here'))}
-
-    Names:
-      default, ui, node-compat
-    `,
-    arg('[link|name]', 'Link or core template to init from'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--force|-f', 'Force overwrite existing files'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    commands.init
-  )
+  const init = command('init', commands.init.runner())
 
   const dev = command('dev', sloppy({ args: true, flags: true }), () => {
     print('pear dev has been removed, use pear run --dev instead.', false)
