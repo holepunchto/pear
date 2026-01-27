@@ -17,6 +17,10 @@
 
 * Internal - tweaks, test refactors
 
+## v2.2.15
+
+* Internal - fix slow warmup prefetch
+
 ## v2.2.14
 
 * Internal - bump runtimes for launcher fix
