@@ -7,7 +7,7 @@
     "test:gen": "brittle -r test/index.js test/*.test.js",
     "test": "bare scripts/test.mjs",
     "lint": "prettier --check . && lunte",
-    "format": "prettier --write .",
+    "format": "prettier --write . && lunte --fix",
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js",
