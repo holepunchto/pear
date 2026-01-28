@@ -1,7 +1,6 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
 const os = require('bare-os')
 const path = require('bare-path')
@@ -74,8 +73,6 @@ module.exports = async function info(cmd) {
   const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
-  if (link && isKey === false)
-    throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
   let dir = cmd.args.dir
   if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
   if (!dir) dir = os.cwd()

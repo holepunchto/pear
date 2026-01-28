@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, ansi } = require('pear-terminal')
+const { outputter } = require('pear-terminal')
 const output = outputter('presets', {
   final: ({ presets }, { link }) => {
     let out = ''

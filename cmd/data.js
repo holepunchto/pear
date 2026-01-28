@@ -1,7 +1,6 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter, ansi, byteSize } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -120,10 +119,7 @@ class Data {
     const { command } = cmd
     const { secrets, json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
+    plink.parse(link) // validates
     await output(
       json,
       this.ipc.data({ resource: 'apps', secrets, link }),
@@ -173,10 +169,7 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
+    plink.parse(link) // validates
     await output(
       json,
       this.ipc.data({ resource: 'assets', link }),
@@ -190,10 +183,7 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
+    plink.parse(link) // validates
     await output(
       json,
       this.ipc.data({ resource: 'currents', link }),
