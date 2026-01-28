@@ -248,8 +248,9 @@ module.exports = class Provision extends Opstream {
     const deferred = Promise.withResolvers()
     const teardown = () => {
       this.push({ tag: 'inactive' })
-      deferred.resolve()
-      to.close()
+      to.close().finally(() => {
+        deferred.resolve()
+      })
     }
 
     let timeout = setTimeout(teardown, cooloff)
