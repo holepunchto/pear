@@ -103,7 +103,7 @@
     "pear-init": "^1.0.0",
     "pear-inspect": "^1.2.5",
     "pear-interface": "^1.1.0",
-    "pear-ipc": "^6.9.0",
+    "pear-ipc": "github:holepunchto/pear-ipc#provision",
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
     "pear-opstream": "^1.0.0",

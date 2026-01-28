@@ -54,6 +54,7 @@ const commands = {
   init: require('./init'),
   stage: require('./stage'),
   seed: require('./seed'),
+  provision: require('./provision'),
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
@@ -100,23 +101,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ipc.close()
   }).hide()
 
-  const seed = command(
-    'seed',
-    summary('Seed or reseed a project'),
-    description`
-      Specify channel or link to seed a project.
-
-      Specify a remote link to reseed.
-    `,
-    arg('<channel|link>', 'Channel name or Pear link to seed'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--verbose|-v', 'Additional output'),
-    flag('--name <name>', 'Advanced. Override app name'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.seed
-  )
-
   const stage = command(
     'stage',
     summary('Synchronize local changes to key'),
@@ -141,6 +125,41 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
     commands.stage
+  )
+
+  const seed = command(
+    'seed',
+    summary('Seed or reseed a project'),
+    description`
+      Specify channel or link to seed a project.
+
+      Specify a remote link to reseed.
+    `,
+    arg('<channel|link>', 'Channel name or Pear link to seed'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--verbose|-v', 'Additional output'),
+    flag('--name <name>', 'Advanced. Override app name'),
+    flag('--no-ask', 'Suppress permission prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.seed
+  )
+
+  const provision = command(
+    'provision',
+    summary('Minimal pre-production sync'),
+    description(`
+      Minimally synchronize blocks to a pre-production target link
+
+      The target can then be multi-signed against a production link
+
+      Use pear touch to generate initial target link
+    `),
+    arg('<source-link>', 'Versioned source link'),
+    arg('<target-link>', 'Target link to sync to'),
+    arg('<production-link>', 'Versioned link to sync against'),
+    flag('--dry-run|-d', 'Execute provision without writing'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.provision
   )
 
   const release = command(
@@ -400,6 +419,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     stage,
     seed,
     run,
+    provision,
     release,
     info,
     dump,
