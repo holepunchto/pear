@@ -66,7 +66,8 @@ const commands = {
   gc: require('./gc'),
   run: require('./run'),
   versions: require('./versions'),
-  presets: require('./presets')
+  presets: require('./presets'),
+  build: new Plugin(require('pear-build/cmd'))
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
@@ -381,6 +382,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
+  const build = command('build', commands.build.runner())
+
   const help = command(
     'help',
     arg('[command]'),
@@ -413,6 +416,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     gc,
     versions,
     presets,
+    build,
     help,
     footer(usage.footer),
     bail(explain),
