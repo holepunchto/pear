@@ -53,7 +53,7 @@ module.exports = class Provision extends Opstream {
     const from = new Hyperdrive(sidecar.getCorestore(), source.drive.key)
     await from.ready()
 
-    // hydrate prod target
+    // hydrate prod
     if (prod.core.length === 0 && !bootstrap && production.drive.length !== 0) {
       await new Promise((resolve) => prod.core.once('append', () => resolve()))
     }
