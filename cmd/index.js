@@ -103,7 +103,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const stage = command(
     'stage',
-    summary('Synchronize local changes to key'),
+    summary('Synchronize local changes to link'),
     description`
       Channel name must be specified on first stage,
       in order to generate the initial key.
@@ -146,7 +146,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const provision = command(
     'provision',
-    summary('Minimal pre-production sync'),
+    summary('Pre-production block sync'),
     description`
       Synchronize blocks to a pre-production target link
 
@@ -164,7 +164,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const release = command(
     'release',
-    summary('Set production release version'),
+    summary('Set release pointer'),
     description`
       Set the release pointer against a version (default latest).
 
@@ -235,8 +235,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Ensure Pear link'),
-    description("Initialize a project Pear link if it doesn't already exist."),
+    summary('Initialize project link'),
+    description`Create a project Pear link if it doesn't already exist`,
     arg('[channel]', 'Channel name. Default: randomly generated'),
     flag('--json', 'Newline delimited JSON output'),
     commands.touch
@@ -391,7 +391,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const presets = command(
     'presets',
-    summary('Default flags for apps per command & link'),
+    summary('Default flags per command & link'),
+    description`
+      Pin flags to a given pear command per app link
+    `,
     arg('<command>', 'Command to apply default flags to'),
     arg('<link>', 'App link to apply default flags to'),
     flag('--json', 'Newline delimited JSON output'),
@@ -416,9 +419,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     header(usage.header),
     init,
     dev,
+    run,
     stage,
     seed,
-    run,
     provision,
     release,
     info,
