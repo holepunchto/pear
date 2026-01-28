@@ -210,7 +210,6 @@ module.exports = class Provision extends Opstream {
       }
 
       if (!src && dst) {
-        // console.log('Dropping pear setting', field)
         this.push({ tag: 'unsetting', data: { field } })
         await dst.db.del(field)
         continue
@@ -220,7 +219,6 @@ module.exports = class Provision extends Opstream {
         (src && !dst) ||
         JSON.stringify(src.value) !== JSON.stringify(dst.value)
       ) {
-        // console.log('Updating pear setting', field)
         this.push({ tag: 'setting', data: { field, value: src.value } })
         await to.db.put(field, src.value)
       }
@@ -266,6 +264,6 @@ module.exports = class Provision extends Opstream {
       timeout = setTimeout(teardown, cooloff)
     })
 
-    await deferred
+    await deferred.promise
   }
 }
