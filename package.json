@@ -93,7 +93,7 @@
     "mutexify": "^1.4.0",
     "paparam": "^1.10.0",
     "pear-api": "^1.30.0",
-    "pear-build": "github:holepunchto/pear-build#bare-build",
+    "pear-build": "github:holepunchto/pear-build",
     "pear-changelog": "^1.0.1",
     "pear-cmd": "^1.0.2",
     "pear-constants": "^1.1.0",
