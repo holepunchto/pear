@@ -117,7 +117,7 @@
     "pear-updater": "^3.4.3",
     "pear-updater-bootstrap": "^2.0.1",
     "pear-updates": "^1.1.0",
-    "prefetcher": "github:holepunchto/prefetcher",
+    "prefetcher": "github:holepunchto/prefetcher#stream-and-ci-and-lint",
     "protomux": "^3.10.1",
     "pw-to-ek": "^1.2.0",
     "quickbit-universal": "^2.2.0",

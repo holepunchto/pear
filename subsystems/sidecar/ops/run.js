@@ -343,6 +343,7 @@ module.exports = class Run extends Opstream {
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
     this._prefetcher = new Prefetcher(app.bundle.drive)
+    this._prefetcher.once('error', (err) => this.emit('error', err))
     this._prefetcher.on('update', (stats) => {
       this.push({ tag: 'stats', data: stats })
     })
@@ -424,9 +425,10 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    const prefetching = this._prefetcher.start(mirror)
 
-    for await (const diff of mirror) {
+    this._prefetcher.start(mirror)
+
+    for await (const diff of this._prefetcher) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
       if (diff.op === 'add') {
         this.push({
@@ -449,8 +451,6 @@ module.exports = class Run extends Opstream {
         })
       }
     }
-
-    await prefetching
 
     await this.sidecar.model.addAsset(opts.link, asset)
     LOG.info(this.LOG_RUN_LINK, 'synced asset', asset.link.slice(0, 14) + '..')
