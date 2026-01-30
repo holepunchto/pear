@@ -1,3 +1,5 @@
 Pear.worker.pipe()
 
-while (true) {}
+while (true) {
+  //block
+}
