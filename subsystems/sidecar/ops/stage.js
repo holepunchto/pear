@@ -7,7 +7,6 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
-const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
@@ -95,14 +94,15 @@ module.exports = class Stage extends Opstream {
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
-    if (state.options?.stage?.ignore)
+    if (state.options?.stage?.ignore) {
       ignore.push(...state.options.stage?.ignore)
+    }
     ignore = [...new Set([...defaultIgnore, ...ignore])]
 
     only = Array.isArray(only)
       ? only
       : only?.split(',').map((s) => s.trim()) || []
-    let cfgOnly = state.options?.stage?.only
+    const cfgOnly = state.options?.stage?.only
     if (cfgOnly) {
       only.push(
         ...(Array.isArray(cfgOnly)
@@ -154,10 +154,11 @@ module.exports = class Stage extends Opstream {
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
-      if (!entry)
+      if (!entry) {
         throw ERR_INVALID_CONFIG(
           'Invalid main or stage entrypoint in package.json'
         )
+      }
     }
 
     const glob = new GlobDrive(src, ignore)
@@ -170,7 +171,7 @@ module.exports = class Stage extends Opstream {
 
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
-      let shake = await pearShake.run({
+      const shake = await pearShake.run({
         defer: state.options?.stage?.defer
       })
       compactFiles = shake.files
@@ -200,8 +201,9 @@ module.exports = class Stage extends Opstream {
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods)
       src.metadata.put(filename, mod.cache())
-    if (!purge && state.options?.stage?.purge)
+    if (!purge && state.options?.stage?.purge) {
       purge = state.options?.stage?.purge
+    }
     if (purge) {
       for await (const entry of dst) {
         if (ignored(entry.key)) {

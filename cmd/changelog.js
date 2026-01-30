@@ -27,8 +27,9 @@ module.exports = async function changelog(cmd) {
   const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null
-  if (link && isKey === false)
+  if (link && isKey === false) {
     throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+  }
   const nmax = +max
   if (Number.isInteger(nmax) === false) {
     throw ERR_INVALID_INPUT('Changelog maximum must be an integer')

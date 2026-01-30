@@ -33,12 +33,12 @@ for (const dir of dirs) {
       : path.join(dir, 'node_modules') + ' not found'
   )
   console.log('Running npm install in ', dir)
-  if (isWindows)
+  if (isWindows) {
     spawnSync('pwsh', ['-Command', 'npm install'], {
       cwd: dir,
       stdio: 'inherit'
     })
-  else spawnSync('npm', ['install'], { cwd: dir, stdio: 'inherit' })
+  } else spawnSync('npm', ['install'], { cwd: dir, stdio: 'inherit' })
 }
 
 const testnet = await createTestnet(10)

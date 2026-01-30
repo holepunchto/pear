@@ -85,8 +85,9 @@ async function init(link = 'default', dir, opts = {}) {
     }
     break
   }
-  if (params === null)
+  if (params === null) {
     throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
+  }
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -96,8 +97,9 @@ async function init(link = 'default', dir, opts = {}) {
         break
       }
     }
-    if (empty === false)
+    if (empty === false) {
       throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    }
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })

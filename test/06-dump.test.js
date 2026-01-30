@@ -50,13 +50,6 @@ test('pear dump dumping subdirectory', async function ({
   teardown
 }) {
   plan(4)
-  const path = require('bare-path')
-  const fs = require('bare-fs')
-  const exists = (path) =>
-    fs.promises.stat(path).then(
-      () => true,
-      () => false
-    )
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()

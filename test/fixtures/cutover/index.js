@@ -3,7 +3,7 @@ const updates = require('pear-updates')
 const pipe = require('pear-pipe')()
 
 let id = 0
-let info = []
+const info = []
 pipe.on('data', (data) => {
   if (data.toString().trim() === 'start-listener') {
     const listenerId = ++id

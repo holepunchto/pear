@@ -49,8 +49,9 @@ async function bootSidecar() {
     .map((tuple) => {
       const [host, port] = tuple.split(':')
       const int = +port
-      if (Number.isInteger(int) === false)
+      if (Number.isInteger(int) === false) {
         throw new Error(`Invalid port: ${port}`)
+      }
       return { host, port: int }
     })
 
@@ -131,8 +132,9 @@ function getUpgradeTarget() {
     key = hypercoreid.encode(ALIASES.pear)
   }
 
-  if (key === null || key === CHECKOUT.key)
+  if (key === null || key === CHECKOUT.key) {
     return { checkout: CHECKOUT, swap: SWAP }
+  }
 
   return {
     checkout: { key, length: 0, fork: 0 },

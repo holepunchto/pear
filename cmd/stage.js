@@ -68,11 +68,12 @@ const output = outputter('stage', {
         ? 'Pre-stage [' + index + ':' + from + ']: '
         : 'Pre-stage [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
-    if (success === false)
+    if (success === false) {
       return {
         success: false,
         message: output?.stack || output?.message || 'Unknown Pre Error'
       }
+    }
     return pre + output.tag + suffix
   },
   final(data, info) {
@@ -89,8 +90,9 @@ module.exports = async function stage(cmd) {
     cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
-  if (!channel && !key)
+  if (!channel && !key) {
     throw ERR_INVALID_INPUT('A key or the channel name must be specified.')
+  }
   const cwd = os.cwd()
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()

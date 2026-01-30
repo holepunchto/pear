@@ -154,10 +154,11 @@ async function download(key, all = false, link) {
   ]
 
   let prefixes = [...bin, ...lib, ...wakeup]
-  if (!all)
+  if (!all) {
     prefixes = prefixes.filter((prefix) =>
       prefix.startsWith('/by-arch/' + ADDON_HOST)
     )
+  }
   const mirror = runtimes.mirror(new Localdrive(SWAP), { prefix: prefixes })
   const monitor = mirror.monitor()
   monitor.on('update', (stats) => {

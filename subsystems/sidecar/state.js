@@ -53,18 +53,20 @@ module.exports = class State extends SharedState {
       if (this.stage && dryRun === false && this.manifest) {
         const result = await pod.db.get('manifest')
         if (app?.reported) return
-        if (!result || !sameData(result.value, this.manifest))
+        if (!result || !sameData(result.value, this.manifest)) {
           await pod.db.put('manifest', this.manifest)
+        }
         if (app?.reported) return
       }
     }
 
     if (app?.reported) return
 
-    if (this.stage && this.manifest === null)
+    if (this.stage && this.manifest === null) {
       throw ERR_INVALID_PROJECT_DIR(
         `"${path.join(this.dir, 'package.json')}" not found. Pear project must have a package.json`
       )
+    }
 
     const { dependencies } = this.manifest
     const options = this.options

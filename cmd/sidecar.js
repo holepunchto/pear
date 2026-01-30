@@ -15,10 +15,11 @@ module.exports = async function sidecar(cmd) {
     print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
     return
   }
-  if (!isWindows && isTTY)
+  if (!isWindows && isTTY) {
     gracedown(() => {
       stdio.out.write('\x1B[1K\x1B[G')
     })
+  }
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
@@ -32,8 +33,9 @@ module.exports = async function sidecar(cmd) {
 
   print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)
   print(ansi.gray('Runtime: ' + path.basename(RUNTIME)), 0)
-  if (cmd.flags.mem)
+  if (cmd.flags.mem) {
     print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
+  }
   print(
     '\n========================= INIT ===================================\n'
   )
@@ -80,8 +82,9 @@ module.exports = async function sidecar(cmd) {
       if (
         cmdArgs[0] === 'seed' &&
         cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false
-      )
+      ) {
         cmdArgs[cmdArgs.length] = dir
+      }
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
   }

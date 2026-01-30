@@ -1,3 +1,3 @@
-const pipe = Pear.worker.pipe()
+Pear.worker.pipe()
 
 while (true) {}
