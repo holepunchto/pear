@@ -464,7 +464,7 @@ module.exports = class Pod {
     const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
     if (warmup) {
-      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
       if (Array.isArray(meta) === false) meta = [meta]
       if (Array.isArray(data) === false) data = [data]
       return await this.drive.downloadRange(meta, data)
