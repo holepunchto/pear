@@ -177,7 +177,7 @@ module.exports = async function run(cmd, devrun = false) {
 
   const result = await runout({ json: replacer }, stream)
   if (result === null) throw ERR_INTERNAL_ERROR('run failure unknown')
-  const { startId, id, bundle, bail } = result
+  const { startId, id, bundle, entry, bail } = result
 
   if (bail) {
     if (bail.code === 'PREFLIGHT') return // done
@@ -195,20 +195,8 @@ module.exports = async function run(cmd, devrun = false) {
 
   state.update({ config })
   global.Pear = new API(ipc, state)
-  const protocol = new Module.Protocol({
-    exists(url) {
-      if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
-      return (
-        Object.hasOwn(bundle.sources, url.href) ||
-        Object.hasOwn(bundle.assets, url.href)
-      )
-    },
-    read(url) {
-      return bundle.sources[url.href]
-    }
-  })
 
-  if (bundle.entrypoint.endsWith('.html')) {
+  if (entry.endsWith('.html')) {
     const updates = require('pear-updates')
     console.log('Legacy application detected, attempting to heal')
     console.log(
@@ -242,10 +230,7 @@ module.exports = async function run(cmd, devrun = false) {
 
   // preserves uncaught exceptions (otherwise they become unhandled rejections)
   setImmediate(() => {
-    Module.load(new URL(bundle.entrypoint), {
-      protocol,
-      resolutions: bundle.resolutions
-    })
+    Module.load(bundle)
     setImmediate(() => {
       // stops replaying & relaying subscriber streams between clients
       if (Pear.constructor.CUTOVER === true) ipc.cutover()

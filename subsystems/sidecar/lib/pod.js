@@ -22,6 +22,7 @@ const pack = require('pear-pack')
 const { SWAP, PLATFORM_DIR } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
+const { c } = require('hyperdb/runtime')
 const noop = Function.prototype
 
 const ABI = 0
@@ -108,6 +109,8 @@ module.exports = class Pod {
   async pack({
     cache = false,
     prebuilds,
+    mount,
+    assets,
     entry,
     builtins = [],
     conditions,
@@ -127,13 +130,16 @@ module.exports = class Pod {
     }
 
     const hosts = [require.addon.host]
-    const prebuildPrefix = pathToFileURL(prebuilds)
+    const prebuildPrefix = prebuilds ? pathToFileURL(prebuilds) : ''
+    const assetsPrefix = assets ? pathToFileURL(assets) : ''
     const packed = await pack(this.drive, {
       entry,
       hosts,
+      mount,
       builtins,
       conditions,
       extensions,
+      assetsPrefix,
       prebuildPrefix
     })
 
@@ -343,19 +349,14 @@ module.exports = class Pod {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
 
-    const assets = this.drive.core
-      ? `assets/${this.drive.core.fork}.${this.drive.core.length}.${this.drive.discoveryKey.toString('hex')}`
-      : true // assets on localdrives are just passthrough per default
-
-    const res = await DriveBundler.bundle(this.drive, {
-      entrypoint: entrypoint || '.',
-      cwd: SWAP,
-      assets,
-      absoluteFiles: true,
+    const packed = await this.pack({
+      entry: entrypoint || '.',
+      prebuildsPrefix: path.join(SWAP, 'prebuilds'),
+      assetsPrefix: this.drive.core ? path.join(SWAP, 'assets', this.drive.core.fork + '.' + this.drive.core.length + '.' + this.drive.discoveryKey.toString('hex')) : path.join(SWAP, 'assets'),
       mount: 'pear://' + id
     })
 
-    return { key: id, ...res }
+    return packed.bundle
   }
 
   absorbReadStream(key, readStream, metadata) {

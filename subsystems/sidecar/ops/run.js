@@ -221,7 +221,7 @@ module.exports = class Run extends Opstream {
       if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
       const bundle = await app.pod.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle }
+      return { id, startId, bundle, entry: state.entrypoint }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
@@ -371,13 +371,13 @@ module.exports = class Run extends Opstream {
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
       const bundle = await app.pod.bundle(state.entrypoint)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle }
+      return { id, startId, bundle, entry: state.entrypoint }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'app bundling..')
     const bundle = await app.pod.bundle(state.entrypoint)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { id, startId, bundle }
+    return { id, startId, bundle, entry: state.entrypoint }
     // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 

@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "pear-bridge": "^1.2.1",
-    "pear-electron": "^1.7.25",
+    "pear-electron": "file:../../../pear-electron/pear-electron-1.9.0-rc.0.tgz",
     "pear-messages": "^1.0.3",
     "pear-pipe": "^1.0.1",
     "pear-updates": "^1.0.1",
