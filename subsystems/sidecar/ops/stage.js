@@ -193,6 +193,15 @@ module.exports = class Stage extends Opstream {
       cache.imports = shake.resolutions[filename]
       src.metadata.put(filename, cache)
     }
+
+    for (const k of Object.keys(shake.resolutions)) {
+      if (mods.has(k)) continue
+      src.metadata.put(k, {
+        type: 'commonjs',
+        imports: shake.resolutions[k]
+      })
+    }
+
     if (!purge && state.options?.stage?.purge)
       purge = state.options?.stage?.purge
     if (purge) {
