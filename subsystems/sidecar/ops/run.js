@@ -17,7 +17,7 @@ const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const State = require('../state')
-const Prefetcher = require('prefetcher')
+const Prefetcher = require('pear-prefetcher')
 
 module.exports = class Run extends Opstream {
   constructor(...args) {
