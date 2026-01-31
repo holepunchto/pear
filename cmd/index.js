@@ -67,7 +67,7 @@ const commands = {
   run: require('./run'),
   versions: require('./versions'),
   presets: require('./presets'),
-  build: new Plugin(require('pear-build/cmd'))
+  build: new Plugin('pear://build')
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
