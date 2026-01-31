@@ -163,11 +163,12 @@ module.exports = class Stage extends Opstream {
     let compactFiles = null
     let compactSkips = null
 
+    const pearShake = new PearShake(src, entrypoints)
+    let shake = await pearShake.run({
+      defer: state.options?.stage?.defer
+    })
+
     if (compact) {
-      const pearShake = new PearShake(src, entrypoints)
-      let shake = await pearShake.run({
-        defer: state.options?.stage?.defer
-      })
       compactFiles = shake.files
       compactSkips = shake.skips
       const { files } = shake
@@ -187,8 +188,11 @@ module.exports = class Stage extends Opstream {
     }
 
     const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods)
-      src.metadata.put(filename, mod.cache())
+    for await (const [filename, mod] of mods) {
+      const cache = mod.cache()
+      cache.imports = shake.resolutions[filename]
+      src.metadata.put(filename, cache)
+    }
     if (!purge && state.options?.stage?.purge)
       purge = state.options?.stage?.purge
     if (purge) {
