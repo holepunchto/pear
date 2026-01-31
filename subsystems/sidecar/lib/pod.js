@@ -352,7 +352,17 @@ module.exports = class Pod {
     const packed = await this.pack({
       entry: entrypoint || '.',
       prebuildsPrefix: path.join(SWAP, 'prebuilds'),
-      assetsPrefix: this.drive.core ? path.join(SWAP, 'assets', this.drive.core.fork + '.' + this.drive.core.length + '.' + this.drive.discoveryKey.toString('hex')) : path.join(SWAP, 'assets'),
+      assetsPrefix: this.drive.core
+        ? path.join(
+            SWAP,
+            'assets',
+            this.drive.core.fork +
+              '.' +
+              this.drive.core.length +
+              '.' +
+              this.drive.discoveryKey.toString('hex')
+          )
+        : path.join(SWAP, 'assets'),
       mount: 'pear://' + id
     })
 
