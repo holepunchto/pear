@@ -48,9 +48,15 @@ const output = outputter('provision', {
   staged: ({ changes }) => (changes === 0 ? '(Empty)' : ''),
   unsetting: ({ field }) => 'Dropping ' + field + ' field from target',
   setting: ({ field }) => 'Updating ' + field + ' field on target',
-  provisioned: ({ target, link }) => {
+  provisioned: ({ verlink, hashlink, link }) => {
     return (
-      '\nProvisioned: ' + target + '\n\nSeed with:\n\npear seed ' + link + '\n'
+      '\nProvisioned:\n  Verlink: ' +
+      verlink +
+      '\n\n  Hashlink: ' +
+      hashlink +
+      '\n\nSeed with:\n\n   pear seed ' +
+      link +
+      '\n'
     )
   },
   seeding: ({ cooloff, peers }) => {

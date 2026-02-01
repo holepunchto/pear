@@ -144,6 +144,8 @@ module.exports = class Provision extends Opstream {
       })
     }
 
+    const coreHash = await to.core.treeHash()
+
     this.push({
       tag: 'diffed',
       data: {
@@ -152,7 +154,7 @@ module.exports = class Provision extends Opstream {
         core: {
           id: to.core.id,
           length: to.core.length,
-          hash: hypercoreid.encode(await to.core.treeHash())
+          hash: hypercoreid.encode(coreHash)
         },
         blobs: {
           id: to.blobs.core.id,
@@ -245,12 +247,21 @@ module.exports = class Provision extends Opstream {
             key: to.core.id
           }
         }),
-        target: plink.serialize({
+        verlink: plink.serialize({
           protocol: 'pear:',
           drive: {
             key: to.core.id,
             fork: to.core.fork,
             length: to.core.length
+          }
+        }),
+        hashlink: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: to.core.id,
+            fork: to.core.fork,
+            length: to.core.length,
+            hash: coreHash
           }
         })
       }
