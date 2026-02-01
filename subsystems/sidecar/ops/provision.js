@@ -37,14 +37,12 @@ module.exports = class Provision extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const bootstrap =
-      production.drive.fork === 0 && production.drive.length === 0
-
     const to = new Hyperdrive(
       sidecar.getCorestore('!provision', '#targets', { writable: true }),
       target.drive.key,
       { compat: false }
     )
+    this.session.add(to)
     await to.ready()
 
     const prod = new Hyperdrive(sidecar.getCorestore(), production.drive.key)
@@ -53,14 +51,27 @@ module.exports = class Provision extends Opstream {
     const from = new Hyperdrive(sidecar.getCorestore(), source.drive.key)
     await from.ready()
 
-    // hydrate prod
-    if (prod.core.length === 0 && !bootstrap && production.drive.length !== 0) {
+    sidecar.swarm.join(to.discoveryKey, {
+      client: true,
+      server: true
+    })
+    sidecar.swarm.join(from.discoveryKey, {
+      client: true,
+      server: false
+    })
+    sidecar.swarm.join(prod.discoveryKey, {
+      client: true,
+      server: false
+    })
+
+    if (prod.core.length === 0 && production.drive.length !== 0) {
       await new Promise((resolve) => prod.core.once('append', () => resolve()))
     }
 
     prod.core.download()
 
     this.push({ tag: 'syncing', data: { type: 'metadata' } })
+
     while (to.core.length < prod.core.length) {
       await to.core.append(await prod.core.get(to.core.length))
       this.push({
@@ -80,6 +91,7 @@ module.exports = class Provision extends Opstream {
       prod.blobs.core.download()
 
       this.push({ tag: 'syncing', data: { type: 'blobs' } })
+
       while (to.blobs.core.length < prod.blobs.core.length) {
         await to.blobs.core.append(
           await prod.blobs.core.get(to.blobs.core.length)
@@ -88,8 +100,8 @@ module.exports = class Provision extends Opstream {
           tag: 'blocks',
           data: {
             type: 'blobs',
-            targetLength: to.core.length,
-            productionLength: prod.core.length
+            targetLength: to.blobs.core.length,
+            productionLength: prod.blobs.core.length
           }
         })
       }
@@ -159,7 +171,7 @@ module.exports = class Provision extends Opstream {
     await new Promise((resolve) => setTimeout(resolve, cooldown))
     this.push({ tag: 'staging' })
 
-    for await (const data of co.mirror(to, { batch: true })) {
+    for await (const diff of co.mirror(to, { batch: true })) {
       changes++
       if (diff.op === 'add') {
         this.push({
@@ -227,8 +239,14 @@ module.exports = class Provision extends Opstream {
     this.push({
       tag: 'provisioned',
       data: {
+        link: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: to.core.id
+          }
+        }),
         target: plink.serialize({
-          protocol: 'pear',
+          protocol: 'pear:',
           drive: {
             key: to.core.id,
             fork: to.core.fork,
@@ -237,33 +255,5 @@ module.exports = class Provision extends Opstream {
         })
       }
     })
-
-    this.push({
-      tag: 'seeding',
-      data: { cooloff, peers: to.core.peers.length }
-    })
-
-    const deferred = Promise.withResolvers()
-    const teardown = () => {
-      this.push({ tag: 'inactive' })
-      to.close().finally(() => {
-        deferred.resolve()
-      })
-    }
-
-    let timeout = setTimeout(teardown, cooloff)
-    const blobs = await to.getBlobs()
-
-    to.core.on('upload', function () {
-      clearTimeout(timeout)
-      timeout = setTimeout(teardown, cooloff)
-    })
-
-    blobs.core.on('upload', function () {
-      clearTimeout(timeout)
-      timeout = setTimeout(teardown, cooloff)
-    })
-
-    await deferred.promise
   }
 }

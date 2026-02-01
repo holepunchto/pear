@@ -1,39 +1,44 @@
 'use strict'
-const { outputter } = require('pear-terminal')
+const { outputter, byteDiff } = require('pear-terminal')
 const { ERR_INVALID_LINK } = require('pear-errors')
 const plink = require('pear-link')
 
 const output = outputter('provision', {
+  ['byte-diff']: byteDiff,
   syncing: ({ type }) => 'Syncing existing ' + type + ', please wait...',
   blocks: ({ type, targetLength, productionLength }) => {
-    return (
-      'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
-    )
+    return {
+      output: 'status',
+      message:
+        'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
+    }
   },
-  synced: ({ type }) => 'Completed ' + type + ' sync',
-  diffing: () => 'Checking diff',
+  synced: ({ type }) => '\nCompleted ' + type + ' sync',
+  diffing: () => 'Checking diff\n',
   diffed: ({ changes, semver, core, blobs }) => {
     return (
-      'Diffing complete\nTotal changes: ' +
+      '\nDiffing complete\nTotal changes: ' +
       changes +
       '\nPackage version: ' +
       semver +
-      '\nCore: ' +
+      '\n\nCore:\n' +
+      '  Key: ' +
       core.id +
-      ' ' +
+      '\n  Length: ' +
       core.length +
-      '\n' +
+      '\n  Hash: ' +
       core.hash +
-      '\n\nBlobs: ' +
+      '\n\nBlobs:\n' +
+      '  Key: ' +
       blobs.id +
-      ' ' +
+      '\n  Length: ' +
       blobs.length +
-      '\n' +
+      '\n  Hash: ' +
       blobs.hash +
       '\n'
     )
   },
-  dry: () => 'Dry Run Complete',
+  dry: () => 'Dry Run Complete\n',
   cooldown: ({ time }) => {
     'NOT A DRY RUN! Waiting ' +
       time / 1000 +
@@ -43,7 +48,11 @@ const output = outputter('provision', {
   staged: ({ changes }) => (changes === 0 ? '(Empty)' : ''),
   unsetting: ({ field }) => 'Dropping ' + field + ' field from target',
   setting: ({ field }) => 'Updating ' + field + ' field on target',
-  provisioned: ({ target }) => 'Provisioned: ' + target,
+  provisioned: ({ target, link }) => {
+    return (
+      '\nProvisioned: ' + target + '\n\nSeed with:\n\npear seed ' + link + '\n'
+    )
+  },
   seeding: ({ cooloff, peers }) => {
     return (
       peers +
@@ -77,7 +86,6 @@ module.exports = async function provision(cmd) {
       link: productionLink
     })
   }
-
   await output(
     json,
     ipc.provision({ sourceLink, targetLink, productionLink, dryRun })
