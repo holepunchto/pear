@@ -15,8 +15,7 @@ module.exports = class Provision extends Opstream {
     targetLink,
     productionLink,
     dryRun,
-    cooldown = 10_000,
-    cooloff = 15_000
+    cooldown = 10_000
   }) {
     const source = plink.parse(sourceLink)
     if (source.drive.length === null) {
@@ -66,7 +65,7 @@ module.exports = class Provision extends Opstream {
       server: false
     })
 
-    session.teardown(() => {
+    this.session.teardown(() => {
       sidecar.swarm.leave(to.discoveryKey)
       sidecar.swarm.leave(from.discoveryKey)
       sidecar.swarm.leave(prod.discoveryKey)
@@ -145,28 +144,41 @@ module.exports = class Provision extends Opstream {
       }
     }
     const pkg = JSON.parse(await co.get('/package.json'))
+
     if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) {
       throw new ERR_INVALID_MANIFEST('Source has non-production SemVer', {
         version: pkg.version
       })
     }
 
-    const coreHash = await to.core.treeHash()
-
     this.push({
       tag: 'diffed',
       data: {
         changes,
         semver: pkg.version,
-        core: {
-          id: to.core.id,
-          length: to.core.length,
-          hash: hypercoreid.encode(coreHash)
+        source: {
+          core: {
+            id: co.core.id,
+            length: co.core.length,
+            hash: hypercoreid.encode(await co.core.treeHash())
+          },
+          blobs: {
+            id: co.blobs.core.id,
+            length: co.blobs.core.length,
+            hash: hypercoreid.encode(await co.blobs.core.treeHash())
+          }
         },
-        blobs: {
-          id: to.blobs.core.id,
-          length: to.blobs.core.length,
-          hash: hypercoreid.encode(await to.blobs.core.treeHash())
+        target: {
+          core: {
+            id: to.core.id,
+            length: to.core.length,
+            hash: hypercoreid.encode(await to.core.treeHash())
+          },
+          blobs: {
+            id: to.blobs.core.id,
+            length: to.blobs.core.length,
+            hash: hypercoreid.encode(await to.blobs.core.treeHash())
+          }
         }
       }
     })
@@ -245,9 +257,53 @@ module.exports = class Provision extends Opstream {
       }
     }
 
-    this.push({
-      tag: 'provisioned',
-      data: {
+    this.final = {
+      source: {
+        core: {
+          id: co.core.id,
+          length: co.core.length,
+          hash: hypercoreid.encode(await co.core.treeHash())
+        },
+        blobs: {
+          id: co.blobs.core.id,
+          length: co.blobs.core.length,
+          hash: hypercoreid.encode(await co.blobs.core.treeHash())
+        },
+        link: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: co.core.id
+          }
+        }),
+        verlink: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: co.core.id,
+            fork: co.core.fork,
+            length: co.core.length
+          }
+        }),
+        hashlink: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: co.core.id,
+            fork: co.core.fork,
+            length: co.core.length,
+            hash: await co.core.treeHash()
+          }
+        })
+      },
+      target: {
+        core: {
+          id: to.core.id,
+          length: to.core.length,
+          hash: hypercoreid.encode(await to.core.treeHash())
+        },
+        blobs: {
+          id: to.blobs.core.id,
+          length: to.blobs.core.length,
+          hash: hypercoreid.encode(await to.blobs.core.treeHash())
+        },
         link: plink.serialize({
           protocol: 'pear:',
           drive: {
@@ -268,10 +324,45 @@ module.exports = class Provision extends Opstream {
             key: to.core.id,
             fork: to.core.fork,
             length: to.core.length,
-            hash: coreHash
+            hash: await to.core.treeHash()
+          }
+        })
+      },
+      production: {
+        core: {
+          id: prod.core.id,
+          length: prod.core.length,
+          hash: hypercoreid.encode(await prod.core.treeHash())
+        },
+        blobs: {
+          id: prod.blobs.core.id,
+          length: prod.blobs.core.length,
+          hash: hypercoreid.encode(await prod.blobs.core.treeHash())
+        },
+        link: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: prod.core.id
+          }
+        }),
+        verlink: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: prod.core.id,
+            fork: prod.core.fork,
+            length: prod.core.length
+          }
+        }),
+        hashlink: plink.serialize({
+          protocol: 'pear:',
+          drive: {
+            key: prod.core.id,
+            fork: prod.core.fork,
+            length: prod.core.length,
+            hash: await prod.core.treeHash()
           }
         })
       }
-    })
+    }
   }
 }
