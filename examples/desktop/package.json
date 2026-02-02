@@ -15,6 +15,12 @@
       "width": 900,
       "height": 500,
       "minWidth": 500
+    },
+    "stage": {
+      "entrypoints": [
+        "/index.js",
+        "/app.js"
+      ]
     }
   },
   "devDependencies": {
