@@ -46,9 +46,11 @@ module.exports = class Provision extends Opstream {
     await to.ready()
 
     const prod = new Hyperdrive(sidecar.getCorestore(), production.drive.key)
+    this.session.add(prod)
     await prod.ready()
 
     const from = new Hyperdrive(sidecar.getCorestore(), source.drive.key)
+    this.session.add(from)
     await from.ready()
 
     sidecar.swarm.join(to.discoveryKey, {
@@ -64,6 +66,11 @@ module.exports = class Provision extends Opstream {
       server: false
     })
 
+    session.teardown(() => {
+      sidecar.swarm.leave(to.discoveryKey)
+      sidecar.swarm.leave(from.discoveryKey)
+      sidecar.swarm.leave(prod.discoveryKey)
+    })
     if (prod.core.length === 0 && production.drive.length !== 0) {
       await new Promise((resolve) => prod.core.once('append', () => resolve()))
     }
