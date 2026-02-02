@@ -559,6 +559,41 @@ Platform uses label-filtered logging (`pear-logger`) controllable via CLI switch
 
 7. **Minimal footprint**: Single sidecar daemon serves all apps. Lazy loading means only needed code is downloaded.
 
+## Architecture Decisions
+
+### ADR-001: Sidecar Daemon Pattern
+
+**Context**: P2P stack (Hyperswarm DHT, Corestore) is expensive to initialize and requires exclusive storage locks.
+
+**Options considered**:
+- Per-process P2P stack: Each CLI command initializes own Hyperswarm/Corestore. Rejected: 2-5s DHT bootstrap per command, storage lock conflicts.
+- HTTP/REST server: Higher latency than Unix sockets, more complex streaming (SSE/WebSocket).
+- Embedded SQLite: Doesn't solve Hyperswarm sharing; still need daemon for P2P coordination.
+
+**Decision**: Long-lived sidecar daemon manages shared P2P infrastructure; CLI and apps connect via Unix socket IPC.
+
+**Consequences**: Fast CLI response (<10ms IPC vs 2-5s DHT bootstrap). Single point of failure mitigated by crash recovery. Debug complexity addressed via `pear sidecar inspect`.
+
+### ADR-002: Atomic Swap Slot Updates
+
+**Context**: Updates must never leave system in broken state. Need instant rollback capability.
+
+**Options considered**:
+- In-place replacement: Risk of corruption if interrupted, no rollback without backup.
+- Blue-green (2 slots): Only one rollback level; 4 slots add minimal overhead with better rollback depth.
+- Git-style object store: Additional indirection over Hyperdrive which already provides content addressing.
+- Copy-on-write filesystem: Platform-specific (no Windows equivalent), requires elevated permissions.
+
+**Decision**: 4-slot rotation with atomic symlink switching. New version downloads to next slot, symlink switches on restart.
+
+**Consequences**: Zero-downtime updates, instant rollback. Trade-off: 4x storage overhead per app (acceptable for typical <100MB apps).
+
+<!-- TODO: ADR-003 Unix Socket IPC vs HTTP/gRPC -->
+<!-- TODO: ADR-004 Opstream tagged event streaming vs request/response -->
+<!-- TODO: ADR-005 Holepunch stack vs libp2p/IPFS -->
+<!-- TODO: ADR-006 HyperDB vs SQLite for platform state -->
+<!-- TODO: ADR-007 Trust-on-first-use vs sandboxing -->
+
 ---
 
 *Document version: Based on pear v2.0.0*
