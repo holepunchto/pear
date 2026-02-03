@@ -351,6 +351,7 @@ module.exports = class Pod {
     const packed = await this.pack({
       entry: entry,
       prebuilds: path.join(SWAP, 'prebuilds'),
+      conditions: ['pear', 'pear-desktop', 'bare'],
       assets: this.drive.core
         ? path.join(
             SWAP,

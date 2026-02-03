@@ -1,4 +1,5 @@
 /** @typedef {import('pear-interface')} */ /* global Pear */
+import pipe from 'pear-pipe'
 import updates from 'pear-updates'
 updates((update) => {
   console.log('Application update available:', update)
