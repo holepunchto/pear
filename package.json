@@ -41,7 +41,8 @@
         "cli.crash.log",
         "package-lock.json",
         "node_modules/.package-lock.json"
-      ]
+      ],
+      "skipWarmup": true
     },
     "platform": {
       "fullSync": 0,
