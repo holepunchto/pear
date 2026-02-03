@@ -219,7 +219,10 @@ module.exports = class Run extends Opstream {
 
       LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
       if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
-      const bundle = await app.pod.bundle(state.entrypoint)
+      const bundle = await app.pod.bundle(
+        // FIXME: temporary demonstration of fix, should be removed
+        flags.pre ? state.entrypoint : path.join(state.entrypoint, state.main)
+      )
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
       return { id, startId, bundle }
     }

@@ -18,7 +18,7 @@ const rig = new Helper.Rig()
 test.solo('pear run staged manifest assets fetched', async (t) => {
   t.plan(1)
   const dir = Helper.fixture('app-pear-main')
-  
+
   const run = await Helper.run({ link: dir })
   const result = await new Promise((resolve) => {
     run.pipe.on('data', (result) => {
