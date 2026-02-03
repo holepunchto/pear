@@ -347,7 +347,6 @@ module.exports = class Pod {
   async bundle(entry) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
-
     const packed = await this.pack({
       entry: entry,
       prebuilds: path.join(SWAP, 'prebuilds'),
