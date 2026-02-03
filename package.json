@@ -111,7 +111,7 @@
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
     "pear-pipe": "^1.0.1",
-    "pear-prefetcher": "github:holepunchto/pear-prefetcher#stream-and-ci-and-lint",
+    "pear-prefetcher": "^1.0.0",
     "pear-run": "^1.0.8",
     "pear-shake": "^2.0.3",
     "pear-stamp": "^1.0.1",
