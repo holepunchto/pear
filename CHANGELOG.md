@@ -17,6 +17,16 @@
 
 * Internal - tweaks, test refactors
 
+## v2.2.16
+
+### Improvements
+
+* Full prefetch happens during preflight
+
+### Fixes
+
+* Run - use correct import map resolutions
+
 ## v2.2.15
 
 * Internal - fix slow warmup prefetch
