@@ -145,6 +145,11 @@ module.exports = class Stage extends Opstream {
     const include = state.options?.stage?.include || []
     const main = state.options?.gui?.main || null
 
+    // Cached versions of files and skips for warmup map generation,
+    // preventing a second round of static analysis
+    let compactFiles = null
+    let compactSkips = null
+
     if (!state.options.stage?.skipWarmup) {
       const builtins = state.options.assets?.ui
         ? sidecar.gunk.builtins
@@ -158,11 +163,6 @@ module.exports = class Stage extends Opstream {
             'Invalid main or stage entrypoint in package.json'
           )
       }
-
-      // Cached versions of files and skips for warmup map generation,
-      // preventing a second round of static analysis
-      let compactFiles = null
-      let compactSkips = null
 
       const pearShake = new PearShake(src, entrypoints)
       let shake = await pearShake.run({
