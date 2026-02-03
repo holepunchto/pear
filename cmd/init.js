@@ -40,8 +40,9 @@ module.exports = async function init(cmd) {
   if (force) header += ansi.bold('FORCE MODE\n\n')
 
   try {
+    const outputOpts = yes ? false : { ctrlTTY: false }
     await output(
-      false,
+      outputOpts,
       await require('../init')(link, dir, {
         cwd,
         ipc,
