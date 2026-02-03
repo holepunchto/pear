@@ -5,8 +5,9 @@ const hypercoreid = require('hypercore-id-encoding')
 const crypto = require('hypercore-crypto')
 const { isWindows } = require('which-runtime')
 const deriveEncryptionKey = require('pw-to-ek')
+const Helper = require('./helper') // note helper must precede constants
 const { SALT } = require('pear-constants')
-const Helper = require('./helper')
+
 
 test('pear data', async function ({
   ok,

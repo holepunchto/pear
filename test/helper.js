@@ -1,8 +1,14 @@
 /* global Pear */
 'use strict'
+const path = require('bare-path')
+const { fileURLToPath } = require('bare-url')
+global.Pear.constructor.RTI.mount = path.resolve(
+  fileURLToPath(require.main.url),
+  '..',
+  '..'
+)
 const os = require('bare-os')
 const env = require('bare-env')
-const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
@@ -159,6 +165,7 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
+          console.log(runtime, args)
           if (this.log) spawn(runtime, args, { stdio: 'inherit' })
           else daemon(runtime, args)
         }

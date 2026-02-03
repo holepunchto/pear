@@ -10,7 +10,6 @@ const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const Localdrive = require('localdrive')
-const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
@@ -108,6 +107,8 @@ module.exports = class Pod {
   async pack({
     cache = false,
     prebuilds,
+    mount,
+    assets,
     entry,
     builtins = [],
     conditions,
@@ -127,13 +128,17 @@ module.exports = class Pod {
     }
 
     const hosts = [require.addon.host]
-    const prebuildPrefix = pathToFileURL(prebuilds)
+    const prebuildPrefix = prebuilds ? pathToFileURL(prebuilds) : ''
+    const assetsPrefix = assets ? pathToFileURL(assets) : ''
+
     const packed = await pack(this.drive, {
       entry,
       hosts,
+      mount,
       builtins,
       conditions,
       extensions,
+      assetsPrefix,
       prebuildPrefix
     })
 
@@ -339,23 +344,28 @@ module.exports = class Pod {
     await this.drain()
   }
 
-  async bundle(entrypoint) {
+  async bundle(entry) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
-
-    const assets = this.drive.core
-      ? `assets/${this.drive.core.fork}.${this.drive.core.length}.${this.drive.discoveryKey.toString('hex')}`
-      : true // assets on localdrives are just passthrough per default
-
-    const res = await DriveBundler.bundle(this.drive, {
-      entrypoint: entrypoint || '.',
-      cwd: SWAP,
-      assets,
-      absoluteFiles: true,
-      mount: 'pear://' + id
+    const packed = await this.pack({
+      entry: entry,
+      prebuilds: path.join(SWAP, 'prebuilds'),
+      conditions: ['pear', 'pear-desktop', 'bare'],
+      assets: this.drive.core
+        ? path.join(
+            SWAP,
+            'assets',
+            this.drive.core.fork +
+              '.' +
+              this.drive.core.length +
+              '.' +
+              this.drive.discoveryKey.toString('hex')
+          )
+        : path.join(SWAP, 'assets'),
+      mount: 'pear://' + id + '/'
     })
 
-    return { key: id, ...res }
+    return packed.bundle
   }
 
   absorbReadStream(key, readStream, metadata) {
