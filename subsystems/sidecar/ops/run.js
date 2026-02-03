@@ -17,6 +17,7 @@ const Bundle = require('../lib/bundle')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const State = require('../state')
+const Prefetcher = require('pear-prefetcher')
 
 module.exports = class Run extends Opstream {
   constructor(...args) {
@@ -341,6 +342,10 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
+    this._prefetcher = new Prefetcher(app.bundle.drive)
+    this._prefetcher.on('update', (stats) => {
+      this.push({ tag: 'stats', data: stats })
+    })
     state.update({ assets: await app.bundle.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
@@ -371,7 +376,11 @@ module.exports = class Run extends Opstream {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
-    if (asset !== null) return asset
+    if (asset !== null && this._prefetcher) {
+      for await (const diff of this._prefetcher.start()) {
+      }
+      return asset
+    }
 
     asset = {
       ...opts,
@@ -416,14 +425,8 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    const monitor = mirror.monitor()
 
-    monitor.on('preloaded', () => {
-      bundle.prefetch()
-      if (appBundle) appBundle.prefetch()
-    })
-    monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
-    for await (const diff of mirror) {
+    for await (const diff of this._prefetcher?.start(mirror) || mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
       if (diff.op === 'add') {
         this.push({

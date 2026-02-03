@@ -41,7 +41,8 @@
         "cli.crash.log",
         "package-lock.json",
         "node_modules/.package-lock.json"
-      ]
+      ],
+      "skipWarmup": true
     },
     "platform": {
       "fullSync": 0,
@@ -53,6 +54,7 @@
   ],
   "dependencies": {
     "b4a": "^1.6.7",
+    "bare-addon-resolve": "^1.9.7",
     "bare-bundle": "^1.8.3",
     "bare-daemon": "^1.1.0",
     "bare-env": "^3.0.0",
@@ -74,8 +76,9 @@
     "crc-universal": "^1.0.4",
     "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
+    "dependency-stream": "^2.4.0",
     "drive-analyzer": "^2.0.2",
-    "drive-bundler": "^2.4.4",
+    "drive-bundler": "^2.6.0",
     "framed-stream": "^1.0.1",
     "fs-native-extensions": "^1.4.2",
     "fs-native-lock": "^1.1.0",
@@ -91,7 +94,7 @@
     "localdrive": "^2.2.0",
     "localwatch": "^1.4.3",
     "mime-db": "^1.54.0",
-    "mirror-drive": "^1.11.1",
+    "mirror-drive": "^1.12.0",
     "mutexify": "^1.4.0",
     "paparam": "^1.8.5",
     "pear-api": "^1.30.0",
@@ -108,8 +111,9 @@
     "pear-link": "^4.1.0",
     "pear-logger": "^1.0.0",
     "pear-pipe": "^1.0.1",
+    "pear-prefetcher": "^1.0.0",
     "pear-run": "^1.0.8",
-    "pear-shake": "^2.0.1",
+    "pear-shake": "^2.0.3",
     "pear-stamp": "^1.0.1",
     "pear-state": "^1.0.2",
     "pear-terminal": "^1.0.1",

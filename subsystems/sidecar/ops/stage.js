@@ -134,11 +134,6 @@ module.exports = class Stage extends Opstream {
 
     const opts = { ignore: glob.ignorer(), dryRun, batch: true, filter: select }
 
-    const builtins = state.options.assets?.ui
-      ? sidecar.gunk.builtins
-      : sidecar.gunk.bareBuiltins
-    const linker = new ScriptLinker(src, { builtins })
-
     const mainExists =
       (await src.entry(unixPathResolve('/', state.main))) !== null
     const entrypoints = [
@@ -150,45 +145,65 @@ module.exports = class Stage extends Opstream {
     const include = state.options?.stage?.include || []
     const main = state.options?.gui?.main || null
 
-    for (const entrypoint of entrypoints) {
-      const entry = await src.entry(entrypoint)
-      if (!entry)
-        throw ERR_INVALID_CONFIG(
-          'Invalid main or stage entrypoint in package.json'
-        )
-    }
-
     // Cached versions of files and skips for warmup map generation,
     // preventing a second round of static analysis
     let compactFiles = null
     let compactSkips = null
 
-    if (compact) {
+    if (!state.options.stage?.skipWarmup) {
+      const builtins = state.options.assets?.ui
+        ? sidecar.gunk.builtins
+        : sidecar.gunk.bareBuiltins
+      const linker = new ScriptLinker(src, { builtins })
+
+      for (const entrypoint of entrypoints) {
+        const entry = await src.entry(entrypoint)
+        if (!entry)
+          throw ERR_INVALID_CONFIG(
+            'Invalid main or stage entrypoint in package.json'
+          )
+      }
+
       const pearShake = new PearShake(src, entrypoints)
       let shake = await pearShake.run({
         defer: state.options?.stage?.defer
       })
-      compactFiles = shake.files
-      compactSkips = shake.skips
-      const { files } = shake
-      const skips = shake.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-      opts.ignore = compactStageIgnore(
-        files,
-        [...prefetch, ...include],
-        select,
-        main
-      )
-      this.push({
-        tag: 'compact',
-        data: { files: files, skips, success: true }
-      })
+
+      if (compact) {
+        compactFiles = shake.files
+        compactSkips = shake.skips
+        const { files } = shake
+        const skips = shake.skips.map(({ specifier, referrer }) => {
+          return { specifier, referrer: referrer.pathname }
+        })
+        opts.ignore = compactStageIgnore(
+          files,
+          [...prefetch, ...include],
+          select,
+          main
+        )
+        this.push({
+          tag: 'compact',
+          data: { files: files, skips, success: true }
+        })
+      }
+
+      const mods = await linker.warmup(entrypoints)
+      for await (const [filename, mod] of mods) {
+        const cache = mod.cache()
+        cache.imports = shake.resolutions[filename]
+        src.metadata.put(filename, cache)
+      }
+
+      for (const k of Object.keys(shake.resolutions)) {
+        if (mods.has(k)) continue
+        src.metadata.put(k, {
+          type: 'commonjs',
+          imports: shake.resolutions[k]
+        })
+      }
     }
 
-    const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods)
-      src.metadata.put(filename, mod.cache())
     if (!purge && state.options?.stage?.purge)
       purge = state.options?.stage?.purge
     if (purge) {

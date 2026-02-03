@@ -23,7 +23,6 @@ module.exports = class Opstream extends streamx.Readable {
           cb(null)
           if (autosession) return this.session.close()
         }
-
         if (params.link) params.link = plink.normalize(params.link)
         op(params).catch(error).finally(close)
       }
