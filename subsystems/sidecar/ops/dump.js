@@ -28,8 +28,9 @@ module.exports = class Dump extends Opstream {
       try {
         const files = await fsp.readdir(dir)
         const empty = files.length === 0
-        if (empty === false && !force)
+        if (empty === false && !force) {
           throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+        }
       } catch (err) {
         if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
       }

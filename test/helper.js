@@ -282,8 +282,9 @@ class Helper extends IPC.Client {
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
-      if (ptn?.[by] !== 'error' && output[by] === 'error')
+      if (ptn?.[by] !== 'error' && output[by] === 'error') {
         throw new OperationError(output.data)
+      }
       if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
@@ -308,8 +309,9 @@ class Helper extends IPC.Client {
           reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
         const ondata = (data) => {
-          if (data === null || data?.tag === 'final')
+          if (data === null || data?.tag === 'final') {
             stream.off('close', onclose)
+          }
         }
         stream.on('data', ondata)
         stream.on('close', onclose)
@@ -450,7 +452,7 @@ class Restack {
 
     Error.prepareStackTrace = (err, frames) => {
       const name = err && err.name ? err.name : 'Error'
-      const msg = err && err.message != null ? String(err.message) : ''
+      const msg = err && err.message !== null ? String(err.message) : ''
       const head = msg ? `${name}: ${msg}` : name
       return head + '\n' + frames.map((cs) => this._callsite(cs)).join('\n')
     }
@@ -472,14 +474,16 @@ class Restack {
     if (cs.isConstructor()) return frm ? `new ${frm}` : 'new <anonymous>'
 
     if (meth) {
-      if (type && frm)
+      if (type && frm) {
         return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
+      }
       if (type) return `${type}.${meth}`
       return meth
     }
 
-    if (type && frm)
+    if (type && frm) {
       return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
+    }
 
     return frm || ''
   }
@@ -503,8 +507,8 @@ class Restack {
 
   _pos(link, line, col) {
     link = link ? String(link) : '<anonymous>'
-    if (line == null) return link
-    if (col == null) return `${link}:${line}`
+    if (line === null) return link
+    if (col === null) return `${link}:${line}`
     return this.at(link, line, col)
   }
 }

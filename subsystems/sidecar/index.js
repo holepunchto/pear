@@ -188,10 +188,12 @@ class Sidecar extends ReadyResource {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
-        if (report.err?.code === 'ERR_PERMISSION_REQUIRED')
+        if (report.err?.code === 'ERR_PERMISSION_REQUIRED') {
           return reports.permission(report)
-        if (report.err?.code === 'ERR_CONNECTION')
+        }
+        if (report.err?.code === 'ERR_CONNECTION') {
           return reports.connection(report)
+        }
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
         const args = [
           report.err?.message,
@@ -491,12 +493,13 @@ class Sidecar extends ReadyResource {
 
   async updateNotify(version, info = {}) {
     if (info.link) LOG.info('sidecar', 'Application update available:')
-    else if (version.force)
+    else if (version.force) {
       LOG.info(
         'sidecar',
         'Platform Force update (' + version.force.reason + '). Updating to:'
       )
-    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    } else
+      LOG.info('sidecar', 'Platform update available. Restart to update to:')
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
     else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
@@ -554,8 +557,9 @@ class Sidecar extends ReadyResource {
           'identify failure unrecognized startId - did the origin app close?'
         )
     }
-    if (!client.userData)
+    if (!client.userData) {
       throw ERR_INTERNAL_ERROR('identify failure no userData')
+    }
     const id = client.userData.id
     return { id }
   }
@@ -819,8 +823,9 @@ class Sidecar extends ReadyResource {
       }
       const tearingDown = isApp && client.userData.teardown()
       // TODO: close timeout for tearingDown clients
-      if (tearingDown === false)
+      if (tearingDown === false) {
         this.#endRPCStreams(client).then(() => client.close())
+      }
     }
     return metadata
   }
@@ -861,8 +866,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -914,8 +920,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -1011,15 +1018,17 @@ class Sidecar extends ReadyResource {
     this.swarm.on('connection', (connection) => {
       this.corestore.replicate(connection)
     })
-    if (this.replicator !== null)
+    if (this.replicator !== null) {
       this.replicator
         .join(this.swarm, { server: false, client: true })
         .catch(safetyCatch)
+    }
   }
 
   getCorestore(name, channel, opts) {
-    if (!name || !channel)
+    if (!name || !channel) {
       return this.corestore.session({ writable: false, ...opts })
+    }
     return this.corestore.namespace(`${name}~${channel}`, {
       writable: false,
       ...opts
@@ -1030,8 +1039,9 @@ class Sidecar extends ReadyResource {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
     const tearingDown =
       client.userData instanceof this.App && client.userData.teardown()
-    if (tearingDown === false)
+    if (tearingDown === false) {
       await this.#endRPCStreams(client).then(() => client.close())
+    }
     this.spindownms = 0
     const restarts = this.closeClients()
     this.#spindownCountdown()

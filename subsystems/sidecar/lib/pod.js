@@ -182,7 +182,7 @@ module.exports = class Pod {
         ? this.release > this.drive.version
         : this.current < this.drive.version)
 
-    if (shouldNotify)
+    if (shouldNotify) {
       await updateNotify(
         {
           key: this.hexKey,
@@ -194,6 +194,7 @@ module.exports = class Pod {
           diff: null
         }
       )
+    }
 
     try {
       if (this.updatesDiff) {
@@ -409,8 +410,9 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null)
+    if (this.release === null) {
       this.release = (await this.db.get('release'))?.value ?? null
+    }
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
@@ -462,7 +464,7 @@ module.exports = class Pod {
     const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
     if (warmup) {
-      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
       if (Array.isArray(meta) === false) meta = [meta]
       if (Array.isArray(data) === false) data = [data]
       return await this.drive.downloadRange(meta, data)
@@ -544,14 +546,16 @@ class PodUpdater extends ReadyResource {
     if (
       fork < this.checkout.fork ||
       (fork === this.checkout.fork && length <= this.checkout.length)
-    )
+    ) {
       return this.checkout
+    }
     for await (const checkout of this.watch(opts)) {
       if (
         fork < checkout.fork ||
         (fork === checkout.fork && length <= checkout.length)
-      )
+      ) {
         return checkout
+      }
     }
 
     return null

@@ -138,8 +138,9 @@ module.exports = class Run extends Opstream {
       }
     }
 
-    if (parsed.protocol !== 'pear:' && !link.startsWith('file:'))
+    if (parsed.protocol !== 'pear:' && !link.startsWith('file:')) {
       link = pathToFileURL(link).href
+    }
 
     link = plink.normalize(link)
 
@@ -336,8 +337,9 @@ module.exports = class Run extends Opstream {
         id,
         err
       )
-      if (err.code === 'ERR_INVALID_MANIFEST')
+      if (err.code === 'ERR_INVALID_MANIFEST') {
         throw ERR_CONNECTION(err.message, { err })
+      }
       throw err
     }
 

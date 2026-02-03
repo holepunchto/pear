@@ -1,3 +1,5 @@
-const pipe = Pear.worker.pipe()
+Pear.worker.pipe()
 
-while (true) {}
+while (true) {
+  //block
+}

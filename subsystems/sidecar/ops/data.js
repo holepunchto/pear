@@ -40,11 +40,10 @@ module.exports = class Data extends Opstream {
 
     if (resource === 'assets') {
       await this.sidecar.model.allocatedAssets()
-      let assets
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
         if (asset === null) throw ERR_NOT_FOUND(link + ' not found', { link })
-        this.final = { assets: assets }
+        this.final = { assets: [asset] }
       } else {
         const assets = await this.sidecar.model.allAssets()
         this.final = { assets: assets }
