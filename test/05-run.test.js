@@ -15,6 +15,20 @@ const Helper = require('./helper')
 
 const rig = new Helper.Rig()
 
+test.solo('pear run staged manifest assets fetched', async (t) => {
+  t.plan(1)
+  const dir = Helper.fixture('app-pear-main')
+
+  const run = await Helper.run({ link: dir })
+  const result = await new Promise((resolve) => {
+    run.pipe.on('data', (result) => {
+      resolve(result.toString())
+      run.pipe.end()
+    })
+  })
+  t.is(result, 'pass')
+})
+
 test('pear run staged manifest assets fetched', async (t) => {
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })

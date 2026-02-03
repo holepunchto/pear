@@ -70,6 +70,11 @@ const commands = {
 }
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
+  // FIXME: temporary demonstration, should be removed
+  if (argv.some((a) => a.includes('app-pear-main'))) {
+    argv.splice(argv.indexOf('--base'), 2)
+  }
+
   await ipc.ready()
 
   Bare.prependListener('exit', () => {

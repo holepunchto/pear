@@ -1,0 +1,10 @@
+{
+  "name": "app-with-assets",
+  "main": "index.js",
+  "pear": {
+    "main": "cmd.js"
+  },
+  "dependencies": {
+    "pear-pipe": "^1.0.1"
+  }
+}

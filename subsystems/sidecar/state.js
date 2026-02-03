@@ -45,9 +45,12 @@ module.exports = class State extends SharedState {
         )
       }
       await this.constructor.build(this, result.value)
+      // FIXME: modify pear-state instead
+      this.manifest.main = this.main
       if (app?.reported) return
     } else {
       await this.constructor.build(this, pkg)
+      this.manifest.main = this.main
       if (app?.reported) return
 
       if (this.stage && dryRun === false && this.manifest) {
