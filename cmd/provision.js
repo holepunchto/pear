@@ -1,5 +1,5 @@
 'use strict'
-const { outputter, byteDiff } = require('pear-terminal')
+const { outputter, ansi, byteDiff } = require('pear-terminal')
 const { ERR_INVALID_LINK } = require('pear-errors')
 const plink = require('pear-link')
 
@@ -15,9 +15,10 @@ const output = outputter('provision', {
   },
   synced: ({ type }) => '\nCompleted ' + type + ' sync',
   diffing: () => 'Checking diff\n',
-  diffed: ({ changes, semver, core, blobs }) => {
+  diffed: ({ changes, semver, target }) => {
+    const { core, blobs } = target
     return (
-      '\nDiffing complete\nTotal changes: ' +
+      'Diffing complete\nTotal changes: ' +
       changes +
       '\nPackage version: ' +
       semver +
@@ -40,15 +41,19 @@ const output = outputter('provision', {
   },
   dry: () => 'Dry Run Complete\n',
   cooldown: ({ time }) => {
-    'NOT A DRY RUN! Waiting ' +
+    return (
+      ansi.bold('NOT A DRY RUN!') +
+      ' Waiting ' +
       time / 1000 +
-      's for certainty\nUse ctrl+c to bail'
+      's for certainty. Use ctrl+c to bail'
+    )
   },
   staging: () => 'Staging to target...',
   staged: ({ changes }) => (changes === 0 ? '(Empty)' : ''),
   unsetting: ({ field }) => 'Dropping ' + field + ' field from target',
   setting: ({ field }) => 'Updating ' + field + ' field on target',
-  final: ({ verlink, hashlink, link }) => {
+  final: ({ target }) => {
+    const { verlink, hashlink, link } = target
     return {
       output: 'print',
       success: Infinity, // omit success tick

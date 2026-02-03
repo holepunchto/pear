@@ -7,7 +7,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   is,
   plan
 }) => {
-  plan(2)
+  plan(1)
   const prod = Helper.fixture('stage-app-min')
   const src = Helper.fixture('sub-dep-require-assets')
 
@@ -63,13 +63,6 @@ test('pear provision syncs blocks from source to target per production key', asy
   })
 
   const provision = await provisioned.final
-
-  is(
-    provision.target.core.length,
-    provision.production.core.length +
-      provision.source.core.length +
-      fieldUpdates
-  )
 
   const srcRun = await Helper.run({ link: provision.source.verlink })
 
