@@ -45,9 +45,10 @@ const { version } = require('../../package.json')
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
-  Release: require('./ops/release'),
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
+  Provision: require('./ops/provision'),
+  Release: require('./ops/release'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
@@ -560,16 +561,20 @@ class Sidecar extends ReadyResource {
     return { id }
   }
 
+  stage(params, client) {
+    return new ops.Stage(params, client, this)
+  }
+
   seed(params, client) {
     return new ops.Seed(params, client, this)
   }
 
-  release(params, client) {
-    return new ops.Release(params, client, this)
+  provision(params, client) {
+    return new ops.Provision(params, client, this)
   }
 
-  stage(params, client) {
-    return new ops.Stage(params, client, this)
+  release(params, client) {
+    return new ops.Release(params, client, this)
   }
 
   dump(params, client) {
