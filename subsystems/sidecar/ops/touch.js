@@ -13,10 +13,22 @@ module.exports = class Touch extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ channel = randomBytes(16).toString('hex') }) {
+  async #op({ dir, channel = randomBytes(16).toString('hex') }) {
     const { sidecar } = this
     await sidecar.ready()
-    const corestore = sidecar.getCorestore('!touch', channel)
+
+    let name = '!touch'
+    if (dir)
+      try {
+        const pkg = await State.localPkg({ dir })
+        if (pkg !== null) {
+          name = State.appname(pkg)
+        }
+      } catch {
+        // ignore
+      }
+
+    const corestore = sidecar.getCorestore(name, channel)
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)
     const drive = new Hyperdrive(corestore, key)

@@ -17,7 +17,8 @@ const output = outputter('touch', {
 
 module.exports = async function touch(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
+  const dir = cmd.args.dir
   const json = cmd.flags.json
   const channel = cmd.args.channel
-  await output(json, ipc.touch({ channel }))
+  await output(json, ipc.touch({ dir, channel }))
 }

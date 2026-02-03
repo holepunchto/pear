@@ -29,8 +29,9 @@ test('pear data', async function ({
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const ek = await deriveEncryptionKey(password, SALT)
 
-  const touch = await helper.touch({ dir, channel: `test-${id}` })
-  const { key } = await Helper.pick(touch, { tag: 'result' })
+  const touching = await helper.touch({ dir, channel: `test-${id}` })
+  const touched = await Helper.pick(touching, [{ tag: 'final' }])
+  const { key } = await touched.final
   await helper.permit({ key: hypercoreid.decode(key), password })
 
   comment('staging with encryption key')

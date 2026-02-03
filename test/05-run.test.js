@@ -442,8 +442,9 @@ test('stage, seed and run encrypted app', async function ({
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
-  const touch = await helper.touch({ dir, channel: `test-${id}` })
-  const { key } = await Helper.pick(touch, { tag: 'result' })
+  const touching = await helper.touch({ dir, channel: `test-${id}` })
+  const touched = await Helper.pick(touching, [{ tag: 'final' }])
+  const { key } = await touched.final
   await helper.permit({ key: hypercoreid.decode(key), password })
 
   comment('staging with encryption key')

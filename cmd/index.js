@@ -238,6 +238,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Initialize project link'),
     description`Create a project Pear link if it doesn't already exist`,
     arg('[channel]', 'Channel name. Default: randomly generated'),
+    flag('--dir', 'Project dir-based deterministic touch'),
     flag('--json', 'Newline delimited JSON output'),
     commands.touch
   )
