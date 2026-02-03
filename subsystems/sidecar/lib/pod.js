@@ -10,7 +10,6 @@ const safetyCatch = require('safety-catch')
 const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const Localdrive = require('localdrive')
-const DriveBundler = require('drive-bundler')
 const DriveAnalyzer = require('drive-analyzer')
 const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
@@ -22,7 +21,6 @@ const pack = require('pear-pack')
 const { SWAP, PLATFORM_DIR } = require('pear-constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
-const { c } = require('hyperdb/runtime')
 const noop = Function.prototype
 
 const ABI = 0
@@ -132,6 +130,7 @@ module.exports = class Pod {
     const hosts = [require.addon.host]
     const prebuildPrefix = prebuilds ? pathToFileURL(prebuilds) : ''
     const assetsPrefix = assets ? pathToFileURL(assets) : ''
+
     const packed = await pack(this.drive, {
       entry,
       hosts,
@@ -345,14 +344,14 @@ module.exports = class Pod {
     await this.drain()
   }
 
-  async bundle(entrypoint) {
+  async bundle(entry) {
     if (!this.opened) await this.ready()
     const id = this.drive.id || 'dev'
 
     const packed = await this.pack({
-      entry: entrypoint || '.',
-      prebuildsPrefix: path.join(SWAP, 'prebuilds'),
-      assetsPrefix: this.drive.core
+      entry: entry,
+      prebuilds: path.join(SWAP, 'prebuilds'),
+      assets: this.drive.core
         ? path.join(
             SWAP,
             'assets',
@@ -363,7 +362,7 @@ module.exports = class Pod {
               this.drive.discoveryKey.toString('hex')
           )
         : path.join(SWAP, 'assets'),
-      mount: 'pear://' + id
+      mount: 'pear://' + id + '/'
     })
 
     return packed.bundle

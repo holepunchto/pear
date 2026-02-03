@@ -43,7 +43,7 @@ module.exports = class Run extends Opstream {
     app.clients.add(client)
 
     this.push({ tag: 'initialized', data: { id } })
-
+    this.corestore = null
     const running = this.run({
       app,
       flags,
@@ -178,7 +178,6 @@ module.exports = class Run extends Opstream {
 
     app.state = state
 
-    const corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
     const fromDisk = state.key === null
     if (fromDisk) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
@@ -191,8 +190,7 @@ module.exports = class Run extends Opstream {
         drive,
         updatesDiff: state.updatesDiff,
         // asset method doesnt get/add assets when running pre.js file
-        asset: (opts) =>
-          state.prerunning ? null : this.asset(opts, corestore),
+        asset: (opts) => (state.prerunning ? null : this.asset(opts)),
         updateNotify:
           state.updates &&
           ((version, info) => sidecar.updateNotify(version, info))
@@ -214,20 +212,23 @@ module.exports = class Run extends Opstream {
         throw err
       }
 
+      this.corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
+
       LOG.info(LOG_RUN_LINK, id, 'determining assets')
       state.update({ assets: await app.pod.assets(state.manifest) })
 
       LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
       if (flags.preflight) return { bail: { code: 'PREFLIGHT' } }
-      const bundle = await app.pod.bundle(state.entrypoint)
+      const bundle = await app.pod.bundle(state.entry)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle, entry: state.entrypoint }
+      return { id, startId, bundle, entry: state.entry }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'checking drive for encryption')
     let drive
     try {
-      drive = new Hyperdrive(corestore, state.key, { encryptionKey })
+      this.corestore = this.corestore || sidecar.getCorestore()
+      drive = new Hyperdrive(this.corestore, state.key, { encryptionKey })
       await drive.ready()
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') {
@@ -258,7 +259,7 @@ module.exports = class Run extends Opstream {
     const pod = new Pod({
       swarm: sidecar.swarm,
       encryptionKey,
-      corestore,
+      corestore: this.corestore,
       appling: state.appling,
       channel: state.channel,
       current: current?.checkout.length,
@@ -280,7 +281,7 @@ module.exports = class Run extends Opstream {
         }
       },
       // pre.js file only runs on disk, so no need for conditional
-      asset: (opts) => this.asset(opts, corestore),
+      asset: (opts) => this.asset(opts),
       failure(err) {
         app.report({ err })
       }
@@ -293,6 +294,7 @@ module.exports = class Run extends Opstream {
     let checkout = null
     try {
       checkout = await pod.calibrate()
+      this.corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
       const { fork, length } = checkout
       const rollback = current > length
       if (rollback) {
@@ -369,19 +371,19 @@ module.exports = class Run extends Opstream {
     if (app.pod.platformVersion !== null) {
       app.report({ type: 'upgrade' })
       LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-      const bundle = await app.pod.bundle(state.entrypoint)
+      const bundle = await app.pod.bundle(state.entry)
       LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-      return { id, startId, bundle, entry: state.entrypoint }
+      return { id, startId, bundle, entry: state.entry }
     }
 
     LOG.info(LOG_RUN_LINK, id, 'app bundling..')
-    const bundle = await app.pod.bundle(state.entrypoint)
+    const bundle = await app.pod.bundle(state.entry)
     LOG.info(LOG_RUN_LINK, id, 'run initialization complete')
-    return { id, startId, bundle, entry: state.entrypoint }
+    return { id, startId, bundle, entry: state.entry }
     // start is tied to the lifecycle of the client itself so we don't tear it down
   }
 
-  async asset(opts, corestore) {
+  async asset(opts) {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
@@ -405,22 +407,22 @@ module.exports = class Run extends Opstream {
     const key = parsed.drive.key
     let src = null
     try {
-      src = new Hyperdrive(corestore, key)
+      src = new Hyperdrive(this.corestore, key)
       await src.ready()
     } catch (err) {
       if (err.code !== 'DECODING_ERROR') throw err
     }
-    const bundle = new Pod({
+    const pod = new Pod({
       key,
-      corestore,
+      corestore: this.corestore,
       drive: src,
       checkout: parsed.drive.length,
       swarm: this.sidecar.swarm
     })
-    await this.session.add(bundle)
-    bundle.join()
+    await this.session.add(pod)
+    pod.join()
     try {
-      await bundle.calibrate()
+      await pod.calibrate()
     } catch (err) {
       await this.session.close()
       throw err

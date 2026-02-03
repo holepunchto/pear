@@ -230,7 +230,8 @@ module.exports = async function run(cmd, devrun = false) {
 
   // preserves uncaught exceptions (otherwise they become unhandled rejections)
   setImmediate(() => {
-    Module.load(bundle)
+    const url = new URL(Pear.app.applink + entry + '.bundle')
+    Module.load(url, bundle)
     setImmediate(() => {
       // stops replaying & relaying subscriber streams between clients
       if (Pear.constructor.CUTOVER === true) ipc.cutover()
