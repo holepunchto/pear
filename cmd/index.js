@@ -11,8 +11,7 @@ const {
   bail,
   sloppy,
   rest,
-  validate,
-  hiddenCommand
+  validate
 } = paparam
 const { usage, print, ansi, explain } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
@@ -333,13 +332,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
-  const reset = hiddenCommand('reset', arg('[link]'), () => {
+  const reset = command('reset', arg('[link]'), () => {
     console.log(
       `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
     )
     console.log(drop.help())
     Bare.exit(1)
-  })
+  }).hide()
 
   const sidecar = command(
     'sidecar',
@@ -407,7 +406,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
-  const build = hiddenCommand('build', commands.build.runner())
+  const build = command('build', commands.build.runner()).hide()
 
   const help = command(
     'help',
