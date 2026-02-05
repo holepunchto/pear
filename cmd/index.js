@@ -384,7 +384,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
-  const build = command('build', commands.build.runner())
+  const build = hiddenCommand('build', commands.build.runner())
 
   const help = command(
     'help',
