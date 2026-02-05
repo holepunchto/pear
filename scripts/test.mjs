@@ -47,7 +47,7 @@ const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
 spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 
-const cmd = pear(Bare.argv.slice(3))
+const cmd = pear(Bare.argv.slice(2))
 const logging = Object.entries(cmd.flags)
   .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
   .map(
