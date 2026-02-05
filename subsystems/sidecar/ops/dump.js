@@ -4,6 +4,7 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
+const State = require('pear-state')
 const {
   ERR_PERMISSION_REQUIRED,
   ERR_DIR_NONEMPTY,
@@ -12,6 +13,7 @@ const {
 } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
+const { isWindows } = require('which-runtime')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -36,9 +38,13 @@ module.exports = class Dump extends Opstream {
     }
 
     const parsed = plink.parse(link)
-    const isFileLink = parsed.protocol === 'file:'
+
+    const isLocalSrc = parsed.protocol === 'file:'
+    const filepath = isWindows
+      ? parsed.pathname.slice(1).split(path.posix.sep).join(path.win32.sep)
+      : parsed.pathname
     const isFile =
-      isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+      isLocalSrc && (await fsp.stat(filepath)).isDirectory() === false
 
     const key = parsed.drive.key
     checkout =
@@ -47,14 +53,28 @@ module.exports = class Dump extends Opstream {
     const traits = await this.sidecar.model.getTraits(link)
     const encryptionKey = traits?.encryptionKey
 
-    const corestore = isFileLink ? null : sidecar.getCorestore(null, null)
-    let drive = null
+    const corestore = isLocalSrc ? null : sidecar.getCorestore(null, null)
 
-    if (corestore) {
+    let prefix
+    let drive
+
+    if (isLocalSrc) {
+      const dir = isFile ? path.dirname(filepath) : filepath
+      const state = { dir }
+      const pkg = await State.localPkg(state)
+      if (pkg === null) {
+        throw ERR_INVALID_PROJECT_DIR(
+          `A valid package.json must exist (checked from "${dir}" to "${state.dir}")`
+        )
+      }
+      prefix = path.join('/', path.relative(state.dir, filepath))
+      drive = new LocalDrive(state.dir, { followLinks: true })
+    } else {
       await corestore.ready()
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
+        prefix = parsed.pathname
       } catch (err) {
         if (err.code !== 'DECODING_ERROR') throw err
         throw ERR_PERMISSION_REQUIRED('Encryption key required', {
@@ -63,10 +83,11 @@ module.exports = class Dump extends Opstream {
         })
       }
     }
-    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
+    const pathname = prefix === '/' ? '' : prefix
+
     const pod = new Pod({
       corestore,
-      drive: isFileLink ? new LocalDrive(root, { followLinks: true }) : drive,
+      drive,
       key,
       checkout,
       swarm: sidecar.swarm
@@ -74,13 +95,13 @@ module.exports = class Dump extends Opstream {
 
     await session.add(pod)
 
-    if (sidecar.swarm && !isFileLink) pod.join()
+    if (sidecar.swarm && !isLocalSrc) pod.join()
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    if (!isFileLink) {
+    if (!isLocalSrc) {
       try {
         await pod.calibrate()
       } catch (err) {
@@ -92,13 +113,6 @@ module.exports = class Dump extends Opstream {
     const src = pod.drive
     await src.ready()
 
-    const prefix = isFileLink ? '/' : parsed.pathname
-    const pathname =
-      !isFileLink && parsed.pathname === '/'
-        ? ''
-        : isFile
-          ? path.basename(parsed.pathname)
-          : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {
@@ -121,7 +135,7 @@ module.exports = class Dump extends Opstream {
       }
 
       for await (const entry of src.list(pathname)) {
-        const key = isFileLink ? entry.key : entry.key.slice(prefix.length)
+        const key = isLocalSrc ? entry.key : entry.key.slice(prefix.length)
         if (list) {
           this.push({ tag: 'file', data: { key } })
           continue
@@ -147,7 +161,7 @@ module.exports = class Dump extends Opstream {
       prune,
       prefix: prefixes
     })
-    if (!isFileLink) {
+    if (!isLocalSrc) {
       const monitor = mirror.monitor()
       monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
     }
