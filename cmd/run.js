@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const Module = require('bare-module')
 const os = require('bare-os')
 const path = require('bare-path')
@@ -31,11 +32,12 @@ const preout = outputter('run', {
     // only occurs when run from disk
     const pre = index > 0 ? 'Pre-run [' + index + ':' + from + ']: ' : 'Pre-run [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
-    if (success === false)
+    if (success === false) {
       return {
         success: false,
         message: output?.stack || output?.message || 'Unknown Pre Error'
       }
+    }
     return pre + output.tag + suffix
   },
   final: {} // hide "{tick} Success"
@@ -90,18 +92,20 @@ module.exports = async function run(cmd, devrun = false) {
   if (onDisk) {
     const base = { cwd, dir, entrypoint: '/' }
     pkg = await State.localPkg(base) // may modify base.dir
-    if (pkg === null)
+    if (pkg === null) {
       throw ERR_INVALID_PROJECT_DIR(
         `A valid package.json must exist (checked from "${dir}" to "${base.dir}")`
       )
+    }
     base.entrypoint = dir.slice(base.dir.length)
     dir = base.dir
     if (dir.length > 1 && dir.endsWith(path.sep)) dir = dir.slice(0, -1)
-    if (isPath)
+    if (isPath) {
       link =
         plink.normalize(pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href) +
         search +
         hash
+    }
     if (flags.pre) {
       const pre = new Pre('run', base, pkg)
       pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, {

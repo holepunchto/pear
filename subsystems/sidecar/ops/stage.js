@@ -7,7 +7,6 @@ const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const DriveAnalyzer = require('drive-analyzer')
-const { dirname } = require('bare-path')
 const { ERR_INVALID_CONFIG, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
@@ -90,7 +89,7 @@ module.exports = class Stage extends Opstream {
     ignore = [...new Set([...defaultIgnore, ...ignore])]
 
     only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim()) || []
-    let cfgOnly = state.options?.stage?.only
+    const cfgOnly = state.options?.stage?.only
     if (cfgOnly) {
       only.push(
         ...(Array.isArray(cfgOnly) ? cfgOnly : cfgOnly?.split(',').map((s) => s.trim()) || [])
@@ -150,7 +149,7 @@ module.exports = class Stage extends Opstream {
 
     if (compact) {
       const pearShake = new PearShake(src, entrypoints)
-      let shake = await pearShake.run({
+      const shake = await pearShake.run({
         defer: state.options?.stage?.defer
       })
       compactFiles = shake.files

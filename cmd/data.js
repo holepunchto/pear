@@ -168,6 +168,7 @@ class Data {
   }
 
   async presets() {
+    const { cmd } = this
     const command = cmd.args.command
     const link = cmd.args.link
     const { json } = cmd.command.parent.flags

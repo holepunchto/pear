@@ -465,10 +465,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     return null
   }
 
-  if (program.running)
+  if (program.running) {
     program.running.finally(() => {
       ipc.close()
     })
+  }
 
   return program
 }

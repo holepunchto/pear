@@ -144,7 +144,7 @@ test('pear data bundle persisted with z32 encoded key', async function ({ is, co
   await Helper.untilClose(run.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  let result = await opwait(data)
+  const result = await opwait(data)
   const bundles = result.data
 
   const persistedBundles = bundles.filter((e) => e.link.startsWith(`pear://${key}`))
@@ -170,7 +170,7 @@ test('pear data no duplicated bundle local app', async function ({ is, comment, 
   await Helper.untilClose(runC.pipe)
 
   const data = await helper.data({ resource: 'apps' })
-  let result = await opwait(data)
+  const result = await opwait(data)
   const bundles = result.data
 
   const key = isWindows ? `file:///${dir.replaceAll('\\', '/')}` : `file://${dir}`

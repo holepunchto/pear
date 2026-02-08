@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const b4a = require('b4a')
 const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
@@ -118,8 +119,9 @@ module.exports = class Model {
   }
 
   async addAsset(link, { ns, name, only, pack, path }) {
-    if (!plink.parse(link)?.drive?.length)
+    if (!plink.parse(link)?.drive?.length) {
       throw ERR_INVALID_LINK(link + ' asset links must include length')
+    }
     const tx = await this.lock.enter()
     const asset = { link, ns, name, only, pack, path }
     LOG.trace('db', 'INSERT', '@pear/assets', asset)
@@ -129,8 +131,9 @@ module.exports = class Model {
   }
 
   async getAsset(link) {
-    if (!plink.parse(link)?.drive?.length)
+    if (!plink.parse(link)?.drive?.length) {
       throw ERR_INVALID_LINK('asset links must include length', { link })
+    }
     const get = { link }
     LOG.trace('db', 'GET', '@pear/assets', get)
     const asset = await this.db.get('@pear/assets', get)
@@ -166,8 +169,9 @@ module.exports = class Model {
   }
 
   async removeAsset(link) {
-    if (!plink.parse(link)?.drive?.length)
+    if (!plink.parse(link)?.drive?.length) {
       throw ERR_INVALID_LINK(link + ' asset links must include length')
+    }
     const get = { link }
     const tx = await this.lock.enter()
     LOG.trace('db', 'GET', '@pear/assets', get)

@@ -15,10 +15,11 @@ module.exports = async function sidecar(cmd) {
     print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
     return
   }
-  if (!isWindows && isTTY)
+  if (!isWindows && isTTY) {
     gracedown(() => {
       stdio.out.write('\x1B[1K\x1B[G')
     })
+  }
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
@@ -66,8 +67,9 @@ module.exports = async function sidecar(cmd) {
       const swapix = cmdArgs.indexOf('--swap')
       if (swapix > -1) cmdArgs.splice(swapix, 2)
       stdio.out.write('  ')
-      if (cmdArgs[0] === 'seed' && cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false)
+      if (cmdArgs[0] === 'seed' && cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false) {
         cmdArgs[cmdArgs.length] = dir
+      }
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
   }

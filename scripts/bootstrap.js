@@ -163,13 +163,15 @@ async function download(key, all = false, link) {
 
   const tick = isWindows ? '^' : '✔'
 
-  if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
-  else
+  if (all) {
+    console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
+  } else {
     console.log(
       '\x1B[32m' +
         tick +
         '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
     )
+  }
 }
 
 async function output(mirror) {

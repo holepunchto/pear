@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const fs = require('bare-fs')
 const os = require('bare-os')
 const path = require('bare-path')

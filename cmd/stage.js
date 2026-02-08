@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-terminal')
@@ -60,11 +61,12 @@ const output = outputter('stage', {
     const pre =
       index > 0 ? 'Pre-stage [' + index + ':' + from + ']: ' : 'Pre-stage [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
-    if (success === false)
+    if (success === false) {
       return {
         success: false,
         message: output?.stack || output?.message || 'Unknown Pre Error'
       }
+    }
     return pre + output.tag + suffix
   },
   final(data, info) {

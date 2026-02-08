@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const cenc = require('compact-encoding')
 const fsp = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')

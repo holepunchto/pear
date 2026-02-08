@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { EventEmitter } = require('bare-events')
@@ -171,7 +172,7 @@ module.exports = class Pod {
         ? this.release > this.drive.version
         : this.current < this.drive.version)
 
-    if (shouldNotify)
+    if (shouldNotify) {
       await updateNotify(
         {
           key: this.hexKey,
@@ -183,6 +184,7 @@ module.exports = class Pod {
           diff: null
         }
       )
+    }
 
     try {
       if (this.updatesDiff) {
@@ -450,7 +452,7 @@ module.exports = class Pod {
     const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
     if (warmup) {
-      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
       if (Array.isArray(meta) === false) meta = [meta]
       if (Array.isArray(data) === false) data = [data]
       return await this.drive.downloadRange(meta, data)
@@ -532,11 +534,13 @@ class PodUpdater extends ReadyResource {
     if (
       fork < this.checkout.fork ||
       (fork === this.checkout.fork && length <= this.checkout.length)
-    )
+    ) {
       return this.checkout
+    }
     for await (const checkout of this.watch(opts)) {
-      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length))
+      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length)) {
         return checkout
+      }
     }
 
     return null
@@ -658,8 +662,9 @@ class PodUpdater extends ReadyResource {
 
   async assets() {
     const pkg = await this.snapshot.db.get('manifest')
-    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {}))
+    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {})) {
       await this._asset({ ns, ...asset })
+    }
   }
 
   async _getLock() {

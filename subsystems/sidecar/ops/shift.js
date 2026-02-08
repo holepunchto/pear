@@ -36,10 +36,12 @@ module.exports = class Shift extends Opstream {
     const srcAppStorage = await this.sidecar.model.getAppStorage(src)
     const dstAppStorage = await this.sidecar.model.getAppStorage(dst)
 
-    if (!srcAppStorage || !(await exists(srcAppStorage)))
+    if (!srcAppStorage || !(await exists(srcAppStorage))) {
       throw ERR_INVALID_INPUT(`No app storage found for ${src}`)
-    if (dstAppStorage && !force)
+    }
+    if (dstAppStorage && !force) {
       throw ERR_INVALID_INPUT(`App storage for ${dst} already exists. Use --force to overwrite`)
+    }
 
     const newSrcAppStorage = path.join(
       path.join(PLATFORM_DIR, 'app-storage'),

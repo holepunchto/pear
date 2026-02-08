@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const bareInspector = require('bare-inspector')
 const { once } = require('bare-events')
 const { Inspector } = require('pear-inspect')
@@ -460,9 +461,9 @@ class Sidecar extends ReadyResource {
 
   async updateNotify(version, info = {}) {
     if (info.link) LOG.info('sidecar', 'Application update available:')
-    else if (version.force)
+    else if (version.force) {
       LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
-    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    } else LOG.info('sidecar', 'Platform update available. Restart to update to:')
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
     else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
@@ -511,8 +512,9 @@ class Sidecar extends ReadyResource {
       if (started) {
         client.userData = started.client.userData.register(client, params.startId, params.pid)
         if (params.startWait) await started.running
-      } else
+      } else {
         throw ERR_INVALID_INPUT('identify failure unrecognized startId - did the origin app close?')
+      }
     }
     if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData')
     const id = client.userData.id
@@ -809,8 +811,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -853,8 +856,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -941,8 +945,9 @@ class Sidecar extends ReadyResource {
     this.swarm.on('connection', (connection) => {
       this.corestore.replicate(connection)
     })
-    if (this.replicator !== null)
+    if (this.replicator !== null) {
       this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
+    }
   }
 
   getCorestore(name, channel, opts) {

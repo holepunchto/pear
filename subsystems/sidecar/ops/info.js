@@ -70,11 +70,12 @@ module.exports = class Info extends Opstream {
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
       const appManifest = await drive.db.get('manifest').catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+        if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
+        }
       })
 
       if (manifest) {
@@ -97,11 +98,12 @@ module.exports = class Info extends Opstream {
         drive.db.get('channel'),
         drive.db.get('release')
       ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+        if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
+        }
       })
 
       if (isEnabled(metadata)) {

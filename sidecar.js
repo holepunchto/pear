@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')

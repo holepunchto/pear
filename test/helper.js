@@ -26,84 +26,6 @@ Error.stackTraceLimit = Infinity
 const rigPear = path.join(tmp, 'rig-pear')
 const STOP_CHAR = '\n'
 const { RUNTIME_ARGV } = Pear.constructor
-Pear.teardown(async () => {
-  console.log('# Teardown: Shutting Down Local Sidecar')
-  const local = new Helper()
-  console.log('# Teardown: Connecting Local Sidecar')
-  await local.ready()
-  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
-  await local.shutdown()
-  console.log('# Teardown: Local Sidecar Shutdown')
-})
-
-class Rig {
-  platformDir = rigPear
-  artefactDir = Helper.localDir
-  id = Math.floor(Math.random() * 10000)
-  local = new Helper()
-  tmp = tmp
-  keepAlive = true
-  constructor({ keepAlive = true } = {}) {
-    this.keepAlive = keepAlive
-  }
-
-  setup = async ({ comment, timeout }) => {
-    timeout(180000)
-    comment('connecting to sidecar')
-    await this.local.ready()
-    comment('connected to sidecar')
-
-    comment('staging platform...')
-    const staging = this.local.stage({
-      channel: `test-${this.id}`,
-      name: `test-${this.id}`,
-      dir: this.artefactDir,
-      dryRun: false
-    })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
-
-    comment('seeding platform')
-    this.seeder = new Helper()
-    await this.seeder.ready()
-    this.seeding = this.seeder.seed({
-      channel: `test-${this.id}`,
-      name: `test-${this.id}`,
-      dir: this.artefactDir,
-      key: null,
-      cmdArgs: []
-    })
-    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    this.key = await until.key
-    await until.announced
-    comment('platform seeding')
-
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
-    if (this.keepAlive) {
-      comment('connecting to rig sidecar')
-      this.rig = new Helper(this)
-      await this.rig.ready()
-      comment('connected to rig sidecar')
-    }
-  }
-
-  cleanup = async ({ comment }) => {
-    comment('closing seeder client')
-    await Helper.teardownStream(this.seeding)
-    await this.seeder.close()
-    comment('seeder client closed')
-    if (this.keepAlive) {
-      comment('shutting down rig sidecar')
-      await this.rig.shutdown()
-      comment('rig sidecar shutdown')
-    }
-    comment('closing local client')
-    await this.local.close()
-    comment('local client closed')
-  }
-}
 
 class OperationError extends Error {
   constructor({ code, message, stack }) {
@@ -117,7 +39,6 @@ class Helper extends IPC.Client {
   static fixture(name) {
     return path.join(Helper.localDir, 'test', 'fixtures', name)
   }
-  static Rig = Rig
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
@@ -351,6 +272,87 @@ class Helper extends IPC.Client {
   }
 }
 
+class Rig {
+  platformDir = rigPear
+  artefactDir = Helper.localDir
+  id = Math.floor(Math.random() * 10000)
+  local = new Helper()
+  tmp = tmp
+  keepAlive = true
+  constructor({ keepAlive = true } = {}) {
+    this.keepAlive = keepAlive
+  }
+
+  setup = async ({ comment, timeout }) => {
+    timeout(180000)
+    comment('connecting to sidecar')
+    await this.local.ready()
+    comment('connected to sidecar')
+
+    comment('staging platform...')
+    const staging = this.local.stage({
+      channel: `test-${this.id}`,
+      name: `test-${this.id}`,
+      dir: this.artefactDir,
+      dryRun: false
+    })
+    await Helper.pick(staging, { tag: 'final' })
+    comment('platform staged')
+
+    comment('seeding platform')
+    this.seeder = new Helper()
+    await this.seeder.ready()
+    this.seeding = this.seeder.seed({
+      channel: `test-${this.id}`,
+      name: `test-${this.id}`,
+      dir: this.artefactDir,
+      key: null,
+      cmdArgs: []
+    })
+    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
+    this.key = await until.key
+    await until.announced
+    comment('platform seeding')
+
+    comment('bootstrapping rig platform...')
+    await Helper.bootstrap(this.key, this.platformDir)
+    comment('rig platform bootstrapped')
+    if (this.keepAlive) {
+      comment('connecting to rig sidecar')
+      this.rig = new Helper(this)
+      await this.rig.ready()
+      comment('connected to rig sidecar')
+    }
+  }
+
+  cleanup = async ({ comment }) => {
+    comment('closing seeder client')
+    await Helper.teardownStream(this.seeding)
+    await this.seeder.close()
+    comment('seeder client closed')
+    if (this.keepAlive) {
+      comment('shutting down rig sidecar')
+      await this.rig.shutdown()
+      comment('rig sidecar shutdown')
+    }
+    comment('closing local client')
+    await this.local.close()
+    comment('local client closed')
+  }
+}
+
+Helper.Rig = Rig
+
+Pear.teardown(async () => {
+  console.log('# Teardown: Shutting Down Local Sidecar')
+  const local = new Helper()
+  console.log('# Teardown: Connecting Local Sidecar')
+  await local.ready()
+  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
+  await local.shutdown()
+  console.log('# Teardown: Local Sidecar Shutdown')
+})
+
 module.exports = Helper
 
 class Reiterate {
@@ -427,7 +429,8 @@ class Restack {
 
     Error.prepareStackTrace = (err, frames) => {
       const name = err && err.name ? err.name : 'Error'
-      const msg = err && err.message != null ? String(err.message) : ''
+      const msg =
+        err && err.message !== null && err.message !== undefined ? String(err.message) : ''
       const head = msg ? `${name}: ${msg}` : name
       return head + '\n' + frames.map((cs) => this._callsite(cs)).join('\n')
     }
@@ -478,8 +481,8 @@ class Restack {
 
   _pos(link, line, col) {
     link = link ? String(link) : '<anonymous>'
-    if (line == null) return link
-    if (col == null) return `${link}:${line}`
+    if (line === null || line === undefined) return link
+    if (col === null || col === undefined) return `${link}:${line}`
     return this.at(link, line, col)
   }
 }
