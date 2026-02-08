@@ -146,8 +146,7 @@ const encoding5 = {
     if (m.pack) encoding5_6.preencode(state, m.pack)
   },
   encode(state, m) {
-    const flags =
-      (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0) | (m.pack ? 8 : 0)
+    const flags = (m.name ? 1 : 0) | (m.only ? 2 : 0) | (m.bytes ? 4 : 0) | (m.pack ? 8 : 0)
 
     c.string.encode(state, m.link)
     c.string.encode(state, m.ns)
@@ -250,8 +249,7 @@ const encoding8 = {
     if (m.extensions) encoding8_4.preencode(state, m.extensions)
   },
   encode(state, m) {
-    const flags =
-      (m.builtins ? 1 : 0) | (m.conditions ? 2 : 0) | (m.extensions ? 4 : 0)
+    const flags = (m.builtins ? 1 : 0) | (m.conditions ? 2 : 0) | (m.extensions ? 4 : 0)
 
     c.string.encode(state, m.bundle)
     c.string.encode(state, m.entry)

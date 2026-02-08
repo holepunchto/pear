@@ -1,3 +1,9 @@
+/* SCHEMA SAFETY RULES
+
+1. Schema fields are append-only; once a new field is added, it cannot be removed (comment as deprecated instead).
+2. Deleting files in spec/ directory is forbidden.
+3. `npm run hyperdb:build` after making changes; once merged to main branch, no undoing changes.
+*/
 const path = require('bare-path')
 const Hyperschema = require('hyperschema')
 const Builder = require('hyperdb/builder')
@@ -63,6 +69,40 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'pack', // DEPRECATED
+  fields: [
+    {
+      name: 'bundle',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'entry',
+      type: 'string',
+      required: true
+    },
+    {
+      name: 'builtins',
+      type: 'string',
+      array: true,
+      required: false
+    },
+    {
+      name: 'conditions',
+      type: 'string',
+      array: true,
+      required: false
+    },
+    {
+      name: 'extensions',
+      type: 'string',
+      array: true,
+      required: false
+    }
+  ]
+})
+
 // both structs & custom types
 pearSchema.register({
   name: 'assets',
@@ -94,6 +134,11 @@ pearSchema.register({
     {
       name: 'bytes',
       type: 'uint'
+    },
+    {
+      name: 'pack', // DEPRECATED
+      type: '@pear/pack',
+      array: true
     }
   ]
 })
