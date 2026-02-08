@@ -9,8 +9,7 @@ const output = outputter('provision', {
   blocks: ({ type, targetLength, productionLength }) => {
     return {
       output: 'status',
-      message:
-        'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
+      message: 'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
     }
   },
   synced: ({ type }) => '\nCompleted ' + type + ' sync',
@@ -68,12 +67,7 @@ const output = outputter('provision', {
     }
   },
   seeding: ({ cooloff, peers }) => {
-    return (
-      peers +
-      ' connected. Seeding until exit or inactive after ' +
-      cooloff / 1000 +
-      's'
-    )
+    return peers + ' connected. Seeding until exit or inactive after ' + cooloff / 1000 + 's'
   },
   inactive: () => 'Inactive, exiting'
 })
@@ -100,8 +94,5 @@ module.exports = async function provision(cmd) {
       link: productionLink
     })
   }
-  await output(
-    json,
-    ipc.provision({ sourceLink, targetLink, productionLink, dryRun })
-  )
+  await output(json, ipc.provision({ sourceLink, targetLink, productionLink, dryRun }))
 }

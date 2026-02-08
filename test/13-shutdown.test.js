@@ -13,22 +13,11 @@ const rig = new Helper.Rig({ keepAlive: false })
 const SPINDOWN_TIMEOUT = 10_000
 
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join(
-  'by-arch',
-  HOST,
-  'bin',
-  `pear-runtime${isWindows ? '.exe' : ''}`
-)
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
 test.hook('shutdown setup', rig.setup)
 
-test('lock released after shutdown', async function ({
-  pass,
-  plan,
-  exception,
-  comment,
-  teardown
-}) {
+test('lock released after shutdown', async function ({ pass, plan, exception, comment, teardown }) {
   plan(2)
   comment('shutting down sidecar')
   const helper = new Helper(rig)
@@ -58,13 +47,10 @@ test.hook('prepare low-spindown platform', async (t) => {
   t.comment(`Copying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   t.teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new LocalDrive(rig.artefactDir).mirror(
-    new LocalDrive(patchedArtefactDir),
-    {
-      prune: false,
-      ignore: ['/pear', '/.git', '/test']
-    }
-  )
+  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
+    prune: false,
+    ignore: ['/pear', '/.git', '/test']
+  })
   await mirror.done()
 
   t.comment('Patching sidecar')
@@ -87,9 +73,7 @@ test.hook('prepare low-spindown platform', async (t) => {
     dir: patchedArtefactDir,
     dryRun: false
   })
-  const patchedStagerUntil = await Helper.pick(patchedStager, [
-    { tag: 'final' }
-  ])
+  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
   await patchedStagerUntil.final
 
   t.comment('Seeding patched platform')
@@ -121,11 +105,9 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const sidecar = spawn(
-    path.join(platformDirLs, 'current', BY_ARCH),
-    ['sidecar'],
-    { stdio: 'pipe' }
-  )
+  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['sidecar'], {
+    stdio: 'pipe'
+  })
   t.teardown(() => {
     if (sidecar.exitCode === null) sidecar?.kill()
   })
@@ -158,13 +140,10 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment(`Copying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   t.teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new LocalDrive(rig.artefactDir).mirror(
-    new LocalDrive(patchedArtefactDir),
-    {
-      prune: false,
-      ignore: ['/pear', '/.git', '/test']
-    }
-  )
+  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
+    prune: false,
+    ignore: ['/pear', '/.git', '/test']
+  })
   await mirror.done()
 
   t.comment('Patching sidecar to throttle seeding')
@@ -194,9 +173,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     dir: patchedArtefactDir,
     dryRun: false
   })
-  const patchedStagerUntil = await Helper.pick(patchedStager, [
-    { tag: 'final' }
-  ])
+  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
   await patchedStagerUntil.final
 
   t.comment('Seeding patched platform')
@@ -236,10 +213,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     dir: rig.artefactDir,
     dryRun: false
   })
-  const stagerUntil = await Helper.pick(stager, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const stagerUntil = await Helper.pick(stager, [{ tag: 'addendum' }, { tag: 'final' }])
   const staged = await stagerUntil.addendum
   await stagerUntil.final
 
@@ -251,10 +225,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     key: null,
     cmdArgs: []
   })
-  const seederUntil = await Helper.pick(seeder, [
-    { tag: 'announced' },
-    { tag: 'peer-add' }
-  ])
+  const seederUntil = await Helper.pick(seeder, [{ tag: 'announced' }, { tag: 'peer-add' }])
   await seederUntil.announced
   let peerAdded = false
   seederUntil['peer-add'].then(() => {
@@ -264,9 +235,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('3. Start sidecar and update using rcv-seeded key')
   t.comment('Starting sidecar')
-  const dhtBootstrap = global.Pear.app.dht.bootstrap
-    .map((e) => `${e.host}:${e.port}`)
-    .join(',')
+  const dhtBootstrap = global.Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
   const sidecar = spawn(
     path.join(platformDirLs, 'current', BY_ARCH),
     ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key],

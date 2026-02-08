@@ -54,14 +54,10 @@ module.exports = class Stage extends Opstream {
     })
     await corestore.ready()
 
-    key = key
-      ? hypercoreid.decode(key)
-      : await Hyperdrive.getDriveKey(corestore)
+    key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
-    const traits = await this.sidecar.model.getTraits(
-      `pear://${hypercoreid.encode(key)}`
-    )
+    const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
     const encryptionKey = traits?.encryptionKey
 
     if (encrypted === true && !encryptionKey) {
@@ -86,28 +82,18 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ pod, dryRun })
 
     await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
-    const defaultIgnore = [
-      '**.git',
-      '**.github',
-      '**.DS_Store',
-      'node_modules/.package-lock.json'
-    ]
+    const defaultIgnore = ['**.git', '**.github', '**.DS_Store', 'node_modules/.package-lock.json']
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
-    if (state.options?.stage?.ignore)
-      ignore.push(...state.options.stage?.ignore)
+    if (state.options?.stage?.ignore) ignore.push(...state.options.stage?.ignore)
     ignore = [...new Set([...defaultIgnore, ...ignore])]
 
-    only = Array.isArray(only)
-      ? only
-      : only?.split(',').map((s) => s.trim()) || []
+    only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim()) || []
     let cfgOnly = state.options?.stage?.only
     if (cfgOnly) {
       only.push(
-        ...(Array.isArray(cfgOnly)
-          ? cfgOnly
-          : cfgOnly?.split(',').map((s) => s.trim()) || [])
+        ...(Array.isArray(cfgOnly) ? cfgOnly : cfgOnly?.split(',').map((s) => s.trim()) || [])
       )
     }
 
@@ -135,13 +121,10 @@ module.exports = class Stage extends Opstream {
       followExternalLinks: true,
       metadata: new Map()
     })
-    const builtins = state.options.assets?.ui
-      ? sidecar.gunk.builtins
-      : sidecar.gunk.bareBuiltins
+    const builtins = state.options.assets?.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
-    const mainExists =
-      (await src.entry(unixPathResolve('/', state.main))) !== null
+    const mainExists = (await src.entry(unixPathResolve('/', state.main))) !== null
     const entrypoints = [
       ...(mainExists ? [state.main] : []),
       ...(state.options?.stage?.entrypoints || [])
@@ -154,10 +137,7 @@ module.exports = class Stage extends Opstream {
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
-      if (!entry)
-        throw ERR_INVALID_CONFIG(
-          'Invalid main or stage entrypoint in package.json'
-        )
+      if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
     }
 
     const glob = new GlobDrive(src, ignore)
@@ -198,10 +178,8 @@ module.exports = class Stage extends Opstream {
     const opts = { prefix, ignore: ignored, dryRun, batch: true }
 
     const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods)
-      src.metadata.put(filename, mod.cache())
-    if (!purge && state.options?.stage?.purge)
-      purge = state.options?.stage?.purge
+    for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
+    if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
         if (ignored(entry.key)) {
@@ -364,9 +342,7 @@ class GlobDrive extends ReadyResource {
       const matcher = globToRegex(cleanPattern)
 
       const idx =
-        cleanPattern.indexOf('**') !== -1
-          ? cleanPattern.indexOf('**')
-          : cleanPattern.indexOf('*')
+        cleanPattern.indexOf('**') !== -1 ? cleanPattern.indexOf('**') : cleanPattern.indexOf('*')
       const dir = idx !== -1 ? cleanPattern.slice(0, idx) : cleanPattern
 
       for await (const entry of this.drive.list(dir, {

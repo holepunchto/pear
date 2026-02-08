@@ -1,19 +1,10 @@
 'use strict'
 const { isAbsolute, resolve } = require('bare-path')
-const {
-  outputter,
-  permit,
-  ansi,
-  isTTY,
-  byteSize,
-  byteDiff
-} = require('pear-terminal')
+const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-terminal')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>
-    dir === '-'
-      ? `${ansi.pear} Output ${link}`
-      : `\n${ansi.pear} Dump ${link} into ${dir}`,
+    dir === '-' ? `${ansi.pear} Output ${link}` : `\n${ansi.pear} Dump ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => {
     return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n'

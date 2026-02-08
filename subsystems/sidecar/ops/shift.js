@@ -30,10 +30,8 @@ module.exports = class Shift extends Opstream {
     const parsedSrc = plink.parse(src)
     const parsedDst = plink.parse(dst)
 
-    if (!parsedSrc?.drive?.key)
-      throw ERR_INVALID_INPUT('Invalid source app key')
-    if (!parsedDst?.drive?.key)
-      throw ERR_INVALID_INPUT('Invalid destination app key')
+    if (!parsedSrc?.drive?.key) throw ERR_INVALID_INPUT('Invalid source app key')
+    if (!parsedDst?.drive?.key) throw ERR_INVALID_INPUT('Invalid destination app key')
 
     const srcAppStorage = await this.sidecar.model.getAppStorage(src)
     const dstAppStorage = await this.sidecar.model.getAppStorage(dst)
@@ -41,9 +39,7 @@ module.exports = class Shift extends Opstream {
     if (!srcAppStorage || !(await exists(srcAppStorage)))
       throw ERR_INVALID_INPUT(`No app storage found for ${src}`)
     if (dstAppStorage && !force)
-      throw ERR_INVALID_INPUT(
-        `App storage for ${dst} already exists. Use --force to overwrite`
-      )
+      throw ERR_INVALID_INPUT(`App storage for ${dst} already exists. Use --force to overwrite`)
 
     const newSrcAppStorage = path.join(
       path.join(PLATFORM_DIR, 'app-storage'),

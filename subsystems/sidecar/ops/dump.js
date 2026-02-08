@@ -37,12 +37,10 @@ module.exports = class Dump extends Opstream {
 
     const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
-    const isFile =
-      isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
     const key = parsed.drive.key
-    checkout =
-      checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
+    checkout = checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
     const traits = await this.sidecar.model.getTraits(link)
     const encryptionKey = traits?.encryptionKey
@@ -94,11 +92,7 @@ module.exports = class Dump extends Opstream {
 
     const prefix = isFileLink ? '/' : parsed.pathname
     const pathname =
-      !isFileLink && parsed.pathname === '/'
-        ? ''
-        : isFile
-          ? path.basename(parsed.pathname)
-          : prefix
+      !isFileLink && parsed.pathname === '/' ? '' : isFile ? path.basename(parsed.pathname) : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {

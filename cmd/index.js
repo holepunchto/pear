@@ -216,10 +216,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
-    flag(
-      '--only <paths>',
-      'Filter by paths. Implies --no-prune. Comma-seperated'
-    ),
+    flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
     flag('--no-ask', 'Suppress permission prompt'),
@@ -246,26 +243,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command(
-      'apps',
-      summary('Installed apps'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(cmd, 'apps')
+    command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) =>
+      commands.data(cmd, 'apps')
     ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      commands.data(cmd, 'dht')
-    ),
-    command('gc', summary('Garbage collection records'), (cmd) =>
-      commands.data(cmd, 'gc')
-    ),
+    command('dht', summary('DHT known-nodes cache'), (cmd) => commands.data(cmd, 'dht')),
+    command('gc', summary('Garbage collection records'), (cmd) => commands.data(cmd, 'gc')),
     command('manifest', summary('Database internal versioning'), (cmd) =>
       commands.data(cmd, 'manifest')
     ),
-    command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(cmd, 'assets')
+    command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) =>
+      commands.data(cmd, 'assets')
     ),
     command(
       'currents',
@@ -331,9 +318,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   )
 
   const reset = hiddenCommand('reset', arg('[link]'), () => {
-    console.log(
-      `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
-    )
+    console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
     console.log(drop.help())
     Bare.exit(1)
   })
@@ -341,11 +326,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const sidecar = command(
     'sidecar',
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
-    command(
-      'inspect',
-      commands.sidecar,
-      summary('Enable running sidecar inspector')
-    ),
+    command('inspect', commands.sidecar, summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description`
       The sidecar is a local-running IPC server for corestore access.
@@ -404,15 +385,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
-  const help = command(
-    'help',
-    arg('[command]'),
-    summary('View help for command'),
-    (h) => {
-      if (h.args.command) console.log(cmd.help(h.args.command))
-      else console.log(cmd.overview({ full: true }))
-    }
-  )
+  const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
+    if (h.args.command) console.log(cmd.help(h.args.command))
+    else console.log(cmd.overview({ full: true }))
+  })
 
   const cmd = command(
     'pear',
@@ -453,17 +429,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       }
       const { key, fork, length } = CHECKOUT
 
-      console.log(
-        'v' +
-          ~~fork +
-          '.' +
-          (length || 'dev') +
-          '.' +
-          key +
-          ' / v' +
-          semver +
-          '\n'
-      )
+      console.log('v' + ~~fork + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
       console.log('Key=' + key)
       console.log('Fork=' + fork)
       console.log('Length=' + length)

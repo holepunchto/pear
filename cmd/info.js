@@ -62,14 +62,7 @@ const output = outputter('info', {
 
 module.exports = async function info(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const {
-    json,
-    changelog,
-    fullChangelog: full,
-    metadata,
-    key: showKey,
-    manifest
-  } = cmd.flags
+  const { json, changelog, fullChangelog: full, metadata, key: showKey, manifest } = cmd.flags
   const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
   const channel = isKey ? null : cmd.args.link
   const link = isKey ? cmd.args.link : null

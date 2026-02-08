@@ -5,13 +5,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
 
-test('set presets and get presets', async ({
-  teardown,
-  plan,
-  comment,
-  is,
-  ok
-}) => {
+test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) => {
   plan(9)
 
   const helper = new Helper()
@@ -26,10 +20,7 @@ test('set presets and get presets', async ({
   const staging = helper.stage({ channel, name: channel, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
   const { key } = await staged.addendum
@@ -51,11 +42,7 @@ test('set presets and get presets', async ({
   presets = await getPresets({ link, command: 'run' })
 
   is(presets.command, 'run', 'stored presets command should be "run"')
-  is(
-    presets.flags,
-    '--dev --no-ask',
-    'stored presets flags should be "--dev --no-ask"'
-  )
+  is(presets.flags, '--dev --no-ask', 'stored presets flags should be "--dev --no-ask"')
 
   const run = await Helper.run({ link })
   const result = await Helper.untilResult(run.pipe)

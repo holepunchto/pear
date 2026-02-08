@@ -2,14 +2,7 @@
 const test = require('brittle')
 const Helper = require('./helper')
 
-test('pear drop', async function ({
-  ok,
-  not,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
+test('pear drop', async function ({ ok, not, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
@@ -30,10 +23,7 @@ test('pear drop', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 

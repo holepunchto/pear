@@ -173,8 +173,7 @@ module.exports = class Model {
     LOG.trace('db', 'GET', '@pear/assets', get)
     const asset = await tx.get('@pear/assets', get)
     if (asset) {
-      if (asset.path)
-        await fs.promises.rm(asset.path, { recursive: true, force: true })
+      if (asset.path) await fs.promises.rm(asset.path, { recursive: true, force: true })
       LOG.trace('db', 'DELETE', '@pear/assets', get)
       await tx.delete('@pear/assets', get)
     }
@@ -189,9 +188,7 @@ module.exports = class Model {
     const current = await this.db.get('@pear/current', get)
     if (current !== null) {
       current.checkout.length =
-        !current.key || !b4a.equals(current.key, parsed.drive.key)
-          ? 0
-          : current.checkout.length
+        !current.key || !b4a.equals(current.key, parsed.drive.key) ? 0 : current.checkout.length
     }
 
     return current

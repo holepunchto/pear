@@ -10,13 +10,7 @@ module.exports = class Provision extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({
-    sourceLink,
-    targetLink,
-    productionLink,
-    dryRun,
-    cooldown = 10_000
-  }) {
+  async #op({ sourceLink, targetLink, productionLink, dryRun, cooldown = 10_000 }) {
     const source = plink.parse(sourceLink)
     if (source.drive.length === null) {
       throw ERR_INVALID_LINK('sourceLink must be versioned', {
@@ -99,9 +93,7 @@ module.exports = class Provision extends Opstream {
       this.push({ tag: 'syncing', data: { type: 'blobs' } })
 
       while (to.blobs.core.length < prod.blobs.core.length) {
-        await to.blobs.core.append(
-          await prod.blobs.core.get(to.blobs.core.length)
-        )
+        await to.blobs.core.append(await prod.blobs.core.get(to.blobs.core.length))
         this.push({
           tag: 'blocks',
           data: {
@@ -226,13 +218,7 @@ module.exports = class Provision extends Opstream {
       await to.db.del('release')
     }
 
-    const fields = [
-      'manifest',
-      'metadata',
-      'channel',
-      'platformVersion',
-      'warmup'
-    ]
+    const fields = ['manifest', 'metadata', 'channel', 'platformVersion', 'warmup']
 
     for (const field of fields) {
       const src = await co.db.get(field)
@@ -248,10 +234,7 @@ module.exports = class Provision extends Opstream {
         continue
       }
 
-      if (
-        (src && !dst) ||
-        JSON.stringify(src.value) !== JSON.stringify(dst.value)
-      ) {
+      if ((src && !dst) || JSON.stringify(src.value) !== JSON.stringify(dst.value)) {
         this.push({ tag: 'setting', data: { field, value: src.value } })
         await to.db.put(field, src.value)
       }

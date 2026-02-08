@@ -30,18 +30,12 @@ const output = outputter('stage', {
   compact: (data) => {
     const { files, skips } = data
     return (
-      'Compact stage static-analysis:-\n' +
-      '- files: ' +
-      files.length +
-      '- skips: ' +
-      skips.length
+      'Compact stage static-analysis:-\n' + '- files: ' + files.length + '- skips: ' + skips.length
     )
   },
   warmed: (data) => {
     const { blocks, total, skips } = data
-    return (
-      'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
-    )
+    return 'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
   },
   error: async (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
@@ -64,9 +58,7 @@ const output = outputter('stage', {
   pre({ from, output, index, success }, { preQ }) {
     if (preQ) return {}
     const pre =
-      index > 0
-        ? 'Pre-stage [' + index + ':' + from + ']: '
-        : 'Pre-stage [' + from + ']: '
+      index > 0 ? 'Pre-stage [' + index + ':' + from + ']: ' : 'Pre-stage [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
     if (success === false)
       return {
@@ -83,14 +75,11 @@ const output = outputter('stage', {
 
 module.exports = async function stage(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } =
-    cmd.flags
-  const isKey =
-    cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
+  const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } = cmd.flags
+  const isKey = cmd.args.channel && plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const key = isKey ? cmd.args.channel : null
-  if (!channel && !key)
-    throw ERR_INVALID_INPUT('A key or the channel name must be specified')
+  if (!channel && !key) throw ERR_INVALID_INPUT('A key or the channel name must be specified')
   const cwd = os.cwd()
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()

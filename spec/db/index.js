@@ -313,10 +313,7 @@ const collection5 = {
 }
 
 // '@pear/traits-by-tags' collection key
-const index6_key = new IndexEncoder(
-  [IndexEncoder.STRING, IndexEncoder.STRING],
-  { prefix: 6 }
-)
+const index6_key = new IndexEncoder([IndexEncoder.STRING, IndexEncoder.STRING], { prefix: 6 })
 
 // '@pear/traits-by-tags' has the following schema defined key map
 const index6_map = helpers0.tags

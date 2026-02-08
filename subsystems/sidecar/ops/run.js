@@ -29,9 +29,7 @@ module.exports = class Run extends Opstream {
     const { flags, env, cwd, link, dir, args, cmdArgs, pkg = null } = params
     const { App } = sidecar
 
-    const linkrep = link.startsWith('pear:')
-      ? link.slice(0, 14) + '..'
-      : '...' + link.slice(-14)
+    const linkrep = link.startsWith('pear:') ? link.slice(0, 14) + '..' : '...' + link.slice(-14)
     const LOG_RUN_LINK = (this.LOG_RUN_LINK = ['run', linkrep])
     LOG.info(LOG_RUN_LINK, 'start', linkrep)
 
@@ -92,20 +90,7 @@ module.exports = class Run extends Opstream {
     }
   }
 
-  async run({
-    app,
-    flags,
-    env,
-    cwd,
-    link,
-    dir,
-    startId,
-    id,
-    args,
-    cmdArgs,
-    pkg = null,
-    pid
-  } = {}) {
+  async run({ app, flags, env, cwd, link, dir, startId, id, args, cmdArgs, pkg = null, pid } = {}) {
     const { sidecar, session, LOG_RUN_LINK } = this
     if (LOG.INF) LOG.info(LOG_RUN_LINK, id, link.slice(0, 14) + '..')
     LOG.info(LOG_RUN_LINK, 'ensuring sidecar ready')
@@ -138,8 +123,7 @@ module.exports = class Run extends Opstream {
       }
     }
 
-    if (parsed.protocol !== 'pear:' && !link.startsWith('file:'))
-      link = pathToFileURL(link).href
+    if (parsed.protocol !== 'pear:' && !link.startsWith('file:')) link = pathToFileURL(link).href
 
     link = plink.normalize(link)
 
@@ -191,11 +175,8 @@ module.exports = class Run extends Opstream {
         drive,
         updatesDiff: state.updatesDiff,
         // asset method doesnt get/add assets when running pre.js file
-        asset: (opts) =>
-          state.prerunning ? null : this.asset(opts, corestore),
-        updateNotify:
-          state.updates &&
-          ((version, info) => sidecar.updateNotify(version, info))
+        asset: (opts) => (state.prerunning ? null : this.asset(opts, corestore)),
+        updateNotify: state.updates && ((version, info) => sidecar.updateNotify(version, info))
       })
       await session.add(pod)
       app.pod = pod
@@ -205,12 +186,7 @@ module.exports = class Run extends Opstream {
         await state.initialize({ pod, app, pkg })
         LOG.info(LOG_RUN_LINK, id, 'state initialized')
       } catch (err) {
-        LOG.error(
-          [...LOG_RUN_LINK, 'internal'],
-          'Failed to initialize state for app id',
-          id,
-          err
-        )
+        LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
         throw err
       }
 
@@ -241,11 +217,7 @@ module.exports = class Run extends Opstream {
         )
         throw err
       }
-      LOG.info(
-        LOG_RUN_LINK,
-        id,
-        'drive is encrypted and key is required - bailing'
-      )
+      LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
       throw ERR_PERMISSION_REQUIRED('Encryption key required', {
         key: state.key,
         encrypted: true
@@ -300,24 +272,13 @@ module.exports = class Run extends Opstream {
       }
     } catch (err) {
       if (err.code === 'DECODING_ERROR') {
-        LOG.info(
-          LOG_RUN_LINK,
-          id,
-          'drive is encrypted and key is required - bailing'
-        )
+        LOG.info(LOG_RUN_LINK, id, 'drive is encrypted and key is required - bailing')
         throw ERR_PERMISSION_REQUIRED('Encryption key required', {
           key: state.key,
           encrypted: true
         })
       } else {
-        LOG.error(
-          LOG_RUN_LINK,
-          'Failure creating drive bundle for',
-          link,
-          'app id:',
-          id,
-          err
-        )
+        LOG.error(LOG_RUN_LINK, 'Failure creating drive bundle for', link, 'app id:', id, err)
         await session.close()
         throw err
       }
@@ -330,14 +291,8 @@ module.exports = class Run extends Opstream {
       await state.initialize({ pod, app })
       LOG.info(LOG_RUN_LINK, id, 'state initialized')
     } catch (err) {
-      LOG.error(
-        [...LOG_RUN_LINK, 'internal'],
-        'Failed to initialize state for app id',
-        id,
-        err
-      )
-      if (err.code === 'ERR_INVALID_MANIFEST')
-        throw ERR_CONNECTION(err.message, { err })
+      LOG.error([...LOG_RUN_LINK, 'internal'], 'Failed to initialize state for app id', id, err)
+      if (err.code === 'ERR_INVALID_MANIFEST') throw ERR_CONNECTION(err.message, { err })
       throw err
     }
 
@@ -346,9 +301,7 @@ module.exports = class Run extends Opstream {
       const assetsDownloading = app.pod.assets(state.manifest)
       const download = await pod.prefetch()
       this._monitor = pod.monitor(download, assetsDownloading)
-      this._monitor.on('progress', (progress) =>
-        this.push({ tag: 'stats', data: progress })
-      )
+      this._monitor.on('progress', (progress) => this.push({ tag: 'stats', data: progress }))
       const assets = await assetsDownloading
       state.update({ assets })
       await this._monitor.done()
@@ -477,9 +430,7 @@ module.exports = class Run extends Opstream {
           userData.state &&
           userData.state.pid &&
           userData.state.parent &&
-          !this.sidecar.apps.some(
-            (app) => app.state.parent === userData.state.parent
-          )
+          !this.sidecar.apps.some((app) => app.state.parent === userData.state.parent)
         ) {
           try {
             LOG.trace(
@@ -505,15 +456,11 @@ module.exports = class Run extends Opstream {
       const pkg = JSON.parse(await drive.get(pkgEntry))
       const isDevDep = !!pkg.devDependencies?.['pear-interface']
       if (isDevDep === false) return
-      const pearInterfacePkgEntry = await drive.entry(
-        '/node_modules/pear-interface/package.json'
-      )
+      const pearInterfacePkgEntry = await drive.entry('/node_modules/pear-interface/package.json')
       if (pearInterfacePkgEntry === null) return
       const projPkg = JSON.parse(await drive.get(pearInterfacePkgEntry))
       const platPkg = JSON.parse(
-        await this.sidecar.drive.get(
-          '/node_modules/pear-interface/package.json'
-        )
+        await this.sidecar.drive.get('/node_modules/pear-interface/package.json')
       )
       if (projPkg.version === platPkg.version) return
       const tmp = path.join(drive.root, 'node_modules', '.pear-interface.next')

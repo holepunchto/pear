@@ -22,17 +22,11 @@ module.exports = async function shift(cmd) {
   const dst = cmd.args.destination
 
   if (plink.parse(src).drive.key === null) {
-    throw ERR_INVALID_LINK(
-      'A valid source application link must be specified',
-      { link: src }
-    )
+    throw ERR_INVALID_LINK('A valid source application link must be specified', { link: src })
   }
 
   if (plink.parse(dst).drive.key === null) {
-    throw ERR_INVALID_LINK(
-      'A valid destination application link must be specified',
-      { link: dst }
-    )
+    throw ERR_INVALID_LINK('A valid destination application link must be specified', { link: dst })
   }
 
   await output(json, ipc.shift({ src, dst, force }))

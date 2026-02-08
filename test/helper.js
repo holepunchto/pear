@@ -13,12 +13,7 @@ const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join(
-  'by-arch',
-  HOST,
-  'bin',
-  `pear-runtime${isWindows ? '.exe' : ''}`
-)
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('pear-constants')
 const run = require('pear-run')
 const { PLATFORM_DIR, RUNTIME } = constants
@@ -78,10 +73,7 @@ class Rig {
       key: null,
       cmdArgs: []
     })
-    const until = await Helper.pick(this.seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
     comment('platform seeding')
@@ -135,16 +127,12 @@ class Helper extends IPC.Client {
       .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
       .map(
         ([k, v]) =>
-          '--' +
-          cmd._definedFlags.get(k).aliases[0] +
-          (typeof v === 'boolean' ? '' : '=' + v)
+          '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v)
       )
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.app.dht.bootstrap
-      .map((e) => `${e.host}:${e.port}`)
-      .join(',')
+    const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -202,10 +190,7 @@ class Helper extends IPC.Client {
     const timeout = opts.timeout || 10000
     const res = new Promise((resolve, reject) => {
       let buffer = ''
-      const timeoutId = setTimeout(
-        () => reject(new Error('timed out ' + timeout)),
-        timeout
-      )
+      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
       pipe.on('data', (data) => {
         buffer += data.toString()
         if (buffer[buffer.length - 1] === STOP_CHAR) {
@@ -244,10 +229,7 @@ class Helper extends IPC.Client {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(
-        () => reject(new Error('timed out')),
-        timeout
-      )
+      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
       pipe.on('close', () => {
         clearTimeout(timeoutId)
         resolve('closed')
@@ -282,8 +264,7 @@ class Helper extends IPC.Client {
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
     for await (const output of stream) {
-      if (ptn?.[by] !== 'error' && output[by] === 'error')
-        throw new OperationError(output.data)
+      if (ptn?.[by] !== 'error' && output[by] === 'error') throw new OperationError(output.data)
       if (this.matchesPattern(output, ptn)) return output.data
     }
     return null
@@ -304,12 +285,10 @@ class Helper extends IPC.Client {
             )
           )
         }, MAX_OP_STEP_WAIT)
-        const onclose = () =>
-          reject(new Error('Helper: Unexpected close on stream'))
+        const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
         const ondata = (data) => {
-          if (data === null || data?.tag === 'final')
-            stream.off('close', onclose)
+          if (data === null || data?.tag === 'final') stream.off('close', onclose)
         }
         stream.on('data', ondata)
         stream.on('close', onclose)
@@ -417,9 +396,7 @@ class Reiterate {
           if (done) break
           yield value
         } else {
-          await new Promise((resolve, reject) =>
-            this.readers.push({ resolve, reject })
-          )
+          await new Promise((resolve, reject) => this.readers.push({ resolve, reject }))
         }
       }
     } finally {
@@ -472,14 +449,12 @@ class Restack {
     if (cs.isConstructor()) return frm ? `new ${frm}` : 'new <anonymous>'
 
     if (meth) {
-      if (type && frm)
-        return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
+      if (type && frm) return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
       if (type) return `${type}.${meth}`
       return meth
     }
 
-    if (type && frm)
-      return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
+    if (type && frm) return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
 
     return frm || ''
   }

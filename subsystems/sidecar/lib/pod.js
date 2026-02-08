@@ -59,8 +59,7 @@ module.exports = class Pod {
     this.failure = failure
     this.corestore = corestore
     this.stage = stage
-    this.drive =
-      drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
     this.current = current ?? this.drive?.core?.length ?? 0
     this.updatesDiff = updatesDiff
     this.link = null
@@ -105,21 +104,12 @@ module.exports = class Pod {
     this.updateNotify = updateNotify
   }
 
-  async pack({
-    cache = false,
-    prebuilds,
-    entry,
-    builtins = [],
-    conditions,
-    extensions
-  } = {}) {
+  async pack({ cache = false, prebuilds, entry, builtins = [], conditions, extensions } = {}) {
     let filename = null
     let metadata = null
 
     if (cache) {
-      filename =
-        crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') +
-        '.bundle'
+      filename = crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') + '.bundle'
       metadata = {
         file: pathToFileURL(path.join(bundles.root, filename)).toString()
       }
@@ -138,8 +128,7 @@ module.exports = class Pod {
     })
 
     const addons = new Localdrive(prebuilds)
-    for (const [prebuild, addon] of packed.prebuilds)
-      await addons.put(prebuild, addon)
+    for (const [prebuild, addon] of packed.prebuilds) await addons.put(prebuild, addon)
 
     if (cache) {
       await bundles.put(filename, packed.bundle)
@@ -409,8 +398,7 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null)
-      this.release = (await this.db.get('release'))?.value ?? null
+    if (this.release === null) this.release = (await this.db.get('release'))?.value ?? null
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
@@ -547,10 +535,7 @@ class PodUpdater extends ReadyResource {
     )
       return this.checkout
     for await (const checkout of this.watch(opts)) {
-      if (
-        fork < checkout.fork ||
-        (fork === checkout.fork && length <= checkout.length)
-      )
+      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length))
         return checkout
     }
 
@@ -773,9 +758,7 @@ class DownloadMonitor extends EventEmitter {
     this._drive.blobs.core.on('download', () => this._downloaded++)
 
     this._interval = setInterval(() => {
-      const downloaded = mirror
-        ? this._downloaded + mirror.downloadedBlocks
-        : this._downloaded
+      const downloaded = mirror ? this._downloaded + mirror.downloadedBlocks : this._downloaded
       const estimated = mirror
         ? downloadEstimate + mirror.downloadedBlocksEstimate
         : downloadEstimate

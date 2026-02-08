@@ -31,10 +31,7 @@ module.exports = async function drop(cmd) {
   await output(
     json,
     ipc.drop({
-      link:
-        isPear || isFile || path.isAbsolute(link)
-          ? link
-          : path.join(os.cwd(), link)
+      link: isPear || isFile || path.isAbsolute(link) ? link : path.join(os.cwd(), link)
     })
   )
 }
