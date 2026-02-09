@@ -2,7 +2,6 @@
 /* global LOG */
 const fs = require('bare-fs')
 const path = require('bare-path')
-const { EventEmitter } = require('bare-events')
 const { waitForLock } = require('fs-native-extensions')
 const RW = require('read-write-mutexify')
 const ReadyResource = require('ready-resource')
@@ -459,11 +458,6 @@ module.exports = class Pod {
     }
   }
 
-  monitor(download, ...promises) {
-    const monitor = new DownloadMonitor(this.drive, download, promises)
-    return monitor
-  }
-
   async close() {
     this.closed = true
     if (this.watchingUpdates) this.watchingUpdates.destroy()
@@ -736,48 +730,4 @@ function closeFd(fd) {
   return new Promise((resolve) => {
     fs.close(fd, () => resolve())
   })
-}
-
-class DownloadMonitor extends EventEmitter {
-  constructor(drive, download, promises) {
-    super()
-    this._downloaded = 0
-    this._interval = null
-    this._intervalMs = 1000
-    this._drive = drive
-    this._download = download
-    this._promises = promises
-  }
-
-  start(mirror) {
-    const dbKey = this._drive.db.core.id
-    const downloadEstimate = this._download.downloads.reduce((acc, dl) => {
-      if (dl.session.id === dbKey) {
-        // count only blob blocks
-        return acc
-      } else {
-        return acc + (dl.range.end - dl.range.start)
-      }
-    }, 0)
-
-    this._drive.blobs.core.on('download', () => this._downloaded++)
-
-    this._interval = setInterval(() => {
-      const downloaded = mirror ? this._downloaded + mirror.downloadedBlocks : this._downloaded
-      const estimated = mirror
-        ? downloadEstimate + mirror.downloadedBlocksEstimate
-        : downloadEstimate
-      this.emit('progress', Math.min(downloaded / estimated, 0.99))
-    }, this._intervalMs)
-  }
-
-  async done(timeout = 20000) {
-    const warmupPromise = Promise.race([
-      this._download.done(),
-      new Promise((resolve) => setTimeout(resolve, timeout))
-    ])
-    await Promise.all([warmupPromise, ...this._promises])
-    this.emit('progress', 1)
-    clearInterval(this._interval)
-  }
 }

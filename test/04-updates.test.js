@@ -439,7 +439,7 @@ test('updates should notify Platform stage, Platform release updates (different 
   comment('rig platform restaged')
 
   comment('waiting for platform updating notification')
-  const updating1 = await untilUpdating2
+  const updating1 = await untilUpdating1
   ok(updating1.updating, 'platform is updating')
 
   comment('waiting for update')

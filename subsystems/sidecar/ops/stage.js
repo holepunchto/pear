@@ -147,27 +147,55 @@ module.exports = class Stage extends Opstream {
     let compactFiles = null
     let compactSkips = null
 
-    if (compact) {
+    if (!state.options.stage?.skipWarmup) {
+      for (const entrypoint of entrypoints) {
+        const entry = await src.entry(entrypoint)
+        if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
+      }
+
       const pearShake = new PearShake(src, entrypoints)
       const shake = await pearShake.run({
         defer: state.options?.stage?.defer
       })
-      compactFiles = shake.files
-      compactSkips = shake.skips
-      const { files } = shake
-      const skips = shake.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-      let main = state.options?.gui?.main || null
-      if (typeof main === 'string') {
-        if (main.startsWith('/') === false) main = '/' + main
-        only.push(main)
+
+      if (compact) {
+        compactFiles = shake.files
+        compactSkips = shake.skips
+        const { files } = shake
+        const skips = shake.skips.map(({ specifier, referrer }) => {
+          return { specifier, referrer: referrer.pathname }
+        })
+        let main = state.options?.gui?.main || null
+        if (typeof main === 'string') {
+          if (main.startsWith('/') === false) main = '/' + main
+          only.push(main)
+        }
+        only.push(...files.filter((file) => !ignored(file)), ...include)
+        this.push({
+          tag: 'compact',
+          data: { files: files, skips, success: true }
+        })
       }
-      only.push(...files.filter((file) => !ignored(file)), ...include)
-      this.push({
-        tag: 'compact',
-        data: { files: files, skips, success: true }
-      })
+
+      const builtins = state.options.assets?.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
+      const linker = new ScriptLinker(src, { builtins })
+
+      const mods = await linker.warmup(entrypoints)
+      for await (const [filename, mod] of mods) {
+        const cache = mod.cache()
+        if (shake.resolutions[filename]) {
+          cache.imports = shake.resolutions[filename]
+        }
+        src.metadata.put(filename, cache)
+      }
+
+      for (const k of Object.keys(shake.resolutions)) {
+        if (mods.has(k)) continue
+        src.metadata.put(k, {
+          type: 'commonjs',
+          imports: shake.resolutions[k]
+        })
+      }
     }
 
     const dst = pod.drive
@@ -176,8 +204,6 @@ module.exports = class Stage extends Opstream {
 
     const opts = { prefix, ignore: ignored, dryRun, batch: true }
 
-    const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
