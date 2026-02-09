@@ -18,6 +18,7 @@ const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const Session = require('../lib/session')
 const State = require('../state')
+const Prefetcher = require('pear-prefetcher')
 
 module.exports = class Run extends Opstream {
   constructor(...args) {
@@ -298,18 +299,13 @@ module.exports = class Run extends Opstream {
     }
 
     LOG.info(LOG_RUN_LINK, id, 'determining assets')
-    if (flags.preflight) {
-      const assetsDownloading = app.pod.assets(state.manifest)
-      const download = await pod.prefetch()
-      this._monitor = pod.monitor(download, assetsDownloading)
-      this._monitor.on('progress', (progress) => this.push({ tag: 'stats', data: progress }))
-      const assets = await assetsDownloading
-      state.update({ assets })
-      await this._monitor.done()
-    } else {
-      pod.prefetch()
-      state.update({ assets: await app.pod.assets(state.manifest) })
-    }
+
+    this._prefetcher = new Prefetcher(app.pod.drive)
+    this._prefetcher.on('update', (stats) => {
+      this.push({ tag: 'stats', data: stats })
+    })
+
+    state.update({ assets: await app.pod.assets(state.manifest) })
 
     LOG.info(LOG_RUN_LINK, id, 'assets', state.assets)
 
@@ -340,9 +336,10 @@ module.exports = class Run extends Opstream {
 
     let asset = await this.sidecar.model.getAsset(opts.link)
     if (asset !== null) {
-      if (this._monitor) {
-        // only in preflight
-        this._monitor.start()
+      if (this._prefetcher) {
+        for await (const diff of this._prefetcher.start()) {
+          // wait until warmup is prefetched
+        }
       }
       return asset
     }
@@ -390,10 +387,8 @@ module.exports = class Run extends Opstream {
     if (prefixes.length === 0) prefixes.push('/')
 
     const mirror = src.mirror(dst, { prefix: prefixes, progress: true })
-    if (this._monitor) {
-      this._monitor.start(mirror)
-    }
-    for await (const diff of mirror) {
+
+    for await (const diff of this._prefetcher?.start(mirror) || mirror) {
       LOG.trace(this.LOG_RUN_LINK, 'asset syncing', diff)
       if (diff.op === 'add') {
         this.push({
