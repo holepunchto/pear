@@ -12,7 +12,6 @@ const Logger = require('./lib/logger')
 const {
   SWAP,
   GC,
-  EOLS,
   ALIASES,
   PLATFORM_CORESTORE,
   CHECKOUT,
@@ -85,29 +84,8 @@ async function bootSidecar () {
 function getUpgradeTarget () {
   if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
 
-  let key = null
-
-  for (let i = 0; i < Bare.argv.length; i++) {
-    const arg = Bare.argv[i]
-
-    if (arg.startsWith('--key=')) {
-      key = hypercoreid.normalize(arg.slice(6))
-      break
-    }
-
-    if (arg === '--key' && Bare.argv.length > i + 1) {
-      key = hypercoreid.normalize(Bare.argv[i + 1])
-      break
-    }
-  }
-
-  const cur = hypercoreid.decode(key ?? CHECKOUT.key)
-  if (cur.equals(EOLS.pear)) key = hypercoreid.encode(ALIASES.pear)
-
-  if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
-
   return {
-    checkout: { key, length: 0, fork: 0 },
+    checkout: { key: hypercoreid.encode(ALIASES.pear), length: 0, fork: 0 },
     swap: null
   }
 }
