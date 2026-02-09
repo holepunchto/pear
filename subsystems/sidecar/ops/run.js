@@ -376,8 +376,12 @@ module.exports = class Run extends Opstream {
     LOG.info(this.LOG_RUN_LINK, 'getting asset', opts.link.slice(0, 14) + '..')
 
     let asset = await this.sidecar.model.getAsset(opts.link)
-    if (asset !== null && this._prefetcher) {
-      for await (const diff of this._prefetcher.start()) {
+    if (asset !== null) {
+      // if there isn't a prefetcher, it means it's running from disk and we can skip warmup prefetch
+      if (this._prefetcher) {
+        for await (const diff of this._prefetcher.start()) {
+          // wait until warmup prefetch is finished
+        }
       }
       return asset
     }

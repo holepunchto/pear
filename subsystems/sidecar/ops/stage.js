@@ -191,7 +191,9 @@ module.exports = class Stage extends Opstream {
       const mods = await linker.warmup(entrypoints)
       for await (const [filename, mod] of mods) {
         const cache = mod.cache()
-        cache.imports = shake.resolutions[filename]
+        if (shake.resolutions[filename]) {
+          cache.imports = shake.resolutions[filename]
+        }
         src.metadata.put(filename, cache)
       }
 
