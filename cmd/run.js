@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const Module = require('bare-module')
 const os = require('bare-os')
 const path = require('bare-path')
