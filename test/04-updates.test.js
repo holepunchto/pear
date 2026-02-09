@@ -52,18 +52,13 @@ test('updates(listener) should notify when restaging and releasing application (
   comment('staging')
   const staging = stager1.stage(stageOpts(testId))
   teardown(() => Helper.teardownStream(staging))
-  const until = await Helper.pick(staging, [
-    { tag: 'staging' },
-    { tag: 'final' }
-  ])
+  const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
   await until.final
 
   comment('running')
   const { pipe } = await Helper.run({ link })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   ok(versions?.app, 'updater is ready')
 
   const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
@@ -148,18 +143,13 @@ test('updates(listener) should notify twice when restaging application twice (sa
   await stager1.ready()
   const staging = stager1.stage(stageOpts(testId))
   teardown(() => Helper.teardownStream(staging))
-  const until = await Helper.pick(staging, [
-    { tag: 'staging' },
-    { tag: 'final' }
-  ])
+  const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
   await until.final
 
   comment('running')
   const { pipe } = await Helper.run({ link })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   ok(versions?.app, 'updater is ready')
 
   const untilUpdate1 = Helper.untilResult(pipe).then((data) => JSON.parse(data))
@@ -265,10 +255,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -284,11 +271,8 @@ test('updates should notify Platform stage updates (different pear instances)', 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
-  const { key: pearVersionKey, length: pearVersionLength } =
-    versions?.platform || {}
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
   const untilUpdating = Helper.untilResult(pipe, {
@@ -353,9 +337,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
     link: Helper.fixture('versions'),
     platformDir: platformDirRcv
   })
-  const { platform } = await Helper.untilResult(pipeAfterUpdate).then((data) =>
-    JSON.parse(data)
-  )
+  const { platform } = await Helper.untilResult(pipeAfterUpdate).then((data) => JSON.parse(data))
   ok(platform.length > pearVersionLength, 'platform has been updated')
 
   const rcvB = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
@@ -401,10 +383,7 @@ test('updates should notify Platform stage, Platform release updates (different 
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -420,11 +399,8 @@ test('updates should notify Platform stage, Platform release updates (different 
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
-  const { key: pearVersionKey, length: pearVersionLength } =
-    versions?.platform || {}
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
+  const { key: pearVersionKey, length: pearVersionLength } = versions?.platform || {}
   is(pearVersionKey, rig.key, 'platform version key matches staged key')
 
   const untilUpdating1 = Helper.untilResult(pipe, {
@@ -542,10 +518,7 @@ test('updates should notify App stage updates (different pear instances)', async
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -561,9 +534,7 @@ test('updates should notify App stage updates (different pear instances)', async
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
@@ -643,10 +614,7 @@ test('updates should notify App stage, App release updates (different pear insta
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -662,9 +630,7 @@ test('updates should notify App stage, App release updates (different pear insta
   comment('running app from rcv platform')
   const link = 'pear://' + appKey
   const { pipe } = await Helper.run({ link, platformDir: platformDirRcv })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
@@ -764,10 +730,7 @@ test('state version and pod drive version match', async function ({
     main: 'index.js',
     pear: { name: 'tmp-app' }
   }
-  await fs.promises.writeFile(
-    path.join(tmpdir, 'package.json'),
-    JSON.stringify(pkgA)
-  )
+  await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgA))
 
   const id = Helper.getRandomId()
 
@@ -779,10 +742,7 @@ test('state version and pod drive version match', async function ({
     dryRun: false
   })
   teardown(() => Helper.teardownStream(stagingA))
-  const stagedA = await Helper.pick(stagingA, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await stagedA.addendum
   await stagedA.final
 
@@ -795,10 +755,7 @@ test('state version and pod drive version match', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   await until.announced
 
   comment('bootstrapping rcv platform...')
@@ -822,10 +779,7 @@ test('state version and pod drive version match', async function ({
     main: 'index.js',
     pear: { name: 'tmp-app' }
   }
-  await fs.promises.writeFile(
-    path.join(tmpdir, 'package.json'),
-    JSON.stringify(pkgB)
-  )
+  await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgB))
 
   comment('second stage')
   const stagingB = helper.stage({
@@ -874,11 +828,7 @@ test('state version and pod drive version match', async function ({
   })
 
   const { result } = await inspectorResult
-  is(
-    result.value,
-    version.app.length,
-    'state.version.length matches pod.drive.version'
-  )
+  is(result.value, version.app.length, 'state.version.length matches pod.drive.version')
 
   pipeB.end()
   await rcvB.shutdown()
@@ -918,10 +868,7 @@ test('updates should replay updates when cutover is not called', async function 
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -941,9 +888,7 @@ test('updates should replay updates when cutover is not called', async function 
     platformDir: platformDirRcv,
     args: ['--no-dirs']
   })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
@@ -1047,10 +992,7 @@ test('updates should replay updates even when cutover is called', async function
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(appSeeding))
-  const untilApp = await Helper.pick(appSeeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const untilApp = await Helper.pick(appSeeding, [{ tag: 'key' }, { tag: 'announced' }])
 
   const appKey = await untilApp.key
   const appAnnounced = await untilApp.announced
@@ -1070,9 +1012,7 @@ test('updates should replay updates even when cutover is called', async function
     platformDir: platformDirRcv,
     args: []
   })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey, length: appVersionLength } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
@@ -1154,22 +1094,14 @@ test('updates should start timer for clearing buffer when cutover is called', as
   comment(`\tCopying platform code to ${patchedArtefactDir}`)
   await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
   teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new Localdrive(rig.artefactDir).mirror(
-    new Localdrive(patchedArtefactDir),
-    {
-      prune: false,
-      ignore: ['/pear', '/.git', '/test']
-    }
-  )
+  const mirror = new Localdrive(rig.artefactDir).mirror(new Localdrive(patchedArtefactDir), {
+    prune: false,
+    ignore: ['/pear', '/.git', '/test']
+  })
   await mirror.done()
 
   comment('Patching sidecar to have reduced timeout')
-  const sidecarPath = path.join(
-    patchedArtefactDir,
-    'subsystems',
-    'sidecar',
-    'index.js'
-  )
+  const sidecarPath = path.join(patchedArtefactDir, 'subsystems', 'sidecar', 'index.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patchedSidecarCode = sidecarCode.replace(
     /(const\s+CUTOVER_DELAY\s+=)\s+[\d_]+\n/,
@@ -1189,9 +1121,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
     dir: patchedArtefactDir,
     dryRun: false
   })
-  const patchedStagerUntil = await Helper.pick(patchedStager, [
-    { tag: 'final' }
-  ])
+  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
   await patchedStagerUntil.final
 
   comment('Seeding patched platform')
@@ -1250,10 +1180,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   })
   teardown(() => Helper.teardownStream(seeding))
 
-  const seedingUntil = await Helper.pick(seeding, [
-    { tag: 'announced' },
-    { tag: 'key' }
-  ])
+  const seedingUntil = await Helper.pick(seeding, [{ tag: 'announced' }, { tag: 'key' }])
   await seedingUntil.announced
   pass('App seeded and announced')
   const appKey = await seedingUntil.key
@@ -1268,9 +1195,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
     platformDir: platformDirRcv,
     args: []
   })
-  const versions = await Helper.untilResult(pipe).then((data) =>
-    JSON.parse(data)
-  )
+  const versions = await Helper.untilResult(pipe).then((data) => JSON.parse(data))
   const { key: appVersionKey } = versions?.app || {}
   is(appVersionKey, appKey, 'app version key matches staged key')
 
@@ -1308,10 +1233,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   }).then((data) => JSON.parse(data.split('\n').at(-1)))
 
   const update = await untilUpdate.catch(() => null)
-  absent(
-    update,
-    'app should not receive any replayed update as cutover should have timed out'
-  )
+  absent(update, 'app should not receive any replayed update as cutover should have timed out')
 
   const rcv = new Helper({ platformDir: platformDirRcv, expectSidecar: true })
   await rcv.ready()

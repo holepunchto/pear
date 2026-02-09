@@ -49,11 +49,7 @@ module.exports = class Pre extends Readable {
         : [this.options.pre]
       : []
     const opOpts = this.options[this.op]
-    const opPre = opOpts?.pre
-      ? Array.isArray(opOpts.pre)
-        ? opOpts.pre
-        : [opOpts.pre]
-      : []
+    const opPre = opOpts?.pre ? (Array.isArray(opOpts.pre) ? opOpts.pre : [opOpts.pre]) : []
     const pre = [...topPre, ...opPre]
     this.pre = pre.length > 0 ? pre : null
 
@@ -68,9 +64,7 @@ module.exports = class Pre extends Readable {
     if (this.op === 'run') {
       let hasPipe
       try {
-        hasPipe = isWindows
-          ? fs.fstatSync(3).isFIFO()
-          : fs.fstatSync(3).isSocket()
+        hasPipe = isWindows ? fs.fstatSync(3).isFIFO() : fs.fstatSync(3).isSocket()
       } catch {
         hasPipe = false
       }
@@ -83,21 +77,12 @@ module.exports = class Pre extends Readable {
     for (let specifier of this.pre) {
       if (this.link.endsWith(specifier)) continue
       specifier = specifier[0] === '/' ? '.' + specifier : specifier
-      const base = this.applink.endsWith('/')
-        ? this.applink
-        : this.applink + '/'
+      const base = this.applink.endsWith('/') ? this.applink : this.applink + '/'
       const url =
-        specifier[0] === '.'
-          ? new URL(specifier, base)
-          : Module.resolve(specifier, new URL(base))
+        specifier[0] === '.' ? new URL(specifier, base) : Module.resolve(specifier, new URL(base))
       const link = url.href
       if (this.link === link) continue
-      this.options = await this.#run(
-        this.options,
-        link,
-        this.index++,
-        specifier
-      )
+      this.options = await this.#run(this.options, link, this.index++, specifier)
     }
     this.pkg.pear = this.options
     this.#final()
@@ -105,15 +90,11 @@ module.exports = class Pre extends Readable {
 
   #run(options, link, index, from) {
     const { cwd } = this
-    const sp = spawn(
-      RUNTIME,
-      ['run', '--base', this.dir, '--prerunning', '--trusted', link],
-      {
-        stdio: ['ignore', 'pipe', 'pipe', 'overlapped'],
-        windowsHide: true,
-        cwd
-      }
-    )
+    const sp = spawn(RUNTIME, ['run', '--base', this.dir, '--prerunning', '--trusted', link], {
+      stdio: ['ignore', 'pipe', 'pipe', 'overlapped'],
+      windowsHide: true,
+      cwd
+    })
     const IDLE_TIMEOUT = 5000
     const SELF_CLOSE_WAIT = 2500
     sp.stdio[1].on('data', (output) =>
@@ -145,9 +126,7 @@ module.exports = class Pre extends Readable {
         }, SELF_CLOSE_WAIT).unref()
         reject(
           new ERR_INVALID_CONFIG(
-            'pear.pre "' +
-              link +
-              '" did not respond with configuration data in time'
+            'pear.pre "' + link + '" did not respond with configuration data in time'
           )
         )
       }, IDLE_TIMEOUT).unref()

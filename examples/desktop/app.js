@@ -1,4 +1,4 @@
-/** @typedef {import('pear-interface')} */ /* global Pear */
+/** @typedef {import('pear-interface')} */ /* global Pear, document */
 import ui from 'pear-electron'
 import pearPipe from 'pear-pipe'
 import updates from 'pear-updates'

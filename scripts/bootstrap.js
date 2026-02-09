@@ -34,8 +34,7 @@ const RUNTIMES = link.parse(cmd.rest?.[0] || pkg.pear.platform.runtimes)
 const RUNTIMES_DRIVE_KEY = encode(RUNTIMES.drive.key)
 const RUNTIMES_VERSION = RUNTIMES.drive.length
 const CORESTORE =
-  cmd.flags.externalCorestore &&
-  path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
+  cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
 const ROOT = global.Pear
   ? path.join(new URL(global.Pear.app.applink).pathname, __dirname)
@@ -44,11 +43,7 @@ const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')
 try {
-  fs.symlinkSync(
-    '..',
-    path.join(PEAR, 'current'),
-    !isWindows ? 'junction' : 'file'
-  )
+  fs.symlinkSync('..', path.join(PEAR, 'current'), !isWindows ? 'junction' : 'file')
 } catch (err) {
   if (err.code === 'EPERM') throw err
   safetyCatch(err)
@@ -79,10 +74,7 @@ if (isWindows === false) {
   fs.renameSync(cmdtmp, path.join(SWAP, 'pear.cmd'))
 }
 
-download(RUNTIMES_DRIVE_KEY, ARCHDUMP, link.serialize(RUNTIMES)).then(
-  advise,
-  console.error
-)
+download(RUNTIMES_DRIVE_KEY, ARCHDUMP, link.serialize(RUNTIMES)).then(advise, console.error)
 
 function advise() {
   if (isWindows === false) {
@@ -98,10 +90,7 @@ function advise() {
 
 async function download(key, all = false, link) {
   if (all) console.log('🍐 Fetching all runtimes from: \n   ' + link)
-  else
-    console.log(
-      '🍐 [ localdev ] - no local runtime: fetching runtime from: \n   ' + link
-    )
+  else console.log('🍐 [ localdev ] - no local runtime: fetching runtime from: \n   ' + link)
 
   const store = CORESTORE || path.join(PEAR, 'corestores', 'platform')
 
@@ -154,10 +143,7 @@ async function download(key, all = false, link) {
   ]
 
   let prefixes = [...bin, ...lib, ...wakeup]
-  if (!all)
-    prefixes = prefixes.filter((prefix) =>
-      prefix.startsWith('/by-arch/' + ADDON_HOST)
-    )
+  if (!all) prefixes = prefixes.filter((prefix) => prefix.startsWith('/by-arch/' + ADDON_HOST))
   const mirror = runtimes.mirror(new Localdrive(SWAP), { prefix: prefixes })
   const monitor = mirror.monitor()
   monitor.on('update', (stats) => {
@@ -177,30 +163,26 @@ async function download(key, all = false, link) {
 
   const tick = isWindows ? '^' : '✔'
 
-  if (all) console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
-  else
+  if (all) {
+    console.log('\x1B[32m' + tick + '\x1B[39m Download complete\n')
+  } else {
     console.log(
       '\x1B[32m' +
         tick +
         '\x1B[39m Download complete, initalizing...\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n'
     )
+  }
 }
 
 async function output(mirror) {
   for await (const { op, key, bytesAdded } of mirror) {
     clear()
     if (op === 'add') {
-      console.log(
-        '\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
-      )
+      console.log('\x1B[32m+\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'change') {
-      console.log(
-        '\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
-      )
+      console.log('\x1B[33m~\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     } else if (op === 'remove') {
-      console.log(
-        '\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']'
-      )
+      console.log('\x1B[31m-\x1B[39m ' + key + ' [' + byteSize(bytesAdded) + ']')
     }
   }
 }

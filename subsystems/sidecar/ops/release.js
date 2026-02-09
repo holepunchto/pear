@@ -14,7 +14,7 @@ module.exports = class Release extends Opstream {
 
   async #op({ name, channel, checkout, link, dir, cmdArgs }) {
     const parsed = link ? plink.parse(link) : null
-    let key = parsed?.drive.key ?? null
+    const key = parsed?.drive.key ?? null
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
       flags: { checkout, channel, link },

@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const cenc = require('compact-encoding')
 const fsp = require('bare-fs/promises')
 const mutexify = require('mutexify/promise')
@@ -128,10 +129,7 @@ class Applings extends ReadyResource {
     this._writes++
 
     if (!this.flushable) {
-      LOG.error(
-        'internal',
-        'Cannot flush applings file to disk (not flushable)'
-      )
+      LOG.error('internal', 'Cannot flush applings file to disk (not flushable)')
       return
     }
 

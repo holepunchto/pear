@@ -54,6 +54,7 @@ const commands = {
   init: require('./init'),
   stage: require('./stage'),
   seed: require('./seed'),
+  provision: require('./provision'),
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
@@ -100,26 +101,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ipc.close()
   }).hide()
 
-  const seed = command(
-    'seed',
-    summary('Seed or reseed a project'),
-    description`
-      Specify channel or link to seed a project.
-
-      Specify a remote link to reseed.
-    `,
-    arg('<channel|link>', 'Channel name or Pear link to seed'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--verbose|-v', 'Additional output'),
-    flag('--name <name>', 'Advanced. Override app name'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.seed
-  )
-
   const stage = command(
     'stage',
-    summary('Synchronize local changes to key'),
+    summary('Synchronize local changes to link'),
     description`
       Channel name must be specified on first stage,
       in order to generate the initial key.
@@ -143,9 +127,44 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.stage
   )
 
+  const seed = command(
+    'seed',
+    summary('Seed or reseed a project'),
+    description`
+      Specify channel or link to seed a project.
+
+      Specify a remote link to reseed.
+    `,
+    arg('<channel|link>', 'Channel name or Pear link to seed'),
+    arg('[dir]', 'Project directory path (default: .)'),
+    flag('--verbose|-v', 'Additional output'),
+    flag('--name <name>', 'Advanced. Override app name'),
+    flag('--no-ask', 'Suppress permission prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.seed
+  )
+
+  const provision = command(
+    'provision',
+    summary('Pre-production block sync'),
+    description`
+      Synchronize blocks to a pre-production target link
+
+      The target can then be multi-signed against a production link
+
+      Use pear touch to initialize target link
+    `,
+    arg('<source-link>', 'Versioned source link'),
+    arg('<target-link>', 'Target link to sync to'),
+    arg('<production-link>', 'Versioned link to sync against'),
+    flag('--dry-run|-d', 'Execute provision without writing'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.provision
+  )
+
   const release = command(
     'release',
-    summary('Set production release version'),
+    summary('Set release pointer'),
     description`
       Set the release pointer against a version (default latest).
 
@@ -197,10 +216,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
-    flag(
-      '--only <paths>',
-      'Filter by paths. Implies --no-prune. Comma-seperated'
-    ),
+    flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
     flag('--no-ask', 'Suppress permission prompt'),
@@ -216,9 +232,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Ensure Pear link'),
-    description("Initialize a project Pear link if it doesn't already exist."),
+    summary('Initialize project link'),
+    description`Create a project Pear link if it doesn't already exist`,
     arg('[channel]', 'Channel name. Default: randomly generated'),
+    flag('--dir', 'Project dir-based deterministic touch'),
     flag('--json', 'Newline delimited JSON output'),
     commands.touch
   )
@@ -226,26 +243,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command(
-      'apps',
-      summary('Installed apps'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(cmd, 'apps')
+    command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) =>
+      commands.data(cmd, 'apps')
     ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      commands.data(cmd, 'dht')
-    ),
-    command('gc', summary('Garbage collection records'), (cmd) =>
-      commands.data(cmd, 'gc')
-    ),
+    command('dht', summary('DHT known-nodes cache'), (cmd) => commands.data(cmd, 'dht')),
+    command('gc', summary('Garbage collection records'), (cmd) => commands.data(cmd, 'gc')),
     command('manifest', summary('Database internal versioning'), (cmd) =>
       commands.data(cmd, 'manifest')
     ),
-    command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(cmd, 'assets')
+    command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) =>
+      commands.data(cmd, 'assets')
     ),
     command(
       'currents',
@@ -311,9 +318,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   )
 
   const reset = hiddenCommand('reset', arg('[link]'), () => {
-    console.log(
-      `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
-    )
+    console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
     console.log(drop.help())
     Bare.exit(1)
   })
@@ -321,11 +326,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const sidecar = command(
     'sidecar',
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
-    command(
-      'inspect',
-      commands.sidecar,
-      summary('Enable running sidecar inspector')
-    ),
+    command('inspect', commands.sidecar, summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description`
       The sidecar is a local-running IPC server for corestore access.
@@ -372,7 +373,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const presets = command(
     'presets',
-    summary('Default flags for apps per command & link'),
+    summary('Default flags per command & link'),
+    description`
+      Pin flags to a given pear command per app link
+    `,
     arg('<command>', 'Command to apply default flags to'),
     arg('<link>', 'App link to apply default flags to'),
     flag('--json', 'Newline delimited JSON output'),
@@ -381,15 +385,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
-  const help = command(
-    'help',
-    arg('[command]'),
-    summary('View help for command'),
-    (h) => {
-      if (h.args.command) console.log(cmd.help(h.args.command))
-      else console.log(cmd.overview({ full: true }))
-    }
-  )
+  const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
+    if (h.args.command) console.log(cmd.help(h.args.command))
+    else console.log(cmd.overview({ full: true }))
+  })
 
   const cmd = command(
     'pear',
@@ -397,9 +396,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     header(usage.header),
     init,
     dev,
+    run,
     stage,
     seed,
-    run,
+    provision,
     release,
     info,
     dump,
@@ -429,17 +429,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       }
       const { key, fork, length } = CHECKOUT
 
-      console.log(
-        'v' +
-          ~~fork +
-          '.' +
-          (length || 'dev') +
-          '.' +
-          key +
-          ' / v' +
-          semver +
-          '\n'
-      )
+      console.log('v' + ~~fork + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
       console.log('Key=' + key)
       console.log('Fork=' + fork)
       console.log('Length=' + length)
@@ -475,10 +465,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     return null
   }
 
-  if (program.running)
+  if (program.running) {
     program.running.finally(() => {
       ipc.close()
     })
+  }
 
   return program
 }

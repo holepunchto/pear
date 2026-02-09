@@ -15,10 +15,11 @@ module.exports = async function sidecar(cmd) {
     print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
     return
   }
-  if (!isWindows && isTTY)
+  if (!isWindows && isTTY) {
     gracedown(() => {
       stdio.out.write('\x1B[1K\x1B[G')
     })
+  }
   print('Closing any current Sidecar clients...', 0)
   const restarts = await ipc.closeClients()
   const n = restarts.length
@@ -32,17 +33,13 @@ module.exports = async function sidecar(cmd) {
 
   print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)
   print(ansi.gray('Runtime: ' + path.basename(RUNTIME)), 0)
-  if (cmd.flags.mem)
-    print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
-  print(
-    '\n========================= INIT ===================================\n'
-  )
+  if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
+  print('\n========================= INIT ===================================\n')
 
   Bare.argv.splice(Bare.argv.lastIndexOf('sidecar'), 1)
   Bare.argv.splice(1, 0, '--sidecar')
 
-  Logger.switches.labels +=
-    (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
+  Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
   if (Logger.switches.level < 2) {
     Logger.switches.level = 2
     global.LOG = new Logger({ pretty: true })
@@ -51,16 +48,9 @@ module.exports = async function sidecar(cmd) {
   Pear.constructor.CONSTANTS.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
   require('../sidecar')
 
-  print(
-    '\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
-  )
+  print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)
-  print(
-    ansi.gray(
-      'Version: ' + JSON.stringify(CHECKOUT, 0, 4).slice(0, -1) + '  }'
-    ),
-    0
-  )
+  print(ansi.gray('Version: ' + JSON.stringify(CHECKOUT, 0, 4).slice(0, -1) + '  }'), 0)
   const commands = restarts.filter(({ id = null }) => id !== null)
   if (commands.length > 0) {
     print('Restart Commands:', 0)
@@ -77,16 +67,12 @@ module.exports = async function sidecar(cmd) {
       const swapix = cmdArgs.indexOf('--swap')
       if (swapix > -1) cmdArgs.splice(swapix, 2)
       stdio.out.write('  ')
-      if (
-        cmdArgs[0] === 'seed' &&
-        cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false
-      )
+      if (cmdArgs[0] === 'seed' && cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false) {
         cmdArgs[cmdArgs.length] = dir
+      }
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
   }
 
-  print(
-    '\n========================= RUN ====================================\n'
-  )
+  print('\n========================= RUN ====================================\n')
 }

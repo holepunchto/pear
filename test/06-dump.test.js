@@ -22,10 +22,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -43,20 +40,8 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping subdirectory', async function ({
-  ok,
-  absent,
-  plan,
-  teardown
-}) {
+test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
   plan(4)
-  const path = require('bare-path')
-  const fs = require('bare-fs')
-  const exists = (path) =>
-    fs.promises.stat(path).then(
-      () => true,
-      () => false
-    )
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -70,10 +55,7 @@ test('pear dump dumping subdirectory', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -93,12 +75,7 @@ test('pear dump dumping subdirectory', async function ({
   ok(await dumped.exists('/lib/pear.js'), 'lib/pear.js should exist')
 })
 
-test('pear dump dumping to existing dir', async function ({
-  absent,
-  is,
-  plan,
-  teardown
-}) {
+test('pear dump dumping to existing dir', async function ({ absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -115,10 +92,7 @@ test('pear dump dumping to existing dir', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -142,11 +116,7 @@ test('pear dump dumping to existing dir', async function ({
   absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
-test('pear dump dumping to existing dir with force', async function ({
-  ok,
-  plan,
-  teardown
-}) {
+test('pear dump dumping to existing dir with force', async function ({ ok, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -163,10 +133,7 @@ test('pear dump dumping to existing dir with force', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -183,13 +150,7 @@ test('pear dump dumping to existing dir with force', async function ({
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping a single file', async function ({
-  ok,
-  absent,
-  is,
-  plan,
-  teardown
-}) {
+test('pear dump dumping a single file', async function ({ ok, absent, is, plan, teardown }) {
   plan(3)
 
   const helper = new Helper()
@@ -206,10 +167,7 @@ test('pear dump dumping a single file', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -252,10 +210,7 @@ test('pear dump dumping a single file in a subdirectory', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -292,10 +247,7 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -315,11 +267,7 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   ok(dumpedFiles.includes('/lib/dump.js'), 'should print out lib/dump.js')
 })
 
-test('pear dump dumping subdirectory to stdout', async function ({
-  ok,
-  plan,
-  teardown
-}) {
+test('pear dump dumping subdirectory to stdout', async function ({ ok, plan, teardown }) {
   plan(2)
 
   const helper = new Helper()
@@ -336,10 +284,7 @@ test('pear dump dumping subdirectory to stdout', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -353,14 +298,8 @@ test('pear dump dumping subdirectory to stdout', async function ({
     if (output.tag === 'final') break
   }
 
-  ok(
-    dumpedFiles.includes('/pear.js'),
-    'should print out lib/pear.js as /pear.js'
-  )
-  ok(
-    dumpedFiles.includes('/dump.js'),
-    'should print out lib/dump.js as /dump.js'
-  )
+  ok(dumpedFiles.includes('/pear.js'), 'should print out lib/pear.js as /pear.js')
+  ok(dumpedFiles.includes('/dump.js'), 'should print out lib/dump.js as /dump.js')
 })
 
 test('pear dump dumping a single file to stdout', async function ({
@@ -386,10 +325,7 @@ test('pear dump dumping a single file to stdout', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -405,10 +341,7 @@ test('pear dump dumping a single file to stdout', async function ({
 
   ok(dumpedFiles.includes('index.js'), 'should print out index.js')
   is(dumpedFiles.length, 1, 'should dump only one file')
-  absent(
-    dumpedFiles.includes('package.json'),
-    'should not print out package.json'
-  )
+  absent(dumpedFiles.includes('package.json'), 'should not print out package.json')
 })
 
 test('pear dump dumping a single file in a subdirectory to stdout', async function ({
@@ -434,10 +367,7 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -476,10 +406,7 @@ test('pear dump should throw when dumping non-existant filepath', async function
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -516,10 +443,7 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 

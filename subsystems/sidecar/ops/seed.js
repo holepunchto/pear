@@ -29,17 +29,12 @@ module.exports = class Seed extends Opstream {
 
     const corestore = this.sidecar.getCorestore(name, channel)
     await corestore.ready()
-    const key = link
-      ? hypercoreid.decode(link)
-      : await Hyperdrive.getDriveKey(corestore)
+    const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
 
-    const status = (msg) =>
-      this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
+    const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const traits = await this.sidecar.model.getTraits(
-      `pear://${hypercoreid.encode(key)}`
-    )
+    const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
     const encryptionKey = traits?.encryptionKey
 
     const pod = new Pod({
@@ -64,9 +59,7 @@ module.exports = class Seed extends Opstream {
     }
 
     if (!link && pod.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT(
-        'Invalid Channel "' + channel + '" - nothing to seed'
-      )
+      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
     }
 
     await pod.join({ server: true })

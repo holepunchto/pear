@@ -1,7 +1,6 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter, confirm, ansi } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 const os = require('bare-os')
 const path = require('bare-path')
 
@@ -17,10 +16,7 @@ module.exports = async function drop(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json } = cmd.flags
   const link = cmd.args.link
-  if (link) {
-    const parsed = plink.parse(link)
-    if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-  }
+  plink.parse(link) // validates
   const dialog =
     ansi.warning +
     `  ${ansi.bold('WARNING')} the storage of ${ansi.bold(link)} will be permanently deleted and cannot be recovered. To confirm type "RESET"\n\n`
@@ -35,10 +31,7 @@ module.exports = async function drop(cmd) {
   await output(
     json,
     ipc.drop({
-      link:
-        isPear || isFile || path.isAbsolute(link)
-          ? link
-          : path.join(os.cwd(), link)
+      link: isPear || isFile || path.isAbsolute(link) ? link : path.join(os.cwd(), link)
     })
   )
 }

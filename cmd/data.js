@@ -1,7 +1,6 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter, ansi, byteSize } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -120,10 +119,7 @@ class Data {
     const { command } = cmd
     const { secrets, json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
+    plink.parse(link) // validates
     await output(
       json,
       this.ipc.data({ resource: 'apps', secrets, link }),
@@ -136,36 +132,21 @@ class Data {
     const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(
-      json,
-      this.ipc.data({ resource: 'dht' }),
-      { tag: 'dht' },
-      this.ipc
-    )
+    await output(json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' }, this.ipc)
   }
 
   async gc() {
     const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(
-      json,
-      this.ipc.data({ resource: 'gc' }),
-      { tag: 'gc' },
-      this.ipc
-    )
+    await output(json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' }, this.ipc)
   }
 
   async manifest() {
     const { cmd } = this
     const { command } = cmd
     const { json } = command.parent.flags
-    await output(
-      json,
-      this.ipc.data({ resource: 'manifest' }),
-      { tag: 'manifest' },
-      this.ipc
-    )
+    await output(json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' }, this.ipc)
   }
 
   async assets() {
@@ -173,16 +154,8 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
-    await output(
-      json,
-      this.ipc.data({ resource: 'assets', link }),
-      { tag: 'assets' },
-      this.ipc
-    )
+    plink.parse(link) // validates
+    await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
   }
 
   async currents() {
@@ -190,27 +163,15 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is invalid`)
-    }
-    await output(
-      json,
-      this.ipc.data({ resource: 'currents', link }),
-      { tag: 'currents' },
-      this.ipc
-    )
+    plink.parse(link) // validates
+    await output(json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' }, this.ipc)
   }
 
   async presets() {
+    const { cmd } = this
     const command = cmd.args.command
     const link = cmd.args.link
     const { json } = cmd.command.parent.flags
-    await output(
-      json,
-      this.ipc.presets({ command, link }),
-      { tag: 'presets' },
-      this.ipc
-    )
+    await output(json, this.ipc.presets({ command, link }), { tag: 'presets' }, this.ipc)
   }
 }
