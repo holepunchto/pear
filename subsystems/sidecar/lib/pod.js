@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { EventEmitter } = require('bare-events')
@@ -59,8 +60,7 @@ module.exports = class Pod {
     this.failure = failure
     this.corestore = corestore
     this.stage = stage
-    this.drive =
-      drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
     this.current = current ?? this.drive?.core?.length ?? 0
     this.updatesDiff = updatesDiff
     this.link = null
@@ -105,21 +105,12 @@ module.exports = class Pod {
     this.updateNotify = updateNotify
   }
 
-  async pack({
-    cache = false,
-    prebuilds,
-    entry,
-    builtins = [],
-    conditions,
-    extensions
-  } = {}) {
+  async pack({ cache = false, prebuilds, entry, builtins = [], conditions, extensions } = {}) {
     let filename = null
     let metadata = null
 
     if (cache) {
-      filename =
-        crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') +
-        '.bundle'
+      filename = crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') + '.bundle'
       metadata = {
         file: pathToFileURL(path.join(bundles.root, filename)).toString()
       }
@@ -138,8 +129,7 @@ module.exports = class Pod {
     })
 
     const addons = new Localdrive(prebuilds)
-    for (const [prebuild, addon] of packed.prebuilds)
-      await addons.put(prebuild, addon)
+    for (const [prebuild, addon] of packed.prebuilds) await addons.put(prebuild, addon)
 
     if (cache) {
       await bundles.put(filename, packed.bundle)
@@ -182,7 +172,7 @@ module.exports = class Pod {
         ? this.release > this.drive.version
         : this.current < this.drive.version)
 
-    if (shouldNotify)
+    if (shouldNotify) {
       await updateNotify(
         {
           key: this.hexKey,
@@ -194,6 +184,7 @@ module.exports = class Pod {
           diff: null
         }
       )
+    }
 
     try {
       if (this.updatesDiff) {
@@ -409,8 +400,7 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null)
-      this.release = (await this.db.get('release'))?.value ?? null
+    if (this.release === null) this.release = (await this.db.get('release'))?.value ?? null
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
@@ -462,7 +452,7 @@ module.exports = class Pod {
     const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
     if (warmup) {
-      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
       if (Array.isArray(meta) === false) meta = [meta]
       if (Array.isArray(data) === false) data = [data]
       return await this.drive.downloadRange(meta, data)
@@ -544,14 +534,13 @@ class PodUpdater extends ReadyResource {
     if (
       fork < this.checkout.fork ||
       (fork === this.checkout.fork && length <= this.checkout.length)
-    )
+    ) {
       return this.checkout
+    }
     for await (const checkout of this.watch(opts)) {
-      if (
-        fork < checkout.fork ||
-        (fork === checkout.fork && length <= checkout.length)
-      )
+      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length)) {
         return checkout
+      }
     }
 
     return null
@@ -673,8 +662,9 @@ class PodUpdater extends ReadyResource {
 
   async assets() {
     const pkg = await this.snapshot.db.get('manifest')
-    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {}))
+    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {})) {
       await this._asset({ ns, ...asset })
+    }
   }
 
   async _getLock() {
@@ -773,9 +763,7 @@ class DownloadMonitor extends EventEmitter {
     this._drive.blobs.core.on('download', () => this._downloaded++)
 
     this._interval = setInterval(() => {
-      const downloaded = mirror
-        ? this._downloaded + mirror.downloadedBlocks
-        : this._downloaded
+      const downloaded = mirror ? this._downloaded + mirror.downloadedBlocks : this._downloaded
       const estimated = mirror
         ? downloadEstimate + mirror.downloadedBlocksEstimate
         : downloadEstimate

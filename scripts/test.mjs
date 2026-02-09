@@ -28,17 +28,17 @@ for (const dir of dirs) {
   const { dependencies = {} } = await import(pkg)
   if (Object.keys(dependencies).length === 0) continue
   console.log(
-    force
-      ? 'reinstalling node_modules in'
-      : path.join(dir, 'node_modules') + ' not found'
+    force ? 'reinstalling node_modules in' : path.join(dir, 'node_modules') + ' not found'
   )
   console.log('Running npm install in ', dir)
-  if (isWindows)
+  if (isWindows) {
     spawnSync('pwsh', ['-Command', 'npm install'], {
       cwd: dir,
       stdio: 'inherit'
     })
-  else spawnSync('npm', ['install'], { cwd: dir, stdio: 'inherit' })
+  } else {
+    spawnSync('npm', ['install'], { cwd: dir, stdio: 'inherit' })
+  }
 }
 
 const testnet = await createTestnet(10)
@@ -51,26 +51,19 @@ const cmd = pear(Bare.argv.slice(2))
 const logging = Object.entries(cmd.flags)
   .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
   .map(
-    ([k, v]) =>
-      '--' +
-      cmd._definedFlags.get(k).aliases[0] +
-      (typeof v === 'boolean' ? '' : '=' + v)
+    ([k, v]) => '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v)
   )
 
 if (cmd.flags.sidecar) {
-  console.log(
-    RUNTIME,
-    [...logging, '--dht-bootstrap', dhtBootstrap, 'sidecar'].join(' ')
-  )
+  console.log(RUNTIME, [...logging, '--dht-bootstrap', dhtBootstrap, 'sidecar'].join(' '))
   console.log('waiting 7s for sidecar')
   await new Promise((resolve) => setTimeout(resolve, 7000))
 }
 
-const tests = spawn(
-  RUNTIME,
-  [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'],
-  { cwd: root, stdio: 'inherit' }
-)
+const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'], {
+  cwd: root,
+  stdio: 'inherit'
+})
 
 tests.on('exit', async (code, signal) => {
   if (signal) code = 128 + signal

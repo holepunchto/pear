@@ -1,6 +1,5 @@
 'use strict'
 const { outputter, ansi } = require('pear-terminal')
-const os = require('bare-os')
 
 const output = outputter('touch', {
   final: ({ verlink, link, channel }) => {

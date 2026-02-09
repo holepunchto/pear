@@ -28,8 +28,9 @@ module.exports = class Dump extends Opstream {
       try {
         const files = await fsp.readdir(dir)
         const empty = files.length === 0
-        if (empty === false && !force)
+        if (empty === false && !force) {
           throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+        }
       } catch (err) {
         if (err.code !== 'ENOENT') throw err // if dir doesn't exist Localdrive will create it
       }
@@ -37,12 +38,10 @@ module.exports = class Dump extends Opstream {
 
     const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
-    const isFile =
-      isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 
     const key = parsed.drive.key
-    checkout =
-      checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
+    checkout = checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
     const traits = await this.sidecar.model.getTraits(link)
     const encryptionKey = traits?.encryptionKey
@@ -94,11 +93,7 @@ module.exports = class Dump extends Opstream {
 
     const prefix = isFileLink ? '/' : parsed.pathname
     const pathname =
-      !isFileLink && parsed.pathname === '/'
-        ? ''
-        : isFile
-          ? path.basename(parsed.pathname)
-          : prefix
+      !isFileLink && parsed.pathname === '/' ? '' : isFile ? path.basename(parsed.pathname) : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {

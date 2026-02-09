@@ -108,9 +108,7 @@ test('pear run preflight downloads staged assets', async (t) => {
 
   t.comment('running app with preflight flag')
 
-  const dhtBootstrap = Pear.app.dht.bootstrap
-    .map((e) => `${e.host}:${e.port}`)
-    .join(',')
+  const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
@@ -203,9 +201,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
 
   t.comment('running app with preflight flag')
 
-  const dhtBootstrap = Pear.app.dht.bootstrap
-    .map((e) => `${e.host}:${e.port}`)
-    .join(',')
+  const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
@@ -222,10 +218,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
     bare: true
   })
   t.teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -296,13 +289,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
 
-test('pear run entrypoint and fragment', async function ({
-  is,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
+test('pear run entrypoint and fragment', async function ({ is, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(2)
 
@@ -325,10 +312,7 @@ test('pear run entrypoint and fragment', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key } = await staged.addendum
   await staged.final
 
@@ -344,12 +328,7 @@ test('pear run entrypoint and fragment', async function ({
   await Helper.untilClose(run.pipe)
 })
 
-test('pear run app routes + linkData', async ({
-  teardown,
-  comment,
-  ok,
-  is
-}) => {
+test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => {
   const dir = Helper.fixture('routes')
 
   const helper = new Helper()
@@ -378,10 +357,7 @@ test('pear run app routes + linkData', async ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -462,10 +438,7 @@ test('stage, seed and run encrypted app', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 

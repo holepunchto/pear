@@ -11,8 +11,7 @@ const output = outputter('seed', {
   key: (info) => `---:\n pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
-  'meta-discovery-key': (info) =>
-    `Meta core discovery key (hex) :-\n\n    ${info}\n`,
+  'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
   announced: '^_^ announced',
   'peer-add': (info) => `o-o peer join ${info}`,
   'peer-remove': (info) => `-_- peer drop ${info}`,

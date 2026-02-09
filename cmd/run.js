@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const Module = require('bare-module')
 const os = require('bare-os')
 const path = require('bare-path')
@@ -29,16 +30,14 @@ const preout = outputter('run', {
   pre({ from, output, index, success }, { quiet }) {
     if (quiet) return {}
     // only occurs when run from disk
-    const pre =
-      index > 0
-        ? 'Pre-run [' + index + ':' + from + ']: '
-        : 'Pre-run [' + from + ']: '
+    const pre = index > 0 ? 'Pre-run [' + index + ':' + from + ']: ' : 'Pre-run [' + from + ']: '
     const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
-    if (success === false)
+    if (success === false) {
       return {
         success: false,
         message: output?.stack || output?.message || 'Unknown Pre Error'
       }
+    }
     return pre + output.tag + suffix
   },
   final: {} // hide "{tick} Success"
@@ -84,8 +83,7 @@ module.exports = async function run(cmd, devrun = false) {
   const isPath = isPear === false && isFile === false
   const onDisk = key === null
 
-  if (onDisk === false && isPear === false)
-    throw ERR_INVALID_INPUT('Key must start with pear://')
+  if (onDisk === false && isPear === false) throw ERR_INVALID_INPUT('Key must start with pear://')
 
   const cwd = os.cwd()
   let dir = normalize(flags.base || (onDisk ? pathname : cwd))
@@ -94,20 +92,20 @@ module.exports = async function run(cmd, devrun = false) {
   if (onDisk) {
     const base = { cwd, dir, entrypoint: '/' }
     pkg = await State.localPkg(base) // may modify base.dir
-    if (pkg === null)
+    if (pkg === null) {
       throw ERR_INVALID_PROJECT_DIR(
         `A valid package.json must exist (checked from "${dir}" to "${base.dir}")`
       )
+    }
     base.entrypoint = dir.slice(base.dir.length)
     dir = base.dir
     if (dir.length > 1 && dir.endsWith(path.sep)) dir = dir.slice(0, -1)
-    if (isPath)
+    if (isPath) {
       link =
-        plink.normalize(
-          pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href
-        ) +
+        plink.normalize(pathToFileURL(path.join(dir, base.entrypoint || path.sep)).href) +
         search +
         hash
+    }
     if (flags.pre) {
       const pre = new Pre('run', base, pkg)
       pkg = await preout({ ctrlTTY: false, json: flags.json }, pre, {
@@ -169,8 +167,7 @@ module.exports = async function run(cmd, devrun = false) {
 
   const replacer = flags.json
     ? (key, value) => {
-        if (key === 'data' && value?.bundle)
-          return { ...value, bundle: undefined } // prevent bundle from hitting stdio
+        if (key === 'data' && value?.bundle) return { ...value, bundle: undefined } // prevent bundle from hitting stdio
         return value
       }
     : null
@@ -182,8 +179,7 @@ module.exports = async function run(cmd, devrun = false) {
   if (bail) {
     if (bail.code === 'PREFLIGHT') return // done
     if (bail.code === 'ERR_CONNECTION') return // handled by reporter
-    if (bail.code === 'ERR_PERMISSION_REQUIRED')
-      return permit(ipc, bail.info, 'run')
+    if (bail.code === 'ERR_PERMISSION_REQUIRED') return permit(ipc, bail.info, 'run')
     throw ERR_OPERATION_FAILED(bail.stack || bail.message, bail.info)
   }
 
@@ -198,10 +194,7 @@ module.exports = async function run(cmd, devrun = false) {
   const protocol = new Module.Protocol({
     exists(url) {
       if (url.href.endsWith('.bare') || url.href.endsWith('.node')) return true
-      return (
-        Object.hasOwn(bundle.sources, url.href) ||
-        Object.hasOwn(bundle.assets, url.href)
-      )
+      return Object.hasOwn(bundle.sources, url.href) || Object.hasOwn(bundle.assets, url.href)
     },
     read(url) {
       return bundle.sources[url.href]
@@ -211,9 +204,7 @@ module.exports = async function run(cmd, devrun = false) {
   if (bundle.entrypoint.endsWith('.html')) {
     const updates = require('pear-updates')
     console.log('Legacy application detected, attempting to heal')
-    console.log(
-      'Developer Solution: pear run pear://runtime/documentation/migration'
-    )
+    console.log('Developer Solution: pear run pear://runtime/documentation/migration')
     console.log('Waiting 60 seconds for application updates...')
     const timeout = setTimeout(() => {
       throw ERR_LEGACY(
@@ -226,9 +217,7 @@ module.exports = async function run(cmd, devrun = false) {
         console.log('Updating please wait...')
       } else if (update.updated) {
         console.log('Application update received')
-        console.log(
-          `pear://${update.version.fork}.${update.version.length}.${update.version.key}`
-        )
+        console.log(`pear://${update.version.fork}.${update.version.length}.${update.version.key}`)
         console.log('Rerun to open')
         stream.end()
       }
@@ -256,7 +245,6 @@ module.exports = async function run(cmd, devrun = false) {
 }
 
 function normalize(pathname) {
-  if (pathname[0] === '/' && pathname[2] === ':')
-    return path.normalize(pathname.slice(1))
+  if (pathname[0] === '/' && pathname[2] === ':') return path.normalize(pathname.slice(1))
   return path.normalize(pathname)
 }

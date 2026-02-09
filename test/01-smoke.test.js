@@ -7,16 +7,7 @@ const Localdrive = require('localdrive')
 const { pathToFileURL } = require('url-file-url')
 const Helper = require('./helper')
 
-test('smoke', async function ({
-  ok,
-  is,
-  pass,
-  alike,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
+test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(14)
 
@@ -49,10 +40,7 @@ test('smoke', async function ({
       cmdArgs: []
     })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -99,10 +87,7 @@ test('smoke', async function ({
       cmdArgs: []
     })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -114,11 +99,7 @@ test('smoke', async function ({
 
     const result = await Helper.untilResult(run.pipe)
     const dhtBootstrap = JSON.parse(result)
-    alike(
-      dhtBootstrap,
-      Pear.app.dht.bootstrap,
-      'dht bootstrap matches Pear.app.dht.bootstrap'
-    )
+    alike(dhtBootstrap, Pear.app.dht.bootstrap, 'dht bootstrap matches Pear.app.dht.bootstrap')
 
     await Helper.untilClose(run.pipe)
     pass('ended')
@@ -145,10 +126,7 @@ test('smoke', async function ({
       bare: true
     })
     teardown(() => Helper.teardownStream(staging))
-    const staged = await Helper.pick(staging, [
-      { tag: 'addendum' },
-      { tag: 'final' }
-    ])
+    const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
     const { key } = await staged.addendum
     await staged.final
 
@@ -176,15 +154,7 @@ test('smoke', async function ({
   await Promise.all([testVersions(), testDhtBootstrap(), testStorage()])
 })
 
-test('app with assets', async function ({
-  ok,
-  is,
-  pass,
-  plan,
-  comment,
-  teardown,
-  timeout
-}) {
+test('app with assets', async function ({ ok, is, pass, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
 
@@ -216,10 +186,7 @@ test('app with assets', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -230,11 +197,7 @@ test('app with assets', async function ({
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)
-  is(
-    result.trim(),
-    'This is the content of the asset',
-    'Read asset from entrypoint'
-  )
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
   await Helper.untilClose(run.pipe)
   pass('ended')
@@ -280,10 +243,7 @@ test('app with assets in sub dep', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -294,11 +254,7 @@ test('app with assets in sub dep', async function ({
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)
-  is(
-    result.trim(),
-    'This is the content of the asset',
-    'Read asset from entrypoint'
-  )
+  is(result.trim(), 'This is the content of the asset', 'Read asset from entrypoint')
 
   await Helper.untilClose(run.pipe)
   pass('ended')
@@ -325,11 +281,7 @@ test('local app', async function ({ ok, is, teardown }) {
   const data = await helper.data({ resource: 'apps', link: tmpdir })
   const appsResult = await opwait(data)
   const bundle = appsResult.data[0]
-  is(
-    bundle.link,
-    pathToFileURL(tmpdir).href,
-    'href of the directory is the app bundle key'
-  )
+  is(bundle.link, pathToFileURL(tmpdir).href, 'href of the directory is the app bundle key')
   ok(
     bundle.appStorage.includes('by-random'),
     'application by storage has been generate randomly and persisted'

@@ -35,9 +35,7 @@ class Watcher extends Readable {
     try {
       const length = this.drive.core.length
       const fork = this.drive.core.fork
-      const node = this._releases
-        ? await this.drive.db.get('release', { update: false })
-        : null
+      const node = this._releases ? await this.drive.db.get('release', { update: false }) : null
       if (this.destroying) return
 
       if (node) {

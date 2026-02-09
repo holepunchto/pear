@@ -28,10 +28,7 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
     }
   })
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'warmed' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
   const warmed = await staged.warmed
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
@@ -56,12 +53,7 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('pear stage min desktop app with entrypoints', async ({
-  teardown,
-  ok,
-  is,
-  comment
-}) => {
+test('pear stage min desktop app with entrypoints', async ({ teardown, ok, is, comment }) => {
   const dir = Helper.fixture('stage-app-min-with-entrypoints')
 
   const helper = new Helper()
@@ -85,10 +77,7 @@ test('pear stage min desktop app with entrypoints', async ({
     }
   })
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'warmed' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
   const warmed = await staged.warmed
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
@@ -109,11 +98,7 @@ test('pear stage min desktop app with entrypoints', async ({
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
 
-test('pear stage min desktop app with only and include', async ({
-  teardown,
-  ok,
-  is
-}) => {
+test('pear stage min desktop app with only and include', async ({ teardown, ok, is }) => {
   const dir = Helper.fixture('stage-app-min-with-only')
 
   const helper = new Helper()
@@ -137,10 +122,7 @@ test('pear stage min desktop app with only and include', async ({
     }
   })
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'warmed' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
   const warmed = await staged.warmed
   ok(warmed.blocks > 0, 'Warmup contains some blocks')
   ok(warmed.total > 0, 'Warmup total is correct')
@@ -265,11 +247,7 @@ test('pear stage with glob ignores', async function ({ ok, is, teardown }) {
   ok(stagingFiles.includes('/ignore-dir1/dont-ignore.txt'))
 })
 
-test('pear stage with ignore and unignore', async function ({
-  ok,
-  is,
-  teardown
-}) {
+test('pear stage with ignore and unignore', async function ({ ok, is, teardown }) {
   const dir = Helper.fixture('app-with-unignore')
 
   const helper = new Helper()
@@ -332,16 +310,8 @@ test('pear stage with ignore and unignore', async function ({
   ok(stagingFiles.includes('/modules-test/dir2/prebuilds-example/file2.js'))
   ok(stagingFiles.includes('/modules-test/dir3/prebuilds-example/file1.js'))
   ok(stagingFiles.includes('/modules-test/dir3/prebuilds-example/file2.js'))
-  ok(
-    stagingFiles.includes(
-      '/modules-test/dir4/subdir/prebuilds-example/file1.js'
-    )
-  )
-  ok(
-    stagingFiles.includes(
-      '/modules-test/dir4/subdir/prebuilds-example/file2.js'
-    )
-  )
+  ok(stagingFiles.includes('/modules-test/dir4/subdir/prebuilds-example/file1.js'))
+  ok(stagingFiles.includes('/modules-test/dir4/subdir/prebuilds-example/file2.js'))
 })
 
 test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
@@ -369,10 +339,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
     }
   })
 
-  let staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  let staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
   is(stagingFiles.length, 6, 'should stage 6 files')
@@ -486,11 +453,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
-  is(
-    removedFiles.length,
-    4,
-    'adding ignore without dry-run should purge 4 files'
-  )
+  is(removedFiles.length, 4, 'adding ignore without dry-run should purge 4 files')
   ok(removedFiles.includes('/purge-file.js'), 'purge-file.js should be purged')
   ok(
     removedFiles.includes('/purge-dir1/purge-dir1-file.js'),
@@ -528,12 +491,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   )
 })
 
-test('pear stage with purge config', async function ({
-  ok,
-  is,
-  comment,
-  teardown
-}) {
+test('pear stage with purge config', async function ({ ok, is, comment, teardown }) {
   const dir = Helper.fixture('app-with-purge')
 
   const helper = new Helper()
@@ -558,20 +516,14 @@ test('pear stage with purge config', async function ({
     }
   })
 
-  let staged = await Helper.pick(staging, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  let staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
   is(stagingFiles.length, 4, 'should stage 4 files')
   ok(stagingFiles.includes('/package.json'), 'package.json should exist')
   ok(stagingFiles.includes('/index.js'), 'index.js should exist')
   ok(stagingFiles.includes('/not-purged.js'), 'not-purged.js should exist')
-  ok(
-    stagingFiles.includes('/config-purge-file.js'),
-    'config-purge-file.js should exist'
-  )
+  ok(stagingFiles.includes('/config-purge-file.js'), 'config-purge-file.js should exist')
 
   comment('purge')
   staging = helper.stage({
@@ -594,10 +546,7 @@ test('pear stage with purge config', async function ({
   await staged.final
 
   is(removedFiles.length, 1, 'should remove 1 file')
-  ok(
-    removedFiles.includes('/config-purge-file.js'),
-    'config-purge-file.js should be purged'
-  )
+  ok(removedFiles.includes('/config-purge-file.js'), 'config-purge-file.js should be purged')
 })
 
 test('pear stage warmup with entrypoints', async function ({
@@ -628,10 +577,7 @@ test('pear stage warmup with entrypoints', async function ({
   })
   teardown(() => Helper.teardownStream(staging))
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'warmed' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
   const warmed = await staged.warmed
   ok((await staged.final).success, 'stage succeeded')
 
@@ -668,10 +614,7 @@ test('pear stage warmup with prefetch', async function ({
   })
   teardown(() => Helper.teardownStream(staging))
 
-  const staged = await Helper.pick(staging, [
-    { tag: 'warmed' },
-    { tag: 'final' }
-  ])
+  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
   const warmed = await staged.warmed
   ok((await staged.final).success, 'stage succeeded')
 
@@ -680,12 +623,7 @@ test('pear stage warmup with prefetch', async function ({
   is(warmed.success, true, 'Warmup completed')
 })
 
-test('pear stage double stage reported versions', async ({
-  teardown,
-  comment,
-  ok,
-  is
-}) => {
+test('pear stage double stage reported versions', async ({ teardown, comment, ok, is }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -714,10 +652,7 @@ test('pear stage double stage reported versions', async ({
     dryRun: false
   })
   teardown(() => Helper.teardownStream(stagingA))
-  const stagedA = await Helper.pick(stagingA, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
   const addendumA = await stagedA.addendum
   const lengthA = addendumA.version
   await stagedA.final
@@ -739,10 +674,7 @@ test('pear stage double stage reported versions', async ({
     dryRun: false
   })
   teardown(() => Helper.teardownStream(stagingB))
-  const stagedB = await Helper.pick(stagingB, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])
   const addendumB = await stagedB.addendum
   const lengthB = addendumB.version
   await stagedB.final

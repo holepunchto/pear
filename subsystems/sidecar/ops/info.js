@@ -14,17 +14,8 @@ module.exports = class Info extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({
-    link,
-    channel,
-    showKey,
-    metadata,
-    manifest,
-    changelog = null,
-    dir
-  } = {}) {
-    if (link && channel)
-      throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
+  async #op({ link, channel, showKey, metadata, manifest, changelog = null, dir } = {}) {
+    if (link && channel) throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
 
     const { session } = this
     let pod = null
@@ -32,22 +23,15 @@ module.exports = class Info extends Opstream {
     let { full = false, max = 10, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
 
-    const enabledFlags = new Set(
-      [full, metadata, showKey].filter((value) => value === true)
-    )
+    const enabledFlags = new Set([full, metadata, showKey].filter((value) => value === true))
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
     const corestore = channel
-      ? this.sidecar.getCorestore(
-          State.appname(await State.localPkg({ dir })),
-          channel
-        )
+      ? this.sidecar.getCorestore(State.appname(await State.localPkg({ dir })), channel)
       : this.sidecar.getCorestore(null, null)
 
-    const key = link
-      ? plink.parse(link).drive.key
-      : await Hyperdrive.getDriveKey(corestore)
+    const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
 
     const traits = link ? await this.sidecar.model.getTraits(link) : null
     const encryptionKey = traits?.encryptionKey
@@ -86,11 +70,12 @@ module.exports = class Info extends Opstream {
 
     if (drive.key && drive.contentKey && drive.discoveryKey) {
       const appManifest = await drive.db.get('manifest').catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+        if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
+        }
       })
 
       if (manifest) {
@@ -113,11 +98,12 @@ module.exports = class Info extends Opstream {
         drive.db.get('channel'),
         drive.db.get('release')
       ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+        if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
+        }
       })
 
       if (isEnabled(metadata)) {

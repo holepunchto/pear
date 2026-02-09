@@ -21,10 +21,7 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
     bare: true
   })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -44,10 +41,7 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
     bare: true
   })
   teardown(() => Helper.teardownStream(staging2))
-  const staged2 = await Helper.pick(staging2, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged2 = await Helper.pick(staging2, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key2 } = await staged2.addendum
   await staged2.final
 
@@ -61,11 +55,7 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   const newDst = await Helper.untilResult(run2.pipe)
   await Helper.untilClose(run2.pipe)
 
-  is(
-    oldSrc,
-    newDst,
-    'dst app storage should be the same as old src app storage'
-  )
+  is(oldSrc, newDst, 'dst app storage should be the same as old src app storage')
 
   const run3 = await Helper.run({ link: src })
   const newSrc = await Helper.untilResult(run3.pipe)
@@ -96,10 +86,7 @@ test('pear shift should fail with invalid src', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -134,10 +121,7 @@ test('pear shift should fail with invalid dst', async function ({
     bare: true
   })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -172,10 +156,7 @@ test('pear shift should fail when src app storage does not exist', async functio
     bare: true
   })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -210,10 +191,7 @@ test('pear shift should fail when dst app storage already exists without force',
     bare: true
   })
   teardown(() => Helper.teardownStream(staging1))
-  const staged1 = await Helper.pick(staging1, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged1 = await Helper.pick(staging1, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key1 } = await staged1.addendum
   await staged1.final
 
@@ -228,10 +206,7 @@ test('pear shift should fail when dst app storage already exists without force',
     bare: true
   })
   teardown(() => Helper.teardownStream(staging2))
-  const staged2 = await Helper.pick(staging2, [
-    { tag: 'addendum' },
-    { tag: 'final' }
-  ])
+  const staged2 = await Helper.pick(staging2, [{ tag: 'addendum' }, { tag: 'final' }])
   const { key: key2 } = await staged2.addendum
   await staged2.final
 

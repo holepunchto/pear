@@ -40,10 +40,7 @@ test(
       cmdArgs: []
     })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -99,10 +96,7 @@ test(
       cmdArgs: []
     })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -163,10 +157,7 @@ test(
       cmdArgs: []
     })
     teardown(() => Helper.teardownStream(seeding))
-    const until = await Helper.pick(seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
     const announced = await until.announced
     ok(announced, 'seeding is announced')
 
@@ -240,10 +231,7 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -299,10 +287,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -319,15 +304,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
   is(status.toString(), 'unloading')
 })
 
-test('forced teardown', async function ({
-  ok,
-  is,
-  plan,
-  comment,
-  teardown,
-  timeout,
-  pass
-}) {
+test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeout, pass }) {
   timeout(30000)
   plan(4)
 
@@ -359,10 +336,7 @@ test('forced teardown', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -421,10 +395,7 @@ test('teardown after exception', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
@@ -441,14 +412,7 @@ test('teardown after exception', async function ({
   is(td, 'teardown')
 })
 
-test('exception during teardown', async function ({
-  ok,
-  plan,
-  comment,
-  teardown,
-  timeout,
-  pass
-}) {
+test('exception during teardown', async function ({ ok, plan, comment, teardown, timeout, pass }) {
   timeout(10000)
   plan(4)
 
@@ -480,10 +444,7 @@ test('exception during teardown', async function ({
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 

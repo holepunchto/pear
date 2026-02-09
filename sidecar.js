@@ -1,4 +1,5 @@
 'use strict'
+/* global LOG */
 const Localdrive = require('localdrive')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
@@ -49,8 +50,7 @@ async function bootSidecar() {
     .map((tuple) => {
       const [host, port] = tuple.split(':')
       const int = +port
-      if (Number.isInteger(int) === false)
-        throw new Error(`Invalid port: ${port}`)
+      if (Number.isInteger(int) === false) throw new Error(`Invalid port: ${port}`)
       return { host, port: int }
     })
 
@@ -83,8 +83,7 @@ async function bootSidecar() {
     if (LOCALDEV) return null
     const { checkout, swap } = getUpgradeTarget()
     const updateDrive =
-      checkout === CHECKOUT ||
-      hypercoreid.normalize(checkout.key) === CHECKOUT.key
+      checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
         ? drive
         : new Hyperdrive(corestore.session(), checkout.key)
 
@@ -131,8 +130,7 @@ function getUpgradeTarget() {
     key = hypercoreid.encode(ALIASES.pear)
   }
 
-  if (key === null || key === CHECKOUT.key)
-    return { checkout: CHECKOUT, swap: SWAP }
+  if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
 
   return {
     checkout: { key, length: 0, fork: 0 },

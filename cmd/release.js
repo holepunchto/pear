@@ -12,8 +12,7 @@ const output = outputter('release', {
     `Current length is ${currentLength}\nSetting release to ${releaseLength}\n`,
   released: ({ name, channel, length }) =>
     `The ${name} app (${channel} channel) was successfully released.\nLatest length: ${length}\n`,
-  error: ({ code, stack }) =>
-    `Releasing Error (code: ${code || 'none'}) ${stack}`,
+  error: ({ code, stack }) => `Releasing Error (code: ${code || 'none'}) ${stack}`,
   final: ({ reason = 'Release complete\n', success = true } = {}) => ({
     output: 'print',
     message: `${reason}`,
@@ -27,10 +26,9 @@ module.exports = async function release(cmd) {
   const isKey = plink.parse(cmd.args.channel).drive.key !== null
   const channel = isKey ? null : cmd.args.channel
   const link = isKey ? cmd.args.channel : null
-  if (!channel && !link)
-    throw ERR_INVALID_INPUT(
-      'A valid pear link or the channel name must be specified.'
-    )
+  if (!channel && !link) {
+    throw ERR_INVALID_INPUT('A valid pear link or the channel name must be specified.')
+  }
   let dir = cmd.args.dir || os.cwd()
   if (isAbsolute(dir) === false) dir = resolve(os.cwd(), dir)
   if (checkout !== undefined && Number.isInteger(+checkout) === false) {

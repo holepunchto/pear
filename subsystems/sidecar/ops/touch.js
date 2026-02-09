@@ -1,10 +1,8 @@
 'use strict'
-const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_INVALID_PROJECT_DIR } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
 
@@ -18,7 +16,7 @@ module.exports = class Touch extends Opstream {
     await sidecar.ready()
 
     let name = '!touch'
-    if (dir)
+    if (dir) {
       try {
         const pkg = await State.localPkg({ dir })
         if (pkg !== null) {
@@ -27,6 +25,7 @@ module.exports = class Touch extends Opstream {
       } catch {
         // ignore
       }
+    }
 
     const corestore = sidecar.getCorestore(name, channel)
     await corestore.ready()
