@@ -85,7 +85,8 @@ class Sidecar extends ReadyResource {
   constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
-    this.model = new Model(HyperDB.rocks(corestore.storage.rocks.session(), spec))
+    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), spec)
+    this.model = new Model(rocks)
 
     const all = {}
 
@@ -370,6 +371,7 @@ class Sidecar extends ReadyResource {
   }
 
   async _open() {
+    await this.model.db.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
