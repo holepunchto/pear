@@ -40,6 +40,7 @@ const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
+const HyperDB = require('hyperdb')
 const { spec, Model } = require('pear-hyperdb')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
@@ -84,7 +85,7 @@ class Sidecar extends ReadyResource {
   constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
-    this.model = new Model(corestore.session())
+    this.model = new Model(HyperDB.rocks(corestore.storage.rocks.session(), spec))
 
     const all = {}
 
