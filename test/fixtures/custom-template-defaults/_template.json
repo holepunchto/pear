@@ -1,0 +1,22 @@
+{
+  "params": [
+    {
+      "name": "name",
+      "prompt": "name"
+    },
+    {
+      "name": "height",
+      "default": 1080,
+      "prompt": "height",
+      "validation": "(value) => Number.isInteger(+value)",
+      "msg": "must be an integer"
+    },
+    {
+      "name": "width",
+      "default": 800,
+      "prompt": "width",
+      "validation": "(value) => Number.isInteger(+value)",
+      "msg": "must be an integer"
+    }
+  ]
+}

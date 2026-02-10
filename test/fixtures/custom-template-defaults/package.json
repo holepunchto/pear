@@ -1,0 +1,11 @@
+{
+  "name": "__name__",
+  "pear": {
+    "name": "__name__",
+    "type": "terminal",
+    "gui": {
+      "height": __height__,
+      "width": __width__
+    }
+  }
+}
