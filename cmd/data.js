@@ -119,7 +119,7 @@ class Data {
     const { command } = cmd
     const { secrets, json } = command.parent.flags
     const link = command.args.link
-    plink.parse(link) // validates
+    if (link) plink.parse(link) // validates
     await output(
       json,
       this.ipc.data({ resource: 'apps', secrets, link }),
@@ -154,7 +154,7 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    plink.parse(link) // validates
+    if (link) plink.parse(link) // validates
     await output(json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' }, this.ipc)
   }
 
@@ -163,7 +163,7 @@ class Data {
     const { command } = cmd
     const { json } = command.parent.flags
     const link = command.args.link
-    plink.parse(link) // validates
+    if (link) plink.parse(link) // validates
     await output(json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' }, this.ipc)
   }
 
