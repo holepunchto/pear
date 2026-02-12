@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-terminal')

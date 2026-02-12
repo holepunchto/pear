@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const b4a = require('b4a')
 const fs = require('bare-fs')
 const HyperDB = require('hyperdb')
