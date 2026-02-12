@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const safetyCatch = require('safety-catch')
 const { ERR_INTERNAL_ERROR } = require('pear-errors')
 module.exports = class Session {

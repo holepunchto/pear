@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { EventEmitter } = require('bare-events')

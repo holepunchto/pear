@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const bareInspector = require('bare-inspector')
 const { once } = require('bare-events')
 const { Inspector } = require('pear-inspect')

@@ -1,5 +1,4 @@
 'use strict'
-/* global LOG */
 const hypercoreid = require('hypercore-id-encoding')
 const { EventEmitter } = require('bare-events')
 
