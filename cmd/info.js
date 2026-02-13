@@ -42,6 +42,10 @@ const output = outputter('info', {
     info.onlyShowKey = onlyShowKey
     return onlyShowKey ? `pear://${z32}` : `---:\n pear://${z32}\n...`
   },
+  empty: (data, info) => {
+    info.empty = true
+    return '[ Empty ]'
+  },
   keys,
   info,
   changelog,
@@ -56,6 +60,7 @@ const output = outputter('info', {
     return JSON.stringify(data.manifest, 0, 2)
   },
   final(data, info) {
+    if (info.empty) return { success: 2 }
     return info.onlyShowKey && data.success ? {} : false
   }
 })
