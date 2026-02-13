@@ -162,7 +162,7 @@ module.exports = class Run extends Opstream {
 
     app.state = state
 
-    const corestore = sidecar.getCorestore(state.manifest?.name, state.channel)
+    const corestore = sidecar.getCorestore(state.manifest?.name, null)
     const fromDisk = state.key === null
     if (fromDisk) {
       LOG.info(LOG_RUN_LINK, id, 'running from disk')
@@ -232,7 +232,6 @@ module.exports = class Run extends Opstream {
       encryptionKey,
       corestore,
       appling: state.appling,
-      channel: state.channel,
       current: current?.checkout.length,
       checkout: state.checkout ?? parsed.drive.length ?? null,
       key: state.key,

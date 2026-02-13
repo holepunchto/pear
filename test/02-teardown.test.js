@@ -22,7 +22,7 @@ test(
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false
@@ -33,7 +33,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       key: null,
@@ -78,7 +78,7 @@ test(
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false
@@ -89,7 +89,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       key: null,
@@ -139,7 +139,7 @@ test(
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false
@@ -150,7 +150,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       key: null,
@@ -213,7 +213,7 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -224,7 +224,7 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -269,7 +269,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -280,7 +280,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -318,7 +318,7 @@ test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeo
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -329,7 +329,7 @@ test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeo
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -377,7 +377,7 @@ test('teardown after exception', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -388,7 +388,7 @@ test('teardown after exception', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -426,7 +426,7 @@ test('exception during teardown', async function ({ ok, plan, comment, teardown,
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -437,7 +437,7 @@ test('exception during teardown', async function ({ ok, plan, comment, teardown,
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,

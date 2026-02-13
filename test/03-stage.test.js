@@ -13,7 +13,7 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
 
   const id = Helper.getRandomId()
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -62,7 +62,7 @@ test('pear stage min desktop app with entrypoints', async ({ teardown, ok, is, c
 
   const id = Helper.getRandomId()
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -107,7 +107,7 @@ test('pear stage min desktop app with only and include', async ({ teardown, ok, 
 
   const id = Helper.getRandomId()
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -152,7 +152,7 @@ test('pear stage pear.main file', async ({ teardown, ok, comment }) => {
 
   const id = Helper.getRandomId()
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -188,7 +188,7 @@ test('pear stage with ignore', async function ({ ok, is, teardown }) {
   const id = Helper.getRandomId()
 
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -222,7 +222,7 @@ test('pear stage with glob ignores', async function ({ ok, is, teardown }) {
   const id = Helper.getRandomId()
 
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -257,7 +257,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   const id = Helper.getRandomId()
 
   let staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -286,7 +286,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   ok(stagingFiles.includes('/modules-test/dir4/subdir/other.js'))
 
   staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -325,7 +325,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   const id = Helper.getRandomId()
 
   let staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -361,7 +361,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment('check dry-run purge doesnt purge')
   staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: true,
@@ -384,7 +384,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment("check ignore doesn't purge")
   staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -434,7 +434,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment('purge')
   staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -502,7 +502,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
   const id = Helper.getRandomId()
 
   let staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -527,7 +527,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
 
   comment('purge')
   staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -570,7 +570,7 @@ test('pear stage warmup with entrypoints', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -607,7 +607,7 @@ test('pear stage warmup with prefetch', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -646,7 +646,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
 
   comment('staging A')
   const stagingA = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir: tmpdir,
     dryRun: false
@@ -668,7 +668,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   comment('staging B')
   await to.put('/index.js', makeIndex('B'))
   const stagingB = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir: tmpdir,
     dryRun: false

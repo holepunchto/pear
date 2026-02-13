@@ -33,8 +33,8 @@ Pear.teardown(async () => {
   await new Promise((resolve) => setTimeout(resolve, 500)) // example async work
 })
 
-document.getElementById('link').innerText = Pear.app.link || 'none [ dev ]'
-document.getElementById('release').innerText = Pear.app.release || (Pear.app.dev ? 'none [ dev ]' : '0')
+document.getElementById('link').innerText = Pear.app.link || 'none'
+document.getElementById('release').innerText = Pear.app.release ?? '0'
 const { app, platform } = await Pear.versions()
 document.getElementById('platformKey').innerText = platform.key
 document.getElementById('platformFork').innerText = platform.fork
