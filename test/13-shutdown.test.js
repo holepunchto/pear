@@ -10,7 +10,7 @@ const Corestore = require('corestore')
 
 const rig = new Helper.Rig({ keepAlive: false })
 
-const SPINDOWN_TIMEOUT = 10_000
+const SPINDOWN_TIMEOUT = 15_000
 
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)

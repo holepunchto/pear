@@ -105,10 +105,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'stage',
     summary('Synchronize local changes to link'),
     description`
-      Stage local changes and derive the project link.
+      Stage local changes to a project link.
 
       Outputs diff information and project link.
     `,
+    arg('<link>', 'Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),

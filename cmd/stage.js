@@ -1,6 +1,8 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
+const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('pear-terminal')
 const { permit, isTTY, byteDiff } = require('pear-terminal')
 const State = require('pear-state')
@@ -76,6 +78,10 @@ module.exports = async function stage(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } = cmd.flags
   const cwd = os.cwd()
+  const link = cmd.args.link
+  if (!link || plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+  }
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
@@ -94,6 +100,7 @@ module.exports = async function stage(cmd) {
   }
   const stream = ipc.stage({
     id,
+    link,
     dir,
     dryRun,
     bare,
