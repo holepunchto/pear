@@ -22,7 +22,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false
@@ -33,7 +33,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       key: null,
@@ -69,7 +69,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false
@@ -80,7 +80,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       key: null,
@@ -119,7 +119,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('staging')
     const staging = helper.stage({
-      channel: `test-${id}`,
+      link: `test-${id}`,
       name: `test-${id}`,
       dir,
       dryRun: false,
@@ -168,7 +168,7 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -179,7 +179,7 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -225,7 +225,7 @@ test('app with assets in sub dep', async function ({
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -236,7 +236,7 @@ test('app with assets in sub dep', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,

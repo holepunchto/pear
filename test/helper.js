@@ -291,7 +291,7 @@ class Rig {
 
     comment('staging platform...')
     const staging = this.local.stage({
-      channel: `test-${this.id}`,
+      link: `test-${this.id}`,
       name: `test-${this.id}`,
       dir: this.artefactDir,
       dryRun: false
@@ -303,7 +303,7 @@ class Rig {
     this.seeder = new Helper()
     await this.seeder.ready()
     this.seeding = this.seeder.seed({
-      channel: `test-${this.id}`,
+      link: `test-${this.id}`,
       name: `test-${this.id}`,
       dir: this.artefactDir,
       key: null,

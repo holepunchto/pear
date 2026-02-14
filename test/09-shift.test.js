@@ -14,7 +14,7 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   comment('staging src app')
   const id1 = Helper.getRandomId()
   const staging1 = helper.stage({
-    channel: `test-${id1}`,
+    link: `test-${id1}`,
     name: `test-${id1}`,
     dir: storageDir,
     dryRun: false,
@@ -34,7 +34,7 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   comment('staging dst app')
   const id2 = Math.floor(Math.random() * 20000)
   const staging2 = helper.stage({
-    channel: `test-${id2}`,
+    link: `test-${id2}`,
     name: `test-${id2}`,
     dir: storageDir,
     dryRun: false,
@@ -79,7 +79,7 @@ test('pear shift should fail with invalid src', async function ({
   comment('staging dst app')
   const id1 = Helper.getRandomId()
   const staging1 = helper.stage({
-    channel: `test-${id1}`,
+    link: `test-${id1}`,
     name: `test-${id1}`,
     dir: storageDir,
     dryRun: false,
@@ -114,7 +114,7 @@ test('pear shift should fail with invalid dst', async function ({
   comment('staging src app')
   const id1 = Helper.getRandomId()
   const staging1 = helper.stage({
-    channel: `test-${id1}`,
+    link: `test-${id1}`,
     name: `test-${id1}`,
     dir: storageDir,
     dryRun: false,
@@ -149,7 +149,7 @@ test('pear shift should fail when src app storage does not exist', async functio
   comment('staging src app')
   const id1 = Helper.getRandomId()
   const staging1 = helper.stage({
-    channel: `test-${id1}`,
+    link: `test-${id1}`,
     name: `test-${id1}`,
     dir: storageDir,
     dryRun: false,
@@ -184,7 +184,7 @@ test('pear shift should fail when dst app storage already exists without force',
   comment('staging src app')
   const id1 = Helper.getRandomId()
   const staging1 = helper.stage({
-    channel: `test-${id1}`,
+    link: `test-${id1}`,
     name: `test-${id1}`,
     dir: storageDir,
     dryRun: false,
@@ -199,7 +199,7 @@ test('pear shift should fail when dst app storage already exists without force',
 
   const id2 = Math.floor(Math.random() * 20000)
   const staging2 = helper.stage({
-    channel: `test-${id2}`,
+    link: `test-${id2}`,
     name: `test-${id2}`,
     dir: storageDir,
     dryRun: false,

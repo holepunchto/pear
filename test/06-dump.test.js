@@ -15,7 +15,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -48,7 +48,7 @@ test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teard
 
   const id = Helper.getRandomId()
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir: Helper.fixture('dump'),
     dryRun: false,
@@ -85,7 +85,7 @@ test('pear dump dumping to existing dir', async function ({ absent, is, plan, te
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -126,7 +126,7 @@ test('pear dump dumping to existing dir with force', async function ({ ok, plan,
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -160,7 +160,7 @@ test('pear dump dumping a single file', async function ({ ok, absent, is, plan, 
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -203,7 +203,7 @@ test('pear dump dumping a single file in a subdirectory', async function ({
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -240,7 +240,7 @@ test('pear dump dumping to stdout', async function ({ ok, plan, teardown }) {
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -277,7 +277,7 @@ test('pear dump dumping subdirectory to stdout', async function ({ ok, plan, tea
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -318,7 +318,7 @@ test('pear dump dumping a single file to stdout', async function ({
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -360,7 +360,7 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -400,7 +400,7 @@ test('pear dump should throw when dumping non-existant filepath', async function
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -437,7 +437,7 @@ test('pear dump should throw when dumping non-existant dirpath', async function 
   const id = Helper.getRandomId()
   const dir = Helper.fixture('dump')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false

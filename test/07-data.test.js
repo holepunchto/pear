@@ -18,16 +18,19 @@ test('pear data', async function ({ ok, is, plan, pass, comment, timeout, teardo
   await helper.ready()
 
   const id = Helper.getRandomId()
+  const scope = `test-${id}`
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const ek = await deriveEncryptionKey(password, SALT)
 
-  const touching = await helper.touch({ dir, channel: `test-${id}` })
-  const touched = await Helper.pick(touching, [{ tag: 'final' }])
-  const { key } = await touched.final
-  await helper.permit({ key: hypercoreid.decode(key), password })
+  const lockedStage = helper.stage({ link: scope, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(lockedStage))
+  const stageError = await Helper.pick(lockedStage, { tag: 'error' })
+  const stageKey = stageError.info.key
+  const key = hypercoreid.encode(stageKey)
+  await helper.permit({ key: stageKey, password })
 
   comment('staging with encryption key')
-  const staging = helper.stage({ channel: `test-${id}`, dir, dryRun: false })
+  const staging = helper.stage({ link: scope, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
@@ -90,7 +93,7 @@ test('pear data no duplicated bundle', async function ({ is, comment, teardown }
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -127,7 +130,7 @@ test('pear data bundle persisted with z32 encoded key', async function ({ is, co
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,

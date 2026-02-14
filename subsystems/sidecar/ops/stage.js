@@ -21,7 +21,7 @@ module.exports = class Stage extends Opstream {
   }
 
   async #op({
-    channel,
+    link,
     key,
     dir,
     dryRun,
@@ -35,10 +35,11 @@ module.exports = class Stage extends Opstream {
     pkg = null
   }) {
     const { client, session, sidecar } = this
+    const parsed = link ? plink.parse(link) : null
 
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
-      flags: { channel, stage: true },
+      flags: { link, stage: true },
       dir,
       cmdArgs
     })
@@ -47,13 +48,16 @@ module.exports = class Stage extends Opstream {
 
     if (name) state.name = name
     await State.build(state, pkg)
+    const scope = parsed?.drive.key ? null : link || state.name
 
-    const corestore = sidecar.getCorestore(state.name, channel, {
+    const corestore = sidecar.getCorestore(state.name, scope, {
       writable: true
     })
     await corestore.ready()
 
-    key = key ? hypercoreid.decode(key) : await Hyperdrive.getDriveKey(corestore)
+    key = key
+      ? hypercoreid.decode(key)
+      : (parsed?.drive.key ?? (await Hyperdrive.getDriveKey(corestore)))
 
     const encrypted = state.options.encrypted
     const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
@@ -69,7 +73,6 @@ module.exports = class Stage extends Opstream {
     const pod = new Pod({
       key,
       corestore,
-      channel,
       truncate,
       stage: true,
       encryptionKey
@@ -98,16 +101,15 @@ module.exports = class Stage extends Opstream {
 
     const release = (await pod.db.get('release'))?.value || 0
 
-    const link = plink.serialize(pod.drive.key)
-    const z32 = link.slice(7)
+    const applink = plink.serialize(pod.drive.key)
+    const z32 = applink.slice(7)
 
     this.push({
       tag: 'staging',
       data: {
         name: state.name,
-        channel: pod.channel,
         key: z32,
-        link,
+        link: applink,
         verlink: verlink,
         current: currentVersion,
         release,
@@ -286,9 +288,8 @@ module.exports = class Stage extends Opstream {
       data: {
         version: pod.version,
         release,
-        channel,
         key: z32,
-        link,
+        link: applink,
         verlink: pod.verlink()
       }
     })

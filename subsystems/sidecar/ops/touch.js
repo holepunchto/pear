@@ -11,40 +11,36 @@ module.exports = class Touch extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ dir, channel = randomBytes(16).toString('hex') }) {
+  async #op({ dir }) {
     const { sidecar } = this
     await sidecar.ready()
 
     let name = '!touch'
+    let namespace = randomBytes(16).toString('hex')
     if (dir) {
       try {
         const pkg = await State.localPkg({ dir })
         if (pkg !== null) {
           name = State.appname(pkg)
+          namespace = name
         }
       } catch {
         // ignore
       }
     }
 
-    const corestore = sidecar.getCorestore(name, channel)
+    const corestore = sidecar.getCorestore(name, namespace)
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)
     const drive = new Hyperdrive(corestore, key)
     await drive.ready()
     const { length, fork } = drive.core
-    const verlink = plink.serialize({
-      protocol: 'pear:',
-      drive: { key, fork, length }
-    })
     const link = plink.serialize({ protocol: 'pear:', drive: { key } })
     this.final = {
       key: hypercoreid.normalize(key),
       length,
       fork,
-      link,
-      verlink,
-      channel
+      link
     }
   }
 }

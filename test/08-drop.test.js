@@ -16,7 +16,7 @@ test('pear drop', async function ({ ok, not, plan, comment, teardown, timeout })
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,

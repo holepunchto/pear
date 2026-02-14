@@ -13,11 +13,11 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
   await helper.ready()
 
   const id = Helper.getRandomId()
-  const channel = `test-${id}`
+  const scope = `test-${id}`
   const dir = flagsDir
 
   comment('staging')
-  const staging = helper.stage({ channel, name: channel, dir, dryRun: false })
+  const staging = helper.stage({ link: scope, name: scope, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])

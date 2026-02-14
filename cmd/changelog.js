@@ -22,10 +22,10 @@ const output = outputter('changelog', {
 module.exports = async function changelog(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json, full, max = 10 } = cmd.flags
-  const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
-  const channel = isKey ? null : cmd.args.link
-  const link = isKey ? cmd.args.link : null
-  if (link && isKey === false) throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+  const link = cmd.args.link || null
+  if (link && plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
+  }
   const nmax = +max
   if (Number.isInteger(nmax) === false) {
     throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
@@ -35,7 +35,6 @@ module.exports = async function changelog(cmd) {
     json,
     ipc.info({
       link,
-      channel,
       changelog: { max: nmax, semver: cmd.flags.of, full },
       cmdArgs: Bare.argv.slice(1)
     }),

@@ -38,7 +38,6 @@ module.exports = class Pod {
       current,
       appling,
       key,
-      channel,
       stage = false,
       status = noop,
       failure,
@@ -53,7 +52,6 @@ module.exports = class Pod {
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
-    this.channel = channel || null
     this.local = !this.key
     this.status = status
     this.failure = failure
@@ -231,13 +229,6 @@ module.exports = class Pod {
     this.link = this.drive.key
       ? plink.serialize(this.drive.key)
       : pathToFileURL(this.drive.root).href
-
-    if (this.channel && this.drive.db.feed.writable) {
-      const existing = await this.drive.db.get('channel')
-      if (!existing || existing.value !== this.channel) {
-        await this.drive.db.put('channel', this.channel)
-      }
-    }
   }
 
   verlink() {
@@ -420,13 +411,8 @@ module.exports = class Pod {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode] = await Promise.all([
-      db.get('platformVersion'),
-      db.get('channel')
-    ])
+    const platformVersionNode = await db.get('platformVersion')
     this.platformVersion = platformVersionNode?.value || null
-
-    if (this.channel === null) this.channel = channelNode?.value || ''
 
     return this.ver
   }
