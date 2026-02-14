@@ -3,18 +3,28 @@ const os = require('bare-os')
 const { readFile } = require('bare-fs/promises')
 const { join } = require('bare-path')
 const plink = require('pear-link')
-const { outputter, ansi, permit, isTTY } = require('pear-terminal')
+const { outputter, ansi, permit, isTTY, byteSize } = require('pear-terminal')
 
 const output = outputter('seed', {
-  seeding: ({ key, name, channel }) =>
-    `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
-  key: (info) => `---:\n pear://${info}\n...`,
-  'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
-  'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
-  'meta-discovery-key': (info) => `Meta core discovery key (hex) :-\n\n    ${info}\n`,
-  announced: '^_^ announced',
-  'peer-add': (info) => `o-o peer join ${info}`,
-  'peer-remove': (info) => `-_- peer drop ${info}`,
+  stats({ peers, discoveryKey, contentKey, link, firewalled, natType, upload, download, connections, connecting }) {
+    const ul = `[ ${ansi.up} ${byteSize(upload.speed)}/s ] `
+    const dl = `[ ${ansi.down} ${byteSize(download.speed)}/s ] `
+    let message = `\x1B[2J\x1B[H\n
+ ${ansi.pear} seeding: ${link}
+------------------------------------
+ peers             ${peers}
+ discoveryKey      ${discoveryKey}
+ contentKey        ${contentKey}
+ firewalled        ${firewalled}
+ NAT Type          ${natType}
+ upload            ${ul}
+ download          ${dl}
+ `;
+    return {
+      output: 'status',
+      message
+    }
+  },
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'seed')
