@@ -18,11 +18,11 @@ module.exports = class Touch extends Opstream {
     let name = '!touch'
     let namespace = randomBytes(16).toString('hex')
     if (dir) {
+      namespace = dir
       try {
         const pkg = await State.localPkg({ dir })
         if (pkg !== null) {
           name = State.appname(pkg)
-          namespace = name
         }
       } catch {
         // ignore

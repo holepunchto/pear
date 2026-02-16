@@ -7,14 +7,13 @@ const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, showKey, metadata, manifest, changelog = null, dir } = {}) {
+  async #op({ link, showKey, metadata, manifest, changelog = null } = {}) {
     const { session } = this
     let pod = null
     let drive = null
@@ -25,15 +24,9 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const parsedLink = link ? plink.parse(link) : null
-    const scope = parsedLink?.drive.key ? null : link
-    const corestore = scope
-      ? this.sidecar.getCorestore(State.appname(await State.localPkg({ dir })), scope)
-      : this.sidecar.getCorestore(null, null)
-
-    const key = parsedLink?.drive.key ?? (scope ? await Hyperdrive.getDriveKey(corestore) : null)
-
-    const traits = parsedLink?.drive.key ? await this.sidecar.model.getTraits(link) : null
+    const corestore = this.sidecar.getCorestore(null, null)
+    const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
+    const traits = link ? await this.sidecar.model.getTraits(link) : null
     const encryptionKey = traits?.encryptionKey
 
     if (link) {

@@ -46,7 +46,7 @@ const output = outputter('stage', {
   },
   addendum: ({ version, release, link, verlink }) => {
     const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
-    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
+    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\nUse ${ansi.bold(`pear release ${link}`)} to set release to latest\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
   },
   ['byte-diff']: byteDiff,
   preio({ from, output, index, fd }, { preio }) {
