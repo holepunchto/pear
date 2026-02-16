@@ -126,8 +126,8 @@ module.exports = class Info extends Opstream {
 
     const contents = await drive.get('/CHANGELOG.md')
     const blank = '[ No Changelog ]'
-    const changelogEntries = clog.parse(contents)
-    const top = changelogEntries[0]?.[0]
+    const parsed = clog.parse(contents)
+    const top = parsed[0]?.[0]
     if (top && semver === '^*') {
       if (full) {
         semver = '*'
@@ -138,7 +138,7 @@ module.exports = class Info extends Opstream {
       }
     }
 
-    const entries = changelogEntries
+    const entries = parsed
       .filter(([version]) => {
         version = version.split(' ')[0]
         if (version[0] === 'v') version = version.slice(1)
