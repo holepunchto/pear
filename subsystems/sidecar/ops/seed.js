@@ -17,7 +17,7 @@ module.exports = class Seed extends Opstream {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const keyFromLink = parsed?.drive.key ?? null
-    const scope = keyFromLink ? null : link
+    const namespace = keyFromLink ? null : link
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
       flags: { link },
@@ -31,7 +31,7 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'seeding', data: { key: keyFromLink ? link : null, name } })
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, scope)
+    const corestore = this.sidecar.getCorestore(name, namespace)
     await corestore.ready()
     const key = keyFromLink || (await Hyperdrive.getDriveKey(corestore))
 
@@ -61,7 +61,7 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    if (scope && pod.drive.core.length === 0) {
+    if (namespace && pod.drive.core.length === 0) {
       throw ERR_INVALID_INPUT('Invalid link "' + link + '" - nothing to seed')
     }
 

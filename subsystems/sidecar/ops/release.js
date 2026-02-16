@@ -15,7 +15,7 @@ module.exports = class Release extends Opstream {
   async #op({ name, checkout, link, dir, cmdArgs }) {
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
-    const scope = key ? null : link
+    const namespace = key ? null : link
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
       flags: { checkout, link },
@@ -31,7 +31,7 @@ module.exports = class Release extends Opstream {
 
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, scope, {
+    const corestore = this.sidecar.getCorestore(name, namespace, {
       writable: true
     })
     await corestore.ready()

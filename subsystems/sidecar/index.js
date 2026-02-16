@@ -952,9 +952,9 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  getCorestore(name, scope, opts) {
-    if (!name || !scope) return this.corestore.session({ writable: false, ...opts })
-    return this.corestore.namespace(`${name}~${scope}`, {
+  getCorestore(name, namespace, opts) {
+    if (!name || !namespace) return this.corestore.session({ writable: false, ...opts })
+    return this.corestore.namespace(`${name}~${namespace}`, {
       writable: false,
       ...opts
     })

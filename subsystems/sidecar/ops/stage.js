@@ -48,9 +48,9 @@ module.exports = class Stage extends Opstream {
 
     if (name) state.name = name
     await State.build(state, pkg)
-    const scope = parsed?.drive.key ? null : link || state.name
+    const namespace = parsed?.drive.key ? null : link || state.name
 
-    const corestore = sidecar.getCorestore(state.name, scope, {
+    const corestore = sidecar.getCorestore(state.name, namespace, {
       writable: true
     })
     await corestore.ready()
