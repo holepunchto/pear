@@ -3,7 +3,7 @@ const test = require('brittle')
 const Helper = require('./helper')
 
 test('pear touch generates clean pear link', async ({ teardown, plan, not, is }) => {
-  plan(10)
+  plan(12)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -16,6 +16,7 @@ test('pear touch generates clean pear link', async ({ teardown, plan, not, is })
   is(result.length, 0)
   is(result.fork, 0)
   is(result.link, 'pear://' + result.key)
+  is(result.verlink, 'pear://' + result.fork + '.' + result.length + '.' + result.key)
 
   const touching2 = helper.touch()
   const touched2 = await Helper.pick(touching2, [{ tag: 'final' }])
@@ -26,16 +27,17 @@ test('pear touch generates clean pear link', async ({ teardown, plan, not, is })
   is(result2.length, 0)
   is(result2.fork, 0)
   is(result2.link, 'pear://' + result2.key)
+  is(result2.verlink, 'pear://' + result2.fork + '.' + result2.length + '.' + result2.key)
   not(result.link, result2.link)
   not(result.key, result2.key)
 })
 
-test('pear touch --dir is deterministic for the same project directory', async ({
+test('pear touch [dir] is deterministic for the same project directory', async ({
   teardown,
   plan,
   is
 }) => {
-  plan(9)
+  plan(11)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -49,6 +51,7 @@ test('pear touch --dir is deterministic for the same project directory', async (
   is(result.length, 0)
   is(result.fork, 0)
   is(result.link, 'pear://' + result.key)
+  is(result.verlink, 'pear://' + result.fork + '.' + result.length + '.' + result.key)
 
   const touching2 = helper.touch({ dir })
   const touched2 = await Helper.pick(touching2, [{ tag: 'final' }])
@@ -59,5 +62,6 @@ test('pear touch --dir is deterministic for the same project directory', async (
   is(result2.length, result.length)
   is(result2.fork, result.fork)
   is(result2.link, result.link)
+  is(result2.verlink, result.verlink)
   is(result.key, result2.key)
 })

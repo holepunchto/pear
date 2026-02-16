@@ -35,12 +35,17 @@ module.exports = class Touch extends Opstream {
     const drive = new Hyperdrive(corestore, key)
     await drive.ready()
     const { length, fork } = drive.core
+    const verlink = plink.serialize({
+      protocol: 'pear:',
+      drive: { key, fork, length }
+    })
     const link = plink.serialize({ protocol: 'pear:', drive: { key } })
     this.final = {
       key: hypercoreid.normalize(key),
       length,
       fork,
-      link
+      link,
+      verlink
     }
   }
 }
