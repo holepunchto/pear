@@ -33,7 +33,7 @@ module.exports = async function seed(cmd) {
   const isKey = link && plink.parse(link).drive.key !== null
   if (!isKey) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   let { name } = cmd.flags
-  if (!name && !link) {
+  if (!name) {
     const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
     name = pkg.pear?.name || pkg.name
   }
