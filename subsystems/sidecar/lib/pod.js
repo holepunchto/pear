@@ -399,7 +399,17 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null) this.release = (await this.db.get('release'))?.value ?? null
+    if (this.release === null) {
+      // warmup all data on the latest checkout, very likely the same as release
+      const [releaseNode] = await Promise.all([
+        this.db.get('release'),
+        this.db.get('platformVersion'),
+        this.db.get('channel'),
+        this.db.get('warmup'),
+        this.db.get('manifest')
+      ])
+      this.release = releaseNode?.value ?? null
+    }
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
@@ -422,7 +432,9 @@ module.exports = class Pod {
     const { db } = this.drive
     const [platformVersionNode, channelNode] = await Promise.all([
       db.get('platformVersion'),
-      db.get('channel')
+      db.get('channel'),
+      db.get('warmup'),
+      db.get('manifest')
     ])
     this.platformVersion = platformVersionNode?.value || null
 
