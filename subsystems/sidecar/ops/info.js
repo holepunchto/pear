@@ -68,12 +68,16 @@ module.exports = class Info extends Opstream {
       await pod.join()
     }
 
+    if (drive.core.length === 0) {
+      await drive.core.update()
+    }
+
     if (drive.core.length === 0 && drive.core.fork === 0) {
       this.push({ tag: 'empty' })
       return
     }
 
-    if (drive.key && drive.contentKey && drive.discoveryKey) {
+    if (drive.core.length > 0) {
       const appManifest = await drive.db.get('manifest').catch((error) => {
         if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
