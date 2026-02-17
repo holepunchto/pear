@@ -151,7 +151,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       The target can then be multi-signed against a production link
 
-      Use pear touch to initialize target link
+      Use pear touch to generate target link
     `,
     arg('<source-link>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
@@ -231,9 +231,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Initialize project link'),
-    description`Create a project Pear link if it doesn't already exist`,
-    arg('[dir]', 'Project directory path (default: .)'),
+    summary('Generate random project link'),
+    description`Create a new random Pear link`,
     flag('--json', 'Newline delimited JSON output'),
     commands.touch
   )

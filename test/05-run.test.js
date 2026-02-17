@@ -405,7 +405,7 @@ test('stage, seed and run encrypted app', async function ({
 
   const password = hypercoreid.encode(crypto.randomBytes(32))
 
-  const touching = await helper.touch({ dir })
+  const touching = await helper.touch()
   const touched = await Helper.pick(touching, [{ tag: 'final' }])
   const { key } = await touched.final
 
