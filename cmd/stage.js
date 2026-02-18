@@ -1,9 +1,9 @@
 'use strict'
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
+const { outputter, ansi } = require('pear-terminal')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi } = require('pear-terminal')
 const { permit, isTTY, byteDiff } = require('pear-terminal')
 const State = require('pear-state')
 const Pre = require('../pre')
