@@ -15,10 +15,9 @@ on:
         description: Select channel to build
         required: true
         options:
-          - dev
-          - stage
-          - rc
-          - next
+          - pear://x6rummbhcc4e45emaryp5yzxtu55p6wbcq9mpyo8cwo7348xq3uo
+          - pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
+          - pear://63q1a8m8z678h19u3ckrzkdmpk7ydkp88jrrjwnkg7c5prf7kuxy
       custom-commit:
         type: string
         description: Custom commit
