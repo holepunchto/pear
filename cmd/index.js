@@ -105,12 +105,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'stage',
     summary('Synchronize local changes to link'),
     description`
-      Channel name must be specified on first stage,
-      in order to generate the initial key.
+      Stage local changes to a project link.
 
       Outputs diff information and project link.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to stage'),
+    arg('<link>', 'Pear link to stage'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
@@ -131,11 +130,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'seed',
     summary('Seed or reseed a project'),
     description`
-      Specify channel or link to seed a project.
+      Specify a link to seed a project.
 
       Specify a remote link to reseed.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to seed'),
+    arg('<link>', 'Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--verbose|-v', 'Additional output'),
     flag('--name <name>', 'Advanced. Override app name'),
@@ -152,7 +151,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       The target can then be multi-signed against a production link
 
-      Use pear touch to initialize target link
+      Use pear touch to generate target link
     `,
     arg('<source-link>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
@@ -170,7 +169,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Use this to indicate production release points.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to release'),
+    arg('<link>', 'Pear link to release'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
@@ -192,11 +191,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'info',
     summary('View project information'),
     description`
-      Supply a link or channel to view application information.
+      Supply a link to view application information.
 
       Supply no argument to view platform information.
     `,
-    arg('[link|channel]', 'Project to view info for'),
+    arg('[link]', 'Project to view info for'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
@@ -232,10 +231,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const touch = command(
     'touch',
-    summary('Initialize project link'),
-    description`Create a project Pear link if it doesn't already exist`,
-    arg('[channel]', 'Channel name. Default: randomly generated'),
-    flag('--dir', 'Project dir-based deterministic touch'),
+    summary('Generate random project link'),
+    description`Create a new random Pear link`,
     flag('--json', 'Newline delimited JSON output'),
     commands.touch
   )
@@ -278,11 +275,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'changelog',
     summary('View project changelog'),
     description`
-      Supply a link or channel to view application changelog
+      Supply a link to view application changelog
 
       Shows Pear changelog by default
     `,
-    arg('[link|channel]', 'Project to view changelog of'),
+    arg('[link]', 'Project to view changelog of'),
     flag('--max|-m <n=10>', 'Maximum entries to show'),
     flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
     flag('--full', 'Show entire changelog'),

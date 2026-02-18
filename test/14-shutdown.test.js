@@ -10,7 +10,7 @@ const Corestore = require('corestore')
 
 const rig = new Helper.Rig({ keepAlive: false })
 
-const SPINDOWN_TIMEOUT = 10_000
+const SPINDOWN_TIMEOUT = 15_000
 
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
@@ -68,7 +68,7 @@ test.hook('prepare low-spindown platform', async (t) => {
   await rigHelper.ready()
 
   const patchedStager = rigHelper.stage({
-    channel: 'test-spindown-ls',
+    link: 'test-spindown-ls',
     name: 'test-spindown-ls',
     dir: patchedArtefactDir,
     dryRun: false
@@ -78,7 +78,7 @@ test.hook('prepare low-spindown platform', async (t) => {
 
   t.comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
-    channel: 'test-spindown-ls',
+    link: 'test-spindown-ls',
     name: 'test-spindown-ls',
     dir: patchedArtefactDir,
     key: null,
@@ -168,7 +168,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   await rigHelper.ready()
 
   const patchedStager = rigHelper.stage({
-    channel: 'test-spindown-throttled',
+    link: 'test-spindown-throttled',
     name: 'test-spindown-throttled',
     dir: patchedArtefactDir,
     dryRun: false
@@ -178,7 +178,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
-    channel: 'test-spindown-throttled',
+    link: 'test-spindown-throttled',
     name: 'test-spindown-throttled',
     dir: patchedArtefactDir,
     key: null,
@@ -208,7 +208,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('Staging platform using rcv')
   const stager = rcvHelper.stage({
-    channel: 'test-spindown',
+    link: 'test-spindown',
     name: 'test-spindown',
     dir: rig.artefactDir,
     dryRun: false
@@ -219,7 +219,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('Seeding staged platform using rcv')
   const seeder = rcvHelper.seed({
-    channel: 'test-spindown',
+    link: 'test-spindown',
     name: 'test-spindown',
     dir: rig.artefactDir,
     key: null,

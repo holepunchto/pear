@@ -1,13 +1,12 @@
 'use strict'
 const os = require('bare-os')
-const { readFile } = require('bare-fs/promises')
-const { join } = require('bare-path')
 const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY } = require('pear-terminal')
 
 const output = outputter('seed', {
-  seeding: ({ key, name, channel }) =>
-    `\n${ansi.pear} Seeding: ${key || `${name} [ ${channel} ]`}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
+  seeding: ({ key, name }) =>
+    `\n${ansi.pear} Seeding: ${key || name}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
   key: (info) => `---:\n pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
@@ -28,14 +27,11 @@ module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json, verbose, ask } = cmd.flags
   const { dir = os.cwd() } = cmd.args
-  const isKey = plink.parse(cmd.args.channel).drive.key !== null
-  const channel = isKey ? null : cmd.args.channel
-  const link = isKey ? cmd.args.channel : null
-  let { name } = cmd.flags
-  if (!name && !link) {
-    const pkg = JSON.parse(await readFile(join(dir, 'package.json')))
-    name = pkg.pear?.name || pkg.name
+  const link = cmd.args.link
+  if (!link || plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
+  const { name } = cmd.flags
   const id = Bare.pid
 
   await output(
@@ -43,7 +39,6 @@ module.exports = async function seed(cmd) {
     ipc.seed({
       id,
       name,
-      channel,
       link,
       verbose,
       dir,

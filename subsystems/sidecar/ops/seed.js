@@ -2,6 +2,7 @@
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const Hyperdrive = require('hyperdrive')
+const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
@@ -12,11 +13,14 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ name, channel, link, verbose, dir, cmdArgs } = {}) {
+  async #op({ name, link, verbose, dir, cmdArgs } = {}) {
     const { client, session } = this
+    const parsed = link ? plink.parse(link) : null
+    const keyFromLink = parsed?.drive.key ?? null
+    const namespace = keyFromLink ? null : link
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
-      flags: { channel, link },
+      flags: { link },
       dir,
       cmdArgs
     })
@@ -24,12 +28,12 @@ module.exports = class Seed extends Opstream {
     // not an app but a long running process, setting userData for restart recognition:
     client.userData = { state }
 
-    this.push({ tag: 'seeding', data: { key: link, name, channel } })
+    this.push({ tag: 'seeding', data: { key: keyFromLink ? link : null, name } })
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, channel)
+    const corestore = this.sidecar.getCorestore(name, namespace)
     await corestore.ready()
-    const key = link ? hypercoreid.decode(link) : await Hyperdrive.getDriveKey(corestore)
+    const key = keyFromLink || (await Hyperdrive.getDriveKey(corestore))
 
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
@@ -41,7 +45,6 @@ module.exports = class Seed extends Opstream {
       swarm: this.sidecar.swarm,
       corestore,
       key,
-      channel,
       status,
       encryptionKey
     })
@@ -58,8 +61,8 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    if (!link && pod.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT('Invalid Channel "' + channel + '" - nothing to seed')
+    if (namespace && pod.drive.core.length === 0) {
+      throw ERR_INVALID_INPUT('Invalid link "' + link + '" - nothing to seed')
     }
 
     await pod.join({ server: true })

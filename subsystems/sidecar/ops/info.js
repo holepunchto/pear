@@ -4,19 +4,16 @@ const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, channel, showKey, metadata, manifest, changelog = null, dir } = {}) {
-    if (link && channel) throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
-
+  async #op({ link, showKey, metadata, manifest, changelog = null } = {}) {
     const { session } = this
     let pod = null
     let drive = null
@@ -27,16 +24,12 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const corestore = channel
-      ? this.sidecar.getCorestore(State.appname(await State.localPkg({ dir })), channel)
-      : this.sidecar.getCorestore(null, null)
-
+    const corestore = this.sidecar.getCorestore(null, null)
     const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-
     const traits = link ? await this.sidecar.model.getTraits(link) : null
     const encryptionKey = traits?.encryptionKey
 
-    if (link || channel) {
+    if (link) {
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
@@ -51,7 +44,7 @@ module.exports = class Info extends Opstream {
       drive = this.sidecar.drive
     }
 
-    if (link || channel) {
+    if (link) {
       pod = new Pod({ swarm: this.sidecar.swarm, corestore, key, drive })
       await pod.ready()
     }
@@ -103,10 +96,7 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const [channel, release] = await Promise.all([
-        drive.db.get('channel'),
-        drive.db.get('release')
-      ]).catch((error) => {
+      const release = await drive.db.get('release').catch((error) => {
         if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
@@ -130,7 +120,6 @@ module.exports = class Info extends Opstream {
         this.push({
           tag: 'info',
           data: {
-            channel: channel?.value,
             release: release?.value || ['Unreleased'],
             name,
             length,

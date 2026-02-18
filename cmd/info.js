@@ -4,6 +4,7 @@ const { outputter } = require('pear-terminal')
 const { permit, isTTY } = require('pear-terminal')
 const os = require('bare-os')
 const path = require('bare-path')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -13,11 +14,10 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ channel, release, name, length, byteLength, blobs, fork }) => `
+const info = ({ release, name, length, byteLength, blobs, fork }) => `
  info              value
 -----------------  -----------------
  name              ${name}
- channel           ${channel}
  release           ${release}
  length            ${length}
  fork              ${fork}
@@ -68,9 +68,10 @@ const output = outputter('info', {
 module.exports = async function info(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json, changelog, fullChangelog: full, metadata, key: showKey, manifest } = cmd.flags
-  const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
-  const channel = isKey ? null : cmd.args.link
-  const link = isKey ? cmd.args.link : null
+  const link = cmd.args.link || null
+  if (link && plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+  }
   let dir = cmd.args.dir
   if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
   if (!dir) dir = os.cwd()
@@ -79,7 +80,6 @@ module.exports = async function info(cmd) {
     json,
     ipc.info({
       link,
-      channel,
       showKey,
       metadata,
       changelog: full || changelog ? { full, max: 1 } : null,

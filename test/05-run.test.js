@@ -211,7 +211,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
 
   t.comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -305,7 +305,7 @@ test('pear run entrypoint and fragment', async function ({ is, plan, comment, te
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false,
@@ -339,7 +339,7 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
 
   comment('staging')
   const staging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     dryRun: false
@@ -350,7 +350,7 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
 
   comment('seeding')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir,
     key: null,
@@ -403,35 +403,29 @@ test('stage, seed and run encrypted app', async function ({
   teardown(() => permitHelper.close(), { order: Infinity })
   await permitHelper.ready()
 
-  const id = Helper.getRandomId()
-
   const password = hypercoreid.encode(crypto.randomBytes(32))
 
+  const touching = await helper.touch()
+  const touched = await Helper.pick(touching, [{ tag: 'final' }])
+  const { key } = await touched.final
+
   comment('staging throws without encryption key')
-  const stagingA = helper.stage({
-    channel: `test-${id}`,
-    name: `test-${id}`,
-    dir,
-    dryRun: false
-  })
+  const stagingA = helper.stage({ key, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingA))
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
 
-  const touching = await helper.touch({ dir, channel: `test-${id}` })
-  const touched = await Helper.pick(touching, [{ tag: 'final' }])
-  const { key } = await touched.final
   await helper.permit({ key: hypercoreid.decode(key), password })
 
   comment('staging with encryption key')
-  const stagingB = helper.stage({ channel: `test-${id}`, dir, dryRun: false })
+  const stagingB = helper.stage({ key, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingB))
   const final = await Helper.pick(stagingB, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding encrypted app')
   const seeding = helper.seed({
-    channel: `test-${id}`,
+    link: `pear://${key}`,
     name: 'encrypted',
     dir,
     key: null,

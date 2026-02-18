@@ -18,7 +18,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   const id = Helper.getRandomId()
 
   const srcStaging = helper.stage({
-    channel: `test-${id}`,
+    link: `test-${id}`,
     name: `test-${id}`,
     dir: src,
     dryRun: false,
@@ -33,7 +33,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   const id2 = Helper.getRandomId()
 
   const prodStaging = helper.stage({
-    channel: `test-${id2}`,
+    link: `test-${id2}`,
     name: `test-${id2}`,
     dir: prod,
     dryRun: false,
