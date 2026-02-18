@@ -121,6 +121,7 @@ module.exports = class Info extends Opstream {
           tag: 'info',
           data: {
             release: release?.value || ['Unreleased'],
+            link,
             name,
             length,
             byteLength,

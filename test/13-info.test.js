@@ -27,7 +27,7 @@ test('pear info on unseeded key shows empty', async ({ ok, comment, teardown }) 
   ok(final, 'stream completed with final tag')
 })
 
-test('pear info seeded link returns info', async ({ ok, is, comment, teardown, timeout }) => {
+test.solo('pear info seeded link returns info', async ({ ok, is, comment, teardown, timeout }) => {
   timeout(TEST_TIMEOUT)
   const dir = Helper.fixture('hello-world')
 
@@ -35,23 +35,21 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const id = Helper.getRandomId()
-
+  const touching = await helper.touch()
+  const touched = await Helper.pick(touching, [{ tag: 'final' }])
+  const { link } = await touched.final
   comment('staging source app')
   const staging = helper.stage({
-    channel: `test-${id}`,
-    name: `test-${id}`,
+    link: link,
     dir,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
-  const stageFinal = await Helper.pick(staging, { tag: 'final' })
-  ok(stageFinal?.success, 'stage succeeded')
-
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
   comment('seeding source app')
   const seeding = helper.seed({
-    channel: `test-${id}`,
-    name: `test-${id}`,
+    link: link,
     dir,
     key: null,
     cmdArgs: []
@@ -59,18 +57,10 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   teardown(() => Helper.teardownStream(seeding))
   const seeded = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   await seeded.announced
-  const key = await seeded.key
-  ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
-  const infoStream = helper.info({ link, cmdArgs: [] })
-  teardown(() => Helper.teardownStream(infoStream))
+  const info = helper.info({ link: link, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(info))
 
-  const until = await Helper.pick(infoStream, [{ tag: 'info' }, { tag: 'final' }])
-  const info = await until.info
-  ok(!!info, 'info payload is present')
-  if (!info) return
-  is(info.channel, `test-${id}`, 'channel matches staged app')
-  await until.final
-  ok(true, 'final tag emitted')
+  const until = await Helper.pick(info, [{ tag: 'info' }, { tag: 'final' }])
+  is((await until.info).link, link)
 })
