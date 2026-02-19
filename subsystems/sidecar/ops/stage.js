@@ -84,12 +84,11 @@ module.exports = class Stage extends Opstream {
     await state.initialize({ pod, dryRun })
 
     await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
-    const defaultIgnore = ['**.git', '**.github', '**.DS_Store', 'node_modules/.package-lock.json']
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
     if (state.options?.stage?.ignore) ignore.push(...state.options.stage?.ignore)
-    ignore = [...new Set([...defaultIgnore, ...ignore])]
+    ignore = [...new Set(ignore)]
 
     only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim()) || []
     const cfgOnly = state.options?.stage?.only
