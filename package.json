@@ -129,6 +129,7 @@
     "script-linker": "^2.5.4",
     "semifies": "^1.0.0",
     "sodium-native": "^5.0.0",
+    "speedometer": "^1.1.0",
     "streamx": "^2.22.0",
     "tiny-byte-size": "^1.1.0",
     "udx-native": "^1.18.3",
