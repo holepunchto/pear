@@ -16,11 +16,11 @@ test('pear data', async function ({ ok, is, plan, pass, comment, timeout, teardo
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const ek = await deriveEncryptionKey(password, SALT)
 
-  const lockedStage = helper.stage({ link: stageLink, dir, dryRun: false })
+  const lockedStage = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(lockedStage))
   const stageError = await Helper.pick(lockedStage, { tag: 'error' })
   const stageKey = stageError.info.key
@@ -28,12 +28,11 @@ test('pear data', async function ({ ok, is, plan, pass, comment, timeout, teardo
   await helper.permit({ key: stageKey, password })
 
   comment('staging with encryption key')
-  const staging = helper.stage({ link: stageLink, dir, dryRun: false })
+  const staging = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
-  const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
   await Helper.untilClose(pipe)
   pass('App has finished running')

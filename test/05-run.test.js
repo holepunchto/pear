@@ -205,18 +205,18 @@ test('pear run preflight downloads staged assets from key', async (t) => {
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const appLink = await Helper.touchLink(helper)
 
   t.comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link: appLink,
     dir,
     dryRun: false,
     bare: true
   })
   t.teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { key } = await staged.addendum
+  await staged.addendum
   await staged.final
 
   const sp = spawn(
@@ -231,7 +231,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
       dir,
       '--trusted',
       '--no-pre',
-      `pear://${key}`
+      appLink
     ],
     {
       stdio: ['inherit', 'pipe', 'inherit', 'overlapped'],
@@ -297,22 +297,22 @@ test('pear run entrypoint and fragment', async function ({ is, plan, comment, te
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link,
     dir,
     dryRun: false,
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { key } = await staged.addendum
+  await staged.addendum
   await staged.final
 
-  const link = `pear://${key}${entrypoint}#${fragment}`
-  const run = await Helper.run({ link })
+  const runLink = `${link}${entrypoint}#${fragment}`
+  const run = await Helper.run({ link: runLink })
 
   const result = await Helper.untilResult(run.pipe)
   const info = JSON.parse(result)
@@ -329,11 +329,11 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link,
     dir,
     dryRun: false
   })
@@ -343,7 +343,7 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
 
   comment('seeding')
   const seeding = helper.seed({
-    link: stageLink,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -357,14 +357,14 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const linkData = 'link-data'
-  const link = `pear://${key}/${linkData}`
-  const run = await Helper.run({ link })
+  const appLink = `${link}/${linkData}`
+  const run = await Helper.run({ link: appLink })
 
   const result = await Helper.untilResult(run.pipe)
   await Helper.untilClose(run.pipe)
   is(result, linkData)
 
-  const routeLink = `pear://${key}/subdir/index.js`
+  const routeLink = `${link}/subdir/index.js`
   const routeRun = await Helper.run({ link: routeLink })
   const expected = 'this-is-subdir'
   const routeResult = await Helper.untilResult(routeRun.pipe)

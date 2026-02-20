@@ -11,18 +11,17 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
   const dir = flagsDir
 
   comment('staging')
-  const staging = helper.stage({ link: stageLink, dir, dryRun: false })
+  const staging = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   await staged.final
 
-  const { key } = await staged.addendum
-  const link = `pear://${key}`
+  await staged.addendum
 
   let presets = await getPresets({ link, command: 'run' })
   is(presets, null, 'initial run presets should be null')

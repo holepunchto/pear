@@ -17,11 +17,11 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-    const stageLink = await Helper.touchLink(helper)
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: stageLink,
+      link,
       dir,
       dryRun: false
     })
@@ -31,7 +31,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      link: stageLink,
+      link,
       dir,
       key: null,
       cmdArgs: []
@@ -44,7 +44,6 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const key = await until.key
     ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
 
     const result = await Helper.untilResult(run.pipe)
@@ -61,11 +60,11 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-    const stageLink = await Helper.touchLink(helper)
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: stageLink,
+      link,
       dir,
       dryRun: false
     })
@@ -75,7 +74,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      link: stageLink,
+      link,
       dir,
       key: null,
       cmdArgs: []
@@ -88,7 +87,6 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const key = await until.key
     ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
 
     const result = await Helper.untilResult(run.pipe)
@@ -108,21 +106,20 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-    const stageLink = await Helper.touchLink(helper)
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: stageLink,
+      link,
       dir,
       dryRun: false,
       bare: true
     })
     teardown(() => Helper.teardownStream(staging))
     const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-    const { key } = await staged.addendum
+    await staged.addendum
     await staged.final
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
 
     const result = await Helper.untilResult(run.pipe)
@@ -130,7 +127,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     await Helper.untilClose(run.pipe)
 
-    const linkWithFragment = `pear://${key}/#fragment`
+    const linkWithFragment = `${link}/#fragment`
     const runWithFragment = await Helper.run({ link: linkWithFragment })
     const resultWithFragment = await Helper.untilResult(runWithFragment.pipe)
     const appStorageWithFragment = resultWithFragment
@@ -155,11 +152,11 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link,
     dir,
     dryRun: false
   })
@@ -169,7 +166,7 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
 
   comment('seeding')
   const seeding = helper.seed({
-    link: stageLink,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -182,7 +179,6 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)
@@ -209,11 +205,11 @@ test('app with assets in sub dep', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link,
     dir,
     dryRun: false
   })
@@ -223,7 +219,7 @@ test('app with assets in sub dep', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: stageLink,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -236,7 +232,6 @@ test('app with assets in sub dep', async function ({
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const run = await Helper.run({ link })
 
   const result = await Helper.untilResult(run.pipe)

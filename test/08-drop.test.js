@@ -11,21 +11,19 @@ test('pear drop', async function ({ ok, not, plan, comment, teardown, timeout })
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stageLink = await Helper.touchLink(helper)
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: stageLink,
+    link,
     dir,
     dryRun: false,
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { key } = await staged.addendum
+  await staged.addendum
   await staged.final
-
-  const link = `pear://${key}`
 
   comment('running')
 
