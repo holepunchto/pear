@@ -270,7 +270,7 @@ class Helper extends IPC.Client {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
-    await updaterBootstrap(key, dir, { bootstrap: Pear.app?.dht?.bootstrap })
+    await updaterBootstrap(key, dir, { bootstrap: Pear.app.dht.bootstrap })
   }
 
   static async gc(dir) {
