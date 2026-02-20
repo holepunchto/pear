@@ -2,7 +2,18 @@
 
 ## v2.4.0
 
+### Fixes
 
+* CLI - `pear info` empty output for seeded links fixed
+* CLI - `pear init` interactive fix
+
+### Improvements
+
+* CLI - `pear info` empty output more clear
+* CLI - `pear data [link]` - link made optional
+* CLI - `channel` removed from all commands, links only, use `pear touch` to make links
+* CLI - `pear stage` default ignores of `pear stage` removed, **.git, **.github, **.DS_Store, node_modules/.package-lock.json are no longer auto-ignored. Add to `pear.stage.ignore` as needed.
+* CLI - `pear run` **DEPRECATED** - use `pear-runtime` module instead for embeddable runtime with P2P OTA updates
 
 ## v2.3.2
 
