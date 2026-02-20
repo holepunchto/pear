@@ -27,7 +27,7 @@ test('pear info on unseeded key shows empty', async ({ ok, comment, teardown }) 
   ok(final, 'stream completed with final tag')
 })
 
-test.solo('pear info seeded link returns info', async ({ ok, is, comment, teardown, timeout }) => {
+test('pear info seeded link returns info', async ({ ok, is, comment, teardown, timeout }) => {
   timeout(TEST_TIMEOUT)
   const dir = Helper.fixture('hello-world')
 
