@@ -16,13 +16,11 @@ test('pear data', async function ({ ok, is, plan, pass, comment, timeout, teardo
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
-  const scope = `test-${id}`
+  const stageLink = await Helper.touchLink(helper)
   const password = hypercoreid.encode(crypto.randomBytes(32))
   const ek = await deriveEncryptionKey(password, SALT)
 
-  const lockedStage = helper.stage({ link: scope, dir, dryRun: false })
+  const lockedStage = helper.stage({ link: stageLink, dir, dryRun: false })
   teardown(() => Helper.teardownStream(lockedStage))
   const stageError = await Helper.pick(lockedStage, { tag: 'error' })
   const stageKey = stageError.info.key
@@ -30,7 +28,7 @@ test('pear data', async function ({ ok, is, plan, pass, comment, timeout, teardo
   await helper.permit({ key: stageKey, password })
 
   comment('staging with encryption key')
-  const staging = helper.stage({ link: scope, dir, dryRun: false })
+  const staging = helper.stage({ link: stageLink, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const final = await Helper.pick(staging, { tag: 'final' })
   ok(final.success, 'stage succeeded')
@@ -88,13 +86,11 @@ test('pear data no duplicated bundle', async function ({ is, comment, teardown }
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false,
     bare: true
@@ -125,13 +121,11 @@ test('pear data bundle persisted with z32 encoded key', async function ({ is, co
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false,
     bare: true

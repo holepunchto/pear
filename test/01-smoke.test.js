@@ -17,13 +17,11 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const stageLink = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link: stageLink,
       dir,
       dryRun: false
     })
@@ -33,8 +31,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link: stageLink,
       dir,
       key: null,
       cmdArgs: []
@@ -64,13 +61,11 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const stageLink = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link: stageLink,
       dir,
       dryRun: false
     })
@@ -80,8 +75,7 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
 
     comment('seeding')
     const seeding = helper.seed({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link: stageLink,
       dir,
       key: null,
       cmdArgs: []
@@ -114,13 +108,11 @@ test('smoke', async function ({ ok, is, pass, alike, plan, comment, teardown, ti
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const stageLink = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link: stageLink,
       dir,
       dryRun: false,
       bare: true
@@ -163,13 +155,11 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -179,8 +169,7 @@ test('app with assets', async function ({ ok, is, pass, plan, comment, teardown,
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     key: null,
     cmdArgs: []
@@ -220,13 +209,11 @@ test('app with assets in sub dep', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -236,8 +223,7 @@ test('app with assets in sub dep', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     key: null,
     cmdArgs: []

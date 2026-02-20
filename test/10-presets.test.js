@@ -11,13 +11,11 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
-  const scope = `test-${id}`
+  const stageLink = await Helper.touchLink(helper)
   const dir = flagsDir
 
   comment('staging')
-  const staging = helper.stage({ link: scope, name: scope, dir, dryRun: false })
+  const staging = helper.stage({ link: stageLink, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])

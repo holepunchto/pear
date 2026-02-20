@@ -53,7 +53,8 @@ class Helper extends IPC.Client {
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
+    const bootstrap = Pear.app?.dht?.bootstrap || []
+    const dhtBootstrap = bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -80,6 +81,13 @@ class Helper extends IPC.Client {
     const buf = Buffer.alloc(32)
     sodium.randombytes_buf(buf)
     return buf.toString('hex')
+  }
+
+  static async touchLink(helper) {
+    const touching = await helper.touch()
+    const until = await Helper.pick(touching, [{ tag: 'final' }])
+    const { link } = await until.final
+    return link
   }
 
   static async teardownStream(stream) {
@@ -262,7 +270,7 @@ class Helper extends IPC.Client {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
 
-    await updaterBootstrap(key, dir, { bootstrap: Pear.app.dht.bootstrap })
+    await updaterBootstrap(key, dir, { bootstrap: Pear.app?.dht?.bootstrap })
   }
 
   static async gc(dir) {
@@ -289,10 +297,11 @@ class Rig {
     await this.local.ready()
     comment('connected to sidecar')
 
+    this.link = await Helper.touchLink(this.local)
+
     comment('staging platform...')
     const staging = this.local.stage({
-      link: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       dryRun: false
     })
@@ -303,8 +312,7 @@ class Rig {
     this.seeder = new Helper()
     await this.seeder.ready()
     this.seeding = this.seeder.seed({
-      link: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       key: null,
       cmdArgs: []

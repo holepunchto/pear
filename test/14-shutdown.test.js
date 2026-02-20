@@ -66,10 +66,10 @@ test.hook('prepare low-spindown platform', async (t) => {
   const rigHelper = new Helper(rig)
   t.teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
+  const patchedLink = await Helper.touchLink(rigHelper)
 
   const patchedStager = rigHelper.stage({
-    link: 'test-spindown-ls',
-    name: 'test-spindown-ls',
+    link: patchedLink,
     dir: patchedArtefactDir,
     dryRun: false
   })
@@ -78,8 +78,7 @@ test.hook('prepare low-spindown platform', async (t) => {
 
   t.comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
-    link: 'test-spindown-ls',
-    name: 'test-spindown-ls',
+    link: patchedLink,
     dir: patchedArtefactDir,
     key: null,
     cmdArgs: []
@@ -166,10 +165,10 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const rigHelper = new Helper(rig)
   t.teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
+  const patchedLink = await Helper.touchLink(rigHelper)
 
   const patchedStager = rigHelper.stage({
-    link: 'test-spindown-throttled',
-    name: 'test-spindown-throttled',
+    link: patchedLink,
     dir: patchedArtefactDir,
     dryRun: false
   })
@@ -178,8 +177,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
-    link: 'test-spindown-throttled',
-    name: 'test-spindown-throttled',
+    link: patchedLink,
     dir: patchedArtefactDir,
     key: null,
     cmdArgs: []
@@ -205,11 +203,11 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const rcvHelper = new Helper({ platformDir: platformDirRcv })
   t.teardown(() => rcvHelper.close(), { order: Infinity })
   await rcvHelper.ready()
+  const rcvLink = await Helper.touchLink(rcvHelper)
 
   t.comment('Staging platform using rcv')
   const stager = rcvHelper.stage({
-    link: 'test-spindown',
-    name: 'test-spindown',
+    link: rcvLink,
     dir: rig.artefactDir,
     dryRun: false
   })
@@ -219,8 +217,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
   t.comment('Seeding staged platform using rcv')
   const seeder = rcvHelper.seed({
-    link: 'test-spindown',
-    name: 'test-spindown',
+    link: rcvLink,
     dir: rig.artefactDir,
     key: null,
     cmdArgs: []

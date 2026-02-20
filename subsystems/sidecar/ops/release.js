@@ -1,7 +1,6 @@
 'use strict'
-const Hyperdrive = require('hyperdrive')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_UNSTAGED } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_UNSTAGED } = require('pear-errors')
 const plink = require('pear-link')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
@@ -15,7 +14,7 @@ module.exports = class Release extends Opstream {
   async #op({ name, checkout, link, dir, cmdArgs }) {
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
-    const namespace = key ? null : link
+    if (!key) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
       flags: { checkout, link },
@@ -31,12 +30,10 @@ module.exports = class Release extends Opstream {
 
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, namespace, {
+    const corestore = this.sidecar.getCorestore(null, null, {
       writable: true
     })
     await corestore.ready()
-
-    if (key === null) await Hyperdrive.getDriveKey(corestore)
 
     const pod = new Pod({ corestore, key })
     await session.add(pod)

@@ -112,7 +112,6 @@ test('pear run preflight downloads staged assets', async (t) => {
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
-
   // NB: we spawn directly instead of using Helper.run to avoid unwanted
   //        call to pipe.end
 
@@ -206,13 +205,11 @@ test('pear run preflight downloads staged assets from key', async (t) => {
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   t.comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     bare: true
@@ -300,13 +297,11 @@ test('pear run entrypoint and fragment', async function ({ is, plan, comment, te
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     bare: true
@@ -334,13 +329,11 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -350,8 +343,7 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     key: null,
     cmdArgs: []
@@ -407,10 +399,10 @@ test('stage, seed and run encrypted app', async function ({
 
   const touching = await helper.touch()
   const touched = await Helper.pick(touching, [{ tag: 'final' }])
-  const { key } = await touched.final
+  const { key, link } = await touched.final
 
   comment('staging throws without encryption key')
-  const stagingA = helper.stage({ key, dir, dryRun: false })
+  const stagingA = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingA))
   const error = await Helper.pick(stagingA, { tag: 'error' })
   is(error.code, 'ERR_PERMISSION_REQUIRED')
@@ -418,15 +410,14 @@ test('stage, seed and run encrypted app', async function ({
   await helper.permit({ key: hypercoreid.decode(key), password })
 
   comment('staging with encryption key')
-  const stagingB = helper.stage({ key, dir, dryRun: false })
+  const stagingB = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(stagingB))
   const final = await Helper.pick(stagingB, { tag: 'final' })
   ok(final.success, 'stage succeeded')
 
   comment('seeding encrypted app')
   const seeding = helper.seed({
-    link: `pear://${key}`,
-    name: 'encrypted',
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -437,7 +428,6 @@ test('stage, seed and run encrypted app', async function ({
   ok(announced, 'seeding is announced')
 
   await permitHelper.permit({ key: hypercoreid.decode(key), password })
-  const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
 
   const result = await Helper.untilResult(pipe)

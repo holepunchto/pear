@@ -12,10 +12,9 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
   const staging1 = helper.stage({
-    link: `test-${id1}`,
-    name: `test-${id1}`,
+    link: stageLink1,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -32,10 +31,9 @@ test('pear shift', async function ({ not, is, plan, comment, teardown }) {
   await Helper.untilClose(run1.pipe)
 
   comment('staging dst app')
-  const id2 = Math.floor(Math.random() * 20000)
+  const stageLink2 = await Helper.touchLink(helper)
   const staging2 = helper.stage({
-    link: `test-${id2}`,
-    name: `test-${id2}`,
+    link: stageLink2,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -77,10 +75,9 @@ test('pear shift should fail with invalid src', async function ({
   await helper.ready()
 
   comment('staging dst app')
-  const id1 = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
   const staging1 = helper.stage({
-    link: `test-${id1}`,
-    name: `test-${id1}`,
+    link: stageLink1,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -112,10 +109,9 @@ test('pear shift should fail with invalid dst', async function ({
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
   const staging1 = helper.stage({
-    link: `test-${id1}`,
-    name: `test-${id1}`,
+    link: stageLink1,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -147,10 +143,9 @@ test('pear shift should fail when src app storage does not exist', async functio
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
   const staging1 = helper.stage({
-    link: `test-${id1}`,
-    name: `test-${id1}`,
+    link: stageLink1,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -182,10 +177,9 @@ test('pear shift should fail when dst app storage already exists without force',
   await helper.ready()
 
   comment('staging src app')
-  const id1 = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
   const staging1 = helper.stage({
-    link: `test-${id1}`,
-    name: `test-${id1}`,
+    link: stageLink1,
     dir: storageDir,
     dryRun: false,
     bare: true
@@ -196,11 +190,9 @@ test('pear shift should fail when dst app storage already exists without force',
   await staged1.final
 
   const src = `pear://${key1}`
-
-  const id2 = Math.floor(Math.random() * 20000)
+  const stageLink2 = await Helper.touchLink(helper)
   const staging2 = helper.stage({
-    link: `test-${id2}`,
-    name: `test-${id2}`,
+    link: stageLink2,
     dir: storageDir,
     dryRun: false,
     bare: true

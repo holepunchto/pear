@@ -11,13 +11,11 @@ test('pear drop', async function ({ ok, not, plan, comment, teardown, timeout })
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     bare: true

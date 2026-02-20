@@ -10,11 +10,9 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     compact: true
@@ -59,11 +57,9 @@ test('pear stage min desktop app with entrypoints', async ({ teardown, ok, is, c
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     compact: true
@@ -104,11 +100,9 @@ test('pear stage min desktop app with only and include', async ({ teardown, ok, 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     compact: true
@@ -149,11 +143,9 @@ test('pear stage pear.main file', async ({ teardown, ok, comment }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     compact: true
@@ -184,12 +176,10 @@ test('pear stage with ignore', async function ({ ok, is, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -218,12 +208,10 @@ test('pear stage with glob ignores', async function ({ ok, is, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     ignore: '/**/*.js'
@@ -253,12 +241,10 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   let staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -286,8 +272,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   ok(stagingFiles.includes('/modules-test/dir4/subdir/other.js'))
 
   staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     purge: false,
@@ -322,11 +307,10 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   await helper.ready()
 
   comment('normal stage')
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   let staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -361,8 +345,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment('check dry-run purge doesnt purge')
   staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: true,
     ignore: 'purge-file.js,purge-dir1,purge-dir2',
@@ -384,8 +367,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment("check ignore doesn't purge")
   staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     ignore: 'purge-file.js,purge-dir1,purge-dir2',
@@ -434,8 +416,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
 
   comment('purge')
   staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     ignore: 'purge-file.js,purge-dir1,purge-dir2',
@@ -499,11 +480,10 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
   await helper.ready()
 
   comment('normal stage')
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   let staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -527,8 +507,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
 
   comment('purge')
   staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false,
     ignore: 'ignored-from-start.js,config-purge-file.js'
@@ -565,13 +544,11 @@ test('pear stage warmup with entrypoints', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -602,13 +579,11 @@ test('pear stage warmup with prefetch', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir,
     dryRun: false
   })
@@ -629,7 +604,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   await helper.ready()
 
   const tmpdir = await tmp()
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   const from = new Localdrive(Helper.fixture('versions'))
   const to = new Localdrive(tmpdir)
@@ -646,8 +621,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
 
   comment('staging A')
   const stagingA = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir: tmpdir,
     dryRun: false
   })
@@ -668,8 +642,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   comment('staging B')
   await to.put('/index.js', makeIndex('B'))
   const stagingB = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir: tmpdir,
     dryRun: false
   })

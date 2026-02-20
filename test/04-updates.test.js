@@ -8,21 +8,19 @@ const Corestore = require('corestore')
 const testTmp = require('test-tmp')
 const { Session } = require('pear-inspect')
 const Helper = require('./helper')
-const seedOpts = (id) => ({
-  link: `test-${id}`,
-  name: `test-${id}`,
+const seedOpts = (link) => ({
+  link,
   key: null,
   dir: Helper.fixture('updates'),
   cmdArgs: []
 })
-const stageOpts = (id, dir) => ({
-  ...seedOpts(id, dir),
+const stageOpts = (link) => ({
+  ...seedOpts(link),
   dryRun: false,
   ignore: []
 })
-const releaseOpts = (id, key) => ({
-  link: `test-${id}`,
-  name: `test-${id}`,
+const releaseOpts = (link, key) => ({
+  link,
   key
 })
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-')
@@ -42,15 +40,15 @@ test('updates(listener) should notify when restaging and releasing application (
 }) {
   plan(7)
   const dir = Helper.fixture('updates')
-  const testId = Helper.getRandomId()
   const stager1 = new Helper(rig)
   teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
+  const testLink = await Helper.touchLink(stager1)
 
   comment('1. Stage and run app')
 
   comment('staging')
-  const staging = stager1.stage(stageOpts(testId))
+  const staging = stager1.stage(stageOpts(testLink))
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
@@ -84,7 +82,7 @@ test('updates(listener) should notify when restaging and releasing application (
   teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
 
-  const staging2 = stager2.stage(stageOpts(testId))
+  const staging2 = stager2.stage(stageOpts(testLink))
   teardown(() => Helper.teardownStream(staging2))
   await Helper.pick(staging2, { tag: 'final' })
 
@@ -108,7 +106,7 @@ test('updates(listener) should notify when restaging and releasing application (
   teardown(() => releaser.close(), { order: Infinity })
   await releaser.ready()
 
-  const releasing = releaser.release(releaseOpts(testId, key))
+  const releasing = releaser.release(releaseOpts(testLink, key))
   teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'released' })
 
@@ -133,7 +131,6 @@ test('updates(listener) should notify twice when restaging application twice (sa
   const { ok, is, plan, comment, teardown } = t
   plan(7)
   const dir = Helper.fixture('updates')
-  const testId = Helper.getRandomId()
 
   comment('1. Stage and run app')
 
@@ -141,7 +138,8 @@ test('updates(listener) should notify twice when restaging application twice (sa
   const stager1 = new Helper(rig)
   teardown(() => stager1.close(), { order: Infinity })
   await stager1.ready()
-  const staging = stager1.stage(stageOpts(testId))
+  const testLink = await Helper.touchLink(stager1)
+  const staging = stager1.stage(stageOpts(testLink))
   teardown(() => Helper.teardownStream(staging))
   const until = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
   const { key, link } = await until.staging
@@ -168,7 +166,7 @@ test('updates(listener) should notify twice when restaging application twice (sa
   teardown(() => stager2.close(), { order: Infinity })
   await stager2.ready()
 
-  const staging2 = stager2.stage(stageOpts(testId))
+  const staging2 = stager2.stage(stageOpts(testLink))
   teardown(() => Helper.teardownStream(staging2))
   await Helper.pick(staging2, { tag: 'final' })
   fs.unlinkSync(path.join(dir, file))
@@ -197,7 +195,7 @@ test('updates(listener) should notify twice when restaging application twice (sa
   const stager3 = new Helper(rig)
   teardown(() => stager3.close(), { order: Infinity })
   await stager3.ready()
-  const staging3 = stager3.stage(stageOpts(testId))
+  const staging3 = stager3.stage(stageOpts(testLink))
   teardown(() => Helper.teardownStream(staging3))
   await Helper.pick(staging3, { tag: 'final' })
 
@@ -228,13 +226,11 @@ test('updates should notify Platform stage updates (different pear instances)', 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-
-  const scope = 'test-fixture'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -248,8 +244,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
   await appSeeder.ready()
 
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -299,8 +294,7 @@ test('updates should notify Platform stage updates (different pear instances)', 
 
   comment('restaging rig platform')
   const staging = rig.local.stage({
-    link: `test-${rig.id}`,
-    name: `test-${rig.id}`,
+    link: rig.link,
     dir: rig.artefactDir,
     dryRun: false
   })
@@ -356,13 +350,11 @@ test('updates should notify Platform stage, Platform release updates (different 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-
-  const scope = 'test-fixture'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -376,8 +368,7 @@ test('updates should notify Platform stage, Platform release updates (different 
 
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -429,8 +420,7 @@ test('updates should notify Platform stage, Platform release updates (different 
 
   comment('restaging rig platform')
   const staging = rig.local.stage({
-    link: `test-${rig.id}`,
-    name: `test-${rig.id}`,
+    link: rig.link,
     dir: rig.artefactDir,
     dryRun: false
   })
@@ -454,8 +444,7 @@ test('updates should notify Platform stage, Platform release updates (different 
 
   comment('releasing rig platform')
   const releasing = rig.local.release({
-    link: `test-${rig.id}`,
-    name: `test-${rig.id}`,
+    link: rig.link,
     dir: rig.artefactDir
   })
   teardown(() => Helper.teardownStream(releasing))
@@ -493,12 +482,11 @@ test('updates should notify App stage updates (different pear instances)', async
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-  const scope = 'test-fixture'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -511,8 +499,7 @@ test('updates should notify App stage updates (different pear instances)', async
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -556,8 +543,7 @@ test('updates should notify App stage updates (different pear instances)', async
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -588,13 +574,11 @@ test('updates should notify App stage, App release updates (different pear insta
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-
-  const scope = 'test-fixture'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -607,8 +591,7 @@ test('updates should notify App stage, App release updates (different pear insta
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -655,8 +638,7 @@ test('updates should notify App stage, App release updates (different pear insta
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -677,7 +659,7 @@ test('updates should notify App stage, App release updates (different pear insta
   teardown(() => releaser.close(), { order: Infinity })
   await releaser.ready()
 
-  const releasing = releaser.release({ link: scope, name: scope, key: appKey })
+  const releasing = releaser.release({ link: scopeLink, key: appKey })
   teardown(() => Helper.teardownStream(releasing))
   await Helper.pick(releasing, { tag: 'released' })
 
@@ -731,13 +713,11 @@ test('state version and pod drive version match', async function ({
     pear: { name: 'tmp-app' }
   }
   await fs.promises.writeFile(path.join(tmpdir, 'package.json'), JSON.stringify(pkgA))
-
-  const id = Helper.getRandomId()
+  const stageLink = await Helper.touchLink(helper)
 
   comment('first stage')
   const stagingA = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir: tmpdir,
     dryRun: false
   })
@@ -748,8 +728,7 @@ test('state version and pod drive version match', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir: tmpdir,
     key: null,
     cmdArgs: []
@@ -783,8 +762,7 @@ test('state version and pod drive version match', async function ({
 
   comment('second stage')
   const stagingB = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink,
     dir: tmpdir,
     dryRun: false
   })
@@ -842,13 +820,11 @@ test('updates should replay updates when cutover is not called', async function 
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-
-  const scope = 'test-fixture-no-cutover'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -861,8 +837,7 @@ test('updates should replay updates when cutover is not called', async function 
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -913,8 +888,7 @@ test('updates should replay updates when cutover is not called', async function 
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -966,13 +940,11 @@ test('updates should replay updates even when cutover is called', async function
   const appStager = new Helper(rig)
   teardown(() => appStager.close(), { order: Infinity })
   await appStager.ready()
-
-  const scope = 'test-fixture-with-cutover'
+  const scopeLink = await Helper.touchLink(appStager)
 
   comment('staging app')
   const appStaging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -985,8 +957,7 @@ test('updates should replay updates even when cutover is called', async function
   teardown(() => appSeeder.close(), { order: Infinity })
   await appSeeder.ready()
   const appSeeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -1037,8 +1008,7 @@ test('updates should replay updates even when cutover is called', async function
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -1114,10 +1084,10 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const rigHelper = new Helper(rig)
   teardown(() => rigHelper.close(), { order: Infinity })
   await rigHelper.ready()
+  const patchedLink = await Helper.touchLink(rigHelper)
 
   const patchedStager = rigHelper.stage({
-    link: 'test-reduced-cutover',
-    name: 'test-reduced-cutover',
+    link: patchedLink,
     dir: patchedArtefactDir,
     dryRun: false
   })
@@ -1126,8 +1096,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
 
   comment('Seeding patched platform')
   const patchedSeeder = rigHelper.seed({
-    link: 'test-reduced-cutover',
-    name: 'test-reduced-cutover',
+    link: patchedLink,
     dir: patchedArtefactDir,
     key: null,
     cmdArgs: []
@@ -1156,12 +1125,11 @@ test('updates should start timer for clearing buffer when cutover is called', as
 
   comment('3. Stage and start app using rig')
   comment('Staging app using rig')
-  const scope = 'test-fixture-no-cutover'
   const appStager = new Helper(rig)
   await appStager.ready()
+  const scopeLink = await Helper.touchLink(appStager)
   const staging = appStager.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
@@ -1172,8 +1140,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   const appSeeder = new Helper(rig)
   await appSeeder.ready()
   const seeding = appSeeder.seed({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     key: null,
     cmdArgs: []
@@ -1216,8 +1183,7 @@ test('updates should start timer for clearing buffer when cutover is called', as
   teardown(() => appStager2.close(), { order: Infinity })
   await appStager2.ready()
   const appStaging2 = appStager2.stage({
-    link: scope,
-    name: scope,
+    link: scopeLink,
     dir,
     dryRun: false
   })
