@@ -282,7 +282,6 @@ class Helper extends IPC.Client {
 class Rig {
   platformDir = rigPear
   artefactDir = Helper.localDir
-  id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
   keepAlive = true

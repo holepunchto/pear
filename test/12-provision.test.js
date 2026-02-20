@@ -14,10 +14,10 @@ test('pear provision syncs blocks from source to target per production key', asy
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const srcStageLink = await Helper.touchLink(helper)
+  const stageLink1 = await Helper.touchLink(helper)
 
   const srcStaging = helper.stage({
-    link: srcStageLink,
+    link: stageLink1,
     dir: src,
     dryRun: false,
     compact: true
@@ -27,10 +27,10 @@ test('pear provision syncs blocks from source to target per production key', asy
   const srcStaged = await Helper.pick(srcStaging, [{ tag: 'addendum' }])
 
   const source = await srcStaged.addendum
-  const prodStageLink = await Helper.touchLink(helper)
+  const stageLink2 = await Helper.touchLink(helper)
 
   const prodStaging = helper.stage({
-    link: prodStageLink,
+    link: stageLink2,
     dir: prod,
     dryRun: false,
     compact: true
@@ -41,14 +41,11 @@ test('pear provision syncs blocks from source to target per production key', asy
 
   const production = await prodStaged.addendum
 
-  const touching = helper.touch()
-  const touched = await Helper.pick(touching, [{ tag: 'final' }])
-
-  const target = await touched.final
+  const targetLink = await Helper.touchLink(helper)
 
   const provisioning = helper.provision({
     sourceLink: source.verlink,
-    targetLink: target.link,
+    targetLink,
     productionLink: production.verlink,
     cooldown: 200
   })
