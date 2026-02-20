@@ -50,10 +50,6 @@ test('pear provision syncs blocks from source to target per production key', asy
     cooldown: 200
   })
   const provisioned = await Helper.pick(provisioning, [{ tag: 'final' }])
-  let fieldUpdates = 0
-  provisioning.on('data', (data) => {
-    if (data.tag === 'setting' || data.tag === 'unsetting') fieldUpdates += 1
-  })
 
   const provision = await provisioned.final
 

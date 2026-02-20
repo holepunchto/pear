@@ -18,10 +18,8 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
   const staging = helper.stage({ link, dir, dryRun: false })
   teardown(() => Helper.teardownStream(staging))
 
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
-
-  await staged.addendum
 
   let presets = await getPresets({ link, command: 'run' })
   is(presets, null, 'initial run presets should be null')

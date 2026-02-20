@@ -165,7 +165,7 @@ test('pear run preflight downloads staged assets', async (t) => {
   t.ok(assetBuffer.equals(assetBin), 'on disk asset is fixture asset')
 })
 
-test('pear run preflight downloads staged assets from key', async (t) => {
+test('pear run preflight downloads staged assets from link', async (t) => {
   t.plan(4)
   t.comment('creating test asset')
   const swarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
@@ -215,8 +215,7 @@ test('pear run preflight downloads staged assets from key', async (t) => {
     bare: true
   })
   t.teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.addendum
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
   const sp = spawn(
@@ -307,8 +306,7 @@ test('pear run entrypoint and fragment', async function ({ is, plan, comment, te
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.addendum
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
   const runLink = `${link}${entrypoint}#${fragment}`

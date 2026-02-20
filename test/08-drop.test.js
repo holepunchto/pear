@@ -21,8 +21,7 @@ test('pear drop', async function ({ ok, not, plan, comment, teardown, timeout })
     bare: true
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  await staged.addendum
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
   comment('running')
