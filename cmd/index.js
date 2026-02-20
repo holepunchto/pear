@@ -14,7 +14,7 @@ const {
   validate,
   hiddenCommand
 } = paparam
-const { usage, print, ansi, explain } = require('pear-terminal')
+const { usage, ansi, explain } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const opwait = require('pear-opwait')
 const run = require('pear-run')
@@ -96,11 +96,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.init
   )
 
-  const dev = command('dev', sloppy({ args: true, flags: true }), () => {
-    print('pear dev has been removed, use pear run --dev instead.', false)
-    ipc.close()
-  }).hide()
-
   const stage = command(
     'stage',
     summary('Synchronize local changes to link'),
@@ -178,8 +173,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const run = command(
     'run',
-    summary('Run an application from a link or dir'),
+    summary('DEPRECATED: use pear-runtime module'),
     description`
+      DEPRECATED. WILL BE REMOVED.
+      Use pear-runtime module with any JS project instead.
+
       ${ansi.bold('link')}   pear://<key> | pear://<alias>
       ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
     `,
@@ -240,7 +238,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command('apps', summary('Installed apps'), arg('[link]', 'Filter by link'), (cmd) =>
+    command('apps', summary('DEPRECATED. Installed apps'), arg('[link]', 'Filter by link'), (cmd) =>
       commands.data(cmd, 'apps')
     ),
     command('dht', summary('DHT known-nodes cache'), (cmd) => commands.data(cmd, 'dht')),
@@ -290,7 +288,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const shift = command(
     'shift',
-    summary('Advanced. Move storage between apps'),
+    summary('DEPRECATED: use pear-runtime module'),
+    description(
+      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
+    ),
     arg('<source>', 'Source application Pear link'),
     arg('<destination>', 'Destination application Pear link'),
     flag('--force', 'Overwrite existing application storage if present'),
@@ -303,8 +304,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Permanent data deletion'),
     command(
       'app',
-      summary('Reset an application to initial state'),
-      description('Clear application storage for supplied link.'),
+      summary('DEPRECATED Reset app to initial state'),
+      description('DEPRECATED. WILL BE REMOVED.\nClear application storage for supplied link.'),
       arg('<link>', 'Application link'),
       flag('--json', 'Newline delimited JSON output'),
       commands.drop
@@ -392,7 +393,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ...def.pear,
     header(usage.header),
     init,
-    dev,
     run,
     stage,
     seed,
