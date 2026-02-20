@@ -34,8 +34,7 @@ module.exports = class Stage extends Opstream {
     pkg = null
   }) {
     const { client, session, sidecar } = this
-    const parsed = link ? plink.parse(link) : null
-    const keyFromLink = parsed?.drive.key ?? null
+    const keyFromLink = link ? plink.parse(link).drive.key : null
 
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,

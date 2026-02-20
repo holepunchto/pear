@@ -12,8 +12,7 @@ module.exports = class Release extends Opstream {
   }
 
   async #op({ name, checkout, link, dir, cmdArgs }) {
-    const parsed = link ? plink.parse(link) : null
-    const key = parsed?.drive.key ?? null
+    const key = link ? plink.parse(link).drive.key : null
     if (!key) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
