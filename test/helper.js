@@ -53,8 +53,7 @@ class Helper extends IPC.Client {
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const bootstrap = Pear.app?.dht?.bootstrap || []
-    const dhtBootstrap = bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
