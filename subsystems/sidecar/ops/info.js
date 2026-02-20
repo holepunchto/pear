@@ -65,7 +65,7 @@ module.exports = class Info extends Opstream {
       await drive.core.update()
     }
 
-    if (drive.core?.length === 0 && drive.core.fork === 0) {
+    if (drive.core.length === 0 && drive.core.fork === 0) {
       this.push({ tag: 'empty' })
       return
     }
