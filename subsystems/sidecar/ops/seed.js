@@ -59,7 +59,7 @@ module.exports = class Seed extends Opstream {
       download: { bytes: speedometer() }
     }
 
-    const pushStats = () => {
+    const pushStats = ({ uploadStopped = false, downloadStopped = false } = {}) => {
       const { swarm } = this.sidecar
       const totalConnections = swarm.connections.size
       const totalConnecting = swarm.connecting
@@ -76,12 +76,12 @@ module.exports = class Seed extends Opstream {
           upload: {
             totalBytes: totalStats.upload.bytes,
             totalBlocks: totalStats.upload.blocks,
-            speed: speedStats.upload.bytes()
+            speed: uploadStopped ? 0 : speedStats.upload.bytes()
           },
           download: {
             totalBytes: totalStats.download.bytes,
             totalBlocks: totalStats.download.blocks,
-            speed: speedStats.download.bytes()
+            speed: downloadStopped ? 0 : speedStats.download.bytes()
           },
           natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
           connections: totalConnections,
@@ -90,7 +90,20 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    const pushStatsThrottled = throttleAndFinalize(pushStats, 400)
+    let uploadStoppedTimer
+    const waitForUploadStopped = () => {
+      if (uploadStoppedTimer) clearTimeout(uploadStoppedTimer)
+      uploadStoppedTimer = setTimeout(() => {
+        pushStats({ uploadStopped: true })
+      }, 1000)
+    }
+    let downloadStoppedTimer
+    const waitForDownloadStopped = () => {
+      if (downloadStoppedTimer) clearTimeout(downloadStoppedTimer)
+      downloadStoppedTimer = setTimeout(() => {
+        pushStats({ downloadStopped: true })
+      }, 1000)
+    }
 
     pod.swarm.on('update', () => {
       pushStats()
@@ -100,18 +113,20 @@ module.exports = class Seed extends Opstream {
     })
 
     pod.drive.db.core.on('upload', (index, byteLength) => {
-      LOG.info('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
       totalStats.upload.blocks += 1
       totalStats.upload.bytes += byteLength
       speedStats.upload.bytes(byteLength)
-      pushStatsThrottled()
+      pushStats()
+      waitForUploadStopped()
     })
     pod.drive.db.core.on('download', (index, byteLength) => {
-      LOG.info('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
       totalStats.download.blocks += 1
       totalStats.download.bytes += byteLength
       speedStats.download.bytes(byteLength)
-      pushStatsThrottled()
+      pushStats()
+      waitForDownloadStopped()
     })
     pod.replicator.on('announce', () => {
       pushStats()
