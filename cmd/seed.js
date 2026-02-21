@@ -67,7 +67,7 @@ class Table {
     )
     const maxLineLength = maxCols.reduce((prev, curr) => prev + curr, 0)
     const numCols = firstRow.length
-    const padding = Math.floor((width - (maxLineLength + 2)) / numCols)
+    const padding = width ? Math.floor((width - (maxLineLength + 2)) / numCols) : ' '
     return rows
       .map(
         (row) =>
@@ -97,6 +97,7 @@ const peerEventsTable = new Table([], { view: 5, maxPadding: 2 })
 
 function printBorder() {
   const { width } = stdio.size()
+  if (!width) return ''
   const borderLength = width - 2
   return ` ${'-'.repeat(borderLength)} `
 }
@@ -118,8 +119,10 @@ function clearScreen() {
 function displayOnResize() {
   clearScreenAndScollback()
   const { height } = stdio.size()
-  peerEventsTable.view = height - statsTable.height - 3
-  peerEventsTable.bottom()
+  if (height) {
+    peerEventsTable.view = height - statsTable.height - 3
+    peerEventsTable.bottom()
+  }
   printOutput()
 }
 
