@@ -1,6 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
+const speedometer = require('speedometer')
 const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
@@ -13,7 +14,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ name, link, verbose, dir, cmdArgs } = {}) {
+  async #op({ name, link, dir, cmdArgs } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const keyFromLink = parsed?.drive.key ?? null
@@ -49,6 +50,91 @@ module.exports = class Seed extends Opstream {
       encryptionKey
     })
 
+    const totalStats = {
+      upload: { blocks: 0, bytes: 0 },
+      download: { blocks: 0, bytes: 0 }
+    }
+    const speedStats = {
+      upload: { bytes: speedometer() },
+      download: { bytes: speedometer() }
+    }
+
+    const pushStats = ({ uploadStopped = false, downloadStopped = false } = {}) => {
+      const { swarm } = this.sidecar
+      const totalConnections = swarm.connections.size
+      const totalConnecting = swarm.connecting
+      const { dht } = swarm
+      this.push({
+        tag: 'stats',
+        data: {
+          firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
+          peers: pod.drive.core.peers.length,
+          key: pod.drive.key?.toString('hex'),
+          discoveryKey: pod.drive.discoveryKey?.toString('hex'),
+          contentKey: pod.drive.contentKey?.toString('hex'),
+          link,
+          upload: {
+            totalBytes: totalStats.upload.bytes,
+            totalBlocks: totalStats.upload.blocks,
+            speed: uploadStopped ? 0 : speedStats.upload.bytes()
+          },
+          download: {
+            totalBytes: totalStats.download.bytes,
+            totalBlocks: totalStats.download.blocks,
+            speed: downloadStopped ? 0 : speedStats.download.bytes()
+          },
+          natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
+          connections: totalConnections,
+          connecting: totalConnecting
+        }
+      })
+    }
+
+    let uploadStoppedTimer
+    const waitForUploadStopped = () => {
+      if (uploadStoppedTimer) clearTimeout(uploadStoppedTimer)
+      uploadStoppedTimer = setTimeout(() => {
+        pushStats({ uploadStopped: true })
+      }, 1000)
+    }
+    let downloadStoppedTimer
+    const waitForDownloadStopped = () => {
+      if (downloadStoppedTimer) clearTimeout(downloadStoppedTimer)
+      downloadStoppedTimer = setTimeout(() => {
+        pushStats({ downloadStopped: true })
+      }, 1000)
+    }
+
+    pod.swarm.on('update', () => {
+      pushStats()
+    })
+    pod.drive.core.on('peer-add', (info) => {
+      pushStats()
+    })
+
+    pod.drive.db.core.on('upload', (index, byteLength) => {
+      LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
+      totalStats.upload.blocks += 1
+      totalStats.upload.bytes += byteLength
+      speedStats.upload.bytes(byteLength)
+      pushStats()
+      waitForUploadStopped()
+    })
+    pod.drive.db.core.on('download', (index, byteLength) => {
+      LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
+      totalStats.download.blocks += 1
+      totalStats.download.bytes += byteLength
+      speedStats.download.bytes(byteLength)
+      pushStats()
+      waitForDownloadStopped()
+    })
+    pod.replicator.on('announce', () => {
+      pushStats()
+    })
+    pod.drive.core.on('peer-remove', () => {
+      pushStats()
+    })
+
     try {
       await session.add(pod)
       await pod.ready()
@@ -77,22 +163,26 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    pod.drive.core.download({ start: 0, end: -1 })
-
     const blobs = await pod.drive.getBlobs()
+    blobs.core.on('upload', (index, byteLength, from) => {
+      LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      totalStats.upload.blocks += 1
+      totalStats.upload.bytes += byteLength
+      speedStats.upload.bytes(byteLength)
+      pushStats()
+      waitForUploadStopped()
+    })
+    blobs.core.on('download', (index, byteLength, from) => {
+      LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      totalStats.download.blocks += 1
+      totalStats.download.bytes += byteLength
+      speedStats.download.bytes(byteLength)
+      pushStats()
+      waitForDownloadStopped()
+    })
     blobs.core.download({ start: 0, end: -1 })
 
-    if (verbose) {
-      this.push({ tag: 'meta-key', data: pod.drive.key.toString('hex') })
-      this.push({
-        tag: 'meta-discovery-key',
-        data: pod.drive.discoveryKey.toString('hex')
-      })
-      this.push({
-        tag: 'content-key',
-        data: pod.drive.contentKey.toString('hex')
-      })
-    }
+    pushStats()
 
     this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
 
