@@ -9,35 +9,12 @@ const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 const State = require('../state')
 
-function throttleAndFinalize(func, delay) {
-  let timer = null
-  let interval = null
-
-  return (...args) => {
-    clearInterval(interval)
-    if (timer === null) {
-      func(...args)
-      timer = setTimeout(() => {
-        timer = null
-        let x = 0
-        interval = setInterval(() => {
-          func(...args)
-          if (x > 6) clearInterval(interval)
-          x += 1
-        }, delay * 3)
-      }, delay)
-    } else {
-      clearInterval(interval)
-    }
-  }
-}
-
 module.exports = class Seed extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ name, link, verbose, dir, cmdArgs } = {}) {
+  async #op({ name, link, dir, cmdArgs } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const keyFromLink = parsed?.drive.key ?? null
@@ -173,34 +150,24 @@ module.exports = class Seed extends Opstream {
 
     const blobs = await pod.drive.getBlobs()
     blobs.core.on('upload', (index, byteLength, from) => {
-      LOG.info('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
       totalStats.upload.blocks += 1
       totalStats.upload.bytes += byteLength
       speedStats.upload.bytes(byteLength)
-      pushStatsThrottled()
+      pushStats()
+      waitForUploadStopped()
     })
     blobs.core.on('download', (index, byteLength, from) => {
-      LOG.info('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
       totalStats.download.blocks += 1
       totalStats.download.bytes += byteLength
       speedStats.download.bytes(byteLength)
-      pushStatsThrottled()
+      pushStats()
+      waitForDownloadStopped()
     })
     blobs.core.download({ start: 0, end: -1 })
 
     pushStats()
-
-    if (verbose) {
-      this.push({ tag: 'meta-key', data: pod.drive.key.toString('hex') })
-      this.push({
-        tag: 'meta-discovery-key',
-        data: pod.drive.discoveryKey.toString('hex')
-      })
-      this.push({
-        tag: 'content-key',
-        data: pod.drive.contentKey.toString('hex')
-      })
-    }
 
     this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
 
