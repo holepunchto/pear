@@ -175,7 +175,7 @@ module.exports = class Stage extends Opstream {
 
     const prefix = only.length > 0 ? only : undefined
 
-    const opts = { prefix, ignore: ignored, dryRun, batch: true }
+    const opts = { prefix, ignore: ignored, dryRun, dedup: true, batch: true }
 
     const mods = await linker.warmup(entrypoints)
     for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
