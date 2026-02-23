@@ -38,7 +38,7 @@ class Table {
 
     return rows
   }
-  push(row) {
+  row(row) {
     this.data.push(row)
     this.bottom()
   }
@@ -131,15 +131,15 @@ function display() {
 
 const output = outputter('seed', {
   announced: () => {
-    peers.push(['^_^ announced'])
+    peers.row(['^_^ announced'])
     display()
   },
   'peer-add': (info) => {
-    peers.push([`o-o peer join ${info}`])
+    peers.row([`o-o peer join ${info}`])
     display()
   },
   'peer-remove': (info) => {
-    peers.push([`-_- peer drop ${info}`])
+    peers.row([`-_- peer drop ${info}`])
     display()
   },
   stats({ peers, key, discoveryKey, contentKey, link, firewalled, natType, upload, download }) {
