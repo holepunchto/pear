@@ -14,7 +14,7 @@ module.exports = class Touch extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const entropy = entropyomBytes(16).toString('hex')
+    const entropy = randomBytes(16).toString('hex')
     const corestore = sidecar.getCorestore('!links', entropy)
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)
