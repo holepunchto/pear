@@ -92,8 +92,8 @@ class Table {
   }
 }
 
-const statsTable = new Table()
-const peerEventsTable = new Table([], { view: 5, maxPadding: 2 })
+const stats = new Table()
+const peers = new Table([], { view: 5, maxPadding: 2 })
 
 function printBorder() {
   const { width } = stdio.size()
@@ -103,9 +103,7 @@ function printBorder() {
 }
 
 function printOutput() {
-  stdio.out.write(
-    [printBorder(), statsTable.print(), printBorder(), peerEventsTable.print()].join('\n')
-  )
+  stdio.out.write([printBorder(), stats.print(), printBorder(), peers.print()].join('\n'))
 }
 
 function clearScreenAndScollback() {
@@ -120,8 +118,8 @@ function displayOnResize() {
   clearScreenAndScollback()
   const { height } = stdio.size()
   if (height) {
-    peerEventsTable.view = height - statsTable.height - 3
-    peerEventsTable.bottom()
+    peers.view = height - stats.height - 3
+    peers.bottom()
   }
   printOutput()
 }
@@ -133,15 +131,15 @@ function display() {
 
 const output = outputter('seed', {
   announced: () => {
-    peerEventsTable.push(['^_^ announced'])
+    peers.push(['^_^ announced'])
     display()
   },
   'peer-add': (info) => {
-    peerEventsTable.push([`o-o peer join ${info}`])
+    peers.push([`o-o peer join ${info}`])
     display()
   },
   'peer-remove': (info) => {
-    peerEventsTable.push([`-_- peer drop ${info}`])
+    peers.push([`-_- peer drop ${info}`])
     display()
   },
   stats({ peers, key, discoveryKey, contentKey, link, firewalled, natType, upload, download }) {
@@ -149,9 +147,9 @@ const output = outputter('seed', {
     const ul = `[ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ]`
     const dl = `[ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
 
-    const isFirstDisplay = statsTable.data.length === 0
+    const isFirstDisplay = stats.data.length === 0
 
-    statsTable.data = [
+    stats.data = [
       [`Pear Seed`, `${ansi.pear} ${link}`],
       ['Drive Key', key ?? 0],
       ['Discovery Key', discoveryKey ?? ''],
@@ -192,10 +190,9 @@ module.exports = async function seed(cmd) {
         process.exit(0)
       }, 1)
     } else if (key.toString() === '\u001b[A') {
-      peerEventsTable.up()
-      console.log(peerEventsTable.offset)
+      peers.up()
     } else if (key.toString() === '\u001b[B') {
-      peerEventsTable.down()
+      peers.down()
     }
     clearScreen()
     printOutput()
