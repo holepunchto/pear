@@ -20,23 +20,12 @@ module.exports = class Stage extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({
-    link,
-    key,
-    dir,
-    dryRun,
-    name,
-    truncate,
-    compact,
-    cmdArgs,
-    ignore,
-    purge,
-    only,
-    pkg = null
-  }) {
+  async #op({ link, dir, dryRun, truncate, compact, cmdArgs, ignore, purge, only, pkg = null }) {
     const { client, session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
-
+    if (parsed === null || parsed.drive?.key === null) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified')
+    }
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
       flags: { link, stage: true },
@@ -46,18 +35,17 @@ module.exports = class Stage extends Opstream {
 
     await sidecar.ready()
 
-    if (name) state.name = name
     await State.build(state, pkg)
-    const namespace = parsed?.drive.key ? null : link || state.name
 
-    const corestore = sidecar.getCorestore(state.name, namespace, {
-      writable: true
-    })
+    const namespace = parsed?.drive.key ? null : link || state.name
+    const entropy = null // TODO: get entropy by link origin from db
+    const corestoreOpts = { writable: true }
+    const corestore = entropy
+      ? sidecar.getCorestore('!links', entropy, corestoreOpts)
+      : sidecar.getCorestore(state.name, namespace, corestoreOpts)
     await corestore.ready()
 
-    key = key
-      ? hypercoreid.decode(key)
-      : (parsed?.drive.key ?? (await Hyperdrive.getDriveKey(corestore)))
+    const key = await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
     const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
