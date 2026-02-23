@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.4.1
+
+### Improvements
+
+* CLI/Internal - `pear stage` now dedups - enables incremental updates to signed files/data
+
 ## v2.4.0
 
 ### Fixes
