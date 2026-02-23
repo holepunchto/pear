@@ -4,6 +4,7 @@ const { randomBytes } = require('hypercore-crypto')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
+const State = require('../state')
 
 module.exports = class Touch extends Opstream {
   constructor(...args) {
@@ -19,7 +20,11 @@ module.exports = class Touch extends Opstream {
     await corestore.ready()
     const key = await Hyperdrive.getDriveKey(corestore)
     const link = plink.serialize({ protocol: 'pear:', drive: { key } })
-    // TODO: store link -> entropy in db
+    const traits = await sidecar.model.getTraits(link)
+    if (!traits) {
+      await sidecar.model.addTraits(link, State.storageFromLink(link))
+    }
+    await sidecar.model.updateEntropy(link, entropy)
     this.final = {
       key: hypercoreid.normalize(key),
       link
