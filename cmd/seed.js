@@ -5,7 +5,8 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY } = require('pear-terminal')
 
 const output = outputter('seed', {
-  seeding: ({ key }) => `\n${ansi.pear} Seeding: ${key}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
+  seeding: ({ key, name }) =>
+    `\n${ansi.pear} Seeding: ${key || name}\n   ${ansi.dim('ctrl^c to stop & exit')}\n`,
   key: (info) => `---:\n pear://${info}\n...`,
   'content-key': (info) => `Content core key (hex) :-\n\n    ${info}\n`,
   'meta-key': (info) => `Meta discovery key (hex) :-\n\n    ${info}\n`,
@@ -30,12 +31,14 @@ module.exports = async function seed(cmd) {
   if (!link || plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
+  const { name } = cmd.flags
   const id = Bare.pid
 
   await output(
     json,
     ipc.seed({
       id,
+      name,
       link,
       verbose,
       dir,
