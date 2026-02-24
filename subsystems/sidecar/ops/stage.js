@@ -38,7 +38,7 @@ module.exports = class Stage extends Opstream {
     await State.build(state, pkg)
 
     const namespace = parsed?.drive.key ? null : link || state.name
-    const entropy = (await sidecar.model.getTraits(link)).entropy
+    const entropy = (await sidecar.model.getTraits(link))?.entropy
     const corestoreOpts = { writable: true }
     const corestore = entropy
       ? sidecar.getCorestore('!links', entropy, corestoreOpts)
