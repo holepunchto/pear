@@ -24,7 +24,7 @@ module.exports = class Stage extends Opstream {
     const { client, session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
-      throw ERR_INVALID_INPUT('A valid pear link must be specified')
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.')
     }
     const state = new State({
       id: `stager-${randomBytes(16).toString('hex')}`,
