@@ -82,6 +82,13 @@ class Helper extends IPC.Client {
     return buf.toString('hex')
   }
 
+  static async touchLink(helper) {
+    const touching = await helper.touch()
+    const until = await Helper.pick(touching, [{ tag: 'final' }])
+    const { link } = await until.final
+    return link
+  }
+
   static async teardownStream(stream) {
     if (stream.destroyed) return
     stream.end()
@@ -275,7 +282,6 @@ class Helper extends IPC.Client {
 class Rig {
   platformDir = rigPear
   artefactDir = Helper.localDir
-  id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
   keepAlive = true
@@ -289,10 +295,11 @@ class Rig {
     await this.local.ready()
     comment('connected to sidecar')
 
+    this.link = await Helper.touchLink(this.local)
+
     comment('staging platform...')
     const staging = this.local.stage({
-      link: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       dryRun: false
     })
@@ -303,8 +310,7 @@ class Rig {
     this.seeder = new Helper()
     await this.seeder.ready()
     this.seeding = this.seeder.seed({
-      link: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       key: null,
       cmdArgs: []

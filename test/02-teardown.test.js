@@ -17,13 +17,11 @@ test(
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       dryRun: false
     })
@@ -33,8 +31,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       key: null,
       cmdArgs: []
@@ -47,7 +44,6 @@ test(
     const key = await until.key
     ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
     const { pipe } = run
 
@@ -73,13 +69,11 @@ test(
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       dryRun: false
     })
@@ -89,8 +83,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       key: null,
       cmdArgs: []
@@ -103,7 +96,6 @@ test(
     const key = await until.key
     ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
     const { pipe } = run
     pipe.on('error', (err) => {
@@ -134,13 +126,11 @@ test(
     const helper = new Helper()
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
-
-    const id = Helper.getRandomId()
+    const link = await Helper.touchLink(helper)
 
     comment('staging')
     const staging = helper.stage({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       dryRun: false
     })
@@ -150,8 +140,7 @@ test(
 
     comment('seeding')
     const seeding = helper.seed({
-      link: `test-${id}`,
-      name: `test-${id}`,
+      link,
       dir,
       key: null,
       cmdArgs: []
@@ -164,7 +153,6 @@ test(
     const key = await until.key
     ok(hypercoreid.isValid(key), 'app key is valid')
 
-    const link = `pear://${key}`
     const run = await Helper.run({ link })
     const { pipe } = run
     pipe.on('error', (err) => {
@@ -208,13 +196,11 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false
   })
@@ -224,8 +210,7 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -238,7 +223,6 @@ test('teardown unloading resolves on sidecar-side teardown', async function ({
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
   pipe.on('error', (err) => {
     if (err.code === 'ENOTCONN') return
@@ -264,13 +248,11 @@ test('teardown unloading - run of run identify as subapp', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false
   })
@@ -280,8 +262,7 @@ test('teardown unloading - run of run identify as subapp', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -294,7 +275,6 @@ test('teardown unloading - run of run identify as subapp', async function ({
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const { pipe } = await Helper.run({ link })
   pipe.on('error', (err) => {
     if (err.code === 'ENOTCONN') return
@@ -313,13 +293,11 @@ test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeo
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false
   })
@@ -329,8 +307,7 @@ test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeo
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -343,7 +320,6 @@ test('forced teardown', async function ({ ok, is, plan, comment, teardown, timeo
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
 
@@ -372,13 +348,11 @@ test('teardown after exception', async function ({
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false
   })
@@ -388,8 +362,7 @@ test('teardown after exception', async function ({
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -402,7 +375,6 @@ test('teardown after exception', async function ({
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
 
@@ -421,13 +393,11 @@ test('exception during teardown', async function ({ ok, plan, comment, teardown,
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const link = await Helper.touchLink(helper)
 
   comment('staging')
   const staging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     dryRun: false
   })
@@ -437,8 +407,7 @@ test('exception during teardown', async function ({ ok, plan, comment, teardown,
 
   comment('seeding')
   const seeding = helper.seed({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -451,7 +420,6 @@ test('exception during teardown', async function ({ ok, plan, comment, teardown,
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
 
-  const link = `pear://${key}`
   const run = await Helper.run({ link })
   const { pipe } = run
 

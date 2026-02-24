@@ -35,12 +35,10 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const touching = await helper.touch()
-  const touched = await Helper.pick(touching, [{ tag: 'final' }])
-  const { link } = await touched.final
+  const link = await Helper.touchLink(helper)
   comment('staging source app')
   const staging = helper.stage({
-    link: link,
+    link,
     dir,
     dryRun: false
   })
@@ -49,7 +47,7 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   ok(staged.success, 'stage succeeded')
   comment('seeding source app')
   const seeding = helper.seed({
-    link: link,
+    link,
     dir,
     key: null,
     cmdArgs: []
@@ -58,7 +56,7 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   const seeded = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   await seeded.announced
 
-  const info = helper.info({ link: link, cmdArgs: [] })
+  const info = helper.info({ link, cmdArgs: [] })
   teardown(() => Helper.teardownStream(info))
 
   const until = await Helper.pick(info, [{ tag: 'info' }, { tag: 'final' }])

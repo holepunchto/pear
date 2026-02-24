@@ -14,12 +14,10 @@ test('pear provision syncs blocks from source to target per production key', asy
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-
-  const id = Helper.getRandomId()
+  const stageLink1 = await Helper.touchLink(helper)
 
   const srcStaging = helper.stage({
-    link: `test-${id}`,
-    name: `test-${id}`,
+    link: stageLink1,
     dir: src,
     dryRun: false,
     compact: true
@@ -29,12 +27,10 @@ test('pear provision syncs blocks from source to target per production key', asy
   const srcStaged = await Helper.pick(srcStaging, [{ tag: 'addendum' }])
 
   const source = await srcStaged.addendum
-
-  const id2 = Helper.getRandomId()
+  const stageLink2 = await Helper.touchLink(helper)
 
   const prodStaging = helper.stage({
-    link: `test-${id2}`,
-    name: `test-${id2}`,
+    link: stageLink2,
     dir: prod,
     dryRun: false,
     compact: true
@@ -45,22 +41,15 @@ test('pear provision syncs blocks from source to target per production key', asy
 
   const production = await prodStaged.addendum
 
-  const touching = helper.touch()
-  const touched = await Helper.pick(touching, [{ tag: 'final' }])
-
-  const target = await touched.final
+  const targetLink = await Helper.touchLink(helper)
 
   const provisioning = helper.provision({
     sourceLink: source.verlink,
-    targetLink: target.link,
+    targetLink,
     productionLink: production.verlink,
     cooldown: 200
   })
   const provisioned = await Helper.pick(provisioning, [{ tag: 'final' }])
-  let fieldUpdates = 0
-  provisioning.on('data', (data) => {
-    if (data.tag === 'setting' || data.tag === 'unsetting') fieldUpdates += 1
-  })
 
   const provision = await provisioned.final
 
