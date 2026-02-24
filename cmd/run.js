@@ -61,6 +61,10 @@ const runout = outputter('run', {
 })
 
 module.exports = async function run(cmd, devrun = false) {
+  console.error(
+    'DEPRECATED: pear run is deprecated and will be removed\nUse the pear-runtime module instead'
+  )
+
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { flags } = cmd
 
@@ -203,12 +207,10 @@ module.exports = async function run(cmd, devrun = false) {
   if (bundle.entrypoint.endsWith('.html')) {
     const updates = require('pear-updates')
     console.log('Legacy application detected, attempting to heal')
-    console.log('Developer Solution: pear run pear://runtime/documentation/migration')
+    console.log('Developer Solution: https://docs.pears.com/reference/migration/')
     console.log('Waiting 60 seconds for application updates...')
     const timeout = setTimeout(() => {
-      throw ERR_LEGACY(
-        '[ LEGACY ] No longer booting app from HTML entrypoints\n  Developer Solution: pear run pear://runtime/documentation/migration'
-      )
+      throw ERR_LEGACY('[ LEGACY ] No longer booting app from HTML entrypoints')
     }, 60_000)
     const stream = updates({ app: true }, (update) => {
       clearTimeout(timeout)
