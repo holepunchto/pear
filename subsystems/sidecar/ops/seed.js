@@ -14,10 +14,9 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ link, pod, uploadStopped = false, downloadStopped = false } = {}) {
+  _stats({ pod } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
-    const totalConnecting = swarm.connecting
     const { dht } = swarm
 
     return {
@@ -25,23 +24,21 @@ module.exports = class Seed extends Opstream {
       data: {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
         peers: pod.drive.core.peers.length,
-        key: pod.drive.key?.toString('hex'),
+        driveKey: pod.drive.key?.toString('hex'),
         discoveryKey: pod.drive.discoveryKey?.toString('hex'),
         contentKey: pod.drive.contentKey?.toString('hex'),
-        link,
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.speed.upload.blocks,
-          speed: uploadStopped ? 0 : this.stats.speed.upload.bytes()
+          speed: this.stats.speed.upload.bytes()
         },
         download: {
           totalBytes: this.stats.totals.download.bytes,
           totalBlocks: this.stats.totals.download.blocks,
-          speed: downloadStopped ? 0 : this.stats.speed.download.bytes()
+          speed: this.stats.speed.download.bytes()
         },
         natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
-        connections: totalConnections,
-        connecting: totalConnecting
+        connections: totalConnections
       }
     }
   }
@@ -93,49 +90,17 @@ module.exports = class Seed extends Opstream {
       }
     }
 
-    let uploadStoppedTimer
-    const waitForUploadStopped = () => {
-      if (uploadStoppedTimer) clearTimeout(uploadStoppedTimer)
-      uploadStoppedTimer = setTimeout(() => {
-        this.push(this._stats({ pod, link, uploadStopped: true }))
-      }, 1000)
-    }
-    let downloadStoppedTimer
-    const waitForDownloadStopped = () => {
-      if (downloadStoppedTimer) clearTimeout(downloadStoppedTimer)
-      downloadStoppedTimer = setTimeout(() => {
-        this.push(this._stats({ pod, link, downloadStopped: true }))
-      }, 1000)
-    }
-
-    pod.swarm.on('update', () => {
-      this.push(this._stats({ pod, link }))
-    })
-    pod.drive.core.on('peer-add', () => {
-      this.push(this._stats({ pod, link }))
-    })
-
     pod.drive.db.core.on('upload', (index, byteLength) => {
       LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
-      this.push(this._stats({ pod, link }))
-      waitForUploadStopped()
     })
     pod.drive.db.core.on('download', (index, byteLength) => {
       LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
-      this.push(this._stats({ pod, link }))
-      waitForDownloadStopped()
-    })
-    pod.replicator.on('announce', () => {
-      this.push(this._stats({ pod, link }))
-    })
-    pod.drive.core.on('peer-remove', () => {
-      this.push(this._stats({ pod, link }))
     })
 
     try {
@@ -154,7 +119,10 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Invalid link "' + link + '" - nothing to seed')
     }
 
+    console.log('A')
+
     await pod.join({ server: true })
+    console.log('B')
 
     try {
       await pod.drive.get('/package.json')
@@ -166,26 +134,30 @@ module.exports = class Seed extends Opstream {
       })
     }
 
+    console.log('C')
+
+    const statsInterval = setInterval(() => {
+      this.push(this._stats({ pod }))
+    }, 500)
+    this.session.teardown(() => {
+      clearInterval(statsInterval)
+    })
+
     const blobs = await pod.drive.getBlobs()
     blobs.core.on('upload', (index, byteLength, from) => {
       LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
-      this.push(this._stats({ pod, link }))
-      waitForUploadStopped()
     })
     blobs.core.on('download', (index, byteLength, from) => {
       LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
-      this.push(this._stats({ pod, link }))
-      waitForDownloadStopped()
     })
+    console.log('D')
     blobs.core.download({ start: 0, end: -1 })
-
-    this.push(this._stats({ pod, link }))
 
     this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
 
