@@ -314,7 +314,7 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, append } = cmd.flags
+  const { json, verbose, ask, noTty } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -323,7 +323,7 @@ module.exports = async function seed(cmd) {
   const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = append === true || !isTTY || !width
+  const appendMode = noTty === true || !isTTY || !width
 
   const stats = new DictTable([
     {
