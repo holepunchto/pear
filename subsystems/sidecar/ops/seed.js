@@ -131,21 +131,21 @@ module.exports = class Seed extends Opstream {
       })
     }
 
-    const statsInterval = setInterval(() => {
+    this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
     }, 500)
     this.session.teardown(() => {
-      clearInterval(statsInterval)
+      clearInterval(this._statsInterval)
     })
 
     const blobs = await pod.drive.getBlobs()
-    blobs.core.on('upload', (index, byteLength, from) => {
+    blobs.core.on('upload', (index, byteLength) => {
       LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
-    blobs.core.on('download', (index, byteLength, from) => {
+    blobs.core.on('download', (index, byteLength) => {
       LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
@@ -157,5 +157,7 @@ module.exports = class Seed extends Opstream {
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
+
+    clearInterval(this._statsInterval)
   }
 }
