@@ -151,7 +151,6 @@ module.exports = class Seed extends Opstream {
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
     })
-    console.log('D')
     blobs.core.download({ start: 0, end: -1 })
 
     this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
