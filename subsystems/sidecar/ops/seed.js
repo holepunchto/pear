@@ -119,10 +119,7 @@ module.exports = class Seed extends Opstream {
       throw ERR_INVALID_INPUT('Invalid link "' + link + '" - nothing to seed')
     }
 
-    console.log('A')
-
     await pod.join({ server: true })
-    console.log('B')
 
     try {
       await pod.drive.get('/package.json')
@@ -133,8 +130,6 @@ module.exports = class Seed extends Opstream {
         encrypted: true
       })
     }
-
-    console.log('C')
 
     const statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
