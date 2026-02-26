@@ -19,10 +19,6 @@ on:
           - pear://x6rummbhcc4e45emaryp5yzxtu55p6wbcq9mpyo8cwo7348xq3uo
           - pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
           - pear://63q1a8m8z678h19u3ckrzkdmpk7ydkp88jrrjwnkg7c5prf7kuxy
-      custom-channel:
-        type: string
-        description: Custom channel
-        required: false
       custom-commit:
         type: string
         description: Custom commit
@@ -54,6 +50,6 @@ jobs:
     secrets: inherit
     with:
       job: pear-platform
-      channel: ${{ inputs.custom-channel || inputs.channel }}
+      channel: ${{ inputs.channel }}
       commit: ${{ inputs.custom-commit || github.sha }}
       dry-run: ${{ inputs.dry-run }}
