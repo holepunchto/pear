@@ -112,7 +112,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--compact|-c', 'Tree-shaking minimal stage via static-analysis'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-pre', 'Skip pre scripts'),
     flag('--pre-io', 'Show stdout & stderr of pre scripts'),

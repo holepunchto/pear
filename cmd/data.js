@@ -15,6 +15,7 @@ const appsOutput = (bundles) => {
       out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
     }
     if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
+    if (bundle.entropy) out += `${padding}entropy: ${ansi.dim(bundle.entropy)}\n`
     out += '\n'
   }
   return out
