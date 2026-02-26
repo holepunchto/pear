@@ -671,11 +671,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   is(info.app.length, lengthA)
 })
 
-test('pear stage updated package name preserves the same key', async ({
-  teardown,
-  ok,
-  is
-}) => {
+test('pear stage keeps the same key when restaging with new name', async ({ teardown, ok, is }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -717,6 +713,6 @@ test('pear stage updated package name preserves the same key', async ({
 
   is(addendumA.key, touchedKey, 'staged key matches touched link key')
   is(addendumB.key, touchedKey, 'restaged key matches touched link key')
-  is(addendumA.key, addendumB.key, 'restaging preserves the same app key')
+  is(addendumA.key, addendumB.key, 'restaging keeps the same app key')
   ok(addendumB.version > addendumA.version, 'restaging increments app version')
 })
