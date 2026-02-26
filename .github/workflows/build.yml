@@ -31,7 +31,7 @@ on:
           - true
           - false
 
-run-name: Build ${{ inputs.custom-channel || inputs.channel }}
+run-name: Build ${{ inputs.channel }}
 
 jobs:
   check:
