@@ -14,3 +14,6 @@ pear/current
 
 examples/desktop/package-lock.json
 examples/terminal/package-lock.json
+
+# Cursor rules deps (cloned pear-* repos for analysis)
+.cursor/rules/deps/
