@@ -370,7 +370,7 @@ test('pear run app routes + linkData', async ({ teardown, comment, ok, is }) => 
   await Helper.untilClose(routeRun.pipe)
 })
 
-test.hook('encrypted run setup', rig.setup)
+test.hook('rig setup', rig.setup)
 
 test('stage, seed and run encrypted app', async function ({
   ok,
@@ -442,4 +442,62 @@ test('stage, seed and run encrypted app', async function ({
   ok(true, 'ended')
 })
 
-test.hook('encrypted run cleanup', rig.cleanup)
+test('run app after not found', async function ({ is, ok, timeout, teardown }) {
+  timeout(180000)
+  const dir = Helper.fixture('versions')
+
+  const helperRig = new Helper()
+  teardown(() => helperRig.close(), { order: Infinity })
+  await helperRig.ready()
+
+  const helper = new Helper(rig)
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const id = Helper.getRandomId()
+
+  const touch = await helper.touch({ dir, channel: `test-${id}` })
+  const { key } = await Helper.pick(touch, { tag: 'result' })
+
+  const link = `pear://${key}`
+
+  const runBefore = await helperRig.run({ link, flags: { trusted: true } })
+  teardown(() => Helper.teardownStream(runBefore))
+  const { bail } = await Helper.pick(runBefore, { tag: 'final' })
+  is(bail.code, 'ERR_CONNECTION')
+
+  const staging = helper.stage({
+    channel: `test-${id}`,
+    name: `versions`,
+    dir,
+    dryRun: false,
+    bare: true
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [
+    { tag: 'addendum' },
+    { tag: 'final' }
+  ])
+
+  await staged.final
+
+  const seeding = helper.seed({
+    channel: `test-${id}`,
+    name: `versions`,
+    cmdArgs: []
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' }
+  ])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const runAfter = await helperRig.run({ link, flags: { trusted: true } })
+  teardown(() => Helper.teardownStream(runAfter))
+  const final = await Helper.pick(runAfter, { tag: 'final' })
+  is(final.bail, undefined)
+})
+
+test.hook('rig cleanup', rig.cleanup)
