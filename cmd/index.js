@@ -54,6 +54,7 @@ class Plugin {
 const commands = {
   touch: require('./touch'),
   stage: require('./stage'),
+  build: require('pear-build'),
   seed: require('./seed'),
   provision: require('./provision'),
   release: require('./release'),
@@ -100,6 +101,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed
+  )
+
+  const build = command(
+    'build',
+    require('pear-build/package.json').command,
+    (cmd) => {
+      return commands.build(cmd.flags)
+    }
   )
 
   const stage = command(
@@ -389,6 +398,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     touch,
     seed,
     stage,
+    build,
     provision,
     release,
     info,
