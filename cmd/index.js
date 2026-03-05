@@ -20,6 +20,7 @@ const opwait = require('pear-opwait')
 const run = require('pear-run')
 const pdump = require('pear-dump')
 const { once } = require('bare-events')
+const { ERR_LEGACY } = require('pear-errors')
 const def = {
   run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
@@ -51,14 +52,13 @@ class Plugin {
 }
 
 const commands = {
-  init: require('./init'),
+  touch: require('./touch'),
   stage: require('./stage'),
   seed: require('./seed'),
   provision: require('./provision'),
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
-  touch: require('./touch'),
   data: require('./data'),
   changelog: require('./changelog'),
   shift: require('./shift'),
@@ -77,28 +77,34 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     ipc.close()
   })
 
-  const init = command(
-    'init',
-    summary('Create initial project files'),
-    description`
-    Links:
-      pear://electron/template
-      ${ansi.italic(ansi.dim('pear://your.key.here/your/path/here'))}
+  const touch = command(
+    'touch',
+    summary('Generate a project link'),
+    description`Create a new randomly generated Pear link`,
+    flag('--json', 'Newline delimited JSON output'),
+    commands.touch
+  )
 
-    Names:
-      default, ui, node-compat
+  const seed = command(
+    'seed',
+    summary('Seed or reseed a project'),
+    description`
+      Specify a link to seed a project.
+
+      Specify a remote link to reseed.
     `,
-    arg('[link|name]', 'Link or core template to init from'),
+    arg('<link>', 'Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
-    flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--force|-f', 'Force overwrite existing files'),
+    flag('--name <name>', 'Advanced. Override app name'),
+    flag('--no-tty', 'Disable tty features'),
     flag('--no-ask', 'Suppress permission prompt'),
-    commands.init
+    flag('--json', 'Newline delimited JSON output'),
+    commands.seed
   )
 
   const stage = command(
     'stage',
-    summary('Synchronize local changes to link'),
+    summary('Sync disk changes into project'),
     description`
       Stage local changes to a project link.
 
@@ -120,26 +126,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.stage
   )
 
-  const seed = command(
-    'seed',
-    summary('Seed or reseed a project'),
-    description`
-      Specify a link to seed a project.
-
-      Specify a remote link to reseed.
-    `,
-    arg('<link>', 'Pear link to seed'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--verbose|-v', 'Additional output'),
-    flag('--name <name>', 'Advanced. Override app name'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.seed
-  )
-
   const provision = command(
     'provision',
-    summary('Pre-production block sync'),
+    summary('Productionize with block sync'),
     description`
       Synchronize blocks to a pre-production target link
 
@@ -168,20 +157,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
     commands.release
-  )
-
-  const run = command(
-    'run',
-    summary('DEPRECATED: use pear-runtime module'),
-    description`
-      DEPRECATED. WILL BE REMOVED.
-      Use pear-runtime module with any JS project instead.
-
-      ${ansi.bold('link')}   pear://<key> | pear://<alias>
-      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
-    `,
-    ...def.run,
-    commands.run
   )
 
   const info = command(
@@ -224,14 +199,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }),
     validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
     commands.dump
-  )
-
-  const touch = command(
-    'touch',
-    summary('Generate random project link'),
-    description`Create a new random Pear link`,
-    flag('--json', 'Newline delimited JSON output'),
-    commands.touch
   )
 
   const data = command(
@@ -285,17 +252,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.changelog
   )
 
-  const shift = command(
-    'shift',
-    summary('DEPRECATED: use pear-runtime module'),
-    description(
-      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
-    ),
-    arg('<source>', 'Source application Pear link'),
-    arg('<destination>', 'Destination application Pear link'),
-    flag('--force', 'Overwrite existing application storage if present'),
+  const presets = command(
+    'presets',
+    summary('Default flags per command & link'),
+    description`
+      Pin flags to a given pear command per app link
+    `,
+    arg('<command>', 'Command to apply default flags to'),
+    arg('<link>', 'App link to apply default flags to'),
     flag('--json', 'Newline delimited JSON output'),
-    commands.shift
+    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
+    sloppy({ flags: true }),
+    commands.presets
   )
 
   const drop = command(
@@ -360,26 +328,52 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
+  const run = command(
+    'run',
+    summary('DEPRECATED: use pear-runtime module'),
+    description`
+      DEPRECATED. WILL BE REMOVED.
+      Use pear-runtime module with any JS project instead.
+
+      ${ansi.bold('link')}   pear://<key> | pear://<alias>
+      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
+    `,
+    ...def.run,
+    commands.run
+  )
+
+  const shift = command(
+    'shift',
+    summary('DEPRECATED: use pear-runtime module'),
+    description(
+      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
+    ),
+    arg('<source>', 'Source application Pear link'),
+    arg('<destination>', 'Destination application Pear link'),
+    flag('--force', 'Overwrite existing application storage if present'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.shift
+  )
+
+  const init = command(
+    'init',
+    summary('DEPRECATED & REMOVED'),
+    description`
+    Feature Removed
+    pear run is deprecated making templates out of scope
+    `,
+    sloppy({ flags: true, args: true }),
+    () => {
+      throw ERR_LEGACY('pear init has been removed')
+    }
+  ).hide()
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
     flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
     commands.versions
-  )
-
-  const presets = command(
-    'presets',
-    summary('Default flags per command & link'),
-    description`
-      Pin flags to a given pear command per app link
-    `,
-    arg('<command>', 'Command to apply default flags to'),
-    arg('<link>', 'App link to apply default flags to'),
-    flag('--json', 'Newline delimited JSON output'),
-    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
-    sloppy({ flags: true }),
-    commands.presets
   )
 
   const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
@@ -391,25 +385,25 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'pear',
     ...def.pear,
     header(usage.header),
-    init,
-    run,
-    stage,
+    touch,
     seed,
+    stage,
     provision,
     release,
     info,
     dump,
-    touch,
     data,
     changelog,
-    shift,
+    presets,
     drop,
     reset,
     sidecar,
     gc,
+    run,
+    shift,
     versions,
-    presets,
     help,
+    init, // legacy
     footer(usage.footer),
     bail(explain),
     pear
