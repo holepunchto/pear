@@ -95,7 +95,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     `,
     arg('<link>', 'Pear link to seed'),
     arg('[dir]', 'Project directory path (default: .)'),
-    flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-tty', 'Disable tty features'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),

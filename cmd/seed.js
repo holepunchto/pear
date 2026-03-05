@@ -320,7 +320,6 @@ module.exports = async function seed(cmd) {
   if (!link || plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
-  const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
   const appendMode = noTty === true || !isTTY || !width
@@ -442,7 +441,6 @@ module.exports = async function seed(cmd) {
     json,
     ipc.seed({
       id,
-      name,
       link,
       verbose,
       dir,

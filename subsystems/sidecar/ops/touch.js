@@ -1,10 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const plink = require('pear-link')
-const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Touch extends Opstream {
   constructor(...args) {
@@ -15,19 +12,17 @@ module.exports = class Touch extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const entropy = randomBytes(16).toString('hex')
-    const corestore = sidecar.getCorestore('!links', entropy)
+    const corestore = sidecar.getCorestore()
     await corestore.ready()
-    const key = await Hyperdrive.getDriveKey(corestore)
-    const link = plink.serialize({ protocol: 'pear:', drive: { key } })
-    const traits = await sidecar.model.getTraits(link)
-    if (!traits) {
-      await sidecar.model.addTraits(link, State.storageFromLink(link))
-    }
-    await sidecar.model.updateEntropy(link, entropy)
+    const keyPair = await corestore.createKeyPair(randomBytes(16).toString('hex'))
+    const core = corestore.get({ keyPair, exclusive: true })
+    await core.ready()
+    const key = core.key
+    await core.close()
+    const normalized = hypercoreid.normalize(key)
     this.final = {
-      key: hypercoreid.normalize(key),
-      link
+      key: normalized,
+      link: 'pear://' + normalized
     }
   }
 }

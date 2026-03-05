@@ -1,7 +1,6 @@
 'use strict'
 const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
-const Hyperdrive = require('hyperdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
@@ -37,15 +36,9 @@ module.exports = class Stage extends Opstream {
 
     await State.build(state, pkg)
 
-    const namespace = parsed?.drive.key ? null : link || state.name
-    const entropy = (await sidecar.model.getTraits(link))?.entropy
-    const corestoreOpts = { writable: true }
-    const corestore = entropy
-      ? sidecar.getCorestore('!links', entropy, corestoreOpts)
-      : sidecar.getCorestore(state.name, namespace, corestoreOpts)
+    const key = parsed.drive.key
+    const corestore = sidecar.getCorestore({ writable: true })
     await corestore.ready()
-
-    const key = await Hyperdrive.getDriveKey(corestore)
 
     const encrypted = state.options.encrypted
     const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
