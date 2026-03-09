@@ -1,7 +1,7 @@
 'use strict'
 const os = require('bare-os')
 const plink = require('pear-link')
-const tty = require('bare-tty')
+const bareTTY = require('bare-tty')
 const process = require('bare-process')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('pear-terminal')
@@ -314,7 +314,7 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, tty: ttyFlag } = cmd.flags
+  const { json, verbose, ask, tty } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -323,7 +323,7 @@ module.exports = async function seed(cmd) {
   const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
-  const ttyEnabled = ttyFlag !== false && isTTY && !!width
+  const appendMode = tty === false || !isTTY || !width
 
   const stats = new DictTable([
     {
@@ -347,11 +347,11 @@ module.exports = async function seed(cmd) {
       { type: 'border' },
       { type: 'table', table: peers }
     ],
-    { appendMode: !ttyEnabled }
+    { appendMode }
   )
 
-  if (ttyEnabled) {
-    stdio.in?.setMode?.(tty.constants.MODE_RAW)
+  if (!appendMode) {
+    stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       if (key.toString() === '\u0003') {
         stdio.out.write(`\x1b[?25h`)
@@ -377,7 +377,7 @@ module.exports = async function seed(cmd) {
 
   stats.set('link', link)
 
-  if (ttyEnabled) {
+  if (!appendMode) {
     stdio.out.off('resize', resizeHandler)
     resizeHandler = () => {
       layout.print(stdio, { clearScrollback: true })
@@ -430,7 +430,7 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     error: (err, info, ipc) => {
-      if (err.info && err.info.encrypted && info.ask && ttyEnabled) {
+      if (err.info && err.info.encrypted && info.ask && !appendMode) {
         return permit(ipc, err.info, 'seed')
       } else {
         return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
@@ -439,7 +439,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    { json, ctrlTTY: ttyEnabled },
+    { json, ctrlTTY: !appendMode },
     ipc.seed({
       id,
       name,
