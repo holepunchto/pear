@@ -314,7 +314,7 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, noTty } = cmd.flags
+  const { json, verbose, ask, tty: ttyFlag } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -323,7 +323,7 @@ module.exports = async function seed(cmd) {
   const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = noTty === true || !isTTY || !width
+  const ttyEnabled = ttyFlag !== false && isTTY && !!width
 
   const stats = new DictTable([
     {
@@ -347,19 +347,19 @@ module.exports = async function seed(cmd) {
       { type: 'border' },
       { type: 'table', table: peers }
     ],
-    { appendMode }
+    { appendMode: !ttyEnabled }
   )
 
-  stdio.in?.setMode?.(tty.constants.MODE_RAW)
-  stdio.in?.on('data', (key) => {
-    if (key.toString() === '\u0003') {
-      stdio.out.write(`\x1b[?25h`)
-      setTimeout(() => {
-        process.exit(0)
-      }, 1)
-    }
+  if (ttyEnabled) {
+    stdio.in?.setMode?.(tty.constants.MODE_RAW)
+    stdio.in?.on('data', (key) => {
+      if (key.toString() === '\u0003') {
+        stdio.out.write(`\x1b[?25h`)
+        setTimeout(() => {
+          process.exit(0)
+        }, 1)
+      }
 
-    if (!appendMode) {
       const selectedTable = layout.selectedTable
       if (selectedTable) {
         if (key.toString() === '\u001b[A') {
@@ -372,12 +372,12 @@ module.exports = async function seed(cmd) {
       }
 
       layout.print(stdio)
-    }
-  })
+    })
+  }
 
   stats.set('link', link)
 
-  if (!appendMode) {
+  if (ttyEnabled) {
     stdio.out.off('resize', resizeHandler)
     resizeHandler = () => {
       layout.print(stdio, { clearScrollback: true })
@@ -430,7 +430,7 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     error: (err, info, ipc) => {
-      if (err.info && err.info.encrypted && info.ask && isTTY) {
+      if (err.info && err.info.encrypted && info.ask && ttyEnabled) {
         return permit(ipc, err.info, 'seed')
       } else {
         return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
@@ -439,7 +439,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    json,
+    { json, ctrlTTY: ttyEnabled },
     ipc.seed({
       id,
       name,
