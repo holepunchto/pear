@@ -29,7 +29,7 @@ module.exports = class Seed extends Opstream {
         contentKey: pod.drive.contentKey?.toString('hex'),
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
-          totalBlocks: this.stats.speed.upload.blocks,
+          totalBlocks: this.stats.totals.upload.blocks,
           speed: this.stats.speed.upload.bytes()
         },
         download: {
