@@ -21,8 +21,8 @@ async function runTests() {
   await import('./11-touch.test.js')
   await import('./12-provision.test.js')
   await import('./13-info.test.js')
-  await import('./14-shutdown.test.js')
-  await import('./15-seed.test.js')
+  await import('./14-seed.test.js')
+  await import('./15-shutdown.test.js')
 
   test.resume()
 }
