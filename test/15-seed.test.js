@@ -6,12 +6,11 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Helper = require('./helper')
 
-test('pear seed announce, join, drop', async function ({ ok, plan, comment, teardown, timeout }) {
+test('pear seed announces, join, drop', async function ({ ok, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(3)
 
   const dir = Helper.fixture('minimal')
-
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -42,13 +41,11 @@ test('pear seed announce, join, drop', async function ({ ok, plan, comment, tear
   ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
-
   const key = await until.key
 
   const peerStore = new Corestore(await tmp())
   teardown(() => peerStore.close())
   await peerStore.ready()
-
   const peerDrive = new Hyperdrive(peerStore, key)
   await peerDrive.ready()
 
@@ -57,15 +54,14 @@ test('pear seed announce, join, drop', async function ({ ok, plan, comment, tear
   peerSwarm.on('connection', (conn) => {
     peerDrive.corestore.replicate(conn)
   })
-
   peerSwarm.join(peerDrive.discoveryKey)
   await peerDrive.get('/package.json')
 
   const joined = await until['peer-add']
-  ok(joined, 'seeding reports peer join')
+  ok(joined, 'peer joins')
 
   await peerSwarm.destroy()
 
   const dropped = await until['peer-remove']
-  ok(dropped, 'seeding reports peer drop')
+  ok(dropped, 'peer drops')
 })
