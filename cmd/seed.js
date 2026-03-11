@@ -432,7 +432,7 @@ module.exports = async function seed(cmd) {
       download
     }) {
       const network = appendMode
-        ? `${peers} peers / uploaded ${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s / downloaded ${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`
+        ? `${peers} peers: upload ${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s: download ${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`
         : `[ Peers: ${peers} ] [ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ] [ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
 
       stats.update({
