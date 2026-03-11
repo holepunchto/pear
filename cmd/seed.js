@@ -328,16 +328,33 @@ module.exports = async function seed(cmd) {
   const stats = new DictTable([
     {
       key: 'link',
-      label: 'Pear Seed:',
+      label: appendMode ? '... seeding' : 'Pear Seed:',
       initial: 'loading...',
       transform: (v) => `${ansi.pear} ${v}`
     },
-    { key: 'driveKey', label: 'Drive Key:', initial: 'loading...' },
-    { key: 'discoveryKey', label: 'Discovery Key:', initial: 'loading...' },
-    { key: 'contentKey', label: 'Content Key:', initial: 'loading...' },
-    { key: 'firewalled', label: 'Firewalled:', initial: 'loading...' },
-    { key: 'natType', label: 'NAT Type:', initial: 'loading...' },
-    { key: 'network', label: 'Network:', initial: 'loading...' }
+    { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
+    {
+      key: 'discoveryKey',
+      label: appendMode ? '... discovery key' : 'Discovery Key:',
+      initial: 'loading...'
+    },
+    {
+      key: 'contentKey',
+      label: appendMode ? '... content key' : 'Content Key:',
+      initial: 'loading...'
+    },
+    {
+      key: 'firewalled',
+      label: appendMode ? '... firewalled' : 'Firewalled:',
+      initial: 'loading...'
+    },
+    {
+      key: 'natType',
+      label: appendMode ? '... NAT type' : 'NAT Type:',
+      initial: 'loading...',
+      transform: (v) => (appendMode ? String(v).toLowerCase() : v)
+    },
+    { key: 'network', label: appendMode ? '---' : 'Network:', initial: 'loading...' }
   ])
   const peers = new Table()
   const layout = new TableLayout(
@@ -353,11 +370,12 @@ module.exports = async function seed(cmd) {
   if (!appendMode) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
+      // Ctrl-C
       if (key.toString() === '\u0003') {
-        stdio.out.write(`\x1b[?25h`)
-        setTimeout(() => {
+        // restore cursor then exit
+        return stdio.out.write(`\x1b[?25h`, () => {
           process.exit(0)
-        }, 1)
+        })
       }
 
       const selectedTable = layout.selectedTable
@@ -413,10 +431,9 @@ module.exports = async function seed(cmd) {
       upload,
       download
     }) {
-      const p = `[ Peers: ${peers} ]`
-      const ul = `[ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ]`
-      const dl = `[ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
-      const network = `${p} ${ul} ${dl}`
+      const network = appendMode
+        ? `${peers} peers: upload ${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s: download ${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`
+        : `[ Peers: ${peers} ] [ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ] [ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
 
       stats.update({
         driveKey,
