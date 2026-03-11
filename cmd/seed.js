@@ -328,11 +328,11 @@ module.exports = async function seed(cmd) {
   const stats = new DictTable([
     {
       key: 'link',
-      label: appendMode ? '--- seeding' : 'Pear Seed:',
+      label: appendMode ? '... seeding' : 'Pear Seed:',
       initial: 'loading...',
       transform: (v) => `${ansi.pear} ${v}`
     },
-    { key: 'driveKey', label: appendMode ? '--- drive key' : 'Drive Key:', initial: 'loading...' },
+    { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
     {
       key: 'discoveryKey',
       label: appendMode ? '--- discovery key' : 'Discovery Key:',
