@@ -354,10 +354,9 @@ module.exports = async function seed(cmd) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       if (key.toString() === '\u0003') {
-        stdio.out.write(`\x1b[?25h`)
-        setTimeout(() => {
+        return stdio.out.write(`\x1b[?25h`, () => {
           process.exit(0)
-        }, 1)
+        })
       }
 
       const selectedTable = layout.selectedTable
