@@ -335,22 +335,22 @@ module.exports = async function seed(cmd) {
     { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
     {
       key: 'discoveryKey',
-      label: appendMode ? '--- discovery key' : 'Discovery Key:',
+      label: appendMode ? '... discovery key' : 'Discovery Key:',
       initial: 'loading...'
     },
     {
       key: 'contentKey',
-      label: appendMode ? '--- content key' : 'Content Key:',
+      label: appendMode ? '... content key' : 'Content Key:',
       initial: 'loading...'
     },
     {
       key: 'firewalled',
-      label: appendMode ? '--- firewalled' : 'Firewalled:',
+      label: appendMode ? '... firewalled' : 'Firewalled:',
       initial: 'loading...'
     },
     {
       key: 'natType',
-      label: appendMode ? '--- NAT type' : 'NAT Type:',
+      label: appendMode ? '... NAT type' : 'NAT Type:',
       initial: 'loading...',
       transform: (v) => (appendMode ? String(v).toLowerCase() : v)
     },
