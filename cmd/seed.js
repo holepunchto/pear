@@ -353,7 +353,9 @@ module.exports = async function seed(cmd) {
   if (!appendMode) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
+      // Ctrl-C
       if (key.toString() === '\u0003') {
+        // restore cursor then exit
         return stdio.out.write(`\x1b[?25h`, () => {
           process.exit(0)
         })
