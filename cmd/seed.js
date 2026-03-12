@@ -321,7 +321,8 @@ module.exports = async function seed(cmd) {
   if (!link || plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
-  if (statsInterval !== undefined && Number.isInteger(+statsInterval) === false) {
+  statsInterval = +statsInterval
+  if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
   const { name } = cmd.flags
