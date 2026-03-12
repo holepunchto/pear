@@ -103,13 +103,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.seed
   )
 
-  const build = command(
-    'build',
-    require('pear-build/package.json').command,
-    (cmd) => {
-      return commands.build(cmd.flags)
-    }
-  )
+  const build = command('build', require('pear-build/package.json').command, (cmd) => {
+    return commands.build(cmd.flags)
+  })
 
   const stage = command(
     'stage',
