@@ -43,7 +43,7 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ name, link, dir, cmdArgs, statsInterval } = {}) {
+  async #op({ name, link, dir, cmdArgs, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const keyFromLink = parsed?.drive.key ?? null
