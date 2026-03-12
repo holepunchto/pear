@@ -133,7 +133,7 @@ module.exports = class Seed extends Opstream {
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
-    }, statsInterval ?? 500)
+    }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
     })
