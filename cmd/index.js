@@ -104,6 +104,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   )
 
   const build = command('build', require('pear-build/package.json').command, (cmd) => {
+    if (!cmd.flags.package) return console.log(build.help())
     return commands.build(cmd.flags)
   })
 
