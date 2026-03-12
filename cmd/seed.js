@@ -315,10 +315,15 @@ let resizeHandler
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json, verbose, ask, tty } = cmd.flags
+  let { statsInterval = 500 } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+  }
+  statsInterval = +statsInterval
+  if (Number.isInteger(+statsInterval) === false) {
+    throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
   const { name } = cmd.flags
   const id = Bare.pid
@@ -462,6 +467,7 @@ module.exports = async function seed(cmd) {
       name,
       link,
       verbose,
+      statsInterval,
       dir,
       cmdArgs: Bare.argv.slice(1)
     }),
