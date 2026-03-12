@@ -1,7 +1,7 @@
 'use strict'
 const os = require('bare-os')
 const plink = require('pear-link')
-const tty = require('bare-tty')
+const bareTTY = require('bare-tty')
 const process = require('bare-process')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('pear-terminal')
@@ -314,7 +314,7 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, noTty } = cmd.flags
+  const { json, verbose, ask, tty } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -323,21 +323,38 @@ module.exports = async function seed(cmd) {
   const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = noTty === true || !isTTY || !width
+  const appendMode = tty === false || !isTTY || !width
 
   const stats = new DictTable([
     {
       key: 'link',
-      label: 'Pear Seed:',
+      label: appendMode ? '... seeding' : 'Pear Seed:',
       initial: 'loading...',
       transform: (v) => `${ansi.pear} ${v}`
     },
-    { key: 'driveKey', label: 'Drive Key:', initial: 'loading...' },
-    { key: 'discoveryKey', label: 'Discovery Key:', initial: 'loading...' },
-    { key: 'contentKey', label: 'Content Key:', initial: 'loading...' },
-    { key: 'firewalled', label: 'Firewalled:', initial: 'loading...' },
-    { key: 'natType', label: 'NAT Type:', initial: 'loading...' },
-    { key: 'network', label: 'Network:', initial: 'loading...' }
+    { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
+    {
+      key: 'discoveryKey',
+      label: appendMode ? '... discovery key' : 'Discovery Key:',
+      initial: 'loading...'
+    },
+    {
+      key: 'contentKey',
+      label: appendMode ? '... content key' : 'Content Key:',
+      initial: 'loading...'
+    },
+    {
+      key: 'firewalled',
+      label: appendMode ? '... firewalled' : 'Firewalled:',
+      initial: 'loading...'
+    },
+    {
+      key: 'natType',
+      label: appendMode ? '... NAT type' : 'NAT Type:',
+      initial: 'loading...',
+      transform: (v) => (appendMode ? String(v).toLowerCase() : v)
+    },
+    { key: 'network', label: appendMode ? '---' : 'Network:', initial: 'loading...' }
   ])
   const peers = new Table()
   const layout = new TableLayout(
@@ -350,16 +367,17 @@ module.exports = async function seed(cmd) {
     { appendMode }
   )
 
-  stdio.in?.setMode?.(tty.constants.MODE_RAW)
-  stdio.in?.on('data', (key) => {
-    if (key.toString() === '\u0003') {
-      stdio.out.write(`\x1b[?25h`)
-      setTimeout(() => {
-        process.exit(0)
-      }, 1)
-    }
+  if (!appendMode) {
+    stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
+    stdio.in?.on('data', (key) => {
+      // Ctrl-C
+      if (key.toString() === '\u0003') {
+        // restore cursor then exit
+        return stdio.out.write(`\x1b[?25h`, () => {
+          process.exit(0)
+        })
+      }
 
-    if (!appendMode) {
       const selectedTable = layout.selectedTable
       if (selectedTable) {
         if (key.toString() === '\u001b[A') {
@@ -372,8 +390,8 @@ module.exports = async function seed(cmd) {
       }
 
       layout.print(stdio)
-    }
-  })
+    })
+  }
 
   stats.set('link', link)
 
@@ -413,10 +431,9 @@ module.exports = async function seed(cmd) {
       upload,
       download
     }) {
-      const p = `[ Peers: ${peers} ]`
-      const ul = `[ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ]`
-      const dl = `[ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
-      const network = `${p} ${ul} ${dl}`
+      const network = appendMode
+        ? `${peers} peers: upload ${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s: download ${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`
+        : `[ Peers: ${peers} ] [ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ] [ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
 
       stats.update({
         driveKey,
@@ -430,7 +447,7 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     error: (err, info, ipc) => {
-      if (err.info && err.info.encrypted && info.ask && isTTY) {
+      if (err.info && err.info.encrypted && info.ask && !appendMode) {
         return permit(ipc, err.info, 'seed')
       } else {
         return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
@@ -439,7 +456,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    json,
+    { json, ctrlTTY: !appendMode },
     ipc.seed({
       id,
       name,
