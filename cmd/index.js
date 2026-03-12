@@ -98,6 +98,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-tty', 'Disable tty features'),
     flag('--no-ask', 'Suppress permission prompt'),
+    flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed
   )
