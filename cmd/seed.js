@@ -314,7 +314,8 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, tty, statsInterval = 500 } = cmd.flags
+  const { json, verbose, ask, tty } = cmd.flags
+  let { statsInterval = 500 } = cmd.flags
   const { dir = os.cwd() } = cmd.args
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
