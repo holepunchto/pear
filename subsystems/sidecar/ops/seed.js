@@ -43,14 +43,14 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ name, link, dir, cmdArgs } = {}) {
+  async #op({ name, link, dir, cmdArgs, statsInterval } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const keyFromLink = parsed?.drive.key ?? null
     const namespace = keyFromLink ? null : link
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
-      flags: { link },
+      flags: { link, statsInterval },
       dir,
       cmdArgs
     })
@@ -133,7 +133,7 @@ module.exports = class Seed extends Opstream {
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
-    }, 500)
+    }, statsInterval ?? 500)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
     })
