@@ -467,7 +467,7 @@ module.exports = async function seed(cmd) {
       name,
       link,
       verbose,
-      statsInterval: statsInterval === undefined ? undefined : +statsInterval,
+      statsInterval,
       dir,
       cmdArgs: Bare.argv.slice(1)
     }),
