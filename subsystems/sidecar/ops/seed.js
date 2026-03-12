@@ -50,7 +50,7 @@ module.exports = class Seed extends Opstream {
     const namespace = keyFromLink ? null : link
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
-      flags: { link, statsInterval },
+      flags: { link },
       dir,
       cmdArgs
     })
