@@ -112,6 +112,7 @@ test('pear run preflight downloads staged assets', async (t) => {
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
   // NB: we spawn directly instead of using Helper.run to avoid unwanted
   //        call to pipe.end
 
@@ -138,8 +139,6 @@ test('pear run preflight downloads staged assets', async (t) => {
     ref.unref()
   })
   const pipe = sp.stdio[3]
-
-  await helper.ready()
 
   await t.execution(
     new Promise((resolve, reject) => {

@@ -24,7 +24,7 @@ module.exports = class Info extends Opstream {
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const corestore = this.sidecar.getCorestore(null, null)
+    const corestore = this.sidecar.getCorestore()
     const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
     const traits = link ? await this.sidecar.model.getTraits(link) : null
     const encryptionKey = traits?.encryptionKey

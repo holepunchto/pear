@@ -30,11 +30,9 @@ module.exports = class Provision extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const to = new Hyperdrive(
-      sidecar.getCorestore('!provision', '#targets', { writable: true }),
-      target.drive.key,
-      { compat: false }
-    )
+    const to = new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
+      compat: false
+    })
     this.session.add(to)
     await to.ready()
 

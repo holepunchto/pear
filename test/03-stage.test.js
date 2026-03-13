@@ -670,3 +670,49 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   is(info.version, 'A')
   is(info.app.length, lengthA)
 })
+
+test('pear stage keeps the same key when restaging with new name', async ({ teardown, ok, is }) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const touching = await helper.touch()
+  const touched = await Helper.pick(touching, [{ tag: 'final' }])
+  const { key: touchedKey, link } = await touched.final
+
+  const from = new Localdrive(Helper.fixture('minimal'))
+  const to = new Localdrive(tmpdir)
+  const mirror = from.mirror(to)
+  await mirror.done()
+
+  const stagingA = helper.stage({
+    link,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingA))
+  const stagedA = await Helper.pick(stagingA, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendumA = await stagedA.addendum
+  await stagedA.final
+
+  const manifest = JSON.parse(await to.get('/package.json'))
+  manifest.name = 'minimal-updated'
+  manifest.version = '2.0.0'
+  await to.put('/package.json', JSON.stringify(manifest, null, 2))
+
+  const stagingB = helper.stage({
+    link,
+    dir: tmpdir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(stagingB))
+  const stagedB = await Helper.pick(stagingB, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendumB = await stagedB.addendum
+  await stagedB.final
+
+  is(addendumA.key, touchedKey, 'staged key matches touched link key')
+  is(addendumB.key, touchedKey, 'restaged key matches touched link key')
+  is(addendumA.key, addendumB.key, 'restaging keeps the same app key')
+  ok(addendumB.version > addendumA.version, 'restaging increments app version')
+})
