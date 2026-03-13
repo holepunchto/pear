@@ -325,7 +325,6 @@ module.exports = async function seed(cmd) {
   if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
-  const { name } = cmd.flags
   const id = Bare.pid
   const { width } = stdio.size()
   const appendMode = tty === false || !isTTY || !width
@@ -464,7 +463,6 @@ module.exports = async function seed(cmd) {
     { json, ctrlTTY: !appendMode },
     ipc.seed({
       id,
-      name,
       link,
       verbose,
       statsInterval,
