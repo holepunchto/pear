@@ -28,7 +28,7 @@ module.exports = class Seed extends Opstream {
         contentKey: pod.drive.contentKey?.toString('hex'),
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
-          totalBlocks: this.stats.speed.upload.blocks,
+          totalBlocks: this.stats.totals.upload.blocks,
           speed: this.stats.speed.upload.bytes()
         },
         download: {
@@ -42,7 +42,7 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, dir, cmdArgs } = {}) {
+  async #op({ name, link, dir, cmdArgs, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
@@ -127,7 +127,7 @@ module.exports = class Seed extends Opstream {
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
-    }, 500)
+    }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
     })
