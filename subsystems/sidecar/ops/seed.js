@@ -2,7 +2,6 @@
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
 const speedometer = require('speedometer')
-const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Pod = require('../lib/pod')
@@ -43,11 +42,11 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ name, link, dir, cmdArgs, statsInterval = 500 } = {}) {
+  async #op({ link, dir, cmdArgs, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
-    const keyFromLink = parsed?.drive.key ?? null
-    const namespace = keyFromLink ? null : link
+    const key = parsed?.drive.key ?? null
+    if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
       flags: { link },
@@ -58,12 +57,11 @@ module.exports = class Seed extends Opstream {
     // not an app but a long running process, setting userData for restart recognition:
     client.userData = { state }
 
-    this.push({ tag: 'seeding', data: { key: keyFromLink ? link : null, name } })
+    this.push({ tag: 'seeding', data: { key: link } })
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, namespace)
+    const corestore = this.sidecar.getCorestore()
     await corestore.ready()
-    const key = keyFromLink || (await Hyperdrive.getDriveKey(corestore))
 
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
@@ -113,10 +111,6 @@ module.exports = class Seed extends Opstream {
         key,
         encrypted: true
       })
-    }
-
-    if (namespace && pod.drive.core.length === 0) {
-      throw ERR_INVALID_INPUT('Invalid link "' + link + '" - nothing to seed')
     }
 
     await pod.join({ server: true })
