@@ -31,6 +31,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Test / ${{ matrix.os }}
     timeout-minutes: 15
-    steps:
-      - uses: holepunchto/actions/.github/steps/setup-repo@v1
+    steps: 
+      - uses: holepunchto/actions/bare-base@v1
+      - run: npm install
+      - run: npm run bootstrap
       - run: npm test
