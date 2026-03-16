@@ -194,38 +194,6 @@ class Sidecar extends ReadyResource {
         return reports.generic(...args)
       }
 
-      async _loadUnsafeAddon(drive, input, output) {
-        try {
-          const buf = await drive.get(output)
-          if (!buf) return null
-
-          const hash = Buffer.allocUnsafe(32)
-          sodium.crypto_generichash(hash, buf)
-
-          const m = output.match(/\/([^/@]+)(@[^/]+)?(\.node|\.bare)$/)
-          if (!m) return null
-
-          const prebuilds = path.join(SWAP, 'prebuilds', require.addon.host)
-          const name = m[1] + '@' + hash.toString('hex') + m[3]
-
-          output = path.join(prebuilds, name)
-
-          try {
-            await fs.promises.stat(output)
-            return { input, output }
-          } catch {}
-
-          const tmp = output + '.tmp.' + Date.now() + m[3]
-
-          await fs.promises.mkdir(prebuilds, { recursive: true })
-          await fs.promises.writeFile(tmp, buf)
-          await fs.promises.rename(tmp, output)
-
-          return { input, output }
-        } catch {
-          return null
-        }
-      }
       onUpdatesSub(sub) {
         this.updates.feed(sub)
 
