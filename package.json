@@ -92,7 +92,7 @@
     "mirror-drive": "^1.13.0",
     "mutexify": "^1.4.0",
     "paparam": "^1.10.0",
-    "pear-api": "github:holepunchto/pear-api#flaky-fix",
+    "pear-api": "^1.30.0",
     "pear-changelog": "^1.0.1",
     "pear-cmd": "^1.0.2",
     "pear-constants": "^1.1.0",
