@@ -24,7 +24,7 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'dht') {
-      const nodes = await this.sidecar.model.getDhtNodes()
+      const nodes = this.sidecar.swarm.dht.toArray()
       this.final = { nodes }
     }
 
