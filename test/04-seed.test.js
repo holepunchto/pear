@@ -49,7 +49,7 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
   const peerDrive = new Hyperdrive(peerStore, key)
   await peerDrive.ready()
 
-  const peerSwarm = new Hyperswarm({ bootstrap: Pear.app.dht.bootstrap })
+  const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
   teardown(() => peerSwarm.destroy())
   peerSwarm.on('connection', (conn) => {
     peerDrive.corestore.replicate(conn)
