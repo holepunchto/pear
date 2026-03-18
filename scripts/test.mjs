@@ -11,7 +11,6 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
-// pear-rti (required by pear-constants) needs global.Pear.constructor.RTI.checkout
 const { default: checkout } = await import('../checkout')
 global.Pear = { constructor: { RTI: { checkout, mount: root } }, config: {} }
 
