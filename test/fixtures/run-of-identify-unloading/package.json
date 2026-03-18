@@ -1,8 +1,0 @@
-{
-  "name": "run",
-  "main": "index.js",
-  "dependencies": {
-    "pear-pipe": "^1.0.1",
-    "pear-run": "^1.0.0"
-  }
-}

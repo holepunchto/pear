@@ -1,5 +1,9 @@
-/* global Pear */
 'use strict'
+if (!global.Pear) {
+  const path = require('bare-path')
+  const checkout = require('../checkout')
+  global.Pear = { constructor: { RTI: { checkout, mount: path.dirname(__dirname) } }, config: {} }
+}
 const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
@@ -8,24 +12,26 @@ const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
-const pear = require('pear-cmd')
 const sodium = require('sodium-native')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('pear-constants')
-const run = require('pear-run')
-const { PLATFORM_DIR, RUNTIME } = constants
-const { pathname } = new URL(global.Pear.app.applink)
-const NO_GC = global.Pear.app.args.includes('--no-tmp-gc')
+const { PLATFORM_DIR } = constants
+const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
 const rigPear = path.join(tmp, 'rig-pear')
-const STOP_CHAR = '\n'
-const { RUNTIME_ARGV } = Pear.constructor
+
+const DHT_BOOTSTRAP = env.PEAR_TEST_BOOTSTRAP
+  ? env.PEAR_TEST_BOOTSTRAP.split(',').map((addr) => {
+      const [host, port] = addr.split(':')
+      return { host, port: +port }
+    })
+  : []
 
 class OperationError extends Error {
   constructor({ code, message, stack }) {
@@ -41,19 +47,14 @@ class Helper extends IPC.Client {
   }
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
+  static dhtBootstrap = DHT_BOOTSTRAP
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
-    const cmd = pear(Pear.argv.slice(1))
-    const logging = Object.entries(cmd.flags)
-      .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
-      .map(
-        ([k, v]) =>
-          '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v)
-      )
+    const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.app.dht.bootstrap.map((e) => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -68,7 +69,7 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          if (this.log) spawn(runtime, args, { stdio: 'inherit' })
+          if (log) spawn(runtime, args, { stdio: 'inherit' })
           else daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
@@ -96,98 +97,7 @@ class Helper extends IPC.Client {
   }
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
-  static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
-
-  static async run({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
-    if (platformDir) {
-      Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
-      Pear.constructor.RUNTIME_ARGV = argv
-    }
-
-    const pipe = run(link, args)
-
-    if (platformDir) {
-      Pear.constructor.RUNTIME = RUNTIME
-      Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
-    }
-
-    return { pipe }
-  }
-
-  static async untilResult(pipe, opts = {}) {
-    const timeout = opts.timeout || 10000
-    const res = new Promise((resolve, reject) => {
-      let buffer = ''
-      const timeoutId = setTimeout(() => reject(new Error('timed out ' + timeout)), timeout)
-      pipe.on('data', (data) => {
-        buffer += data.toString()
-        if (buffer[buffer.length - 1] === STOP_CHAR) {
-          clearTimeout(timeoutId)
-          resolve(buffer.trim())
-        }
-      })
-      pipe.on('close', () => {
-        clearTimeout(timeoutId)
-        reject(new Error('unexpected closed'))
-      })
-      pipe.on('end', () => {
-        clearTimeout(timeoutId)
-        reject(new Error('unexpected ended'))
-      })
-    })
-    if (opts.runFn) {
-      await opts.runFn()
-    } else {
-      pipe.write(opts.info ?? 'start')
-    }
-    return res
-  }
-
-  static untilData(pipe, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      const tid = setTimeout(reject, timeout, new Error('timeout'))
-      pipe.once('data', (data) => {
-        clearTimeout(tid)
-        resolve(data)
-      })
-    })
-  }
-
-  static async untilClose(pipe, timeout = 5000) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('timed out')), timeout)
-      pipe.on('close', () => {
-        clearTimeout(timeoutId)
-        resolve('closed')
-      })
-      pipe.on('end', () => {
-        clearTimeout(timeoutId)
-        resolve('ended')
-      })
-    })
-    pipe.end()
-    return res
-  }
-
-  static async isRunning(pid) {
-    try {
-      // 0 is a signal that doesn't kill the process, just checks if it's running
-      return process.kill(pid, 0)
-    } catch (err) {
-      return err.code === 'EPERM'
-    }
-  }
-
-  static async untilWorkerExit(pid, timeout = 5000) {
-    if (!pid) throw new Error('Invalid pid')
-    const start = Date.now()
-    while (await this.isRunning(pid)) {
-      if (Date.now() - start > timeout) throw new Error('timed out')
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
-  }
+  static localDir = path.dirname(__dirname)
 
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
@@ -238,7 +148,7 @@ class Helper extends IPC.Client {
     return untils
   }
 
-  static async sink(stream, ptn) {
+  static async sink(stream) {
     for await (const output of stream) {
       if (output.tag === 'error') throw new Error(output.data?.stack)
     }
@@ -268,13 +178,11 @@ class Helper extends IPC.Client {
   static async bootstrap(key, dir) {
     await Helper.gc(dir)
     await fs.promises.mkdir(dir, { recursive: true })
-
-    await updaterBootstrap(key, dir, { bootstrap: Pear.app.dht.bootstrap })
+    await updaterBootstrap(key, dir, { bootstrap: DHT_BOOTSTRAP })
   }
 
   static async gc(dir) {
     if (NO_GC) return
-
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
 }
@@ -349,16 +257,6 @@ class Rig {
 
 Helper.Rig = Rig
 
-Pear.teardown(async () => {
-  console.log('# Teardown: Shutting Down Local Sidecar')
-  const local = new Helper()
-  console.log('# Teardown: Connecting Local Sidecar')
-  await local.ready()
-  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
-  await local.shutdown()
-  console.log('# Teardown: Local Sidecar Shutdown')
-})
-
 module.exports = Helper
 
 class Reiterate {
@@ -418,87 +316,3 @@ class Reiterate {
     return this._tail()
   }
 }
-
-class Restack {
-  static at = (link, line, col) => `${link}:${line}:${col}`
-
-  constructor({ at = this.constructor.at } = {}) {
-    this.at =
-      at === this.constructor.at
-        ? at
-        : (link, line, col) => at(link, line, col, this.constructor.at)
-
-    const { prepareStackTrace } = Error
-    this.restore = () => {
-      Error.prepareStackTrace = prepareStackTrace
-    }
-
-    Error.prepareStackTrace = (err, frames) => {
-      const name = err && err.name ? err.name : 'Error'
-      const msg =
-        err && err.message !== null && err.message !== undefined ? String(err.message) : ''
-      const head = msg ? `${name}: ${msg}` : name
-      return head + '\n' + frames.map((cs) => this._callsite(cs)).join('\n')
-    }
-  }
-
-  _callsite(cs) {
-    const frm = this._frame(cs)
-    const loc = this._location(cs)
-    if (frm && loc) return `    at ${frm} (${loc})`
-    if (frm) return `    at ${frm}`
-    return `    at ${loc}`
-  }
-
-  _frame(cs) {
-    const frm = cs.getFunctionName()
-    const meth = cs.getMethodName()
-    const type = cs.getTypeName()
-
-    if (cs.isConstructor()) return frm ? `new ${frm}` : 'new <anonymous>'
-
-    if (meth) {
-      if (type && frm) return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
-      if (type) return `${type}.${meth}`
-      return meth
-    }
-
-    if (type && frm) return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
-
-    return frm || ''
-  }
-
-  _location(cs) {
-    if (cs.isNative()) return 'native'
-
-    let link = cs.getFileName()
-    const line = cs.getLineNumber()
-    const col = cs.getColumnNumber()
-
-    if (cs.isEval()) {
-      const origin = cs.getEvalOrigin()
-      const inner = link ? this._pos(link, line, col) : ''
-      return inner ? `eval at ${origin}, ${inner}` : `eval at ${origin}`
-    }
-
-    if (!link) link = '<anonymous>'
-    return this._pos(link, line, col)
-  }
-
-  _pos(link, line, col) {
-    link = link ? String(link) : '<anonymous>'
-    if (line === null || line === undefined) return link
-    if (col === null || col === undefined) return `${link}:${line}`
-    return this.at(link, line, col)
-  }
-}
-
-function restack(opts) {
-  return new Restack(opts)
-}
-
-restack({
-  at(link, line, col, at) {
-    return at(link.startsWith('pear://dev/') ? link.slice(11) : link, line, col)
-  }
-})
