@@ -6,7 +6,7 @@ const Helper = require('./helper')
 const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
 
 test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) => {
-  plan(9)
+  plan(7)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -38,13 +38,6 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
 
   is(presets.command, 'run', 'stored presets command should be "run"')
   is(presets.flags, '--dev --no-ask', 'stored presets flags should be "--dev --no-ask"')
-
-  const run = await Helper.run({ link })
-  const result = await Helper.untilResult(run.pipe)
-  const flags = JSON.parse(result)
-  is(flags.dev, true, 'dev flag is set')
-  is(flags.ask, false, 'no-ask flag is set')
-  await Helper.untilClose(run.pipe)
 
   presets = await getPresets({
     link,

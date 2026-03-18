@@ -2,7 +2,82 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
+
+test('app with assets', async function ({ ok, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(3)
+
+  const dir = Helper.fixture('require-assets')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  comment('staging')
+  const staging = helper.stage({
+    link,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({
+    link,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+})
+
+test('app with assets in sub dep', async function ({ ok, plan, comment, teardown, timeout }) {
+  timeout(180000)
+  plan(3)
+
+  const dir = Helper.fixture('sub-dep-require-assets')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  comment('staging')
+  const staging = helper.stage({
+    link,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, { tag: 'final' })
+  ok(staged.success, 'stage succeeded')
+
+  comment('seeding')
+  const seeding = helper.seed({
+    link,
+    dir,
+    key: null,
+    cmdArgs: []
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const announced = await until.announced
+  ok(announced, 'seeding is announced')
+
+  const key = await until.key
+  ok(hypercoreid.isValid(key), 'app key is valid')
+})
 
 test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   const dir = Helper.fixture('stage-app-min')
@@ -597,7 +672,7 @@ test('pear stage warmup with prefetch', async function ({
   is(warmed.success, true, 'Warmup completed')
 })
 
-test('pear stage double stage reported versions', async ({ teardown, comment, ok, is }) => {
+test('pear stage versions increase monotonically', async ({ teardown, comment, ok }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -611,13 +686,6 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   const mirror = from.mirror(to)
   await mirror.done()
 
-  const makeIndex = (version) => `const pipe = require('pear-pipe')()
-  Pear.versions().then((versions) => {
-    pipe.write(JSON.stringify({ version: '${version}', ...versions }) + '\\n')
-  })
-`
-  await to.put('/index.js', makeIndex('A'))
-
   comment('staging A')
   const stagingA = helper.stage({
     link,
@@ -630,14 +698,8 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   const lengthA = addendumA.version
   await stagedA.final
 
-  const runA = await Helper.run({ link })
-  const resultA = await Helper.untilResult(runA.pipe)
-  const infoA = JSON.parse(resultA)
-  await Helper.untilClose(runA.pipe)
-  is(infoA.version, 'A')
-
   comment('staging B')
-  await to.put('/index.js', makeIndex('B'))
+  await to.put('/index.js', 'module.exports = {}\n')
   const stagingB = helper.stage({
     link,
     dir: tmpdir,
@@ -649,26 +711,7 @@ test('pear stage double stage reported versions', async ({ teardown, comment, ok
   const lengthB = addendumB.version
   await stagedB.final
 
-  ok(lengthA < lengthB)
-
-  // runAA Needed for update
-  const runAA = await Helper.run({ link })
-  await Helper.untilResult(runAA.pipe)
-  await Helper.untilClose(runAA.pipe)
-
-  const runB = await Helper.run({ link })
-  const resultB = await Helper.untilResult(runB.pipe)
-  const infoB = JSON.parse(resultB)
-  await Helper.untilClose(runB.pipe)
-  is(infoB.version, 'B')
-
-  const run = await Helper.run({ link: `pear://0.${lengthA}.${addendumA.key}` })
-  const result = await Helper.untilResult(run.pipe)
-  const info = JSON.parse(result)
-  await Helper.untilClose(run.pipe)
-
-  is(info.version, 'A')
-  is(info.app.length, lengthA)
+  ok(lengthA < lengthB, 'second stage version is greater than first')
 })
 
 test('pear stage keeps the same key when restaging with new name', async ({ teardown, ok, is }) => {

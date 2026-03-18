@@ -4,17 +4,16 @@ import path from 'bare-path'
 import { spawn, spawnSync } from 'bare-subprocess'
 import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
+import env from 'bare-env'
 import { isWindows } from 'which-runtime'
-const { default: checkout } = await import('../checkout')
-import pear from 'pear-cmd'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
-class API {
-  static RTI = { checkout, mount: root }
-  config = {}
-}
-global.Pear = new API()
+
+const { default: checkout } = await import('../checkout')
+global.Pear = { constructor: { RTI: { checkout, mount: root } }, config: {} }
+
 const { RUNTIME } = await import('pear-constants')
 
 const force = Bare.argv.includes('--force-install')
@@ -42,27 +41,14 @@ for (const dir of dirs) {
 }
 
 const testnet = await createTestnet(10)
-
 const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
 spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 
-const cmd = pear(Bare.argv.slice(2))
-const logging = Object.entries(cmd.flags)
-  .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
-  .map(
-    ([k, v]) => '--' + cmd._definedFlags.get(k).aliases[0] + (typeof v === 'boolean' ? '' : '=' + v)
-  )
-
-if (cmd.flags.sidecar) {
-  console.log(RUNTIME, [...logging, '--dht-bootstrap', dhtBootstrap, 'sidecar'].join(' '))
-  console.log('waiting 7s for sidecar')
-  await new Promise((resolve) => setTimeout(resolve, 7000))
-}
-
-const tests = spawn(RUNTIME, [...logging, 'run', '--dht-bootstrap', dhtBootstrap, 'test'], {
+const tests = spawn(Bare.argv[0], [path.join(root, 'test', 'index.js'), ...Bare.argv.slice(2)], {
   cwd: root,
-  stdio: 'inherit'
+  stdio: 'inherit',
+  env: { ...env, PEAR_TEST_BOOTSTRAP: dhtBootstrap }
 })
 
 tests.on('exit', async (code, signal) => {
