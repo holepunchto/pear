@@ -171,6 +171,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'request',
       description('Create signing request'),
       flag('--force', 'Skip sanity checks'),
+      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       arg('<link>', 'Versioned source link to sign off'),
       commands.multisig
@@ -182,7 +183,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         '--first-commit',
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO REMOVE
+      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      arg('<link>', 'Versioned source link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
@@ -195,6 +198,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO - REMOVE
       flag('--dry-run|-d', 'Execute steps without committing'),
+      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       arg('<link>', 'Source link'),
