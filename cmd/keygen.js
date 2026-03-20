@@ -25,7 +25,7 @@ module.exports = async function keygen(cmd) {
     ])
     return
   }
-  const pwd = await password()
+  const pwd = Buffer.from(await password())
   const { publicKey, secretKey } = generateKeys(pwd)
   fs.mkdirSync(sign, { recursive: true })
   fs.writeFileSync(path.join(sign, 'default.public'), publicKey)
