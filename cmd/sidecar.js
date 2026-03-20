@@ -67,9 +67,6 @@ module.exports = async function sidecar(cmd) {
       const swapix = cmdArgs.indexOf('--swap')
       if (swapix > -1) cmdArgs.splice(swapix, 2)
       stdio.out.write('  ')
-      if (cmdArgs[0] === 'seed' && cmdArgs.some(([ch]) => ch === '/' || ch === '.') === false) {
-        cmdArgs[cmdArgs.length] = dir
-      }
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
   }
