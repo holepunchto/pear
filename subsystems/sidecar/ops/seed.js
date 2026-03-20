@@ -42,7 +42,7 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, dir, cmdArgs, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
@@ -50,7 +50,6 @@ module.exports = class Seed extends Opstream {
     const state = new State({
       id: `seeder-${randomBytes(16).toString('hex')}`,
       flags: { link },
-      dir,
       cmdArgs
     })
 
