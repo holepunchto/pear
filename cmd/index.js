@@ -91,11 +91,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Seed or reseed a project'),
     description`
       Specify a link to seed a project.
-
-      Specify a remote link to reseed.
     `,
     arg('<link>', 'Pear link to seed'),
-    arg('[dir]', 'Project directory path (default: .)'),
     flag('--no-tty', 'Disable tty features'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
