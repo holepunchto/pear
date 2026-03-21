@@ -139,12 +139,16 @@ class Data {
   }
 
   async assets() {
+    const { cmd } = this
+    const { command } = cmd
     const link = command.args.link
     if (link) plink.parse(link) // validates
     await Data.output(this.json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' })
   }
 
   async currents() {
+    const { cmd } = this
+    const { command } = cmd
     const link = command.args.link
     if (link) plink.parse(link) // validates
     await Data.output(this.json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' })
