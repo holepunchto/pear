@@ -23,10 +23,11 @@ class Multisig {
         `Committed (key ${hypercoreid.encode(key)})`,
         'Waiting for remote seeders to pick up the changes...'
       ]
-      if (firstCommit)
+      if (firstCommit) {
         lines.push(
           'Please add this key to the seeders now. The logs here will notify you when it is picked up by them. Do not shut down until that happens.'
         )
+      }
       return lines
     },
     final: (data) => {

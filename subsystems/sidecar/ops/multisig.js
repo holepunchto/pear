@@ -21,8 +21,9 @@ module.exports = class Multisig extends Opstream {
     if (!multisig) throw ERR_INVALID_CONFIG('package.json multisig field required')
     if (!multisig.signers) throw ERR_INVALID_CONFIG('package.json multisig.signers field required')
     if (!multisig.quorum) throw ERR_INVALID_CONFIG('package.json multisig.quorum field required')
-    if (!multisig.namespace)
+    if (!multisig.namespace) {
       throw ERR_INVALID_CONFIG('package.json multisig.namespace field required')
+    }
     this.config = multisig
     if (params.action === 'link') return this.link()
     if (params.action === 'request') return this.request(params)
