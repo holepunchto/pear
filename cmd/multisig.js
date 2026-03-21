@@ -10,16 +10,23 @@ class Multisig {
     'getting-blobs-length': () => 'Getting the blobs length (this can take a while)...',
     'verify-blobs-requestable-start': () => 'Verifying the blobs core is requestable...',
     'creating-drive': () => 'Creating the drive...',
-    comitting: ({ request, responses }) => {
+    committing: ({ request, responses }) => {
       const lines = [`Committing request ${request}`]
       if (responses.length) lines.push(`Responses:\n -${responses.join('\n -')}`)
       return { output: 'status', message: lines.join('\n') }
     },
-    'verify-committable-start': ({ srcKey, dstKey }) => `Verifying safe to commit (source ${hypercoreid.encode(srcKey)} to multisig target ${hypercoreid.encode(dstKey)})`,
+    'verify-committable-start': ({ srcKey, dstKey }) =>
+      `Verifying safe to commit (source ${hypercoreid.encode(srcKey)} to multisig target ${hypercoreid.encode(dstKey)})`,
     'commit-start': () => 'Committing...',
     'verify-committed-start': ({ firstCommit, key }) => {
-      const lines = [`Committed (key ${hypercoreid.encode(key)})`, 'Waiting for remote seeders to pick up the changes...']
-      if (firstCommit) lines.push('Please add this key to the seeders now. The logs here will notify you when it is picked up by them. Do not shut down until that happens.')
+      const lines = [
+        `Committed (key ${hypercoreid.encode(key)})`,
+        'Waiting for remote seeders to pick up the changes...'
+      ]
+      if (firstCommit)
+        lines.push(
+          'Please add this key to the seeders now. The logs here will notify you when it is picked up by them. Do not shut down until that happens.'
+        )
       return lines
     },
     final: (data) => {
@@ -27,8 +34,14 @@ class Multisig {
       if (data.request) return data.request + '\n'
       const { dstKey, dryRun, quorum, result } = data
       const lines = dryRun
-        ? [`\nQuorum: ${quorum.total} / ${quorum.amount}`, 'Review batch to commit: ' + JSON.stringify(result, null, 2)]
-        : ['Committed: ' + JSON.stringify(result, null, 2), '\n~ DONE ~ Seeding now ~ Press Ctrl+C to exit ~\n']
+        ? [
+            `\nQuorum: ${quorum.total} / ${quorum.amount}`,
+            'Review batch to commit: ' + JSON.stringify(result, null, 2)
+          ]
+        : [
+            'Committed: ' + JSON.stringify(result, null, 2),
+            '\n~ DONE ~ Seeding now ~ Press Ctrl+C to exit ~\n'
+          ]
       lines.push(`dst key: ${dstKey}`)
       return lines.join('\n')
     }
@@ -50,7 +63,13 @@ class Multisig {
     const { link } = this.cmd.args
     await Multisig.output(
       this.json,
-      this.ipc.multisig({ action: 'request', package: this.package, link, force, peerUpdateTimeout })
+      this.ipc.multisig({
+        action: 'request',
+        package: this.package,
+        link,
+        force,
+        peerUpdateTimeout
+      })
     )
   }
 
@@ -60,7 +79,14 @@ class Multisig {
     const responses = this.cmd.rest
     await Multisig.output(
       this.json,
-      this.ipc.multisig({ action: 'verify', package: this.package, link, request, peerUpdateTimeout, responses })
+      this.ipc.multisig({
+        action: 'verify',
+        package: this.package,
+        link,
+        request,
+        peerUpdateTimeout,
+        responses
+      })
     )
   }
 

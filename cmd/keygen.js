@@ -1,6 +1,7 @@
 'use strict'
 const fs = require('bare-fs')
 const path = require('bare-path')
+const sodium = require('sodium-native')
 const hypercoreid = require('hypercore-id-encoding')
 const { outputter, password } = require('pear-terminal')
 const { generateKeys } = require('hypercore-sign')
@@ -25,7 +26,9 @@ module.exports = async function keygen(cmd) {
     ])
     return
   }
-  const pwd = Buffer.from(await password())
+  const input = await password()
+  const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
+  pwd.write(input)
   const { publicKey, secretKey } = generateKeys(pwd)
   fs.mkdirSync(sign, { recursive: true })
   fs.writeFileSync(path.join(sign, 'default.public'), publicKey)
