@@ -57,8 +57,6 @@ const commands = {
   build: require('pear-build'),
   seed: require('./seed'),
   provision: require('./provision'),
-  keygen: require('./keygen'),
-  sign: require('./sign'),
   multisig: require('./multisig'),
   release: require('./release'),
   info: require('./info'),
@@ -150,20 +148,53 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.provision
   )
 
-  const keygen = command(
-    'keygen',
-    summary('Make keypair & print signing key'),
-    flag('--paths', 'Print paths to public and private key files'),
-    commands.keygen
-  )
-
-  const sign = command('sign', summary('Sign a multisig request'), arg('<request>'), commands.sign)
-
   const multisig = command(
     'multisig',
     summary('Production signing coordination'),
+    description(`Quorum-based signing for production releases
+
+Gather enough signatures to approve a release,
+instantly upon approval the release occurs
+
+Example - 2/3 must sign to approve
+package.json: {
+  "name": "my-app",
+  "pear": {
+    "multisig": {
+      "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+      "namespace": "my-org/my-app",
+      "quorum": 2
+    }
+  }
+}
+    `),
     flag('--json', 'Newline delimited JSON output'),
-    command('link', description('Print multisig link'), commands.multisig),
+    command(
+      'keygen',
+      summary('Make system keypair & print signing key'),
+      flag('--paths', 'Print paths to public and private key files'),
+      commands.multisig
+    ),
+    command('sign', summary('Sign a multisig request'), arg('<request>'), commands.multisig),
+    command(
+      'link',
+      summary('Print multisig link'),
+      description(`The signers, namespace & quorom values of the package.json
+pear.multisig field are used to generate the multisig link
+
+Example - 2/3 must sign to approve
+package.json: {
+  "name": "my-app",
+  "pear": {
+    "multisig": {
+      "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+      "namespace": "my-org/my-app",
+      "quorum": 2
+    }
+  }
+}`),
+      commands.multisig
+    ),
     command(
       'request',
       description('Create signing request'),
@@ -452,8 +483,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     stage,
     build,
     provision,
-    keygen,
-    sign,
     multisig,
     info,
     dump,

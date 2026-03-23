@@ -2,7 +2,6 @@
 const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
-const os = require('bare-os')
 const sodium = require('sodium-native')
 const hs = require('hypercore-sign')
 const hypercoreid = require('hypercore-id-encoding')

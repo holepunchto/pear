@@ -1,7 +1,13 @@
 'use strict'
 const path = require('bare-path')
-const { outputter } = require('pear-terminal')
+const { outputter, password } = require('pear-terminal')
 const hypercoreid = require('hypercore-id-encoding')
+const fs = require('bare-fs')
+const sodium = require('sodium-native')
+const { generateKeys } = require('hypercore-sign')
+const { PLATFORM_DIR } = require('pear-constants')
+const { decode } = require('hypercore-id-encoding')
+const hs = require('hypercore-sign')
 
 class Multisig {
   static output = outputter('multisig', {
@@ -30,7 +36,17 @@ class Multisig {
       }
       return lines
     },
+
+    sign: ({ response }) => decode(response) + '\n',
+
+    keygen: ({ paths, pub, prv, publicKey }) => {
+      const pkey = hypercoreid.encode(publicKey)
+      if (paths) return 'public: ' + pub + '\nprivate:' + prv + '\npubkey:' + pkey + '\n'
+      return pkey + '\n'
+    },
+
     final: (data) => {
+      if (!data) return ''
       if (data.link) return data.link + '\n'
       if (data.request) return data.request + '\n'
       const { dstKey, dryRun, quorum, result } = data
@@ -57,6 +73,41 @@ class Multisig {
 
   async link() {
     await Multisig.output(this.json, this.ipc.multisig({ action: 'link', package: this.package }))
+  }
+
+  async keygen() {
+    const { paths } = this.cmd.flags
+    const sign = path.join(PLATFORM_DIR, 'sign')
+    const pub = path.join(sign, 'default.public')
+    const prv = path.join(sign, 'default')
+    if (fs.existsSync(pub)) {
+      await Multisig.output(this.json, [
+        { tag: 'keygen', data: { paths, pub, prv, publicKey: fs.readFileSync(pub) } },
+        { tag: 'final' }
+      ])
+      return
+    }
+    const input = await password()
+    const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
+    pwd.write(input)
+    const { publicKey, secretKey } = generateKeys(pwd)
+    fs.mkdirSync(sign, { recursive: true })
+    fs.writeFileSync(path.join(sign, 'default.public'), publicKey)
+    fs.writeFileSync(path.join(sign, 'default'), secretKey)
+    await Multisig.output(this.json, [
+      { tag: 'keygen', data: { paths, pub, prv, publicKey } },
+      { tag: 'final' }
+    ])
+  }
+
+  async sign() {
+    const { request } = this.cmd.args
+    const key = fs.readFileSync(path.join(PLATFORM_DIR, 'sign', 'default'))
+    const input = await password()
+    const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
+    pwd.write(input)
+    const response = hs.sign(decode(request), key, pwd)
+    await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
   }
 
   async request() {
