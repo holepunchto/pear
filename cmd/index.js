@@ -140,9 +140,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Use pear touch to generate target link
     `,
-    arg('<source-link>', 'Versioned source link'),
+    arg('<source-verlink>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
-    arg('<production-link>', 'Versioned link to sync against'),
+    arg('<production-verlink>', 'Versioned link to sync against'),
     flag('--dry-run|-d', 'Execute provision without writing'),
     flag('--json', 'Newline delimited JSON output'),
     commands.provision
@@ -179,7 +179,7 @@ package.json: {
     command(
       'link',
       summary('Print multisig link'),
-      description(`The signers, namespace & quorom values of the package.json
+      description(`The signers & namespace values of the package.json
 pear.multisig field are used to generate the multisig link
 
 Example - 2/3 must sign to approve
@@ -193,40 +193,42 @@ package.json: {
     }
   }
 }`),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       commands.multisig
     ),
     command(
       'request',
       description('Create signing request'),
       flag('--force', 'Skip sanity checks'),
-      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
-      arg('<link>', 'Versioned source link to sign off'),
+      arg('<verlink>', 'Versioned source link to sign off'),
       commands.multisig
     ),
     command(
       'verify',
-      description('Verify multisig request & responses'),
+      summary('Verify multisig request & responses'),
+      description('Verify inputs & peform commit dry-run'),
       flag(
         '--first-commit',
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO REMOVE
-      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
-      arg('<link>', 'Versioned source link'),
+      arg('<verlink>', 'Versioned source link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
     ),
     command(
       'commit',
-      description('Commit multisig'),
+      summary('Commit multisig'),
+      description('Apply signatures to allow sync from source drive to multisig drive'),
       flag(
         '--first-commit',
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO - REMOVE
-      flag('--dry-run|-d', 'Execute steps without committing'),
-      flag('--package [path]', 'Path to project package.json. Default: <cwd>/package.json'),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       arg('<link>', 'Source link'),

@@ -17,11 +17,15 @@ module.exports = class Multisig extends Opstream {
     await this.sidecar.ready()
     if (!params.package) throw ERR_INVALID_INPUT('package param required')
     const drive = new Localdrive(path.dirname(params.package))
-    const { pear } = JSON.parse(await drive.get('/package.json'))
+    const { pear = {} } = JSON.parse(await drive.get('/package.json'))
     const multisig = pear.multisig
     if (!multisig) throw ERR_INVALID_CONFIG('package.json pear.multisig field required')
-    if (!multisig.signers) throw ERR_INVALID_CONFIG('package.json pear.multisig.signers field required')
-    if (!multisig.quorum) throw ERR_INVALID_CONFIG('package.json pear.multisig.quorum field required')
+    if (!multisig.signers) {
+      throw ERR_INVALID_CONFIG('package.json pear.multisig.signers field required')
+    }
+    if (!multisig.quorum) {
+      throw ERR_INVALID_CONFIG('package.json pear.multisig.quorum field required')
+    }
     if (!multisig.namespace) {
       throw ERR_INVALID_CONFIG('package.json pear.multisig.namespace field required')
     }

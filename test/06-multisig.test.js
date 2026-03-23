@@ -117,7 +117,10 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
     pkgPath,
     JSON.stringify({
       name: 'test-multisig-req',
-      pear: { name: 'test-multisig-req', multisig: { signers, quorum: 1, namespace: 'test-ns-req' } }
+      pear: {
+        name: 'test-multisig-req',
+        multisig: { signers, quorum: 1, namespace: 'test-ns-req' }
+      }
     })
   )
 
@@ -183,7 +186,10 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
     pkgPath,
     JSON.stringify({
       name: 'test-multisig-commit',
-      pear: { name: 'test-multisig-commit', multisig: { signers, quorum: 2, namespace: 'test-ns-commit' } }
+      pear: {
+        name: 'test-multisig-commit',
+        multisig: { signers, quorum: 2, namespace: 'test-ns-commit' }
+      }
     })
   )
 

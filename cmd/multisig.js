@@ -8,6 +8,7 @@ const { generateKeys } = require('hypercore-sign')
 const { PLATFORM_DIR } = require('pear-constants')
 const { decode } = require('hypercore-id-encoding')
 const hs = require('hypercore-sign')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 class Multisig {
   static output = outputter('multisig', {
@@ -47,8 +48,8 @@ class Multisig {
 
     final: (data) => {
       if (!data) return ''
-      if (data.link) return data.link + '\n'
-      if (data.request) return data.request + '\n'
+      if (data.link) return { output: 'print', success: Infinity, message: data.link }
+      if (data.request) return { output: 'print', success: Infinity, message: data.request }
       const { dstKey, dryRun, quorum, result } = data
       const lines = dryRun
         ? [
@@ -106,7 +107,13 @@ class Multisig {
     const input = await password()
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
-    const response = hs.sign(decode(request), key, pwd)
+    let decoded = null
+    try {
+      decoded = decode(request)
+    } catch {
+      throw ERR_INVALID_INPUT('invalid request argument')
+    }
+    const response = hs.sign(decoded, key, pwd)
     await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
   }
 
