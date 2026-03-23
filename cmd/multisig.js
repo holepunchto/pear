@@ -2,11 +2,11 @@
 const path = require('bare-path')
 const { outputter, password } = require('pear-terminal')
 const hypercoreid = require('hypercore-id-encoding')
+const z32 = require('z32')
 const fs = require('bare-fs')
 const sodium = require('sodium-native')
 const { generateKeys } = require('hypercore-sign')
 const { PLATFORM_DIR } = require('pear-constants')
-const { decode } = require('hypercore-id-encoding')
 const hs = require('hypercore-sign')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
@@ -17,10 +17,10 @@ class Multisig {
     'getting-blobs-length': () => 'Getting the blobs length (this can take a while)...',
     'verify-blobs-requestable-start': () => 'Verifying the blobs core is requestable...',
     'creating-drive': () => 'Creating the drive...',
-    committing: ({ request, responses }) => {
-      const lines = [`Committing request ${request}`]
-      if (responses.length) lines.push(`Responses:\n -${responses.join('\n -')}`)
-      return { output: 'status', message: lines.join('\n') }
+    multisigging: ({ request, responses, dryRun }) => {
+      let message = (dryRun ? 'Verifying' : 'Committing') + ' request: ' + request
+      if (responses.length) message += 'Responses:\n - ' + responses.join('\n -')
+      return message
     },
     'verify-committable-start': ({ srcKey, dstKey }) =>
       `Verifying safe to commit (source ${hypercoreid.encode(srcKey)} to multisig target ${hypercoreid.encode(dstKey)})`,
@@ -38,7 +38,7 @@ class Multisig {
       return lines
     },
 
-    sign: ({ response }) => decode(response) + '\n',
+    sign: ({ response }) => response,
 
     keys: ({ paths, pub, prv, publicKey }) => {
       const pkey = hypercoreid.encode(publicKey)
@@ -103,17 +103,15 @@ class Multisig {
 
   async sign() {
     const { request } = this.cmd.args
+    if (!request) {
+      throw ERR_INVALID_INPUT('request argument required')
+    }
     const key = fs.readFileSync(path.join(PLATFORM_DIR, 'sign', 'default'))
     const input = await password()
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
-    let decoded = null
-    try {
-      decoded = decode(request)
-    } catch {
-      throw ERR_INVALID_INPUT('invalid request argument')
-    }
-    const response = hs.sign(decoded, key, pwd)
+
+    const response = z32.encode(hs.sign(z32.decode(request), key, pwd))
     await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
   }
 

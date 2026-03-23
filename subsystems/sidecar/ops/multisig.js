@@ -88,7 +88,7 @@ module.exports = class Multisig extends Opstream {
     if (!link) throw new Error('missing link')
     if (!request) throw new Error('missing request')
 
-    this.push({ tag: 'committing', data: { request, responses } })
+    this.push({ tag: 'multisigging', data: { request, responses, dryRun } })
 
     const { signers, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)

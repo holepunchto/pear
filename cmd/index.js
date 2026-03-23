@@ -151,10 +151,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const multisig = command(
     'multisig',
     summary('Production signing coordination'),
-    description(`Quorum-based signing for production releases
+    description(`Quorum-based cryptographic cosigning for production releases
 
-Gather enough signatures to approve a release,
-instantly upon approval the release occurs
+Gather enough signatures to approve a release in order
+to synchronize to a production multisig link
 
 Example - 2/3 must sign to approve
 package.json: {
@@ -166,8 +166,7 @@ package.json: {
       "quorum": 2
     }
   }
-}
-    `),
+}`),
     flag('--json', 'Newline delimited JSON output'),
     command(
       'keys',
@@ -176,10 +175,9 @@ package.json: {
       flag('--paths', 'Print paths to public and private key files'),
       commands.multisig
     ),
-    command('sign', summary('Sign a multisig request'), arg('<request>'), commands.multisig),
     command(
       'link',
-      summary('Print multisig link'),
+      summary('Print project multisig link'),
       description(`The signers & namespace values of the package.json
 pear.multisig field are used to generate the multisig link
 
@@ -199,11 +197,23 @@ package.json: {
     ),
     command(
       'request',
-      description('Create signing request'),
+      summary('Create a multisig request'),
+      description('Create a signing request to synchronize from a versioned source link'),
       flag('--force', 'Skip sanity checks'),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       arg('<verlink>', 'Versioned source link to sign off'),
+      commands.multisig
+    ),
+    command(
+      'sign',
+      summary('Sign a multisig request'),
+      description(`Sign the output from the pear multisig request command with the
+public key output from the pear keys command
+
+The signing key must be in the pear.multisig.signers array of
+the package.json in the source link supplied to multisig request`),
+      arg('<request>'),
       commands.multisig
     ),
     command(
@@ -223,7 +233,7 @@ package.json: {
     ),
     command(
       'commit',
-      summary('Commit multisig'),
+      summary('Commit multisig to go live'),
       description('Apply signatures to allow sync from source drive to multisig drive'),
       flag(
         '--first-commit',
