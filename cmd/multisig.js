@@ -40,14 +40,14 @@ class Multisig {
 
     sign: ({ response }) => decode(response) + '\n',
 
-    keygen: ({ paths, pub, prv, publicKey }) => {
+    keys: ({ paths, pub, prv, publicKey }) => {
       const pkey = hypercoreid.encode(publicKey)
-      if (paths) return 'public: ' + pub + '\nprivate:' + prv + '\npubkey:' + pkey + '\n'
+      if (paths) return 'public: ' + pub + '\nprivate: ' + prv + '\npubkey: ' + pkey + '\n'
       return pkey + '\n'
     },
 
     final: (data) => {
-      if (!data) return ''
+      if (!data) return {}
       if (data.link) return { output: 'print', success: Infinity, message: data.link }
       if (data.request) return { output: 'print', success: Infinity, message: data.request }
       const { dstKey, dryRun, quorum, result } = data
@@ -76,14 +76,14 @@ class Multisig {
     await Multisig.output(this.json, this.ipc.multisig({ action: 'link', package: this.package }))
   }
 
-  async keygen() {
+  async keys() {
     const { paths } = this.cmd.flags
     const sign = path.join(PLATFORM_DIR, 'sign')
     const pub = path.join(sign, 'default.public')
     const prv = path.join(sign, 'default')
     if (fs.existsSync(pub)) {
       await Multisig.output(this.json, [
-        { tag: 'keygen', data: { paths, pub, prv, publicKey: fs.readFileSync(pub) } },
+        { tag: 'keys', data: { paths, pub, prv, publicKey: fs.readFileSync(pub) } },
         { tag: 'final' }
       ])
       return
@@ -96,7 +96,7 @@ class Multisig {
     fs.writeFileSync(path.join(sign, 'default.public'), publicKey)
     fs.writeFileSync(path.join(sign, 'default'), secretKey)
     await Multisig.output(this.json, [
-      { tag: 'keygen', data: { paths, pub, prv, publicKey } },
+      { tag: 'keys', data: { paths, pub, prv, publicKey } },
       { tag: 'final' }
     ])
   }

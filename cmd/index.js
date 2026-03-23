@@ -170,8 +170,9 @@ package.json: {
     `),
     flag('--json', 'Newline delimited JSON output'),
     command(
-      'keygen',
-      summary('Make system keypair & print signing key'),
+      'keys',
+      summary('Initialize keypair, output signing key'),
+      description('Prints signing key if already initialized else initializes and prints'),
       flag('--paths', 'Print paths to public and private key files'),
       commands.multisig
     ),
