@@ -215,7 +215,7 @@ package.json: {
       ).hide(), // TODO REMOVE
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
-      arg('<verlink>', 'Versioned source link'),
+      arg('<link>', 'Source link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig

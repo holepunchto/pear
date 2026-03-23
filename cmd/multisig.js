@@ -119,13 +119,13 @@ class Multisig {
 
   async request() {
     const { force, peerUpdateTimeout } = this.cmd.flags
-    const { link } = this.cmd.args
+    const { verlink } = this.cmd.args
     await Multisig.output(
       this.json,
       this.ipc.multisig({
         action: 'request',
         package: this.package,
-        link,
+        verlink,
         force,
         peerUpdateTimeout
       })

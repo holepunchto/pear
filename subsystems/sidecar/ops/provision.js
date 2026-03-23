@@ -10,20 +10,20 @@ module.exports = class Provision extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ sourceLink, targetLink, productionLink, dryRun, cooldown = 10_000 }) {
-    const source = plink.parse(sourceLink)
+  async #op({ sourceVerlink, targetLink, productionVerlink, dryRun, cooldown = 10_000 }) {
+    const source = plink.parse(sourceVerlink)
     if (source.drive.length === null) {
-      throw ERR_INVALID_LINK('sourceLink must be versioned', {
-        link: sourceLink
+      throw ERR_INVALID_LINK('sourceVerlink must be versioned', {
+        link: sourceVerlink
       })
     }
 
     const target = plink.parse(targetLink) // validates
 
-    const production = plink.parse(productionLink)
+    const production = plink.parse(productionVerlink)
     if (production.drive.length === null) {
       throw ERR_INVALID_LINK('targetLink must be versioned', {
-        link: productionLink
+        link: productionVerlink
       })
     }
 

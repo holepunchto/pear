@@ -2,67 +2,11 @@
 const test = require('brittle')
 const path = require('bare-path')
 const fs = require('bare-fs')
-const sodium = require('sodium-native')
 const hs = require('hypercore-sign')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
 const tmp = require('test-tmp')
-const Corestore = require('corestore')
-const Hyperdrive = require('hyperdrive')
-const Hyperswarm = require('hyperswarm')
 const Helper = require('./helper')
-
-function makePwd(str) {
-  const buf = sodium.sodium_malloc(Buffer.byteLength(str))
-  buf.write(str)
-  return buf
-}
-
-async function setupDestPeers(dbKey, blobsKey, n, teardown) {
-  for (let i = 0; i < n; i++) {
-    const store = new Corestore(await tmp())
-    teardown(() => store.close())
-    await store.ready()
-    const dbCore = store.get({ key: dbKey })
-    const blobsCore = store.get({ key: blobsKey })
-    await Promise.all([dbCore.ready(), blobsCore.ready()])
-    dbCore.download({ start: 0, end: -1 })
-    blobsCore.download({ start: 0, end: -1 })
-
-    const swarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
-    teardown(() => swarm.destroy())
-    swarm.on('connection', (conn) => store.replicate(conn))
-    const topic = swarm.join(dbCore.discoveryKey, { server: true, client: false })
-    await topic.flushed()
-  }
-}
-
-async function setupPeers(key, n, teardown) {
-  for (let i = 0; i < n; i++) {
-    const store = new Corestore(await tmp())
-    teardown(() => store.close())
-    await store.ready()
-    const drive = new Hyperdrive(store, key)
-    await drive.ready()
-
-    const dlSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
-    const done = store.findingPeers()
-    dlSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
-    dlSwarm.join(drive.discoveryKey)
-    await dlSwarm.flush()
-    await drive.db.core.update()
-    done()
-    await drive.db.core.download({ start: 0, end: drive.db.core.length }).done()
-    await drive.download().done()
-    await dlSwarm.destroy()
-
-    const serverSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
-    teardown(() => serverSwarm.destroy())
-    serverSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
-    const topic = serverSwarm.join(drive.discoveryKey, { server: true, client: false })
-    await topic.flushed()
-  }
-}
 
 test('pear multisig link', async function ({ ok, plan, teardown }) {
   plan(2)
@@ -71,8 +15,8 @@ test('pear multisig link', async function ({ ok, plan, teardown }) {
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const pwd1 = makePwd('signer1-link-password')
-  const pwd2 = makePwd('signer2-link-password')
+  const pwd1 = Helper.makePwd('signer1-link-password')
+  const pwd2 = Helper.makePwd('signer2-link-password')
   const { publicKey: pub1 } = hs.generateKeys(pwd1)
   const { publicKey: pub2 } = hs.generateKeys(pwd2)
   const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
@@ -105,7 +49,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const pwd1 = makePwd('signer1-req-password')
+  const pwd1 = Helper.makePwd('signer1-req-password')
   const { publicKey: pub1 } = hs.generateKeys(pwd1)
   const signers = [hypercoreid.encode(pub1)]
 
@@ -145,13 +89,13 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   const key = await seedUntil.key
 
   comment('setting up external peers')
-  await setupPeers(key, 2, teardown)
+  await Helper.setupPeers(key, 2, teardown)
 
   comment('creating multisig request')
   const multisig = helper.multisig({
     action: 'request',
     package: pkgPath,
-    link: verlink,
+    verlink,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(multisig))
@@ -172,8 +116,8 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const pwd1 = makePwd('signer1-commit-password')
-  const pwd2 = makePwd('signer2-commit-password')
+  const pwd1 = Helper.makePwd('signer1-commit-password')
+  const pwd2 = Helper.makePwd('signer2-commit-password')
   const { publicKey: pub1, secretKey: sec1 } = hs.generateKeys(pwd1)
   const { publicKey: pub2, secretKey: sec2 } = hs.generateKeys(pwd2)
   const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
@@ -198,7 +142,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const staging = helper.stage({ link: stageLink, dir: Helper.fixture('minimal'), dryRun: false })
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
-  const { verlink } = await staged.addendum
+  const { link, verlink } = await staged.addendum
   await staged.final
 
   comment('seeding source app')
@@ -214,13 +158,13 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const key = await seedUntil.key
 
   comment('setting up external peers')
-  await setupPeers(key, 2, teardown)
+  await Helper.setupPeers(key, 2, teardown)
 
   comment('creating multisig request')
   const reqStream = helper.multisig({
     action: 'request',
     package: pkgPath,
-    link: verlink,
+    verlink,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(reqStream))
@@ -228,15 +172,15 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
 
   comment('signing request')
   const requestBytes = z32.decode(request)
-  const resp1 = hs.sign(requestBytes, sec1, makePwd('signer1-commit-password'))
-  const resp2 = hs.sign(requestBytes, sec2, makePwd('signer2-commit-password'))
+  const resp1 = hs.sign(requestBytes, sec1, Helper.makePwd('signer1-commit-password'))
+  const resp2 = hs.sign(requestBytes, sec2, Helper.makePwd('signer2-commit-password'))
   const responses = [z32.encode(resp1), z32.encode(resp2)]
 
   comment('verifying (dry-run)')
   const verifyStream = helper.multisig({
     action: 'verify',
     package: pkgPath,
-    link: verlink,
+    link,
     request,
     responses,
     firstCommit: true,
@@ -251,13 +195,13 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   comment('setting up destination peers')
   const dstDbKey = hypercoreid.decode(verified.dstKey)
   const dstBlobsKey = hypercoreid.decode(verified.result.blobs.destCore.key)
-  await setupDestPeers(dstDbKey, dstBlobsKey, 2, teardown)
+  await Helper.setupDestPeers(dstDbKey, dstBlobsKey, 2, teardown)
 
   comment('committing')
   const commitStream = helper.multisig({
     action: 'commit',
     package: pkgPath,
-    link: verlink,
+    link,
     request,
     responses,
     firstCommit: true,

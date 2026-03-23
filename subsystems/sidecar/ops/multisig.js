@@ -44,10 +44,10 @@ module.exports = class Multisig extends Opstream {
   async request(params) {
     const { signers, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
-    const { link, force, peerUpdateTimeout } = params
-    const parsed = plink.parse(link)
+    const { verlink, force, peerUpdateTimeout } = params
+    const parsed = plink.parse(verlink)
     if (parsed === null || parsed.drive.key === null || parsed.drive.length === null) {
-      throw ERR_INVALID_LINK('A valid versioned source link must be specified', { link })
+      throw ERR_INVALID_LINK('A valid versioned source link must be specified', { verlink })
     }
     const { key, length } = parsed.drive
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), key)
@@ -95,7 +95,7 @@ module.exports = class Multisig extends Opstream {
 
     const parsed = plink.parse(link)
     if (parsed === null || parsed.drive.key === null) {
-      throw ERR_INVALID_LINK('A valid versioned source link must be specified', { link })
+      throw ERR_INVALID_LINK('A valid source link must be specified', { link })
     }
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), parsed.drive.key)
     try {

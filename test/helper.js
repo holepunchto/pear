@@ -13,6 +13,9 @@ const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
+const Corestore = require('corestore')
+const Hyperdrive = require('hyperdrive')
+const Hyperswarm = require('hyperswarm')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
@@ -21,6 +24,7 @@ const constants = require('pear-constants')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
+const testtmp = require('test-tmp')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
@@ -45,6 +49,9 @@ class Helper extends IPC.Client {
   static fixture(name) {
     return path.join(Helper.localDir, 'test', 'fixtures', name)
   }
+  static setupPeers = setupPeers
+  static setupDestPeers = setupDestPeers
+  static makePwd = makePwd
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   static dhtBootstrap = DHT_BOOTSTRAP
@@ -314,5 +321,57 @@ class Reiterate {
 
   [Symbol.asyncIterator]() {
     return this._tail()
+  }
+}
+
+function makePwd(str) {
+  const buf = sodium.sodium_malloc(Buffer.byteLength(str))
+  buf.write(str)
+  return buf
+}
+
+async function setupDestPeers(dbKey, blobsKey, n, teardown) {
+  for (let i = 0; i < n; i++) {
+    const store = new Corestore(await testtmp())
+    teardown(() => store.close())
+    await store.ready()
+    const dbCore = store.get({ key: dbKey })
+    const blobsCore = store.get({ key: blobsKey })
+    await Promise.all([dbCore.ready(), blobsCore.ready()])
+    dbCore.download({ start: 0, end: -1 })
+    blobsCore.download({ start: 0, end: -1 })
+
+    const swarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    teardown(() => swarm.destroy())
+    swarm.on('connection', (conn) => store.replicate(conn))
+    const topic = swarm.join(dbCore.discoveryKey, { server: true, client: false })
+    await topic.flushed()
+  }
+}
+
+async function setupPeers(key, n, teardown) {
+  for (let i = 0; i < n; i++) {
+    const store = new Corestore(await testtmp())
+    teardown(() => store.close())
+    await store.ready()
+    const drive = new Hyperdrive(store, key)
+    await drive.ready()
+
+    const dlSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    const done = store.findingPeers()
+    dlSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
+    dlSwarm.join(drive.discoveryKey)
+    await dlSwarm.flush()
+    await drive.db.core.update()
+    done()
+    await drive.db.core.download({ start: 0, end: drive.db.core.length }).done()
+    await drive.download().done()
+    await dlSwarm.destroy()
+
+    const serverSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    teardown(() => serverSwarm.destroy())
+    serverSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
+    const topic = serverSwarm.join(drive.discoveryKey, { server: true, client: false })
+    await topic.flushed()
   }
 }

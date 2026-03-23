@@ -44,9 +44,9 @@ test('pear provision syncs blocks from source to target per production key', asy
   const targetLink = await Helper.touchLink(helper)
 
   const provisioning = helper.provision({
-    sourceLink: source.verlink,
+    sourceVerlink: source.verlink,
     targetLink,
-    productionLink: production.verlink,
+    productionVerlink: production.verlink,
     cooldown: 200
   })
   const provisioned = await Helper.pick(provisioning, [{ tag: 'final' }])
