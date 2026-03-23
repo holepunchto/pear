@@ -13,12 +13,6 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const Helper = require('./helper')
 
-const localTmp = fs.realpathSync(os.tmpdir())
-
-function tmpDir(label) {
-  return path.join(localTmp, `pear-test-multisig-${label}-${Math.random().toString(36).slice(2)}`)
-}
-
 function makePwd(str) {
   const buf = sodium.sodium_malloc(Buffer.byteLength(str))
   buf.write(str)
@@ -84,8 +78,8 @@ test('pear multisig link', async function ({ ok, plan, teardown }) {
   const { publicKey: pub2 } = hs.generateKeys(pwd2)
   const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
 
-  const pkgDir = tmpDir('link')
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }).catch(() => {}))
+  const pkgDir = await tmp()
+  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
   fs.mkdirSync(pkgDir, { recursive: true })
   const pkgPath = path.join(pkgDir, 'package.json')
   fs.writeFileSync(
@@ -117,8 +111,8 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   const { publicKey: pub1 } = hs.generateKeys(pwd1)
   const signers = [hypercoreid.encode(pub1)]
 
-  const pkgDir = tmpDir('request')
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }).catch(() => {}))
+  const pkgDir = await tmp()
+  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
   fs.mkdirSync(pkgDir, { recursive: true })
   const pkgPath = path.join(pkgDir, 'package.json')
   fs.writeFileSync(
@@ -184,8 +178,8 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const { publicKey: pub2, secretKey: sec2 } = hs.generateKeys(pwd2)
   const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
 
-  const pkgDir = tmpDir('commit')
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }).catch(() => {}))
+  const pkgDir = await tmp()
+  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
   fs.mkdirSync(pkgDir, { recursive: true })
   const pkgPath = path.join(pkgDir, 'package.json')
   fs.writeFileSync(
