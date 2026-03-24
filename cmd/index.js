@@ -151,22 +151,24 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const multisig = command(
     'multisig',
     summary('Production signing coordination'),
-    description(`Quorum-based cryptographic cosigning for production releases
+    description`
+      Quorum-based cryptographic cosigning for production releases
 
-Gather enough signatures to approve a release in order
-to synchronize to a production multisig link
+      Gather enough signatures to approve a release to synchronize
+      onto a production link
 
-Example - 2/3 must sign to approve
-package.json: {
-  "name": "my-app",
-  "pear": {
-    "multisig": {
-      "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-      "namespace": "my-org/my-app",
-      "quorum": 2
-    }
-  }
-}`),
+      Example - 2/3 must sign to approve
+      package.json: {
+        "name": "my-app",
+        "pear": {
+          "multisig": {
+            "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+            "namespace": "my-org/my-app",
+            "quorum": 2
+          }
+        }
+      }
+    `,
     flag('--json', 'Newline delimited JSON output'),
     command(
       'keys',
@@ -178,27 +180,31 @@ package.json: {
     command(
       'link',
       summary('Print project multisig link'),
-      description(`The signers & namespace values of the package.json
-pear.multisig field are used to generate the multisig link
+      description`
+        The signers & namespace values of the package.json
+        pear.multisig field determine the multisig link
 
-Example - 2/3 must sign to approve
-package.json: {
-  "name": "my-app",
-  "pear": {
-    "multisig": {
-      "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-      "namespace": "my-org/my-app",
-      "quorum": 2
-    }
-  }
-}`),
+        Example - 2/3 must sign to approve
+        package.json: {
+          "name": "my-app",
+          "pear": {
+            "multisig": {
+              "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+              "namespace": "my-org/my-app",
+              "quorum": 2
+            }
+          }
+        }`,
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       commands.multisig
     ),
     command(
       'request',
       summary('Create a multisig request'),
-      description('Create a signing request to synchronize from a versioned source link'),
+      description`
+        Create a signing request to synchronize from a versioned source link
+        onto the project multisig link as output by the pear multisig link command
+      `,
       flag('--force', 'Skip sanity checks'),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
@@ -208,11 +214,13 @@ package.json: {
     command(
       'sign',
       summary('Sign a multisig request'),
-      description(`Sign the output from the pear multisig request command with the
-public key output from the pear keys command
+      description`
+        Sign the output from the pear multisig request command with the
+        public key output from the pear keys command
 
-The signing key must be in the pear.multisig.signers array of
-the package.json in the source link supplied to multisig request`),
+        The signing key must be in the pear.multisig.signers array of
+        the package.json in the source link supplied to multisig request
+      `,
       arg('<request>'),
       commands.multisig
     ),
