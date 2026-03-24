@@ -37,8 +37,8 @@ module.exports = class Multisig extends Opstream {
   }
 
   async link() {
-    const { signers, namespace } = this.config
-    const key = HyperMultisig.getCoreKey(signers, namespace) // TODO: needed in hyper-multisg
+    const { signers, namespace, quorum } = this.config
+    const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
     this.final = { link: plink.serialize({ drive: { key } }) }
   }
   async request(params) {

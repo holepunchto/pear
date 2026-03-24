@@ -181,7 +181,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'link',
       summary('Print project multisig link'),
       description`
-        The signers & namespace values of the package.json
+        The signers, quorom & namespace values of the package.json
         pear.multisig field determine the multisig link
 
         Example - 2/3 must sign to approve
