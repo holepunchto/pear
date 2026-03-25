@@ -89,6 +89,9 @@ class Sidecar extends ReadyResource {
     const rocks = HyperDB.rocks(corestore.storage.rocks.session(), spec)
     this.model = new Model(rocks)
 
+    const rocksNext = HyperDB.rocks(path.join(corestore.storage.path, 'next'), specNext)
+    this.modelNext = new ModelNext(rocksNext)
+
     const all = {}
 
     this.bus = new Iambus({
@@ -373,6 +376,7 @@ class Sidecar extends ReadyResource {
 
   async _open() {
     await this.model.db.ready()
+    await this.modelNext.db.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
@@ -990,6 +994,7 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     await this.model.close()
+    await this.modelNext.close()
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }

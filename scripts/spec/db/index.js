@@ -7,10 +7,9 @@ const { version, getEncoding, setVersion } = require('./messages.js')
 const versions = { schema: version, db: 1 }
 
 // '@pear/dht' collection key
-const collection0_key = new IndexEncoder([
-], { prefix: 0 })
+const collection0_key = new IndexEncoder([], { prefix: 0 })
 
-function collection0_indexify (record) {
+function collection0_indexify(record) {
   return []
 }
 
@@ -18,7 +17,7 @@ function collection0_indexify (record) {
 const collection0_enc = getEncoding('@pear/dht')
 
 // '@pear/dht' reconstruction function
-function collection0_reconstruct (schemaVersion, keyBuf, valueBuf) {
+function collection0_reconstruct(schemaVersion, keyBuf, valueBuf) {
   setVersion(schemaVersion)
   const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
   const type = c.uint.decode(state)
@@ -28,7 +27,7 @@ function collection0_reconstruct (schemaVersion, keyBuf, valueBuf) {
   return record
 }
 // '@pear/dht' key reconstruction function
-function collection0_reconstruct_key (keyBuf) {
+function collection0_reconstruct_key(keyBuf) {
   return {}
 }
 
@@ -37,11 +36,11 @@ const collection0 = {
   name: '@pear/dht',
   id: 0,
   version: 1,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = []
     return collection0_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection0_key.encodeRange({
       gt: gt ? collection0_indexify(gt) : null,
       lt: lt ? collection0_indexify(lt) : null,
@@ -49,7 +48,7 @@ const collection0 = {
       lte: lte ? collection0_indexify(lte) : null
     })
   },
-  encodeValue (schemaVersion, collectionVersion, record) {
+  encodeValue(schemaVersion, collectionVersion, record) {
     setVersion(schemaVersion)
     const state = { start: 0, end: 2, buffer: null }
     collection0_enc.preencode(state, record)
@@ -66,24 +65,24 @@ const collection0 = {
   decodedVersion: 0
 }
 
-const collections = [
-  collection0
-]
+const collections = [collection0]
 
-const indexes = [
-]
+const indexes = []
 
 module.exports = { versions, collections, indexes, resolveCollection, resolveIndex }
 
-function resolveCollection (name) {
+function resolveCollection(name) {
   switch (name) {
-    case '@pear/dht': return collection0
-    default: return null
+    case '@pear/dht':
+      return collection0
+    default:
+      return null
   }
 }
 
-function resolveIndex (name) {
+function resolveIndex(name) {
   switch (name) {
-    default: return null
+    default:
+      return null
   }
 }
