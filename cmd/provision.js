@@ -75,24 +75,24 @@ const output = outputter('provision', {
 module.exports = async function provision(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json, dryRun } = cmd.flags
-  const sourceLink = cmd.args.sourceLink
+  const sourceVerlink = cmd.args.sourceVerlink
   const targetLink = cmd.args.targetLink
-  const productionLink = cmd.args.productionLink
+  const productionVerlink = cmd.args.productionVerlink
 
-  const source = plink.parse(sourceLink)
+  const source = plink.parse(sourceVerlink)
   if (source.drive.length === null) {
     throw ERR_INVALID_LINK('<source-link> must be versioned', {
-      link: sourceLink
+      link: sourceVerlink
     })
   }
 
   plink.parse(targetLink) // validates
 
-  const production = plink.parse(productionLink)
+  const production = plink.parse(productionVerlink)
   if (production.drive.length === null) {
     throw ERR_INVALID_LINK('<target-link> must be versioned', {
-      link: productionLink
+      link: productionVerlink
     })
   }
-  await output(json, ipc.provision({ sourceLink, targetLink, productionLink, dryRun }))
+  await output(json, ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun }))
 }

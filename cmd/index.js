@@ -57,6 +57,7 @@ const commands = {
   build: require('pear-build'),
   seed: require('./seed'),
   provision: require('./provision'),
+  multisig: require('./multisig'),
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
@@ -131,36 +132,193 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const provision = command(
     'provision',
-    summary('Productionize with block sync'),
+    summary('Block-sync source & production'),
     description`
       Synchronize blocks to a pre-production target link
 
-      The target can then be multi-signed against a production link
+      The target can then be multisig'd against a production link
 
       Use pear touch to generate target link
     `,
-    arg('<source-link>', 'Versioned source link'),
+    arg('<source-verlink>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
-    arg('<production-link>', 'Versioned link to sync against'),
+    arg('<production-verlink>', 'Versioned link to sync against'),
     flag('--dry-run|-d', 'Execute provision without writing'),
     flag('--json', 'Newline delimited JSON output'),
     commands.provision
   )
 
+  const multisig = command(
+    'multisig',
+    summary('Production signing coordination'),
+    description`
+      Quorum-based cryptographic cosigning for production releases
+
+      Gather enough signatures to approve a release to synchronize
+      onto a production link
+
+      Example - 2/3 must sign to approve
+      package.json: {
+        "name": "my-app",
+        "pear": {
+          "multisig": {
+            "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+            "namespace": "my-org/my-app",
+            "quorum": 2
+          }
+        }
+      }
+    `,
+    command(
+      'keys',
+      summary('Manage signing keys'),
+      command(
+        'get',
+        summary('Get signing key, initializing if needed'),
+        description`
+          Idempotent. Creates keypair unless it already exists. Always prints the public key
+        `,
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--private', 'Also output the private key'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'paths',
+        summary('Print paths to public & private key files'),
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'list',
+        summary('List signing keys'),
+        description`
+          Output all names and public keys
+        `,
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'add',
+        summary('Add signing keys'),
+        description`
+          Import a signing keypair or add a known public key
+
+          If supplying a private key
+        `,
+        arg('<name>', 'As used for public/private key filenames'),
+        arg('<public-key>', 'public key path or string)'),
+        arg('[private-key]', 'private key path or string)'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'remove',
+        summary('Remove signing keys'),
+        arg('<name>', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      (cmd) => console.log(cmd.command.help())
+    ),
+    command(
+      'link',
+      summary('Print project multisig link'),
+      description`
+        The signers, quorom & namespace values of the package.json
+        pear.multisig field determine the multisig link
+
+        Example - 2/3 must sign to approve
+        package.json: {
+          "name": "my-app",
+          "pear": {
+            "multisig": {
+              "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+              "namespace": "my-org/my-app",
+              "quorum": 2
+            }
+          }
+        }`,
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.multisig
+    ),
+    command(
+      'request',
+      summary('Create a multisig request'),
+      description`
+        Create a signing request to synchronize from a versioned source link
+        onto the project multisig link as output by the pear multisig link command
+      `,
+      flag('--force', 'Skip sanity checks'),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<verlink>', 'Versioned source link to sign off'),
+      commands.multisig
+    ),
+    command(
+      'sign',
+      summary('Sign a multisig request'),
+      description`
+        Sign a multisig request using a local signing key
+
+        The key's public counterpart must be listed in pear.multisig.signers
+        in the package.json of the source link supplied to pear multisig request
+      `,
+      arg('<request>', 'As returned by pear multisig request'),
+      arg('[name=default]', 'Name of local key to sign with'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.multisig
+    ),
+    command(
+      'verify',
+      summary('Verify multisig request & responses'),
+      description('Verify inputs & peform commit dry-run'),
+      flag(
+        '--first-commit',
+        'Set when this is the first commit to the multisig target, so it skips those checks'
+      ).hide(), // TODO REMOVE
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<link>', 'Source link'),
+      arg('<request>', 'Signing request'),
+      rest('[...responses]', 'Signing responses'),
+      commands.multisig
+    ),
+    command(
+      'commit',
+      summary('Commit multisig to go live'),
+      description('Apply signatures to allow sync from source drive to multisig drive'),
+      flag(
+        '--first-commit',
+        'Set when this is the first commit to the multisig target, so it skips those checks'
+      ).hide(), // TODO - REMOVE
+      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<link>', 'Source link'),
+      arg('<request>', 'Signing request'),
+      rest('[...responses]', 'Signing responses'),
+      commands.multisig
+    ),
+    (cmd) => console.log(cmd.command.help())
+  )
+
   const release = command(
     'release',
-    summary('Set release pointer'),
-    description`
-      Set the release pointer against a version (default latest).
-
-      Use this to indicate production release points.
-    `,
+    summary('DEPRECATED: pear provision incompat'),
+    description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
     arg('<link>', 'Pear link to release'),
     arg('[dir]', 'Project directory path (default: .)'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
     commands.release
-  )
+  ).hide()
 
   const info = command(
     'info',
@@ -207,34 +365,38 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command('apps', summary('DEPRECATED. Installed apps'), arg('[link]', 'Filter by link'), (cmd) =>
-      commands.data(cmd, 'apps')
+    command(
+      'apps',
+      summary('DEPRECATED. Installed apps'),
+      arg('[link]', 'Filter by link'),
+      commands.data
     ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) => commands.data(cmd, 'dht')),
-    command('gc', summary('Garbage collection records'), (cmd) => commands.data(cmd, 'gc')),
-    command('manifest', summary('Database internal versioning'), (cmd) =>
-      commands.data(cmd, 'manifest')
-    ),
-    command('assets', summary('On-disk assets for app'), arg('[link]', 'Filter by link'), (cmd) =>
-      commands.data(cmd, 'assets')
+    command('dht', summary('DHT known-nodes cache'), commands.data),
+    command('gc', summary('Garbage collection records'), commands.data),
+    command('manifest', summary('Database internal versioning'), commands.data),
+    command(
+      'assets',
+      summary('On-disk assets for app'),
+      arg('[link]', 'Filter by link'),
+      commands.data
     ),
     command(
       'currents',
       summary('Current working versions'),
       arg('[link]', 'Filter by link'),
-      (cmd) => commands.data(cmd, 'currents')
+      commands.data
     ),
     command(
       'presets',
       summary('Presets by link and command'),
       arg('[link]', 'Filter by link'),
       arg('[command]', 'Filter by command'),
-      (cmd) => commands.data(cmd, 'presets')
+      commands.data
     ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
-    () => {
-      console.log(data.help())
+    (cmd) => {
+      console.log(cmd.command.help())
     }
   )
 
@@ -343,7 +505,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     `,
     ...def.run,
     commands.run
-  )
+  ).hide()
 
   const shift = command(
     'shift',
@@ -356,7 +518,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--force', 'Overwrite existing application storage if present'),
     flag('--json', 'Newline delimited JSON output'),
     commands.shift
-  )
+  ).hide()
 
   const init = command(
     'init',
@@ -393,7 +555,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     stage,
     build,
     provision,
-    release,
+    multisig,
     info,
     dump,
     data,
@@ -405,6 +567,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     gc,
     run,
     shift,
+    release,
     versions,
     help,
     init, // legacy
