@@ -130,7 +130,7 @@ class Multisig {
   }
 
   async verify() {
-    const { peerUpdateTimeout } = this.cmd.flags
+    const { forceDangerous, peerUpdateTimeout } = this.cmd.flags
     const { link, request } = this.cmd.args
     const responses = this.cmd.rest
     await Multisig.output(
@@ -140,8 +140,9 @@ class Multisig {
         package: this.package,
         link,
         request,
-        peerUpdateTimeout,
-        responses
+        responses,
+        forceDangerous,
+        peerUpdateTimeout
       })
     )
   }

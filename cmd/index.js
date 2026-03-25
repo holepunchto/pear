@@ -232,6 +232,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         '--first-commit',
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO REMOVE
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       arg('<link>', 'Source link'),
