@@ -13,10 +13,11 @@ async function runTests() {
   await import('./03-seed.test.js')
   await import('./04-dump.test.js')
   await import('./05-provision.test.js')
-  await import('./06-info.test.js')
-  await import('./07-data.test.js')
-  await import('./08-presets.test.js')
-  await import('./09-shutdown.test.js')
+  await import('./06-multisig.test.js')
+  await import('./07-info.test.js')
+  await import('./08-data.test.js')
+  await import('./09-presets.test.js')
+  await import('./10-shutdown.test.js')
 
   test.resume()
 }
