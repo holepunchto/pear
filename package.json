@@ -10,7 +10,8 @@
     "lint": "prettier --check . && lunte",
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
-    "bootstrap": "node scripts/bootstrap.js"
+    "bootstrap": "node scripts/bootstrap.js",
+    "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
   "pear": {
@@ -74,6 +75,7 @@
     "compact-encoding": "^2.16.0",
     "corestore": "^7.2.1",
     "crc-universal": "^1.0.4",
+    "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
     "drive-analyzer": "^2.0.2",
     "drive-bundler": "^2.4.4",
