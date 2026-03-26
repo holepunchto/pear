@@ -1,9 +1,5 @@
 'use strict'
-
 const DBLock = require('db-lock')
-
-if (global.LOG === undefined) global.LOG = { trace() {} }
-const LOG = global.LOG
 
 class Lock extends DBLock {
   #manual = false
