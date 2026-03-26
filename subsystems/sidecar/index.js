@@ -40,7 +40,8 @@ const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const { spec, Model } = require('pear-hyperdb')
+const hyperdb = require('pear-hyperdb') // FROZEN: remove with pear run removal
+const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
 const State = require('./state')
@@ -85,8 +86,16 @@ class Sidecar extends ReadyResource {
   constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
-    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), spec)
-    this.model = new Model(rocks)
+    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
+    this.model = new hyperdb.Model(rocks)
+
+    const rocksNext = HyperDB.rocks(
+      path.join(path.dirname(path.dirname(corestore.storage.path)), 'db'),
+      db.spec
+    )
+    this.db = {
+      model: new db.Model(rocksNext)
+    }
 
     const all = {}
 
@@ -372,6 +381,7 @@ class Sidecar extends ReadyResource {
 
   async _open() {
     await this.model.db.ready()
+    await this.db.model.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
@@ -935,7 +945,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.nodes) LOG.info('sidecar', 'DHT bootstrap set', this.nodes)
-    const knownNodes = await this.model.getDhtNodes()
+    const knownNodes = await this.db.model.getDhtNodes()
     const nodes = this.nodes ? undefined : knownNodes
     if (nodes) {
       LOG.info('dht', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
@@ -981,7 +991,7 @@ class Sidecar extends ReadyResource {
       if (!this.nodes) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await this.model.setDhtNodes(knownNodes)
+          await this.db.model.setDhtNodes(knownNodes)
           LOG.info('dht', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('dht', knownNodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
         }
@@ -989,6 +999,7 @@ class Sidecar extends ReadyResource {
       await this.swarm.destroy()
     }
     await this.model.close()
+    await this.db.model.close()
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
