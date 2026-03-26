@@ -40,8 +40,8 @@ const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const { spec, Model } = require('pear-hyperdb') // deprecated: remove after pear run is fully phased out
-const { spec: specNext, Model: ModelNext } = require('./lib/db')
+const hyperdb = require('pear-hyperdb') // deprecated: remove after pear run is fully phased out
+const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
 const State = require('./state')
@@ -86,15 +86,15 @@ class Sidecar extends ReadyResource {
   constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
-    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), spec)
-    this.model = new Model(rocks)
+    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
+    this.model = new hyperdb.Model(rocks)
 
     const rocksNext = HyperDB.rocks(
       path.join(path.dirname(path.dirname(corestore.storage.path)), 'db'),
-      specNext
+      db.spec
     )
     this.db = {
-      model: new ModelNext(rocksNext)
+      model: new db.Model(rocksNext)
     }
 
     const all = {}
