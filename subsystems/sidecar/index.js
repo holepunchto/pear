@@ -89,7 +89,10 @@ class Sidecar extends ReadyResource {
     const rocks = HyperDB.rocks(corestore.storage.rocks.session(), spec)
     this.model = new Model(rocks)
 
-    const rocksNext = HyperDB.rocks(path.join(corestore.storage.path, 'next'), specNext)
+    const rocksNext = HyperDB.rocks(
+      path.join(path.dirname(path.dirname(corestore.storage.path)), 'db'),
+      specNext
+    )
     this.modelNext = new ModelNext(rocksNext)
 
     const all = {}
