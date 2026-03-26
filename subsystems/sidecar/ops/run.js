@@ -137,7 +137,7 @@ module.exports = class Run extends Opstream {
       nodes: sidecar.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT }),
       bootstrap: sidecar.nodes
     }
-    await sidecar.model.setDhtNodes(dht.nodes)
+    await sidecar.modelNext.setDhtNodes(dht.nodes)
     const state = new State({
       startId,
       id,

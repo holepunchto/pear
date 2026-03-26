@@ -943,7 +943,7 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.nodes) LOG.info('sidecar', 'DHT bootstrap set', this.nodes)
-    const knownNodes = await this.model.getDhtNodes()
+    const knownNodes = await this.modelNext.getDhtNodes()
     const nodes = this.nodes ? undefined : knownNodes
     if (nodes) {
       LOG.info('dht', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
@@ -989,7 +989,7 @@ class Sidecar extends ReadyResource {
       if (!this.nodes) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await this.model.setDhtNodes(knownNodes)
+          await this.modelNext.setDhtNodes(knownNodes)
           LOG.info('dht', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
           LOG.trace('dht', knownNodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
         }
