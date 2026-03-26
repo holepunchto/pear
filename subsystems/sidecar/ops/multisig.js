@@ -117,7 +117,8 @@ module.exports = class Multisig extends Opstream {
         this.push({ tag: 'commit-start', data: { dryRun, srcKey, dstKey } })
       })
       commit.on('verify-committed-start', (key) => {
-        this.push({ tag: 'verify-committed-start', data: { firstCommit, key } })
+        const link = plink.serialize({ drive: { key } })
+        this.push({ tag: 'verify-committed-start', data: { firstCommit, key, link } })
       })
 
       const res = await commit.done()

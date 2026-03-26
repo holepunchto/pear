@@ -169,13 +169,58 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         }
       }
     `,
-    flag('--json', 'Newline delimited JSON output'),
     command(
       'keys',
-      summary('Initialize keypair, output signing key'),
-      description('Prints signing key if already initialized else initializes and prints'),
-      flag('--paths', 'Print paths to public and private key files'),
-      commands.multisig
+      summary('Manage signing keys'),
+      command(
+        'get',
+        summary('Get signing key, initializing if needed'),
+        description`
+          Idempotent. Creates keypair unless it already exists. Always prints the public key
+        `,
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--private', 'Also output the private key'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'paths',
+        summary('Print paths to public & private key files'),
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'list',
+        summary('List signing keys'),
+        description`
+          Output all names and public keys
+        `,
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'add',
+        summary('Add signing keys'),
+        description`
+          Import a signing keypair or add a known public key
+
+          If supplying a private key
+        `,
+        arg('<name>', 'As used for public/private key filenames'),
+        arg('<public-key>', 'public key path or string)'),
+        arg('[private-key]', 'private key path or string)'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'remove',
+        summary('Remove signing keys'),
+        arg('<name>', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      (cmd) => console.log(cmd.command.help())
     ),
     command(
       'link',
@@ -196,6 +241,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
           }
         }`,
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
     command(
@@ -208,6 +254,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       flag('--force', 'Skip sanity checks'),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
       arg('<verlink>', 'Versioned source link to sign off'),
       commands.multisig
     ),
@@ -215,13 +262,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'sign',
       summary('Sign a multisig request'),
       description`
-        Sign the output from the pear multisig request command with the
-        public key output from the pear keys command
+        Sign a multisig request using a local signing key
 
-        The signing key must be in the pear.multisig.signers array of
-        the package.json in the source link supplied to multisig request
+        The key's public counterpart must be listed in pear.multisig.signers
+        in the package.json of the source link supplied to pear multisig request
       `,
-      arg('<request>'),
+      arg('<request>', 'As returned by pear multisig request'),
+      arg('[name=default]', 'Name of local key to sign with'),
+      flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
     command(
@@ -232,8 +280,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         '--first-commit',
         'Set when this is the first commit to the multisig target, so it skips those checks'
       ).hide(), // TODO REMOVE
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
       arg('<link>', 'Source link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
@@ -250,6 +300,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
       arg('<link>', 'Source link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
