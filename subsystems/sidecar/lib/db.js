@@ -38,14 +38,19 @@ class Lock extends DBLock {
 }
 
 class Model {
-  constructor(rocks) {
-    this.db = rocks
-    this.lock = new Lock(this.db)
+  constructor(hyperdb) {
+    this.hyperdb = hyperdb
+    this.lock = new Lock(this.hyperdb)
+  }
+
+  async ready() {
+    LOG.trace('db', 'READY')
+    await this.hyperdb.ready()
   }
 
   async getDhtNodes() {
     LOG.trace('db', 'GET', '@pear/dht', '[nodes]')
-    return (await this.db.get('@pear/dht'))?.nodes || []
+    return (await this.hyperdb.get('@pear/dht'))?.nodes || []
   }
 
   async setDhtNodes(nodes) {
@@ -58,7 +63,7 @@ class Model {
 
   async close() {
     LOG.trace('db', 'CLOSE')
-    await this.db.close()
+    await this.hyperdb.close()
   }
 }
 
