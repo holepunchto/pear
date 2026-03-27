@@ -34,5 +34,5 @@ test('pear data multisig', async function ({ ok, teardown }) {
 
   const data = await helper.data({ resource: 'multisig' })
   const result = await opwait(data)
-  ok(Array.isArray(result.records), 'Multisig records is an array')
+  ok(Array.isArray(result.records), 'Multisig records are an array')
 })
