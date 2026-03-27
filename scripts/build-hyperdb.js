@@ -41,6 +41,17 @@ pearSchema.register({
   ]
 })
 
+pearSchema.register({
+  name: 'multisig',
+  fields: [
+    {
+      name: 'targetKey',
+      type: 'fixed32',
+      required: true
+    }
+  ]
+})
+
 Hyperschema.toDisk(schema)
 
 const db = Builder.from(SCHEMA_DIR, DB_DIR)
@@ -49,6 +60,12 @@ const pearDB = db.namespace('pear')
 pearDB.collections.register({
   name: 'dht',
   schema: '@pear/dht'
+})
+
+pearDB.collections.register({
+  name: 'multisig',
+  schema: '@pear/multisig',
+  key: ['targetKey']
 })
 
 Builder.toDisk(db)

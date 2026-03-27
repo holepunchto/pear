@@ -34,6 +34,20 @@
           "version": 1
         }
       ]
+    },
+    {
+      "name": "multisig",
+      "namespace": "pear",
+      "compact": false,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "targetKey",
+          "required": true,
+          "type": "fixed32",
+          "version": 1
+        }
+      ]
     }
   ]
 }

@@ -58,6 +58,38 @@ const encoding1 = {
   }
 }
 
+// @pear/multisig
+const encoding2 = {
+  preencode(state, m) {
+    c.fixed32.preencode(state, m.targetKey)
+  },
+  encode(state, m) {
+    c.fixed32.encode(state, m.targetKey)
+  },
+  decode(state) {
+    const r0 = c.fixed32.decode(state)
+
+    return {
+      targetKey: r0
+    }
+  }
+}
+
+// @pear/multisig/hyperdb#1
+const encoding3 = {
+  preencode(state, m) {
+
+  },
+  encode(state, m) {
+
+  },
+  decode(state) {
+    return {
+      targetKey: null
+    }
+  }
+}
+
 function setVersion(v) {
   version = v
 }
@@ -85,6 +117,10 @@ function getEncoding(name) {
       return encoding0
     case '@pear/dht':
       return encoding1
+    case '@pear/multisig':
+      return encoding2
+    case '@pear/multisig/hyperdb#1':
+      return encoding3
     default:
       throw new Error('Encoder not found ' + name)
   }
