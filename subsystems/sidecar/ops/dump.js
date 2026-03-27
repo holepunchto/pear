@@ -140,7 +140,8 @@ module.exports = class Dump extends Opstream {
       progress: true,
       dryRun,
       prune,
-      prefix: prefixes
+      prefix: prefixes,
+      dedup: true
     })
     if (!isFileLink) {
       const monitor = mirror.monitor()
