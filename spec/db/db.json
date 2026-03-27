@@ -25,9 +25,7 @@
       "indexes": [],
       "schema": "@pear/multisig",
       "derived": false,
-      "key": [
-        "targetKey"
-      ],
+      "key": ["key"],
       "trigger": null
     }
   ]

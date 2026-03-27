@@ -61,8 +61,8 @@ class Model {
     await this.lock.exit()
   }
 
-  async getMultisig(targetKey) {
-    const get = { targetKey }
+  async getMultisig(key) {
+    const get = { key }
     LOG.trace('db', 'GET', '@pear/multisig', get)
     return await this.hyperdb.get('@pear/multisig', get)
   }
@@ -72,9 +72,9 @@ class Model {
     return await this.hyperdb.find('@pear/multisig').toArray()
   }
 
-  async setMultisig(targetKey) {
+  async setMultisig(key) {
     const tx = await this.lock.enter()
-    const insert = { targetKey }
+    const insert = { key }
     LOG.trace('db', 'INSERT', '@pear/multisig', insert)
     await tx.insert('@pear/multisig', insert)
     await this.lock.exit()

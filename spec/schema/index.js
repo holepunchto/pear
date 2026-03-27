@@ -61,16 +61,16 @@ const encoding1 = {
 // @pear/multisig
 const encoding2 = {
   preencode(state, m) {
-    c.fixed32.preencode(state, m.targetKey)
+    c.fixed32.preencode(state, m.key)
   },
   encode(state, m) {
-    c.fixed32.encode(state, m.targetKey)
+    c.fixed32.encode(state, m.key)
   },
   decode(state) {
     const r0 = c.fixed32.decode(state)
 
     return {
-      targetKey: r0
+      key: r0
     }
   }
 }

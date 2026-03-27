@@ -110,7 +110,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
 
 test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(5)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -183,7 +183,6 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
     link,
     request,
     responses,
-    firstCommit: true,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(verifyStream))
@@ -204,11 +203,19 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
     link,
     request,
     responses,
-    firstCommit: true,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(commitStream))
   const committed = await Helper.pick(commitStream, { tag: 'final' })
 
   ok(committed.dstKey, 'committed drive has a destination key')
+
+  const data = helper.data({ resource: 'multisig' })
+  teardown(() => Helper.teardownStream(data))
+  const { records } = await Helper.pick(data, { tag: 'final' })
+  const committedKey = hypercoreid.decode(committed.dstKey)
+  const record = records.find((entry) => entry.key.equals(committedKey))
+
+  ok(record, 'multisig record persisted')
+  is(Object.keys(record).length, 1, 'multisig record stores the key')
 })

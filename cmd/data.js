@@ -60,7 +60,7 @@ class Data {
     if (!records.length) return placeholder
     let out = ''
     for (const record of records) {
-      out += `- ${ansi.bold(hypercoreid.encode(record.targetKey))}\n`
+      out += `- ${ansi.bold(hypercoreid.encode(record.key))}\n`
     }
     return out
   }

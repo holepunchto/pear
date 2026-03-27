@@ -45,7 +45,7 @@ pearSchema.register({
   name: 'multisig',
   fields: [
     {
-      name: 'targetKey',
+      name: 'key',
       type: 'fixed32',
       required: true
     }
@@ -65,7 +65,7 @@ pearDB.collections.register({
 pearDB.collections.register({
   name: 'multisig',
   schema: '@pear/multisig',
-  key: ['targetKey']
+  key: ['key']
 })
 
 Builder.toDisk(db)

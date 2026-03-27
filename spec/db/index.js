@@ -7,10 +7,9 @@ const { version, getEncoding, setVersion } = require('./messages.js')
 const versions = { schema: version, db: 1 }
 
 // '@pear/dht' collection key
-const collection0_key = new IndexEncoder([
-], { prefix: 0 })
+const collection0_key = new IndexEncoder([], { prefix: 0 })
 
-function collection0_indexify (record) {
+function collection0_indexify(record) {
   return []
 }
 
@@ -18,7 +17,7 @@ function collection0_indexify (record) {
 const collection0_enc = getEncoding('@pear/dht')
 
 // '@pear/dht' reconstruction function
-function collection0_reconstruct (schemaVersion, keyBuf, valueBuf) {
+function collection0_reconstruct(schemaVersion, keyBuf, valueBuf) {
   setVersion(schemaVersion)
   const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
   const type = c.uint.decode(state)
@@ -28,7 +27,7 @@ function collection0_reconstruct (schemaVersion, keyBuf, valueBuf) {
   return record
 }
 // '@pear/dht' key reconstruction function
-function collection0_reconstruct_key (keyBuf) {
+function collection0_reconstruct_key(keyBuf) {
   return {}
 }
 
@@ -37,11 +36,11 @@ const collection0 = {
   name: '@pear/dht',
   id: 0,
   version: 1,
-  encodeKey (record) {
+  encodeKey(record) {
     const key = []
     return collection0_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection0_key.encodeRange({
       gt: gt ? collection0_indexify(gt) : null,
       lt: lt ? collection0_indexify(lt) : null,
@@ -49,7 +48,7 @@ const collection0 = {
       lte: lte ? collection0_indexify(lte) : null
     })
   },
-  encodeValue (schemaVersion, collectionVersion, record) {
+  encodeValue(schemaVersion, collectionVersion, record) {
     setVersion(schemaVersion)
     const state = { start: 0, end: 2, buffer: null }
     collection0_enc.preencode(state, record)
@@ -67,12 +66,10 @@ const collection0 = {
 }
 
 // '@pear/multisig' collection key
-const collection1_key = new IndexEncoder([
-  IndexEncoder.BUFFER
-], { prefix: 1 })
+const collection1_key = new IndexEncoder([IndexEncoder.BUFFER], { prefix: 1 })
 
-function collection1_indexify (record) {
-  const a = record.targetKey
+function collection1_indexify(record) {
+  const a = record.key
   return a === undefined ? [] : [a]
 }
 
@@ -80,7 +77,7 @@ function collection1_indexify (record) {
 const collection1_enc = getEncoding('@pear/multisig/hyperdb#1')
 
 // '@pear/multisig' reconstruction function
-function collection1_reconstruct (schemaVersion, keyBuf, valueBuf) {
+function collection1_reconstruct(schemaVersion, keyBuf, valueBuf) {
   const key = collection1_key.decode(keyBuf)
   setVersion(schemaVersion)
   const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
@@ -88,14 +85,14 @@ function collection1_reconstruct (schemaVersion, keyBuf, valueBuf) {
   if (type !== 0) throw new Error('Unknown collection type: ' + type)
   collection1.decodedVersion = c.uint.decode(state)
   const record = collection1_enc.decode(state)
-  record.targetKey = key[0]
+  record.key = key[0]
   return record
 }
 // '@pear/multisig' key reconstruction function
-function collection1_reconstruct_key (keyBuf) {
+function collection1_reconstruct_key(keyBuf) {
   const key = collection1_key.decode(keyBuf)
   return {
-    targetKey: key[0]
+    key: key[0]
   }
 }
 
@@ -104,11 +101,11 @@ const collection1 = {
   name: '@pear/multisig',
   id: 1,
   version: 1,
-  encodeKey (record) {
-    const key = [record.targetKey]
+  encodeKey(record) {
+    const key = [record.key]
     return collection1_key.encode(key)
   },
-  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange({ gt, lt, gte, lte } = {}) {
     return collection1_key.encodeRange({
       gt: gt ? collection1_indexify(gt) : null,
       lt: lt ? collection1_indexify(lt) : null,
@@ -116,7 +113,7 @@ const collection1 = {
       lte: lte ? collection1_indexify(lte) : null
     })
   },
-  encodeValue (schemaVersion, collectionVersion, record) {
+  encodeValue(schemaVersion, collectionVersion, record) {
     setVersion(schemaVersion)
     const state = { start: 0, end: 2, buffer: null }
     collection1_enc.preencode(state, record)
@@ -133,26 +130,26 @@ const collection1 = {
   decodedVersion: 0
 }
 
-const collections = [
-  collection0,
-  collection1
-]
+const collections = [collection0, collection1]
 
-const indexes = [
-]
+const indexes = []
 
 module.exports = { versions, collections, indexes, resolveCollection, resolveIndex }
 
-function resolveCollection (name) {
+function resolveCollection(name) {
   switch (name) {
-    case '@pear/dht': return collection0
-    case '@pear/multisig': return collection1
-    default: return null
+    case '@pear/dht':
+      return collection0
+    case '@pear/multisig':
+      return collection1
+    default:
+      return null
   }
 }
 
-function resolveIndex (name) {
+function resolveIndex(name) {
   switch (name) {
-    default: return null
+    default:
+      return null
   }
 }
