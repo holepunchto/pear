@@ -154,7 +154,7 @@ module.exports = class Stage extends Opstream {
 
     const dst = pod.drive
 
-    const prefix = only.length > 0 ? only : undefined
+    const prefix = only.length > 0 ? [...new Set(only)] : undefined
 
     const opts = { prefix, ignore: ignored, dryRun, dedup: true, batch: true }
 
