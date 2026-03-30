@@ -92,7 +92,8 @@ module.exports = class Multisig extends Opstream {
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), parsed.drive.key)
     const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
     try {
-      const firstCommit = (await this.sidecar.db.model.getMultisig(key)) === null
+      const entry = await this.sidecar.db.model.getMultisig(key)
+      const firstCommit = entry === null
 
       const commit = multisig.commitDrive(signers, namespace, srcDrive, request, responses, {
         skipTargetChecks: firstCommit,
