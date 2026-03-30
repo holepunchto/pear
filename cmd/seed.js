@@ -1,7 +1,7 @@
 'use strict'
 const plink = require('pear-link')
 const bareTTY = require('bare-tty')
-const process = require('bare-process')
+
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('pear-terminal')
 const { EventEmitter } = require('bare-events')
@@ -376,7 +376,7 @@ module.exports = async function seed(cmd) {
       if (key.toString() === '\u0003') {
         // restore cursor then exit
         return stdio.out.write(`\x1b[?25h`, () => {
-          process.exit(0)
+          Bare.exit(0)
         })
       }
 
