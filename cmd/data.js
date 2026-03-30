@@ -49,7 +49,7 @@ class Data {
 
   static dht = (nodes) => {
     if (!nodes.length) return placeholder
-    let out = ''
+    let out = '\n'
     for (const node of nodes) {
       out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
     }
@@ -58,7 +58,7 @@ class Data {
 
   static multisig = (records) => {
     if (!records.length) return placeholder
-    let out = ''
+    let out = '\n'
     for (const record of records) {
       out += `- ${ansi.bold(hypercoreid.encode(record.key))}\n`
     }
