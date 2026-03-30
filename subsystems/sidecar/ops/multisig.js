@@ -90,10 +90,9 @@ module.exports = class Multisig extends Opstream {
       throw ERR_INVALID_LINK('A valid source link must be specified', { link })
     }
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), parsed.drive.key)
-    let target = null
+    const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
     try {
-      target = await multisig.createDrive(signers, namespace, { quorum })
-      const firstCommit = (await this.sidecar.db.model.getMultisig(target.key)) === null
+      const firstCommit = (await this.sidecar.db.model.getMultisig(key)) === null
 
       const commit = multisig.commitDrive(signers, namespace, srcDrive, request, responses, {
         skipTargetChecks: firstCommit,
@@ -119,7 +118,7 @@ module.exports = class Multisig extends Opstream {
 
       const res = await commit.done()
 
-      if (!dryRun) await this.sidecar.db.model.setMultisig(target.key)
+      if (!dryRun) await this.sidecar.db.model.setMultisig(key)
 
       this.final = {
         dstKey: res.result.db.destCore.key,
@@ -128,10 +127,6 @@ module.exports = class Multisig extends Opstream {
         result: res.result
       }
     } finally {
-      if (target !== null) {
-        await target.blobsCore.close()
-        await target.core.close()
-      }
       await srcDrive.close()
     }
   }
