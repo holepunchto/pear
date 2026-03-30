@@ -278,10 +278,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'verify',
       summary('Verify multisig request & responses'),
       description('Verify inputs & peform commit dry-run'),
-      flag(
-        '--first-commit',
-        'Set when this is the first commit to the multisig target, so it skips those checks'
-      ).hide(), // TODO REMOVE
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
@@ -295,10 +291,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'commit',
       summary('Commit multisig to go live'),
       description('Apply signatures to allow sync from source drive to multisig drive'),
-      flag(
-        '--first-commit',
-        'Set when this is the first commit to the multisig target, so it skips those checks'
-      ).hide(), // TODO - REMOVE
       flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
@@ -374,6 +366,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       commands.data
     ),
     command('dht', summary('DHT known-nodes cache'), commands.data),
+    command('multisig', summary('Multisig records'), commands.data),
     command('gc', summary('Garbage collection records'), commands.data),
     command('manifest', summary('Database internal versioning'), commands.data),
     command(

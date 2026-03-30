@@ -58,6 +58,23 @@ const encoding1 = {
   }
 }
 
+// @pear/multisig
+const encoding2 = {
+  preencode(state, m) {
+    c.fixed32.preencode(state, m.key)
+  },
+  encode(state, m) {
+    c.fixed32.encode(state, m.key)
+  },
+  decode(state) {
+    const r0 = c.fixed32.decode(state)
+
+    return {
+      key: r0
+    }
+  }
+}
+
 function setVersion(v) {
   version = v
 }
@@ -85,6 +102,8 @@ function getEncoding(name) {
       return encoding0
     case '@pear/dht':
       return encoding1
+    case '@pear/multisig':
+      return encoding2
     default:
       throw new Error('Encoder not found ' + name)
   }

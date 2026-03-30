@@ -28,6 +28,11 @@ module.exports = class Data extends Opstream {
       this.final = { nodes }
     }
 
+    if (resource === 'multisig') {
+      const records = await this.sidecar.db.model.allMultisig()
+      this.final = { records }
+    }
+
     if (resource === 'gc') {
       const records = await this.sidecar.model.allGc()
       this.final = { records }
