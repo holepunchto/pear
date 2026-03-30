@@ -1,5 +1,18 @@
 # Pear Runtime Changelog
 
+## v2.5.0
+
+### Features
+
+* CLI - `pear build` - new command - create a multi-architecture deployment folder from build sources
+* CLI - `pear multisig` - new command - production signing coordination. Gather enough cryptographic signatures to approve a release to synchronize onto a production link
+* CLI - `pear seed` realtime stats status updates table with `--no-tty` and `--stats-interval` flags
+
+### Improvements
+
+* CLI/Internal - `pear stage` - `package.json` `name` no longer used to generate pear link - always use `pear touch`
+* CLI - `pear seed` defunct `--dir` flag removed
+
 ## v2.4.1
 
 ### Improvements
