@@ -216,6 +216,5 @@ test('pear multisig commit', async function ({ ok, is, alike, plan, comment, tea
   const committedKey = hypercoreid.decode(committed.dstKey)
   const record = records.find((entry) => entry.key.equals(committedKey))
 
-  ok(record, 'multisig record persisted')
   alike(record, { key: committedKey }, 'multisig record stores the committed key')
 })

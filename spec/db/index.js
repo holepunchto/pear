@@ -4,7 +4,7 @@
 const { IndexEncoder, c, b4a } = require('hyperdb/runtime')
 const { version, getEncoding, setVersion } = require('./messages.js')
 
-const versions = { schema: version, db: 1 }
+const versions = { schema: version, db: 2 }
 
 // '@pear/dht' collection key
 const collection0_key = new IndexEncoder([], { prefix: 0 })
@@ -100,7 +100,7 @@ function collection1_reconstruct_key(keyBuf) {
 const collection1 = {
   name: '@pear/multisig',
   id: 1,
-  version: 1,
+  version: 2,
   encodeKey(record) {
     const key = [record.key]
     return collection1_key.encode(key)
