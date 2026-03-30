@@ -366,6 +366,7 @@ async function setupPeers(key, n, teardown) {
     done()
     await drive.db.core.download({ start: 0, end: drive.db.core.length }).done()
     await drive.download().done()
+    await drive.blobs.core.download({ start: 0, end: drive.blobs.core.length }).done()
     await dlSwarm.destroy()
 
     const serverSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })

@@ -176,10 +176,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         'get',
         summary('Get signing key, initializing if needed'),
         description`
-          Idempotent. Creates keypair unless it already exists. Always prints the public key
+          Idempotent. 
+          
+          Creates public/private keypair if it does't exist.
+          
+          Always prints the public key
         `,
         arg('[name=default]', 'As used for public/private key filenames'),
-        flag('--private', 'Also output the private key'),
+        flag('--secret', 'Also output the private key'),
         flag('--json', 'Newline delimited JSON output'),
         commands.multisig
       ),
@@ -204,12 +208,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         summary('Add signing keys'),
         description`
           Import a signing keypair or add a known public key
-
-          If supplying a private key
         `,
         arg('<name>', 'As used for public/private key filenames'),
-        arg('<public-key>', 'public key path or string)'),
-        arg('[private-key]', 'private key path or string)'),
+        arg('<public-key>', 'public key path or string'),
+        arg('[private-key]', 'private key path or string'),
         flag('--json', 'Newline delimited JSON output'),
         commands.multisig
       ),

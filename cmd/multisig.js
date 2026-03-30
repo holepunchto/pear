@@ -17,7 +17,9 @@ class Keys {
     key: ({ paths, pub, prv, publicKey, privateKey }) => {
       if (paths) return 'public: ' + pub + '\nprivate: ' + prv + '\n'
       let out = hypercoreid.encode(publicKey) + '\n'
-      if (privateKey) out += '\n' + z32.encode(privateKey) + '\n'
+      if (privateKey) {
+        out += '\private: ' + z32.encode(privateKey) + '\n'
+      }
       return out
     },
 
@@ -55,10 +57,12 @@ class Keys {
   }
 
   async get() {
-    const showPrivate = this.cmd.flags.private
+    const { secret } = this.cmd.flags
     if (fs.existsSync(this.pub)) {
       const data = { pub: this.pub, prv: this.prv, publicKey: fs.readFileSync(this.pub) }
-      if (showPrivate) data.privateKey = fs.readFileSync(this.prv)
+      if (secret) {
+        data.privateKey = fs.existsSync(this.prv) ? fs.readFileSync(this.prv) : '(no secret key)'
+      }
       await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
       return
     }
@@ -70,7 +74,7 @@ class Keys {
     fs.writeFileSync(this.pub, publicKey)
     fs.writeFileSync(this.prv, secretKey)
     const data = { pub: this.pub, prv: this.prv, publicKey }
-    if (showPrivate) data.privateKey = secretKey
+    if (secret) data.privateKey = secretKey
     await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
   }
 
@@ -82,7 +86,6 @@ class Keys {
   }
 
   async add() {
-    if (!this.name) throw ERR_INVALID_INPUT('<name> is required')
     const pubKey = this.cmd.args.publicKey
     if (!this.cmd.args.publicKey) throw ERR_INVALID_INPUT('<public-key> is required')
     if (fs.existsSync(this.pub)) throw ERR_INVALID_INPUT(`Key "${this.name}" already exists`)
@@ -101,7 +104,6 @@ class Keys {
   }
 
   async remove() {
-    if (!this.name) throw ERR_INVALID_INPUT('<name> is required')
     if (!fs.existsSync(this.pub)) throw ERR_INVALID_INPUT(`Key "${this.name}" not found`)
     fs.unlinkSync(this.pub)
     if (fs.existsSync(this.prv)) fs.unlinkSync(this.prv)
@@ -184,9 +186,8 @@ class Multisig {
 
   async sign() {
     const { request } = this.cmd.args
-    if (!request) {
-      throw ERR_INVALID_INPUT('request argument required')
-    }
+    if (!request) throw ERR_INVALID_INPUT('request argument required')
+    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     const name = this.cmd.args.name || 'default'
     if (!/^[\w-]+$/.test(name)) {
       throw ERR_INVALID_INPUT(
@@ -223,6 +224,10 @@ class Multisig {
     const { forceDangerous, peerUpdateTimeout } = this.cmd.flags
     const { link, request } = this.cmd.args
     const responses = this.cmd.rest
+    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    for (const response of responses) {
+      if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response:' + response)
+    }
     await Multisig.output(
       this.json,
       this.ipc.multisig({
@@ -241,6 +246,10 @@ class Multisig {
     const { dryRun, forceDangerous, peerUpdateTimeout } = this.cmd.flags
     const { link, request } = this.cmd.args
     const responses = this.cmd.rest
+    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    for (const response of responses) {
+      if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
+    }
     await Multisig.output(
       this.json,
       this.ipc.multisig({
