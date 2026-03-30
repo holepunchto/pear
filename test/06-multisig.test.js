@@ -108,7 +108,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   )
 })
 
-test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('pear multisig commit', async function ({ ok, is, alike, plan, comment, teardown, timeout }) {
   timeout(180000)
   plan(5)
 
@@ -217,5 +217,5 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const record = records.find((entry) => entry.key.equals(committedKey))
 
   ok(record, 'multisig record persisted')
-  is(Object.keys(record).length, 1, 'multisig record stores the key')
+  alike(record, { key: committedKey }, 'multisig record stores the committed key')
 })
