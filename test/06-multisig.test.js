@@ -183,7 +183,6 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
     link,
     request,
     responses,
-    firstCommit: true,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(verifyStream))
@@ -204,7 +203,6 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
     link,
     request,
     responses,
-    firstCommit: true,
     peerUpdateTimeout: 30000
   })
   teardown(() => Helper.teardownStream(commitStream))

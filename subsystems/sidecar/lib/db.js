@@ -61,6 +61,26 @@ class Model {
     await this.lock.exit()
   }
 
+  async getMultisig(key) {
+    const get = { key }
+    LOG.trace('db', 'GET', '@pear/multisig', get)
+    return await this.hyperdb.get('@pear/multisig', get)
+  }
+
+  async allMultisig() {
+    LOG.trace('db', 'FIND', '@pear/multisig')
+    return await this.hyperdb.find('@pear/multisig').toArray()
+  }
+
+  async setMultisig(key) {
+    const tx = await this.lock.enter()
+    const insert = { key }
+    LOG.trace('db', 'INSERT', '@pear/multisig', insert)
+    await tx.insert('@pear/multisig', insert)
+    await this.lock.exit()
+    return insert
+  }
+
   async close() {
     LOG.trace('db', 'CLOSE')
     await this.hyperdb.close()

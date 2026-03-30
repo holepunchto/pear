@@ -76,15 +76,7 @@ module.exports = class Multisig extends Opstream {
     return this.commit({ ...params, dryRun: true })
   }
   async commit(params) {
-    const {
-      link,
-      dryRun,
-      request,
-      responses = [],
-      firstCommit,
-      forceDangerous,
-      peerUpdateTimeout
-    } = params
+    const { link, dryRun, request, responses = [], forceDangerous, peerUpdateTimeout } = params
     if (!link) throw new Error('missing link')
     if (!request) throw new Error('missing request')
 
@@ -98,7 +90,11 @@ module.exports = class Multisig extends Opstream {
       throw ERR_INVALID_LINK('A valid source link must be specified', { link })
     }
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), parsed.drive.key)
+    const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
     try {
+      const entry = await this.sidecar.db.model.getMultisig(key)
+      const firstCommit = entry === null
+
       const commit = multisig.commitDrive(signers, namespace, srcDrive, request, responses, {
         skipTargetChecks: firstCommit,
         force: forceDangerous,
@@ -122,6 +118,8 @@ module.exports = class Multisig extends Opstream {
       })
 
       const res = await commit.done()
+
+      if (!dryRun) await this.sidecar.db.model.setMultisig(key)
 
       this.final = {
         dstKey: res.result.db.destCore.key,

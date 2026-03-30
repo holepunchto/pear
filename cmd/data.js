@@ -1,4 +1,5 @@
 'use strict'
+const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
 const { outputter, ansi, byteSize } = require('pear-terminal')
 
@@ -13,6 +14,8 @@ class Data {
           return Data.apps(result.data)
         case 'dht':
           return Data.dht(result.nodes)
+        case 'multisig':
+          return Data.multisig(result.records)
         case 'gc':
           return Data.gc(result.records)
         case 'manifest':
@@ -46,9 +49,18 @@ class Data {
 
   static dht = (nodes) => {
     if (!nodes.length) return placeholder
-    let out = ''
+    let out = '\n'
     for (const node of nodes) {
       out += `${node.host}${ansi.dim(`:${node.port}`)}\n`
+    }
+    return out
+  }
+
+  static multisig = (records) => {
+    if (!records.length) return placeholder
+    let out = '\n'
+    for (const record of records) {
+      out += `- ${ansi.bold(hypercoreid.encode(record.key))}\n`
     }
     return out
   }
@@ -128,6 +140,10 @@ class Data {
 
   async dht() {
     await Data.output(this.json, this.ipc.data({ resource: 'dht' }), { tag: 'dht' })
+  }
+
+  async multisig() {
+    await Data.output(this.json, this.ipc.data({ resource: 'multisig' }), { tag: 'multisig' })
   }
 
   async gc() {
