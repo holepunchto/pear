@@ -10,10 +10,7 @@ class Table extends EventEmitter {
   constructor(rows = [], opts = {}) {
     const { view, offset = 0, minPadding = 1, maxPadding = 5 } = opts
     super()
-    rows.forEach((row) => {
-      this.emit('row', Object.freeze([...row]))
-    })
-    /** do not modify _rows, use .append or .swap to alter table */
+    for (const row of rows) this.emit('row', row)
     this._rows = rows
     this.view = view
     this.offset = offset
@@ -22,7 +19,7 @@ class Table extends EventEmitter {
   }
   swap(i, row) {
     this._rows[i] = row
-    this.emit('row', Object.freeze([...row]))
+    this.emit('row', row)
   }
   get length() {
     return this._rows.length
@@ -41,7 +38,7 @@ class Table extends EventEmitter {
     return this.canScrollUp || this.canScrollDown
   }
   append(row) {
-    this.emit('row', Object.freeze([...row]))
+    this.emit('row', row)
     this._rows.push(row)
     this.bottom()
   }
@@ -164,10 +161,10 @@ class DictTable extends Table {
     const config = this.configForKey[key]
     if (!config) throw new Error(`key ${key} not configured`)
     const i = this.rowForKey[key]
-    const didChange = this.state[key] !== val
+    const changed = this.state[key] !== val
     this.state[key] = val
 
-    if (didChange) {
+    if (changed) {
       const { label, transform = (v) => v } = config
       this.swap(i, [label, transform(this.state[key])])
     }
@@ -330,9 +327,8 @@ module.exports = async function seed(cmd) {
   const stats = new DictTable([
     {
       key: 'link',
-      label: appendMode ? '... seeding' : 'Pear Seed:',
-      initial: 'loading...',
-      transform: (v) => `${ansi.pear} ${v}`
+      label: appendMode ? '... seeding' : 'Pear Link:',
+      initial: 'loading...'
     },
     { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
     {
