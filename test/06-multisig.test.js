@@ -174,7 +174,11 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   ok(committed.dstKey, 'committed drive has a destination key')
 })
 
-test('pear multisig link rejects missing publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig link rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -194,12 +198,21 @@ test('pear multisig link rejects empty publicKeys', async function ({ exception,
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig link rejects non-array publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig link rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stream = helper.multisig({ action: 'link', publicKeys: 'notanarray', quorum: 2, namespace: 'ns' })
+  const stream = helper.multisig({
+    action: 'link',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
   teardown(() => Helper.teardownStream(stream))
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
@@ -214,7 +227,11 @@ test('pear multisig link rejects missing quorum', async function ({ exception, p
   await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
 })
 
-test('pear multisig link rejects missing namespace', async function ({ exception, plan, teardown }) {
+test('pear multisig link rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -224,7 +241,11 @@ test('pear multisig link rejects missing namespace', async function ({ exception
   await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
 })
 
-test('pear multisig request rejects missing publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig request rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -234,7 +255,11 @@ test('pear multisig request rejects missing publicKeys', async function ({ excep
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig request rejects empty publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig request rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -244,17 +269,30 @@ test('pear multisig request rejects empty publicKeys', async function ({ excepti
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig request rejects non-array publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig request rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stream = helper.multisig({ action: 'request', publicKeys: 'notanarray', quorum: 2, namespace: 'ns' })
+  const stream = helper.multisig({
+    action: 'request',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
   teardown(() => Helper.teardownStream(stream))
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig request rejects missing quorum', async function ({ exception, plan, teardown }) {
+test('pear multisig request rejects missing quorum', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -264,7 +302,11 @@ test('pear multisig request rejects missing quorum', async function ({ exception
   await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
 })
 
-test('pear multisig request rejects missing namespace', async function ({ exception, plan, teardown }) {
+test('pear multisig request rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -274,7 +316,11 @@ test('pear multisig request rejects missing namespace', async function ({ except
   await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
 })
 
-test('pear multisig verify rejects missing publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig verify rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -284,7 +330,11 @@ test('pear multisig verify rejects missing publicKeys', async function ({ except
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig verify rejects empty publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig verify rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -294,12 +344,21 @@ test('pear multisig verify rejects empty publicKeys', async function ({ exceptio
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig verify rejects non-array publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig verify rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stream = helper.multisig({ action: 'verify', publicKeys: 'notanarray', quorum: 2, namespace: 'ns' })
+  const stream = helper.multisig({
+    action: 'verify',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
   teardown(() => Helper.teardownStream(stream))
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
@@ -314,7 +373,11 @@ test('pear multisig verify rejects missing quorum', async function ({ exception,
   await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
 })
 
-test('pear multisig verify rejects missing namespace', async function ({ exception, plan, teardown }) {
+test('pear multisig verify rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -324,7 +387,11 @@ test('pear multisig verify rejects missing namespace', async function ({ excepti
   await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
 })
 
-test('pear multisig commit rejects missing publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig commit rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -334,7 +401,11 @@ test('pear multisig commit rejects missing publicKeys', async function ({ except
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig commit rejects empty publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig commit rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -344,12 +415,21 @@ test('pear multisig commit rejects empty publicKeys', async function ({ exceptio
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
 
-test('pear multisig commit rejects non-array publicKeys', async function ({ exception, plan, teardown }) {
+test('pear multisig commit rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
-  const stream = helper.multisig({ action: 'commit', publicKeys: 'notanarray', quorum: 2, namespace: 'ns' })
+  const stream = helper.multisig({
+    action: 'commit',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
   teardown(() => Helper.teardownStream(stream))
   await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
 })
@@ -364,7 +444,11 @@ test('pear multisig commit rejects missing quorum', async function ({ exception,
   await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
 })
 
-test('pear multisig commit rejects missing namespace', async function ({ exception, plan, teardown }) {
+test('pear multisig commit rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
   plan(1)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

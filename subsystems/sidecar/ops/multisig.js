@@ -13,7 +13,13 @@ module.exports = class Multisig extends Opstream {
 
   async #op(params) {
     await this.sidecar.ready()
-    if (!params.publicKeys || Array.isArray(params.publicKeys) === false || params.publicKeys.length === 0) throw ERR_INVALID_INPUT('publicKeys array required')
+    if (
+      !params.publicKeys ||
+      Array.isArray(params.publicKeys) === false ||
+      params.publicKeys.length === 0
+    ) {
+      throw ERR_INVALID_INPUT('publicKeys array required')
+    }
     if (!params.quorum) throw ERR_INVALID_INPUT('quorum required')
     if (!params.namespace) throw ERR_INVALID_INPUT('namespace required')
     this.config = {
