@@ -2,6 +2,7 @@
 const { ERR_INVALID_LINK, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 const HyperMultisig = require('hyper-multisig')
+const hypercoreid = require('hypercore-id-encoding')
 const Hyperdrive = require('hyperdrive')
 const z32 = require('z32')
 const Opstream = require('../lib/opstream')
@@ -35,6 +36,11 @@ module.exports = class Multisig extends Opstream {
 
   async link() {
     const { publicKeys, namespace, quorum } = this.config
+    for (const publicKey of publicKeys) {
+      if (hypercoreid.isValid(publicKey) === false) {
+        throw ERR_INVALID_INPUT('Invalid publicKeys signing key: ' + publicKey)
+      }
+    }
     const key = HyperMultisig.getCoreKey(publicKeys, namespace, { quorum })
     this.final = { link: plink.serialize({ drive: { key } }) }
   }

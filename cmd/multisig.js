@@ -157,12 +157,16 @@ class Multisig {
 
     final: (data) => {
       if (!data) return {}
-      if (data.link) return { output: 'print', success: Infinity, message: data.link }
+      if (data.link) return { output: 'print', success: Infinity, message: data.link, nonl: true }
       if (data.request) return { output: 'print', success: Infinity, message: data.request }
       const { dstKey, dryRun, quorum, result } = data
       const link = plink.serialize({ drive: { key: dstKey } })
       const verlink = plink.serialize({
-        drive: { key: dstKey, length: result.db.destCore.length, fork: result.db.destCore.fork ?? 0 }
+        drive: {
+          key: dstKey,
+          length: result.db.destCore.length,
+          fork: result.db.destCore.fork ?? 0
+        }
       })
       return (
         `\nQuorum: ${quorum.total} / ${quorum.amount}\n` +
@@ -215,10 +219,8 @@ class Multisig {
   }
 
   async link() {
-    await Multisig.output(
-      this.json,
-      this.ipc.multisig({ action: 'link', multisig: this._config() })
-    )
+    const config = this._config()
+    await Multisig.output(this.json, this.ipc.multisig({ action: 'link', ...config }))
   }
 
   async sign() {
