@@ -159,7 +159,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
       Example - 2/3 must sign to approve
       pear.json: {
-        "name": "my-app",
         "multisig": {
           "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
           "namespace": "my-org/my-app",
@@ -231,7 +230,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
         Example - 2/3 must sign to approve
         pear.json: {
-          "name": "my-app",
           "multisig": {
             "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
             "namespace": "my-org/my-app",
