@@ -236,7 +236,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
             "quorum": 2
           }
         }`,
-      flag('--config [./pear.json]', 'Config file path'),
+      flag('--config [./pear.json]', 'Project pear.json config file'),
       flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
@@ -248,7 +248,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         onto the project multisig link as output by the pear multisig link command
       `,
       flag('--force', 'Skip sanity checks'),
-      flag('--config [./pear.json]', 'Config file path'),
+      flag('--config [./pear.json]', 'Project pear.json config file'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
       arg('<verlink>', 'Versioned source link to sign off'),
@@ -273,7 +273,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       summary('Verify multisig request & responses'),
       description('Verify inputs & peform commit dry-run'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
-      flag('--config [./pear.json]', 'Config file path'),
+      flag('--config [./pear.json]', 'Project pear.json config file'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
       arg('<link>', 'Source link'),
@@ -285,7 +285,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'commit',
       summary('Commit multisig to go live'),
       description('Apply signatures to allow sync from source drive to multisig drive'),
-      flag('--config [./pear.json]', 'Config file path'),
+      flag('--config [./pear.json]', 'Project pear.json config file'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
