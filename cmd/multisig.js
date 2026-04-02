@@ -164,17 +164,18 @@ class Multisig {
       const verlink = plink.serialize({
         drive: { key: dstKey, length: result.db.destCore.length, fork: 0 }
       })
-      return `\nQuorum: ${quorum.total} / ${quorum.amount}\n` + dryRun
-        ? 'Dry-run: '
-        : 'Committed: ' +
-            JSON.stringify(result, null, 2) +
-            '\n' +
-            'link: ' +
-            link +
-            'verlink: ' +
-            verlink +
-            'seed: pear seed ' +
-            link
+      return (
+        `\nQuorum: ${quorum.total} / ${quorum.amount}\n` +
+        (dryRun ? 'Dry-run: ' : 'Committed: ') +
+        JSON.stringify(result, null, 2) +
+        '\n' +
+        'link: ' +
+        link +
+        'verlink: ' +
+        verlink +
+        'seed: pear seed ' +
+        link
+      )
     }
   })
 
