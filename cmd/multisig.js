@@ -7,6 +7,7 @@ const fs = require('bare-fs')
 const sodium = require('sodium-native')
 const Localdrive = require('localdrive')
 const hs = require('hypercore-sign')
+const plink = require('pear-link')
 const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
 const SIGN = path.join(PLATFORM_DIR, 'sign')
@@ -159,17 +160,21 @@ class Multisig {
       if (data.link) return { output: 'print', success: Infinity, message: data.link }
       if (data.request) return { output: 'print', success: Infinity, message: data.request }
       const { dstKey, dryRun, quorum, result } = data
-      const lines = dryRun
-        ? [
-            `\nQuorum: ${quorum.total} / ${quorum.amount}`,
-            'Review batch to commit: ' + JSON.stringify(result, null, 2)
-          ]
-        : [
-            'Committed: ' + JSON.stringify(result, null, 2),
-            '\n~ DONE ~ Seeding now ~ Press Ctrl+C to exit ~\n'
-          ]
-      lines.push(`dst key: ${dstKey}`)
-      return lines.join('\n')
+      const link = plink.serialize({ drive: { key: dstKey } })
+      const verlink = plink.serialize({
+        drive: { key: dstKey, length: result.db.destCore.length, fork: 0 }
+      })
+      return `\nQuorum: ${quorum.total} / ${quorum.amount}\n` + dryRun
+        ? 'Dry-run: '
+        : 'Committed: ' +
+            JSON.stringify(result, null, 2) +
+            '\n' +
+            'link: ' +
+            link +
+            'verlink: ' +
+            verlink +
+            'seed: pear seed ' +
+            link
     }
   })
 
@@ -218,7 +223,8 @@ class Multisig {
   async sign() {
     const { request } = this.cmd.args
     if (!request) throw ERR_INVALID_INPUT('request argument required')
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     const name = this.cmd.args.name || 'default'
     if (!/^[\w-]+$/.test(name)) {
       throw ERR_INVALID_INPUT(
@@ -232,7 +238,7 @@ class Multisig {
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
 
-    const response = z32.encode(hs.sign(z32.decode(request), key, pwd))
+    const response = z32.encode(hs.sign(req, key, pwd))
     await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
   }
 
@@ -255,7 +261,8 @@ class Multisig {
     const { forceDangerous, peerUpdateTimeout } = this.cmd.flags
     const { link, request } = this.cmd.args
     const responses = this.cmd.rest
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     for (const response of responses) {
       if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response:' + response)
     }
@@ -277,9 +284,11 @@ class Multisig {
     const { dryRun, forceDangerous, peerUpdateTimeout } = this.cmd.flags
     const { link, request } = this.cmd.args
     const responses = this.cmd.rest
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     for (const response of responses) {
-      if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
+      const res = z32.decode(response)
+      if (!hs.isResponse(res)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
     }
     await Multisig.output(
       this.json,

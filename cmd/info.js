@@ -59,6 +59,17 @@ const output = outputter('info', {
   manifest: (data) => {
     return JSON.stringify(data.manifest, 0, 2)
   },
+  multisig: ({ quorum, publicKeys, only }) => {
+    let out =
+      (only ? '' : '\n') +
+      ' multisig\n-----------\n quorum: ' +
+      quorum +
+      ' / ' +
+      publicKeys.length +
+      '\n public signing keys:'
+    for (const key of publicKeys) out += '\n    ' + key
+    return out + '\n'
+  },
   final(data, info) {
     if (info.empty) return { success: 2 }
     return info.onlyShowKey && data.success ? {} : false
@@ -67,7 +78,15 @@ const output = outputter('info', {
 
 module.exports = async function info(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, changelog, fullChangelog: full, metadata, key: showKey, manifest } = cmd.flags
+  const {
+    json,
+    changelog,
+    fullChangelog: full,
+    metadata,
+    key: showKey,
+    manifest,
+    multisig
+  } = cmd.flags
   const link = cmd.args.link || null
   if (link && plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
@@ -84,6 +103,7 @@ module.exports = async function info(cmd) {
       metadata,
       changelog: full || changelog ? { full, max: 1 } : null,
       manifest,
+      multisig,
       cmdArgs: Bare.argv.slice(1),
       dir
     }),

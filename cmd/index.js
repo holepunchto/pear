@@ -323,6 +323,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
+    flag('--multisig', 'View multisig info only'),
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
