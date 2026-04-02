@@ -8,7 +8,7 @@ const sodium = require('sodium-native')
 const Localdrive = require('localdrive')
 const hs = require('hypercore-sign')
 const { PLATFORM_DIR } = require('pear-constants')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
 const SIGN = path.join(PLATFORM_DIR, 'sign')
 const replacer = (key, value) => (Buffer.isBuffer(value) ? z32.encode(value) : value)
 
@@ -177,11 +177,42 @@ class Multisig {
     this.cmd = cmd
     this.ipc = global.Pear[global.Pear.constructor.IPC]
     this.json = cmd.command.flags.json && replacer
-    this.package = cmd.command.flags.package ?? path.resolve('package.json')
+    this.config = cmd.command.flags.config ?? path.resolve('pear.json')
+  }
+
+  _config() {
+    let config
+    try {
+      config = JSON.parse(fs.readFileSync(this.config))
+    } catch (err) {
+      const invalidPath =
+        err.code === 'ENOENT' ||
+        err.code === 'EACCES' ||
+        err.code === 'EPERM' ||
+        err.code === 'ENOTDIR' ||
+        err.code === 'EMFILE' ||
+        err.code === 'ENFILE'
+      if (invalidPath) throw ERR_INVALID_INPUT(err.message)
+      throw ERR_INVALID_CONFIG('Could not parse config ' + this.config + ': ' + err.message)
+    }
+    if (!config.multisig) throw ERR_INVALID_CONFIG('multisig field required in ' + this.config)
+    if (!config.multisig.publicKeys) {
+      throw ERR_INVALID_CONFIG('multisig.publicKeys field required in ' + this.config)
+    }
+    if (!config.multisig.quorum) {
+      throw ERR_INVALID_CONFIG('multisig.quorum field required in ' + this.config)
+    }
+    if (!config.multisig.namespace) {
+      throw ERR_INVALID_CONFIG('multisig.namespace field required in ' + this.config)
+    }
+    return config.multisig
   }
 
   async link() {
-    await Multisig.output(this.json, this.ipc.multisig({ action: 'link', package: this.package }))
+    await Multisig.output(
+      this.json,
+      this.ipc.multisig({ action: 'link', multisig: this._config() })
+    )
   }
 
   async sign() {
@@ -212,7 +243,7 @@ class Multisig {
       this.json,
       this.ipc.multisig({
         action: 'request',
-        package: this.package,
+        ...this._config(),
         verlink,
         force,
         peerUpdateTimeout
@@ -232,7 +263,7 @@ class Multisig {
       this.json,
       this.ipc.multisig({
         action: 'verify',
-        package: this.package,
+        ...this._config(),
         link,
         request,
         responses,
@@ -254,7 +285,7 @@ class Multisig {
       this.json,
       this.ipc.multisig({
         action: 'commit',
-        package: this.package,
+        ...this._config(),
         dryRun,
         link,
         request,

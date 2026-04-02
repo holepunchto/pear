@@ -115,7 +115,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Outputs diff information and project link.
     `,
     arg('<link>', 'Pear link to stage'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
     flag('--purge', 'Remove ignored files if present in previous stage'),
@@ -158,14 +158,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       onto a production link
 
       Example - 2/3 must sign to approve
-      package.json: {
+      pear.json: {
         "name": "my-app",
-        "pear": {
-          "multisig": {
-            "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-            "namespace": "my-org/my-app",
-            "quorum": 2
-          }
+        "multisig": {
+          "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+          "namespace": "my-org/my-app",
+          "quorum": 2
         }
       }
     `,
@@ -228,21 +226,19 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'link',
       summary('Print project multisig link'),
       description`
-        The signers, quorom & namespace values of the package.json
-        pear.multisig field determine the multisig link
+        The publicKeys, quorum & namespace values of the pear.json
+        multisig field determine the multisig link
 
         Example - 2/3 must sign to approve
-        package.json: {
+        pear.json: {
           "name": "my-app",
-          "pear": {
-            "multisig": {
-              "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-              "namespace": "my-org/my-app",
-              "quorum": 2
-            }
+          "multisig": {
+            "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+            "namespace": "my-org/my-app",
+            "quorum": 2
           }
         }`,
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
@@ -254,7 +250,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         onto the project multisig link as output by the pear multisig link command
       `,
       flag('--force', 'Skip sanity checks'),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
       arg('<verlink>', 'Versioned source link to sign off'),
@@ -266,8 +262,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       description`
         Sign a multisig request using a local signing key
 
-        The key's public counterpart must be listed in pear.multisig.signers
-        in the package.json of the source link supplied to pear multisig request
+        The key's public counterpart must be listed in multisig.publicKeys
+        in the pear.json of the source link supplied to pear multisig request
       `,
       arg('<request>', 'As returned by pear multisig request'),
       arg('[name=default]', 'Name of local key to sign with'),
@@ -279,7 +275,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       summary('Verify multisig request & responses'),
       description('Verify inputs & peform commit dry-run'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
       arg('<link>', 'Source link'),
@@ -291,7 +287,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'commit',
       summary('Commit multisig to go live'),
       description('Apply signatures to allow sync from source drive to multisig drive'),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
@@ -308,7 +304,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('DEPRECATED: pear provision incompat'),
     description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
     arg('<link>', 'Pear link to release'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
     commands.release
@@ -323,7 +319,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Supply no argument to view platform information.
     `,
     arg('[link]', 'Project to view info for'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
