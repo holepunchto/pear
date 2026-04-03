@@ -72,7 +72,7 @@ test('pear provision removes warmup metadata missing from source', async ({
 
   teardown(() => Helper.gc(src))
 
-  const mirror = new Localdrive(dir).mirror(new Localdrive(src), { prune: false })
+  const mirror = new Localdrive(prod).mirror(new Localdrive(src), { prune: false })
   await mirror.done()
 
   const pkgPath = path.join(src, 'package.json')
