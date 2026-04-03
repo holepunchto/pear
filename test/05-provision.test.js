@@ -67,9 +67,8 @@ test('pear provision removes warmup metadata missing from source', async ({
   plan
 }) => {
   plan(1)
-
   const src = await tmp()
-  const dir = Helper.fixture('warmup')
+  const prod = Helper.fixture('warmup')
 
   teardown(() => Helper.gc(src))
 
@@ -99,7 +98,7 @@ test('pear provision removes warmup metadata missing from source', async ({
   const productionLink = await Helper.touchLink(helper)
   const productionStaging = helper.stage({
     link: productionLink,
-    dir,
+    dir: prod,
     dryRun: false
   })
   teardown(() => Helper.teardownStream(productionStaging))
@@ -107,6 +106,7 @@ test('pear provision removes warmup metadata missing from source', async ({
   const production = await productionStaged.addendum
 
   const targetLink = await Helper.touchLink(helper)
+
   const provisioning = helper.provision({
     sourceVerlink: source.verlink,
     targetLink,
@@ -116,5 +116,7 @@ test('pear provision removes warmup metadata missing from source', async ({
   teardown(() => Helper.teardownStream(provisioning))
 
   const provisioned = await Helper.pick(provisioning, [{ tag: 'final' }])
-  ok((await provisioned.final).target.verlink.startsWith('pear://'), 'provision succeeded')
+  const provision = await provisioned.final
+
+  ok(provision.target.verlink.startsWith('pear://'), 'provision succeeded')
 })
