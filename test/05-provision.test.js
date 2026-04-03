@@ -1,5 +1,9 @@
 'use strict'
+const fs = require('bare-fs')
+const path = require('bare-path')
 const test = require('brittle')
+const tmp = require('test-tmp')
+const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
 test('pear provision syncs blocks from source to target per production key', async ({
@@ -55,4 +59,62 @@ test('pear provision syncs blocks from source to target per production key', asy
 
   ok(provision.source.verlink.startsWith('pear://'), 'source verlink is a pear link')
   ok(provision.target.verlink.startsWith('pear://'), 'target verlink is a pear link')
+})
+
+test('pear provision removes target-only warmup metadata', async ({
+  teardown,
+  ok,
+  plan
+}) => {
+  plan(1)
+
+  const src = await tmp()
+  const dir = Helper.fixture('warmup')
+
+  teardown(() => Helper.gc(src))
+
+  const mirror = new Localdrive(dir).mirror(new Localdrive(src), { prune: false })
+  await mirror.done()
+
+  const pkgPath = path.join(src, 'package.json')
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+  pkg.version = '1.0.0'
+  pkg.pear.stage.skipWarmup = true
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const sourceLink = await Helper.touchLink(helper)
+  const sourceStaging = helper.stage({
+    link: sourceLink,
+    dir: src,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(sourceStaging))
+  const sourceStaged = await Helper.pick(sourceStaging, [{ tag: 'addendum' }])
+  const source = await sourceStaged.addendum
+
+  const productionLink = await Helper.touchLink(helper)
+  const productionStaging = helper.stage({
+    link: productionLink,
+    dir,
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(productionStaging))
+  const productionStaged = await Helper.pick(productionStaging, [{ tag: 'addendum' }])
+  const production = await productionStaged.addendum
+
+  const targetLink = await Helper.touchLink(helper)
+  const provisioning = helper.provision({
+    sourceVerlink: source.verlink,
+    targetLink,
+    productionVerlink: production.verlink,
+    cooldown: 0
+  })
+  teardown(() => Helper.teardownStream(provisioning))
+
+  const provisioned = await Helper.pick(provisioning, [{ tag: 'final' }])
+  ok((await provisioned.final).target.verlink.startsWith('pear://'), 'provision succeeded')
 })
