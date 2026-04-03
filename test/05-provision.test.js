@@ -61,7 +61,11 @@ test('pear provision syncs blocks from source to target per production key', asy
   ok(provision.target.verlink.startsWith('pear://'), 'target verlink is a pear link')
 })
 
-test('pear provision removes warmup metadata missing from source', async ({ teardown, ok, plan }) => {
+test('pear provision removes warmup metadata missing from source', async ({
+  teardown,
+  ok,
+  plan
+}) => {
   plan(1)
 
   const src = await tmp()
