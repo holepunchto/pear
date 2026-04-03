@@ -228,7 +228,7 @@ module.exports = class Provision extends Opstream {
 
       if (!src && dst) {
         this.push({ tag: 'unsetting', data: { field } })
-        await dst.db.del(field)
+        await to.db.del(field)
         continue
       }
 
