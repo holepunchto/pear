@@ -262,7 +262,7 @@ class Multisig {
 
   async verify() {
     const { forceDangerous, peerUpdateTimeout } = this.cmd.flags
-    const { link, request } = this.cmd.args
+    const { sourceLink, request } = this.cmd.args
     const responses = this.cmd.rest
     const req = z32.decode(request)
     if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
@@ -274,7 +274,7 @@ class Multisig {
       this.ipc.multisig({
         action: 'verify',
         ...this._config(),
-        link,
+        link: sourceLink,
         request,
         responses,
         forceDangerous,
@@ -285,7 +285,7 @@ class Multisig {
 
   async commit() {
     const { dryRun, forceDangerous, peerUpdateTimeout } = this.cmd.flags
-    const { link, request } = this.cmd.args
+    const { sourceLink, request } = this.cmd.args
     const responses = this.cmd.rest
     const req = z32.decode(request)
     if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
@@ -299,7 +299,7 @@ class Multisig {
         action: 'commit',
         ...this._config(),
         dryRun,
-        link,
+        link: sourceLink,
         request,
         responses,
         forceDangerous,

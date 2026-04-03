@@ -276,7 +276,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       flag('--config [./pear.json]', 'Config file path'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
-      arg('<link>', 'Source link'),
+      arg('<source-link>', 'Source pear link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
@@ -289,7 +289,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
-      arg('<link>', 'Source link'),
+      arg('<source-link>', 'Source pear link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
