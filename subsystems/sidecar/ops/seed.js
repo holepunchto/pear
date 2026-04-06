@@ -56,7 +56,7 @@ module.exports = class Seed extends Opstream {
     // not an app but a long running process, setting userData for restart recognition:
     client.userData = { state }
 
-    this.push({ tag: 'seeding', data: { key: link } })
+    this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
 
     const corestore = this.sidecar.getCorestore()
