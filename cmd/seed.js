@@ -322,7 +322,7 @@ module.exports = async function seed(cmd) {
   }
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = tty === false || !isTTY || !width
+  const appendMode = json || tty === false || !isTTY || !width
 
   const stats = new DictTable([
     {
@@ -365,7 +365,7 @@ module.exports = async function seed(cmd) {
     { appendMode }
   )
 
-  if (!json && !appendMode) {
+  if (!appendMode) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       // Ctrl-C
@@ -393,7 +393,7 @@ module.exports = async function seed(cmd) {
 
   stats.set('link', link)
 
-  if (!json && !appendMode) {
+  if (!appendMode) {
     stdio.out.off('resize', resizeHandler)
     resizeHandler = () => {
       layout.print(stdio, { clearScrollback: true })
@@ -454,7 +454,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    { json, ctrlTTY: !json && !appendMode },
+    { json, ctrlTTY: !appendMode },
     ipc.seed({
       id,
       link,
