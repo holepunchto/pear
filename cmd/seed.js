@@ -365,7 +365,7 @@ module.exports = async function seed(cmd) {
     { appendMode }
   )
 
-  if (!appendMode) {
+  if (!json && !appendMode) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       // Ctrl-C
@@ -393,7 +393,7 @@ module.exports = async function seed(cmd) {
 
   stats.set('link', link)
 
-  if (!appendMode) {
+  if (!json && !appendMode) {
     stdio.out.off('resize', resizeHandler)
     resizeHandler = () => {
       layout.print(stdio, { clearScrollback: true })
@@ -401,7 +401,7 @@ module.exports = async function seed(cmd) {
     stdio.out.on('resize', resizeHandler)
   }
 
-  layout.print(stdio, { clearScrollback: true })
+  if (!json) layout.print(stdio, { clearScrollback: true })
 
   const output = outputter('seed', {
     announced: () => {
@@ -454,7 +454,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    { json, ctrlTTY: !appendMode },
+    { json, ctrlTTY: !json && !appendMode },
     ipc.seed({
       id,
       link,
