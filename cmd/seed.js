@@ -322,7 +322,7 @@ module.exports = async function seed(cmd) {
   }
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = tty === false || !isTTY || !width
+  const appendMode = json || tty === false || !isTTY || !width
 
   const stats = new DictTable([
     {
@@ -401,7 +401,7 @@ module.exports = async function seed(cmd) {
     stdio.out.on('resize', resizeHandler)
   }
 
-  layout.print(stdio, { clearScrollback: true })
+  if (!json) layout.print(stdio, { clearScrollback: true })
 
   const output = outputter('seed', {
     announced: () => {
