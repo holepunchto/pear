@@ -4,7 +4,7 @@ const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 
@@ -13,14 +13,16 @@ module.exports = class Info extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, showKey, metadata, manifest, changelog = null } = {}) {
+  async #op({ link, showKey, metadata, manifest, multisig, changelog = null } = {}) {
     const { session } = this
     let pod = null
     let drive = null
     let { full = false, max = 10, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
 
-    const enabledFlags = new Set([full, metadata, showKey].filter((value) => value === true))
+    const enabledFlags = new Set(
+      [full, metadata, showKey, multisig].filter((value) => value === true)
+    )
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
@@ -86,6 +88,10 @@ module.exports = class Info extends Opstream {
         return
       }
 
+      const coreManifest = drive.core.manifest
+      const isMultisig = coreManifest !== null && coreManifest.signers.length > 1
+      if (multisig && !isMultisig) throw ERR_INVALID_INPUT('Link has no multisig signers')
+
       if (isEnabled(metadata)) {
         this.push({
           tag: 'keys',
@@ -129,6 +135,15 @@ module.exports = class Info extends Opstream {
             fork
           }
         })
+      }
+
+      if (isEnabled(multisig) && isMultisig) {
+        const publicKeys = coreManifest.signers.map((s) => hypercoreid.encode(s.publicKey))
+        this.push({
+          tag: 'multisig',
+          data: { quorum: coreManifest.quorum, publicKeys, only: !!multisig }
+        })
+        if (multisig) return
       }
     }
 
