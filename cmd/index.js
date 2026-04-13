@@ -14,13 +14,13 @@ const {
   validate,
   hiddenCommand
 } = paparam
-const { usage, ansi, explain } = require('pear-terminal')
+const { usage, ansi, print } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const opwait = require('pear-opwait')
 const run = require('pear-run')
 const pdump = require('pear-dump')
 const { once } = require('bare-events')
-const { ERR_LEGACY } = require('pear-errors')
+const errors = require('pear-errors')
 const def = {
   run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
@@ -115,7 +115,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Outputs diff information and project link.
     `,
     arg('<link>', 'Pear link to stage'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
     flag('--purge', 'Remove ignored files if present in previous stage'),
@@ -158,14 +158,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       onto a production link
 
       Example - 2/3 must sign to approve
-      package.json: {
-        "name": "my-app",
-        "pear": {
-          "multisig": {
-            "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-            "namespace": "my-org/my-app",
-            "quorum": 2
-          }
+      pear.json: {
+        "multisig": {
+          "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+          "namespace": "my-org/my-app",
+          "quorum": 2
         }
       }
     `,
@@ -228,21 +225,18 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'link',
       summary('Print project multisig link'),
       description`
-        The signers, quorom & namespace values of the package.json
-        pear.multisig field determine the multisig link
+        The publicKeys, quorum & namespace values of the pear.json
+        multisig field determine the multisig link
 
         Example - 2/3 must sign to approve
-        package.json: {
-          "name": "my-app",
-          "pear": {
-            "multisig": {
-              "signers": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-              "namespace": "my-org/my-app",
-              "quorum": 2
-            }
+        pear.json: {
+          "multisig": {
+            "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+            "namespace": "my-org/my-app",
+            "quorum": 2
           }
         }`,
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
@@ -254,7 +248,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         onto the project multisig link as output by the pear multisig link command
       `,
       flag('--force', 'Skip sanity checks'),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
       arg('<verlink>', 'Versioned source link to sign off'),
@@ -266,8 +260,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       description`
         Sign a multisig request using a local signing key
 
-        The key's public counterpart must be listed in pear.multisig.signers
-        in the package.json of the source link supplied to pear multisig request
+        The key's public counterpart must be listed in multisig.publicKeys
+        in the pear.json of the source link supplied to pear multisig request
       `,
       arg('<request>', 'As returned by pear multisig request'),
       arg('[name=default]', 'Name of local key to sign with'),
@@ -279,10 +273,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       summary('Verify multisig request & responses'),
       description('Verify inputs & peform commit dry-run'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
-      arg('<link>', 'Source link'),
+      arg('<source-link>', 'Source pear link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
@@ -291,11 +285,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       'commit',
       summary('Commit multisig to go live'),
       description('Apply signatures to allow sync from source drive to multisig drive'),
-      flag('--package [path=<cwd>/package.json]', 'Path to project package.json'),
+      flag('--config [./pear.json]', 'Config file path'),
       flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
       flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
       flag('--json', 'Newline delimited JSON output'),
-      arg('<link>', 'Source link'),
+      arg('<source-link>', 'Source pear link'),
       arg('<request>', 'Signing request'),
       rest('[...responses]', 'Signing responses'),
       commands.multisig
@@ -308,7 +302,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('DEPRECATED: pear provision incompat'),
     description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
     arg('<link>', 'Pear link to release'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
     commands.release
@@ -323,12 +317,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       Supply no argument to view platform information.
     `,
     arg('[link]', 'Project to view info for'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
+    flag('--multisig', 'View multisig info only'),
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
@@ -524,7 +519,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     `,
     sloppy({ flags: true, args: true }),
     () => {
-      throw ERR_LEGACY('pear init has been removed')
+      throw errors.ERR_LEGACY('pear init has been removed')
     }
   ).hide()
 
@@ -567,7 +562,49 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     help,
     init, // legacy
     footer(usage.footer),
-    bail(explain),
+    bail(function explain(bail = {}) {
+      if (!bail.reason && bail.err) {
+        const known = errors.known()
+        if (known.includes(bail.err.code) === false) {
+          print(
+            errors.ERR_UNKNOWN(
+              'Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack
+            ),
+            false
+          )
+          Bare.exit(1)
+        }
+      }
+      const messageUsage = (bail) => bail.err.message
+      const messageOnly = (bail) => bail.err.message
+      const opFail = (cmd) => cmd.err.info.message
+      const codemap = new Map([
+        ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
+        [
+          'UNKNOWN_ARG',
+          (bail) =>
+            'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value
+        ],
+        ['MISSING_ARG', (bail) => bail.arg.value],
+        ['INVALID', messageUsage],
+        ['ERR_INVALID_INPUT', messageUsage],
+        ['ERR_LEGACY', messageOnly],
+        ['ERR_INVALID_TEMPLATE', messageOnly],
+        ['ERR_DIR_NONEMPTY', messageOnly],
+        ['ERR_OPERATION_FAILED', opFail]
+      ])
+      const nouse = [messageOnly, opFail]
+      const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
+      const ref = codemap.get(code)
+      const reason = codemap.has(code) ? (codemap.get(code)(bail) ?? bail.reason) : bail.reason
+      Bare.exitCode = 1
+
+      print(reason, false)
+
+      if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
+
+      print('\n' + bail.command.usage())
+    }),
     pear
   )
 

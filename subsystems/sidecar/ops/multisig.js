@@ -1,9 +1,8 @@
 'use strict'
-const path = require('bare-path')
-const { ERR_INVALID_LINK, ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
+const { ERR_INVALID_LINK, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 const HyperMultisig = require('hyper-multisig')
-const Localdrive = require('localdrive')
+const hypercoreid = require('hypercore-id-encoding')
 const Hyperdrive = require('hyperdrive')
 const z32 = require('z32')
 const Opstream = require('../lib/opstream')
@@ -15,21 +14,20 @@ module.exports = class Multisig extends Opstream {
 
   async #op(params) {
     await this.sidecar.ready()
-    if (!params.package) throw ERR_INVALID_INPUT('package param required')
-    const drive = new Localdrive(path.dirname(params.package))
-    const { pear = {} } = JSON.parse(await drive.get('/package.json'))
-    const multisig = pear.multisig
-    if (!multisig) throw ERR_INVALID_CONFIG('package.json pear.multisig field required')
-    if (!multisig.signers) {
-      throw ERR_INVALID_CONFIG('package.json pear.multisig.signers field required')
+    if (
+      !params.publicKeys ||
+      Array.isArray(params.publicKeys) === false ||
+      params.publicKeys.length === 0
+    ) {
+      throw ERR_INVALID_INPUT('publicKeys array required')
     }
-    if (!multisig.quorum) {
-      throw ERR_INVALID_CONFIG('package.json pear.multisig.quorum field required')
+    if (!params.quorum) throw ERR_INVALID_INPUT('quorum required')
+    if (!params.namespace) throw ERR_INVALID_INPUT('namespace required')
+    this.config = {
+      publicKeys: params.publicKeys,
+      quorum: params.quorum,
+      namespace: params.namespace
     }
-    if (!multisig.namespace) {
-      throw ERR_INVALID_CONFIG('package.json pear.multisig.namespace field required')
-    }
-    this.config = multisig
     if (params.action === 'link') return this.link()
     if (params.action === 'request') return this.request(params)
     if (params.action === 'verify') return this.verify(params)
@@ -37,12 +35,17 @@ module.exports = class Multisig extends Opstream {
   }
 
   async link() {
-    const { signers, namespace, quorum } = this.config
-    const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
+    const { publicKeys, namespace, quorum } = this.config
+    for (const publicKey of publicKeys) {
+      if (hypercoreid.isValid(publicKey) === false) {
+        throw ERR_INVALID_INPUT('Invalid publicKeys signing key: ' + publicKey)
+      }
+    }
+    const key = HyperMultisig.getCoreKey(publicKeys, namespace, { quorum })
     this.final = { link: plink.serialize({ drive: { key } }) }
   }
   async request(params) {
-    const { signers, namespace, quorum } = this.config
+    const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
     const { verlink, force, peerUpdateTimeout } = params
     const parsed = plink.parse(verlink)
@@ -52,7 +55,7 @@ module.exports = class Multisig extends Opstream {
     const { key, length } = parsed.drive
     const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), key)
     try {
-      const req = multisig.requestDrive(signers, namespace, srcDrive, length, {
+      const req = multisig.requestDrive(publicKeys, namespace, srcDrive, length, {
         force,
         peerUpdateTimeout,
         quorum
@@ -82,20 +85,28 @@ module.exports = class Multisig extends Opstream {
 
     this.push({ tag: 'multisigging', data: { request, responses, dryRun } })
 
-    const { signers, namespace, quorum } = this.config
+    const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
 
     const parsed = plink.parse(link)
     if (parsed === null || parsed.drive.key === null) {
       throw ERR_INVALID_LINK('A valid source link must be specified', { link })
     }
-    const srcDrive = new Hyperdrive(this.sidecar.getCorestore(), parsed.drive.key)
-    const key = HyperMultisig.getCoreKey(signers, namespace, { quorum })
+    const corestore = this.sidecar.getCorestore()
+    const srcDrive = new Hyperdrive(corestore, parsed.drive.key)
+    const key = HyperMultisig.getCoreKey(publicKeys, namespace, { quorum })
+    const entry = await this.sidecar.db.model.getMultisig(key)
+    let firstCommit = entry === null
+    if (firstCommit) {
+      const multisigCore = corestore.get(key)
+      await multisigCore.ready()
+      this.sidecar.swarm.join(multisigCore.discoveryKey, { client: true, server: false })
+      await multisigCore.update()
+      firstCommit = multisigCore.length === 0
+      await multisigCore.close()
+    }
     try {
-      const entry = await this.sidecar.db.model.getMultisig(key)
-      const firstCommit = entry === null
-
-      const commit = multisig.commitDrive(signers, namespace, srcDrive, request, responses, {
+      const commit = multisig.commitDrive(publicKeys, namespace, srcDrive, request, responses, {
         skipTargetChecks: firstCommit,
         force: forceDangerous,
         dryRun,
