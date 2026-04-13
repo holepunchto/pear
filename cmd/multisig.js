@@ -7,8 +7,9 @@ const fs = require('bare-fs')
 const sodium = require('sodium-native')
 const Localdrive = require('localdrive')
 const hs = require('hypercore-sign')
+const plink = require('pear-link')
 const { PLATFORM_DIR } = require('pear-constants')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
 const SIGN = path.join(PLATFORM_DIR, 'sign')
 const replacer = (key, value) => (Buffer.isBuffer(value) ? z32.encode(value) : value)
 
@@ -156,20 +157,29 @@ class Multisig {
 
     final: (data) => {
       if (!data) return {}
-      if (data.link) return { output: 'print', success: Infinity, message: data.link }
+      if (data.link) return { output: 'print', success: Infinity, message: data.link, nonl: true }
       if (data.request) return { output: 'print', success: Infinity, message: data.request }
       const { dstKey, dryRun, quorum, result } = data
-      const lines = dryRun
-        ? [
-            `\nQuorum: ${quorum.total} / ${quorum.amount}`,
-            'Review batch to commit: ' + JSON.stringify(result, null, 2)
-          ]
-        : [
-            'Committed: ' + JSON.stringify(result, null, 2),
-            '\n~ DONE ~ Seeding now ~ Press Ctrl+C to exit ~\n'
-          ]
-      lines.push(`dst key: ${dstKey}`)
-      return lines.join('\n')
+      const link = plink.serialize({ drive: { key: dstKey } })
+      const verlink = plink.serialize({
+        drive: {
+          key: dstKey,
+          length: result.db.destCore.length,
+          fork: result.db.destCore.fork ?? 0
+        }
+      })
+      return (
+        `\nQuorum: ${quorum.total} / ${quorum.amount}\n` +
+        (dryRun ? 'Dry-run: ' : 'Committed: ') +
+        JSON.stringify(result, null, 2) +
+        '\n' +
+        'link: ' +
+        link +
+        'verlink: ' +
+        verlink +
+        'seed: pear seed ' +
+        link
+      )
     }
   })
 
@@ -177,17 +187,47 @@ class Multisig {
     this.cmd = cmd
     this.ipc = global.Pear[global.Pear.constructor.IPC]
     this.json = cmd.command.flags.json && replacer
-    this.package = cmd.command.flags.package ?? path.resolve('package.json')
+    this.config = cmd.command.flags.config ?? path.resolve('pear.json')
+  }
+
+  _config() {
+    let config
+    try {
+      config = JSON.parse(fs.readFileSync(this.config))
+    } catch (err) {
+      const invalidPath =
+        err.code === 'ENOENT' ||
+        err.code === 'EACCES' ||
+        err.code === 'EPERM' ||
+        err.code === 'ENOTDIR' ||
+        err.code === 'EMFILE' ||
+        err.code === 'ENFILE'
+      if (invalidPath) throw ERR_INVALID_INPUT(err.message)
+      throw ERR_INVALID_CONFIG('Could not parse config ' + this.config + ': ' + err.message)
+    }
+    if (!config.multisig) throw ERR_INVALID_CONFIG('multisig field required in ' + this.config)
+    if (!config.multisig.publicKeys) {
+      throw ERR_INVALID_CONFIG('multisig.publicKeys field required in ' + this.config)
+    }
+    if (!config.multisig.quorum) {
+      throw ERR_INVALID_CONFIG('multisig.quorum field required in ' + this.config)
+    }
+    if (!config.multisig.namespace) {
+      throw ERR_INVALID_CONFIG('multisig.namespace field required in ' + this.config)
+    }
+    return config.multisig
   }
 
   async link() {
-    await Multisig.output(this.json, this.ipc.multisig({ action: 'link', package: this.package }))
+    const config = this._config()
+    await Multisig.output(this.json, this.ipc.multisig({ action: 'link', ...config }))
   }
 
   async sign() {
     const { request } = this.cmd.args
     if (!request) throw ERR_INVALID_INPUT('request argument required')
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     const name = this.cmd.args.name || 'default'
     if (!/^[\w-]+$/.test(name)) {
       throw ERR_INVALID_INPUT(
@@ -201,7 +241,7 @@ class Multisig {
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
 
-    const response = z32.encode(hs.sign(z32.decode(request), key, pwd))
+    const response = z32.encode(hs.sign(req, key, pwd))
     await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
   }
 
@@ -212,7 +252,7 @@ class Multisig {
       this.json,
       this.ipc.multisig({
         action: 'request',
-        package: this.package,
+        ...this._config(),
         verlink,
         force,
         peerUpdateTimeout
@@ -222,9 +262,10 @@ class Multisig {
 
   async verify() {
     const { forceDangerous, peerUpdateTimeout } = this.cmd.flags
-    const { link, request } = this.cmd.args
+    const { sourceLink, request } = this.cmd.args
     const responses = this.cmd.rest
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     for (const response of responses) {
       if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response:' + response)
     }
@@ -232,8 +273,8 @@ class Multisig {
       this.json,
       this.ipc.multisig({
         action: 'verify',
-        package: this.package,
-        link,
+        ...this._config(),
+        link: sourceLink,
         request,
         responses,
         forceDangerous,
@@ -244,19 +285,21 @@ class Multisig {
 
   async commit() {
     const { dryRun, forceDangerous, peerUpdateTimeout } = this.cmd.flags
-    const { link, request } = this.cmd.args
+    const { sourceLink, request } = this.cmd.args
     const responses = this.cmd.rest
-    if (!hs.isRequest(request)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
+    const req = z32.decode(request)
+    if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     for (const response of responses) {
-      if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
+      const res = z32.decode(response)
+      if (!hs.isResponse(res)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
     }
     await Multisig.output(
       this.json,
       this.ipc.multisig({
         action: 'commit',
-        package: this.package,
+        ...this._config(),
         dryRun,
-        link,
+        link: sourceLink,
         request,
         responses,
         forceDangerous,

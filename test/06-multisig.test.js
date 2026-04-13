@@ -1,11 +1,8 @@
 'use strict'
 const test = require('brittle')
-const path = require('bare-path')
-const fs = require('bare-fs')
 const hs = require('hypercore-sign')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
-const tmp = require('test-tmp')
 const Helper = require('./helper')
 
 test('pear multisig link', async function ({ ok, plan, teardown }) {
@@ -19,21 +16,14 @@ test('pear multisig link', async function ({ ok, plan, teardown }) {
   const pwd2 = Helper.makePwd('signer2-link-password')
   const { publicKey: pub1 } = hs.generateKeys(pwd1)
   const { publicKey: pub2 } = hs.generateKeys(pwd2)
-  const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
+  const publicKeys = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
 
-  const pkgDir = await tmp()
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
-  fs.mkdirSync(pkgDir, { recursive: true })
-  const pkgPath = path.join(pkgDir, 'package.json')
-  fs.writeFileSync(
-    pkgPath,
-    JSON.stringify({
-      name: 'test-multisig',
-      pear: { name: 'test-multisig', multisig: { signers, quorum: 2, namespace: 'test-ns-link' } }
-    })
-  )
-
-  const multisig = helper.multisig({ action: 'link', package: pkgPath })
+  const multisig = helper.multisig({
+    action: 'link',
+    publicKeys,
+    quorum: 2,
+    namespace: 'test-ns-link'
+  })
   teardown(() => Helper.teardownStream(multisig))
   const result = await Helper.pick(multisig, { tag: 'final' })
 
@@ -51,22 +41,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
 
   const pwd1 = Helper.makePwd('signer1-req-password')
   const { publicKey: pub1 } = hs.generateKeys(pwd1)
-  const signers = [hypercoreid.encode(pub1)]
-
-  const pkgDir = await tmp()
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
-  fs.mkdirSync(pkgDir, { recursive: true })
-  const pkgPath = path.join(pkgDir, 'package.json')
-  fs.writeFileSync(
-    pkgPath,
-    JSON.stringify({
-      name: 'test-multisig-req',
-      pear: {
-        name: 'test-multisig-req',
-        multisig: { signers, quorum: 1, namespace: 'test-ns-req' }
-      }
-    })
-  )
+  const publicKeys = [hypercoreid.encode(pub1)]
 
   comment('staging source app')
   const stageLink = await Helper.touchLink(helper)
@@ -94,7 +69,9 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   comment('creating multisig request')
   const multisig = helper.multisig({
     action: 'request',
-    package: pkgPath,
+    publicKeys,
+    quorum: 1,
+    namespace: 'test-ns-req',
     verlink,
     peerUpdateTimeout: 30000
   })
@@ -120,22 +97,8 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const pwd2 = Helper.makePwd('signer2-commit-password')
   const { publicKey: pub1, secretKey: sec1 } = hs.generateKeys(pwd1)
   const { publicKey: pub2, secretKey: sec2 } = hs.generateKeys(pwd2)
-  const signers = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
-
-  const pkgDir = await tmp()
-  teardown(() => fs.promises.rm(pkgDir, { recursive: true }))
-  fs.mkdirSync(pkgDir, { recursive: true })
-  const pkgPath = path.join(pkgDir, 'package.json')
-  fs.writeFileSync(
-    pkgPath,
-    JSON.stringify({
-      name: 'test-multisig-commit',
-      pear: {
-        name: 'test-multisig-commit',
-        multisig: { signers, quorum: 2, namespace: 'test-ns-commit' }
-      }
-    })
-  )
+  const publicKeys = [hypercoreid.encode(pub1), hypercoreid.encode(pub2)]
+  const msig = { publicKeys, quorum: 2, namespace: 'test-ns-commit' }
 
   comment('staging source app')
   const stageLink = await Helper.touchLink(helper)
@@ -163,7 +126,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   comment('creating multisig request')
   const reqStream = helper.multisig({
     action: 'request',
-    package: pkgPath,
+    ...msig,
     verlink,
     peerUpdateTimeout: 30000
   })
@@ -179,7 +142,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   comment('verifying (dry-run)')
   const verifyStream = helper.multisig({
     action: 'verify',
-    package: pkgPath,
+    ...msig,
     link,
     request,
     responses,
@@ -199,7 +162,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   comment('committing')
   const commitStream = helper.multisig({
     action: 'commit',
-    package: pkgPath,
+    ...msig,
     link,
     request,
     responses,
@@ -209,4 +172,288 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const committed = await Helper.pick(commitStream, { tag: 'final' })
 
   ok(committed.dstKey, 'committed drive has a destination key')
+})
+
+test('pear multisig link rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'link', quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig link rejects empty publicKeys', async function ({ exception, plan, teardown }) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'link', publicKeys: [], quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig link rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({
+    action: 'link',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig link rejects missing quorum', async function ({ exception, plan, teardown }) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'link', publicKeys: ['akey'], namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
+})
+
+test('pear multisig link rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'link', publicKeys: ['akey'], quorum: 1 })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
+})
+
+test('pear multisig request rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'request', quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig request rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'request', publicKeys: [], quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig request rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({
+    action: 'request',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig request rejects missing quorum', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'request', publicKeys: ['akey'], namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
+})
+
+test('pear multisig request rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'request', publicKeys: ['akey'], quorum: 1 })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
+})
+
+test('pear multisig verify rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'verify', quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig verify rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'verify', publicKeys: [], quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig verify rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({
+    action: 'verify',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig verify rejects missing quorum', async function ({ exception, plan, teardown }) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'verify', publicKeys: ['akey'], namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
+})
+
+test('pear multisig verify rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'verify', publicKeys: ['akey'], quorum: 1 })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
+})
+
+test('pear multisig commit rejects missing publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'commit', quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig commit rejects empty publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'commit', publicKeys: [], quorum: 2, namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig commit rejects non-array publicKeys', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({
+    action: 'commit',
+    publicKeys: 'notanarray',
+    quorum: 2,
+    namespace: 'ns'
+  })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /publicKeys array required/)
+})
+
+test('pear multisig commit rejects missing quorum', async function ({ exception, plan, teardown }) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'commit', publicKeys: ['akey'], namespace: 'ns' })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /quorum required/)
+})
+
+test('pear multisig commit rejects missing namespace', async function ({
+  exception,
+  plan,
+  teardown
+}) {
+  plan(1)
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const stream = helper.multisig({ action: 'commit', publicKeys: ['akey'], quorum: 1 })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(() => Helper.pick(stream, { tag: 'final' }), /namespace required/)
 })
