@@ -1,5 +1,17 @@
 # Pear Runtime Changelog
 
+## v2.6.0
+
+# Fixes
+
+* CLI - `pear provision` - target metadata crash fix
+* CLI - `pear seed --json` - log ordering fix
+
+# Improvements
+
+* CLI - `pear multisig` introduces `pear.json` for multisig config
+* Internal - deps bump
+
 ## v2.5.0
 
 ### Features
