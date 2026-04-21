@@ -148,7 +148,7 @@ class Multisig {
     'verify-committed-start': ({ firstCommit, key, link }) => {
       let lines = `Committed (key ${hypercoreid.encode(key)})\nWaiting for remote seeders to pick up the changes...`
       if (firstCommit) {
-        lines += `Make sure ${link} is seeded. Once seeded process will continue. Do not exit until seeding confirmed`
+        lines += `Make sure ${link} is seeded. Once seeded, the process will continue. Do not exit until seeding is confirmed`
       }
       return lines
     },
@@ -177,7 +177,6 @@ class Multisig {
         link +
         '\n' +
         'verlink: ' +
-        '\n' +
         verlink +
         '\n' +
         'seed: pear seed ' +
