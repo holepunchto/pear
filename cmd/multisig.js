@@ -12,9 +12,6 @@ const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
 const HOME = os.homedir()
 const SIGN = path.join(HOME, '.pear-sign')
-const HYPERCORE_SIGN = path.join(HOME, '.hypercore-sign')
-const HYPERCORE_SIGN_PRV = path.join(HYPERCORE_SIGN, 'default')
-const HYPERCORE_SIGN_PUB = path.join(HYPERCORE_SIGN, 'default.public')
 const replacer = (key, value) => (Buffer.isBuffer(value) ? z32.encode(value) : value)
 
 class Keys {
@@ -77,25 +74,6 @@ class Keys {
       await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
       return
     }
-    if (this.name === 'default' && fs.existsSync(HYPERCORE_SIGN_PUB)) {
-      const data = {
-        name: this.name,
-        pub: HYPERCORE_SIGN_PUB,
-        prv: HYPERCORE_SIGN_PRV,
-        publicKey: z32.decode(fs.readFileSync(HYPERCORE_SIGN_PUB, 'utf8').trim()),
-        at: {
-          pub: HYPERCORE_SIGN_PUB.replace(HOME, '~'),
-          prv: HYPERCORE_SIGN_PRV.replace(HOME, '~')
-        }
-      }
-      if (secret) {
-        data.privateKey = fs.existsSync(HYPERCORE_SIGN_PRV)
-          ? z32.decode(fs.readFileSync(HYPERCORE_SIGN_PRV, 'utf8').trim())
-          : '(no secret key)'
-      }
-      await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
-      return
-    }
     const input = await password()
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
@@ -115,14 +93,8 @@ class Keys {
   }
 
   async paths() {
-    const pub = fs.existsSync(this.pub)
-      ? this.pub
-      : this.name === 'default' && fs.existsSync(HYPERCORE_SIGN_PUB)
-        ? HYPERCORE_SIGN_PUB
-        : this.pub
-    const prv = pub === HYPERCORE_SIGN_PUB ? HYPERCORE_SIGN_PRV : this.prv
     await Keys.output(this.json, [
-      { tag: 'key', data: { paths: true, pub, prv } },
+      { tag: 'key', data: { paths: true, pub: this.pub, prv: this.prv } },
       { tag: 'final' }
     ])
   }
@@ -167,12 +139,10 @@ class Keys {
 
   async list() {
     const keys = []
-    let hasDefault = false
     const drive = new Localdrive(SIGN)
     for await (const entry of drive.list('/')) {
       if (!entry.key.endsWith('.public')) continue
       const name = entry.key.slice(1, -7)
-      if (name === 'default') hasDefault = true
       const publicKey = await drive.get(entry.key)
       const owned = (await drive.entry('/' + name)) !== null
       keys.push({
@@ -185,18 +155,6 @@ class Keys {
         }
       })
     }
-    if (!hasDefault && fs.existsSync(HYPERCORE_SIGN_PUB)) {
-      keys.push({
-        name: 'default',
-        publicKey: z32.decode(fs.readFileSync(HYPERCORE_SIGN_PUB, 'utf8').trim()),
-        owned: fs.existsSync(HYPERCORE_SIGN_PRV),
-        at: {
-          pub: HYPERCORE_SIGN_PUB.replace(HOME, '~'),
-          prv: HYPERCORE_SIGN_PRV.replace(HOME, '~')
-        }
-      })
-    }
-    keys.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
     await Keys.output(this.json, [{ tag: 'list', data: { keys } }, { tag: 'final' }])
   }
 }
@@ -308,13 +266,9 @@ class Multisig {
         'Key name must contain only letters, numbers, hyphens, or underscores'
       )
     }
-    let prv = path.join(SIGN, name)
-    if (!fs.existsSync(prv) && name === 'default') prv = HYPERCORE_SIGN_PRV
+    const prv = path.join(SIGN, name)
     if (!fs.existsSync(prv)) throw ERR_INVALID_INPUT(`No private key found for "${name}"`)
-    const key =
-      prv === HYPERCORE_SIGN_PRV
-        ? z32.decode(fs.readFileSync(prv, 'utf8').trim())
-        : fs.readFileSync(prv)
+    const key = fs.readFileSync(prv)
     const input = await password()
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
