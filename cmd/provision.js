@@ -52,6 +52,8 @@ const output = outputter('provision', {
   unsetting: ({ field }) => 'Dropping ' + field + ' field from target',
   setting: ({ field }) => 'Updating ' + field + ' field on target',
   final: ({ target }) => {
+    const dryRun = !target
+    if (dryRun) return
     const { verlink, hashlink, link } = target
     return {
       output: 'print',
