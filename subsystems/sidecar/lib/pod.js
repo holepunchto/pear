@@ -285,11 +285,11 @@ module.exports = class Pod {
     return this.drive.compare(...args)
   }
 
-  async get(key) {
+  get(key) {
     return this.drive.get(key)
   }
 
-  async exists(key) {
+  exists(key) {
     return this.drive.exists(key)
   }
 
@@ -358,7 +358,7 @@ module.exports = class Pod {
   }
 
   // does not throw, must never throw:
-  async join({ server = false, client = true } = {}) {
+  join({ server = false, client = true } = {}) {
     if (!this.swarm) return
     if (this.announcing) return this.announcing
     if (this.replicator === null) return
@@ -371,7 +371,7 @@ module.exports = class Pod {
   }
 
   // does not throw, must never throw:
-  async leave() {
+  leave() {
     if (!this.swarm) return
     if (this.leaving) return this.leaving
     if (this.replicator === null) return
