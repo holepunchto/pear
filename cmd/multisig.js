@@ -1,5 +1,6 @@
 'use strict'
 const path = require('bare-path')
+const os = require('bare-os')
 const { outputter, password } = require('pear-terminal')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
@@ -8,31 +9,34 @@ const sodium = require('sodium-native')
 const Localdrive = require('localdrive')
 const hs = require('hypercore-sign')
 const plink = require('pear-link')
-const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
-const SIGN = path.join(PLATFORM_DIR, 'sign')
+const HOME = os.homedir()
+const SIGN = path.join(HOME, '.pear-sign')
+const HYPERCORE_SIGN = path.join(HOME, '.hypercore-sign')
+const HYPERCORE_SIGN_PRV = path.join(HYPERCORE_SIGN, 'default')
+const HYPERCORE_SIGN_PUB = path.join(HYPERCORE_SIGN, 'default.public')
 const replacer = (key, value) => (Buffer.isBuffer(value) ? z32.encode(value) : value)
 
 class Keys {
   static output = outputter('keys', {
-    key: ({ paths, pub, prv, publicKey, privateKey }) => {
+    key: ({ paths, pub, prv, publicKey, privateKey, at, name }) => {
       if (paths) return 'public: ' + pub + '\nprivate: ' + prv + '\n'
-      let out = hypercoreid.encode(publicKey) + '\n'
+      let out = name + '\n'
+      out += '  ' + (at ? at.pub + ' ' : '') + z32.encode(publicKey) + '\n'
       if (privateKey) {
-        out += '\private: ' + z32.encode(privateKey) + '\n'
+        out += '  ' + (at ? at.prv + ' ' : '') + z32.encode(privateKey) + '\n'
       }
       return out
     },
 
     list: ({ keys }) => {
       if (!keys.length) return '(no keys)\n'
-      const width = Math.max(...keys.map(({ name }) => name.length))
       return (
         keys
-          .map(({ name, publicKey }) => {
-            return name.padEnd(width) + '  ' + hypercoreid.encode(publicKey)
+          .map(({ name, publicKey, at }) => {
+            return name + '\n  ' + (at ? at.pub + ' ' : '') + z32.encode(publicKey)
           })
-          .join('\n') + '\n'
+          .join('\n\n') + '\n'
       )
     },
 
@@ -60,9 +64,34 @@ class Keys {
   async get() {
     const { secret } = this.cmd.flags
     if (fs.existsSync(this.pub)) {
-      const data = { pub: this.pub, prv: this.prv, publicKey: fs.readFileSync(this.pub) }
+      const data = {
+        name: this.name,
+        pub: this.pub,
+        prv: this.prv,
+        publicKey: fs.readFileSync(this.pub),
+        at: { pub: this.pub.replace(HOME, '~'), prv: this.prv.replace(HOME, '~') }
+      }
       if (secret) {
         data.privateKey = fs.existsSync(this.prv) ? fs.readFileSync(this.prv) : '(no secret key)'
+      }
+      await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
+      return
+    }
+    if (this.name === 'default' && fs.existsSync(HYPERCORE_SIGN_PUB)) {
+      const data = {
+        name: this.name,
+        pub: HYPERCORE_SIGN_PUB,
+        prv: HYPERCORE_SIGN_PRV,
+        publicKey: z32.decode(fs.readFileSync(HYPERCORE_SIGN_PUB, 'utf8').trim()),
+        at: {
+          pub: HYPERCORE_SIGN_PUB.replace(HOME, '~'),
+          prv: HYPERCORE_SIGN_PRV.replace(HOME, '~')
+        }
+      }
+      if (secret) {
+        data.privateKey = fs.existsSync(HYPERCORE_SIGN_PRV)
+          ? z32.decode(fs.readFileSync(HYPERCORE_SIGN_PRV, 'utf8').trim())
+          : '(no secret key)'
       }
       await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
       return
@@ -74,14 +103,26 @@ class Keys {
     fs.mkdirSync(SIGN, { recursive: true })
     fs.writeFileSync(this.pub, publicKey)
     fs.writeFileSync(this.prv, secretKey)
-    const data = { pub: this.pub, prv: this.prv, publicKey }
+    const data = {
+      name: this.name,
+      pub: this.pub,
+      prv: this.prv,
+      publicKey,
+      at: { pub: this.pub.replace(HOME, '~'), prv: this.prv.replace(HOME, '~') }
+    }
     if (secret) data.privateKey = secretKey
     await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
   }
 
   async paths() {
+    const pub = fs.existsSync(this.pub)
+      ? this.pub
+      : this.name === 'default' && fs.existsSync(HYPERCORE_SIGN_PUB)
+        ? HYPERCORE_SIGN_PUB
+        : this.pub
+    const prv = pub === HYPERCORE_SIGN_PUB ? HYPERCORE_SIGN_PRV : this.prv
     await Keys.output(this.json, [
-      { tag: 'key', data: { paths: true, pub: this.pub, prv: this.prv } },
+      { tag: 'key', data: { paths: true, pub, prv } },
       { tag: 'final' }
     ])
   }
@@ -90,16 +131,29 @@ class Keys {
     const pubKey = this.cmd.args.publicKey
     if (!this.cmd.args.publicKey) throw ERR_INVALID_INPUT('<public-key> is required')
     if (fs.existsSync(this.pub)) throw ERR_INVALID_INPUT(`Key "${this.name}" already exists`)
-    const publicKey = fs.existsSync(pubKey) ? fs.readFileSync(pubKey) : hypercoreid.decode(pubKey)
+    const publicKey = fs.existsSync(pubKey)
+      ? z32.decode(fs.readFileSync(pubKey, 'utf8').trim())
+      : z32.decode(pubKey)
     fs.mkdirSync(SIGN, { recursive: true })
     fs.writeFileSync(this.pub, publicKey)
     if (this.cmd.args.privateKey) {
       const prvKey = this.cmd.args.privateKey
-      const privateKey = fs.existsSync(prvKey) ? fs.readFileSync(prvKey) : z32.decode(prvKey)
+      const privateKey = fs.existsSync(prvKey)
+        ? z32.decode(fs.readFileSync(prvKey, 'utf8').trim())
+        : z32.decode(prvKey)
       fs.writeFileSync(this.prv, privateKey)
     }
     await Keys.output(this.json, [
-      { tag: 'key', data: { pub: this.pub, prv: this.prv, publicKey } },
+      {
+        tag: 'key',
+        data: {
+          name: this.name,
+          pub: this.pub,
+          prv: this.prv,
+          publicKey,
+          at: { pub: this.pub.replace(HOME, '~'), prv: this.prv.replace(HOME, '~') }
+        }
+      },
       { tag: 'final' }
     ])
   }
@@ -112,19 +166,37 @@ class Keys {
   }
 
   async list() {
-    if (!fs.existsSync(SIGN)) {
-      await Keys.output(this.json, [{ tag: 'list', data: { keys: [] } }, { tag: 'final' }])
-      return
-    }
-    const drive = new Localdrive(SIGN)
     const keys = []
+    let hasDefault = false
+    const drive = new Localdrive(SIGN)
     for await (const entry of drive.list('/')) {
       if (!entry.key.endsWith('.public')) continue
       const name = entry.key.slice(1, -7)
+      if (name === 'default') hasDefault = true
       const publicKey = await drive.get(entry.key)
       const owned = (await drive.entry('/' + name)) !== null
-      keys.push({ name, publicKey, owned })
+      keys.push({
+        name,
+        publicKey,
+        owned,
+        at: {
+          pub: path.join(SIGN, name + '.public').replace(HOME, '~'),
+          prv: path.join(SIGN, name).replace(HOME, '~')
+        }
+      })
     }
+    if (!hasDefault && fs.existsSync(HYPERCORE_SIGN_PUB)) {
+      keys.push({
+        name: 'default',
+        publicKey: z32.decode(fs.readFileSync(HYPERCORE_SIGN_PUB, 'utf8').trim()),
+        owned: fs.existsSync(HYPERCORE_SIGN_PRV),
+        at: {
+          pub: HYPERCORE_SIGN_PUB.replace(HOME, '~'),
+          prv: HYPERCORE_SIGN_PRV.replace(HOME, '~')
+        }
+      })
+    }
+    keys.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
     await Keys.output(this.json, [{ tag: 'list', data: { keys } }, { tag: 'final' }])
   }
 }
@@ -153,7 +225,7 @@ class Multisig {
       return lines
     },
 
-    sign: ({ response }) => response,
+    sign: ({ response, at }) => 'Response signed by ' + at.prv + ':\n\n' + response,
 
     final: (data) => {
       if (!data) return {}
@@ -236,15 +308,21 @@ class Multisig {
         'Key name must contain only letters, numbers, hyphens, or underscores'
       )
     }
-    const prv = path.join(SIGN, name)
+    let prv = path.join(SIGN, name)
+    if (!fs.existsSync(prv) && name === 'default') prv = HYPERCORE_SIGN_PRV
     if (!fs.existsSync(prv)) throw ERR_INVALID_INPUT(`No private key found for "${name}"`)
-    const key = fs.readFileSync(prv)
+    const key =
+      prv === HYPERCORE_SIGN_PRV
+        ? z32.decode(fs.readFileSync(prv, 'utf8').trim())
+        : fs.readFileSync(prv)
     const input = await password()
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
 
+    const pub = path.join(SIGN, name + '.public')
+    const at = { pub: pub.replace(HOME, '~'), prv: prv.replace(HOME, '~') }
     const response = z32.encode(hs.sign(req, key, pwd))
-    await Multisig.output(this.json, [{ tag: 'sign', data: { response } }, { tag: 'final' }])
+    await Multisig.output(this.json, [{ tag: 'sign', data: { response, at } }, { tag: 'final' }])
   }
 
   async request() {
