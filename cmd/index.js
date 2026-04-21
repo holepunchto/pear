@@ -175,7 +175,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
         description`
           Idempotent. 
           
-          Creates public/private keypair if it does't exist.
+          Creates public/private keypair if it doesn't exist.
           
           Always prints the public key
         `,
