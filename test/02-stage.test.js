@@ -95,7 +95,7 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
@@ -142,7 +142,7 @@ test('pear stage min desktop app with entrypoints', async ({ teardown, ok, is, c
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
@@ -185,7 +185,7 @@ test('pear stage min desktop app with only and include', async ({ teardown, ok, 
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
@@ -228,7 +228,7 @@ test('pear stage pear.main file', async ({ teardown, ok, comment }) => {
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagedFiles.push(data.data.message)
     }
@@ -261,7 +261,7 @@ test('pear stage with ignore', async function ({ ok, is, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -294,7 +294,7 @@ test('pear stage with glob ignores', async function ({ ok, is, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -326,7 +326,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   teardown(() => Helper.teardownStream(staging))
 
   let stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -356,7 +356,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   teardown(() => Helper.teardownStream(staging))
 
   stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -392,7 +392,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -429,7 +429,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   let removed
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'summary') {
       removed = data.data.remove
     }
@@ -451,7 +451,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   const stagedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       stagedFiles.push(data.data.message)
     }
@@ -499,7 +499,7 @@ test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
   teardown(() => Helper.teardownStream(staging))
 
   const removedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       removedFiles.push(data.data.message)
     }
@@ -564,7 +564,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
   teardown(() => Helper.teardownStream(staging))
 
   const stagingFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff') {
       stagingFiles.push(data.data.message)
     }
@@ -589,7 +589,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
   teardown(() => Helper.teardownStream(staging))
 
   const removedFiles = []
-  staging.on('data', async (data) => {
+  staging.on('data', (data) => {
     if (data?.tag === 'byte-diff' && data?.data.type === -1) {
       removedFiles.push(data.data.message)
     }
