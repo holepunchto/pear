@@ -34,7 +34,7 @@ module.exports = class Multisig extends Opstream {
     if (params.action === 'commit') return this.commit(params)
   }
 
-  async link() {
+  link() {
     const { publicKeys, namespace, quorum } = this.config
     for (const publicKey of publicKeys) {
       if (hypercoreid.isValid(publicKey) === false) {
@@ -75,7 +75,7 @@ module.exports = class Multisig extends Opstream {
       await srcDrive.close()
     }
   }
-  async verify(params) {
+  verify(params) {
     return this.commit({ ...params, dryRun: true })
   }
   async commit(params) {

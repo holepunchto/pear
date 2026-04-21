@@ -37,7 +37,7 @@ const output = outputter('stage', {
     const { blocks, total, skips } = data
     return 'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
   },
-  error: async (err, info, ipc) => {
+  error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'stage')
     } else {
