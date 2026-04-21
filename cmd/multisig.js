@@ -144,7 +144,7 @@ class Multisig {
     'creating-drive': () => 'Creating the drive...',
     'verify-committable-start': ({ srcKey, dstKey }) =>
       `Verifying safe to commit (source ${hypercoreid.encode(srcKey)} to multisig target ${hypercoreid.encode(dstKey)})`,
-    'commit-start': () => 'Committing...',
+    'commit-start': ({ dryRun }) => (dryRun ? 'Verifying...' : 'Committing...'),
     'verify-committed-start': ({ firstCommit, key, link }) => {
       let lines = `Committed (key ${hypercoreid.encode(key)})\nWaiting for remote seeders to pick up the changes...`
       if (firstCommit) {
@@ -175,8 +175,11 @@ class Multisig {
         '\n' +
         'link: ' +
         link +
+        '\n' +
         'verlink: ' +
+        '\n' +
         verlink +
+        '\n' +
         'seed: pear seed ' +
         link
       )
@@ -267,7 +270,8 @@ class Multisig {
     const req = z32.decode(request)
     if (!hs.isRequest(req)) throw ERR_INVALID_INPUT('Invalid request: ' + request)
     for (const response of responses) {
-      if (!hs.isResponse(response)) throw ERR_INVALID_INPUT('Invalid response:' + response)
+      const res = z32.decode(response)
+      if (!hs.isResponse(res)) throw ERR_INVALID_INPUT('Invalid response:' + response)
     }
     await Multisig.output(
       this.json,
