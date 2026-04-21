@@ -449,7 +449,7 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.spindownt)
     if (this.decomissioned) return
     if (this.hasClients) return
-    this.spindownt = setTimeout(async () => {
+    this.spindownt = setTimeout(() => {
       if (this.hasClients || this.updater?.updating) return
       this.close().catch((err) => {
         LOG.error('internal', 'Failed to Close Sidecar', err)
@@ -592,7 +592,7 @@ class Sidecar extends ReadyResource {
     return client.userData.unwrapped.warming
   }
 
-  async versions(params, client) {
+  versions(params, client) {
     const runtimes = { bare: Bare.versions.bare, pear: version }
     return {
       platform: this.version,
@@ -640,7 +640,7 @@ class Sidecar extends ReadyResource {
     return client.userData.reported
   }
 
-  async config(params, client) {
+  config(params, client) {
     if (client.userData instanceof this.App === false) return
     const cfg = client.userData.state.constructor.configFrom(client.userData.state)
     return cfg
@@ -651,7 +651,7 @@ class Sidecar extends ReadyResource {
     await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
-  async message(params, client) {
+  message(params, client) {
     if (client.userData instanceof this.App === false) return
     return client.userData.message(params)
   }

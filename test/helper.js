@@ -97,7 +97,7 @@ class Helper extends IPC.Client {
     return link
   }
 
-  static async teardownStream(stream) {
+  static teardownStream(stream) {
     if (stream.destroyed) return
     stream.end()
     return new Promise((resolve) => stream.on('close', resolve))
