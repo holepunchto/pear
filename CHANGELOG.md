@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.6.1
+
+# Fixes
+
+* CLI - `pear provision` - dry run output fix
+
 ## v2.6.0
 
 # Fixes
