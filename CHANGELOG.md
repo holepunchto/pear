@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.6.3
+
+# Improvements
+
+* CLI - `pear multisig` uses ~/.pear-sign dir
+
 ## v2.6.2
 
 # Fixes
