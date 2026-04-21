@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.6.2
+
+# Fixes
+
+* CLI - `pear multisig verify` - response validation and output fixe
+
 ## v2.6.1
 
 # Fixes
