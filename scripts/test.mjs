@@ -46,7 +46,7 @@ const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 
 const tests = spawn(
-  'npx',
+  isWindows ? 'npx.cmd' : 'npx',
   ['brittle-bare', '-j', '4', path.join('test', 'index.mjs'), ...Bare.argv.slice(2)],
   {
     cwd: root,
