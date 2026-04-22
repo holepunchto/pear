@@ -11,7 +11,7 @@ const hs = require('hypercore-sign')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_INVALID_CONFIG } = require('pear-errors')
 const HOME = os.homedir()
-const SIGN = path.join(HOME, '.pear-sign')
+const SIGN = path.join(HOME, '.pear')
 const replacer = (key, value) => (Buffer.isBuffer(value) ? z32.encode(value) : value)
 
 class Keys {
@@ -75,6 +75,7 @@ class Keys {
       return
     }
     const input = await password()
+    if (!input) throw new ERR_INVALID_INPUT('password required')
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
     const { publicKey, secretKey } = hs.generateKeys(pwd)
@@ -270,6 +271,7 @@ class Multisig {
     if (!fs.existsSync(prv)) throw ERR_INVALID_INPUT(`No private key found for "${name}"`)
     const key = fs.readFileSync(prv)
     const input = await password()
+    if (!input) throw new ERR_INVALID_INPUT('password required')
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
 
