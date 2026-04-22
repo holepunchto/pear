@@ -47,7 +47,7 @@ spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 
 const tests = spawn(
   'npx',
-  ['brittle-bare', '-j', '4', path.join('test', 'index.mjs'), ...Bare.argv.slice(2)],
+  ['bare', path.join(root, 'test', 'index.mjs'), ...Bare.argv.slice(2)],
   {
     cwd: root,
     stdio: 'inherit',
