@@ -5,6 +5,8 @@ runTests()
 async function runTests() {
   const test = (await import('brittle')).default
 
+  test.configure({ jobs: 4 })
+
   test.pause()
 
   await test.load(import.meta.resolve('./00-inspect.test.js'))
