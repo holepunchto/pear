@@ -7,17 +7,17 @@ async function runTests() {
 
   test.pause()
 
-  await import('./00-inspect.test.js')
-  await import('./01-touch.test.js')
-  await import('./02-stage.test.js')
-  await import('./03-seed.test.js')
-  await import('./04-dump.test.js')
-  await import('./05-provision.test.js')
-  await import('./06-multisig.test.js')
-  await import('./07-info.test.js')
-  await import('./08-data.test.js')
-  await import('./09-presets.test.js')
-  await import('./10-shutdown.test.js')
+  await test.load(import.meta.resolve('./00-inspect.test.js'))
+  await test.load(import.meta.resolve('./01-touch.test.js'))
+  await test.load(import.meta.resolve('./02-stage.test.js'))
+  await test.load(import.meta.resolve('./03-seed.test.js'))
+  await test.load(import.meta.resolve('./04-dump.test.js'))
+  await test.load(import.meta.resolve('./05-provision.test.js'))
+  await test.load(import.meta.resolve('./06-multisig.test.js'))
+  await test.load(import.meta.resolve('./07-info.test.js'))
+  await test.load(import.meta.resolve('./08-data.test.js'))
+  await test.load(import.meta.resolve('./09-presets.test.js'))
+  await test.load(import.meta.resolve('./10-shutdown.test.js'))
 
   test.resume()
 }
