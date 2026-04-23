@@ -1,5 +1,18 @@
 # Pear Runtime Changelog
 
+## v2.6.4
+
+# Improvements
+
+* CLI - `pear multisig` uses ~/.pear dir
+* CLI - `pear multisig keys get` and `pear multisig sign` prints error if no password supplied
+
+## v2.6.3
+
+# Improvements
+
+* CLI - `pear multisig` uses ~/.pear-sign dir
+
 ## v2.6.2
 
 # Fixes
