@@ -61,6 +61,7 @@ const commands = {
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
+  install: require('./install'),
   data: require('./data'),
   changelog: require('./changelog'),
   shift: require('./shift'),
@@ -351,6 +352,17 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.dump
   )
 
+  const install = command(
+    'install',
+    summary('Install applications from peers'),
+    description('Installs from peers directly into OS application folder'),
+    arg('<link>', 'Pear link origin to install from'),
+    flag('--system|-s', 'System instead of user install'),
+    flag('--force', 'Force overwrite existing files'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.install
+  )
+
   const data = command(
     'data',
     summary('Explore platform database'),
@@ -548,6 +560,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     multisig,
     info,
     dump,
+    install,
     data,
     changelog,
     presets,
