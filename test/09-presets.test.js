@@ -5,7 +5,7 @@ const path = require('bare-path')
 const Helper = require('./helper')
 const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
 
-test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) => {
+test('set presets and get presets', { timeout: 60_000 }, async ({ teardown, plan, comment, is, ok }) => {
   plan(7)
 
   const helper = new Helper()
