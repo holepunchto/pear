@@ -13,7 +13,7 @@
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js",
-    "build:new": "node scripts/build-local-runtime.js",
+    "build": "node scripts/build-local-runtime.js",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
