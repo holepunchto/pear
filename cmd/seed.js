@@ -409,7 +409,7 @@ module.exports = async function seed(cmd) {
 
       layout.print(stdio)
     })
-  } else if (isTTY) {
+  } else if (tty === false && isTTY) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       if (key.toString() === '\u0003') Bare.exit(0)
