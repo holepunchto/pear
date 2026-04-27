@@ -15,4 +15,3 @@ jobs:
     steps:
       - uses: holepunchto/actions/node-base@v1
       - uses: holepunchto/actions/publish@v1
-
