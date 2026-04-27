@@ -8,9 +8,8 @@ const { EventEmitter } = require('bare-events')
 
 class Table extends EventEmitter {
   constructor(rows = [], opts = {}) {
-    const { view, offset = 0, minPadding = 1, maxPadding = 5 } = opts
+    const { view, offset = 0, minPadding = 1, maxPadding = 3 } = opts
     super()
-    for (const row of rows) this.emit('row', row)
     this._rows = rows
     this.view = view
     this.offset = offset
@@ -190,14 +189,14 @@ class TableLayout {
     }
   }
   get selectedTable() {
-    if (!this.selected) return null
+    if (this.selected === null) return null
     const selectedElement = this.elements[this.selected]
     if (selectedElement.type !== 'table') return null
     return selectedElement.table
   }
   selectNextScrollable() {
     if (this.scrollableElements.length === 0) return
-    if (!this.selected) {
+    if (this.selected === null) {
       this.selected = this.scrollableElements[this.scrollableElements.length - 1]
     } else {
       const i = this.scrollableElements.indexOf(this.selected)
@@ -296,7 +295,7 @@ class TableLayout {
             const { table } = element
             row = table.render({ screen, isSelected: i === this.selected })
           } else if (element.type === 'border') {
-            row = `  ${'-'.repeat(screen.width - 4)}  `
+            row = ansi.gray(`  ${'-'.repeat(screen.width - 4)}  `)
           }
           return rows.concat(row)
         }, [])
@@ -323,36 +322,57 @@ module.exports = async function seed(cmd) {
   const id = Bare.pid
   const { width } = stdio.size()
   const appendMode = json || tty === false || !isTTY || !width
+  const loading = ansi.dim('loading...')
 
   const stats = new DictTable([
     {
       key: 'link',
       label: appendMode ? '... seeding' : 'Pear Link:',
-      initial: 'loading...'
+      initial: loading,
+      transform: (v) => ansi.bold(ansi.green(v))
     },
-    { key: 'driveKey', label: appendMode ? '... drive key' : 'Drive Key:', initial: 'loading...' },
+    {
+      key: 'driveKey',
+      label: appendMode ? '... drive key' : 'Drive Key:',
+      initial: loading,
+      transform: (v) => ansi.gray(v)
+    },
     {
       key: 'discoveryKey',
       label: appendMode ? '... discovery key' : 'Discovery Key:',
-      initial: 'loading...'
+      initial: loading,
+      transform: (v) => ansi.gray(v)
     },
     {
       key: 'contentKey',
       label: appendMode ? '... content key' : 'Content Key:',
-      initial: 'loading...'
+      initial: loading,
+      transform: (v) => ansi.gray(v)
     },
     {
       key: 'firewalled',
       label: appendMode ? '... firewalled' : 'Firewalled:',
-      initial: 'loading...'
+      initial: loading,
+      transform: (v) => {
+        v = `${v}`
+        if (v === 'unknown') return ansi.dim(v)
+        return v === 'false' ? ansi.bold(ansi.green(v)) : ansi.bold(ansi.yellow(v))
+      }
     },
     {
       key: 'natType',
       label: appendMode ? '... NAT type' : 'NAT Type:',
-      initial: 'loading...',
-      transform: (v) => (appendMode ? String(v).toLowerCase() : v)
+      initial: loading,
+      transform: (v) => {
+        v = appendMode ? String(v).toLowerCase() : `${v}`
+        return v === 'unknown' ? ansi.dim(v) : ansi.bold(v)
+      }
     },
-    { key: 'network', label: appendMode ? '---' : 'Network:', initial: 'loading...' }
+    {
+      key: 'network',
+      label: appendMode ? '---' : 'Network:',
+      initial: loading
+    }
   ])
   const peers = new Table()
   const layout = new TableLayout(
@@ -405,17 +425,17 @@ module.exports = async function seed(cmd) {
 
   const output = outputter('seed', {
     announced: () => {
-      const msg = '^_^ announced'
+      const msg = ansi.bold(ansi.green('^_^ announced'))
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-add': (info) => {
-      const msg = `o-o peer join ${info}`
+      const msg = `${ansi.green('o-o peer join')} ${ansi.gray(info)}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
-      const msg = `-_- peer drop ${info}`
+      const msg = `${ansi.yellow('-_- peer drop')} ${ansi.gray(info)}`
       peers.append([msg])
       layout.print(stdio)
     },
@@ -430,8 +450,8 @@ module.exports = async function seed(cmd) {
       download
     }) {
       const network = appendMode
-        ? `${peers} peers: upload ${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s: download ${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`
-        : `[ Peers: ${peers} ] [ ${ansi.up} ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s ] [ ${ansi.down} ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s ]`
+        ? `${ansi.green(peers)} peers: upload ${ansi.green(`${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s`)}: download ${ansi.green(`${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`)}`
+        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} Upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} Download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
         driveKey,
