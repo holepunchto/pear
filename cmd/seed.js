@@ -205,7 +205,7 @@ class TableLayout {
   }
   print(stdio, opts) {
     const str = this.render({ ...opts, screen: stdio.size() })
-    if (str) stdio.out.write(`${str}\n`)
+    if (str) stdio.out.write(this.appendMode ? `${str}\n` : str)
   }
   render(opts = {}) {
     const { clearScrollback, screen } = opts
@@ -356,7 +356,7 @@ module.exports = async function seed(cmd) {
       transform: (v) => {
         v = `${v}`
         if (v === 'unknown') return ansi.dim(v)
-        return v === 'false' ? ansi.bold(ansi.green(v)) : ansi.bold(ansi.yellow(v))
+        return ansi.bold(v)
       }
     },
     {
@@ -364,7 +364,7 @@ module.exports = async function seed(cmd) {
       label: appendMode ? '... NAT type' : 'NAT Type:',
       initial: loading,
       transform: (v) => {
-        v = appendMode ? String(v).toLowerCase() : `${v}`
+        v = `${v}`
         return v === 'unknown' ? ansi.dim(v) : ansi.bold(v)
       }
     },
@@ -409,6 +409,11 @@ module.exports = async function seed(cmd) {
 
       layout.print(stdio)
     })
+  } else if (isTTY) {
+    stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
+    stdio.in?.on('data', (key) => {
+      if (key.toString() === '\u0003') Bare.exit(0)
+    })
   }
 
   stats.set('link', link)
@@ -430,12 +435,12 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     'peer-add': (info) => {
-      const msg = `${ansi.green('o-o peer join')} ${ansi.gray(info)}`
+      const msg = `${ansi.green('o-o peer join')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
-      const msg = `${ansi.yellow('-_- peer drop')} ${ansi.gray(info)}`
+      const msg = `${ansi.yellow('-_- peer drop')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
@@ -450,8 +455,8 @@ module.exports = async function seed(cmd) {
       download
     }) {
       const network = appendMode
-        ? `${ansi.green(peers)} peers: upload ${ansi.green(`${byteSize(upload.totalBytes)} @ ${byteSize(upload.speed)}/s`)}: download ${ansi.green(`${byteSize(download.totalBytes)} @ ${byteSize(download.speed)}/s`)}`
-        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} Upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} Download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+        ? `${ansi.green(peers)} peers: upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} - download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)}`
+        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} Upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} Download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
         driveKey,
