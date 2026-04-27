@@ -1,10 +1,11 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 const { isWindows } = require('which-runtime')
+const mount = global.Pear?.constructor?.RTI?.mount
 
 const app = {}
 class API {
-  static RTI = { checkout: require('./checkout') }
+  static RTI = mount ? { checkout: require('./checkout'), mount } : { checkout: require('./checkout') }
   static CONSTANTS = null
   app = app
   config = app
@@ -15,6 +16,9 @@ API.CONSTANTS = require('pear-constants')
 if (isWindows === false) {
   const fs = require('bare-fs')
   const os = require('bare-os')
+  if (fs.existsSync(API.CONSTANTS.PLATFORM_DIR) === false) {
+    fs.mkdirSync(API.CONSTANTS.PLATFORM_DIR, { recursive: true })
+  }
   const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
   const user = os.userInfo()
 
