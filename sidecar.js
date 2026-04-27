@@ -63,7 +63,9 @@ async function bootSidecar() {
 
   const drive = await createPlatformDrive()
 
-  const Sidecar = await subsystem(drive, '/subsystems/sidecar/index.js')
+  const Sidecar = LOCALDEV
+    ? require('./subsystems/sidecar/index.js')
+    : await subsystem(drive, '/subsystems/sidecar/index.js')
   const updater = createUpdater()
 
   const sidecar = new Sidecar({

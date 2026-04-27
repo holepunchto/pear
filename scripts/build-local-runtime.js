@@ -9,20 +9,14 @@ const { isWindows } = require('which-runtime')
 
 const root = path.resolve(__dirname, '..')
 const host = `${os.platform()}-${os.arch()}`
-const output = path.join(root, isWindows ? 'pear.new.exe' : 'pear.new.dev')
+const runtimeRel = path.join('by-arch', host, 'bin', isWindows ? 'pear-runtime.exe' : 'pear-runtime')
+const output = path.join(root, runtimeRel)
+const devLink = path.join(root, 'pear.dev')
+const ps1 = path.join(root, 'pear.ps1')
+const cmd = path.join(root, 'pear.cmd')
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pear-bare-build-'))
 const entry = path.join(root, 'scripts', '.pear-standalone-entry.js')
 const out = path.join(tmp, 'out')
-
-const backups = new Map()
-const patch = (file, transform) => {
-  if (!backups.has(file)) backups.set(file, fs.readFileSync(file, 'utf8'))
-  fs.writeFileSync(file, transform(backups.get(file)))
-}
-
-const restore = () => {
-  for (const [file, contents] of backups) fs.writeFileSync(file, contents)
-}
 
 const run = (cmd, args) => {
   const res = spawnSync(cmd, args, { cwd: root, stdio: 'inherit' })
@@ -30,41 +24,16 @@ const run = (cmd, args) => {
 }
 
 try {
-  patch(path.join(root, 'node_modules', 'pear-logger', 'package.json'), (s) => {
-    const j = JSON.parse(s)
-    j.imports = j.imports || {}
-    j.imports.tty = { bare: 'bare-tty', default: 'tty' }
-    return JSON.stringify(j, null, 2) + '\n'
-  })
-
-  patch(path.join(root, 'node_modules', 'script-linker', 'package.json'), (s) => {
-    const j = JSON.parse(s)
-    j.imports = j.imports || {}
-    j.imports.module = { bare: 'bare-module', default: 'module' }
-    return JSON.stringify(j, null, 2) + '\n'
-  })
-
-  patch(path.join(root, 'node_modules', 'pear-api', 'index.js'), (s) =>
-    s.replace(
-      "const electron = require('electron')",
-      "const req = require\n        const electron = req('electron')"
-    )
-  )
-
-  patch(path.join(root, 'node_modules', 'pear-crasher', 'index.js'), (s) =>
-    s.replace(
-      "global.process.versions.electron ? require('electron').app : global.process",
-      "global.process.versions.electron ? (() => { const req = require; return req('electron').app })() : global.process"
-    )
-  )
-
   fs.writeFileSync(
     entry,
     `'use strict'
-const os = require('bare-os')
+const path = require('bare-path')
 const checkout = require('../checkout')
+const runtimeRoot = global.Bare?.argv?.[0]
+  ? path.dirname(path.resolve(global.Bare.argv[0]))
+  : path.resolve('.')
 class API {
-  static RTI = { checkout, mount: os.cwd() }
+  static RTI = { checkout, mount: runtimeRoot }
   app = {}
   config = this.app
 }
@@ -87,11 +56,21 @@ require('../boot.js')
     process.exit(1)
   }
 
+  fs.mkdirSync(path.dirname(output), { recursive: true })
+  fs.rmSync(devLink, { force: true })
+  fs.rmSync(path.join(root, 'pear.new.dev'), { force: true })
+  fs.rmSync(path.join(root, 'pear.new.exe'), { force: true })
   fs.copyFileSync(built, output)
   if (!isWindows) fs.chmodSync(output, 0o775)
+  if (!isWindows) {
+    fs.symlinkSync(runtimeRel, devLink)
+    fs.chmodSync(devLink, 0o775)
+  } else {
+    fs.writeFileSync(ps1, `& "$PSScriptRoot\\\\${runtimeRel}" @args`)
+    fs.writeFileSync(cmd, `@echo off\r\n"%~dp0${runtimeRel}" %*`)
+  }
   console.log(`Built ${output}`)
 } finally {
-  restore()
   fs.rmSync(entry, { force: true })
   fs.rmSync(tmp, { recursive: true, force: true })
 }
