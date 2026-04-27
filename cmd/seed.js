@@ -327,7 +327,7 @@ module.exports = async function seed(cmd) {
   const stats = new DictTable([
     {
       key: 'link',
-      label: appendMode ? '... seeding' : 'Pear Link:',
+      label: appendMode ? '... seeding' : 'Seeding:',
       initial: loading,
       transform: (v) => ansi.bold(ansi.green(v))
     },
@@ -356,7 +356,7 @@ module.exports = async function seed(cmd) {
       transform: (v) => {
         v = `${v}`
         if (v === 'unknown') return ansi.dim(v)
-        return ansi.bold(v)
+        return v
       }
     },
     {
@@ -365,7 +365,7 @@ module.exports = async function seed(cmd) {
       initial: loading,
       transform: (v) => {
         v = `${v}`
-        return v === 'unknown' ? ansi.dim(v) : ansi.bold(v)
+        return v === 'unknown' ? ansi.dim(v) : v
       }
     },
     {
@@ -435,12 +435,12 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     'peer-add': (info) => {
-      const msg = `${ansi.green('o-o peer join')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+      const msg = `${ansi.green('o-o peer join')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
-      const msg = `${ansi.yellow('-_- peer drop')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+      const msg = `${ansi.yellow('-_- peer drop')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
@@ -455,7 +455,7 @@ module.exports = async function seed(cmd) {
       download
     }) {
       const network = appendMode
-        ? `${ansi.green(peers)} peers: upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} - download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)}`
+        ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)}`
         : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} Upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} Download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
