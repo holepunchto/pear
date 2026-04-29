@@ -2,7 +2,7 @@
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs/promises')
-const { isMac, isLinux, isWindows } = require('which-runtime')
+const { isMac, isWindows } = require('which-runtime')
 const { ERR_INVALID_MANIFEST } = require('pear-errors')
 const plink = require('pear-link')
 const crypto = require('hypercore-crypto')
@@ -43,7 +43,11 @@ module.exports = class Install extends Opstream {
       ? path.join('/', 'Applications', appName + ext)
       : isWindows
         ? null // Windows: MSIX installer handles placement
-        : await fs.stat(path.join(home, 'Applications')).then(() => path.join(home, 'Applications', appName + ext), () => path.join(home, '.local', 'bin', appName + ext))
+        : await linuxInstallPath()
+
+    function linuxInstallPath () {
+      return fs.stat(path.join(home, 'Applications')).then(() => path.join(home, 'Applications', appName + ext), () => path.join(home, '.local', 'bin', appName + ext))
+    }
 
     const build = plink.serialize({
       ...parsed,
@@ -60,44 +64,6 @@ module.exports = class Install extends Opstream {
 
     const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
 
-    if (isWindows) {
-      this.final = { data: { success: true, msixPath: from } }
-      return
-    }
-
-    let exists = false
-    try {
-      await fs.rename(from, dir)
-    } catch (err) {
-      if (err?.code === 'ENOTEMPTY' || err?.code === 'EEXIST') {
-        exists = true
-      } else {
-        throw err
-      }
-    }
-
-    if (exists) {
-      this.final = {
-        data: { success: false, exists }
-      }
-      return
-    }
-
-    if (isLinux) {
-      const desktopDir = path.join(home, '.local', 'share', 'applications')
-      const desktop =
-        [
-          '[Desktop Entry]',
-          'Type=Application',
-          `Name=${appName}`,
-          `Exec=${dir}`,
-          'Terminal=false'
-        ].join('\n') + '\n'
-      await fs.writeFile(path.join(desktopDir, appName + '.desktop'), desktop).catch((err) => {
-        if (err.code !== 'ENOENT') throw err // ignore if no desktop
-      })
-    }
-
-    this.push({ tag: 'installed' })
+    this.final = { data: { success: true, from, dir, appName } }
   }
 }
