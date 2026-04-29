@@ -63,7 +63,7 @@ module.exports = class Install extends Opstream {
       }
     )
 
-    const from = path.join(tmp, 'by-arch', 'darwin-arm64', 'app', appName + ext)
+    const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
     let exists = false
 
     try {
