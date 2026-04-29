@@ -8,7 +8,6 @@ const plink = require('pear-link')
 const crypto = require('hypercore-crypto')
 const opwait = require('pear-opwait')
 const { GC } = require('pear-constants')
-const env = require('bare-env')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Install extends Opstream {
@@ -16,7 +15,7 @@ module.exports = class Install extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, system } = {}) {
+  async #op({ link } = {}) {
     const parsed = plink.parse(link)
     if (parsed.pathname) throw new Error('Link must not have pathname')
     const host = require.addon.host
@@ -35,20 +34,16 @@ module.exports = class Install extends Opstream {
     const { manifest } = result
     const { name, productName, version, upgrade } = manifest
     const appName = productName ?? name
-    const ext = isMac ? '.app' : isWindows ? '.exe' : '.AppImage'
+    const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
     const key = '/by-arch/' + host + '/app/' + appName + ext
     const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
     const home = os.homedir()
 
     const dir = isMac
-      ? path.join(system ? '/' : home, 'Applications', appName + ext)
+      ? path.join('/', 'Applications', appName + ext)
       : isWindows
-        ? system
-          ? env.ProgramFiles
-          : path.join(home, 'AppData', 'Local', appName + ext)
-        : system
-          ? path.join('/usr', 'local', 'bin', appName + ext)
-          : path.join(home, '.local', 'bin', appName + ext)
+        ? null // Windows: MSIX installer handles placement
+        : await fs.stat(path.join(home, 'Applications')).then(() => path.join(home, 'Applications', appName + ext), () => path.join(home, '.local', 'bin', appName + ext))
 
     const build = plink.serialize({
       ...parsed,
@@ -64,12 +59,17 @@ module.exports = class Install extends Opstream {
     )
 
     const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
-    let exists = false
 
+    if (isWindows) {
+      this.final = { data: { success: true, msixPath: from } }
+      return
+    }
+
+    let exists = false
     try {
       await fs.rename(from, dir)
     } catch (err) {
-      if (err?.code === 'ENOTEMPTY') {
+      if (err?.code === 'ENOTEMPTY' || err?.code === 'EEXIST') {
         exists = true
       } else {
         throw err
@@ -78,22 +78,24 @@ module.exports = class Install extends Opstream {
 
     if (exists) {
       this.final = {
-        data: {
-          success: false,
-          message: 'Refusing to overwrite existing ',
-          hint: 'Manually remove to force'
-        }
+        data: { success: false, exists }
       }
       return
     }
 
     if (isLinux) {
-      // TODO: ~/.local/share/applications/<app>.desktop
-    }
-
-    if (isWindows) {
-      // TODO: if not installers, then add to start menu + reg key at:
-      // HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\<AppName>
+      const desktopDir = path.join(home, '.local', 'share', 'applications')
+      const desktop =
+        [
+          '[Desktop Entry]',
+          'Type=Application',
+          `Name=${appName}`,
+          `Exec=${dir}`,
+          'Terminal=false'
+        ].join('\n') + '\n'
+      await fs.writeFile(path.join(desktopDir, appName + '.desktop'), desktop).catch((err) => {
+        if (err.code !== 'ENOENT') throw err // ignore if no desktop
+      })
     }
 
     this.push({ tag: 'installed' })

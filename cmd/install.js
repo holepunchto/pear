@@ -26,22 +26,28 @@ const output = outputter('install', {
     }
   },
   installed() {},
-  final({ data = {} }) {
+  async final({ data = {} }) {
     if (data.success === false) {
       return {
         output: 'print',
         success: data.success,
-        message: data.message + '\n  ' + ansi.dim(data.hint)
+        message: data.exists
+          ? 'Refusing to overwrite existing\n  ' + ansi.dim('Manually remove to reinstall')
+          : 'Failed'
       }
-    } else {
-      return { output: 'print', success: true, message: 'Installed'.padEnd(10) }
     }
+    if (data.msixPath) {
+      const MSIXManager = require('msix-manager')
+      const manager = new MSIXManager()
+      await manager.addPackage(data.msixPath)
+    }
+    return { output: 'print', success: true, message: 'Installed'.padEnd(10) }
   }
 })
 
 module.exports = async function (cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, system } = cmd.flags
+  const { json } = cmd.flags
   const link = cmd.args.link
-  await output(json, ipc.install({ link, system }))
+  await output(json, ipc.install({ link }))
 }
