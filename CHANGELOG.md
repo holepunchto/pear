@@ -1,5 +1,11 @@
 # Pear Runtime Changelog
 
+## v2.6.5
+
+# Fixes
+
+* CLI - `pear provision` - preinitialized 0 length production link crash fix
+
 ## v2.6.4
 
 # Improvements
