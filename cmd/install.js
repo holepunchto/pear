@@ -86,7 +86,9 @@ class Install extends Opstream {
         ? null
         : fs.existsSync(path.join(home, 'Applications'))
           ? path.join(home, 'Applications', appName + ext)
-          : path.join(home, '.local', 'bin', appName + ext)
+          : fs.existsSync(path.join(home, 'AppImages'))
+            ? path.join(home, 'AppImages', appName + ext)
+            : path.join(home, '.local', 'bin', appName + ext)
 
     const build = plink.serialize({ ...parsed, pathname: key })
     this.push({ tag: 'app', data: { app: appName, name, version, upgrade, key, tmp, dir } })
