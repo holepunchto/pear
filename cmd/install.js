@@ -2,7 +2,8 @@
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
-const { isMac, isWindows } = require('which-runtime')
+const { spawnSync } = require('bare-subprocess')
+const { isMac, isLinux, isWindows } = require('which-runtime')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 const opwait = require('pear-opwait')
@@ -42,10 +43,12 @@ const output = outputter('install', {
         output: 'print',
         success: false,
         message: data.exists
-          ? 'Refusing to overwrite existing ' +
-            data.dir +
-            '\n  ' +
-            ansi.dim('Manually remove to reinstall')
+          ? data.dir
+            ? 'Refusing to overwrite existing ' +
+              data.dir +
+              '\n  ' +
+              ansi.dim('Manually remove to reinstall')
+            : 'Already installed' + ansi.dim('Manually uninstall to reinstall')
           : 'Failed'
       }
     }
@@ -99,13 +102,7 @@ class Install extends Opstream {
 
     const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
 
-    if (isWindows) {
-      const MSIXManager = require('msix-manager')
-      const manager = new MSIXManager()
-      await manager.addPackage(from)
-      this.final = { data: { success: true } }
-      return
-    }
+    if (isWindows) return this._windows(from, appName)
 
     if (fs.existsSync(dir)) {
       this.final = { data: { success: false, exists: true, dir } }
@@ -114,24 +111,81 @@ class Install extends Opstream {
 
     await fs.promises.rename(from, dir)
 
-    if (!isMac) {
-      const desktopDir = path.join(home, '.local', 'share', 'applications')
-      const desktop =
-        [
-          '[Desktop Entry]',
-          'Type=Application',
-          `Name=${appName}`,
-          `Exec=${dir}`,
-          'Terminal=false'
-        ].join('\n') + '\n'
-      await fs.promises
-        .writeFile(path.join(desktopDir, appName + '.desktop'), desktop)
-        .catch((err) => {
-          if (err.code !== 'ENOENT') throw err // ignore if no desktop dir
-        })
+    if (isLinux) this._linux(dir, appName, tmp, home)
+    this.final = { data: { success: true } }
+  }
+
+  async _windows(from, appName) {
+    const ps = spawnSync('powershell', [
+      '-NoProfile',
+      '-Command',
+      `(Get-AppxPackage *${appName}*) -ne $null`
+    ])
+    if (ps.stdout.toString().trim() === 'True') {
+      this.final = { data: { success: false, exists: true } }
+      return
+    }
+    const MSIXManager = require('msix-manager')
+    await new MSIXManager().addPackage(from)
+    this.final = { data: { success: true } }
+  }
+
+  _linux(dir, appName, tmp, home) {
+    fs.chmodSync(dir, 0o755)
+    const extracted = path.join(tmp, 'squashfs-root')
+    const desktop = this._extract(dir, extracted, tmp, appName + '.desktop')
+    fs.writeFileSync(desktop, fs.readFileSync(desktop, 'utf8').replace(/^Exec=.*/m, `Exec=${dir}`))
+
+    const iconMatch = desktop.match(/^Icon=(.+)/m)
+    const iconName = iconMatch && iconMatch[1] && iconMatch[1].trim()
+    let icon = null
+    if (iconName) {
+      for (const ext of ['.png', '.svg', '.xpm']) {
+        try {
+          icon = this._extract(dir, extracted, tmp, iconName + ext)
+          break
+        } catch {
+          // ignore
+        }
+      }
     }
 
-    this.final = { data: { success: true } }
+    this._move(desktop, path.join(home, '.local', 'share', 'applications', appName + '.desktop'))
+    if (icon) {
+      this._move(icon, path.join(home, '.local', 'share', 'icons', iconName + path.extname(icon)))
+    }
+  }
+
+  _extract(appImage, extracted, cwd, file) {
+    const { status } = spawnSync(appImage, ['--appimage-extract', file], { cwd })
+    if (status !== 0) throw new Error('appimage-extract failed')
+    const full = path.join(extracted, file)
+    let stat = null
+    try {
+      stat = fs.lstatSync(full)
+    } catch {}
+    if (stat !== null && !stat.isSymbolicLink()) return full
+    const link = fs.readlinkSync(full)
+    const target = path.resolve(path.dirname(full), link)
+    let exists = true
+    try {
+      fs.lstatSync(target)
+    } catch {
+      exists = false
+    }
+    return exists
+      ? target
+      : this._extract(appImage, extracted, cwd, path.relative(extracted, target))
+  }
+
+  _move(src, dst) {
+    try {
+      fs.renameSync(src, dst)
+    } catch (err) {
+      if (err.code === 'ENOENT') return // ignore if not path does not exist
+      if (err.code !== 'EXDEV') throw err
+      fs.copyFileSync(src, dst)
+    }
   }
 }
 
