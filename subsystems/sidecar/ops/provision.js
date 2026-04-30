@@ -316,7 +316,7 @@ module.exports = class Provision extends Opstream {
           hash: hypercoreid.encode(await prod.core.treeHash())
         },
         blobs:
-          production.drive.length === 0 && prod.blobs.core === null
+          production.drive.length === 0 && prod.blobs === null
             ? {}
             : {
                 id: prod.blobs.core.id,
