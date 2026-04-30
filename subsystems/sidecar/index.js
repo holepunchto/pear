@@ -52,7 +52,6 @@ const ops = {
   Provision: require('./ops/provision'),
   Release: require('./ops/release'),
   Dump: require('./ops/dump'),
-  Install: require('./ops/install'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
   Drop: require('./ops/drop'),
@@ -553,10 +552,6 @@ class Sidecar extends ReadyResource {
 
   dump(params, client) {
     return new ops.Dump(params, client, this)
-  }
-
-  install(params, client) {
-    return new ops.Install(params, client, this)
   }
 
   info(params, client) {

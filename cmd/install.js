@@ -1,8 +1,14 @@
 'use strict'
 const path = require('bare-path')
 const os = require('bare-os')
-const fs = require('bare-fs/promises')
-const { isLinux, isWindows } = require('which-runtime')
+const fs = require('bare-fs')
+const { isMac, isWindows } = require('which-runtime')
+const crypto = require('hypercore-crypto')
+const plink = require('pear-link')
+const opwait = require('pear-opwait')
+const Opstream = require('pear-opstream')
+const { GC } = require('pear-constants')
+const { ERR_INVALID_MANIFEST } = require('pear-errors')
 const { outputter, byteSize, ansi } = require('pear-terminal')
 
 const output = outputter('install', {
@@ -30,56 +36,107 @@ const output = outputter('install', {
     }
   },
   installed() {},
-  async final({ data = {} }) {
+  final({ data = {} }) {
     if (data.success === false) {
       return {
         output: 'print',
-        success: data.success,
+        success: false,
         message: data.exists
-          ? 'Refusing to overwrite existing\n  ' + ansi.dim('Manually remove to reinstall')
+          ? 'Refusing to overwrite existing ' +
+            data.dir +
+            '\n  ' +
+            ansi.dim('Manually remove to reinstall')
           : 'Failed'
-      }
-    }
-    if (isWindows) {
-      const MSIXManager = require('msix-manager')
-      const manager = new MSIXManager()
-      await manager.addPackage(data.from)
-      return { output: 'print', success: true, message: 'Installed'.padEnd(10) }
-    }
-    if (data.from) {
-      try {
-        await fs.rename(data.from, data.dir)
-      } catch (err) {
-        if (err?.code === 'ENOTEMPTY' || err?.code === 'EEXIST') {
-          return {
-            output: 'print',
-            success: false,
-            message: 'Refusing to overwrite existing\n  ' + ansi.dim('Manually remove to reinstall')
-          }
-        }
-        throw err
-      }
-      if (isLinux) {
-        const desktopDir = path.join(os.homedir(), '.local', 'share', 'applications')
-        const desktop = [
-          '[Desktop Entry]',
-          'Type=Application',
-          `Name=${data.appName}`,
-          `Exec=${data.dir}`,
-          'Terminal=false'
-        ].join('\n') + '\n'
-        await fs.writeFile(path.join(desktopDir, data.appName + '.desktop'), desktop).catch((err) => {
-          if (err.code !== 'ENOENT') throw err // ignore if no desktop
-        })
       }
     }
     return { output: 'print', success: true, message: 'Installed'.padEnd(10) }
   }
 })
 
+class Install extends Opstream {
+  constructor(ipc, params) {
+    super((...args) => this.#op(...args), params)
+    this._ipc = ipc
+  }
+
+  async #op({ link }) {
+    const ipc = this._ipc
+    const parsed = plink.parse(link)
+    if (parsed.pathname) throw new Error('Link must not have pathname')
+    const host = require.addon.host
+    this.push({ tag: 'installing', data: { link, host } })
+
+    const result = await opwait(ipc.info({ link, manifest: true }), ({ tag, data }) => {
+      if (tag !== 'final') this.push({ tag, data })
+    })
+
+    if (result === null) throw ERR_INVALID_MANIFEST('Unable to read application manifest')
+
+    const { manifest } = result
+    const { name, productName, version, upgrade } = manifest
+    const appName = productName ?? name
+    const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
+    const key = '/by-arch/' + host + '/app/' + appName + ext
+    const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
+    const home = os.homedir()
+
+    const dir = isMac
+      ? path.join('/', 'Applications', appName + ext)
+      : isWindows
+        ? null
+        : fs.existsSync(path.join(home, 'Applications'))
+          ? path.join(home, 'Applications', appName + ext)
+          : path.join(home, '.local', 'bin', appName + ext)
+
+    const build = plink.serialize({ ...parsed, pathname: key })
+    this.push({ tag: 'app', data: { app: appName, name, version, upgrade, key, tmp, dir } })
+
+    await opwait(ipc.dump({ link: build, dir: tmp, force: true }), ({ tag, data }) => {
+      if (tag !== 'final') this.push({ tag, data })
+    })
+
+    const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
+
+    if (isWindows) {
+      const MSIXManager = require('msix-manager')
+      const manager = new MSIXManager()
+      await manager.addPackage(from)
+      this.final = { data: { success: true } }
+      return
+    }
+
+    if (fs.existsSync(dir)) {
+      this.final = { data: { success: false, exists: true, dir } }
+      return
+    }
+
+    await fs.promises.rename(from, dir)
+
+    if (!isMac) {
+      const desktopDir = path.join(home, '.local', 'share', 'applications')
+      const desktop =
+        [
+          '[Desktop Entry]',
+          'Type=Application',
+          `Name=${appName}`,
+          `Exec=${dir}`,
+          'Terminal=false'
+        ].join('\n') + '\n'
+      await fs.promises
+        .writeFile(path.join(desktopDir, appName + '.desktop'), desktop)
+        .catch((err) => {
+          if (err.code !== 'ENOENT') throw err // ignore if no desktop dir
+        })
+    }
+
+    this.final = { data: { success: true } }
+  }
+}
+
 module.exports = async function (cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
   const { json } = cmd.flags
   const link = cmd.args.link
-  await output(json, ipc.install({ link }))
+  const stream = new Install(ipc, { link })
+  await output(json, stream)
 }
