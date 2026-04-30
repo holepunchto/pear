@@ -315,11 +315,14 @@ module.exports = class Provision extends Opstream {
           length: prod.core.length,
           hash: hypercoreid.encode(await prod.core.treeHash())
         },
-        blobs: {
-          id: prod.blobs.core.id,
-          length: prod.blobs.core.length,
-          hash: hypercoreid.encode(await prod.blobs.core.treeHash())
-        },
+        blobs:
+          production.drive.length === 0 && prod.blobs === null
+            ? {}
+            : {
+                id: prod.blobs.core.id,
+                length: prod.blobs.core.length,
+                hash: hypercoreid.encode(await prod.blobs.core.treeHash())
+              },
         link: plink.serialize({
           protocol: 'pear:',
           drive: {
