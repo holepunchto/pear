@@ -119,7 +119,7 @@ class Install extends Opstream {
     const ps = spawnSync('powershell', [
       '-NoProfile',
       '-Command',
-      `(Get-AppxPackage *${appName}*) -ne $null`
+      `(Get-AppxPackage '${appName}') -ne $null`
     ])
     if (ps.stdout.toString().trim() === 'True') {
       this.final = { data: { success: false, exists: true } }
@@ -133,8 +133,9 @@ class Install extends Opstream {
   _linux(dir, appName, tmp, home) {
     fs.chmodSync(dir, 0o755)
     const extracted = path.join(tmp, 'squashfs-root')
-    const desktop = this._extract(dir, extracted, tmp, appName + '.desktop')
-    fs.writeFileSync(desktop, fs.readFileSync(desktop, 'utf8').replace(/^Exec=.*/m, `Exec=${dir}`))
+    const desktopPath = this._extract(dir, extracted, tmp, appName + '.desktop')
+    const desktop = fs.readFileSync(desktopPath, 'utf8').replace(/^Exec=.*/m, `Exec=${dir}`)
+    fs.writeFileSync(desktopPath, desktop)
 
     const iconMatch = desktop.match(/^Icon=(.+)/m)
     const iconName = iconMatch && iconMatch[1] && iconMatch[1].trim()
@@ -150,7 +151,7 @@ class Install extends Opstream {
       }
     }
 
-    this._move(desktop, path.join(home, '.local', 'share', 'applications', appName + '.desktop'))
+    this._move(desktopPath, path.join(home, '.local', 'share', 'applications', appName + '.desktop'))
     if (icon) {
       this._move(icon, path.join(home, '.local', 'share', 'icons', iconName + path.extname(icon)))
     }
@@ -182,9 +183,10 @@ class Install extends Opstream {
     try {
       fs.renameSync(src, dst)
     } catch (err) {
-      if (err.code === 'ENOENT') return // ignore if not path does not exist
+      if (err.code === 'ENOENT') return // ignore if path does not exist
       if (err.code !== 'EXDEV') throw err
       fs.copyFileSync(src, dst)
+      fs.rmSync(src)
     }
   }
 }
