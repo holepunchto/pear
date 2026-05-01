@@ -72,19 +72,22 @@ module.exports = class Info extends Opstream {
       return
     }
 
+    let pkg = null
     if (drive.core.length > 0) {
-      const appManifest = await drive.db.get('manifest').catch((error) => {
-        if (error.code === 'DECODING_ERROR') {
+      try {
+        pkg = JSON.parse(await drive.get('./package.json'))
+      } catch (err) {
+        if (err.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
-        }
-      })
+        } else throw err
+      }
 
       if (manifest) {
-        this.push({ tag: 'manifest', data: { manifest: appManifest.value } })
-        this.final = { manifest: appManifest.value }
+        this.push({ tag: 'manifest', data: { manifest: pkg } })
+        this.final = { manifest: pkg }
         return
       }
 
@@ -112,7 +115,7 @@ module.exports = class Info extends Opstream {
       })
 
       if (isEnabled(metadata)) {
-        const name = appManifest?.value?.pear?.name || appManifest?.value?.name
+        const name = pkg?.pear?.name || pkg?.name
         const length = drive.core.length
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
