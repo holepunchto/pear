@@ -5,7 +5,9 @@ const mount = global.Pear?.constructor?.RTI?.mount
 
 const app = {}
 class API {
-  static RTI = mount ? { checkout: require('./checkout'), mount } : { checkout: require('./checkout') }
+  static RTI = mount
+    ? { checkout: require('./checkout'), mount }
+    : { checkout: require('./checkout') }
   static CONSTANTS = null
   app = app
   config = app
