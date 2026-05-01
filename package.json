@@ -2,6 +2,8 @@
   "name": "pear",
   "version": "2.0.0",
   "main": "./boot.js",
+  "productName": "pear-runtime",
+  "upgrade": "pear://eecyngfo1nacgyp4i9fi1rm4ip6akwqb87j5hdpykhtdfc8j7jky",
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.js test/*.test.js",
@@ -11,6 +13,11 @@
     "archdump": "node scripts/bootstrap.js --archdump",
     "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
     "bootstrap": "node scripts/bootstrap.js",
+    "build": "node scripts/build-local-runtime.js",
+    "build:darwin-arm64": "bare-build --config ./bare-build.config.cjs --host darwin-arm64 --out ./out/darwin-arm64 scripts/standalone-entry.js",
+    "build:darwin-x64": "bare-build --config ./bare-build.config.cjs --host darwin-x64 --out ./out/darwin-x64 scripts/standalone-entry.js",
+    "build:win32-x64": "bare-build --config ./bare-build.config.cjs --host win32-x64 --out ./out/win32-x64 scripts/standalone-entry.js && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Write-Win32Ps1Wrapper.ps1",
+    "build:win32-x64:msix": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Win32X64.ps1",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
@@ -105,6 +112,7 @@
     "pear-opstream": "^1.0.0",
     "pear-pack": "^1.1.3",
     "pear-run": "^1.0.8",
+    "pear-runtime-updater": "^3.0.8",
     "pear-shake": "^2.0.1",
     "pear-stamp": "^1.0.2",
     "pear-state": "^1.0.2",
@@ -132,6 +140,7 @@
   "devDependencies": {
     "@hyperswarm/secret-stream": "^6.9.1",
     "@hyperswarm/testnet": "^3.1.4",
+    "bare-build": "^0.5.3",
     "bare-bundle": "^1.10.0",
     "brittle": "^3.19.1",
     "graceful-goodbye": "^1.3.3",
