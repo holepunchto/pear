@@ -9,7 +9,12 @@ const { isWindows } = require('which-runtime')
 
 const root = path.resolve(__dirname, '..')
 const host = `${os.platform()}-${os.arch()}`
-const runtimeRel = path.join('by-arch', host, 'bin', isWindows ? 'pear-runtime.exe' : 'pear-runtime')
+const runtimeRel = path.join(
+  'by-arch',
+  host,
+  'bin',
+  isWindows ? 'pear-runtime.exe' : 'pear-runtime'
+)
 const output = path.join(root, runtimeRel)
 const devLink = path.join(root, 'pear.dev')
 const ps1 = path.join(root, 'pear.ps1')
@@ -45,7 +50,18 @@ require('../boot.js')
 `
   )
 
-  run('npx', ['--yes', 'bare-build', '--standalone', '--host', host, '--base', root, '--out', out, entry])
+  run('npx', [
+    '--yes',
+    'bare-build',
+    '--standalone',
+    '--host',
+    host,
+    '--base',
+    root,
+    '--out',
+    out,
+    entry
+  ])
 
   const built = ['pear.exe', 'pear']
     .map((name) => path.join(out, name))
