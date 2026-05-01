@@ -23,8 +23,8 @@ API.CONSTANTS = require('pear-constants')
 
   if (isWindows === false) {
     const os = require('bare-os')
-  const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
-  const user = os.userInfo()
+    const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
+    const user = os.userInfo()
 
     if (stat.uid !== user.uid) {
       const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
