@@ -17,11 +17,9 @@ const sodium = require('sodium-native')
 const Updater = require('pear-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
-const { command } = require('paparam')
 const deriveEncryptionKey = require('pw-to-ek')
 const { Transform, pipeline } = require('streamx')
 const plink = require('pear-link')
-const rundef = require('pear-cmd/run')
 const {
   PLATFORM_DIR,
   SOCKET_PATH,
@@ -40,7 +38,7 @@ const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const hyperdb = require('pear-hyperdb') // FROZEN: remove with pear run removal
+const hyperdb = require('pear-hyperdb')
 const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
@@ -57,7 +55,6 @@ const ops = {
   Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  Run: require('./ops/run'),
   Presets: require('./ops/presets'),
   Multisig: require('./ops/multisig')
 }
@@ -570,10 +567,6 @@ class Sidecar extends ReadyResource {
     return new ops.Drop(params, client, this)
   }
 
-  run(params, client) {
-    return new ops.Run(params, client, this)
-  }
-
   gc(params, client) {
     return new ops.GC(params, client, this)
   }
@@ -822,19 +815,6 @@ class Sidecar extends ReadyResource {
           daemon.spawn(applingPath, { env }) // appling owns cwd
         }
       } else {
-        const cmd = command('run', ...rundef)
-        cmd.parse(cmdArgs.slice(1))
-
-        const linkIndex = cmd?.indices?.args?.link
-        const link = cmd?.args?.link
-        if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
-            cmdArgs[linkIndex + 1] = dir
-          }
-        } else {
-          cmdArgs.push(dir)
-        }
-
         daemon.spawn(RUNTIME, cmdArgs, { cwd, env })
       }
 
@@ -866,19 +846,6 @@ class Sidecar extends ReadyResource {
       } else {
         const TARGET_RUNTIME =
           this.updater === null ? RUNTIME : this.updater.swap + RUNTIME.slice(SWAP.length)
-
-        const cmd = command('run', ...rundef)
-        cmd.parse(cmdArgs.slice(1))
-
-        const linkIndex = cmd?.indices?.args?.link
-        const link = cmd?.args?.link
-        if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
-            cmdArgs[linkIndex + 1] = dir
-          }
-        } else {
-          cmdArgs.push(dir)
-        }
 
         daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
       }

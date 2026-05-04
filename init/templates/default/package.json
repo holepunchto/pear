@@ -8,7 +8,7 @@
   "type": "module",
   "license": "__license__",
   "scripts": {
-    "dev": "pear run -d .",
+    "dev": "echo 'pear dev workflow removed; use pear-runtime instead' && exit 1",
     "test": "brittle test/*.test.js"
   },
   "devDependencies": {

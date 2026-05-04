@@ -28,7 +28,7 @@ swap: incremental integer dirname (default: 0) - incremented with `swap + 1 & 3`
     - /prebuilds <-- native bundled prebuilds
   - /current -> symlink -> /by-dkey/[platform-dkey]/[swap]
   - /next -> symlink -> /by-dkey/[platform-dkey]/[swap] <-- Windows only, atomic swap
-  - /bin - prefixed to PATH to enable pear executable and pear run [key] --save-command flow
+  - /bin - prefixed to PATH to enable pear executable and saved-command flow
     - /pear -> symlink -> ../current/by-arch/[os]-[arch]/bin/pear-runtime <-- linux/mac
     - /pear.cmd | pear.ps1 -> win cmd/powershell script wrapper for ../current/by-arch/[os]-[arch]/bin/pear-runtime.exe
     - /[name] | ([name].cmd | [name].ps1) -> reserved
