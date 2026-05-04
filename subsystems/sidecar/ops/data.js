@@ -38,11 +38,6 @@ module.exports = class Data extends Opstream {
       this.final = { records }
     }
 
-    if (resource === 'manifest') {
-      const manifest = await this.sidecar.model.getManifest()
-      this.final = { manifest }
-    }
-
     if (resource === 'currents') {
       let records
       if (link) {

@@ -16,17 +16,6 @@ test('pear data dht', async function ({ ok, is, teardown }) {
   is(typeof dht[0].port, 'number', 'Field port is a number')
 })
 
-test('pear data manifest', async function ({ is, teardown }) {
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-
-  const data = await helper.data({ resource: 'manifest' })
-  const result = await opwait(data)
-  const manifest = await result.manifest
-  is(manifest, null, 'Manifest does not exist in test context')
-})
-
 test('pear data multisig', async function ({ ok, teardown }) {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

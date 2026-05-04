@@ -352,7 +352,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('dht', summary('DHT known-nodes cache'), commands.data),
     command('multisig', summary('Multisig records'), commands.data),
     command('gc', summary('Garbage collection records'), commands.data),
-    command('manifest', summary('Database internal versioning'), commands.data),
     command(
       'currents',
       summary('Current working versions'),
