@@ -295,7 +295,7 @@ class TableLayout {
             const { table } = element
             row = table.render({ screen, isSelected: i === this.selected })
           } else if (element.type === 'border') {
-            row = ansi.gray(`  ${'-'.repeat(screen.width - 4)}  `)
+            row = ansi.gray(`  ${'-'.repeat(Math.max(0, screen.width - 4))}  `)
           }
           return rows.concat(row)
         }, [])
@@ -309,15 +309,15 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, verbose, ask, tty } = cmd.flags
+  const { json, ask, tty } = cmd.flags
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
   statsInterval = +statsInterval
-  if (Number.isInteger(+statsInterval) === false) {
-    throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
+  if (Number.isInteger(+statsInterval) === false || statsInterval <= 0) {
+    throw ERR_INVALID_INPUT('--stats-interval flag must supply a positive integer if set')
   }
   const id = Bare.pid
   const { width } = stdio.size()
@@ -430,17 +430,17 @@ module.exports = async function seed(cmd) {
 
   const output = outputter('seed', {
     announced: () => {
-      const msg = ansi.bold(ansi.green('^_^ announced'))
+      const msg = `${ansi.gray('^_^')} ${ansi.bold(ansi.green('announced'))}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-add': (info) => {
-      const msg = `${ansi.green('o-o peer join')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
+      const msg = `${ansi.gray('o-o')} ${ansi.green('peer join')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
-      const msg = `${ansi.yellow('-_- peer drop')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
+      const msg = `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
@@ -456,7 +456,7 @@ module.exports = async function seed(cmd) {
     }) {
       const network = appendMode
         ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)}`
-        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} Upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} Download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
         driveKey,
@@ -483,7 +483,6 @@ module.exports = async function seed(cmd) {
     ipc.seed({
       id,
       link,
-      verbose,
       statsInterval,
       cmdArgs: Bare.argv.slice(1)
     }),
