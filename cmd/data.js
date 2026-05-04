@@ -1,7 +1,7 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
-const { outputter, ansi, byteSize } = require('pear-terminal')
+const { outputter, ansi } = require('pear-terminal')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'
@@ -20,8 +20,6 @@ class Data {
           return Data.gc(result.records)
         case 'manifest':
           return Data.manifest(result.manifest)
-        case 'assets':
-          return Data.assets(result.assets)
         case 'currents':
           return Data.currents(result.records)
         case 'presets':
@@ -79,24 +77,6 @@ class Data {
     return `version: ${ansi.bold(manifest.version)}\n`
   }
 
-  static assets = (assets) => {
-    if (!assets.length) return placeholder
-    let totalBytes = 0
-    let out = ''
-    for (const asset of assets) {
-      out += `- ${ansi.bold(asset.link)}\n`
-      out += `${padding}ns: ${ansi.dim(asset.ns)}\n`
-      out += `${padding}path: ${ansi.dim(asset.path)}\n`
-      out += `${padding}name: ${ansi.dim(asset.name)}\n`
-      out += `${padding}only: ${ansi.dim(asset.only)}\n`
-      out += `${padding}bytes: ${ansi.dim(byteSize(asset.bytes || 0))}\n`
-      out += '\n'
-      totalBytes += asset.bytes || 0
-    }
-    out += `\n${ansi.bold('Total assets: ')}${ansi.dim(byteSize(totalBytes))}\n`
-    return out
-  }
-
   static currents = (records) => {
     if (!records.length) return placeholder
     let out = ''
@@ -152,14 +132,6 @@ class Data {
 
   async manifest() {
     await Data.output(this.json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' })
-  }
-
-  async assets() {
-    const { cmd } = this
-    const { command } = cmd
-    const link = command.args.link
-    if (link) plink.parse(link) // validates
-    await Data.output(this.json, this.ipc.data({ resource: 'assets', link }), { tag: 'assets' })
   }
 
   async currents() {

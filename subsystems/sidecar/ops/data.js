@@ -43,19 +43,6 @@ module.exports = class Data extends Opstream {
       this.final = { manifest }
     }
 
-    if (resource === 'assets') {
-      await this.sidecar.model.allocatedAssets()
-      if (link) {
-        const asset = await this.sidecar.model.getAsset(link)
-        if (asset === null) throw ERR_NOT_FOUND(link + ' not found', { link })
-        const assets = [asset]
-        this.final = { assets }
-      } else {
-        const assets = await this.sidecar.model.allAssets()
-        this.final = { assets }
-      }
-    }
-
     if (resource === 'currents') {
       let records
       if (link) {

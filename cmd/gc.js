@@ -1,7 +1,5 @@
 'use strict'
-const plink = require('pear-link')
-const { outputter, confirm, ansi } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { outputter } = require('pear-terminal')
 
 const output = outputter('gc', {
   remove: ({ resource, id, operation = 'removed' }) =>
@@ -29,25 +27,6 @@ class GC {
 
   sidecars() {
     return { pid: Bare.pid }
-  }
-
-  async assets(cmd) {
-    const { command } = cmd
-    const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
-    const dialog =
-      ansi.warning +
-      `  ${ansi.bold('WARNING')} synced assets will be cleared from disk. To confirm type "CLEAR"\n\n`
-    const target = link || 'all assets'
-    const ask = `Clear ${target}`
-    const delim = '?'
-    const validation = (v) => v === 'CLEAR'
-    const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
-    await confirm(dialog, ask, delim, validation, msg)
-    return { link }
   }
 
   cores() {
