@@ -327,31 +327,31 @@ module.exports = async function seed(cmd) {
   const stats = new DictTable([
     {
       key: 'link',
-      label: appendMode ? '... seeding' : 'Seeding:',
+      label: appendMode ? `${ansi.gray('...')} seeding` : 'Seeding:',
       initial: loading,
       transform: (v) => ansi.bold(ansi.green(v))
     },
     {
       key: 'driveKey',
-      label: appendMode ? '... drive key' : 'Drive Key:',
+      label: appendMode ? `${ansi.gray('...')} drive key` : 'Drive Key:',
       initial: loading,
       transform: (v) => ansi.gray(v)
     },
     {
       key: 'discoveryKey',
-      label: appendMode ? '... discovery key' : 'Discovery Key:',
+      label: appendMode ? `${ansi.gray('...')} discovery key` : 'Discovery Key:',
       initial: loading,
       transform: (v) => ansi.gray(v)
     },
     {
       key: 'contentKey',
-      label: appendMode ? '... content key' : 'Content Key:',
+      label: appendMode ? `${ansi.gray('...')} content key` : 'Content Key:',
       initial: loading,
       transform: (v) => ansi.gray(v)
     },
     {
       key: 'firewalled',
-      label: appendMode ? '... firewalled' : 'Firewalled:',
+      label: appendMode ? `${ansi.gray('...')} firewalled` : 'Firewalled:',
       initial: loading,
       transform: (v) => {
         v = `${v}`
@@ -361,7 +361,7 @@ module.exports = async function seed(cmd) {
     },
     {
       key: 'natType',
-      label: appendMode ? '... NAT type' : 'NAT Type:',
+      label: appendMode ? `${ansi.gray('...')} NAT type` : 'NAT Type:',
       initial: loading,
       transform: (v) => {
         v = `${v}`
@@ -370,7 +370,7 @@ module.exports = async function seed(cmd) {
     },
     {
       key: 'network',
-      label: appendMode ? '---' : 'Network:',
+      label: appendMode ? ansi.gray('---') : 'Network:',
       initial: loading
     }
   ])
@@ -455,8 +455,8 @@ module.exports = async function seed(cmd) {
       download
     }) {
       const network = appendMode
-        ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)}`
-        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} @ ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} @ ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+        ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)}`
+        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
         driveKey,
