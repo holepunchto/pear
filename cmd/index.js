@@ -17,32 +17,15 @@ const {
 const { usage, ansi, print } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const opwait = require('pear-opwait')
-const run = require('pear-run')
 const pdump = require('pear-dump')
-const { once } = require('bare-events')
 const errors = require('pear-errors')
 const def = {
-  run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
 }
 
 class Plugin {
   constructor(link) {
     this.link = link
-  }
-  runner() {
-    return async (cmd) => {
-      const ipc = global.Pear[global.Pear.constructor.IPC]
-      const { platform } = await ipc.versions()
-      global.Pear.app.fork = platform.fork
-      global.Pear.app.length = platform.length
-      global.Pear.app.key = platform.key
-      global.Pear.app.applink = 'pear://pear'
-      Bare.argv.unshift('pear')
-      const pipe = run(this.link, cmd.argv.slice(1))
-      await once(pipe, 'end')
-      await ipc.close()
-    }
   }
   async definition(cmd) {
     const pkg = await opwait(pdump(this.link + '/package.json', { dir: '-' }))
@@ -67,7 +50,6 @@ const commands = {
   drop: require('./drop'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
-  run: require('./run'),
   versions: require('./versions'),
   presets: require('./presets')
 }
@@ -483,20 +465,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
-  const run = command(
-    'run',
-    summary('DEPRECATED: use pear-runtime module'),
-    description`
-      DEPRECATED. WILL BE REMOVED.
-      Use pear-runtime module with any JS project instead.
-
-      ${ansi.bold('link')}   pear://<key> | pear://<alias>
-      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
-    `,
-    ...def.run,
-    commands.run
-  ).hide()
-
   const shift = command(
     'shift',
     summary('DEPRECATED: use pear-runtime module'),
@@ -515,7 +483,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('DEPRECATED & REMOVED'),
     description`
     Feature Removed
-    pear run is deprecated making templates out of scope
+    legacy scaffolding is out of scope for this CLI
     `,
     sloppy({ flags: true, args: true }),
     () => {
@@ -555,7 +523,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     reset,
     sidecar,
     gc,
-    run,
     shift,
     release,
     versions,
@@ -632,12 +599,14 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 
-  // support for `#!/usr/bin/env pear` in npm bin:
-  if (shell?.positionals?.[0]?.includes('/node_modules/.bin/')) {
-    argv[0] = 'run'
-    argv.push('-f', shell.positionals[0])
+  if (argv[0] === 'run') {
+    const message =
+      'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
+    print(message, false)
+    Bare.exitCode = 1
+    ipc.close()
+    return null
   }
-  run.argv = argv
 
   const preparse = cmd.parse(argv, { run: false, silent: true, bails: false })
   if (commands[cmd.current?.name] instanceof Plugin) {

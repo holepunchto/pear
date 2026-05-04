@@ -21,31 +21,31 @@ test('set presets and get presets', async ({ teardown, plan, comment, is, ok }) 
   const staged = await Helper.pick(staging, [{ tag: 'final' }])
   await staged.final
 
-  let presets = await getPresets({ link, command: 'run' })
-  is(presets, null, 'initial run presets should be null')
+  let presets = await getPresets({ link, command: 'stage' })
+  is(presets, null, 'initial stage presets should be null')
 
   presets = await getPresets({
     link,
-    command: 'run',
-    flags: '--dev --no-ask'
+    command: 'stage',
+    flags: '--dry-run --no-ask'
   })
 
   ok(presets, 'should have one presets')
-  is(presets.command, 'run', 'presets command should be "run"')
-  is(presets.flags, '--dev --no-ask', 'presets flags should match')
+  is(presets.command, 'stage', 'presets command should be "stage"')
+  is(presets.flags, '--dry-run --no-ask', 'presets flags should match')
 
-  presets = await getPresets({ link, command: 'run' })
+  presets = await getPresets({ link, command: 'stage' })
 
-  is(presets.command, 'run', 'stored presets command should be "run"')
-  is(presets.flags, '--dev --no-ask', 'stored presets flags should be "--dev --no-ask"')
+  is(presets.command, 'stage', 'stored presets command should be "stage"')
+  is(presets.flags, '--dry-run --no-ask', 'stored presets flags should be "--dry-run --no-ask"')
 
   presets = await getPresets({
     link,
-    command: 'run',
+    command: 'stage',
     reset: true
   })
-  presets = await getPresets({ link, command: 'run' })
-  is(presets, null, 'initial run presets should be null after reset')
+  presets = await getPresets({ link, command: 'stage' })
+  is(presets, null, 'initial stage presets should be null after reset')
 
   async function getPresets({ link, command, flags, reset }) {
     const presetsStream = await helper.presets({
