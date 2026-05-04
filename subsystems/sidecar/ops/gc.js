@@ -17,7 +17,6 @@ module.exports = class GC extends Opstream {
   #op(params) {
     if (params.resource === 'releases') return this.releases(params)
     if (params.resource === 'sidecars') return this.sidecars(params)
-    if (params.resource === 'assets') return this.assets(params)
     if (params.resource === 'cores') return this.cores(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + params.resource)
   }
@@ -108,36 +107,6 @@ module.exports = class GC extends Opstream {
         resolve()
       })
     })
-  }
-
-  async assets(params) {
-    const { resource, data = {} } = params
-    const { link } = data
-    const { sidecar } = this
-    await sidecar.ready()
-    let count = 0
-    let removeAssets = []
-    if (link) {
-      const asset = await sidecar.model.getAsset(link)
-      if (asset) removeAssets = [asset]
-    } else {
-      const assets = await sidecar.model.allAssets()
-      if (assets) removeAssets = assets
-    }
-    for (const { client } of sidecar.running.values()) {
-      // skip running assets
-      if (client.userData instanceof sidecar.App === false) return
-      const links = Object.values(client.userData.state.manifest.pear?.assets ?? {}).map(
-        (asset) => asset.link
-      )
-      removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
-    }
-    for (const asset of removeAssets) {
-      await sidecar.model.removeAsset(asset.link)
-      this.push({ tag: 'remove', data: { resource, id: asset.link } })
-      count += 1
-    }
-    this.push({ tag: 'complete', data: { resource, count } })
   }
 
   async cores(params) {

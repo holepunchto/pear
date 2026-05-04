@@ -13,7 +13,7 @@ test('pear provision syncs blocks from source to target per production key', asy
 }) => {
   plan(2)
   const prod = Helper.fixture('stage-app-min')
-  const src = Helper.fixture('sub-dep-require-assets')
+  const src = Helper.fixture('minimal')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })

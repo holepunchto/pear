@@ -5,8 +5,6 @@ const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('pear-terminal')
 const { permit, isTTY, byteDiff } = require('pear-terminal')
-const State = require('pear-state')
-const Pre = require('../pre')
 
 function hints(skips) {
   return skips.length === 0
@@ -49,29 +47,7 @@ const output = outputter('stage', {
     return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\nUse ${ansi.bold(`pear release ${link}`)} to set release to latest\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
   },
   ['byte-diff']: byteDiff,
-  preio({ from, output, index, fd }, { preio }) {
-    if (!preio) return {}
-    const io = fd === 1 ? 'stdout' : 'stderr'
-    const pre = 'Pre-stage [' + index + ':' + from + ':' + io + ']: '
-    return pre + output
-  },
-  pre({ from, output, index, success }, { preQ }) {
-    if (preQ) return {}
-    const pre =
-      index > 0 ? 'Pre-stage [' + index + ':' + from + ']: ' : 'Pre-stage [' + from + ']: '
-    const suffix = LOG.INF ? ' - ' + JSON.stringify(output.data) : ''
-    if (success === false) {
-      return {
-        success: false,
-        message: output?.stack || output?.message || 'Unknown Pre Error'
-      }
-    }
-    return pre + output.tag + suffix
-  },
-  final(data, info) {
-    if (info.pre) return {}
-    return data
-  }
+  final: (data) => data
 })
 
 module.exports = async function stage(cmd) {
@@ -85,19 +61,6 @@ module.exports = async function stage(cmd) {
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
-  const base = { cwd, dir }
-  let pkg = null
-  if (cmd.flags.pre) {
-    pkg = await State.localPkg(base)
-    if (pkg !== null) {
-      const pre = new Pre('stage', { dir, cwd }, pkg)
-      pkg = await output({ ctrlTTY: false, json }, pre, {
-        pre: true,
-        preQ: cmd.flags.preQ,
-        preio: cmd.flags.preIo
-      })
-    }
-  }
   const stream = ipc.stage({
     id,
     link,
@@ -110,8 +73,7 @@ module.exports = async function stage(cmd) {
     truncate,
     only,
     compact,
-    cmdArgs: Bare.argv.slice(1),
-    pkg
+    cmdArgs: Bare.argv.slice(1)
   })
   await output(json, stream, { ask: cmd.flags.ask }, ipc)
 }

@@ -106,9 +106,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--no-ask', 'Suppress permission prompt'),
-    flag('--no-pre', 'Skip pre scripts'),
-    flag('--pre-io', 'Show stdout & stderr of pre scripts'),
-    flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
     commands.stage
   )
@@ -357,12 +354,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('gc', summary('Garbage collection records'), commands.data),
     command('manifest', summary('Database internal versioning'), commands.data),
     command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
-    command(
       'currents',
       summary('Current working versions'),
       arg('[link]', 'Filter by link'),
@@ -462,12 +453,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Clear dangling resources'),
     command('releases', summary('Clear inactive releases'), commands.gc),
     command('sidecars', summary('Clear running sidecars'), commands.gc),
-    command(
-      'assets',
-      summary('Clear synced assets'),
-      arg('[link]', 'Clear asset by link'),
-      commands.gc
-    ),
     command('cores', summary('Clear corestore cores'), commands.gc),
     flag('--json', 'Newline delimited JSON output'),
     () => {

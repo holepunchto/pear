@@ -2,82 +2,7 @@
 const test = require('brittle')
 const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
-const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
-
-test('app with assets', async function ({ ok, plan, comment, teardown, timeout }) {
-  timeout(180000)
-  plan(3)
-
-  const dir = Helper.fixture('require-assets')
-
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-  const link = await Helper.touchLink(helper)
-
-  comment('staging')
-  const staging = helper.stage({
-    link,
-    dir,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, { tag: 'final' })
-  ok(staged.success, 'stage succeeded')
-
-  comment('seeding')
-  const seeding = helper.seed({
-    link,
-    dir,
-    key: null,
-    cmdArgs: []
-  })
-  teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'app key is valid')
-})
-
-test('app with assets in sub dep', async function ({ ok, plan, comment, teardown, timeout }) {
-  timeout(180000)
-  plan(3)
-
-  const dir = Helper.fixture('sub-dep-require-assets')
-
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-  const link = await Helper.touchLink(helper)
-
-  comment('staging')
-  const staging = helper.stage({
-    link,
-    dir,
-    dryRun: false
-  })
-  teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, { tag: 'final' })
-  ok(staged.success, 'stage succeeded')
-
-  comment('seeding')
-  const seeding = helper.seed({
-    link,
-    dir,
-    key: null,
-    cmdArgs: []
-  })
-  teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
-  const announced = await until.announced
-  ok(announced, 'seeding is announced')
-
-  const key = await until.key
-  ok(hypercoreid.isValid(key), 'app key is valid')
-})
 
 test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   const dir = Helper.fixture('stage-app-min')
@@ -122,49 +47,6 @@ test('pear stage min desktop app', async ({ teardown, ok, is, comment }) => {
   ]
 
   comment('Only files in the dependency tree are staged')
-  ok(stagedFiles.length === expectedStagedFiles.length)
-  ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
-})
-
-test('pear stage min desktop app with entrypoints', async ({ teardown, ok, is, comment }) => {
-  const dir = Helper.fixture('stage-app-min-with-entrypoints')
-
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
-  await helper.ready()
-  const link = await Helper.touchLink(helper)
-  const staging = helper.stage({
-    link,
-    dir,
-    dryRun: false,
-    compact: true
-  })
-  teardown(() => Helper.teardownStream(staging))
-
-  const stagedFiles = []
-  staging.on('data', (data) => {
-    if (data?.tag === 'byte-diff') {
-      stagedFiles.push(data.data.message)
-    }
-  })
-
-  const staged = await Helper.pick(staging, [{ tag: 'warmed' }, { tag: 'final' }])
-  const warmed = await staged.warmed
-  ok(warmed.blocks > 0, 'Warmup contains some blocks')
-  ok(warmed.total > 0, 'Warmup total is correct')
-  is(warmed.success, true, 'Warmup completed')
-  await staged.final
-
-  const expectedStagedFiles = [
-    '/package.json',
-    '/index.js',
-    '/entrypoint.js',
-    '/dep.js',
-    '/assets/file1.txt',
-    '/assets/file2.txt'
-  ]
-
-  comment('Only files in the dependency tree and assets are staged')
   ok(stagedFiles.length === expectedStagedFiles.length)
   ok(stagedFiles.every((e) => expectedStagedFiles.includes(e)))
 })
