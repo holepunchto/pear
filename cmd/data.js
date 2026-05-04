@@ -18,8 +18,6 @@ class Data {
           return Data.multisig(result.records)
         case 'gc':
           return Data.gc(result.records)
-        case 'manifest':
-          return Data.manifest(result.manifest)
         case 'currents':
           return Data.currents(result.records)
         case 'presets':
@@ -70,11 +68,6 @@ class Data {
       out += `- ${ansi.bold(gc.path)}\n`
     }
     return out
-  }
-
-  static manifest = (manifest) => {
-    if (!manifest) return placeholder
-    return `version: ${ansi.bold(manifest.version)}\n`
   }
 
   static currents = (records) => {
@@ -128,10 +121,6 @@ class Data {
 
   async gc() {
     await Data.output(this.json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' })
-  }
-
-  async manifest() {
-    await Data.output(this.json, this.ipc.data({ resource: 'manifest' }), { tag: 'manifest' })
   }
 
   async currents() {
