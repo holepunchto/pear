@@ -487,20 +487,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--json', 'Newline delimited JSON output'),
     commands.shift
   ).hide()
-
-  const init = command(
-    'init',
-    summary('DEPRECATED & REMOVED'),
-    description`
-    Feature Removed
-    legacy scaffolding is out of scope for this CLI
-    `,
-    sloppy({ flags: true, args: true }),
-    () => {
-      throw errors.ERR_LEGACY('pear init has been removed')
-    }
-  ).hide()
-
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -538,7 +524,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     release,
     versions,
     help,
-    init, // legacy
     footer(usage.footer),
     bail(function explain(bail = {}) {
       if (!bail.reason && bail.err) {
