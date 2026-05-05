@@ -359,7 +359,7 @@ module.exports = async function seed(cmd) {
       key: 'natType',
       label: appendMode ? `${ansi.gray('...')} NAT type` : 'NAT Type:',
       initial: loading,
-      transform: (v) => v ?? 'unknown'
+      transform: (v) => String(v ?? 'unknown').toLowerCase()
     },
     {
       key: 'network',
