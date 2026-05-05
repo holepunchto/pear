@@ -353,20 +353,13 @@ module.exports = async function seed(cmd) {
       key: 'firewalled',
       label: appendMode ? `${ansi.gray('...')} firewalled` : 'Firewalled:',
       initial: loading,
-      transform: (v) => {
-        v = `${v}`
-        if (v === 'unknown') return ansi.dim(v)
-        return v
-      }
+      transform: (v) => v ?? 'unknown'
     },
     {
       key: 'natType',
       label: appendMode ? `${ansi.gray('...')} NAT type` : 'NAT Type:',
       initial: loading,
-      transform: (v) => {
-        v = `${v}`
-        return v === 'unknown' ? ansi.dim(v) : v
-      }
+      transform: (v) => v ?? 'unknown'
     },
     {
       key: 'network',
@@ -444,16 +437,7 @@ module.exports = async function seed(cmd) {
       peers.append([msg])
       layout.print(stdio)
     },
-    stats({
-      peers = 'unknown',
-      driveKey = '',
-      discoveryKey = '',
-      contentKey = '',
-      firewalled = 'unknown',
-      natType = 'unknown',
-      upload,
-      download
-    }) {
+    stats({ peers, driveKey, discoveryKey, contentKey, firewalled, natType, upload, download }) {
       const network = appendMode
         ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)}`
         : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
