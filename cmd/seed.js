@@ -316,8 +316,8 @@ module.exports = async function seed(cmd) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
   statsInterval = +statsInterval
-  if (Number.isInteger(+statsInterval) === false || statsInterval <= 0) {
-    throw ERR_INVALID_INPUT('--stats-interval flag must supply a positive integer if set')
+  if (Number.isInteger(+statsInterval) === false) {
+    throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
   const id = Bare.pid
   const { width } = stdio.size()
