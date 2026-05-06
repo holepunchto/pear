@@ -139,12 +139,17 @@ class Install extends Opstream {
     fs.writeFileSync(desktopPath, desktop)
 
     spawnSync(dir, ['--appimage-extract', 'usr/share/icons'], { cwd: tmp })
-    const src = new LocalDrive(path.join(extracted, 'usr', 'share', 'icons', 'hicolor'), { followLinks: true })
+    const src = new LocalDrive(path.join(extracted, 'usr', 'share', 'icons', 'hicolor'), {
+      followLinks: true
+    })
     const dst = new LocalDrive(path.join(home, '.local', 'share', 'icons', 'hicolor'))
     const mirror = src.mirror(dst, { prune: false })
     await mirror.done()
 
-    this._move(desktopPath, path.join(home, '.local', 'share', 'applications', appName + '.desktop'))
+    this._move(
+      desktopPath,
+      path.join(home, '.local', 'share', 'applications', appName + '.desktop')
+    )
   }
 
   _extract(appImage, extracted, cwd, file) {
