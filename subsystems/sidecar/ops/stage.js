@@ -102,7 +102,7 @@ module.exports = class Stage extends Opstream {
       followExternalLinks: true,
       metadata: new Map()
     })
-    const builtins = state.options.assets?.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
+    const builtins = sidecar.gunk.bareBuiltins
     const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = (await src.entry(unixPathResolve('/', state.main))) !== null

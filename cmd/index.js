@@ -1,20 +1,8 @@
 'use strict'
 const paparam = require('paparam')
-const {
-  header,
-  footer,
-  command,
-  flag,
-  arg,
-  summary,
-  description,
-  bail,
-  sloppy,
-  rest,
-  validate,
-  hiddenCommand
-} = paparam
-const { usage, ansi, print } = require('pear-terminal')
+const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
+  paparam
+const { usage, print } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
 const opwait = require('pear-opwait')
 const pdump = require('pear-dump')
@@ -47,8 +35,6 @@ const commands = {
   install: require('./install'),
   data: require('./data'),
   changelog: require('./changelog'),
-  shift: require('./shift'),
-  drop: require('./drop'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   versions: require('./versions'),
@@ -353,12 +339,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     command('multisig', summary('Multisig records'), commands.data),
     command('gc', summary('Garbage collection records'), commands.data),
     command(
-      'currents',
-      summary('Current working versions'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
-    command(
       'presets',
       summary('Presets by link and command'),
       arg('[link]', 'Filter by link'),
@@ -403,28 +383,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     commands.presets
   )
 
-  const drop = command(
-    'drop',
-    summary('Advanced. Permanent data deletion'),
-    command(
-      'app',
-      summary('DEPRECATED Reset app to initial state'),
-      description('DEPRECATED. WILL BE REMOVED.\nClear application storage for supplied link.'),
-      arg('<link>', 'Application link'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.drop
-    ),
-    () => {
-      console.log(drop.help())
-    }
-  )
-
-  const reset = hiddenCommand('reset', arg('[link]'), () => {
-    console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
-    console.log(drop.help())
-    Bare.exit(1)
-  })
-
   const sidecar = command(
     'sidecar',
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
@@ -459,18 +417,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     }
   )
 
-  const shift = command(
-    'shift',
-    summary('DEPRECATED: use pear-runtime module'),
-    description(
-      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
-    ),
-    arg('<source>', 'Source application Pear link'),
-    arg('<destination>', 'Destination application Pear link'),
-    flag('--force', 'Overwrite existing application storage if present'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.shift
-  ).hide()
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -500,11 +446,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     data,
     changelog,
     presets,
-    drop,
-    reset,
     sidecar,
     gc,
-    shift,
     release,
     versions,
     help,

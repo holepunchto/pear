@@ -10,7 +10,6 @@ const { spawn } = require('bare-subprocess')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
-const crypto = require('hypercore-crypto')
 const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
@@ -21,7 +20,6 @@ const deriveEncryptionKey = require('pw-to-ek')
 const { Transform, pipeline } = require('streamx')
 const plink = require('pear-link')
 const {
-  PLATFORM_DIR,
   SOCKET_PATH,
   CHECKOUT,
   APPLINGS_PATH,
@@ -38,11 +36,10 @@ const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const hyperdb = require('pear-hyperdb') // FROZEN: remove with pear run removal
+const hyperdb = require('./lib/model')
 const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
-const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
@@ -51,8 +48,6 @@ const ops = {
   Release: require('./ops/release'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
-  Shift: require('./ops/shift'),
-  Drop: require('./ops/drop'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Presets: require('./ops/presets'),
@@ -382,7 +377,6 @@ class Sidecar extends ReadyResource {
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
-      await this.model.scavengeAssets()
       await this.model.gc()
     }
     gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
@@ -559,14 +553,6 @@ class Sidecar extends ReadyResource {
     return new ops.Data(params, client, this)
   }
 
-  shift(params, client) {
-    return new ops.Shift(params, client, this)
-  }
-
-  drop(params, client) {
-    return new ops.Drop(params, client, this)
-  }
-
   gc(params, client) {
     return new ops.GC(params, client, this)
   }
@@ -694,7 +680,7 @@ class Sidecar extends ReadyResource {
       const link = `pear://${hypercoreid.encode(params.key)}`
       const traits = await this.model.getTraits(link)
       if (!traits) {
-        await this.model.addTraits(link, State.storageFromLink(link))
+        await this.model.addTraits(link)
       }
       return await this.model.updateEncryptionKey(link, encryptionKey)
     }
@@ -712,15 +698,6 @@ class Sidecar extends ReadyResource {
 
   async detached({ link, key, storage, appdev }) {
     if (!key) return false // ignore bad requests
-    if (!storage) {
-      storage = path.join(
-        PLATFORM_DIR,
-        'app-storage',
-        'by-dkey',
-        crypto.discoveryKey(key).toString('hex')
-      )
-    }
-
     const wokeup = await this.wakeup({
       args: [link, storage, appdev, false, null]
     })
@@ -855,46 +832,44 @@ class Sidecar extends ReadyResource {
   wakeup(params = {}) {
     const [link, storage, appdev = null, selfwake = true, startId] = params.args
     const parsed = plink.parse(link)
-    return this.model.getAppStorage(parsed).then((appStorage) => {
-      return new Promise((resolve) => {
-        if (this.hasClients === false) {
-          resolve(false)
-          return
-        }
+    return new Promise((resolve) => {
+      if (this.hasClients === false) {
+        resolve(false)
+        return
+      }
 
-        if (parsed.drive.key === null && appdev === null) {
-          resolve(false)
-          return
-        }
-        const matches = [...this.apps].filter((app) => {
-          if (!app || !app.state) return false
-          if (startId === app.startId) return false
-          return (
-            app.state.storage === (storage || appStorage) &&
-            (appdev
-              ? app.state.dir === appdev
-              : app.state.key &&
-                hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
-          )
-        })
-        for (const app of matches) {
-          const pathname = parsed.pathname
-          const fragment = parsed.hash ? parsed.hash.slice(1) : null
-          const query = parsed.search ? parsed.search.slice(1) : null
-          const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
-          app.message({
-            type: 'pear/wakeup',
-            link,
-            applink: app.state.applink,
-            entrypoint: pathname,
-            fragment,
-            query,
-            linkData
-          })
-        }
-        const min = selfwake ? 1 : 0
-        resolve(matches.length > min)
+      if (parsed.drive.key === null && appdev === null) {
+        resolve(false)
+        return
+      }
+      const matches = [...this.apps].filter((app) => {
+        if (!app || !app.state) return false
+        if (startId === app.startId) return false
+        return (
+          (!storage || app.state.storage === storage) &&
+          (appdev
+            ? app.state.dir === appdev
+            : app.state.key &&
+              hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
+        )
       })
+      for (const app of matches) {
+        const pathname = parsed.pathname
+        const fragment = parsed.hash ? parsed.hash.slice(1) : null
+        const query = parsed.search ? parsed.search.slice(1) : null
+        const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
+        app.message({
+          type: 'pear/wakeup',
+          link,
+          applink: app.state.applink,
+          entrypoint: pathname,
+          fragment,
+          query,
+          linkData
+        })
+      }
+      const min = selfwake ? 1 : 0
+      resolve(matches.length > min)
     })
   }
 

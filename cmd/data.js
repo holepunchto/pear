@@ -18,8 +18,6 @@ class Data {
           return Data.multisig(result.records)
         case 'gc':
           return Data.gc(result.records)
-        case 'currents':
-          return Data.currents(result.records)
         case 'presets':
           return Data.presets(result.presets)
         default:
@@ -33,7 +31,6 @@ class Data {
     let out = ''
     for (const bundle of bundles) {
       out += `- ${ansi.bold(bundle.link)}\n`
-      out += `${padding}storage: ${ansi.dim(bundle.appStorage)}\n`
       if (bundle.encryptionKey) {
         out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
       }
@@ -66,18 +63,6 @@ class Data {
     let out = ''
     for (const gc of records) {
       out += `- ${ansi.bold(gc.path)}\n`
-    }
-    return out
-  }
-
-  static currents = (records) => {
-    if (!records.length) return placeholder
-    let out = ''
-    for (const record of records) {
-      out += `- ${ansi.bold(record.link)}\n`
-      out += `${padding}fork: ${ansi.dim(record.checkout.fork)}\n`
-      out += `${padding}length: ${ansi.dim(record.checkout.length)}\n`
-      out += '\n'
     }
     return out
   }
@@ -121,14 +106,6 @@ class Data {
 
   async gc() {
     await Data.output(this.json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' })
-  }
-
-  async currents() {
-    const { cmd } = this
-    const { command } = cmd
-    const link = command.args.link
-    if (link) plink.parse(link) // validates
-    await Data.output(this.json, this.ipc.data({ resource: 'currents', link }), { tag: 'currents' })
   }
 
   async presets() {

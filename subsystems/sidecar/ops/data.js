@@ -19,7 +19,9 @@ module.exports = class Data extends Opstream {
       } else {
         data = await this.sidecar.model.allTraits()
       }
-      if (!secrets) data = data.map(({ encryptionKey, ...rest }) => rest)
+      if (!secrets) {
+        data = data.map(({ encryptionKey, checkout, current, appStorage, ...rest }) => rest)
+      }
       this.final = { data }
     }
 
@@ -35,18 +37,6 @@ module.exports = class Data extends Opstream {
 
     if (resource === 'gc') {
       const records = await this.sidecar.model.allGc()
-      this.final = { records }
-    }
-
-    if (resource === 'currents') {
-      let records
-      if (link) {
-        const record = await this.sidecar.model.getCurrent(link)
-        if (record === null) throw ERR_NOT_FOUND(link + ' not found', { link })
-        records = [record]
-      } else {
-        records = await this.sidecar.model.allCurrents()
-      }
       this.final = { records }
     }
   }
