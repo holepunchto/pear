@@ -3,6 +3,7 @@ const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
 const { spawnSync } = require('bare-subprocess')
+const LocalDrive = require('localdrive')
 const { isMac, isLinux, isWindows } = require('which-runtime')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
@@ -102,7 +103,7 @@ class Install extends Opstream {
 
     const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
 
-    if (isWindows) return this._windows(from, appName)
+    if (isWindows) return await this._windows(from, appName)
 
     if (fs.existsSync(dir)) {
       this.final = { data: { success: false, exists: true, dir } }
@@ -111,7 +112,7 @@ class Install extends Opstream {
 
     await fs.promises.rename(from, dir)
 
-    if (isLinux) this._linux(dir, appName, tmp, home)
+    if (isLinux) await this._linux(dir, appName, tmp, home)
     this.final = { data: { success: true } }
   }
 
@@ -130,31 +131,20 @@ class Install extends Opstream {
     this.final = { data: { success: true } }
   }
 
-  _linux(dir, appName, tmp, home) {
+  async _linux(dir, appName, tmp, home) {
     fs.chmodSync(dir, 0o755)
     const extracted = path.join(tmp, 'squashfs-root')
     const desktopPath = this._extract(dir, extracted, tmp, appName + '.desktop')
     const desktop = fs.readFileSync(desktopPath, 'utf8').replace(/^Exec=.*/m, `Exec=${dir}`)
     fs.writeFileSync(desktopPath, desktop)
 
-    const iconMatch = desktop.match(/^Icon=(.+)/m)
-    const iconName = iconMatch && iconMatch[1] && iconMatch[1].trim()
-    let icon = null
-    if (iconName) {
-      for (const ext of ['.png', '.svg', '.xpm']) {
-        try {
-          icon = this._extract(dir, extracted, tmp, iconName + ext)
-          break
-        } catch {
-          // ignore
-        }
-      }
-    }
+    spawnSync(dir, ['--appimage-extract', 'usr/share/icons'], { cwd: tmp })
+    const src = new LocalDrive(path.join(extracted, 'usr', 'share', 'icons', 'hicolor'), { followLinks: true })
+    const dst = new LocalDrive(path.join(home, '.local', 'share', 'icons', 'hicolor'))
+    const mirror = src.mirror(dst)
+    await mirror.done()
 
     this._move(desktopPath, path.join(home, '.local', 'share', 'applications', appName + '.desktop'))
-    if (icon) {
-      this._move(icon, path.join(home, '.local', 'share', 'icons', iconName + path.extname(icon)))
-    }
   }
 
   _extract(appImage, extracted, cwd, file) {
