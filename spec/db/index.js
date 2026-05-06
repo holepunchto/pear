@@ -4,12 +4,13 @@
 const { IndexEncoder, c, b4a } = require('hyperdb/runtime')
 const { version, getEncoding, setVersion } = require('./messages.js')
 
-const versions = { schema: version, db: 2 }
+const versions = { schema: version, db: 1 }
 
 // '@pear/dht' collection key
-const collection0_key = new IndexEncoder([], { prefix: 0 })
+const collection0_key = new IndexEncoder([
+], { prefix: 0 })
 
-function collection0_indexify(record) {
+function collection0_indexify (record) {
   return []
 }
 
@@ -17,17 +18,14 @@ function collection0_indexify(record) {
 const collection0_enc = getEncoding('@pear/dht')
 
 // '@pear/dht' reconstruction function
-function collection0_reconstruct(schemaVersion, keyBuf, valueBuf) {
+function collection0_reconstruct (schemaVersion, keyBuf, valueBuf) {
   setVersion(schemaVersion)
   const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
-  const type = c.uint.decode(state)
-  if (type !== 0) throw new Error('Unknown collection type: ' + type)
-  collection0.decodedVersion = c.uint.decode(state)
   const record = collection0_enc.decode(state)
   return record
 }
 // '@pear/dht' key reconstruction function
-function collection0_reconstruct_key(keyBuf) {
+function collection0_reconstruct_key (keyBuf) {
   return {}
 }
 
@@ -35,12 +33,12 @@ function collection0_reconstruct_key(keyBuf) {
 const collection0 = {
   name: '@pear/dht',
   id: 0,
-  version: 1,
-  encodeKey(record) {
+  version: 0,
+  encodeKey (record) {
     const key = []
     return collection0_key.encode(key)
   },
-  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
     return collection0_key.encodeRange({
       gt: gt ? collection0_indexify(gt) : null,
       lt: lt ? collection0_indexify(lt) : null,
@@ -48,13 +46,11 @@ const collection0 = {
       lte: lte ? collection0_indexify(lte) : null
     })
   },
-  encodeValue(schemaVersion, collectionVersion, record) {
+  encodeValue (schemaVersion, collectionVersion, record) {
     setVersion(schemaVersion)
-    const state = { start: 0, end: 2, buffer: null }
+    const state = { start: 0, end: 0, buffer: null }
     collection0_enc.preencode(state, record)
     state.buffer = b4a.allocUnsafe(state.end)
-    state.buffer[state.start++] = 0
-    state.buffer[state.start++] = collectionVersion
     collection0_enc.encode(state, record)
     return state.buffer
   },
@@ -65,47 +61,46 @@ const collection0 = {
   decodedVersion: 0
 }
 
-// '@pear/multisig' collection key
-const collection1_key = new IndexEncoder([IndexEncoder.BUFFER], { prefix: 1 })
+// '@pear/gc' collection key
+const collection1_key = new IndexEncoder([
+  IndexEncoder.STRING
+], { prefix: 1 })
 
-function collection1_indexify(record) {
-  const a = record.key
+function collection1_indexify (record) {
+  const a = record.path
   return a === undefined ? [] : [a]
 }
 
-// '@pear/multisig' value encoding
-const collection1_enc = getEncoding('@pear/multisig/hyperdb#1')
+// '@pear/gc' value encoding
+const collection1_enc = getEncoding('@pear/gc/hyperdb#1')
 
-// '@pear/multisig' reconstruction function
-function collection1_reconstruct(schemaVersion, keyBuf, valueBuf) {
+// '@pear/gc' reconstruction function
+function collection1_reconstruct (schemaVersion, keyBuf, valueBuf) {
   const key = collection1_key.decode(keyBuf)
   setVersion(schemaVersion)
   const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
-  const type = c.uint.decode(state)
-  if (type !== 0) throw new Error('Unknown collection type: ' + type)
-  collection1.decodedVersion = c.uint.decode(state)
   const record = collection1_enc.decode(state)
-  record.key = key[0]
+  record.path = key[0]
   return record
 }
-// '@pear/multisig' key reconstruction function
-function collection1_reconstruct_key(keyBuf) {
+// '@pear/gc' key reconstruction function
+function collection1_reconstruct_key (keyBuf) {
   const key = collection1_key.decode(keyBuf)
   return {
-    key: key[0]
+    path: key[0]
   }
 }
 
-// '@pear/multisig'
+// '@pear/gc'
 const collection1 = {
-  name: '@pear/multisig',
+  name: '@pear/gc',
   id: 1,
-  version: 2,
-  encodeKey(record) {
-    const key = [record.key]
+  version: 0,
+  encodeKey (record) {
+    const key = [record.path]
     return collection1_key.encode(key)
   },
-  encodeKeyRange({ gt, lt, gte, lte } = {}) {
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
     return collection1_key.encodeRange({
       gt: gt ? collection1_indexify(gt) : null,
       lt: lt ? collection1_indexify(lt) : null,
@@ -113,13 +108,11 @@ const collection1 = {
       lte: lte ? collection1_indexify(lte) : null
     })
   },
-  encodeValue(schemaVersion, collectionVersion, record) {
+  encodeValue (schemaVersion, collectionVersion, record) {
     setVersion(schemaVersion)
-    const state = { start: 0, end: 2, buffer: null }
+    const state = { start: 0, end: 0, buffer: null }
     collection1_enc.preencode(state, record)
     state.buffer = b4a.allocUnsafe(state.end)
-    state.buffer[state.start++] = 0
-    state.buffer[state.start++] = collectionVersion
     collection1_enc.encode(state, record)
     return state.buffer
   },
@@ -130,26 +123,276 @@ const collection1 = {
   decodedVersion: 0
 }
 
-const collections = [collection0, collection1]
+// '@pear/traits' collection key
+const collection2_key = new IndexEncoder([
+  IndexEncoder.STRING
+], { prefix: 2 })
 
-const indexes = []
+function collection2_indexify (record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
 
-module.exports = { versions, collections, indexes, resolveCollection, resolveIndex }
+// '@pear/traits' value encoding
+const collection2_enc = getEncoding('@pear/traits/hyperdb#2')
 
-function resolveCollection(name) {
-  switch (name) {
-    case '@pear/dht':
-      return collection0
-    case '@pear/multisig':
-      return collection1
-    default:
-      return null
+// '@pear/traits' reconstruction function
+function collection2_reconstruct (schemaVersion, keyBuf, valueBuf) {
+  const key = collection2_key.decode(keyBuf)
+  setVersion(schemaVersion)
+  const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
+  const record = collection2_enc.decode(state)
+  record.link = key[0]
+  return record
+}
+// '@pear/traits' key reconstruction function
+function collection2_reconstruct_key (keyBuf) {
+  const key = collection2_key.decode(keyBuf)
+  return {
+    link: key[0]
   }
 }
 
-function resolveIndex(name) {
+// '@pear/traits'
+const collection2 = {
+  name: '@pear/traits',
+  id: 2,
+  version: 0,
+  encodeKey (record) {
+    const key = [record.link]
+    return collection2_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection2_key.encodeRange({
+      gt: gt ? collection2_indexify(gt) : null,
+      lt: lt ? collection2_indexify(lt) : null,
+      gte: gte ? collection2_indexify(gte) : null,
+      lte: lte ? collection2_indexify(lte) : null
+    })
+  },
+  encodeValue (schemaVersion, collectionVersion, record) {
+    setVersion(schemaVersion)
+    const state = { start: 0, end: 0, buffer: null }
+    collection2_enc.preencode(state, record)
+    state.buffer = b4a.allocUnsafe(state.end)
+    collection2_enc.encode(state, record)
+    return state.buffer
+  },
+  trigger: null,
+  reconstruct: collection2_reconstruct,
+  reconstructKey: collection2_reconstruct_key,
+  indexes: [],
+  decodedVersion: 0
+}
+
+// '@pear/presets' collection key
+const collection3_key = new IndexEncoder([
+  IndexEncoder.STRING
+], { prefix: 3 })
+
+function collection3_indexify (record) {
+  const a = record.link
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/presets' value encoding
+const collection3_enc = getEncoding('@pear/presets/hyperdb#3')
+
+// '@pear/presets' reconstruction function
+function collection3_reconstruct (schemaVersion, keyBuf, valueBuf) {
+  const key = collection3_key.decode(keyBuf)
+  setVersion(schemaVersion)
+  const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
+  const record = collection3_enc.decode(state)
+  record.link = key[0]
+  return record
+}
+// '@pear/presets' key reconstruction function
+function collection3_reconstruct_key (keyBuf) {
+  const key = collection3_key.decode(keyBuf)
+  return {
+    link: key[0]
+  }
+}
+
+// '@pear/presets'
+const collection3 = {
+  name: '@pear/presets',
+  id: 3,
+  version: 0,
+  encodeKey (record) {
+    const key = [record.link]
+    return collection3_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection3_key.encodeRange({
+      gt: gt ? collection3_indexify(gt) : null,
+      lt: lt ? collection3_indexify(lt) : null,
+      gte: gte ? collection3_indexify(gte) : null,
+      lte: lte ? collection3_indexify(lte) : null
+    })
+  },
+  encodeValue (schemaVersion, collectionVersion, record) {
+    setVersion(schemaVersion)
+    const state = { start: 0, end: 0, buffer: null }
+    collection3_enc.preencode(state, record)
+    state.buffer = b4a.allocUnsafe(state.end)
+    collection3_enc.encode(state, record)
+    return state.buffer
+  },
+  trigger: null,
+  reconstruct: collection3_reconstruct,
+  reconstructKey: collection3_reconstruct_key,
+  indexes: [],
+  decodedVersion: 0
+}
+
+// '@pear/presets-by-command' collection key
+const index4_key = new IndexEncoder([
+  IndexEncoder.STRING,
+  IndexEncoder.STRING,
+  IndexEncoder.STRING
+], { prefix: 4 })
+
+function index4_indexify (record) {
+  const arr = []
+
+  const a0 = record.link
+  if (a0 === undefined) return arr
+  arr.push(a0)
+
+  const a1 = record.command
+  if (a1 === undefined) return arr
+  arr.push(a1)
+
+  const a2 = record.link
+  if (a2 === undefined) return arr
+  arr.push(a2)
+
+  return arr
+}
+
+// '@pear/presets-by-command'
+const index4 = {
+  name: '@pear/presets-by-command',
+  version: 0,
+  id: 4,
+  encodeKey (record) {
+    return index4_key.encode(index4_indexify(record))
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return index4_key.encodeRange({
+      gt: gt ? index4_indexify(gt) : null,
+      lt: lt ? index4_indexify(lt) : null,
+      gte: gte ? index4_indexify(gte) : null,
+      lte: lte ? index4_indexify(lte) : null
+    })
+  },
+  encodeValue: (record) => index4.collection.encodeKey(record),
+  encodeIndexKeys (record, context) {
+    return [index4_key.encode([record.link, record.command, record.link])]
+  },
+  reconstruct: (keyBuf, valueBuf) => valueBuf,
+  offset: collection3.indexes.length,
+  collection: collection3
+}
+collection3.indexes.push(index4)
+
+// '@pear/multisig' collection key
+const collection5_key = new IndexEncoder([
+  IndexEncoder.BUFFER
+], { prefix: 5 })
+
+function collection5_indexify (record) {
+  const a = record.key
+  return a === undefined ? [] : [a]
+}
+
+// '@pear/multisig' value encoding
+const collection5_enc = getEncoding('@pear/multisig/hyperdb#5')
+
+// '@pear/multisig' reconstruction function
+function collection5_reconstruct (schemaVersion, keyBuf, valueBuf) {
+  const key = collection5_key.decode(keyBuf)
+  setVersion(schemaVersion)
+  const state = { start: 0, end: valueBuf.byteLength, buffer: valueBuf }
+  const type = c.uint.decode(state)
+  if (type !== 0) throw new Error('Unknown collection type: ' + type)
+  collection5.decodedVersion = c.uint.decode(state)
+  const record = collection5_enc.decode(state)
+  record.key = key[0]
+  return record
+}
+// '@pear/multisig' key reconstruction function
+function collection5_reconstruct_key (keyBuf) {
+  const key = collection5_key.decode(keyBuf)
+  return {
+    key: key[0]
+  }
+}
+
+// '@pear/multisig'
+const collection5 = {
+  name: '@pear/multisig',
+  id: 5,
+  version: 1,
+  encodeKey (record) {
+    const key = [record.key]
+    return collection5_key.encode(key)
+  },
+  encodeKeyRange ({ gt, lt, gte, lte } = {}) {
+    return collection5_key.encodeRange({
+      gt: gt ? collection5_indexify(gt) : null,
+      lt: lt ? collection5_indexify(lt) : null,
+      gte: gte ? collection5_indexify(gte) : null,
+      lte: lte ? collection5_indexify(lte) : null
+    })
+  },
+  encodeValue (schemaVersion, collectionVersion, record) {
+    setVersion(schemaVersion)
+    const state = { start: 0, end: 2, buffer: null }
+    collection5_enc.preencode(state, record)
+    state.buffer = b4a.allocUnsafe(state.end)
+    state.buffer[state.start++] = 0
+    state.buffer[state.start++] = collectionVersion
+    collection5_enc.encode(state, record)
+    return state.buffer
+  },
+  trigger: null,
+  reconstruct: collection5_reconstruct,
+  reconstructKey: collection5_reconstruct_key,
+  indexes: [],
+  decodedVersion: 0
+}
+
+const collections = [
+  collection0,
+  collection1,
+  collection2,
+  collection3,
+  collection5
+]
+
+const indexes = [
+  index4
+]
+
+module.exports = { versions, collections, indexes, resolveCollection, resolveIndex }
+
+function resolveCollection (name) {
   switch (name) {
-    default:
-      return null
+    case '@pear/dht': return collection0
+    case '@pear/gc': return collection1
+    case '@pear/traits': return collection2
+    case '@pear/presets': return collection3
+    case '@pear/multisig': return collection5
+    default: return null
+  }
+}
+
+function resolveIndex (name) {
+  switch (name) {
+    case '@pear/presets-by-command': return index4
+    default: return null
   }
 }

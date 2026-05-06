@@ -136,23 +136,6 @@ module.exports = class Pod {
     return packed
   }
 
-  async assets(manifest) {
-    const assets = manifest.pear?.assets || {}
-    // TODO: remove some time after v2 release
-    if (!assets.ui && manifest?.pear?.pre === 'pear-electron/pre') {
-      assets.ui = {
-        link: 'pear://0.940.cktxzetiwt6un3ado5kgqedge6ya4nfazjckzq76zcapefwxakdy',
-        only: ['/boot.bundle', '/by-arch/%%HOST%%', '/prebuilds/%%HOST%%'],
-        name: 'Pear Runtime'
-      }
-    }
-
-    for (const [ns, asset] of Object.entries(assets)) {
-      assets[ns] = await this._asset({ ns, ...asset })
-    }
-    return assets
-  }
-
   async watch() {
     this.release = (await this.db?.get('release'))?.value ?? null
     return this.#updates()
@@ -611,7 +594,6 @@ class PodUpdater extends ReadyResource {
 
       await this.onupdating(checkout, old)
       this.emit('updating', checkout, old)
-      await this.assets()
       await this.snapshot.download()
     } finally {
       await this.snapshot.close()
@@ -645,13 +627,6 @@ class PodUpdater extends ReadyResource {
     return { key, abi: this.abi, compat: [] }
   }
 
-  async assets() {
-    const pkg = await this.snapshot.db.get('manifest')
-    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {})) {
-      await this._asset({ ns, ...asset })
-    }
-  }
-
   async _getLock() {
     if (this.lock === null) return 0
 
@@ -675,8 +650,6 @@ class PodUpdater extends ReadyResource {
       if (!this.updated) return null
 
       lock = await this._getLock()
-
-      await this.assets()
 
       this.emit('update-applied', this.checkout)
 

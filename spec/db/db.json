@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "offset": 0,
   "schema": [
     {
@@ -7,7 +7,7 @@
       "namespace": "pear",
       "id": 0,
       "type": 1,
-      "version": 1,
+      "version": 0,
       "versionField": null,
       "indexes": [],
       "schema": "@pear/dht",
@@ -16,16 +16,79 @@
       "trigger": null
     },
     {
-      "name": "multisig",
+      "name": "gc",
       "namespace": "pear",
       "id": 1,
       "type": 1,
-      "version": 2,
+      "version": 0,
+      "versionField": null,
+      "indexes": [],
+      "schema": "@pear/gc",
+      "derived": false,
+      "key": [
+        "path"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "traits",
+      "namespace": "pear",
+      "id": 2,
+      "type": 1,
+      "version": 0,
+      "versionField": null,
+      "indexes": [],
+      "schema": "@pear/traits",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "presets",
+      "namespace": "pear",
+      "id": 3,
+      "type": 1,
+      "version": 0,
+      "versionField": null,
+      "indexes": [
+        "@pear/presets-by-command"
+      ],
+      "schema": "@pear/presets",
+      "derived": false,
+      "key": [
+        "link"
+      ],
+      "trigger": null
+    },
+    {
+      "name": "presets-by-command",
+      "namespace": "pear",
+      "id": 4,
+      "type": 2,
+      "version": 0,
+      "collection": "@pear/presets",
+      "unique": false,
+      "deprecated": false,
+      "key": [
+        "link",
+        "command"
+      ]
+    },
+    {
+      "name": "multisig",
+      "namespace": "pear",
+      "id": 5,
+      "type": 1,
+      "version": 1,
       "versionField": null,
       "indexes": [],
       "schema": "@pear/multisig",
       "derived": false,
-      "key": ["key"],
+      "key": [
+        "key"
+      ],
       "trigger": null
     }
   ]
