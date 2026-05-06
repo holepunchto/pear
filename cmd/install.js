@@ -49,7 +49,7 @@ const output = outputter('install', {
               data.dir +
               '\n  ' +
               ansi.dim('Manually remove to reinstall')
-            : 'Already installed' + ansi.dim('Manually uninstall to reinstall')
+            : 'Already installed\n' + ansi.dim('Manually uninstall to reinstall')
           : 'Failed'
       }
     }
