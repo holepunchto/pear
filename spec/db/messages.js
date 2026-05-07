@@ -203,12 +203,8 @@ const encoding6 = {
 
 // @pear/gc/hyperdb#1
 const encoding7 = {
-  preencode(state, m) {
-
-  },
-  encode(state, m) {
-
-  },
+  preencode(state, m) {},
+  encode(state, m) {},
   decode(state) {
     return {
       path: null
@@ -277,12 +273,8 @@ const encoding9 = {
 
 // @pear/multisig/hyperdb#5
 const encoding10 = {
-  preencode(state, m) {
-
-  },
-  encode(state, m) {
-
-  },
+  preencode(state, m) {},
+  encode(state, m) {},
   decode(state) {
     return {
       key: null
