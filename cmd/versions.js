@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
 const { outputter, ansi } = require('pear-terminal')
 const { dependencies } = require('../package.json')
@@ -45,7 +46,7 @@ const output = outputter('versions', {
 })
 
 module.exports = async function versions(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const json = cmd.flags.json
   const modules = cmd.flags.modules
   const { runtimes, platform } = await ipc.versions()

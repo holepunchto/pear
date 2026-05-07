@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
   paparam
@@ -88,7 +89,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
     flag('--purge', 'Remove ignored files if present in previous stage'),
-    flag('--compact|-c', 'Tree-shaking minimal stage via static-analysis'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
     flag('--no-ask', 'Suppress permission prompt'),
@@ -556,7 +556,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 }
 
 async function getPresets(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   if (!cmd || !cmd.args.link) return []
   const command = cmd.name
   const link = cmd.args.link

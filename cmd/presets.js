@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const { outputter } = require('pear-terminal')
 const output = outputter('presets', {
   final: ({ presets }, { link }) => {
@@ -16,7 +17,7 @@ const output = outputter('presets', {
 })
 
 module.exports = async function presets(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const command = cmd.args.command
   const link = cmd.args.link
   const flags = cmd.rest?.join(' ')

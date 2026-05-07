@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-terminal')
 
@@ -36,7 +37,7 @@ const output = outputter('dump', {
 })
 
 module.exports = async function dump(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args

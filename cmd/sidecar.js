@@ -1,11 +1,13 @@
 'use strict'
+const context = require('../context')
 const path = require('bare-path')
 const gracedown = require('pear-gracedown')
 const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('pear-terminal')
 const Logger = require('pear-logger')
+const constants = require('pear-constants')
 module.exports = async function sidecar(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   if (cmd.command.name === 'inspect') {
     const inspectorKey = await ipc.inspect()
     print(`\n${ansi.bold('Sidecar inspector enabled.')}\n`)
@@ -45,7 +47,7 @@ module.exports = async function sidecar(cmd) {
     global.LOG = new Logger({ pretty: true })
   }
 
-  Pear.constructor.CONSTANTS.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
+  constants.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
   require('../sidecar')
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')

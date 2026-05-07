@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const { outputter } = require('pear-terminal')
 
 const output = outputter('gc', {
@@ -11,7 +12,7 @@ const output = outputter('gc', {
 })
 
 module.exports = async function gc(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { command } = cmd
   const { json } = command.parent.flags
   const gc = new GC()

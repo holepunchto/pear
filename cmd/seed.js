@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
 const bareTTY = require('bare-tty')
 
@@ -308,7 +309,7 @@ class TableLayout {
 let resizeHandler
 
 module.exports = async function seed(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { json, ask, tty } = cmd.flags
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link

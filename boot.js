@@ -1,33 +1,23 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 const { isWindows } = require('which-runtime')
-const mount = global.Pear?.constructor?.RTI?.mount
-
-const app = {}
-class API {
-  static RTI = mount
-    ? { checkout: require('./checkout'), mount }
-    : { checkout: require('./checkout') }
-  static CONSTANTS = null
-  app = app
-  config = app
-}
-global.Pear = new API()
-API.CONSTANTS = require('pear-constants')
+const bootstrapRTI = require('./rti-bootstrap')
+bootstrapRTI(global.__PEAR_MOUNT || null)
+const CONSTANTS = require('pear-constants')
 
 {
   const fs = require('bare-fs')
-  if (fs.existsSync(API.CONSTANTS.PLATFORM_DIR) === false) {
-    fs.mkdirSync(API.CONSTANTS.PLATFORM_DIR, { recursive: true })
+  if (fs.existsSync(CONSTANTS.PLATFORM_DIR) === false) {
+    fs.mkdirSync(CONSTANTS.PLATFORM_DIR, { recursive: true })
   }
 
   if (isWindows === false) {
     const os = require('bare-os')
-    const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
+    const stat = fs.statSync(CONSTANTS.PLATFORM_DIR)
     const user = os.userInfo()
 
     if (stat.uid !== user.uid) {
-      const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
+      const err = new Error(`Current user does not own ${CONSTANTS.PLATFORM_DIR}`)
       err.name = 'User Permissions Error'
       throw err
     }

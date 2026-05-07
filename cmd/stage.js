@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const plink = require('pear-link')
@@ -6,34 +7,15 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('pear-terminal')
 const { permit, isTTY, byteDiff } = require('pear-terminal')
 
-function hints(skips) {
-  return skips.length === 0
-    ? ''
-    : '\n\n' +
-        skips.map(({ specifier, referrer }, idx) => {
-          return `${ansi.dim(ansi.dot)} ${ansi.bold('skip')} "${specifier}" not found from "${referrer}"${idx < skips.length - 1 ? '\n' : ''}`
-        })
-}
-
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current, release }) => {
     const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
     return `\n${ansi.pear} Staging ${name}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n${rel}\n`
   },
-  skipping: ({ reason }) => 'Skipping warmup (' + reason + ')',
+  skipping: ({ reason }) => 'Skipping (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
   complete: ({ dryRun }) => {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
-  },
-  compact: (data) => {
-    const { files, skips } = data
-    return (
-      'Compact stage static-analysis:-\n' + '- files: ' + files.length + '- skips: ' + skips.length
-    )
-  },
-  warmed: (data) => {
-    const { blocks, total, skips } = data
-    return 'Warmed up app (used ' + blocks + '/' + total + ' blocks)' + hints(skips)
   },
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
@@ -51,8 +33,8 @@ const output = outputter('stage', {
 })
 
 module.exports = async function stage(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { dryRun, bare, json, ignore, purge, name, truncate, only, compact } = cmd.flags
+  const ipc = context.getIPC()
+  const { dryRun, bare, json, ignore, purge, name, truncate, only } = cmd.flags
   const cwd = os.cwd()
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -72,7 +54,6 @@ module.exports = async function stage(cmd) {
     name,
     truncate,
     only,
-    compact,
     cmdArgs: Bare.argv.slice(1)
   })
   await output(json, stream, { ask: cmd.flags.ask }, ipc)

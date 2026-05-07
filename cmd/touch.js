@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const { outputter } = require('pear-terminal')
 
 const output = outputter('touch', {
@@ -15,7 +16,7 @@ const output = outputter('touch', {
 })
 
 module.exports = async function touch(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const json = cmd.flags.json
   await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.touch({}))
 }

@@ -11,7 +11,6 @@ const pipeline = require('streamx').pipelinePromise
 const Hyperdrive = require('hyperdrive')
 const Localdrive = require('localdrive')
 const DriveBundler = require('drive-bundler')
-const DriveAnalyzer = require('drive-analyzer')
 const crypto = require('hypercore-crypto')
 const { pathToFileURL } = require('url-file-url')
 const plink = require('pear-link')
@@ -102,7 +101,7 @@ module.exports = class Pod {
     this.updateNotify = updateNotify
   }
 
-  async pack({ cache = false, prebuilds, entry, builtins = [], conditions, extensions } = {}) {
+  async pack({ cache = false, prebuilds, entry, conditions, extensions } = {}) {
     let filename = null
     let metadata = null
 
@@ -119,7 +118,6 @@ module.exports = class Pod {
     const packed = await pack(this.drive, {
       entry,
       hosts,
-      builtins,
       conditions,
       extensions,
       prebuildPrefix
@@ -417,14 +415,7 @@ module.exports = class Pod {
   }
 
   async prefetch() {
-    const warmupNode = await this.drive.db.get('warmup')
-    const warmup = warmupNode?.value
-    if (warmup) {
-      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
-      if (Array.isArray(meta) === false) meta = [meta]
-      if (Array.isArray(data) === false) data = [data]
-      return await this.drive.downloadRange(meta, data)
-    }
+    return null
   }
 
   monitor(download, ...promises) {

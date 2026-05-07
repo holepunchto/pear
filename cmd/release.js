@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { outputter, ansi } = require('pear-terminal')
@@ -20,7 +21,7 @@ const output = outputter('release', {
 })
 
 module.exports = async function release(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { checkout, name, json } = cmd.flags
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
