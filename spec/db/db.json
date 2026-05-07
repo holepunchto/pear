@@ -25,9 +25,7 @@
       "indexes": [],
       "schema": "@pear/gc",
       "derived": false,
-      "key": [
-        "path"
-      ],
+      "key": ["path"],
       "trigger": null
     },
     {
@@ -40,9 +38,7 @@
       "indexes": [],
       "schema": "@pear/traits",
       "derived": false,
-      "key": [
-        "link"
-      ],
+      "key": ["link"],
       "trigger": null
     },
     {
@@ -52,14 +48,10 @@
       "type": 1,
       "version": 0,
       "versionField": null,
-      "indexes": [
-        "@pear/presets-by-command"
-      ],
+      "indexes": ["@pear/presets-by-command"],
       "schema": "@pear/presets",
       "derived": false,
-      "key": [
-        "link"
-      ],
+      "key": ["link"],
       "trigger": null
     },
     {
@@ -71,10 +63,7 @@
       "collection": "@pear/presets",
       "unique": false,
       "deprecated": false,
-      "key": [
-        "link",
-        "command"
-      ]
+      "key": ["link", "command"]
     },
     {
       "name": "multisig",
@@ -86,9 +75,7 @@
       "indexes": [],
       "schema": "@pear/multisig",
       "derived": false,
-      "key": [
-        "key"
-      ],
+      "key": ["key"],
       "trigger": null
     }
   ]

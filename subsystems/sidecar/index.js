@@ -21,6 +21,7 @@ const deriveEncryptionKey = require('pw-to-ek')
 const { Transform, pipeline } = require('streamx')
 const plink = require('pear-link')
 const {
+  PLATFORM_DIR,
   SOCKET_PATH,
   CHECKOUT,
   APPLINGS_PATH,
