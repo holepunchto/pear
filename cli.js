@@ -1,13 +1,13 @@
 'use strict'
 const IPC = require('pear-ipc')
-const API = require('pear-api')
 const crasher = require('pear-crasher')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const { isWindows } = require('which-runtime')
 const { spawn: daemon } = require('bare-daemon')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('pear-constants')
+const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR, RUNTIME } = require('pear-constants')
+const context = require('./context')
 const cmd = require('./cmd')
 crasher('cli', SWAP)
 
@@ -19,11 +19,7 @@ async function cli() {
     connectTimeout: CONNECT_TIMEOUT,
     connect: tryboot
   })
-  global.Pear.constructor.RUNTIME = global.Bare?.argv?.[0] || API.RUNTIME
-  global.Pear.constructor.RUNTIME_ARGV = API.RUNTIME_ARGV
-  global.Pear.constructor.RUNTIME_FLAGS = API.RUNTIME_FLAGS
-  global.Pear.constructor.IPC = API.IPC
-  global.Pear[global.Pear.constructor.IPC] = ipc
+  context.setIPC(ipc)
   await cmd(ipc)
 }
 
@@ -34,7 +30,7 @@ function tryboot() {
   if (bootstrapArgIndex !== -1 && argv[bootstrapArgIndex + 1]) {
     args.push('--dht-bootstrap', argv[bootstrapArgIndex + 1])
   }
-  let runtime = global.Bare?.argv?.[0] || API.RUNTIME
+  let runtime = global.Bare?.argv?.[0] || RUNTIME
   if (isWindows) runtime = resolveWindowsSidecarRuntime(runtime)
   if (!path.isAbsolute(runtime)) runtime = path.resolve(os.cwd(), runtime)
   daemon(runtime, args, { cwd: resolveSpawnCwd(runtime) })

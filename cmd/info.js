@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
 const { permit, isTTY } = require('pear-terminal')
@@ -77,7 +78,7 @@ const output = outputter('info', {
 })
 
 module.exports = async function info(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const {
     json,
     changelog,

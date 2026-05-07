@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const path = require('bare-path')
 const os = require('bare-os')
 const fs = require('bare-fs')
@@ -187,7 +188,7 @@ class Install extends Opstream {
 }
 
 module.exports = async function (cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { json } = cmd.flags
   const link = cmd.args.link
   const stream = new Install(ipc, { link })

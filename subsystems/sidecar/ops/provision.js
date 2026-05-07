@@ -216,7 +216,7 @@ module.exports = class Provision extends Opstream {
       await to.db.del('release')
     }
 
-    const fields = ['manifest', 'metadata', 'platformVersion', 'warmup']
+    const fields = ['manifest', 'metadata', 'platformVersion']
 
     for (const field of fields) {
       const src = await co.db.get(field)

@@ -115,34 +115,30 @@ const encoding3 = {
   }
 }
 
-// @pear/pack.builtins
-const encoding4_2 = encoding2_3
 // @pear/pack.conditions
-const encoding4_3 = encoding2_3
+const encoding4_2 = encoding2_3
 // @pear/pack.extensions
-const encoding4_4 = encoding2_3
+const encoding4_3 = encoding2_3
 
 // @pear/pack
 const encoding4 = {
   preencode(state, m) {
     c.string.preencode(state, m.bundle)
     c.string.preencode(state, m.entry)
-    state.end++ // max flag is 4 so always one byte
+    state.end++ // max flag is 2 so always one byte
 
-    if (m.builtins) encoding4_2.preencode(state, m.builtins)
-    if (m.conditions) encoding4_3.preencode(state, m.conditions)
-    if (m.extensions) encoding4_4.preencode(state, m.extensions)
+    if (m.conditions) encoding4_2.preencode(state, m.conditions)
+    if (m.extensions) encoding4_3.preencode(state, m.extensions)
   },
   encode(state, m) {
-    const flags = (m.builtins ? 1 : 0) | (m.conditions ? 2 : 0) | (m.extensions ? 4 : 0)
+    const flags = (m.conditions ? 1 : 0) | (m.extensions ? 2 : 0)
 
     c.string.encode(state, m.bundle)
     c.string.encode(state, m.entry)
     c.uint.encode(state, flags)
 
-    if (m.builtins) encoding4_2.encode(state, m.builtins)
-    if (m.conditions) encoding4_3.encode(state, m.conditions)
-    if (m.extensions) encoding4_4.encode(state, m.extensions)
+    if (m.conditions) encoding4_2.encode(state, m.conditions)
+    if (m.extensions) encoding4_3.encode(state, m.extensions)
   },
   decode(state) {
     const r0 = c.string.decode(state)
@@ -152,9 +148,8 @@ const encoding4 = {
     return {
       bundle: r0,
       entry: r1,
-      builtins: (flags & 1) !== 0 ? encoding4_2.decode(state) : null,
-      conditions: (flags & 2) !== 0 ? encoding4_3.decode(state) : null,
-      extensions: (flags & 4) !== 0 ? encoding4_4.decode(state) : null
+      conditions: (flags & 1) !== 0 ? encoding4_2.decode(state) : null,
+      extensions: (flags & 2) !== 0 ? encoding4_3.decode(state) : null
     }
   }
 }

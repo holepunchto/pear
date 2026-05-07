@@ -1,17 +1,14 @@
 'use strict'
-const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const DriveAnalyzer = require('drive-analyzer')
 const { ERR_INVALID_CONFIG, ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
 const Pod = require('../lib/pod')
 const State = require('../state')
-const PearShake = require('pear-shake')
 const ReadyResource = require('ready-resource')
 
 module.exports = class Stage extends Opstream {
@@ -19,7 +16,7 @@ module.exports = class Stage extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, dir, dryRun, truncate, compact, cmdArgs, ignore, purge, only, pkg = null }) {
+  async #op({ link, dir, dryRun, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
     const { client, session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
@@ -99,22 +96,14 @@ module.exports = class Stage extends Opstream {
 
     if (dryRun) this.push({ tag: 'dry' })
     const src = new LocalDrive(state.dir, {
-      followExternalLinks: true,
-      metadata: new Map()
+      followExternalLinks: true
     })
-    const builtins = sidecar.gunk.bareBuiltins
-    const linker = new ScriptLinker(src, { builtins })
 
     const mainExists = (await src.entry(unixPathResolve('/', state.main))) !== null
     const entrypoints = [
       ...(mainExists ? [state.main] : []),
       ...(state.options?.stage?.entrypoints || [])
     ].map((entrypoint) => unixPathResolve('/', entrypoint))
-
-    const include = [
-      ...(state.options?.stage?.include || []),
-      ...(state.options?.stage?.prefetch || [])
-    ]
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
@@ -124,42 +113,12 @@ module.exports = class Stage extends Opstream {
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
     const ignored = glob.ignorer()
-    // Cached versions of files and skips for warmup map generation,
-    // preventing a second round of static analysis
-    let compactFiles = null
-    let compactSkips = null
-
-    if (compact) {
-      const pearShake = new PearShake(src, entrypoints)
-      const shake = await pearShake.run({
-        defer: state.options?.stage?.defer
-      })
-      compactFiles = shake.files
-      compactSkips = shake.skips
-      const { files } = shake
-      const skips = shake.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-      let main = state.options?.gui?.main || null
-      if (typeof main === 'string') {
-        if (main.startsWith('/') === false) main = '/' + main
-        only.push(main)
-      }
-      only.push(...files.filter((file) => !ignored(file)), ...include)
-      this.push({
-        tag: 'compact',
-        data: { files: files, skips, success: true }
-      })
-    }
-
     const dst = pod.drive
 
     const prefix = only.length > 0 ? [...new Set(only)] : undefined
 
     const opts = { prefix, ignore: ignored, dryRun, dedup: true, batch: true }
 
-    const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
     if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
@@ -219,44 +178,8 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    const isTemplate = (await pod.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
-    } else if (state.options?.stage?.skipWarmup) {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'configured', success: true }
-      })
-    } else if (isTemplate) {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'template', success: true }
-      })
-    } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const analyzer = new DriveAnalyzer(pod.drive)
-      await analyzer.ready()
-      const analyzed = await analyzer.analyze(entrypoints, include, {
-        defer: state.options?.stage?.defer,
-        files: compact ? await stagedFiles(pod.drive) : null,
-        skips: compact ? compactSkips : null
-      })
-      const { warmup } = analyzed
-      const skips = analyzed.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-
-      await pod.db.put('warmup', warmup)
-      const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
-      const blocks = warmup.meta.length + warmup.data.length
-      this.push({
-        tag: 'warmed',
-        data: { total, blocks, skips: skips, success: true }
-      })
-    } else {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'no changes', success: true }
-      })
     }
 
     this.push({ tag: 'complete', data: { dryRun } })
@@ -357,11 +280,4 @@ class GlobDrive extends ReadyResource {
     }
     return this.ignore
   }
-}
-
-// Lists all staged files without reprocessing ignore
-async function stagedFiles(drive) {
-  const files = []
-  for await (const file of drive.list()) files.push(file)
-  return files
 }

@@ -79,7 +79,7 @@ class Sidecar extends ReadyResource {
     global.Bare.exit()
   }
 
-  constructor({ updater, drive, corestore, nodes, gunk }) {
+  constructor({ updater, drive, corestore, nodes }) {
     super()
 
     const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
@@ -128,8 +128,6 @@ class Sidecar extends ReadyResource {
     this.drive = drive
     this.corestore = corestore
     this.nodes = nodes
-    this.gunk = gunk
-
     this.ipc = new IPC.Server({
       handlers: this,
       socketPath: SOCKET_PATH

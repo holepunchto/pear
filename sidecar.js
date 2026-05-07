@@ -20,7 +20,6 @@ const {
   PLATFORM_DIR,
   WAKEUP
 } = require('pear-constants')
-const gunk = require('pear-gunk')
 const pear = require('pear-cmd')
 const registerUrlHandler = require('./url-handler')
 const subsystem = require('./subsystem')
@@ -72,8 +71,7 @@ async function bootSidecar() {
     updater,
     drive,
     corestore,
-    nodes,
-    gunk
+    nodes
   })
   gracedown(() => sidecar.close())
   await sidecar.ipc.ready()

@@ -23,8 +23,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   const srcStaging = helper.stage({
     link: stageLink1,
     dir: src,
-    dryRun: false,
-    compact: true
+    dryRun: false
   })
   teardown(() => Helper.teardownStream(srcStaging))
 
@@ -36,8 +35,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   const prodStaging = helper.stage({
     link: stageLink2,
     dir: prod,
-    dryRun: false,
-    compact: true
+    dryRun: false
   })
   teardown(() => Helper.teardownStream(prodStaging))
 
@@ -61,11 +59,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   ok(provision.target.verlink.startsWith('pear://'), 'target verlink is a pear link')
 })
 
-test('pear provision removes warmup metadata missing from source', async ({
-  teardown,
-  ok,
-  plan
-}) => {
+test('pear provision succeeds with standalone stage metadata', async ({ teardown, ok, plan }) => {
   plan(1)
   const src = await tmp()
   const prod = Helper.fixture('warmup')
@@ -78,7 +72,6 @@ test('pear provision removes warmup metadata missing from source', async ({
   const pkgPath = path.join(src, 'package.json')
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
   pkg.version = '1.0.0'
-  pkg.pear.stage.skipWarmup = true
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2))
 
   const helper = new Helper()

@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
 const { outputter, ansi } = require('pear-terminal')
@@ -78,7 +79,7 @@ class Data {
   }
   constructor(cmd) {
     this.cmd = cmd
-    this.ipc = global.Pear[global.Pear.constructor.IPC]
+    this.ipc = context.getIPC()
     this.json = cmd.command.parent.flags.json
   }
 

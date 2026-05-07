@@ -9,7 +9,7 @@ const Corestore = require('corestore')
 const Localdrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
-const goodbye = global.Pear?.teardown || require('graceful-goodbye')
+const goodbye = require('graceful-goodbye')
 const byteSize = require('tiny-byte-size')
 const { decode, encode } = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
@@ -18,7 +18,7 @@ const pkg = require('../package.json')
 const Rache = require('rache')
 const isTTY = isBare ? false : process.stdout.isTTY // TODO: support Bare
 
-const argv = global.Pear?.app.args || global.Bare?.argv || global.process.argv
+const argv = global.Bare?.argv || global.process.argv
 
 const parser = command(
   'bootstrap',
@@ -36,9 +36,7 @@ const RUNTIMES_VERSION = RUNTIMES.drive.length
 const CORESTORE =
   cmd.flags.externalCorestore && path.join(os.homedir(), '.pear-archdump', `${RUNTIMES_DRIVE_KEY}`)
 
-const ROOT = global.Pear
-  ? path.join(new URL(global.Pear.app.applink).pathname, __dirname)
-  : __dirname
+const ROOT = __dirname
 const ADDON_HOST = require.addon?.host || platform + '-' + arch
 const PEAR = path.join(ROOT, '..', 'pear')
 const SWAP = path.join(ROOT, '..')

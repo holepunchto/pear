@@ -1,4 +1,5 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
@@ -20,7 +21,7 @@ const output = outputter('changelog', {
 })
 
 module.exports = async function changelog(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { json, full, max = 10 } = cmd.flags
   const link = cmd.args.link || null
   if (link && plink.parse(link).drive.key === null) {

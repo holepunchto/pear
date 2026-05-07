@@ -104,13 +104,6 @@
           "version": 1
         },
         {
-          "name": "builtins",
-          "required": false,
-          "array": true,
-          "type": "string",
-          "version": 1
-        },
-        {
           "name": "conditions",
           "required": false,
           "array": true,
