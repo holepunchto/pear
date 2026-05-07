@@ -14,6 +14,7 @@ const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const sodium = require('sodium-native')
 const Updater = require('pear-updater')
+const PearRuntimeUpdater = require('pear-runtime-updater')
 const IPC = require('pear-ipc')
 const { isMac, isWindows } = require('which-runtime')
 const deriveEncryptionKey = require('pw-to-ek')
@@ -39,7 +40,7 @@ const HyperDB = require('hyperdb')
 const hyperdb = require('./lib/model')
 const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
-const { version } = require('../../package.json')
+const { version, productName, upgrade } = require('../../package.json')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
@@ -68,6 +69,8 @@ class Sidecar extends ReadyResource {
   spindownms = SPINDOWN_TIMEOUT
   decomissioned = false
   swarm = null
+  runtimeUpdater = null
+  runtimeUpdaterSwarm = null
   keyPair = null
   discovery = null
 
@@ -375,6 +378,9 @@ class Sidecar extends ReadyResource {
     await this.model.db.ready()
     await this.db.model.ready()
     await this.#ensureSwarm()
+    this.#startRuntimeUpdater().catch((err) => {
+      LOG.error('sidecar', 'Runtime updater start failed', err)
+    })
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
       await this.model.gc()
@@ -925,6 +931,7 @@ class Sidecar extends ReadyResource {
   }
 
   async #close() {
+    await this.#closeRuntimeUpdater()
     await this.applings.close()
     clearInterval(this.gcInterval)
     clearTimeout(this.lazySwarmTimeout)
@@ -944,6 +951,89 @@ class Sidecar extends ReadyResource {
     await this.db.model.close()
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
+  }
+
+  async #startRuntimeUpdater() {
+    if (!upgrade) return
+
+    const app = global.Bare?.argv?.[0]
+    if (!app) return
+
+    const name = path.basename(app) || productName || 'pear'
+    const updater = new PearRuntimeUpdater({
+      dir: PLATFORM_DIR,
+      store: this.corestore,
+      version,
+      upgrade,
+      app,
+      name
+    })
+    this.runtimeUpdater = updater
+    this.#bindRuntimeUpdaterEvents(updater)
+
+    await updater.ready()
+
+    const keyPair = await this.corestore.createKeyPair('pear-runtime-updater')
+
+    const swarm = new Hyperswarm({
+      keyPair,
+      bootstrap: this.nodes
+    })
+    this.runtimeUpdaterSwarm = swarm
+    swarm.on('connection', (connection) => this.corestore.replicate(connection))
+    swarm.on('error', (err) => LOG.error('sidecar', 'Runtime updater swarm error', err))
+
+    const topic = swarm.join(updater.drive.core.discoveryKey, {
+      client: true,
+      server: false
+    })
+    topic.flushed().catch((err) => LOG.error('sidecar', 'Runtime updater swarm join failed', err))
+  }
+
+  #bindRuntimeUpdaterEvents(updater) {
+    updater.on('updating', () => {
+      LOG.info('sidecar', 'Runtime updater: updating')
+    })
+
+    updater.on('updating-delta', (data) => {
+      LOG.info('sidecar', 'Runtime updater: updating-delta', data)
+    })
+
+    updater.on('updated', async () => {
+      LOG.info('sidecar', 'Runtime updater: updated')
+      try {
+        await updater.applyUpdate()
+        LOG.info('sidecar', 'Runtime updater: applyUpdate complete')
+      } catch (err) {
+        LOG.error('sidecar', 'Runtime updater: applyUpdate failed', err)
+      }
+    })
+
+    updater.on('error', (err) => {
+      LOG.error('sidecar', 'Runtime updater error', err)
+    })
+  }
+
+  async #closeRuntimeUpdater() {
+    if (this.runtimeUpdaterSwarm) {
+      try {
+        await this.runtimeUpdaterSwarm.destroy()
+      } catch (err) {
+        LOG.error('sidecar', 'Runtime updater close: swarm destroy failed', err)
+      } finally {
+        this.runtimeUpdaterSwarm = null
+      }
+    }
+
+    if (this.runtimeUpdater) {
+      try {
+        await this.runtimeUpdater.close()
+      } catch (err) {
+        LOG.error('sidecar', 'Runtime updater close: updater close failed', err)
+      } finally {
+        this.runtimeUpdater = null
+      }
+    }
   }
 
   async _close() {

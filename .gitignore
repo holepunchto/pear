@@ -4,6 +4,8 @@ prebuilds
 boot.bundle
 by-arch
 pear.dev
+pear.new.dev
+pear.new.exe
 pear.ps1
 pear.cmd
 pear/current
@@ -11,6 +13,7 @@ pear/current
 .DS_Store
 *.tmp
 /assets/
+out/
 
 examples/desktop/package-lock.json
 examples/terminal/package-lock.json
