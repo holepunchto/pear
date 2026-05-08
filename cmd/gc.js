@@ -4,8 +4,8 @@ const { outputter, confirm, ansi } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
-  remove: ({ resource, id, operation = 'removed' }) =>
-    `${operation[0].toUpperCase() + operation.slice(1)} ${resource.slice(0, -1)} '${id}'`,
+  remove: ({ resource, id, operation = 'removed', link }) =>
+    `${id} ${resource.slice(0, -1)} ${operation}${link ? ' ~ ' + link : ''}`,
   complete: ({ resource, count }) => {
     return count > 0 ? `Total ${resource} removed: ${count}` : `No ${resource} removed`
   },
@@ -50,7 +50,13 @@ class GC {
     return { link }
   }
 
-  cores() {
-    return null
+  cores(cmd) {
+    const { command } = cmd
+    const link = command.args.link
+    if (link) {
+      const parsed = plink.parse(link)
+      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    return { link }
   }
 }

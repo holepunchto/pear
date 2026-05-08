@@ -8,6 +8,8 @@ const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
+const Hyperdrive = require('hyperdrive')
+const plink = require('pear-link')
 
 module.exports = class GC extends Opstream {
   constructor(...args) {
@@ -141,28 +143,47 @@ module.exports = class GC extends Opstream {
   }
 
   async cores(params) {
-    const { resource } = params
+    const { resource, data = {} } = params
+    const { link } = data
     const { sidecar } = this
     const ignore = !sidecar.drive.core
       ? new Set()
       : new Set([sidecar.drive.core.discoveryKey, sidecar.drive.blobs.core.discoveryKey])
 
-    for await (const discoveryKey of sidecar.corestore.list()) {
-      if (ignore.has(hypercoreid.encode(discoveryKey))) continue
+    const discoveryKeys = []
+    if (link) {
+      const parsed = plink.parse(link)
+      const traits = await sidecar.model.getTraits(link)
+      const encryptionKey = traits?.encryptionKey
+      const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key, { encryptionKey })
+      await drive.ready()
+      discoveryKeys.push(drive.core.discoveryKey)
+      if (drive.blobs) discoveryKeys.push(drive.blobs.core.discoveryKey)
+      await drive.close()
+    } else {
+      for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
+    }
+    for (const discoveryKey of discoveryKeys) {
+      const dkey = hypercoreid.encode(discoveryKey)
+      if (ignore.has(dkey)) continue
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
+
       const core = sidecar.corestore.get({
         discoveryKey: info.discoveryKey,
         active: false
       })
       await core.ready()
       await core.clear(0, core.length)
+      const dlink =
+        info.auth && info.auth.key ? plink.serialize({ drive: { key: info.auth.key } }) : null
       this.push({
         tag: 'remove',
         data: {
-          operation: 'cleared',
+          operation: 'clear',
           resource: resource,
-          id: hypercoreid.encode(discoveryKey)
+          id: dkey,
+          link: dlink
         }
       })
       await core.close()
