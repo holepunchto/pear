@@ -15,8 +15,8 @@ const { outputter, byteSize, ansi } = require('pear-terminal')
 
 const output = outputter('install', {
   installing: ({ link }) => `Installing... ${ansi.dim(link)}`,
-  app({ app, version, upgrade, tmp, dir, key }) {
-    return `App: ${app}\nVersion: ${version}\nUpgrade: ${upgrade}\nKey: ${key}\nTmp: ${tmp}\nDir: ${dir}`
+  app({ app, version, upgrade, tmp, dest, key }) {
+    return `App: ${app}\nVersion: ${version}\nUpgrade: ${upgrade}\nKey: ${key}\nTmp: ${tmp}\nDest: ${dest}`
   },
   dumping: ({ link, dir }) => `Syncing: ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
@@ -40,18 +40,17 @@ const output = outputter('install', {
   installed() {},
   final({ data = {} }) {
     if (data.success === false) {
-      return {
-        output: 'print',
-        success: false,
-        message: data.exists
-          ? data.dir
-            ? 'Refusing to overwrite existing ' +
-              data.dir +
-              '\n  ' +
-              ansi.dim('Manually remove to reinstall')
-            : 'Already installed\n' + ansi.dim('Manually uninstall to reinstall')
-          : 'Failed'
+      let message
+      if (data.permission) {
+        message = `Permission denied: ${data.dest}\n  ${ansi.dim('Fix: sudo chmod g+w ' + path.dirname(data.dest))}`
+      } else if (data.exists && data.exists.length) {
+        message = isWindows
+          ? `Already installed\n${ansi.dim('Manually uninstall to reinstall')}`
+          : `Refusing to overwrite existing:\n${data.exists.map(({ dest }) => '  ' + dest).join('\n')}\n  ${ansi.dim('Manually remove to reinstall')}`
+      } else {
+        message = 'Failed'
       }
+      return { output: 'print', success: false, message }
     }
     return { output: 'print', success: true, message: 'Installed'.padEnd(10) }
   }
@@ -61,6 +60,7 @@ class Install extends Opstream {
   constructor(ipc, params) {
     super((...args) => this.#op(...args), params)
     this._ipc = ipc
+    this.targets = []
   }
 
   async #op({ link }) {
@@ -77,68 +77,100 @@ class Install extends Opstream {
     if (result === null) throw ERR_INVALID_MANIFEST('Unable to read application manifest')
 
     const { manifest } = result
-    const { name, productName, version, upgrade } = manifest
+    const { name, productName, version, upgrade, bin } = manifest
     const appName = productName ?? name
-    const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
-    const key = '/by-arch/' + host + '/app/' + appName + ext
-    const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
     const home = os.homedir()
 
-    const dir = isMac
-      ? path.join('/', 'Applications', appName + ext)
-      : isWindows
-        ? null
-        : fs.existsSync(path.join(home, 'Applications'))
-          ? path.join(home, 'Applications', appName + ext)
-          : fs.existsSync(path.join(home, 'AppImages'))
-            ? path.join(home, 'AppImages', appName + ext)
-            : path.join(home, '.local', 'bin', appName + ext)
-
-    const build = plink.serialize({ ...parsed, pathname: key })
-    this.push({ tag: 'app', data: { app: appName, name, version, upgrade, key, tmp, dir } })
-
-    await opwait(ipc.dump({ link: build, dir: tmp, force: true }), ({ tag, data }) => {
-      if (tag !== 'final') this.push({ tag, data })
-    })
-
-    const from = path.join(tmp, 'by-arch', host, 'app', appName + ext)
-
-    if (isWindows) return await this._windows(from, appName)
-
-    if (fs.existsSync(dir)) {
-      this.final = { data: { success: false, exists: true, dir } }
-      return
+    if (bin) {
+      const bins = typeof bin === 'string' ? { [name]: bin } : bin
+      for (const binName of Object.keys(bins)) {
+        const ext = isWindows ? '.msix' : ''
+        const dest = isWindows
+          ? null
+          : isMac
+            ? path.join('/', 'usr', 'local', 'bin', binName)
+            : path.join(home, '.local', 'bin', binName)
+        this.targets.push({ filename: binName, ext, dest, isBin: true })
+      }
+    } else {
+      const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
+      const dest = isMac
+        ? path.join('/', 'Applications', appName + ext)
+        : isWindows
+          ? null
+          : fs.existsSync(path.join(home, 'Applications'))
+            ? path.join(home, 'Applications', appName + ext)
+            : fs.existsSync(path.join(home, 'AppImages'))
+              ? path.join(home, 'AppImages', appName + ext)
+              : path.join(home, '.local', 'bin', appName + ext)
+      this.targets.push({ filename: appName, ext, dest, isBin: false })
     }
 
-    await fs.promises.rename(from, dir)
+    const exists = []
 
-    if (isLinux) await this._linux(dir, appName, tmp, home)
-    this.final = { data: { success: true } }
-  }
+    for (const { filename, ext, dest, isBin } of this.targets) {
+      if (isWindows) {
+        const ps = spawnSync('powershell', [
+          '-NoProfile',
+          '-Command',
+          `(Get-AppxPackage '${filename}') -ne $null`
+        ])
+        if (ps.stdout.toString().trim() === 'True') {
+          exists.push({ filename, dest })
+          continue
+        }
+      } else if (fs.existsSync(dest)) {
+        exists.push({ filename, dest })
+        continue
+      }
 
-  async _windows(from, appName) {
-    const ps = spawnSync('powershell', [
-      '-NoProfile',
-      '-Command',
-      `(Get-AppxPackage '${appName}') -ne $null`
-    ])
-    if (ps.stdout.toString().trim() === 'True') {
-      this.final = { data: { success: false, exists: true } }
-      return
+      const key = '/by-arch/' + host + '/app/' + filename + ext
+      const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
+      const build = plink.serialize({ ...parsed, pathname: key })
+
+      this.push({ tag: 'app', data: { app: filename, name, version, upgrade, key, tmp, dest } })
+
+      await opwait(ipc.dump({ link: build, dir: tmp, force: true }), ({ tag, data }) => {
+        if (tag !== 'final') this.push({ tag, data })
+      })
+
+      const from = path.join(tmp, 'by-arch', host, 'app', filename + ext)
+
+      if (isWindows) {
+        const MSIXManager = require('msix-manager')
+        await new MSIXManager().addPackage(from)
+        continue
+      }
+
+      if (isBin) {
+        try {
+          fs.mkdirSync(path.dirname(dest), { recursive: true })
+          this._move(from, dest)
+        } catch (err) {
+          if (err.code === 'EACCES' || err.code === 'EPERM') {
+            this.final = { data: { success: false, permission: true, dest } }
+            return
+          }
+          throw err
+        }
+        fs.chmodSync(dest, 0o755)
+      } else {
+        await fs.promises.rename(from, dest)
+        if (isLinux) await this._linux(dest, filename, tmp, home)
+      }
     }
-    const MSIXManager = require('msix-manager')
-    await new MSIXManager().addPackage(from)
-    this.final = { data: { success: true } }
+
+    this.final = { data: { success: exists.length === 0, exists } }
   }
 
-  async _linux(dir, appName, tmp, home) {
-    fs.chmodSync(dir, 0o755)
+  async _linux(dest, appName, tmp, home) {
+    fs.chmodSync(dest, 0o755)
     const extracted = path.join(tmp, 'squashfs-root')
-    const desktopPath = this._extract(dir, extracted, tmp, appName + '.desktop')
-    const desktop = fs.readFileSync(desktopPath, 'utf8').replace(/^Exec=.*/m, `Exec=${dir}`)
+    const desktopPath = this._extract(dest, extracted, tmp, appName + '.desktop')
+    const desktop = fs.readFileSync(desktopPath, 'utf8').replace(/^Exec=.*/m, `Exec=${dest}`)
     fs.writeFileSync(desktopPath, desktop)
 
-    spawnSync(dir, ['--appimage-extract', 'usr/share/icons'], { cwd: tmp })
+    spawnSync(dest, ['--appimage-extract', 'usr/share/icons'], { cwd: tmp })
     const src = new LocalDrive(path.join(extracted, 'usr', 'share', 'icons', 'hicolor'), {
       followLinks: true
     })
