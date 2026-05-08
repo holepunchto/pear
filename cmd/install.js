@@ -37,7 +37,7 @@ const output = outputter('install', {
       message: `[ Peers: ${peers} ] ${dl}${ul}`
     }
   },
-  installed() {},
+  warn: ({ message }) => `Warning: ${ansi.dim(message)}`,
   final({ data = {} }) {
     if (data.success === false) {
       let message
@@ -45,8 +45,10 @@ const output = outputter('install', {
         message = `Permission denied: ${data.dest}\n  ${ansi.dim('Fix: sudo chmod g+w ' + path.dirname(data.dest))}`
       } else if (data.exists && data.exists.length) {
         message = isWindows
-          ? `Already installed\n${ansi.dim('Manually uninstall to reinstall')}`
+          ? `Already installed:\n${data.exists.map(({ filename }) => '  ' + filename).join('\n')}\n  ${ansi.dim('Manually uninstall to reinstall')}`
           : `Refusing to overwrite existing:\n${data.exists.map(({ dest }) => '  ' + dest).join('\n')}\n  ${ansi.dim('Manually remove to reinstall')}`
+      } else if (data.notFound) {
+        message = `App not found: ${data.notFound}`
       } else {
         message = 'Failed'
       }
@@ -83,32 +85,34 @@ class Install extends Opstream {
 
     if (bin) {
       const bins = typeof bin === 'string' ? { [name]: bin } : bin
-      for (const binName of Object.keys(bins)) {
+      const binNames = Object.keys(bins)
+      for (const binName of binNames) {
         const ext = isWindows ? '.msix' : ''
         const dest = isWindows
           ? null
           : isMac
             ? path.join('/', 'usr', 'local', 'bin', binName)
             : path.join(home, '.local', 'bin', binName)
-        this.targets.push({ filename: binName, ext, dest, isBin: true })
+        this.targets.push({ filename: binName, ext, dest, isBin: true, optional: binNames.length > 1 })
       }
-    } else {
-      const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
-      const dest = isMac
-        ? path.join('/', 'Applications', appName + ext)
-        : isWindows
-          ? null
-          : fs.existsSync(path.join(home, 'Applications'))
-            ? path.join(home, 'Applications', appName + ext)
-            : fs.existsSync(path.join(home, 'AppImages'))
-              ? path.join(home, 'AppImages', appName + ext)
-              : path.join(home, '.local', 'bin', appName + ext)
-      this.targets.push({ filename: appName, ext, dest, isBin: false })
     }
+
+    const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
+    const dest = isMac
+      ? path.join('/', 'Applications', appName + ext)
+      : isWindows
+        ? null
+        : fs.existsSync(path.join(home, 'Applications'))
+          ? path.join(home, 'Applications', appName + ext)
+          : fs.existsSync(path.join(home, 'AppImages'))
+            ? path.join(home, 'AppImages', appName + ext)
+            : path.join(home, '.local', 'bin', appName + ext)
+
+    this.targets.push({ filename: appName, ext, dest, isBin: false, optional: !!bin })
 
     const exists = []
 
-    for (const { filename, ext, dest, isBin } of this.targets) {
+    for (const { filename, ext, dest, isBin, optional } of this.targets) {
       if (isWindows) {
         const ps = spawnSync('powershell', [
           '-NoProfile',
@@ -135,6 +139,15 @@ class Install extends Opstream {
       })
 
       const from = path.join(tmp, 'by-arch', host, 'app', filename + ext)
+
+      if (fs.existsSync(from) === false) {
+        if (optional) {
+          if (isBin) this.push({ tag: 'warn', data: { message: `Bin not found: ${key}` } })
+          continue
+        }
+        this.final = { data: { success: false, notFound: key } }
+        return
+      }
 
       if (isWindows) {
         const MSIXManager = require('msix-manager')
