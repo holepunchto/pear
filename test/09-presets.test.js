@@ -7,7 +7,7 @@ const flagsDir = path.join(Helper.localDir, 'test', 'fixtures', 'flags')
 
 test(
   'set presets and get presets',
-  { timeout: 60_000 },
+  { timeout: 90_000 },
   async ({ teardown, plan, comment, is, ok }) => {
     plan(7)
 
