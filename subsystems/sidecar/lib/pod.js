@@ -414,7 +414,7 @@ module.exports = class Pod {
     yield 100
   }
 
-  async prefetch() {
+  prefetch() {
     return null
   }
 
