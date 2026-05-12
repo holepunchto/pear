@@ -145,7 +145,7 @@ class Sidecar extends ReadyResource {
 
     this.replicator = updater ? new Replicator(updater.drive, { appling: true }) : null
 
-    this.applings = new Applings(APPLINGS_PATH)
+    this.applings = new Applings(APPLINGS_PATH) // TODO: @keith cleanup applings
 
     this.running = new Map()
 
@@ -222,7 +222,7 @@ class Sidecar extends ReadyResource {
           this.message({
             type: 'pear/updates',
             app: false,
-            version: this.sidecar.updater.checkout,
+            version: this.sidecar.updater.checkout, // TODO: @keith cleanup pear/updates
             info: null,
             updating: true,
             updated: false
@@ -243,6 +243,7 @@ class Sidecar extends ReadyResource {
         this.reporter.once('cutover', () => {
           userData.reporter.cutover()
         })
+        // TODO: @keith cleanup warming and updates
         userData.warming = this.warming.feed(
           this.sidecar.bus.sub({ topic: 'warming', id: userData.startId }, opts)
         )
@@ -576,6 +577,7 @@ class Sidecar extends ReadyResource {
   }
 
   cutover(params, client) {
+    // TODO: @keith cleanup cutover
     const app = client.userData
     if (app instanceof this.App === false) return
     return app.cutover(params)
@@ -674,6 +676,7 @@ class Sidecar extends ReadyResource {
   }
 
   async trusted(link) {
+    // TODO: @keith cleanup app encryption
     const aliases = Object.keys(ALIASES).map((alias) => 'pear://' + alias)
     const aliasesKeys = Object.values(ALIASES).map((key) => `pear://${hypercoreid.encode(key)}`)
     return (
@@ -751,7 +754,7 @@ class Sidecar extends ReadyResource {
   }
 
   async restart({ platform = false } = {}, client) {
-    LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`)
+    LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`) // TODO: @keith cleanup client restart
     this.spindownms = SPINDOWN_TIMEOUT
     if (platform === false) {
       if (client.userData instanceof this.App === false) {
