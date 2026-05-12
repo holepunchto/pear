@@ -42,7 +42,11 @@ const output = outputter('install', {
     if (data.success === false) {
       let message
       if (data.permission) {
-        message = `Permission denied: ${data.dest}\n  ${ansi.dim('Fix: sudo chmod g+w ' + path.dirname(data.dest))}`
+        const dir = path.dirname(data.dest)
+        const fix = isMac
+          ? `sudo chgrp admin ${dir} && sudo chmod g+w ${dir}`
+          : `sudo chown -R "$(id -un):$(id -gn)" ${dir}`
+        message = `Permission denied: ${data.dest}\n  ${ansi.dim('Fix: ' + fix)}`
       } else if (data.exists && data.exists.length) {
         message = isWindows
           ? `Already installed:\n${data.exists.map(({ filename }) => '  ' + filename).join('\n')}\n  ${ansi.dim('Manually uninstall to reinstall')}`
@@ -188,7 +192,15 @@ class Install extends Opstream {
         }
         fs.chmodSync(dest, 0o755)
       } else {
-        await fs.promises.rename(from, dest)
+        try {
+          await fs.promises.rename(from, dest)
+        } catch (err) {
+          if (err.code === 'EACCES' || err.code === 'EPERM') {
+            this.final = { data: { success: false, permission: true, dest } }
+            return
+          }
+          throw err
+        }
         if (isLinux) await this._linux(dest, filename, tmp, home)
       }
     }
