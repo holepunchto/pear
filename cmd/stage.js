@@ -41,6 +41,16 @@ module.exports = async function stage(cmd) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
   let { dir = cwd } = cmd.args
+  // Some standalone argv layouts can cause paparam to fall back to the default [dir=.].
+  // Recover the user-supplied 2nd positional when available.
+  if (
+    (dir === '.' || dir === cwd) &&
+    Array.isArray(cmd.positionals) &&
+    cmd.positionals.length > 1 &&
+    cmd.positionals[1]
+  ) {
+    dir = cmd.positionals[1]
+  }
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid
   const stream = ipc.stage({
