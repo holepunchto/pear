@@ -357,6 +357,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Install applications from peers'),
     description('Installs from peers directly into OS application folder'),
     arg('<link>', 'Pear link origin to install from'),
+    flag('--only <paths>', 'Advanced. Filter by app filenames'),
+    flag('--to <dir>', 'Override install target directory'),
     flag('--json', 'Newline delimited JSON output'),
     commands.install
   )

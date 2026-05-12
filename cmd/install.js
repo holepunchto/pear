@@ -52,7 +52,7 @@ const output = outputter('install', {
           ? `Already installed:\n${data.exists.map(({ filename }) => '  ' + filename).join('\n')}\n  ${ansi.dim('Manually uninstall to reinstall')}`
           : `Refusing to overwrite existing:\n${data.exists.map(({ dest }) => '  ' + dest).join('\n')}\n  ${ansi.dim('Manually remove to reinstall')}`
       } else if (data.notFound) {
-        message = `App not found: ${data.notFound}`
+        message = `Not found: ${data.notFound}`
       } else {
         message = 'Failed'
       }
@@ -69,7 +69,7 @@ class Install extends Opstream {
     this.targets = []
   }
 
-  async #op({ link }) {
+  async #op({ link, only, to }) {
     const ipc = this._ipc
     const parsed = plink.parse(link)
     if (parsed.pathname) throw new Error('Link must not have pathname')
@@ -89,54 +89,66 @@ class Install extends Opstream {
 
     if (bin) {
       const bins = typeof bin === 'string' ? { [name]: bin } : bin
-      const binNames = Object.keys(bins)
-      for (const binName of binNames) {
+      for (const binName of Object.keys(bins)) {
         const ext = isWindows ? '.msix' : ''
         const dest = isWindows
           ? null
-          : isMac
-            ? path.join('/', 'usr', 'local', 'bin', binName)
-            : path.join(home, '.local', 'bin', binName)
-        this.targets.push({
-          filename: binName,
-          ext,
-          dest,
-          isBin: true,
-          optional: binNames.length > 1
-        })
+          : to
+            ? path.join(to, binName + ext)
+            : isMac
+              ? path.join('/', 'usr', 'local', 'bin', binName)
+              : path.join(home, '.local', 'bin', binName)
+        this.targets.push({ filename: binName, ext, dest, isBin: true })
       }
     }
 
     const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
-    const dest = isMac
-      ? path.join('/', 'Applications', appName + ext)
-      : isWindows
-        ? null
-        : fs.existsSync(path.join(home, 'Applications'))
-          ? path.join(home, 'Applications', appName + ext)
-          : fs.existsSync(path.join(home, 'AppImages'))
-            ? path.join(home, 'AppImages', appName + ext)
-            : path.join(home, '.local', 'bin', appName + ext)
+    const dest = isWindows
+      ? null
+      : to
+        ? path.join(to, appName + ext)
+        : isMac
+          ? path.join('/', 'Applications', appName + ext)
+          : fs.existsSync(path.join(home, 'Applications'))
+            ? path.join(home, 'Applications', appName + ext)
+            : fs.existsSync(path.join(home, 'AppImages'))
+              ? path.join(home, 'AppImages', appName + ext)
+              : path.join(home, '.local', 'bin', appName + ext)
 
-    this.targets.push({ filename: appName, ext, dest, isBin: false, optional: !!bin })
+    this.targets.push({ filename: appName, ext, dest, isBin: false })
 
-    const exists = []
     const present = new Set()
     const appPath = '/by-arch/' + host + '/app/'
     await opwait(
       ipc.dump({
         link: plink.serialize({ ...parsed, pathname: appPath }),
         dir: '-',
-        list: true
+        list: true,
+        only
       }),
       ({ tag, data }) => {
         if (tag === 'file') present.add(data.key.slice(1))
       }
     )
 
+    const required = only
+      ? only
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : this.targets.filter((t) => t.isBin || !bin).map((t) => t.filename + t.ext)
+    const missing = required.filter((r) => !present.has(r))
+    if (missing.length) {
+      this.final = { data: { success: false, notFound: missing.join(', ') } }
+      return
+    }
+
     this.targets = this.targets.filter(({ filename, ext }) => present.has(filename + ext))
 
-    for (const { filename, ext, dest, isBin, optional } of this.targets) {
+    const exists = []
+    let installed = 0
+
+    for (const { filename, ext, dest, isBin } of this.targets) {
       if (isWindows) {
         const ps = spawnSync('powershell', [
           '-NoProfile',
@@ -165,10 +177,6 @@ class Install extends Opstream {
       const from = path.join(tmp, 'by-arch', host, 'app', filename + ext)
 
       if (fs.existsSync(from) === false) {
-        if (optional) {
-          if (isBin) this.push({ tag: 'warn', data: { message: `Bin not found: ${key}` } })
-          continue
-        }
         this.final = { data: { success: false, notFound: key } }
         return
       }
@@ -176,12 +184,13 @@ class Install extends Opstream {
       if (isWindows) {
         const MSIXManager = require('msix-manager')
         await new MSIXManager().addPackage(from)
+        installed++
         continue
       }
 
       if (isBin) {
         try {
-          fs.mkdirSync(path.dirname(dest), { recursive: true })
+          if (!to) fs.mkdirSync(path.dirname(dest), { recursive: true })
           this._move(from, dest)
         } catch (err) {
           if (err.code === 'EACCES' || err.code === 'EPERM') {
@@ -203,9 +212,11 @@ class Install extends Opstream {
         }
         if (isLinux) await this._linux(dest, filename, tmp, home)
       }
+      fs.rmSync(tmp, { recursive: true, force: true })
+      installed++
     }
 
-    this.final = { data: { success: exists.length === 0, exists } }
+    this.final = { data: { success: installed > 0, exists } }
   }
 
   async _linux(dest, appName, tmp, home) {
@@ -265,8 +276,8 @@ class Install extends Opstream {
 
 module.exports = async function (cmd) {
   const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json } = cmd.flags
+  const { json, only, to } = cmd.flags
   const link = cmd.args.link
-  const stream = new Install(ipc, { link })
+  const stream = new Install(ipc, { link, only, to })
   await output(json, stream)
 }
