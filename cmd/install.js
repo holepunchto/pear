@@ -93,7 +93,13 @@ class Install extends Opstream {
           : isMac
             ? path.join('/', 'usr', 'local', 'bin', binName)
             : path.join(home, '.local', 'bin', binName)
-        this.targets.push({ filename: binName, ext, dest, isBin: true, optional: binNames.length > 1 })
+        this.targets.push({
+          filename: binName,
+          ext,
+          dest,
+          isBin: true,
+          optional: binNames.length > 1
+        })
       }
     }
 
