@@ -63,7 +63,7 @@ async function bootSidecar() {
     ? require('./subsystems/sidecar/index.js')
     : await subsystem(updater.drive, '/subsystems/sidecar/index.js') // TODO: @keith cleanup subsystem if needed?
   const updater = createUpdater()
-  await updater.ready()
+  if (updater) await updater.ready()
 
   const sidecar = new Sidecar({
     updater,
