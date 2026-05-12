@@ -15,8 +15,8 @@ const { outputter, byteSize, ansi } = require('pear-terminal')
 
 const output = outputter('install', {
   installing: ({ link }) => `Installing... ${ansi.dim(link)}`,
-  app({ app, version, upgrade, tmp, dest, key }) {
-    return `App: ${app}\nVersion: ${version}\nUpgrade: ${upgrade}\nKey: ${key}\nTmp: ${tmp}\nDest: ${dest}`
+  app({ app, version, upgrade, dest, key }) {
+    return `App: ${app}\nVersion: ${version}\nLink: ${upgrade}\nPathname: ${key}\nTarget: ${dest}`
   },
   dumping: ({ link, dir }) => `Syncing: ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
@@ -117,6 +117,20 @@ class Install extends Opstream {
     this.targets.push({ filename: appName, ext, dest, isBin: false, optional: !!bin })
 
     const exists = []
+    const present = new Set()
+    const appPath = '/by-arch/' + host + '/app/'
+    await opwait(
+      ipc.dump({
+        link: plink.serialize({ ...parsed, pathname: appPath }),
+        dir: '-',
+        list: true
+      }),
+      ({ tag, data }) => {
+        if (tag === 'file') present.add(data.key.slice(1))
+      }
+    )
+
+    this.targets = this.targets.filter(({ filename, ext }) => present.has(filename + ext))
 
     for (const { filename, ext, dest, isBin, optional } of this.targets) {
       if (isWindows) {
@@ -134,7 +148,7 @@ class Install extends Opstream {
         continue
       }
 
-      const key = '/by-arch/' + host + '/app/' + filename + ext
+      const key = appPath + filename + ext
       const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
       const build = plink.serialize({ ...parsed, pathname: key })
 
