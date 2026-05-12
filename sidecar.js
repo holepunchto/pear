@@ -59,10 +59,11 @@ async function bootSidecar() {
   })
   await corestore.ready()
 
-  const updater = createUpdater()
   const Sidecar = LOCALDEV
     ? require('./subsystems/sidecar/index.js')
     : await subsystem(updater.drive, '/subsystems/sidecar/index.js') // TODO: @keith cleanup subsystem if needed?
+  const updater = createUpdater()
+  await updater.ready()
 
   const sidecar = new Sidecar({
     updater,
@@ -88,7 +89,7 @@ async function bootSidecar() {
 
     return new Sidecar.Updater({
       dir: PLATFORM_DIR,
-      store: this.corestore,
+      store: corestore,
       version: versionTarget,
       upgrade: `pear://${upgradeTarget}`,
       app,

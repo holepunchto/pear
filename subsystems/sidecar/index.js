@@ -107,7 +107,7 @@ class Sidecar extends ReadyResource {
     this.version = CHECKOUT
 
     this.updater = updater
-    if (this.updater) this.#bindUpdaterEvents()
+    if (this.updater) this.#bindUpdaterEvents(updater)
 
     this.#spindownCountdown()
 
