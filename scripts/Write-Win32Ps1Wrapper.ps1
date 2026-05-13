@@ -1,5 +1,5 @@
 param(
-  [string] $OutDir = 'out/win32-x64'
+  [string] $OutDir = 'by-arch/win32-x64/bin'
 )
 
 $ErrorActionPreference = 'Stop'

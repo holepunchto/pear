@@ -175,7 +175,7 @@ try {
 
     Set-Content -NoNewline -Path $msixContentBuilder -Value $patchedMsixContentBuilder
 
-    Invoke-Checked bare-build @('--config', './bare-build.msix.config.cjs', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
+    Invoke-Checked bare-build @('--standalone', '--base', '.', '--name', $name, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
 
     New-Item -ItemType Directory -Force -Path $msixOut | Out-Null
     Invoke-Checked makeappx @('pack', '/d', $contentDir, '/p', $msixPath, '/o')
