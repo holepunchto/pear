@@ -49,8 +49,8 @@ const output = outputter('install', {
         message = `Permission denied: ${data.dest}\n  ${ansi.dim('Fix: ' + fix)}`
       } else if (data.exists && data.exists.length) {
         message = isWindows
-          ? `Already installed:\n${data.exists.map(({ filename }) => '  ' + filename).join('\n')}\n  ${ansi.dim('Manually uninstall to reinstall')}`
-          : `Refusing to overwrite existing:\n${data.exists.map(({ dest }) => '  ' + dest).join('\n')}\n  ${ansi.dim('Manually remove to reinstall')}`
+          ? `Already installed:\n${data.exists.map(({ filename }) => '  ' + filename).join('\n')}\n  ${ansi.dim('Manually uninstall first to reinstall')}`
+          : `Refusing to overwrite existing:\n${data.exists.map(({ dest }) => '  ' + dest).join('\n')}\n  ${ansi.dim('Manually remove first to reinstall')}`
       } else if (data.notFound) {
         message = `Not found: ${data.notFound}`
       } else {
@@ -215,6 +215,8 @@ class Install extends Opstream {
       fs.rmSync(tmp, { recursive: true, force: true })
       installed++
     }
+
+    await opwait(ipc.gc({ resource: 'cores', data: { link } }))
 
     this.final = { data: { success: installed > 0, exists } }
   }
