@@ -15,7 +15,7 @@ const SPINDOWN_TIMEOUT = 15_000
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
-test.hook('shutdown setup', rig.setup)
+const cleanupShutdown = test.hook('shutdown setup', rig.setup)
 
 test('lock released after shutdown', async function ({ pass, plan, exception, comment, teardown }) {
   plan(2)
@@ -40,7 +40,7 @@ test('lock released after shutdown', async function ({ pass, plan, exception, co
 })
 
 let platformDirLs
-test.hook('prepare low-spindown platform', async (t) => {
+const cleanupPlatform = test.hook('prepare low-spindown platform', async (t) => {
   t.timeout(120_000)
 
   const patchedArtefactDir = path.join(Helper.tmp, 'als-pear')
@@ -265,8 +265,8 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 })
 
-test.hook('patched platform cleanup', async () => {
+cleanupPlatform('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })
 
-test.hook('shutdown cleanup', rig.cleanup)
+cleanupShutdown('shutdown cleanup', rig.cleanup)
