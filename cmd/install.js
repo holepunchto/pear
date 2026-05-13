@@ -6,12 +6,19 @@ const { spawnSync } = require('bare-subprocess')
 const LocalDrive = require('localdrive')
 const { isMac, isLinux, isWindows } = require('which-runtime')
 const crypto = require('hypercore-crypto')
+const Corestore = require('corestore')
+const Hyperdrive = require('hyperdrive')
+const Hyperswarm = require('hyperswarm')
 const plink = require('pear-link')
-const opwait = require('pear-opwait')
 const Opstream = require('pear-opstream')
-const { GC } = require('pear-constants')
 const { ERR_INVALID_MANIFEST } = require('pear-errors')
-const { outputter, byteSize, ansi } = require('pear-terminal')
+const { outputter, byteSize, ansi, stdio, isTTY } = require('pear-terminal')
+
+const PEAR_DIR = isMac
+  ? path.join(os.homedir(), 'Library', 'Application Support', 'pear')
+  : isLinux
+    ? path.join(os.homedir(), '.config', 'pear')
+    : path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
 
 const output = outputter('install', {
   installing: ({ link }) => `Installing... ${ansi.dim(link)}`,
@@ -63,162 +70,193 @@ const output = outputter('install', {
 })
 
 class Install extends Opstream {
-  constructor(ipc, params) {
+  constructor(params) {
     super((...args) => this.#op(...args), params)
-    this._ipc = ipc
     this.targets = []
   }
 
-  async #op({ link, only, to }) {
-    const ipc = this._ipc
+  async #op({ link, only, to, bootstrap }) {
     const parsed = plink.parse(link)
     if (parsed.pathname) throw new Error('Link must not have pathname')
     const host = require.addon.host
     this.push({ tag: 'installing', data: { link, host } })
 
-    const result = await opwait(ipc.info({ link, manifest: true }), ({ tag, data }) => {
-      if (tag !== 'final') this.push({ tag, data })
-    })
+    const rand = crypto.randomBytes(16).toString('hex')
+    const base = path.join(PEAR_DIR, 'gc', rand)
+    fs.mkdirSync(base, { recursive: true })
 
-    if (result === null) throw ERR_INVALID_MANIFEST('Unable to read application manifest')
+    const corestore = new Corestore(base)
+    const drive = new Hyperdrive(corestore, parsed.drive.key)
+    const swarm = new Hyperswarm({ bootstrap })
 
-    const { manifest } = result
-    const { name, productName, version, upgrade, bin } = manifest
-    const appName = productName ?? name
-    const home = os.homedir()
+    let findingDone = null
+    try {
+      await drive.ready()
 
-    if (bin) {
-      const bins = typeof bin === 'string' ? { [name]: bin } : bin
-      for (const binName of Object.keys(bins)) {
-        const ext = isWindows ? '.msix' : ''
-        const dest = isWindows
-          ? null
-          : to
-            ? path.join(to, binName + ext)
-            : isMac
-              ? path.join('/', 'usr', 'local', 'bin', binName)
-              : path.join(home, '.local', 'bin', binName)
-        this.targets.push({ filename: binName, ext, dest, isBin: true })
-      }
-    }
+      findingDone = drive.findingPeers()
+      const topic = swarm.join(drive.discoveryKey, { server: false, client: true })
+      swarm.on('connection', (c) => corestore.replicate(c))
 
-    const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
-    const dest = isWindows
-      ? null
-      : to
-        ? path.join(to, appName + ext)
-        : isMac
-          ? path.join('/', 'Applications', appName + ext)
-          : fs.existsSync(path.join(home, 'Applications'))
-            ? path.join(home, 'Applications', appName + ext)
-            : fs.existsSync(path.join(home, 'AppImages'))
-              ? path.join(home, 'AppImages', appName + ext)
-              : path.join(home, '.local', 'bin', appName + ext)
-
-    this.targets.push({ filename: appName, ext, dest, isBin: false })
-
-    const present = new Set()
-    const appPath = '/by-arch/' + host + '/app/'
-    await opwait(
-      ipc.dump({
-        link: plink.serialize({ ...parsed, pathname: appPath }),
-        dir: '-',
-        list: true,
-        only
-      }),
-      ({ tag, data }) => {
-        if (tag === 'file') present.add(data.key.slice(1))
-      }
-    )
-
-    const required = only
-      ? only
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : this.targets.filter((t) => t.isBin || !bin).map((t) => t.filename + t.ext)
-    const missing = required.filter((r) => !present.has(r))
-    if (missing.length) {
-      this.final = { data: { success: false, notFound: missing.join(', ') } }
-      return
-    }
-
-    this.targets = this.targets.filter(({ filename, ext }) => present.has(filename + ext))
-
-    const exists = []
-    let installed = 0
-
-    for (const { filename, ext, dest, isBin } of this.targets) {
-      if (isWindows) {
-        const ps = spawnSync('powershell', [
-          '-NoProfile',
-          '-Command',
-          `(Get-AppxPackage '${filename}') -ne $null`
-        ])
-        if (ps.stdout.toString().trim() === 'True') {
-          exists.push({ filename, dest })
-          continue
+      let serving = false
+      swarm.dht.on('nat-update', () => {
+        if (!swarm.dht.randomized && !serving) {
+          serving = true
+          swarm
+            .join(drive.discoveryKey, { server: true, client: false })
+            .flushed()
+            .then(() => topic.destroy())
         }
-      } else if (fs.existsSync(dest)) {
-        exists.push({ filename, dest })
-        continue
-      }
-
-      const key = appPath + filename + ext
-      const tmp = path.join(GC, crypto.hash(Buffer.from(link + key)).toString('hex'))
-      const build = plink.serialize({ ...parsed, pathname: key })
-
-      this.push({ tag: 'app', data: { app: filename, name, version, upgrade, key, tmp, dest } })
-
-      await opwait(ipc.dump({ link: build, dir: tmp, force: true }), ({ tag, data }) => {
-        if (tag !== 'final') this.push({ tag, data })
       })
 
-      const from = path.join(tmp, 'by-arch', host, 'app', filename + ext)
+      await drive.core.update({ wait: true })
+      const pkg = await drive.get('/package.json')
+      if (pkg === null) throw ERR_INVALID_MANIFEST('Unable to read application package.json')
+      const manifest = JSON.parse(pkg.toString())
+      const { name, productName, version, upgrade, bin } = manifest
+      const appName = productName ?? name
+      const home = os.homedir()
 
-      if (fs.existsSync(from) === false) {
-        this.final = { data: { success: false, notFound: key } }
+      if (bin) {
+        const bins = typeof bin === 'string' ? { [name]: bin } : bin
+        for (const binName of Object.keys(bins)) {
+          const ext = isWindows ? '.msix' : ''
+          const dest = isWindows
+            ? null
+            : to
+              ? path.join(to, binName + ext)
+              : isMac
+                ? path.join('/', 'usr', 'local', 'bin', binName)
+                : path.join(home, '.local', 'bin', binName)
+          this.targets.push({ filename: binName, ext, dest, isBin: true })
+        }
+      }
+
+      const ext = isMac ? '.app' : isWindows ? '.msix' : '.AppImage'
+      const dest = isWindows
+        ? null
+        : to
+          ? path.join(to, appName + ext)
+          : isMac
+            ? path.join('/', 'Applications', appName + ext)
+            : fs.existsSync(path.join(home, 'Applications'))
+              ? path.join(home, 'Applications', appName + ext)
+              : fs.existsSync(path.join(home, 'AppImages'))
+                ? path.join(home, 'AppImages', appName + ext)
+                : path.join(home, '.local', 'bin', appName + ext)
+
+      this.targets.push({ filename: appName, ext, dest, isBin: false })
+
+      const present = new Set()
+      const appPath = '/by-arch/' + host + '/app/'
+      for await (const name of drive.readdir(appPath)) present.add(name)
+
+      const required = only
+        ? only
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : this.targets.filter((t) => t.isBin || !bin).map((t) => t.filename + t.ext)
+      const missing = required.filter((r) => !present.has(r))
+      if (missing.length) {
+        this.final = { data: { success: false, notFound: missing.join(', ') } }
         return
       }
 
-      if (isWindows) {
-        const MSIXManager = require('msix-manager')
-        await new MSIXManager().addPackage(from)
+      this.targets = this.targets.filter(({ filename, ext }) => present.has(filename + ext))
+
+      const exists = []
+      const installs = []
+      for (const target of this.targets) {
+        if (isWindows) {
+          const ps = spawnSync('powershell', [
+            '-NoProfile',
+            '-Command',
+            `(Get-AppxPackage '${target.filename}') -ne $null`
+          ])
+          if (ps.stdout.toString().trim() === 'True') {
+            exists.push({ filename: target.filename, dest: target.dest })
+            continue
+          }
+        } else if (fs.existsSync(target.dest)) {
+          exists.push({ filename: target.filename, dest: target.dest })
+          continue
+        }
+        installs.push(target)
+      }
+
+      if (installs.length === 0) {
+        this.final = { data: { success: false, exists } }
+        return
+      }
+
+      const tmp = path.join(base, 'targets')
+      fs.mkdirSync(tmp, { recursive: true })
+      const prefixes = installs.map(({ filename, ext }) => appPath + filename + ext)
+      const mirror = drive.mirror(new LocalDrive(tmp), {
+        prefix: prefixes,
+        prune: false,
+        dedup: true
+      })
+      const monitor = mirror.monitor()
+      monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
+      if (isTTY) monitor.on('destroy', () => stdio.out.write('\x1B[2K\r'))
+      await mirror.done()
+      monitor.destroy()
+
+      let installed = 0
+      for (const { filename, ext, dest, isBin } of installs) {
+        const key = appPath + filename + ext
+        this.push({ tag: 'app', data: { app: filename, name, version, upgrade, key, tmp, dest } })
+
+        const from = path.join(tmp, 'by-arch', host, 'app', filename + ext)
+
+        if (fs.existsSync(from) === false) {
+          this.final = { data: { success: false, notFound: key } }
+          return
+        }
+
+        if (isWindows) {
+          const MSIXManager = require('msix-manager')
+          await new MSIXManager().addPackage(from)
+          installed++
+          continue
+        }
+
+        if (isBin) {
+          try {
+            if (!to) fs.mkdirSync(path.dirname(dest), { recursive: true })
+            this._move(from, dest)
+          } catch (err) {
+            if (err.code === 'EACCES' || err.code === 'EPERM') {
+              this.final = { data: { success: false, permission: true, dest } }
+              return
+            }
+            throw err
+          }
+          fs.chmodSync(dest, 0o755)
+        } else {
+          try {
+            await fs.promises.rename(from, dest)
+          } catch (err) {
+            if (err.code === 'EACCES' || err.code === 'EPERM') {
+              this.final = { data: { success: false, permission: true, dest } }
+              return
+            }
+            throw err
+          }
+          if (isLinux) await this._linux(dest, filename, tmp, home)
+        }
         installed++
-        continue
       }
 
-      if (isBin) {
-        try {
-          if (!to) fs.mkdirSync(path.dirname(dest), { recursive: true })
-          this._move(from, dest)
-        } catch (err) {
-          if (err.code === 'EACCES' || err.code === 'EPERM') {
-            this.final = { data: { success: false, permission: true, dest } }
-            return
-          }
-          throw err
-        }
-        fs.chmodSync(dest, 0o755)
-      } else {
-        try {
-          await fs.promises.rename(from, dest)
-        } catch (err) {
-          if (err.code === 'EACCES' || err.code === 'EPERM') {
-            this.final = { data: { success: false, permission: true, dest } }
-            return
-          }
-          throw err
-        }
-        if (isLinux) await this._linux(dest, filename, tmp, home)
-      }
-      fs.rmSync(tmp, { recursive: true, force: true })
-      installed++
+      this.final = { data: { success: installed > 0, exists } }
+    } finally {
+      if (findingDone) findingDone()
+      await drive.close()
+      await swarm.destroy()
+      await corestore.close()
+      fs.rmSync(base, { recursive: true, force: true })
     }
-
-    await opwait(ipc.gc({ resource: 'cores', data: { link } }))
-
-    this.final = { data: { success: installed > 0, exists } }
   }
 
   async _linux(dest, appName, tmp, home) {
@@ -277,9 +315,16 @@ class Install extends Opstream {
 }
 
 module.exports = async function (cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { json, only, to } = cmd.flags
+  const { json, only, to, dhtBootstrap } = cmd.flags
   const link = cmd.args.link
-  const stream = new Install(ipc, { link, only, to })
+  const bootstrap = dhtBootstrap
+    ? dhtBootstrap.split(',').map((tuple) => {
+        const [host, port] = tuple.split(':')
+        const int = +port
+        if (Number.isInteger(int) === false) throw new Error(`Invalid port: ${port}`)
+        return { host, port: int }
+      })
+    : undefined
+  const stream = new Install({ link, only, to, bootstrap })
   await output(json, stream)
 }

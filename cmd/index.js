@@ -360,6 +360,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Advanced. Filter by app filenames'),
     flag('--to <dir>', 'Override install target directory'),
     flag('--json', 'Newline delimited JSON output'),
+    flag('--dht-bootstrap <nodes>').hide(),
     commands.install
   )
 
