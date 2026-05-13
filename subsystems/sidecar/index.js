@@ -251,11 +251,20 @@ class Sidecar extends ReadyResource {
 
   closeClients(params = {}, originClient) {
     if (this.hasClients === false) return []
+    const metadata = []
+
     for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
-      if (!params.inclusive && client === originClient) continue
+      if (client === originClient) continue
+
+      if (client.userData?.state && !client.userData.state.parent) {
+        const { id, cmdArgs, cwd, dir, env, options } = client.userData.state
+        metadata.push({ id, cmdArgs, cwd, dir, env, options })
+      }
 
       this.#endRPCStreams(client).then(() => client.close())
     }
+
+    return metadata
   }
 
   async #ensureSwarm() {
