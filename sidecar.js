@@ -21,7 +21,6 @@ const {
 
 const { version, productName, upgrade } = require('./package.json')
 const registerUrlHandler = require('./url-handler')
-const subsystem = require('./subsystem')
 crasher('sidecar', SWAP)
 
 os.setProcessTitle('pear-sidecar')
@@ -59,9 +58,7 @@ async function bootSidecar() {
   })
   await corestore.ready()
 
-  const Sidecar = LOCALDEV
-    ? require('./subsystems/sidecar/index.js')
-    : await subsystem(updater.drive, '/subsystems/sidecar/index.js') // TODO: @keith cleanup subsystem if needed?
+  const Sidecar = require('./subsystems/sidecar/index.js')
   const updater = createUpdater()
   if (updater) await updater.ready()
 
@@ -83,7 +80,8 @@ async function bootSidecar() {
     const normalizedUpgrade = hypercoreid.normalize(upgrade)
     const forceUpgradeTarget = getForceUpgradeTarget()
     const upgradeTarget = forceUpgradeTarget ? forceUpgradeTarget : normalizedUpgrade
-    const versionTarget = forceUpgradeTarget && forceUpgradeTarget !== normalizedUpgrade ? '0.0.0' : version
+    const versionTarget =
+      forceUpgradeTarget && forceUpgradeTarget !== normalizedUpgrade ? '0.0.0' : version
 
     const name = path.basename(app) || productName || 'pear'
 
