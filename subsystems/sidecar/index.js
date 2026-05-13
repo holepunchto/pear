@@ -223,7 +223,7 @@ class Sidecar extends ReadyResource {
           userData.reporter.cutover()
         })
         userData.unwrapped = {
-          reporter: pipeline(userData.reporter, unwrap()),
+          reporter: pipeline(userData.reporter, unwrap())
         }
         return userData
       }
@@ -293,7 +293,7 @@ class Sidecar extends ReadyResource {
         }
         this.reporter = reporter
         this.unwrapped = {
-          reporter: pipeline(reporter, unwrap()),
+          reporter: pipeline(reporter, unwrap())
         }
       }
 
@@ -365,7 +365,8 @@ class Sidecar extends ReadyResource {
   }
 
   async updateNotify(version, info = {}) {
-    if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    if (version.force)
+      LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
     else LOG.info('sidecar', 'Platform update available. Restart to update to:')
 
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
@@ -625,39 +626,8 @@ class Sidecar extends ReadyResource {
   }
 
   async restart({ platform = false } = {}, client) {
-    LOG.info('sidecar', `Restarting ${platform ? 'platform' : 'client'}`) // TODO: @keith cleanup client restart
+    LOG.info('sidecar', 'Restarting platform')
     this.spindownms = SPINDOWN_TIMEOUT
-    if (platform === false) {
-      if (client.userData instanceof this.App === false) {
-        LOG.info('sidecar', 'Invalid restart request from non-app client')
-        return
-      }
-      const { appling, dir, cwd, cmdArgs, env } = client.userData.state
-      if (!client.closed) {
-        const tearingDown = client.userData.teardown()
-        if (tearingDown) {
-          // TODO: close timeout
-          await new Promise((resolve) => {
-            client.once('close', resolve)
-          })
-        } else {
-          await this.#endRPCStreams(client)
-          await client.close()
-        }
-      }
-      if (appling) {
-        const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) {
-          spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
-        } else {
-          daemon.spawn(applingPath, { env }) // appling owns cwd
-        }
-      } else {
-        daemon.spawn(RUNTIME, cmdArgs, { cwd, env })
-      }
-
-      return
-    }
 
     const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
@@ -666,27 +636,18 @@ class Sidecar extends ReadyResource {
     // shutdown successful, reset death clock
     this.deathClock()
 
+    // TODO: @keith see if we can remove isApp filter
     restarts = restarts.filter(({ isApp }) => isApp)
     if (restarts.length === 0) return
     LOG.info('sidecar', 'Restarting', restarts.length, 'apps')
 
     await sidecarClosed
 
-    for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
-      if (appling) {
-        const applingPath = typeof appling === 'string' ? appling : appling?.path
-        if (isMac) {
-          const openProc = spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
-          await once(openProc, 'exit')
-        } else {
-          daemon.spawn(applingPath, { env }) // appling owns cwd
-        }
-      } else {
-        const TARGET_RUNTIME =
-          this.updater === null ? RUNTIME : this.updater.swap + RUNTIME.slice(SWAP.length)
+    for (const { cwd, cmdArgs, env } of restarts) {
+      const TARGET_RUNTIME =
+        this.updater === null ? RUNTIME : this.updater.swap + RUNTIME.slice(SWAP.length)
 
-        daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
-      }
+      daemon.spawn(TARGET_RUNTIME, cmdArgs, { cwd, env })
     }
   }
 
