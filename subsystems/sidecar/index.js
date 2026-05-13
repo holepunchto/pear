@@ -91,12 +91,7 @@ class Sidecar extends ReadyResource {
 
     const all = {}
 
-    this.bus = new Iambus({
-      onsub: (sub) => {
-        if (sub.pattern === all) return
-        this._onsub(sub)
-      }
-    })
+    this.bus = new Iambus()
 
     this.bus.sub(all).on('data', (msg) => {
       LOG.trace('bus', 'PUB', msg)
@@ -213,20 +208,6 @@ class Sidecar extends ReadyResource {
           return null
         }
       }
-      onUpdatesSub(sub) {
-        this.updates.feed(sub)
-
-        if (this.sidecar.updater?.updating) {
-          this.message({
-            type: 'pear/updates',
-            app: false,
-            version: this.sidecar.updater.checkout, // TODO: @keith cleanup pear/updates
-            info: null,
-            updating: true,
-            updated: false
-          })
-        }
-      }
 
       register(client, startId, pid = -1) {
         this.clients.add(client)
@@ -241,21 +222,8 @@ class Sidecar extends ReadyResource {
         this.reporter.once('cutover', () => {
           userData.reporter.cutover()
         })
-        // TODO: @keith cleanup warming and updates
-        userData.warming = this.warming.feed(
-          this.sidecar.bus.sub({ topic: 'warming', id: userData.startId }, opts)
-        )
-        this.warming.once('cutover', () => {
-          userData.warming.cutover()
-        })
-        const ptn = this.updates.pattern.data
-        userData.updates = this.updates.feed(userData.messages(ptn, opts))
-        this.updates.once('cutover', () => {
-          userData.updates.cutover()
-        })
         userData.unwrapped = {
           reporter: pipeline(userData.reporter, unwrap()),
-          warming: pipeline(userData.warming, unwrap())
         }
         return userData
       }
@@ -270,14 +238,6 @@ class Sidecar extends ReadyResource {
           topic: 'reports',
           id: this.startId,
           data: this._mapReport(report)
-        })
-      }
-
-      warmup(data) {
-        return this.sidecar.bus.pub({
-          topic: 'warming',
-          id: this.startId,
-          data
         })
       }
 
@@ -327,20 +287,13 @@ class Sidecar extends ReadyResource {
         this.clients = new Set()
         const opts = { retain: true }
         const reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.startId }, opts)
-        const warming = this.sidecar.bus.sub({ topic: 'warming', id: this.startId }, opts)
-        const updates = this.messages({ type: 'pear/updates' }, opts)
         this.cutover = (params) => {
           // closure scoped to keep cutover refs to top ancestor subs
           reporter.cutover(params.after ?? CUTOVER_DELAY)
-          warming.cutover(params.after ?? CUTOVER_DELAY)
-          updates.cutover(params.after ?? CUTOVER_DELAY)
         }
         this.reporter = reporter
-        this.warming = warming
-        this.updates = updates
         this.unwrapped = {
           reporter: pipeline(reporter, unwrap()),
-          warming: pipeline(warming, unwrap())
         }
       }
 
@@ -370,29 +323,6 @@ class Sidecar extends ReadyResource {
     this.gcInterval = setInterval(() => {
       gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
     }, gcCycleMs)
-  }
-
-  _onsub(sub) {
-    LOG.trace('bus', 'SUB', sub.pattern)
-    const isUpdateSub =
-      sub.pattern.id &&
-      Iambus.match(sub.pattern, {
-        topic: 'messages',
-        data: { type: 'pear/updates' }
-      })
-    if (isUpdateSub) {
-      const startId = sub.pattern.id
-      const started = this.running.get(startId)
-
-      if (!started) return
-
-      if (started.client.userData instanceof this.App === false) {
-        LOG.error('internal', 'subscriber pattern id invalid - no clients matched')
-        return
-      }
-
-      started.client.userData.onUpdatesSub(sub)
-    }
   }
 
   get clients() {
@@ -434,62 +364,15 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
-  async updatingNotify(checkout = null) {
-    for await (const app of this.heads) {
-      if (!app) continue
-
-      app.message({
-        type: 'pear/updates',
-        app: false,
-        version: checkout,
-        diff: null,
-        updating: true,
-        updated: false
-      })
-    }
-  }
-
   async updateNotify(version, info = {}) {
-    if (info.link) LOG.info('sidecar', 'Application update available:')
-    else if (version.force) {
-      LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
-    } else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    if (version.force) LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
     else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
     if (!info.link) this.spindownms = 0
     this.#spindownCountdown()
-    const messaged = new Set()
-
-    for await (const app of this.heads) {
-      if (!app) continue
-
-      if (messaged.has(app)) continue
-      messaged.add(app)
-
-      if (info.link && info.link === app.pod?.link) {
-        app.message({
-          type: 'pear/updates',
-          app: true,
-          version,
-          diff: info.diff,
-          updating: false,
-          updated: true,
-          link: info.link
-        })
-        continue
-      }
-      if (info.link) continue
-      app.message({
-        type: 'pear/updates',
-        app: false,
-        version,
-        diff: null,
-        updating: false,
-        updated: true,
-        link: null
-      })
-    }
   }
 
   clientReady(params, client) {
@@ -545,16 +428,6 @@ class Sidecar extends ReadyResource {
 
   touch(params, client) {
     return new ops.Touch(params, client, this)
-  }
-
-  warmup(params, client) {
-    if (client.userData instanceof this.App === false) return
-    return client.userData.warmup(params)
-  }
-
-  warming(params, client) {
-    if (client.userData instanceof this.App === false) return
-    return client.userData.unwrapped.warming
   }
 
   versions(params, client) {
@@ -944,7 +817,6 @@ class Sidecar extends ReadyResource {
           ? `- Updating to length ${length}...`
           : `- Switching to key ${key} with length ${length}...`
       )
-      this.updatingNotify({ key, length })
     })
 
     updater.on('updated', () => this.updateNotify({ key: updater.key, length: updater.length }))
