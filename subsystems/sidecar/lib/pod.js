@@ -35,7 +35,6 @@ module.exports = class Pod {
       drive = false,
       checkout,
       current,
-      appling,
       key,
       stage = false,
       status = noop,
@@ -48,7 +47,6 @@ module.exports = class Pod {
     } = opts
     this.swarm = swarm
     this.checkout = checkout ?? 'release'
-    this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
     this.local = !this.key
@@ -65,7 +63,7 @@ module.exports = class Pod {
     this._asset = asset
     if (this.corestore) {
       this.updater = this.stage ? null : new PodUpdater(this.drive, { asset })
-      this.replicator = new Replicator(this.drive, { appling: this.appling })
+      this.replicator = new Replicator(this.drive)
       this.replicator.on('announce', () => this.status({ tag: 'announced' }))
       this.drive.core.on('peer-add', (peer) => {
         this.status({

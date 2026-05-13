@@ -14,12 +14,10 @@ const plink = require('pear-link')
 const {
   SOCKET_PATH,
   CHECKOUT,
-  APPLINGS_PATH,
   SPINDOWN_TIMEOUT,
   WAKEUP,
   KNOWN_NODES_LIMIT
 } = require('pear-constants')
-const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const hyperdb = require('./lib/model')
@@ -107,9 +105,7 @@ class Sidecar extends ReadyResource {
       })
     })
 
-    this.replicator = updater ? new Replicator(updater.drive, { appling: true }) : null
-
-    this.applings = new Applings(APPLINGS_PATH) // TODO: @keith cleanup applings
+    this.replicator = updater ? new Replicator(updater.drive) : null
 
     this.running = new Map()
 
@@ -307,7 +303,6 @@ class Sidecar extends ReadyResource {
   }
 
   async #close() {
-    await this.applings.close()
     clearInterval(this.gcInterval)
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
