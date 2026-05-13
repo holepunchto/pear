@@ -61,7 +61,8 @@ module.exports = class Stage extends Opstream {
     const verlink = pod.verlink()
     await state.initialize({ pod, dryRun })
 
-    await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
+    // TODO: @keith figure out if we still need permit here
+    // await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
