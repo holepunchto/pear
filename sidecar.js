@@ -14,7 +14,6 @@ const {
   PLATFORM_CORESTORE,
   EOLS,
   ALIASES,
-  LOCALDEV,
   PLATFORM_DIR,
   WAKEUP
 } = require('pear-constants')
@@ -73,7 +72,7 @@ async function bootSidecar() {
   registerUrlHandler(WAKEUP)
 
   function createUpdater() {
-    if (LOCALDEV || !upgrade) return null
+    if (!global.__STANDALONE || !upgrade) return null
     const app = global.Bare?.argv?.[0]
     if (!app) return null
 
@@ -97,7 +96,7 @@ async function bootSidecar() {
 }
 
 function getForceUpgradeTarget() {
-  if (LOCALDEV) return null
+  if (!global.__STANDALONE) return null
 
   let key = null
 
