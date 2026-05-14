@@ -21,6 +21,7 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH_RUNTIME = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const BY_ARCH_PEAR = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+const REPO_ROOT = path.dirname(__dirname)
 const constants = require('pear-constants')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
@@ -197,9 +198,14 @@ class Helper extends IPC.Client {
 }
 
 function runtimePath(platformDir) {
+  const localByArch = [
+    path.join(REPO_ROOT, BY_ARCH_PEAR),
+    path.join(REPO_ROOT, BY_ARCH_RUNTIME)
+  ]
   const candidates = [
     path.join(platformDir, 'current', BY_ARCH_RUNTIME),
-    path.join(platformDir, 'current', BY_ARCH_PEAR)
+    path.join(platformDir, 'current', BY_ARCH_PEAR),
+    ...localByArch
   ]
   return candidates.find((p) => fs.existsSync(p)) || candidates[0]
 }
