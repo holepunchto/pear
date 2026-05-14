@@ -3,7 +3,7 @@
   "version": "2.0.2",
   "main": "./boot.js",
   "bin": "pear",
-  "productName": "pear-runtime",
+  "productName": "pear",
   "upgrade": "pear://pn8u9qgx7xhi9zesfwzy3bjpuzw3aw8x3669d7sbrihgmbxbm39o",
   "private": true,
   "scripts": {
@@ -11,9 +11,6 @@
     "test": "bare scripts/test.mjs",
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
-    "archdump": "node scripts/bootstrap.js --archdump",
-    "prestage": "node scripts/bootstrap.js --archdump --external-corestore && node scripts/prune-dual-prebuilds.mjs",
-    "bootstrap": "node scripts/bootstrap.js",
     "make": "node scripts/build-local-runtime.js",
     "make:darwin-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host darwin-arm64 --out ./by-arch/darwin-arm64/bin scripts/standalone-entry.js && node scripts/link-pear-dev.js",
     "make:darwin-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host darwin-x64 --out ./by-arch/darwin-x64/bin scripts/standalone-entry.js && node scripts/link-pear-dev.js",
