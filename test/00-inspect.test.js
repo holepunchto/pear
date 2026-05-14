@@ -1,5 +1,6 @@
 'use strict'
 const test = require('brittle')
+const b4a = require('b4a')
 const Helper = require('./helper')
 const { Session } = require('pear-inspect')
 const env = require('bare-env')
@@ -22,7 +23,8 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   ok(key, 'inspect returns sidecar inspect key')
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
   const timeoutMs = env.CI ? 20_000 : 5_000
-  session = new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap })
+  const inspectorKey = normalizeInspectorKey(key)
+  session = new Session({ inspectorKey, bootstrap: Helper.dhtBootstrap })
   const hasSidecar = await evaluateOnce(session, timeoutMs)
 
   ok(hasSidecar, 'sidecar is defined')
@@ -67,4 +69,15 @@ async function evaluateOnce(session, timeoutMs) {
       params: { expression: 'global.sidecar' }
     })
   })
+}
+
+function normalizeInspectorKey(key) {
+  if (typeof key === 'string') {
+    // IPC may serialize buffers as hex strings on some runners.
+    if (/^[a-f0-9]{64}$/i.test(key)) return b4a.from(key, 'hex')
+    return b4a.from(key)
+  }
+  if (b4a.isBuffer(key)) return key
+  if (key && typeof key.length === 'number') return b4a.from(key)
+  throw new Error('invalid inspector key format')
 }
