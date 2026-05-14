@@ -10,7 +10,7 @@ if (isWindows) process.exit(0)
 
 const root = path.resolve(__dirname, '..')
 const host = `${os.platform()}-${os.arch()}`
-const runtimeRel = path.join('by-arch', host, 'bin', 'pear-runtime')
+const runtimeRel = path.join('by-arch', host, 'bin', 'pear')
 const runtimeAbs = path.join(root, runtimeRel)
 const devLink = path.join(root, 'pear.dev')
 

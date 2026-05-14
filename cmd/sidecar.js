@@ -23,11 +23,11 @@ module.exports = async function sidecar(cmd) {
     })
   }
   print('Closing any current Sidecar clients...', 0)
-  const restarts = await ipc.closeClients()
+  const restarts = await withTimeout(ipc.closeClients(), 8000, [])
   const n = restarts.length
   if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed`, true)
   print('Shutting down current Sidecar...', 0)
-  await ipc.shutdown()
+  await withTimeout(ipc.shutdown(), 8000)
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
   const { CHECKOUT, RUNTIME } = require('pear-constants')
@@ -74,4 +74,20 @@ module.exports = async function sidecar(cmd) {
   }
 
   print('\n========================= RUN ====================================\n')
+}
+
+async function withTimeout(promise, ms, fallback = undefined) {
+  let timer = null
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(fallback), ms)
+      })
+    ])
+  } catch {
+    return fallback
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }
