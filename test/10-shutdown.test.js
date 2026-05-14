@@ -4,16 +4,12 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const Helper = require('./helper')
 const { spawn } = require('bare-subprocess')
-const { platform, arch, isWindows } = require('which-runtime')
 const LocalDrive = require('localdrive')
 const Corestore = require('corestore')
 
 const rig = new Helper.Rig({ keepAlive: false })
 
 const SPINDOWN_TIMEOUT = 15_000
-
-const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 
 test.hook('shutdown setup', rig.setup)
 
@@ -104,7 +100,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['sidecar'], {
+  const sidecar = spawn(Helper.runtimePath(platformDirLs), ['sidecar'], {
     stdio: 'pipe'
   })
   t.teardown(() => {
@@ -233,11 +229,9 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment('3. Start sidecar and update using rcv-seeded key')
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(
-    path.join(platformDirLs, 'current', BY_ARCH),
-    ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key],
-    { stdio: 'pipe' }
-  )
+  const sidecar = spawn(Helper.runtimePath(platformDirLs), ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key], {
+    stdio: 'pipe'
+  })
   t.teardown(() => {
     if (sidecar.exitCode === null) sidecar?.kill()
   })

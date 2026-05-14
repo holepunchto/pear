@@ -43,7 +43,9 @@ for (const dir of dirs) {
 const testnet = await createTestnet(10)
 const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
-spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
+if (fs.existsSync(RUNTIME)) {
+  spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
+}
 
 const tests = spawn(Bare.argv[0], [path.join(root, 'test', 'index.js'), ...Bare.argv.slice(2)], {
   cwd: root,

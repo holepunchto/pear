@@ -19,7 +19,8 @@ const Hyperswarm = require('hyperswarm')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const BY_ARCH_RUNTIME = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const BY_ARCH_PEAR = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
 const constants = require('pear-constants')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
@@ -55,12 +56,13 @@ class Helper extends IPC.Client {
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   static dhtBootstrap = DHT_BOOTSTRAP
+  static runtimePath = runtimePath
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = runtimePath(platformDir)
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
@@ -192,6 +194,14 @@ class Helper extends IPC.Client {
     if (NO_GC) return
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
+}
+
+function runtimePath(platformDir) {
+  const candidates = [
+    path.join(platformDir, 'current', BY_ARCH_RUNTIME),
+    path.join(platformDir, 'current', BY_ARCH_PEAR)
+  ]
+  return candidates.find((p) => fs.existsSync(p)) || candidates[0]
 }
 
 class Rig {
