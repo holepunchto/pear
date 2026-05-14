@@ -5,6 +5,7 @@ const os = require('bare-os')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
 
 global.__PEAR_MOUNT = resolveMount(global.Bare?.argv?.[0])
+global.__STANDALONE = true
 
 if (global.Bare?.argv?.[1] && /[\\/](boot\.js|standalone-entry\.js)$/.test(global.Bare.argv[1])) {
   global.Bare.argv.splice(1, 1)

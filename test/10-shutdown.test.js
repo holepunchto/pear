@@ -25,7 +25,7 @@ test('lock released after shutdown', async function ({ pass, plan, exception, co
 
   const corestorePath = path.join(rig.platformDir, 'corestores', 'platform')
 
-  exception(async () => {
+  await exception(async () => {
     const corestore = new Corestore(corestorePath)
     await corestore.ready()
   }, 'platform corestore is locked')

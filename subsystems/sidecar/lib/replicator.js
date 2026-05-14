@@ -3,10 +3,9 @@ const hypercoreid = require('hypercore-id-encoding')
 const { EventEmitter } = require('bare-events')
 
 module.exports = class Replicator extends EventEmitter {
-  constructor(drive, opts) {
+  constructor(drive) {
     super()
     this.drive = drive
-    this.appling = !!(opts && opts.appling)
     this.swarm = null
     this.announcing = null
   }

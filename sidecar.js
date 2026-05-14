@@ -1,28 +1,25 @@
 'use strict'
-const Localdrive = require('localdrive')
 const Corestore = require('corestore')
-const Hyperdrive = require('hyperdrive')
 const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
 const crasher = require('pear-crasher')
 const gracedown = require('pear-gracedown')
 const os = require('bare-os')
+const pear = require('pear-cmd')
+const path = require('bare-path')
 const {
   SWAP,
   GC,
   PLATFORM_CORESTORE,
   EOLS,
   ALIASES,
-  CHECKOUT,
-  LOCALDEV,
-  UPGRADE_LOCK,
   PLATFORM_DIR,
   WAKEUP
 } = require('pear-constants')
-const pear = require('pear-cmd')
+
+const { version, productName, upgrade } = require('./package.json')
 const registerUrlHandler = require('./url-handler')
-const subsystem = require('./subsystem')
 crasher('sidecar', SWAP)
 
 os.setProcessTitle('pear-sidecar')
@@ -60,16 +57,12 @@ async function bootSidecar() {
   })
   await corestore.ready()
 
-  const drive = await createPlatformDrive()
-
-  const Sidecar = LOCALDEV
-    ? require('./subsystems/sidecar/index.js')
-    : await subsystem(drive, '/subsystems/sidecar/index.js')
+  const Sidecar = require('./subsystems/sidecar/index.js')
   const updater = createUpdater()
+  if (updater) await updater.ready()
 
   const sidecar = new Sidecar({
     updater,
-    drive,
     corestore,
     nodes
   })
@@ -79,34 +72,31 @@ async function bootSidecar() {
   registerUrlHandler(WAKEUP)
 
   function createUpdater() {
-    if (LOCALDEV) return null
-    const { checkout, swap } = getUpgradeTarget()
-    const updateDrive =
-      checkout === CHECKOUT || hypercoreid.normalize(checkout.key) === CHECKOUT.key
-        ? drive
-        : new Hyperdrive(corestore.session(), checkout.key)
+    if (!global.__STANDALONE || !upgrade) return null
+    const app = global.Bare?.argv?.[0]
+    if (!app) return null
 
-    return new Sidecar.Updater(updateDrive, {
-      directory: PLATFORM_DIR,
-      swap,
-      lock: UPGRADE_LOCK,
-      checkout
+    const normalizedUpgrade = hypercoreid.normalize(upgrade)
+    const forceUpgradeTarget = getForceUpgradeTarget()
+    const upgradeTarget = forceUpgradeTarget ? forceUpgradeTarget : normalizedUpgrade
+    const versionTarget =
+      forceUpgradeTarget && forceUpgradeTarget !== normalizedUpgrade ? '0.0.0' : version
+
+    const name = path.basename(app) || productName || 'pear'
+
+    return new Sidecar.Updater({
+      dir: PLATFORM_DIR,
+      store: corestore,
+      version: versionTarget,
+      upgrade: `pear://${upgradeTarget}`,
+      app,
+      name
     })
-  }
-
-  async function createPlatformDrive() {
-    if (LOCALDEV) return new Localdrive(SWAP)
-
-    const drive = new Hyperdrive(corestore.session(), CHECKOUT.key)
-    const checkout = drive.checkout(CHECKOUT.length)
-    await checkout.ready()
-    checkout.on('close', () => drive.close())
-    return checkout
   }
 }
 
-function getUpgradeTarget() {
-  if (LOCALDEV) return { checkout: CHECKOUT, swap: SWAP }
+function getForceUpgradeTarget() {
+  if (!global.__STANDALONE) return null
 
   let key = null
 
@@ -124,15 +114,12 @@ function getUpgradeTarget() {
     }
   }
 
-  const cur = hypercoreid.decode(key ?? CHECKOUT.key)
+  if (!key) return null
+
+  const cur = hypercoreid.decode(key)
   if (EOLS.pear?.some((key) => cur.equals(key))) {
     key = hypercoreid.encode(ALIASES.pear)
   }
 
-  if (key === null || key === CHECKOUT.key) return { checkout: CHECKOUT, swap: SWAP }
-
-  return {
-    checkout: { key, length: 0, fork: 0 },
-    swap: null
-  }
+  return `pear://${key}`
 }
