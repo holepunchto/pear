@@ -101,7 +101,7 @@
     "pear-inspect": "^1.2.5",
     "pear-ipc": "^6.11.0",
     "pear-link": "^4.1.0",
-    "pear-logger": "^1.0.0",
+    "pear-logger": "^1.0.1",
     "pear-opstream": "^1.0.0",
     "pear-opwait": "^1.0.0",
     "pear-pack": "^1.1.3",
