@@ -9,6 +9,12 @@ const { isWindows } = require('which-runtime')
 
 const root = path.resolve(__dirname, '..')
 const host = `${os.platform()}-${os.arch()}`
+const bareBuildBin = path.join(
+  root,
+  'node_modules',
+  '.bin',
+  isWindows ? 'bare-build.cmd' : 'bare-build'
+)
 const runtimeRel = path.join(
   'by-arch',
   host,
@@ -25,13 +31,15 @@ const out = path.join(tmp, 'out')
 
 const run = (cmd, args) => {
   const res = spawnSync(cmd, args, { cwd: root, stdio: 'inherit' })
+  if (res.error) {
+    console.error(`Failed to run ${cmd}: ${res.error.message}`)
+    process.exit(1)
+  }
   if (res.status !== 0) process.exit(res.status || 1)
 }
 
 try {
-  run('npx', [
-    '--yes',
-    'bare-build',
+  run(bareBuildBin, [
     '--standalone',
     '--host',
     host,
