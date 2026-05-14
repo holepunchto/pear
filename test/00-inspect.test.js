@@ -19,52 +19,52 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   )
 
   const key = await helper.inspect()
-  session = new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap })
   ok(key, 'inspect returns sidecar inspect key')
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
-  session.connect()
   const timeoutMs = env.CI ? 20_000 : 5_000
+  session = new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap })
+  const hasSidecar = await evaluateOnce(session, timeoutMs)
 
-  // Wait for pear-inspect handshake before posting Runtime.evaluate.
-  // Linux CI is more likely to race here.
-  await new Promise((resolve, reject) => {
+  ok(hasSidecar, 'sidecar is defined')
+})
+
+async function evaluateOnce(session, timeoutMs) {
+  const waitInfo = new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('inspector info timeout')), timeoutMs)
-    const onClose = () => {
-      clearTimeout(timeout)
-      reject(new Error('inspector closed before handshake'))
-    }
     session.once('info', () => {
       clearTimeout(timeout)
-      session.off('close', onClose)
       resolve()
     })
-    session.once('close', onClose)
+    session.once('close', () => {
+      clearTimeout(timeout)
+      reject(new Error('inspector closed before handshake'))
+    })
   })
 
-  const hasSidecar = await new Promise((resolve, reject) => {
+  // Listener must be attached before connect() to avoid missing fast handshake.
+  session.connect()
+  await waitInfo
+
+  return await new Promise((resolve, reject) => {
     const id = 1
     const timeout = setTimeout(() => reject(new Error('inspector response timeout')), timeoutMs)
-    const onClose = () => {
-      clearTimeout(timeout)
-      session.off('message', onMessage)
-      reject(new Error('inspector closed before response'))
-    }
     const onMessage = ({ id: msgId, result, error }) => {
       if (msgId !== id) return
       clearTimeout(timeout)
-      session.off('close', onClose)
       session.off('message', onMessage)
       if (error) return reject(new Error(error.message || 'inspector error'))
       resolve(result)
     }
     session.on('message', onMessage)
-    session.once('close', onClose)
+    session.once('close', () => {
+      clearTimeout(timeout)
+      session.off('message', onMessage)
+      reject(new Error('inspector closed before response'))
+    })
     session.post({
       id,
       method: 'Runtime.evaluate',
       params: { expression: 'global.sidecar' }
     })
   })
-
-  ok(hasSidecar, 'sidecar is defined')
-})
+}
