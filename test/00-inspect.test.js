@@ -2,6 +2,7 @@
 const test = require('brittle')
 const Helper = require('./helper')
 const { Session } = require('pear-inspect')
+const env = require('bare-env')
 
 test('inspect', async function ({ ok, teardown, alike, plan }) {
   plan(3)
@@ -22,28 +23,42 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   ok(key, 'inspect returns sidecar inspect key')
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
   session.connect()
+  const timeoutMs = env.CI ? 20_000 : 5_000
 
   // Wait for pear-inspect handshake before posting Runtime.evaluate.
   // Linux CI is more likely to race here.
   await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('inspector info timeout')), 5000)
+    const timeout = setTimeout(() => reject(new Error('inspector info timeout')), timeoutMs)
+    const onClose = () => {
+      clearTimeout(timeout)
+      reject(new Error('inspector closed before handshake'))
+    }
     session.once('info', () => {
       clearTimeout(timeout)
+      session.off('close', onClose)
       resolve()
     })
+    session.once('close', onClose)
   })
 
   const hasSidecar = await new Promise((resolve, reject) => {
     const id = 1
-    const timeout = setTimeout(() => reject(new Error('inspector response timeout')), 5000)
+    const timeout = setTimeout(() => reject(new Error('inspector response timeout')), timeoutMs)
+    const onClose = () => {
+      clearTimeout(timeout)
+      session.off('message', onMessage)
+      reject(new Error('inspector closed before response'))
+    }
     const onMessage = ({ id: msgId, result, error }) => {
       if (msgId !== id) return
       clearTimeout(timeout)
+      session.off('close', onClose)
       session.off('message', onMessage)
       if (error) return reject(new Error(error.message || 'inspector error'))
       resolve(result)
     }
     session.on('message', onMessage)
+    session.once('close', onClose)
     session.post({
       id,
       method: 'Runtime.evaluate',
