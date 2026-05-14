@@ -5,6 +5,7 @@ const { header, footer, command, flag, arg, summary, description, bail, sloppy, 
   paparam
 const { usage, print } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
+const { userArgv } = require('../argv')
 const opwait = require('pear-opwait')
 const pdump = require('pear-dump')
 const errors = require('pear-errors')
@@ -42,7 +43,7 @@ const commands = {
   presets: require('./presets')
 }
 
-module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
+module.exports = async (ipc, argv = userArgv()) => {
   await ipc.ready()
 
   Bare.prependListener('exit', () => {
