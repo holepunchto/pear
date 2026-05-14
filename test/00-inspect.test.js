@@ -23,18 +23,33 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
   session.connect()
 
-  const hasSidecar = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('inspector response timeout')), 5000)
-    session.once('message', ({ result, error }) => {
+  // Wait for pear-inspect handshake before posting Runtime.evaluate.
+  // Linux CI is more likely to race here.
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('inspector info timeout')), 5000)
+    session.once('info', () => {
       clearTimeout(timeout)
+      resolve()
+    })
+  })
+
+  const hasSidecar = await new Promise((resolve, reject) => {
+    const id = 1
+    const timeout = setTimeout(() => reject(new Error('inspector response timeout')), 5000)
+    const onMessage = ({ id: msgId, result, error }) => {
+      if (msgId !== id) return
+      clearTimeout(timeout)
+      session.off('message', onMessage)
       if (error) return reject(new Error(error.message || 'inspector error'))
       resolve(result)
-    })
+    }
+    session.on('message', onMessage)
     session.post({
+      id,
       method: 'Runtime.evaluate',
       params: { expression: 'global.sidecar' }
     })
   })
 
-  ok(await hasSidecar, 'sidecar is defined')
+  ok(hasSidecar, 'sidecar is defined')
 })
