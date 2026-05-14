@@ -10,14 +10,14 @@ global.__STANDALONE = true
 require('../boot.js')
 
 function resolveMount(argv0) {
-  const fallback = path.resolve('.')
+  const fallback = safeResolveDot()
   if (!argv0) return legacyCurrentOr(fallback, null)
 
   let resolved = argv0
   try {
-    resolved = fs.realpathSync(path.resolve(argv0))
+    resolved = fs.realpathSync(safeResolveArgv(argv0))
   } catch {
-    resolved = path.resolve(argv0)
+    resolved = safeResolveArgv(argv0)
   }
 
   const host = `${platform}-${arch}`
@@ -32,7 +32,7 @@ function resolveMount(argv0) {
     return root.endsWith('/') && root !== '/' ? root.slice(0, -1) : root
   }
 
-  return legacyCurrentOr(path.dirname(path.resolve(argv0)), resolved)
+  return legacyCurrentOr(path.dirname(safeResolveArgv(argv0)), resolved)
 }
 
 function normalize(p) {
@@ -83,4 +83,24 @@ function platformDir() {
   if (isWindows) return path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
   if (isLinux) return path.join(os.homedir(), '.config', 'pear')
   return path.join(os.homedir(), 'Library', 'Application Support', 'pear')
+}
+
+function safeResolveArgv(argv0) {
+  if (!argv0) return safeResolveDot()
+  if (path.isAbsolute(argv0)) return argv0
+  const cwd = safeCwd()
+  return cwd ? path.join(cwd, argv0) : argv0
+}
+
+function safeResolveDot() {
+  const cwd = safeCwd()
+  return cwd || '/'
+}
+
+function safeCwd() {
+  try {
+    return os.cwd()
+  } catch {
+    return null
+  }
 }
