@@ -357,12 +357,13 @@ class Sidecar extends ReadyResource {
   #bindUpdaterEvents(updater) {
     updater.on('updating', () => {
       const key = updater.key
+      const encodedKey = key ? hypercoreid.encode(key) : null
       const length = updater.drive.core.length
       LOG.info(
         'sidecar',
-        key === version.key
+        encodedKey === version.key
           ? `- Updating to length ${length}...`
-          : `- Switching to key ${key} with length ${length}...`
+          : `- Switching to key ${encodedKey || 'unknown'} with length ${length}...`
       )
     })
 

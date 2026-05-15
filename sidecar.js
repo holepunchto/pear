@@ -1,22 +1,14 @@
 'use strict'
 const Corestore = require('corestore')
-const hypercoreid = require('hypercore-id-encoding')
 const fs = require('bare-fs')
 const Rache = require('rache')
 const crasher = require('pear-crasher')
 const gracedown = require('pear-gracedown')
+const process = require('bare-process')
 const os = require('bare-os')
 const pear = require('pear-cmd')
 const path = require('bare-path')
-const {
-  SWAP,
-  GC,
-  PLATFORM_CORESTORE,
-  EOLS,
-  ALIASES,
-  PLATFORM_DIR,
-  WAKEUP
-} = require('pear-constants')
+const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR, WAKEUP } = require('pear-constants')
 
 const { version, productName, upgrade } = require('./package.json')
 const registerUrlHandler = require('./url-handler')
@@ -72,54 +64,19 @@ async function bootSidecar() {
   registerUrlHandler(WAKEUP)
 
   function createUpdater() {
-    if (!global.__STANDALONE || !upgrade) return null
-    const app = global.Bare?.argv?.[0]
+    // if (!global.__STANDALONE || !upgrade) return null
+    const app = process.execPath
     if (!app) return null
-
-    const normalizedUpgrade = hypercoreid.normalize(upgrade)
-    const forceUpgradeTarget = getForceUpgradeTarget()
-    const upgradeTarget = forceUpgradeTarget ? forceUpgradeTarget : normalizedUpgrade
-    const versionTarget =
-      forceUpgradeTarget && forceUpgradeTarget !== normalizedUpgrade ? '0.0.0' : version
 
     const name = path.basename(app) || productName || 'pear'
 
     return new Sidecar.Updater({
       dir: PLATFORM_DIR,
       store: corestore,
-      version: versionTarget,
-      upgrade: `pear://${upgradeTarget}`,
+      version,
+      upgrade,
       app,
       name
     })
   }
-}
-
-function getForceUpgradeTarget() {
-  if (!global.__STANDALONE) return null
-
-  let key = null
-
-  for (let i = 0; i < Bare.argv.length; i++) {
-    const arg = Bare.argv[i]
-
-    if (arg.startsWith('--key=')) {
-      key = hypercoreid.normalize(arg.slice(6))
-      break
-    }
-
-    if (arg === '--key' && Bare.argv.length > i + 1) {
-      key = hypercoreid.normalize(Bare.argv[i + 1])
-      break
-    }
-  }
-
-  if (!key) return null
-
-  const cur = hypercoreid.decode(key)
-  if (EOLS.pear?.some((key) => cur.equals(key))) {
-    key = hypercoreid.encode(ALIASES.pear)
-  }
-
-  return `pear://${key}`
 }
