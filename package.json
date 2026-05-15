@@ -4,7 +4,7 @@
   "main": "./boot.js",
   "bin": "pear",
   "productName": "pear",
-  "upgrade": "pear://pn8u9qgx7xhi9zesfwzy3bjpuzw3aw8x3669d7sbrihgmbxbm39o",
+  "upgrade": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.js test/*.test.js",
@@ -93,7 +93,7 @@
     "pear-build": "^1.0.0",
     "pear-changelog": "^1.0.1",
     "pear-cmd": "^1.0.2",
-    "pear-constants": "^1.1.0",
+    "pear-constants": "github:holepunchto/pear-constants#new-pear-arch",
     "pear-crasher": "github:holepunchto/pear-crasher#only-runs-in-bare",
     "pear-dump": "^1.0.0",
     "pear-errors": "^1.0.1",

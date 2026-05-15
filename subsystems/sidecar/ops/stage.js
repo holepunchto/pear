@@ -56,6 +56,14 @@ module.exports = class Stage extends Opstream {
       encryptionKey
     })
     await session.add(pod)
+    await pod.ready()
+
+    if (pod.drive?.core?.writable === false) {
+      throw new ERR_PERMISSION_REQUIRED(
+        `No write access for ${plink.serialize(key)}. Make sure this device has the writer key for this drive.`,
+        { key, encrypted: !!encryptionKey }
+      )
+    }
 
     const currentVersion = pod.version
     const verlink = pod.verlink()
