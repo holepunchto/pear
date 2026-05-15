@@ -67,6 +67,7 @@
     "bare-module": "^5.0.3",
     "bare-os": "^3.6.1",
     "bare-path": "^3.0.0",
+    "bare-process": "^4.4.1",
     "bare-subprocess": "^5.1.5",
     "bare-tty": "^5.0.2",
     "compact-encoding": "^2.16.0",

@@ -13,6 +13,7 @@ const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
 const deriveEncryptionKey = require('pw-to-ek')
 const hypercoreid = require('hypercore-id-encoding')
+const { version } = require('../../package.json')
 const {
   SOCKET_PATH,
   CHECKOUT,
@@ -161,10 +162,12 @@ class Sidecar extends ReadyResource {
     }, this.spindownms)
   }
 
-  async updateNotify(version, info = {}) {
-    if (version.force)
+  updateNotify(version, info = {}) {
+    if (version.force) {
       LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
-    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    } else {
+      LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    }
 
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
     else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))

@@ -2,12 +2,11 @@
 const path = require('bare-path')
 const fs = require('bare-fs')
 const os = require('bare-os')
-const env = require('bare-env')
+const process = require('bare-process')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
 
-const executable = resolveExecutable(global.Bare?.argv?.[0])
+const executable = resolveExecutable()
 const devRoot = resolveDevRoot(executable)
-global.__PEAR_EXECUTABLE = executable
 global.__PEAR_DEV_ROOT = devRoot
 global.__PEAR_MOUNT = resolveMount()
 global.__STANDALONE = true
@@ -15,15 +14,12 @@ migrateMisplacedPlatformState()
 
 require('../boot.js')
 
-function resolveExecutable(argv0) {
-  if (!argv0) return null
-  const direct = resolveExisting(safeResolveArgv(argv0))
-  if (direct) return direct
-  const fromPath = resolveFromPath(argv0)
-  if (fromPath) return fromPath
-  const fromKnownBins = resolveFromKnownBins(argv0)
-  if (fromKnownBins) return fromKnownBins
-  return null
+function resolveExecutable() {
+  const executable = process.execPath
+  if (!executable) {
+    throw new Error('Unable to resolve runtime executable from bare-process.execPath')
+  }
+  return executable
 }
 
 function resolveMount() {
@@ -95,8 +91,12 @@ function migrateMisplacedPlatformState() {
     }
 
     // Cleanup legacy nested dirs if they are now empty.
-    try { fs.rmdirSync(wrongRoot) } catch {}
-    try { fs.rmdirSync(wrongBinRoot) } catch {}
+    try {
+      fs.rmdirSync(wrongRoot)
+    } catch {}
+    try {
+      fs.rmdirSync(wrongBinRoot)
+    } catch {}
   }
 }
 
@@ -115,7 +115,9 @@ function mergeDir(from, to) {
       if (st.isDirectory()) {
         if (!fs.existsSync(dst)) fs.mkdirSync(dst, { recursive: true })
         mergeDir(src, dst)
-        try { fs.rmdirSync(src) } catch {}
+        try {
+          fs.rmdirSync(src)
+        } catch {}
       } else {
         if (!fs.existsSync(dst)) fs.renameSync(src, dst)
       }
@@ -134,13 +136,6 @@ function normalize(p) {
   return p.replace(/\\/g, '/')
 }
 
-function safeResolveArgv(argv0) {
-  if (!argv0) return safeResolveDot()
-  if (path.isAbsolute(argv0)) return argv0
-  const cwd = safeCwd()
-  return cwd ? path.join(cwd, argv0) : argv0
-}
-
 function safeResolveDot() {
   const cwd = safeCwd()
   return cwd || '/'
@@ -152,55 +147,4 @@ function safeCwd() {
   } catch {
     return null
   }
-}
-
-function resolveExisting(p) {
-  if (!p) return null
-  try {
-    if (!fs.existsSync(p)) return null
-    try {
-      return fs.realpathSync(p)
-    } catch {
-      return p
-    }
-  } catch {
-    return null
-  }
-}
-
-function resolveFromPath(bin) {
-  if (!bin || bin.includes('/') || bin.includes('\\')) return null
-  const PATH = env.PATH || env.Path || ''
-  if (!PATH) return null
-  const dirs = PATH.split(isWindows ? ';' : ':').filter(Boolean)
-  const names = isWindows ? [bin, `${bin}.exe`, `${bin}.cmd`, `${bin}.bat`] : [bin]
-  for (const dir of dirs) {
-    for (const name of names) {
-      const found = resolveExisting(path.join(dir, name))
-      if (found) return found
-    }
-  }
-  return null
-}
-
-function resolveFromKnownBins(bin) {
-  if (!bin || bin.includes('/') || bin.includes('\\')) return null
-  const dirs = isWindows
-    ? [
-        path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'WindowsApps'),
-        'C:\\Program Files\\pear\\bin'
-      ]
-    : [
-        '/usr/local/bin',
-        '/opt/homebrew/bin',
-        '/usr/bin'
-      ]
-  const names = isWindows ? [bin, `${bin}.exe`] : [bin]
-  for (const dir of dirs) {
-    for (const name of names) {
-      const found = resolveExisting(path.join(dir, name))
-      if (found) return found
-    }
-  }
-  return null
 }
