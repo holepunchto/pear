@@ -4,10 +4,21 @@ const fs = require('bare-fs')
 const os = require('bare-os')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
 
-global.__PEAR_MOUNT = resolveMount(global.Bare?.argv?.[0])
+const executable = resolveExecutable(global.Bare?.argv?.[0])
+global.__PEAR_EXECUTABLE = executable
+global.__PEAR_MOUNT = resolveMount(executable || global.Bare?.argv?.[0])
 global.__STANDALONE = true
 
 require('../boot.js')
+
+function resolveExecutable(argv0) {
+  if (!argv0) return null
+  try {
+    return fs.realpathSync(safeResolveArgv(argv0))
+  } catch {
+    return safeResolveArgv(argv0)
+  }
+}
 
 function resolveMount(argv0) {
   const fallback = safeResolveDot()

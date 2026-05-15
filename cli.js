@@ -31,7 +31,7 @@ function tryboot() {
   if (bootstrapArgIndex !== -1 && argv[bootstrapArgIndex + 1]) {
     args.push('--dht-bootstrap', argv[bootstrapArgIndex + 1])
   }
-  let runtime = resolveRuntimeExecutable(global.Bare?.argv?.[0] || RUNTIME)
+  let runtime = resolveRuntimeExecutable(global.__PEAR_EXECUTABLE || global.Bare?.argv?.[0] || RUNTIME)
   if (isWindows) runtime = resolveWindowsSidecarRuntime(runtime)
   daemon(runtime, args, { cwd: resolveSpawnCwd(runtime) })
 }
