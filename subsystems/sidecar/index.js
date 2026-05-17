@@ -28,7 +28,6 @@ const hyperdb = require('./lib/model')
 const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version, productName, upgrade } = require('../../package.json')
-const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
