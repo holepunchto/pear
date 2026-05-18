@@ -8,10 +8,9 @@ const process = require('bare-process')
 const os = require('bare-os')
 const pear = require('pear-cmd')
 const path = require('bare-path')
-const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR, WAKEUP } = require('pear-constants')
+const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('pear-constants')
 
 const { version, productName, upgrade } = require('./package.json')
-const registerUrlHandler = require('./url-handler')
 crasher('sidecar', SWAP)
 
 os.setProcessTitle('pear-sidecar')
@@ -60,8 +59,6 @@ async function bootSidecar() {
   })
   gracedown(() => sidecar.close())
   await sidecar.ipc.ready()
-
-  registerUrlHandler(WAKEUP)
 
   function createUpdater() {
     // if (!global.__STANDALONE || !upgrade) return null

@@ -27,7 +27,6 @@ const HyperDB = require('hyperdb')
 const State = require('./state')
 const hyperdb = require('./lib/model')
 const db = require('./lib/db')
-const registerUrlHandler = require('../../url-handler')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
@@ -41,9 +40,6 @@ const ops = {
   Presets: require('./ops/presets'),
   Multisig: require('./ops/multisig')
 }
-
-// ensure that we are registered as a link handler
-registerUrlHandler(WAKEUP)
 
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'
