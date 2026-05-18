@@ -13,7 +13,7 @@ const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
 const deriveEncryptionKey = require('pw-to-ek')
 const hypercoreid = require('hypercore-id-encoding')
-const { version } = require('../../package.json')
+const { version, upgrade } = require('../../package.json')
 const {
   SOCKET_PATH,
   CHECKOUT,
@@ -357,14 +357,14 @@ class Sidecar extends ReadyResource {
 
   #bindUpdaterEvents(updater) {
     updater.on('updating', () => {
-      const key = updater.key
-      const encodedKey = key ? hypercoreid.encode(key) : null
+      const key = updater.key ? hypercoreid.normalize(updater.key) : null
+      const currentKey = upgrade ? hypercoreid.normalize(upgrade) : null
       const length = updater.drive.core.length
       LOG.info(
         'sidecar',
-        encodedKey === version.key
+        key === currentKey
           ? `- Updating to length ${length}...`
-          : `- Switching to key ${encodedKey || 'unknown'} with length ${length}...`
+          : `- Switching to key ${key || 'unknown'} with length ${length}...`
       )
     })
 
