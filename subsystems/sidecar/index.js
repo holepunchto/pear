@@ -391,8 +391,10 @@ class Sidecar extends ReadyResource {
     await this.ipc.close()
 
     if (this.updater) {
-      await this.updater.applyUpdate()
-      LOG.info('sidecar', CHECKMARK + ' Applied update')
+      if (this.updater.updated) {
+        await this.updater.applyUpdate()
+        LOG.info('sidecar', CHECKMARK + ' Applied update')
+      }
       await this.updater.close()
     }
     this.bus.destroy()
