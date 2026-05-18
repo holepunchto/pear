@@ -31,10 +31,9 @@ module.exports = async function sidecar(cmd) {
   await withTimeout(ipc.shutdown(), 8000)
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
-  const { RUNTIME } = require('pear-constants')
 
   print('Rebooting current process as Sidecar\n  - [ ' + key + ' ]', 0)
-  print(ansi.gray('Runtime: ' + path.basename(RUNTIME)), 0)
+  print(ansi.gray('Runtime: ' + path.basename(constants.RUNTIME)), 0)
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
