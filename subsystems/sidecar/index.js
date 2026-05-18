@@ -155,14 +155,14 @@ class Sidecar extends ReadyResource {
   }
 
   updateNotify(version) {
+    // TODO: @keith either fix or cleanup force
     if (version.force) {
       LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
     } else {
       LOG.info('sidecar', 'Platform update available. Restart to update to:')
     }
 
-    if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
-    else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
+    LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
     // TODO: @keith should spindown 0 only happen when updating to new key?
     this.spindownms = 0
