@@ -353,7 +353,7 @@ class Sidecar extends ReadyResource {
 
   #bindUpdaterEvents(updater) {
     updater.on('updating', () => {
-      const key = updater.key ? hypercoreid.normalize(updater.key) : null
+      const key = hypercoreid.normalize(updater.key)
       const currentKey = upgrade ? hypercoreid.normalize(upgrade) : null
       const length = updater.drive.core.length
       LOG.info(
