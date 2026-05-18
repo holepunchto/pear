@@ -14,14 +14,7 @@ const plink = require('pear-link')
 const deriveEncryptionKey = require('pw-to-ek')
 const hypercoreid = require('hypercore-id-encoding')
 const { version, upgrade } = require('../../package.json')
-const {
-  SOCKET_PATH,
-  CHECKOUT,
-  SPINDOWN_TIMEOUT,
-  WAKEUP,
-  KNOWN_NODES_LIMIT,
-  SALT
-} = require('pear-constants')
+const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, SALT } = require('pear-constants')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const State = require('./state')
@@ -76,8 +69,6 @@ class Sidecar extends ReadyResource {
     this.bus.sub({}).on('data', (msg) => {
       LOG.trace('bus', 'PUB', msg)
     })
-
-    this.version = CHECKOUT
 
     this.updater = updater
     if (this.updater) this.#bindUpdaterEvents(updater)
@@ -223,7 +214,7 @@ class Sidecar extends ReadyResource {
   versions(params, client) {
     const runtimes = { bare: Bare.versions.bare, pear: version }
     return {
-      platform: this.version,
+      platform: { key: upgrade, version },
       runtimes
     }
   }

@@ -6,6 +6,7 @@ const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('pear-terminal')
 const Logger = require('pear-logger')
 const constants = require('pear-constants')
+const { upgrade: key, version } = require('../package.json')
 module.exports = async function sidecar(cmd) {
   const ipc = context.getIPC()
   if (cmd.command.name === 'inspect') {
@@ -30,10 +31,9 @@ module.exports = async function sidecar(cmd) {
   await withTimeout(ipc.shutdown(), 8000)
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
-  const { CHECKOUT, RUNTIME } = require('pear-constants')
-  const KEY = CHECKOUT.key
+  const { RUNTIME } = require('pear-constants')
 
-  print('Rebooting current process as Sidecar\n  - [ ' + KEY + ' ]', 0)
+  print('Rebooting current process as Sidecar\n  - [ ' + key + ' ]', 0)
   print(ansi.gray('Runtime: ' + path.basename(RUNTIME)), 0)
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
@@ -52,7 +52,7 @@ module.exports = async function sidecar(cmd) {
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)
-  print(ansi.gray('Version: ' + JSON.stringify(CHECKOUT, 0, 4).slice(0, -1) + '  }'), 0)
+  print(ansi.gray('Version: ' + JSON.stringify({ key, version }, 0, 4).slice(0, -1) + '  }'), 0)
   const commands = restarts.filter(({ id = null }) => id !== null)
   if (commands.length > 0) {
     print('Restart Commands:', 0)

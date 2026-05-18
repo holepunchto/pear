@@ -4,7 +4,6 @@ const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
   paparam
 const { usage, print } = require('pear-terminal')
-const { CHECKOUT } = require('pear-constants')
 const { userArgv } = require('../argv')
 const opwait = require('pear-opwait')
 const pdump = require('pear-dump')
@@ -501,19 +500,15 @@ module.exports = async (ipc, argv = userArgv()) => {
 
   function pear({ flags }) {
     if (flags.v) {
-      const semver = require('../package.json').version
+      const { upgrade: key, version } = require('../package.json')
       if (flags.json) {
-        const checkout = JSON.stringify(CHECKOUT)
-        console.log({ ...checkout, semver })
+        console.log(JSON.stringify({ key, version }))
         return
       }
-      const { key, fork, length } = CHECKOUT
+      console.log(key + ' / v' + version + '\n')
 
-      console.log('v' + ~~fork + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
       console.log('Key=' + key)
-      console.log('Fork=' + fork)
-      console.log('Length=' + length)
-      console.log('SemVer=' + semver)
+      console.log('SemVer=' + version)
       return
     }
     console.log(cmd.overview())
