@@ -110,9 +110,6 @@ class Sidecar extends ReadyResource {
 
     this.replicator = updater ? new Replicator(updater.drive) : null
 
-    // TODO: @keith cleanup
-    this.running = new Map()
-
     this._inspector = new Inspector({
       inspector: bareInspector,
       bootstrap: this.nodes
