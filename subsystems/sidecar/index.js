@@ -75,11 +75,9 @@ class Sidecar extends ReadyResource {
       model: new db.Model(rocksNext)
     }
 
-    const all = {}
-
     this.bus = new Iambus()
 
-    this.bus.sub(all).on('data', (msg) => {
+    this.bus.sub({}).on('data', (msg) => {
       LOG.trace('bus', 'PUB', msg)
     })
 
@@ -112,6 +110,7 @@ class Sidecar extends ReadyResource {
 
     this.replicator = updater ? new Replicator(updater.drive) : null
 
+    // TODO: @keith cleanup
     this.running = new Map()
 
     this._inspector = new Inspector({
