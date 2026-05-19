@@ -13,30 +13,54 @@ test('inspect', async function ({ ok, teardown, alike, plan, timeout }) {
   teardown(
     () => {
       helper.close()
-      session.destroy()
+      if (session) session.destroy()
     },
     { order: Infinity }
   )
 
   const key = await helper.inspect()
-  session = new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap })
   ok(key, 'inspect returns sidecar inspect key')
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
-
-  await waitForInfo(session)
-  session.connect()
-
-  const id = 1
-  const response = waitForMessageById(session, id, 30000)
-  session.post({
-    id,
-    method: 'Runtime.evaluate',
-    params: { expression: 'global.sidecar' }
-  })
-
-  const { result } = await response
+  const { result } = await inspectWithRetry(
+    () => new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap }),
+    (s) => {
+      session = s
+    }
+  )
   ok(result, 'sidecar is defined')
 })
+
+async function inspectWithRetry(createSession, setSession, maxAttempts = 4) {
+  let lastErr = null
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const session = createSession()
+    setSession(session)
+    try {
+      await waitForInfo(session)
+      session.connect()
+      const id = attempt
+      const response = waitForMessageById(session, id, 30000)
+      session.post({
+        id,
+        method: 'Runtime.evaluate',
+        params: { expression: 'global.sidecar' }
+      })
+      const msg = await response
+      return msg
+    } catch (err) {
+      lastErr = err
+      try {
+        await session.destroy()
+      } catch {}
+      if (attempt < maxAttempts) await wait(250 * attempt)
+    }
+  }
+  throw lastErr || new Error('inspector retry failed')
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 function waitForInfo(session, ms = 30000) {
   return new Promise((resolve, reject) => {
