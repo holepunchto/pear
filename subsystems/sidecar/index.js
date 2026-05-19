@@ -53,6 +53,8 @@ class Sidecar extends ReadyResource {
   constructor({ updater, corestore, nodes }) {
     super()
 
+    global.sidecar = this
+
     const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
     this.model = new hyperdb.Model(rocks)
 
@@ -107,7 +109,6 @@ class Sidecar extends ReadyResource {
       if (this.closed) return
       this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
-    global.sidecar = this
   }
 
   async _open() {
