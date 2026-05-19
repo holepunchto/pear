@@ -4,6 +4,8 @@ const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
   paparam
 const { usage, print } = require('pear-terminal')
+const path = require('bare-path')
+const process = require('bare-process')
 const { userArgv } = require('../argv')
 const opwait = require('pear-opwait')
 const pdump = require('pear-dump')
@@ -498,20 +500,56 @@ module.exports = async (ipc, argv = userArgv()) => {
     pear
   )
 
-  function pear({ flags }) {
+  async function pear({ flags }) {
     if (flags.v) {
-      const { upgrade: key, version } = require('../package.json')
+      const pkg = require('../package.json')
+      const { version } = pkg
+      const devRoot = getDevRoot()
+      const vinfo = await ipc.versions()
+      const key = vinfo?.platform?.key || pkg.upgrade
+      const release = devRoot ? null : (vinfo?.platform?.fork ?? null)
+      const length = devRoot ? null : (vinfo?.platform?.length ?? null)
+      const hasVersioned = release !== null && length !== null
+      const versionedKey = hasVersioned
+        ? `pear://${release}.${length}.${stripPearPrefix(key)}`
+        : key
       if (flags.json) {
-        console.log(JSON.stringify({ key, version }))
+        console.log(
+          JSON.stringify({ key, version, path: devRoot, fork: release, length, versionedKey })
+        )
         return
       }
-      console.log(key + ' / v' + version + '\n')
+      console.log(versionedKey + ' / v' + version + '\n')
 
-      console.log('Key=' + key)
+      if (devRoot) console.log('Path=' + devRoot)
+      else console.log('Key=' + key)
       console.log('SemVer=' + version)
+      if (release !== null) console.log('Fork=' + release)
+      if (length !== null) console.log('Length=' + length)
       return
     }
     console.log(cmd.overview())
+  }
+
+  function stripPearPrefix(link) {
+    if (typeof link !== 'string') return ''
+    return link.startsWith('pear://') ? link.slice('pear://'.length) : link
+  }
+
+  function getDevRoot() {
+    if (global.__PEAR_DEV_ROOT) return global.__PEAR_DEV_ROOT
+    const execPath = process.execPath
+    if (!execPath) return null
+    const normalized = execPath.replace(/\\/g, '/')
+    const ix = normalized.indexOf('/by-arch/')
+    if (ix === -1) return null
+    const root = normalized.slice(0, ix)
+    if (!root) return null
+    try {
+      return path.resolve(root)
+    } catch {
+      return root
+    }
   }
 
   const shell = require('pear-cmd')(argv)

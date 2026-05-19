@@ -213,8 +213,14 @@ class Sidecar extends ReadyResource {
 
   versions(params, client) {
     const runtimes = { bare: Bare.versions.bare, pear: version }
+    const fork = Number.isFinite(this.updater?.drive?.core?.fork)
+      ? this.updater.drive.core.fork
+      : null
+    const length = Number.isFinite(this.updater?.drive?.core?.length)
+      ? this.updater.drive.core.length
+      : null
     return {
-      platform: { key: upgrade, version },
+      platform: { key: upgrade, version, fork, length },
       runtimes
     }
   }
