@@ -10,7 +10,7 @@ const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
-const { arch, platform, isWindows } = require('which-runtime')
+const { isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const Corestore = require('corestore')
@@ -18,10 +18,8 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
-const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('pear-constants')
-const { PLATFORM_DIR } = constants
+const { PLATFORM_DIR, WAKEUP } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const testtmp = require('test-tmp')
@@ -60,7 +58,7 @@ class Helper extends IPC.Client {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = opts.runtime || WAKEUP
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
