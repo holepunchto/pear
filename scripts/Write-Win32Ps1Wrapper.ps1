@@ -18,3 +18,8 @@ $wrapper = @"
 
 Set-Content -Path $wrapperPath -Value $wrapper -Encoding ascii
 Write-Host "Wrote wrapper: $wrapperPath"
+
+$exePath = Join-Path $targetDir "$name.exe"
+$runtimePath = Join-Path $targetDir "$name-runtime.exe"
+Copy-Item -Path $exePath -Destination $runtimePath -Force
+Write-Host "Copied runtime: $runtimePath"
