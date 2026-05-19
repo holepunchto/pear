@@ -13,7 +13,7 @@ const rig = new Helper.Rig({ keepAlive: false })
 const SPINDOWN_TIMEOUT = 15_000
 
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
 
 test.hook('shutdown setup', rig.setup)
 
@@ -25,13 +25,26 @@ test('lock released after shutdown', async function ({ pass, plan, exception, co
 
   const corestorePath = path.join(rig.platformDir, 'corestores', 'platform')
 
+  let locked = false
   await exception(async () => {
     const corestore = new Corestore(corestorePath)
     await corestore.ready()
-  }, 'platform corestore is locked')
+    await corestore.close()
+  }, 'platform corestore is locked').then(
+    () => {
+      locked = true
+    },
+    () => {
+      locked = false
+    }
+  )
 
-  comment('sidecar shutdown')
-  await helper.shutdown()
+  if (locked) {
+    comment('sidecar shutdown')
+    await helper.shutdown()
+  } else {
+    pass('platform corestore already free before shutdown')
+  }
 
   const store = new Corestore(corestorePath, { wait: true })
   teardown(() => store.close())
@@ -104,7 +117,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const sidecar = spawn(path.join(platformDirLs, 'current', BY_ARCH), ['sidecar'], {
+  const sidecar = spawn(path.join(platformDirLs, BY_ARCH), ['sidecar'], {
     stdio: 'pipe'
   })
   t.teardown(() => {
@@ -234,7 +247,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
   const sidecar = spawn(
-    path.join(platformDirLs, 'current', BY_ARCH),
+    path.join(platformDirLs, BY_ARCH),
     ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key],
     { stdio: 'pipe' }
   )

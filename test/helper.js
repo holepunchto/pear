@@ -19,7 +19,15 @@ const Hyperswarm = require('hyperswarm')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+const LEGACY_BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
+const APP_BY_ARCH = path.join('by-arch', HOST, 'app', `pear${isWindows ? '.exe' : ''}`)
+const LEGACY_APP_BY_ARCH = path.join(
+  'by-arch',
+  HOST,
+  'app',
+  `pear-runtime${isWindows ? '.exe' : ''}`
+)
 const constants = require('pear-constants')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
@@ -60,7 +68,11 @@ class Helper extends IPC.Client {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = opts.platformDir
+      ? Helper.resolveRuntimeInPlatformDir(platformDir)
+      : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
+        ? path.join(Helper.localDir, 'pear.dev')
+        : path.join(Helper.localDir, BY_ARCH)
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
@@ -105,6 +117,24 @@ class Helper extends IPC.Client {
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = path.dirname(__dirname)
+
+  static resolveRuntimeInPlatformDir(platformDir) {
+    const candidates = [
+      path.join(platformDir, BY_ARCH),
+      path.join(platformDir, 'current', BY_ARCH),
+      path.join(platformDir, 'current', LEGACY_BY_ARCH),
+      path.join(platformDir, APP_BY_ARCH),
+      path.join(platformDir, LEGACY_APP_BY_ARCH),
+      path.join(platformDir, 'current', APP_BY_ARCH),
+      path.join(platformDir, 'current', LEGACY_APP_BY_ARCH)
+    ]
+    for (const candidate of candidates) {
+      try {
+        if (fs.existsSync(candidate)) return candidate
+      } catch {}
+    }
+    return path.join(platformDir, BY_ARCH)
+  }
 
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)

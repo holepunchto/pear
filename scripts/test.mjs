@@ -5,7 +5,7 @@ import { spawn, spawnSync } from 'bare-subprocess'
 import createTestnet from '@hyperswarm/testnet'
 import fs from 'bare-fs'
 import env from 'bare-env'
-import { isWindows } from 'which-runtime'
+import { isWindows, arch, platform } from 'which-runtime'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -15,6 +15,9 @@ const { default: checkout } = await import('../checkout')
 global.Pear = { constructor: { RTI: { checkout, mount: root } }, config: {} }
 
 const { RUNTIME } = await import('pear-constants')
+const HOST = `${platform}-${arch}`
+const BIN = isWindows ? 'pear.exe' : 'pear'
+const LEGACY_BIN = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 
 const force = Bare.argv.includes('--force-install')
 const fixtures = path.join(root, 'test', 'fixtures')
@@ -43,7 +46,10 @@ for (const dir of dirs) {
 const testnet = await createTestnet(10)
 const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
 
-spawnSync(RUNTIME, ['sidecar', 'shutdown'], { stdio: 'inherit' })
+const runtime = resolveRuntime()
+if (runtime) {
+  spawnSync(runtime, ['sidecar', 'shutdown'], { stdio: 'inherit' })
+}
 
 const tests = spawn(Bare.argv[0], [path.join(root, 'test', 'index.js'), ...Bare.argv.slice(2)], {
   cwd: root,
@@ -56,3 +62,20 @@ tests.on('exit', async (code, signal) => {
   await testnet.destroy()
   Bare.exitCode = code
 })
+
+function resolveRuntime() {
+  const candidates = [
+    RUNTIME,
+    path.join(root, 'pear.dev'),
+    path.join(root, 'by-arch', HOST, 'bin', BIN),
+    path.join(root, 'by-arch', HOST, 'bin', LEGACY_BIN),
+    path.join(root, 'current', 'by-arch', HOST, 'bin', LEGACY_BIN)
+  ]
+  for (const candidate of candidates) {
+    if (!candidate) continue
+    try {
+      if (fs.existsSync(candidate)) return candidate
+    } catch {}
+  }
+  return null
+}
