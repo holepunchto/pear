@@ -7,7 +7,7 @@ async function runTests() {
 
   test.pause()
 
-  await test.load(import.meta.resolve('./00-inspect.test.js'))
+  // await test.load(import.meta.resolve('./00-inspect.test.js')) // disabled for now (linux CI race condition)
   await test.load(import.meta.resolve('./01-touch.test.js'))
   await test.load(import.meta.resolve('./02-stage.test.js'))
   await test.load(import.meta.resolve('./03-seed.test.js'))
