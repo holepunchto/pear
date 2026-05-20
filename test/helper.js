@@ -147,58 +147,10 @@ class Helper extends IPC.Client {
 
   static #untils(stream, patterns = [], by) {
     const untils = {}
-    const pending = new Map()
-
-    const settle = (key, err, value) => {
-      const entry = pending.get(key)
-      if (!entry || entry.done) return
-      entry.done = true
-      clearTimeout(entry.timeout)
-      pending.delete(key)
-      if (err) entry.reject(err)
-      else entry.resolve(value === undefined ? true : value)
-      if (pending.size === 0) cleanup()
-    }
-
-    const onerror = (err) => {
-      for (const [key] of pending) settle(key, err)
-    }
-
-    const onclose = () => {
-      for (const [key] of pending) settle(key, new Error('Helper: Unexpected close on stream'))
-    }
-
-    const ondata = (output) => {
-      if (output?.tag === 'error') {
-        onerror(new OperationError(output.data))
-        return
-      }
-      for (const [key, entry] of pending) {
-        if (this.matchesPattern(output, entry.pattern)) {
-          settle(key, null, output.data)
-        }
-      }
-      if (output === null || output?.tag === 'final') {
-        stream.off('close', onclose)
-      }
-    }
-
-    const cleanup = () => {
-      stream.off('data', ondata)
-      stream.off('close', onclose)
-      stream.off('error', onerror)
-    }
-
-    stream.on('data', ondata)
-    stream.on('close', onclose)
-    stream.on('error', onerror)
-
     for (const ptn of patterns) {
-      const key = ptn[by]
-      untils[key] = new Promise((resolve, reject) => {
+      untils[ptn[by]] = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          settle(
-            key,
+          reject(
             new Error(
               'Helper: Data Timeout for ' +
                 JSON.stringify(ptn) +
@@ -208,7 +160,26 @@ class Helper extends IPC.Client {
             )
           )
         }, MAX_OP_STEP_WAIT)
-        pending.set(key, { pattern: ptn, resolve, reject, timeout, done: false })
+        const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
+        const onerror = (err) => reject(err)
+        const ondata = (data) => {
+          if (data === null || data?.tag === 'final') stream.off('close', onclose)
+        }
+        stream.on('data', ondata)
+        stream.on('close', onclose)
+        stream.on('error', onerror)
+        const onpick = (data) => {
+          const result = data === undefined ? true : data
+          resolve(result)
+        }
+        this.pick(new Reiterate(stream), ptn, by)
+          .then(onpick, reject)
+          .finally(() => {
+            clearTimeout(timeout)
+            stream.off('data', ondata)
+            stream.off('close', onclose)
+            stream.off('error', onerror)
+          })
       })
     }
 

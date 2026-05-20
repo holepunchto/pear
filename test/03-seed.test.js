@@ -80,15 +80,11 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
   const announced = await until.announced
   ok(announced, 'seeding is announced')
   const key = await until.key
-  console.log('test 1')
   const peerStore = new Corestore(await tmp())
-  console.log('test 2')
   teardown(() => peerStore.close())
   await peerStore.ready()
-  console.log('test 3')
   const peerDrive = new Hyperdrive(peerStore, key)
   await peerDrive.ready()
-  console.log('test 4')
 
   const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
   teardown(() => peerSwarm.destroy())
@@ -97,16 +93,12 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
   })
   peerSwarm.join(peerDrive.discoveryKey)
   await peerDrive.get('/package.json')
-  console.log('test 5')
 
   const joined = await until['peer-add']
-  console.log('test 6')
   ok(joined, 'peer joins')
 
   await peerSwarm.destroy()
-  console.log('test 7')
 
   const dropped = await until['peer-remove']
-  console.log('test 8')
   ok(dropped, 'peer drops')
 })
