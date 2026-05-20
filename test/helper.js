@@ -163,6 +163,7 @@ class Helper extends IPC.Client {
         const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
         const onerror = (err) => reject(err)
         const ondata = (data) => {
+          console.log(data)
           if (data === null || data?.tag === 'final') stream.off('close', onclose)
         }
         stream.on('data', ondata)
