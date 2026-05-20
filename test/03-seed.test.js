@@ -93,13 +93,31 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
     peerDrive.corestore.replicate(conn)
   })
   peerSwarm.join(peerDrive.discoveryKey)
-  await peerDrive.get('/package.json')
+  await peerSwarm.flush()
 
-  const joined = await until['peer-add']
+  const joined = await withTimeout(until['peer-add'], 45000, 'peer-add timeout')
   ok(joined, 'peer joins')
+
+  await withTimeout(peerDrive.get('/package.json'), 45000, 'package fetch timeout')
 
   await peerSwarm.destroy()
 
-  const dropped = await until['peer-remove']
+  const dropped = await withTimeout(until['peer-remove'], 45000, 'peer-remove timeout')
   ok(dropped, 'peer drops')
 })
+
+function withTimeout(promise, ms, msg) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(msg)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (err) => {
+        clearTimeout(timer)
+        reject(err)
+      }
+    )
+  })
+}
