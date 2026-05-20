@@ -24,31 +24,31 @@ test(
     const staged = await Helper.pick(staging, [{ tag: 'final' }])
     await staged.final
 
-  let presets = await getPresets({ link, command: 'stage' })
-  is(presets, null, 'initial stage presets should be null')
+    let presets = await getPresets({ link, command: 'stage' })
+    is(presets, null, 'initial stage presets should be null')
 
-  presets = await getPresets({
-    link,
-    command: 'stage',
-    flags: '--dry-run --no-ask'
-  })
+    presets = await getPresets({
+      link,
+      command: 'stage',
+      flags: '--dry-run --no-ask'
+    })
 
-  ok(presets, 'should have one presets')
-  is(presets.command, 'stage', 'presets command should be "stage"')
-  is(presets.flags, '--dry-run --no-ask', 'presets flags should match')
+    ok(presets, 'should have one presets')
+    is(presets.command, 'stage', 'presets command should be "stage"')
+    is(presets.flags, '--dry-run --no-ask', 'presets flags should match')
 
-  presets = await getPresets({ link, command: 'stage' })
+    presets = await getPresets({ link, command: 'stage' })
 
-  is(presets.command, 'stage', 'stored presets command should be "stage"')
-  is(presets.flags, '--dry-run --no-ask', 'stored presets flags should be "--dry-run --no-ask"')
+    is(presets.command, 'stage', 'stored presets command should be "stage"')
+    is(presets.flags, '--dry-run --no-ask', 'stored presets flags should be "--dry-run --no-ask"')
 
-  presets = await getPresets({
-    link,
-    command: 'stage',
-    reset: true
-  })
-  presets = await getPresets({ link, command: 'stage' })
-  is(presets, null, 'initial stage presets should be null after reset')
+    presets = await getPresets({
+      link,
+      command: 'stage',
+      reset: true
+    })
+    presets = await getPresets({ link, command: 'stage' })
+    is(presets, null, 'initial stage presets should be null after reset')
 
     async function getPresets({ link, command, flags, reset }) {
       const presetsStream = await helper.presets({
