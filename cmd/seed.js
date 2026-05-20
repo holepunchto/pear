@@ -1,6 +1,7 @@
 'use strict'
 const plink = require('pear-link')
 const bareTTY = require('bare-tty')
+const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('pear-terminal')
@@ -428,11 +429,13 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     'peer-add': (info) => {
+      info = hypercoreid.normalize(info)
       const msg = `${ansi.gray('o-o')} ${ansi.green('peer join')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
+      info = hypercoreid.normalize(info)
       const msg = `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
       peers.append([msg])
       layout.print(stdio)
@@ -443,9 +446,9 @@ module.exports = async function seed(cmd) {
         : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
-        driveKey,
-        discoveryKey,
-        contentKey,
+        driveKey: driveKey && hypercoreid.normalize(driveKey),
+        discoveryKey: discoveryKey && hypercoreid.normalize(discoveryKey),
+        contentKey: contentKey && hypercoreid.normalize(contentKey),
         firewalled,
         natType,
         network
