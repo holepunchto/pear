@@ -6,7 +6,6 @@ const crasher = require('pear-crasher')
 const gracedown = require('pear-gracedown')
 const process = require('bare-process')
 const os = require('bare-os')
-const pear = require('pear-cmd')
 const path = require('bare-path')
 const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('pear-constants')
 
@@ -31,10 +30,7 @@ async function bootSidecar() {
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
-  const nodes = pear(Bare.argv.slice(1))
-    .flags.dhtBootstrap?.split(',')
-    .map(parseBootstrapAddr)
-    .filter(Boolean)
+  const nodes = parseDhtBootstrapFromArgv(Bare.argv)
 
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
@@ -97,4 +93,24 @@ function parseBootstrapAddr(tuple) {
   const port = Number(portRaw)
   if (!host || !Number.isInteger(port)) throw new Error(`Invalid port: ${portRaw}`)
   return { host, port }
+}
+
+function parseDhtBootstrapFromArgv(argv = []) {
+  let raw = null
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg === '--dht-bootstrap' && typeof argv[i + 1] === 'string') {
+      raw = argv[i + 1]
+      break
+    }
+    if (typeof arg === 'string' && arg.startsWith('--dht-bootstrap=')) {
+      raw = arg.slice('--dht-bootstrap='.length)
+      break
+    }
+  }
+  if (!raw) return undefined
+  return raw
+    .split(',')
+    .map(parseBootstrapAddr)
+    .filter(Boolean)
 }
