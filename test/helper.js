@@ -39,10 +39,7 @@ Error.stackTraceLimit = Infinity
 const rigPear = path.join(tmp, 'rig-pear')
 
 const DHT_BOOTSTRAP = env.PEAR_TEST_BOOTSTRAP
-  ? env.PEAR_TEST_BOOTSTRAP.split(',').map((addr) => {
-      const [host, port] = addr.split(':')
-      return { host, port: +port }
-    })
+  ? env.PEAR_TEST_BOOTSTRAP.split(',').map(parseBootstrapAddr).filter(Boolean)
   : []
 
 class OperationError extends Error {
@@ -73,7 +70,7 @@ class Helper extends IPC.Client {
       : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
         ? path.join(Helper.localDir, 'pear.dev')
         : path.join(Helper.localDir, BY_ARCH)
-    const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
+    const dhtBootstrap = DHT_BOOTSTRAP.map((e) => formatBootstrapAddr(e.host, e.port)).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
       const buf = b4a.allocUnsafe(32)
@@ -359,6 +356,30 @@ function makePwd(str) {
   const buf = sodium.sodium_malloc(Buffer.byteLength(str))
   buf.write(str)
   return buf
+}
+
+function parseBootstrapAddr(addr) {
+  if (!addr) return null
+  if (addr[0] === '[') {
+    const end = addr.indexOf(']')
+    if (end === -1) return null
+    const host = addr.slice(1, end)
+    const sep = addr.indexOf(':', end)
+    if (sep === -1) return null
+    const port = Number(addr.slice(sep + 1))
+    if (!Number.isFinite(port)) return null
+    return { host, port }
+  }
+  const idx = addr.lastIndexOf(':')
+  if (idx === -1) return null
+  const host = addr.slice(0, idx)
+  const port = Number(addr.slice(idx + 1))
+  if (!host || !Number.isFinite(port)) return null
+  return { host, port }
+}
+
+function formatBootstrapAddr(host, port) {
+  return host.includes(':') ? `[${host}]:${port}` : `${host}:${port}`
 }
 
 async function setupDestPeers(dbKey, blobsKey, n, teardown) {

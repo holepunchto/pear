@@ -33,12 +33,8 @@ async function bootSidecar() {
   const globalCache = new Rache({ maxSize: maxCacheSize })
   const nodes = pear(Bare.argv.slice(1))
     .flags.dhtBootstrap?.split(',')
-    .map((tuple) => {
-      const [host, port] = tuple.split(':')
-      const int = +port
-      if (Number.isInteger(int) === false) throw new Error(`Invalid port: ${port}`)
-      return { host, port: int }
-    })
+    .map(parseBootstrapAddr)
+    .filter(Boolean)
 
   const corestore = new Corestore(PLATFORM_CORESTORE, {
     globalCache,
@@ -76,4 +72,29 @@ async function bootSidecar() {
       name
     })
   }
+}
+
+function parseBootstrapAddr(tuple) {
+  if (!tuple) return null
+
+  // [ipv6]:port
+  if (tuple[0] === '[') {
+    const end = tuple.indexOf(']')
+    if (end === -1) throw new Error(`Invalid bootstrap node: ${tuple}`)
+    const host = tuple.slice(1, end)
+    const sep = tuple.indexOf(':', end)
+    if (sep === -1) throw new Error(`Invalid bootstrap node: ${tuple}`)
+    const port = Number(tuple.slice(sep + 1))
+    if (!Number.isInteger(port)) throw new Error(`Invalid port: ${tuple.slice(sep + 1)}`)
+    return { host, port }
+  }
+
+  // hostname/ipv4:port (split on last colon)
+  const idx = tuple.lastIndexOf(':')
+  if (idx === -1) throw new Error(`Invalid bootstrap node: ${tuple}`)
+  const host = tuple.slice(0, idx)
+  const portRaw = tuple.slice(idx + 1)
+  const port = Number(portRaw)
+  if (!host || !Number.isInteger(port)) throw new Error(`Invalid port: ${portRaw}`)
+  return { host, port }
 }

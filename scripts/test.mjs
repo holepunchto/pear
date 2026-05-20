@@ -44,7 +44,7 @@ for (const dir of dirs) {
 }
 
 const testnet = await createTestnet(10)
-const dhtBootstrap = testnet.nodes.map((e) => `${e.host}:${e.port}`).join(',')
+const dhtBootstrap = testnet.nodes.map((e) => formatBootstrapAddr(e.host, e.port)).join(',')
 
 const runtime = resolveRuntime()
 if (runtime) {
@@ -66,6 +66,11 @@ tests.on('exit', async (code, signal) => {
   await testnet.destroy()
   Bare.exitCode = code
 })
+
+function formatBootstrapAddr(host, port) {
+  // Encode IPv6 as [host]:port so downstream parsing is unambiguous.
+  return host.includes(':') ? `[${host}]:${port}` : `${host}:${port}`
+}
 
 function resolveRuntime() {
   const candidates = [
