@@ -89,7 +89,7 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
   const peerDrive = new Hyperdrive(peerStore, key)
   await peerDrive.ready()
   console.log('test 4')
-  
+
   const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
   teardown(() => peerSwarm.destroy())
   peerSwarm.on('connection', (conn) => {
@@ -98,14 +98,14 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
   peerSwarm.join(peerDrive.discoveryKey)
   await peerDrive.get('/package.json')
   console.log('test 5')
-  
+
   const joined = await until['peer-add']
   console.log('test 6')
   ok(joined, 'peer joins')
-  
+
   await peerSwarm.destroy()
   console.log('test 7')
-  
+
   const dropped = await until['peer-remove']
   console.log('test 8')
   ok(dropped, 'peer drops')
