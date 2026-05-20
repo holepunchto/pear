@@ -6,6 +6,7 @@ const crasher = require('pear-crasher')
 const gracedown = require('pear-gracedown')
 const process = require('bare-process')
 const os = require('bare-os')
+const env = require('bare-env')
 const path = require('bare-path')
 const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('pear-constants')
 
@@ -108,6 +109,8 @@ function parseDhtBootstrapFromArgv(argv = []) {
       break
     }
   }
+  // CI/test fallback: keep sidecar on the local ephemeral testnet even if argv was rewritten.
+  if (!raw && env.PEAR_TEST_BOOTSTRAP) raw = env.PEAR_TEST_BOOTSTRAP
   if (!raw) return undefined
   return raw
     .split(',')
