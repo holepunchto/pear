@@ -51,11 +51,15 @@ if (runtime) {
   spawnSync(runtime, ['sidecar', 'shutdown'], { stdio: 'inherit' })
 }
 
-const tests = spawn(Bare.argv[0], [path.join(root, 'test', 'index.js'), ...Bare.argv.slice(2)], {
-  cwd: root,
-  stdio: 'inherit',
-  env: { ...env, PEAR_TEST_BOOTSTRAP: dhtBootstrap }
-})
+const tests = spawn(
+  isWindows ? 'npx.cmd' : 'npx',
+  ['brittle-bare', '-j', '4', path.join('test', 'index.mjs'), ...Bare.argv.slice(2)],
+  {
+    cwd: root,
+    stdio: 'inherit',
+    env: { ...env, PEAR_TEST_BOOTSTRAP: dhtBootstrap }
+  }
+)
 
 tests.on('exit', async (code, signal) => {
   if (signal) code = 128 + signal
