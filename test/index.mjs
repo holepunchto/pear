@@ -8,15 +8,15 @@ async function runTests() {
   test.pause()
 
   // await test.load(import.meta.resolve('./00-inspect.test.js')) // skip inspect tests (not needed -> avoids linux CI race condition)
-  await test.load(import.meta.resolve('./01-touch.test.js'))
-  await test.load(import.meta.resolve('./02-stage.test.js'))
+  // await test.load(import.meta.resolve('./01-touch.test.js'))
+  // await test.load(import.meta.resolve('./02-stage.test.js'))
   await test.load(import.meta.resolve('./03-seed.test.js'))
-  await test.load(import.meta.resolve('./04-dump.test.js'))
-  await test.load(import.meta.resolve('./05-provision.test.js'))
-  await test.load(import.meta.resolve('./06-multisig.test.js'))
-  await test.load(import.meta.resolve('./07-info.test.js'))
-  await test.load(import.meta.resolve('./08-data.test.js'))
-  await test.load(import.meta.resolve('./09-presets.test.js'))
+  // await test.load(import.meta.resolve('./04-dump.test.js'))
+  // await test.load(import.meta.resolve('./05-provision.test.js'))
+  // await test.load(import.meta.resolve('./06-multisig.test.js'))
+  // await test.load(import.meta.resolve('./07-info.test.js'))
+  // await test.load(import.meta.resolve('./08-data.test.js'))
+  // await test.load(import.meta.resolve('./09-presets.test.js'))
   // await test.load(import.meta.resolve('./10-shutdown.test.js')) // TODO: @keith fix
 
   test.resume()

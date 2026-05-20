@@ -63,7 +63,10 @@ module.exports = class Seed extends Opstream {
     await corestore.ready()
 
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
-    const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
+    const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id }, { retain: true })
+    const noticePump = (async () => {
+      for await (const { msg } of notices) this.push(msg)
+    })()
 
     const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
     const encryptionKey = traits?.encryptionKey
@@ -147,8 +150,7 @@ module.exports = class Seed extends Opstream {
     blobs.core.download({ start: 0, end: -1 })
 
     this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
-
-    for await (const { msg } of notices) this.push(msg)
+    await noticePump
     // no need for teardown, seed is tied to the lifecycle of the client
 
     clearInterval(this._statsInterval)
