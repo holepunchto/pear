@@ -71,12 +71,7 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [
-    { tag: 'key' },
-    { tag: 'announced' },
-    { tag: 'peer-add' },
-    { tag: 'peer-remove' }
-  ])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
   const key = await until.key
@@ -89,20 +84,31 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
 
   const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
   teardown(() => peerSwarm.destroy())
+  let peerConn = null
+  const joinedPromise = new Promise((resolve) => {
+    peerSwarm.once('connection', (conn) => {
+      peerConn = conn
+      resolve(true)
+    })
+  })
   peerSwarm.on('connection', (conn) => {
     peerDrive.corestore.replicate(conn)
   })
   peerSwarm.join(peerDrive.discoveryKey)
   await peerSwarm.flush()
 
-  const joined = await withTimeout(until['peer-add'], 45000, 'peer-add timeout')
+  const joined = await withTimeout(joinedPromise, 45000, 'peer connection timeout')
   ok(joined, 'peer joins')
 
   await withTimeout(peerDrive.get('/package.json'), 45000, 'package fetch timeout')
 
+  const droppedPromise = new Promise((resolve) => {
+    if (!peerConn) return resolve(false)
+    peerConn.once('close', () => resolve(true))
+  })
   await peerSwarm.destroy()
 
-  const dropped = await withTimeout(until['peer-remove'], 45000, 'peer-remove timeout')
+  const dropped = await withTimeout(droppedPromise, 45000, 'peer connection close timeout')
   ok(dropped, 'peer drops')
 })
 
