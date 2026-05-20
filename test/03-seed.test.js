@@ -71,59 +71,42 @@ test('pear seed announces, join, drop', async function ({ ok, plan, comment, tea
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [
+    { tag: 'key' },
+    { tag: 'announced' },
+    { tag: 'peer-add' },
+    { tag: 'peer-remove' }
+  ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
   const key = await until.key
-
+  console.log('test 1')
   const peerStore = new Corestore(await tmp())
+  console.log('test 2')
   teardown(() => peerStore.close())
   await peerStore.ready()
+  console.log('test 3')
   const peerDrive = new Hyperdrive(peerStore, key)
   await peerDrive.ready()
-
+  console.log('test 4')
+  
   const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
   teardown(() => peerSwarm.destroy())
-  let peerConn = null
-  const joinedPromise = new Promise((resolve) => {
-    peerSwarm.once('connection', (conn) => {
-      peerConn = conn
-      resolve(true)
-    })
-  })
   peerSwarm.on('connection', (conn) => {
     peerDrive.corestore.replicate(conn)
   })
   peerSwarm.join(peerDrive.discoveryKey)
-  await peerSwarm.flush()
-
-  const joined = await withTimeout(joinedPromise, 45000, 'peer connection timeout')
+  await peerDrive.get('/package.json')
+  console.log('test 5')
+  
+  const joined = await until['peer-add']
+  console.log('test 6')
   ok(joined, 'peer joins')
-
-  await withTimeout(peerDrive.get('/package.json'), 45000, 'package fetch timeout')
-
-  const droppedPromise = new Promise((resolve) => {
-    if (!peerConn) return resolve(false)
-    peerConn.once('close', () => resolve(true))
-  })
+  
   await peerSwarm.destroy()
-
-  const dropped = await withTimeout(droppedPromise, 45000, 'peer connection close timeout')
+  console.log('test 7')
+  
+  const dropped = await until['peer-remove']
+  console.log('test 8')
   ok(dropped, 'peer drops')
 })
-
-function withTimeout(promise, ms, msg) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(msg)), ms)
-    promise.then(
-      (value) => {
-        clearTimeout(timer)
-        resolve(value)
-      },
-      (err) => {
-        clearTimeout(timer)
-        reject(err)
-      }
-    )
-  })
-}
