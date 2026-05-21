@@ -12,6 +12,9 @@ on:
       version:
         type: string
         default: ''
+      notify:
+        type: boolean
+        default: true
       run-stage:
         type: boolean
         default: false
@@ -48,6 +51,10 @@ on:
         type: boolean
         description: Stage the build
         default: false
+      notify:
+        type: boolean
+        description: Notify to Slack
+        default: true
       build-snap:
         type: boolean
         description: Build Snap package (Linux)
@@ -248,3 +255,136 @@ jobs:
           primary-key: ${{ secrets.PEAR_PRIMARY_KEY }}
           target: './out/pear-stage'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    needs:
+      [
+        bump-version,
+        build-linux-x64,
+        build-linux-arm,
+        build-macos,
+        build-macos-x64,
+        build-win32,
+        stage
+      ]
+    if: ${{ !cancelled() && always() && inputs.notify }}
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-latest
+    environment: release
+    env:
+      UPGRADE_KEY: >-
+        ${{ github.event.inputs['upgrade-key']
+          || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+          || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@holepunchto'
+
+      - name: Build Message
+        id: message
+        env:
+          CHANNEL: ${{ env.CHANNEL }}
+          UPGRADE_KEY: ${{ env.UPGRADE_KEY }}
+          BUILD_LINUX_X64_RESULT: ${{ needs.build-linux-x64.result }}
+          BUILD_LINUX_ARM_RESULT: ${{ needs.build-linux-arm.result }}
+          BUILD_MACOS_RESULT: ${{ needs.build-macos.result }}
+          BUILD_MACOS_X64_RESULT: ${{ needs.build-macos-x64.result }}
+          BUILD_WINDOWS_RESULT: ${{ needs.build-win32.result }}
+          BUILD_LINUX_X64_ARTIFACT_LINKS: ${{ needs.build-linux-x64.outputs.artifact-links }}
+          BUILD_LINUX_ARM_ARTIFACT_LINKS: ${{ needs.build-linux-arm.outputs.artifact-links }}
+          BUILD_MACOS_ARTIFACT_LINKS: ${{ needs.build-macos.outputs.artifact-links }}
+          BUILD_MACOS_X64_ARTIFACT_LINKS: ${{ needs.build-macos-x64.outputs.artifact-links }}
+          BUILD_WINDOWS_ARTIFACT_LINKS: ${{ needs.build-win32.outputs.artifact-links }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          emoji=":pear:"
+          case "$CHANNEL" in
+            nightly) emoji=":experimental-bird:" ;;
+            internal) emoji=":internal-bird:" ;;
+            production) emoji=":pear:" ;;
+          esac
+
+          format_result() {
+            local result="$1"
+            local artifact="$2"
+            if [[ "$result" == "success" ]]; then
+              echo "$artifact"
+            else
+              echo "failed"
+            fi
+          }
+
+          linux_x64=$(format_result "$BUILD_LINUX_X64_RESULT" "$BUILD_LINUX_X64_ARTIFACT_LINKS")
+          linux_arm=$(format_result "$BUILD_LINUX_ARM_RESULT" "$BUILD_LINUX_ARM_ARTIFACT_LINKS")
+          macos=$(format_result "$BUILD_MACOS_RESULT" "$BUILD_MACOS_ARTIFACT_LINKS")
+          macos_x64=$(format_result "$BUILD_MACOS_X64_RESULT" "$BUILD_MACOS_X64_ARTIFACT_LINKS")
+          windows=$(format_result "$BUILD_WINDOWS_RESULT" "$BUILD_WINDOWS_ARTIFACT_LINKS")
+
+          if [[ "$BUILD_LINUX_X64_RESULT" == "success" && "$BUILD_LINUX_ARM_RESULT" == "success" && "$BUILD_MACOS_RESULT" == "success" && "$BUILD_MACOS_X64_RESULT" == "success" && "$BUILD_WINDOWS_RESULT" == "success" ]]; then
+            printf -v message '%s New pear platform `%s` build ready\n\nUpgrade key: `%s`\n\n:linux: %s\n:linux: %s\n:apple-mac: %s\n:apple-mac: %s\n:windows: %s' \
+              "$emoji" \
+              "$CHANNEL" \
+              "$UPGRADE_KEY" \
+              "$linux_x64" \
+              "$linux_arm" \
+              "$macos" \
+              "$macos_x64" \
+              "$windows"
+          else
+            printf -v message ':ga-failed: New pear platform `%s` build failed\n\nUpgrade key: `%s`\n\n:linux: %s\n:linux: %s\n:apple-mac: %s\n:apple-mac: %s\n:windows: %s\n\n%s' \
+              "$CHANNEL" \
+              "$UPGRADE_KEY" \
+              "$linux_x64" \
+              "$linux_arm" \
+              "$macos" \
+              "$macos_x64" \
+              "$windows" \
+              "$RUN_URL"
+          fi
+
+          {
+            echo "message<<EOF"
+            echo "$message"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve previous tag
+        id: previous_tag
+        run: |
+          tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: Slack Notification
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_MESSAGE: ${{ steps.message.outputs.message }}
+          PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
+        run: |
+          npm install -g bare @holepunchto/ci-tooling
+
+          ARGS=(slack
+            --token "$SLACK_TOKEN"
+            --channel "$SLACK_CHANNEL_ID"
+            --message "$SLACK_MESSAGE"
+            --deps "$(ci deps --list pear-runtime-updater,pear-updater,pear-cmd)"
+            --dups "$(ci dups)"
+          )
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            ARGS+=(--changelog "$(ci changelog --from "$PREVIOUS_TAG" --slack)")
+          fi
+
+          ci "${ARGS[@]}"
