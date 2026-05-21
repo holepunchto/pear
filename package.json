@@ -3,7 +3,8 @@
   "version": "2.0.0",
   "main": "./boot.js",
   "bin": "pear",
-  "productName": "pear",
+  "productName": "Pear",
+  "description": "Pear runtime command line interface",
   "upgrade": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
   "private": true,
   "scripts": {
@@ -17,6 +18,11 @@
     "make:linux-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-arm64 --out ./by-arch/linux-arm64/bin scripts/standalone-entry.js && rm -f ./pear.dev && ln -s ./by-arch/linux-arm64/bin/pear ./pear.dev && chmod 775 ./pear.dev",
     "make:linux-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-x64 --out ./by-arch/linux-x64/bin scripts/standalone-entry.js && rm -f ./pear.dev && ln -s ./by-arch/linux-x64/bin/pear ./pear.dev && chmod 775 ./pear.dev",
     "make:win32-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-x64 --out ./by-arch/win32-x64/bin scripts/standalone-entry.js && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Write-Win32Ps1Wrapper.ps1 -OutDir by-arch/win32-x64/bin",
+    "make:release:darwin-arm64": "node scripts/package-darwin.js darwin-arm64",
+    "make:release:darwin-x64": "node scripts/package-darwin.js darwin-x64",
+    "make:release:linux-arm64": "node scripts/package-linux.js linux-arm64",
+    "make:release:linux-x64": "node scripts/package-linux.js linux-x64",
+    "make:release:win32-x64": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Win32X64.ps1",
     "make:win32-x64:msix": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Win32X64.ps1",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
@@ -114,6 +120,9 @@
     "watch-drive": "^2.0.3",
     "which-runtime": "^1.2.1",
     "z32": "^1.1.0"
+  },
+  "optionalDependencies": {
+    "bare-app-image": "^0.1.1"
   },
   "devDependencies": {
     "@hyperswarm/secret-stream": "^6.9.1",

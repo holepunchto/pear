@@ -1,5 +1,7 @@
 param(
-  [string] $Subject = 'CN=Holepunch Inc'
+  [string] $Subject = 'CN=Holepunch Inc',
+  [string] $Thumbprint = $env:WINDOWS_CERT_SHA1,
+  [string] $OutDir = $(Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')) 'out\make\win32-x64')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -92,7 +94,33 @@ function New-CodeSigningCertificate {
 }
 
 function Get-CodeSigningCertificate {
-  param([string] $Subject)
+  param(
+    [string] $Subject,
+    [string] $Thumbprint
+  )
+
+  if ($Thumbprint) {
+    $store = [System.Security.Cryptography.X509Certificates.X509Store]::new('My', 'CurrentUser')
+    $store.Open('ReadOnly')
+    try {
+      $cert = $store.Certificates | Where-Object { $_.Thumbprint -eq $Thumbprint } | Select-Object -First 1
+    } finally {
+      $store.Close()
+    }
+    if (-not $cert) {
+      $store = [System.Security.Cryptography.X509Certificates.X509Store]::new('My', 'LocalMachine')
+      $store.Open('ReadOnly')
+      try {
+        $cert = $store.Certificates | Where-Object { $_.Thumbprint -eq $Thumbprint } | Select-Object -First 1
+      } finally {
+        $store.Close()
+      }
+    }
+    if (-not $cert) {
+      throw "Certificate with thumbprint $Thumbprint not found in CurrentUser\My or LocalMachine\My"
+    }
+    return $cert
+  }
 
   $cert = Find-Certificate -Subject $Subject
   if (-not $cert) {
@@ -140,7 +168,9 @@ function Sign-File {
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..')
 $pkg = Get-Content -Raw -Path (Join-Path $repo 'package.json') | ConvertFrom-Json
 $name = $pkg.name
-$cert = Get-CodeSigningCertificate -Subject $Subject
+$productName = if ($pkg.productName) { $pkg.productName } else { $pkg.name }
+$cert = Get-CodeSigningCertificate -Subject $Subject -Thumbprint $Thumbprint
+$Subject = $cert.Subject
 $localRuntime = Join-Path $repo '..\bare-build\build\short-mt-win32-x64-install\win32-x64\bare.exe'
 $runtimePackage = Join-Path $repo 'node_modules\bare-build-win32-x64\bare.exe'
 
@@ -154,9 +184,9 @@ try {
   $env:MSIX_CERT_THUMBPRINT = $cert.Thumbprint
 
   $contentRoot = Join-Path $repo 'out\win32-x64-msix-dir'
-  $contentDir = Join-Path $contentRoot $name
-  $msixOut = Join-Path $repo 'out\win32-x64-msix'
-  $msixPath = Join-Path $msixOut "$name.msix"
+  $contentDir = Join-Path $contentRoot $productName
+  $msixOut = $OutDir
+  $msixPath = Join-Path $msixOut "$productName-win32-x64.msix"
   $msixContentBuilder = Join-Path $repo 'node_modules\bare-build\lib\platform\windows\create-msix-content-directory.js'
   $originalMsixContentBuilder = $null
 
@@ -175,7 +205,7 @@ try {
 
     Set-Content -NoNewline -Path $msixContentBuilder -Value $patchedMsixContentBuilder
 
-    Invoke-Checked bare-build @('--standalone', '--base', '.', '--name', $name, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
+    Invoke-Checked bare-build @('--standalone', '--base', '.', '--name', $productName, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
 
     New-Item -ItemType Directory -Force -Path $msixOut | Out-Null
     Invoke-Checked makeappx @('pack', '/d', $contentDir, '/p', $msixPath, '/o')
