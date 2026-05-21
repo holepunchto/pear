@@ -110,7 +110,8 @@ unhookPlatform('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })
 
-test('sidecar should not spindown until ongoing update is finished', async (t) => {
+// TODO: @keith reenable when pear-runtime-updater updating event is fixed
+test.skip('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 
