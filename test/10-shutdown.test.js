@@ -62,7 +62,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
   t.comment('Building low-spindown sidecar')
-  const build = spawn('npm', ['run', `make:${HOST}`], {
+  const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make:${HOST}`], {
     cwd: platformDirLs,
     stdio: 'ignore'
   })
@@ -74,7 +74,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const runtime = path.join(platformDirLs, 'by-arch', HOST, 'bin', 'pear')
+  const runtime = path.join(platformDirLs, Helper.BY_ARCH)
   const sidecar = spawn(runtime, ['sidecar'], {
     stdio: 'ignore',
     cwd: platformDirLs

@@ -54,6 +54,7 @@ class Helper extends IPC.Client {
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   static dhtBootstrap = DHT_BOOTSTRAP
+  static BY_ARCH = BY_ARCH
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
