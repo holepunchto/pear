@@ -70,10 +70,9 @@ module.exports = class State extends SharedState {
 
     const { dependencies } = this.manifest
     const options = this.options
-    const { release } = pod
     const { main = 'index.js' } = this.manifest
 
-    this.update({ main, options, dependencies, release })
+    this.update({ main, options, dependencies })
 
     if (this.clearAppStorage) await fsp.rm(this.storage, { recursive: true })
 

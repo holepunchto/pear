@@ -8,9 +8,8 @@ const { outputter, ansi } = require('pear-terminal')
 const { byteDiff } = require('pear-terminal')
 
 const output = outputter('stage', {
-  staging: ({ name, link, verlink, current, release }) => {
-    const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
-    return `\n${ansi.pear} Staging ${name}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n${rel}\n`
+  staging: ({ name, link, verlink, current }) => {
+    return `\n${ansi.pear} Staging ${name}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n`
   },
   skipping: ({ reason }) => 'Skipping (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
@@ -20,9 +19,8 @@ const output = outputter('stage', {
   error: (err, info, ipc) => {
     return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
   },
-  addendum: ({ version, release, link, verlink }) => {
-    const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
-    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n${rel}\n\nUse ${ansi.bold(`pear release ${link}`)} to set release to latest\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
+  addendum: ({ version, link, verlink }) => {
+    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
   },
   ['byte-diff']: byteDiff,
   final: (data) => data

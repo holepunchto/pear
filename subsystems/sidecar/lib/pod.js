@@ -47,8 +47,6 @@ module.exports = class Pod {
       })
     })
 
-    this.release = null
-
     this.batch = null
     this.queue = []
     this.closed = false
@@ -135,15 +133,9 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null) this.release = (await this.db.get('release'))?.value ?? null
-
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
-      const length = Number.isInteger(+this.checkout)
-        ? +this.checkout
-        : this.checkout === 'latest'
-          ? this.current
-          : (this.release ?? this.current)
+      const length = Number.isInteger(+this.checkout) ? +this.checkout : this.current
 
       this.drive = this.drive.checkout?.(length) ?? this.drive
       await this.drive.ready()

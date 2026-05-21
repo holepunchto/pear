@@ -84,8 +84,6 @@ module.exports = class Stage extends Opstream {
       )
     }
 
-    const release = (await pod.db.get('release'))?.value || 0
-
     const applink = plink.serialize(pod.drive.key)
     const z32 = applink.slice(7)
 
@@ -97,7 +95,6 @@ module.exports = class Stage extends Opstream {
         link: applink,
         verlink: verlink,
         current: currentVersion,
-        release,
         dir
       }
     })
@@ -198,7 +195,6 @@ module.exports = class Stage extends Opstream {
       tag: 'addendum',
       data: {
         version: pod.drive.version,
-        release,
         key: z32,
         link: applink,
         verlink: plink.serialize({

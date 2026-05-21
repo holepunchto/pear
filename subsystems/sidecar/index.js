@@ -23,7 +23,6 @@ const ops = {
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
   Provision: require('./ops/provision'),
-  Release: require('./ops/release'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Touch: require('./ops/touch'),
@@ -169,10 +168,6 @@ class Sidecar extends ReadyResource {
 
   provision(params, client) {
     return new ops.Provision(params, client, this)
-  }
-
-  release(params, client) {
-    return new ops.Release(params, client, this)
   }
 
   dump(params, client) {

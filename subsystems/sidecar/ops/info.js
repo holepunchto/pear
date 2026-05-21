@@ -105,14 +105,6 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const release = await drive.db.get('release').catch((error) => {
-        if (error.code === 'DECODING_ERROR') {
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-            key,
-            encrypted: true
-          })
-        }
-      })
 
       if (isEnabled(metadata)) {
         const name = pkg?.pear?.name || pkg?.name
@@ -129,7 +121,6 @@ module.exports = class Info extends Opstream {
         this.push({
           tag: 'info',
           data: {
-            release: release?.value || ['Unreleased'],
             link,
             name,
             length,
