@@ -1,0 +1,23 @@
+name: Build Nightly
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  bump-version:
+    uses: ./.github/workflows/bump-version-release.yml
+    secrets: inherit
+    with:
+      version-type: prerelease
+
+  build:
+    needs: bump-version
+    uses: ./.github/workflows/build-release.yml
+    with:
+      channel: nightly
+      ref: ${{ needs.bump-version.outputs.sha }}
+    secrets: inherit
