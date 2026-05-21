@@ -12,6 +12,9 @@ on:
       version:
         type: string
         default: ''
+      run-stage:
+        type: boolean
+        default: false
       build-snap:
         type: boolean
         description: Build Snap package (Linux)
@@ -41,6 +44,10 @@ on:
       upgrade-key:
         description: Value for package.json upgrade field
         required: false
+      run-stage:
+        type: boolean
+        description: Stage the build
+        default: false
       build-snap:
         type: boolean
         description: Build Snap package (Linux)
@@ -196,3 +203,48 @@ jobs:
               || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
           windows_signing_method: windows_cert_sha1
           windows_cert_sha1: ${{ secrets.WINDOWS_CERT_SHA1 }}
+
+  stage:
+    needs:
+      [bump-version, build-linux-x64, build-linux-arm, build-macos, build-macos-x64, build-win32]
+    if: >-
+      ${{ !cancelled()
+        && (inputs.run-stage == true || github.event.inputs['run-stage'] == 'true')
+        && needs.build-linux-x64.result == 'success'
+        && needs.build-linux-arm.result == 'success'
+        && needs.build-macos.result == 'success'
+        && needs.build-macos-x64.result == 'success'
+        && needs.build-win32.result == 'success' }}
+    permissions:
+      contents: write
+      packages: read
+      actions: read
+    runs-on: macos-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out/artifacts
+
+      - name: Build stage artifact
+        env:
+          CHANNEL: ${{ env.CHANNEL }}
+          BUILD_VERSION: ${{ inputs.version }}
+        run: |
+          ./scripts/build-stage-artifact.sh out/artifacts out/pear-stage
+
+      - uses: holepunchto/actions/pear-ci@v1
+        with:
+          namespace: ${{ env.CHANNEL }}-v4
+          primary-key: ${{ secrets.PEAR_PRIMARY_KEY }}
+          target: './out/pear-stage'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
