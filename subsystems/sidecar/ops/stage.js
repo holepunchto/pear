@@ -65,8 +65,10 @@ module.exports = class Stage extends Opstream {
       )
     }
 
-    const currentVersion = pod.version
-    const verlink = pod.verlink()
+    const currentVersion = pod.drive.version
+    const verlink = plink.serialize({
+      drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+    })
     await state.initialize({ pod, dryRun })
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
@@ -195,11 +197,13 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: pod.version,
+        version: pod.drive.version,
         release,
         key: z32,
         link: applink,
-        verlink: pod.verlink()
+        verlink: plink.serialize({
+          drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+        })
       }
     })
   }
