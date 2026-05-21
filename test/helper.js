@@ -20,14 +20,7 @@ const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
-const LEGACY_BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const APP_BY_ARCH = path.join('by-arch', HOST, 'app', `pear${isWindows ? '.exe' : ''}`)
-const LEGACY_APP_BY_ARCH = path.join(
-  'by-arch',
-  HOST,
-  'app',
-  `pear-runtime${isWindows ? '.exe' : ''}`
-)
+
 const constants = require('pear-constants')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
@@ -35,8 +28,6 @@ const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const testtmp = require('test-tmp')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
-
-const rigPear = path.join(tmp, 'rig-pear')
 
 const DHT_BOOTSTRAP = env.PEAR_TEST_BOOTSTRAP
   ? env.PEAR_TEST_BOOTSTRAP.split(',').map((addr) => {
@@ -69,7 +60,7 @@ class Helper extends IPC.Client {
     const log = logging.length > 0
     const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = opts.platformDir
-      ? Helper.resolveRuntimeInPlatformDir(platformDir)
+      ? path.resolve(opts.platformDir, '..', BY_ARCH)
       : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
         ? path.join(Helper.localDir, 'pear.dev')
         : path.join(Helper.localDir, BY_ARCH)
@@ -117,24 +108,6 @@ class Helper extends IPC.Client {
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
   static localDir = path.dirname(__dirname)
-
-  static resolveRuntimeInPlatformDir(platformDir) {
-    const candidates = [
-      path.join(platformDir, BY_ARCH),
-      path.join(platformDir, 'current', BY_ARCH),
-      path.join(platformDir, 'current', LEGACY_BY_ARCH),
-      path.join(platformDir, APP_BY_ARCH),
-      path.join(platformDir, LEGACY_APP_BY_ARCH),
-      path.join(platformDir, 'current', APP_BY_ARCH),
-      path.join(platformDir, 'current', LEGACY_APP_BY_ARCH)
-    ]
-    for (const candidate of candidates) {
-      try {
-        if (fs.existsSync(candidate)) return candidate
-      } catch {}
-    }
-    return path.join(platformDir, BY_ARCH)
-  }
 
   static async pick(stream, ptn = {}, by = 'tag') {
     if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
@@ -225,70 +198,28 @@ class Helper extends IPC.Client {
 }
 
 class Rig {
-  platformDir = rigPear
+  localDir = path.join(tmp, 'rig-pear')
+  platformDir = path.join(this.localDir, 'pear')
   artefactDir = Helper.localDir
-  local = new Helper()
   tmp = tmp
-  keepAlive = true
-  constructor({ keepAlive = true } = {}) {
-    this.keepAlive = keepAlive
-  }
+  constructor() {}
 
   setup = async ({ comment, timeout }) => {
     timeout(180000)
-    comment('connecting to sidecar')
-    await this.local.ready()
-    comment('connected to sidecar')
 
-    this.link = await Helper.touchLink(this.local)
+    comment('preparing rig platform...')
+    const runtime = path.resolve(PLATFORM_DIR, '..', BY_ARCH)
 
-    comment('staging platform...')
-    const staging = this.local.stage({
-      link: this.link,
-      dir: this.artefactDir,
-      dryRun: false
-    })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
+    const bin = path.join(this.localDir, BY_ARCH)
+    await fs.promises.mkdir(path.dirname(bin), { recursive: true })
+    await fs.promises.cp(runtime, bin)
 
-    comment('seeding platform')
-    this.seeder = new Helper()
-    await this.seeder.ready()
-    this.seeding = this.seeder.seed({
-      link: this.link,
-      dir: this.artefactDir,
-      key: null,
-      cmdArgs: []
-    })
-    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    this.key = await until.key
-    await until.announced
-    comment('platform seeding')
-
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
-    if (this.keepAlive) {
-      comment('connecting to rig sidecar')
-      this.rig = new Helper(this)
-      await this.rig.ready()
-      comment('connected to rig sidecar')
-    }
+    comment('rig platform prepared')
   }
 
   cleanup = async ({ comment }) => {
-    comment('closing seeder client')
-    await Helper.teardownStream(this.seeding)
-    await this.seeder.close()
-    comment('seeder client closed')
-    if (this.keepAlive) {
-      comment('shutting down rig sidecar')
-      await this.rig.shutdown()
-      comment('rig sidecar shutdown')
-    }
-    comment('closing local client')
-    await this.local.close()
-    comment('local client closed')
+    await fs.promises.rm(this.localDir, { recursive: true })
+    comment('rig sidecar cleaned up')
   }
 }
 
