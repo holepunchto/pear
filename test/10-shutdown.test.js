@@ -14,6 +14,7 @@ const SPINDOWN_TIMEOUT = 15_000
 
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+const npm = isWindows ? 'npm.cmd' : 'npm'
 
 const unhookShutdown = test.hook('shutdown setup', rig.setup)
 
@@ -62,7 +63,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
   t.comment('Building low-spindown sidecar')
-  const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make:${HOST}`], {
+  const build = spawn(npm, ['run', `make:${HOST}`], {
     cwd: platformDirLs,
     stdio: 'ignore'
   })
@@ -144,7 +145,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
     t.comment('Building throttled sidecar')
-    const build = spawn('npm', ['run', `make:${HOST}`], {
+    const build = spawn(npm, ['run', `make:${HOST}`], {
       cwd: patchedArtefactDir,
       stdio: 'ignore'
     })
@@ -196,7 +197,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
     t.comment('Building platform')
-    const build = spawn('npm', ['run', `make:${HOST}`], {
+    const build = spawn(npm, ['run', `make:${HOST}`], {
       cwd: artefactDir,
       stdio: 'ignore'
     })
