@@ -1,0 +1,112 @@
+name: Bump Version (Release)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-type:
+        type: choice
+        description: Select version type to bump
+        default: prerelease
+        options:
+          - prerelease
+          - patch
+          - minor
+          - major
+      version:
+        type: string
+        description: Or specify a version
+        default: ''
+      notify:
+        type: boolean
+        description: Notify to Slack
+        default: true
+  workflow_call:
+    inputs:
+      version-type:
+        type: string
+        required: false
+      version:
+        type: string
+        required: false
+        default: ''
+    outputs:
+      version:
+        description: Bumped package version
+        value: ${{ jobs.bump-version.outputs.version }}
+      sha:
+        description: Commit SHA created by the version bump
+        value: ${{ jobs.bump-version.outputs.sha }}
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    environment: release
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      sha: ${{ steps.bump.outputs.sha }}
+    steps:
+      - name: Create GitHub App token
+        id: build_app_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.BUILD_APP_ID }}
+          private-key: ${{ secrets.BUILD_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.build_app_token.outputs.token }}
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Bump version
+        id: bump
+        env:
+          GH_TOKEN: ${{ steps.build_app_token.outputs.token }}
+          APP_SLUG: ${{ steps.build_app_token.outputs.app-slug }}
+          VERSION_TYPE: ${{ inputs.version-type }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -e
+
+          USER_ID=$(gh api "/users/${APP_SLUG}[bot]" -q .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+          if [ -n "$VERSION" ]; then
+            npm version "$VERSION"
+          elif [ "$VERSION_TYPE" = "prerelease" ]; then
+            npm version prerelease --preid=rc
+          else
+            npm version "$VERSION_TYPE"
+          fi
+
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+          git push origin HEAD:${{ github.ref_name }} --follow-tags
+
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Setup node
+        if: ${{ github.event.inputs.notify == 'true' }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@holepunchto'
+
+      - name: Slack Notification
+        if: ${{ github.event.inputs.notify == 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_MESSAGE: 'Pear version bumped to v${{ steps.bump.outputs.version }} :pear:'
+        run: |
+          npm install -g bare @holepunchto/ci-tooling
+          ci slack --token "$SLACK_TOKEN" --channel "$SLACK_CHANNEL_ID" --message "$SLACK_MESSAGE"

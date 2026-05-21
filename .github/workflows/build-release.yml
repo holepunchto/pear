@@ -1,0 +1,198 @@
+name: Build Release
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+      channel:
+        type: string
+        default: ''
+      version:
+        type: string
+        default: ''
+      build-snap:
+        type: boolean
+        description: Build Snap package (Linux)
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        description: Bump version
+        default: '-'
+        options:
+          - '-'
+          - prerelease
+          - patch
+          - minor
+          - major
+      channel:
+        type: choice
+        description: Select the channel
+        default: nightly
+        options:
+          - nightly
+          - internal
+          - production
+        required: true
+      upgrade-key:
+        description: Value for package.json upgrade field
+        required: false
+      build-snap:
+        type: boolean
+        description: Build Snap package (Linux)
+        default: false
+
+env:
+  CHANNEL: ${{ inputs.channel || github.event.inputs.channel || 'nightly' }}
+
+jobs:
+  bump-version:
+    if: ${{ github.event.inputs.bump != '' && github.event.inputs.bump != '-' }}
+    permissions:
+      contents: write
+      packages: read
+    uses: ./.github/workflows/bump-version-release.yml
+    secrets: inherit
+    with:
+      version-type: ${{ github.event.inputs.bump }}
+
+  build-linux-x64:
+    needs: bump-version
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write # to upload artifacts
+      packages: read
+    runs-on: ubuntu-latest
+    environment: release
+    outputs:
+      artifact-links: ${{ steps.build.outputs.artifact-links }}
+    env:
+      BUILD_SNAP: ${{ inputs.build-snap || github.event.inputs['build-snap'] || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+      - uses: holepunchto/actions/make-pear-app@v1
+        id: build
+        with:
+          channel: ${{ env.CHANNEL }}
+          linux_set_up_snapcraft: ${{ env.BUILD_SNAP }}
+          upgrade_key: >-
+            ${{ github.event.inputs['upgrade-key']
+              || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+              || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+
+  build-linux-arm:
+    needs: bump-version
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write
+      packages: read
+    runs-on: ubuntu-24.04-arm
+    environment: release
+    outputs:
+      artifact-links: ${{ steps.build.outputs.artifact-links }}
+    env:
+      BUILD_SNAP: ${{ inputs.build-snap || github.event.inputs['build-snap'] || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+      - uses: holepunchto/actions/make-pear-app@v1
+        id: build
+        with:
+          channel: ${{ env.CHANNEL }}
+          linux_set_up_snapcraft: ${{ env.BUILD_SNAP }}
+          upgrade_key: >-
+            ${{ github.event.inputs['upgrade-key']
+              || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+              || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+
+  build-macos:
+    needs: bump-version
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write
+      packages: read
+    runs-on: macos-latest
+    environment: release
+    outputs:
+      artifact-links: ${{ steps.build.outputs.artifact-links }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+      - uses: holepunchto/actions/make-pear-app@v1
+        id: build
+        with:
+          channel: ${{ env.CHANNEL }}
+          upgrade_key: >-
+            ${{ github.event.inputs['upgrade-key']
+              || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+              || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+          macos_certificate_base64: ${{ secrets.CERTIFICATE_P12 }}
+          macos_p12_password: ${{ secrets.CERTIFICATE_PASSWORD }}
+          macos_codesign_identity: ${{ secrets.MAC_CODESIGN_IDENTITY }}
+          macos_notarization_method: apple_id_password
+          macos_apple_id: ${{ secrets.APPLE_ID }}
+          macos_apple_password: ${{ secrets.APPLE_PASSWORD }}
+          macos_apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+
+  build-macos-x64:
+    needs: bump-version
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write
+      packages: read
+    runs-on: macos-26-intel
+    environment: release
+    outputs:
+      artifact-links: ${{ steps.build.outputs.artifact-links }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+      - uses: holepunchto/actions/make-pear-app@v1
+        id: build
+        with:
+          channel: ${{ env.CHANNEL }}
+          upgrade_key: >-
+            ${{ github.event.inputs['upgrade-key']
+              || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+              || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+          macos_certificate_base64: ${{ secrets.CERTIFICATE_P12 }}
+          macos_p12_password: ${{ secrets.CERTIFICATE_PASSWORD }}
+          macos_codesign_identity: ${{ secrets.MAC_CODESIGN_IDENTITY }}
+          macos_notarization_method: apple_id_password
+          macos_apple_id: ${{ secrets.APPLE_ID }}
+          macos_apple_password: ${{ secrets.APPLE_PASSWORD }}
+          macos_apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+
+  build-win32:
+    needs: bump-version
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      contents: write
+      packages: read
+    runs-on: windows-signer
+    environment: release
+    outputs:
+      artifact-links: ${{ steps.build.outputs.artifact-links }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || needs.bump-version.outputs.sha || github.sha }}
+      - uses: holepunchto/actions/make-pear-app@v1
+        id: build
+        with:
+          channel: ${{ env.CHANNEL }}
+          upgrade_key: >-
+            ${{ github.event.inputs['upgrade-key']
+              || ((inputs.channel || github.event.inputs.channel) == 'nightly' && secrets.NIGHTLY_KEY)
+              || ((inputs.channel || github.event.inputs.channel) == 'internal' && secrets.INTERNAL_KEY) }}
+          windows_signing_method: windows_cert_sha1
+          windows_cert_sha1: ${{ secrets.WINDOWS_CERT_SHA1 }}
