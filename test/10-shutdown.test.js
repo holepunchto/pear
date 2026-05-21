@@ -110,8 +110,7 @@ unhookPlatform('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })
 
-// TODO: @keith reenable when pear-runtime-updater updating event is fixed
-test.skip('sidecar should not spindown until ongoing update is finished', async (t) => {
+test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 
@@ -135,7 +134,7 @@ test.skip('sidecar should not spindown until ongoing update is finished', async 
   (() => {
     const secretStream = require('@hyperswarm/secret-stream')
     const originalWrite = secretStream.prototype.write
-    let allowedPackets = 10
+    let allowedPackets = 20
     secretStream.prototype.write = function (data) {
       return allowedPackets-- > 0 ? originalWrite.call(this, data) : true
     }
@@ -210,6 +209,14 @@ test.skip('sidecar should not spindown until ongoing update is finished', async 
       Helper.gc(artefactDir)
     })
     await fs.promises.cp(path.join(artefactDir, BY_ARCH), path.join(buildDir, BY_ARCH))
+
+    t.comment('Copying build to app dir')
+    const byApp = BY_ARCH.replace('bin', 'app')
+    await fs.promises.mkdir(path.join(buildDir, path.dirname(byApp)), { recursive: true })
+    t.teardown(() => {
+      Helper.gc(artefactDir)
+    })
+    await fs.promises.cp(path.join(artefactDir, BY_ARCH), path.join(buildDir, byApp))
 
     t.comment('Staging as version 2.0.0')
     packageJson.version = '2.0.0'
