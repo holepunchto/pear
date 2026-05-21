@@ -25,26 +25,13 @@ test('lock released after shutdown', async function ({ pass, plan, exception, co
 
   const corestorePath = path.join(rig.platformDir, 'corestores', 'platform')
 
-  let locked = false
   await exception(async () => {
     const corestore = new Corestore(corestorePath)
     await corestore.ready()
-    await corestore.close()
-  }, 'platform corestore is locked').then(
-    () => {
-      locked = true
-    },
-    () => {
-      locked = false
-    }
-  )
+  }, 'platform corestore is locked')
 
-  if (locked) {
-    comment('sidecar shutdown')
-    await helper.shutdown()
-  } else {
-    pass('platform corestore already free before shutdown')
-  }
+  comment('sidecar shutdown')
+  await helper.shutdown()
 
   const store = new Corestore(corestorePath, { wait: true })
   teardown(() => store.close())
@@ -56,18 +43,17 @@ let platformDirLs
 const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   t.timeout(120_000)
 
-  const patchedArtefactDir = path.join(Helper.tmp, 'als-pear')
-  t.comment(`Copying platform code to ${patchedArtefactDir}`)
-  await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
-  t.teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
+  platformDirLs = path.join(Helper.tmp, 'als-pear')
+  t.comment(`Copying platform code to ${platformDirLs}`)
+  await fs.promises.mkdir(platformDirLs, { recursive: true })
+  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(platformDirLs), {
     prune: false,
-    ignore: ['/pear', '/.git', '/test']
+    ignore: ['/pear', '/.git', '/test', '/by-arch']
   })
   await mirror.done()
 
   t.comment('Patching sidecar')
-  const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
+  const sidecarPath = path.join(platformDirLs, 'sidecar.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
   (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
@@ -75,41 +61,12 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   const patchedSidecarCode = patch + sidecarCode
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
-  t.comment('Staging patched platform')
-  const rigHelper = new Helper(rig)
-  t.teardown(() => rigHelper.close(), { order: Infinity })
-  await rigHelper.ready()
-  const patchedLink = await Helper.touchLink(rigHelper)
-
-  const patchedStager = rigHelper.stage({
-    link: patchedLink,
-    dir: patchedArtefactDir,
-    dryRun: false
+  t.comment('Building low-spindown sidecar')
+  const build = spawn('npm', ['run', `make:${HOST}`], {
+    cwd: platformDirLs,
+    stdio: 'ignore'
   })
-  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
-  await patchedStagerUntil.final
-
-  t.comment('Seeding patched platform')
-  const patchedSeeder = rigHelper.seed({
-    link: patchedLink,
-    dir: patchedArtefactDir,
-    key: null,
-    cmdArgs: []
-  })
-  const patchedSeederUntil = await Helper.pick(patchedSeeder, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
-  const patchedPlatformKey = await patchedSeederUntil.key
-  await patchedSeederUntil.announced
-  t.teardown(() => Helper.teardownStream(patchedSeeder))
-
-  t.comment('Bootstrapping patched platform as ls')
-  platformDirLs = path.join(Helper.tmp, 'ls-pear')
-  await Helper.bootstrap(patchedPlatformKey, platformDirLs)
-
-  await Helper.teardownStream(patchedSeeder)
-  await rigHelper.close()
+  await new Promise((resolve) => build.once('exit', resolve))
 })
 
 test('sidecar should spindown after a period of inactivity', async (t) => {
@@ -117,13 +74,19 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const sidecar = spawn(path.join(platformDirLs, BY_ARCH), ['sidecar'], {
-    stdio: 'pipe'
+  const runtime = path.join(platformDirLs, 'by-arch', HOST, 'bin', 'pear')
+  const sidecar = spawn(runtime, ['sidecar'], {
+    stdio: 'ignore',
+    cwd: platformDirLs
   })
   t.teardown(() => {
     if (sidecar.exitCode === null) sidecar?.kill()
   })
-  const untilExit = new Promise((resolve) => sidecar.once('exit', resolve))
+  const untilExit = new Promise((resolve) =>
+    sidecar.once('exit', (code, signal) => {
+      resolve(signal ? 128 + signal : code)
+    })
+  )
   t.teardown(() => untilExit)
 
   t.comment(`Waiting for sidecar to spindown (${SPINDOWN_TIMEOUT / 1000}s)`)
@@ -143,25 +106,31 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   }
 })
 
+unhookPlatform('patched platform cleanup', async () => {
+  await Helper.gc(platformDirLs)
+})
+
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 
-  t.comment('1. Prepare throttled platform as rcv')
-  const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
-  t.comment(`Copying platform code to ${patchedArtefactDir}`)
-  await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
-  t.teardown(() => Helper.gc(patchedArtefactDir))
-  const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
-    prune: false,
-    ignore: ['/pear', '/.git', '/test']
-  })
-  await mirror.done()
+  t.comment('1. Prepare throttled seeder platform')
+  let platformDirRcv
+  {
+    const patchedArtefactDir = path.join(Helper.tmp, 'arcv-pear')
+    t.comment(`Copying platform code to ${patchedArtefactDir}`)
+    await fs.promises.mkdir(patchedArtefactDir, { recursive: true })
+    t.teardown(() => Helper.gc(patchedArtefactDir))
+    const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
+      prune: false,
+      ignore: ['/pear', '/.git', '/test', '/by-arch']
+    })
+    await mirror.done()
 
-  t.comment('Patching sidecar to throttle seeding')
-  const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
-  const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
-  const patch = `
+    t.comment('Patching sidecar to throttle seeding')
+    const sidecarPath = path.join(patchedArtefactDir, 'sidecar.js')
+    const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
+    const patch = `
   (() => {
     const secretStream = require('@hyperswarm/secret-stream')
     const originalWrite = secretStream.prototype.write
@@ -171,86 +140,117 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     }
   })()
   `
-  const patchedSidecarCode = patch + sidecarCode
-  fs.writeFileSync(sidecarPath, patchedSidecarCode)
+    const patchedSidecarCode = patch + sidecarCode
+    fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
-  t.comment('Staging patched platform')
-  const rigHelper = new Helper(rig)
-  t.teardown(() => rigHelper.close(), { order: Infinity })
-  await rigHelper.ready()
-  const patchedLink = await Helper.touchLink(rigHelper)
+    t.comment('Building throttled sidecar')
+    const build = spawn('npm', ['run', `make:${HOST}`], {
+      cwd: patchedArtefactDir,
+      stdio: 'ignore'
+    })
+    await new Promise((resolve) => build.once('exit', resolve))
 
-  const patchedStager = rigHelper.stage({
-    link: patchedLink,
-    dir: patchedArtefactDir,
-    dryRun: false
-  })
-  const patchedStagerUntil = await Helper.pick(patchedStager, [{ tag: 'final' }])
-  await patchedStagerUntil.final
+    platformDirRcv = path.join(patchedArtefactDir, 'pear')
+  }
 
-  t.comment('Seeding patched platform')
-  const patchedSeeder = rigHelper.seed({
-    link: patchedLink,
-    dir: patchedArtefactDir,
-    key: null,
-    cmdArgs: []
-  })
-  const patchedSeederUntil = await Helper.pick(patchedSeeder, [
-    { tag: 'key' },
-    { tag: 'announced' }
-  ])
-  const patchedPlatformKey = await patchedSeederUntil.key
-  await patchedSeederUntil.announced
-  t.teardown(() => Helper.teardownStream(patchedSeeder))
-
-  t.comment('Bootstrapping patched platform')
-  const platformDirRcv = path.join(Helper.tmp, 'rcv-pear')
-  await Helper.bootstrap(patchedPlatformKey, platformDirRcv)
-  t.teardown(() => Helper.gc(platformDirRcv))
-
-  await Helper.teardownStream(patchedSeeder)
-  await rigHelper.close()
-
-  t.comment('2. Start patched rcv platform')
-  t.comment('Starting rcv platform')
+  t.comment('2. Start throttled seeder platform')
+  t.comment('Starting throttled seeder platform')
   const rcvHelper = new Helper({ platformDir: platformDirRcv })
-  t.teardown(() => rcvHelper.close(), { order: Infinity })
+  t.teardown(
+    async () => {
+      await rcvHelper.shutdown()
+      rcvHelper.close()
+    },
+    { order: Infinity }
+  )
   await rcvHelper.ready()
   const rcvLink = await Helper.touchLink(rcvHelper)
 
-  t.comment('Staging platform using rcv')
-  const stager = rcvHelper.stage({
-    link: rcvLink,
-    dir: rig.artefactDir,
-    dryRun: false
-  })
-  const stagerUntil = await Helper.pick(stager, [{ tag: 'addendum' }, { tag: 'final' }])
-  const staged = await stagerUntil.addendum
-  await stagerUntil.final
+  t.comment('3. Prepare updater platform')
+  let buildDir
+  {
+    const artefactDir = path.join(Helper.tmp, 'rcv-pear')
+    t.comment(`Copying platform code to ${artefactDir}`)
+    await fs.promises.mkdir(artefactDir, { recursive: true })
+    t.teardown(() => Helper.gc(artefactDir))
+    const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(artefactDir), {
+      prune: false,
+      ignore: ['/pear', '/.git', '/test', '/by-arch']
+    })
+    await mirror.done()
 
-  t.comment('Seeding staged platform using rcv')
-  const seeder = rcvHelper.seed({
-    link: rcvLink,
-    dir: rig.artefactDir,
-    key: null,
-    cmdArgs: []
-  })
-  const seederUntil = await Helper.pick(seeder, [{ tag: 'announced' }, { tag: 'peer-add' }])
-  await seederUntil.announced
+    t.comment('Updating upgrade link and version to 1.0.0')
+    const packageJsonFile = path.join(artefactDir, 'package.json')
+    const packageJson = require(packageJsonFile)
+    packageJson.upgrade = rcvLink
+    packageJson.version = '1.0.0'
+    await fs.promises.writeFile(packageJsonFile, JSON.stringify(packageJson, null, 2), 'utf8')
+
+    t.comment('Applying low spindown patch')
+    const sidecarPath = path.join(artefactDir, 'sidecar.js')
+    const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
+    const patch = `
+    (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+    `
+    const patchedSidecarCode = patch + sidecarCode
+    fs.writeFileSync(sidecarPath, patchedSidecarCode)
+
+    t.comment('Building platform')
+    const build = spawn('npm', ['run', `make:${HOST}`], {
+      cwd: artefactDir,
+      stdio: 'ignore'
+    })
+    await new Promise((resolve) => build.once('exit', resolve))
+
+    t.comment('Copying build to build dir')
+    buildDir = path.join(artefactDir, 'build')
+    await fs.promises.mkdir(path.join(buildDir, path.dirname(BY_ARCH)), { recursive: true })
+    t.teardown(() => {
+      Helper.gc(artefactDir)
+    })
+    await fs.promises.cp(path.join(artefactDir, BY_ARCH), path.join(buildDir, BY_ARCH))
+
+    t.comment('Staging as version 2.0.0')
+    packageJson.version = '2.0.0'
+    await fs.promises.writeFile(
+      path.join(buildDir, 'package.json'),
+      JSON.stringify(packageJson, null, 2),
+      'utf8'
+    )
+  }
+
+  t.comment('Staging platform using throttled platform')
   let peerAdded = false
-  seederUntil['peer-add'].then(() => {
-    peerAdded = true
-  })
-  t.teardown(() => Helper.teardownStream(seeder))
+  {
+    const stager = rcvHelper.stage({
+      link: rcvLink,
+      dir: buildDir,
+      dryRun: false
+    })
+    const stagerUntil = await Helper.pick(stager, [{ tag: 'addendum' }, { tag: 'final' }])
+    await stagerUntil.final
 
-  t.comment('3. Start sidecar and update using rcv-seeded key')
+    t.comment('Seeding staged platform using throttled platform')
+    const seeder = rcvHelper.seed({
+      link: rcvLink,
+      dir: rig.artefactDir,
+      key: null,
+      cmdArgs: []
+    })
+    const seederUntil = await Helper.pick(seeder, [{ tag: 'announced' }, { tag: 'peer-add' }])
+    await seederUntil.announced
+    seederUntil['peer-add'].then(() => {
+      peerAdded = true
+    })
+    t.teardown(() => Helper.teardownStream(seeder))
+  }
+
+  t.comment('4. Start sidecar and update using the throttle seeder')
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(
-    path.join(platformDirLs, BY_ARCH),
-    ['--dht-bootstrap', dhtBootstrap, 'sidecar', '--key', staged.key],
-    { stdio: 'pipe' }
-  )
+  const sidecar = spawn(path.join(buildDir, BY_ARCH), ['sidecar', '--dhtBootstrap', dhtBootstrap], {
+    stdio: 'ignore'
+  })
   t.teardown(() => {
     if (sidecar.exitCode === null) sidecar?.kill()
   })
@@ -269,17 +269,13 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   })
 
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
-  t.is(peerAdded, true, 'sidecar successfully connected to paused seeder')
+  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
 
   if (hasSpunDown !== false) {
     t.fail('sidecar failed to prevent spindown during update')
   } else {
     t.pass('sidecar successfully blocked spindown during update')
   }
-})
-
-unhookPlatform('patched platform cleanup', async () => {
-  await Helper.gc(platformDirLs)
 })
 
 unhookShutdown('shutdown cleanup', rig.cleanup)
