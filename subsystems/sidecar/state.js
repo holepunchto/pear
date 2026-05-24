@@ -4,7 +4,7 @@ const fsp = require('bare-fs/promises')
 const sameData = require('same-data')
 const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_MANIFEST } = require('pear-errors')
-const SharedState = require('pear-state')
+const SharedState = require('../../lib/state.js')
 
 module.exports = class State extends SharedState {
   constructor(opts) {
