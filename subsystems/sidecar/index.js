@@ -14,7 +14,6 @@ const plink = require('pear-link')
 const deriveEncryptionKey = require('pw-to-ek')
 const hypercoreid = require('hypercore-id-encoding')
 const { version, upgrade } = require('../../package.json')
-const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, SALT } = require('pear-constants')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const State = require('./state')
@@ -33,6 +32,7 @@ const ops = {
   Presets: require('./ops/presets'),
   Multisig: require('./ops/multisig')
 }
+const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, SALT } = require('../../constants.js')
 
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'

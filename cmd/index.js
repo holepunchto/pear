@@ -3,7 +3,7 @@ const context = require('../context')
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
   paparam
-const { usage, print } = require('pear-terminal')
+const { usage, print } = require('../lib/terminal.js')
 const path = require('bare-path')
 const process = require('bare-process')
 const { userArgv } = require('../argv')

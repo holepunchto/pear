@@ -1,9 +1,8 @@
 'use strict'
 const context = require('../context')
 const plink = require('pear-link')
-const { outputter } = require('pear-terminal')
+const { outputter, permit, isTTY } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { permit, isTTY } = require('pear-terminal')
 
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>

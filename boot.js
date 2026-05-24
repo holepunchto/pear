@@ -5,7 +5,7 @@ const bootstrapRTI = require('./rti-bootstrap')
 const { normalizeBareArgv } = require('./argv')
 bootstrapRTI(global.__PEAR_MOUNT || null)
 normalizeBareArgv()
-const CONSTANTS = require('pear-constants')
+const CONSTANTS = require('./constants.js')
 
 {
   const fs = require('bare-fs')

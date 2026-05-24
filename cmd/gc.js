@@ -1,6 +1,6 @@
 'use strict'
 const context = require('../context')
-const { outputter } = require('pear-terminal')
+const { outputter } = require('../lib/terminal.js')
 
 const output = outputter('gc', {
   remove: ({ resource, id, operation = 'removed' }) =>

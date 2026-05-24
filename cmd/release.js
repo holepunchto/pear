@@ -2,7 +2,7 @@
 const context = require('../context')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, ansi } = require('pear-terminal')
+const { outputter, ansi } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 

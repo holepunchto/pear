@@ -14,7 +14,7 @@ const root = path.dirname(dirname)
 const { default: checkout } = await import('../checkout')
 global.Pear = { constructor: { RTI: { checkout, mount: root } }, config: {} }
 
-const { RUNTIME } = await import('pear-constants')
+const { RUNTIME } = await import('../constants')
 const HOST = `${platform}-${arch}`
 const BIN = isWindows ? 'pear.exe' : 'pear'
 const LEGACY_BIN = isWindows ? 'pear-runtime.exe' : 'pear-runtime'

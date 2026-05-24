@@ -1,7 +1,7 @@
 'use strict'
 const context = require('../context')
 const plink = require('pear-link')
-const { outputter, ansi } = require('pear-terminal')
+const { outputter, ansi } = require('../lib/terminal.js')
 const { dependencies } = require('../package.json')
 
 function v(name, version) {

@@ -8,7 +8,7 @@ const process = require('bare-process')
 const os = require('bare-os')
 const pear = require('pear-cmd')
 const path = require('bare-path')
-const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('pear-constants')
+const { SWAP, GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 crasher('sidecar', SWAP)

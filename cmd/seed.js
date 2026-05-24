@@ -4,7 +4,7 @@ const plink = require('pear-link')
 const bareTTY = require('bare-tty')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('pear-terminal')
+const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('../lib/terminal.js')
 const { EventEmitter } = require('bare-events')
 
 class Table extends EventEmitter {

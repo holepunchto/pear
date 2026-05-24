@@ -1,7 +1,7 @@
 'use strict'
 const context = require('../context')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-terminal')
+const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('../lib/terminal.js')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>

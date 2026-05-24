@@ -56,7 +56,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   const sidecarPath = path.join(platformDirLs, 'sidecar.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
-  (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+  (() => { require('./constants.js').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
   `
   const patchedSidecarCode = patch + sidecarCode
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
@@ -191,7 +191,7 @@ test.skip('sidecar should not spindown until ongoing update is finished', async 
     const sidecarPath = path.join(artefactDir, 'sidecar.js')
     const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
     const patch = `
-    (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+    (() => { require('./constants.js').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
     `
     const patchedSidecarCode = patch + sidecarCode
     fs.writeFileSync(sidecarPath, patchedSidecarCode)
