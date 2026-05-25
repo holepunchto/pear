@@ -42,8 +42,7 @@ module.exports = class Pod {
       asset,
       updateNotify,
       updatesDiff = false,
-      truncate,
-      encryptionKey = null
+      truncate
     } = opts
     this.swarm = swarm
     this.checkout = checkout ?? 'release'
@@ -54,7 +53,7 @@ module.exports = class Pod {
     this.failure = failure
     this.corestore = corestore
     this.stage = stage
-    this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.drive = drive || new Hyperdrive(this.corestore, this.key)
     this.current = current ?? this.drive?.core?.length ?? 0
     this.updatesDiff = updatesDiff
     this.link = null
