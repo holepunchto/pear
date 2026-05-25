@@ -6,6 +6,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Add-WindowsSdkToPath {
+  $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\bin"
+  if (-not (Test-Path $kitsRoot)) { return }
+  $latest = Get-ChildItem $kitsRoot -Directory |
+    Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } |
+    Sort-Object { [version] $_.Name } -Descending |
+    Select-Object -First 1
+  if (-not $latest) { return }
+  $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
+  $sdkBin = Join-Path $latest.FullName $arch
+  if (Test-Path $sdkBin) {
+    $env:PATH = "$sdkBin;$env:PATH"
+    Write-Host "Windows SDK bin on PATH: $sdkBin"
+  }
+}
+
+Add-WindowsSdkToPath
+
 function Find-Certificate {
   param([string] $Subject)
 
