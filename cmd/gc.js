@@ -22,10 +22,6 @@ module.exports = async function gc(cmd) {
 }
 
 class GC {
-  releases() {
-    return null
-  }
-
   sidecars() {
     return { pid: Bare.pid }
   }

@@ -32,7 +32,6 @@ const commands = {
   seed: require('./seed'),
   provision: require('./provision'),
   multisig: require('./multisig'),
-  release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
   install: require('./install'),
@@ -265,17 +264,6 @@ module.exports = async (ipc, argv = userArgv()) => {
     (cmd) => console.log(cmd.command.help())
   )
 
-  const release = command(
-    'release',
-    summary('DEPRECATED: pear provision incompat'),
-    description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
-    arg('<link>', 'Pear link to release'),
-    arg('[dir=.]', 'Project directory path'),
-    flag('--checkout <n>', 'Set release checkout n is version length'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.release
-  ).hide()
-
   const info = command(
     'info',
     summary('View project information'),
@@ -410,7 +398,6 @@ module.exports = async (ipc, argv = userArgv()) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), commands.gc),
     command('sidecars', summary('Clear running sidecars'), commands.gc),
     command('cores', summary('Clear corestore cores'), commands.gc),
     flag('--json', 'Newline delimited JSON output'),
@@ -450,7 +437,6 @@ module.exports = async (ipc, argv = userArgv()) => {
     presets,
     sidecar,
     gc,
-    release,
     versions,
     help,
     footer(usage.footer),
@@ -507,15 +493,13 @@ module.exports = async (ipc, argv = userArgv()) => {
       const devRoot = getDevRoot()
       const vinfo = await ipc.versions()
       const key = vinfo?.platform?.key || pkg.upgrade
-      const release = devRoot ? null : (vinfo?.platform?.fork ?? null)
+      const fork = devRoot ? null : (vinfo?.platform?.fork ?? null)
       const length = devRoot ? null : (vinfo?.platform?.length ?? null)
-      const hasVersioned = release !== null && length !== null
-      const versionedKey = hasVersioned
-        ? `pear://${release}.${length}.${stripPearPrefix(key)}`
-        : key
+      const hasVersioned = fork !== null && length !== null
+      const versionedKey = hasVersioned ? `pear://${fork}.${length}.${stripPearPrefix(key)}` : key
       if (flags.json) {
         console.log(
-          JSON.stringify({ key, version, path: devRoot, fork: release, length, versionedKey })
+          JSON.stringify({ key, version, path: devRoot, fork: fork, length, versionedKey })
         )
         return
       }
@@ -524,7 +508,7 @@ module.exports = async (ipc, argv = userArgv()) => {
       if (devRoot) console.log('Path=' + devRoot)
       else console.log('Key=' + key)
       console.log('SemVer=' + version)
-      if (release !== null) console.log('Fork=' + release)
+      if (fork !== null) console.log('Fork=' + fork)
       if (length !== null) console.log('Length=' + length)
       return
     }

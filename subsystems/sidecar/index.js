@@ -23,7 +23,6 @@ const ops = {
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
   Provision: require('./ops/provision'),
-  Release: require('./ops/release'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Touch: require('./ops/touch'),
@@ -172,10 +171,6 @@ class Sidecar extends ReadyResource {
     return new ops.Provision(params, client, this)
   }
 
-  release(params, client) {
-    return new ops.Release(params, client, this)
-  }
-
   dump(params, client) {
     return new ops.Dump(params, client, this)
   }
@@ -253,9 +248,9 @@ class Sidecar extends ReadyResource {
     for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       if (client === originClient) continue
 
-      if (client.userData?.state && !client.userData.state.parent) {
-        const { id, cmdArgs, cwd, dir, env, options } = client.userData.state
-        metadata.push({ id, cmdArgs, cwd, dir, env, options })
+      if (client.userData?.state) {
+        const { cmdArgs } = client.userData.state
+        metadata.push({ cmdArgs })
       }
 
       this.#endRPCStreams(client).then(() => client.close())
