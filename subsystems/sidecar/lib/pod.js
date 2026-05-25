@@ -18,7 +18,7 @@ const watch = require('watch-drive')
 const hypercoreid = require('hypercore-id-encoding')
 const b4a = require('b4a')
 const pack = require('pear-pack')
-const { SWAP, PLATFORM_DIR } = require('../../../constants')
+const { PLATFORM_DIR } = require('../../../constants')
 const Replicator = require('./replicator')
 const watcher = require('./watcher')
 const noop = Function.prototype
@@ -309,7 +309,6 @@ module.exports = class Pod {
 
     const res = await DriveBundler.bundle(this.drive, {
       entrypoint: entrypoint || '.',
-      cwd: SWAP,
       assets,
       absoluteFiles: true,
       mount: 'pear://' + id

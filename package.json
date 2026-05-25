@@ -102,7 +102,6 @@
     "pear-inspect": "^1.2.5",
     "pear-ipc": "^6.11.0",
     "pear-link": "^4.1.0",
-    "pear-logger": "github:holepunchto/pear-logger#only-runs-in-bare",
     "pear-opstream": "^1.0.0",
     "pear-opwait": "^1.0.0",
     "pear-pack": "^1.1.3",
