@@ -486,7 +486,12 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       arg('[link]', 'Clear asset by link'),
       commands.gc
     ),
-    command('cores', summary('Clear corestore cores'), commands.gc),
+    command(
+      'cores',
+      summary('Clear corestore cores'),
+      arg('[link]', 'Clear cores by link'),
+      commands.gc
+    ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
