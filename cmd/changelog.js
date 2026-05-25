@@ -3,17 +3,12 @@ const context = require('../context')
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { permit, isTTY } = require('pear-terminal')
 
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>
     (index > 0 ? '\n____________\n\n' : '') + changelog + (index === max - 1 ? '\n' : ''),
   error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'info')
-    } else {
-      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
-    }
+    return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   final(data) {
     return data.success ? {} : false

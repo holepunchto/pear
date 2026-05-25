@@ -2,7 +2,6 @@
 const context = require('../context')
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
-const { permit, isTTY } = require('pear-terminal')
 const os = require('bare-os')
 const path = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
@@ -51,11 +50,7 @@ const output = outputter('info', {
   info,
   changelog,
   error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'info')
-    } else {
-      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
-    }
+    return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   manifest: (data) => {
     return JSON.stringify(data.manifest, 0, 2)

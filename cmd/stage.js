@@ -5,7 +5,7 @@ const { isAbsolute, resolve } = require('bare-path')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('pear-terminal')
-const { permit, isTTY, byteDiff } = require('pear-terminal')
+const { byteDiff } = require('pear-terminal')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current, release }) => {
@@ -18,11 +18,7 @@ const output = outputter('stage', {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
   },
   error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'stage')
-    } else {
-      return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
-    }
+    return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   addendum: ({ version, release, link, verlink }) => {
     const rel = `Release: ${release > 0 ? release : release + ansi.bold(ansi.dim(' [UNRELEASED]'))}`
