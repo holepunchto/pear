@@ -16,7 +16,6 @@ const sodium = require('sodium-native')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
-const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
@@ -184,12 +183,6 @@ class Helper extends IPC.Client {
       }
     }
     return true
-  }
-
-  static async bootstrap(key, dir) {
-    await Helper.gc(dir)
-    await fs.promises.mkdir(dir, { recursive: true })
-    await updaterBootstrap(key, dir, { bootstrap: DHT_BOOTSTRAP })
   }
 
   static async gc(dir) {
