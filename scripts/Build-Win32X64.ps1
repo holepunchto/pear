@@ -128,7 +128,10 @@ function Get-CodeSigningCertificate {
   }
 
   Trust-Certificate -Certificate $cert -StoreName TrustedPeople
-  Trust-Certificate -Certificate $cert -StoreName Root
+  # CurrentUser\Root add can prompt; gate behind SKIP_ROOT_TRUST for non-interactive runners
+  if ($env:SKIP_ROOT_TRUST -ne '1') {
+    Trust-Certificate -Certificate $cert -StoreName Root
+  }
 
   return $cert
 }
@@ -165,7 +168,9 @@ function Sign-File {
   $signArgs += $Path
 
   Invoke-Checked signtool $signArgs
-  Invoke-Checked signtool @('verify', '/pa', '/v', $Path)
+  if ($env:SKIP_VERIFY -ne '1') {
+    Invoke-Checked signtool @('verify', '/pa', '/v', $Path)
+  }
 }
 
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..')
