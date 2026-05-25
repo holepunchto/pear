@@ -152,16 +152,19 @@ function Sign-File {
     [string] $Subject
   )
 
-  Invoke-Checked signtool @(
+  $signArgs = @(
     'sign',
     '/a',
     '/fd', 'SHA256',
-    '/t', 'http://timestamp.digicert.com',
     '/n', $Subject.Replace('CN=', ''),
-    '/sha1', $Certificate.Thumbprint,
-    $Path
+    '/sha1', $Certificate.Thumbprint
   )
+  if ($env:SKIP_TIMESTAMP -ne '1') {
+    $signArgs += @('/t', 'http://timestamp.digicert.com')
+  }
+  $signArgs += $Path
 
+  Invoke-Checked signtool $signArgs
   Invoke-Checked signtool @('verify', '/pa', '/v', $Path)
 }
 
@@ -205,13 +208,17 @@ try {
 
     Set-Content -NoNewline -Path $msixContentBuilder -Value $patchedMsixContentBuilder
 
+    Write-Host "[$(Get-Date -Format HH:mm:ss)] bare-build standalone"
     Invoke-Checked bare-build @('--standalone', '--base', '.', '--name', $productName, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
 
+    Write-Host "[$(Get-Date -Format HH:mm:ss)] makeappx pack"
     New-Item -ItemType Directory -Force -Path $msixOut | Out-Null
     Invoke-Checked makeappx @('pack', '/d', $contentDir, '/p', $msixPath, '/o')
+
+    Write-Host "[$(Get-Date -Format HH:mm:ss)] signtool sign"
     Sign-File -Path $msixPath -Certificate $cert -Subject $Subject
 
-    Write-Host "Signed MSIX: $msixPath"
+    Write-Host "[$(Get-Date -Format HH:mm:ss)] Signed MSIX: $msixPath"
   } finally {
     if ($null -ne $originalMsixContentBuilder) {
       Set-Content -NoNewline -Path $msixContentBuilder -Value $originalMsixContentBuilder

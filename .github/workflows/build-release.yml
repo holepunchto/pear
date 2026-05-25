@@ -82,6 +82,7 @@ jobs:
       packages: read
     runs-on: ubuntu-latest
     environment: release
+    timeout-minutes: 10
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     env:
@@ -108,6 +109,7 @@ jobs:
       packages: read
     runs-on: ubuntu-24.04-arm
     environment: release
+    timeout-minutes: 10
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     env:
@@ -134,6 +136,7 @@ jobs:
       packages: read
     runs-on: macos-latest
     environment: release
+    timeout-minutes: 10
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     steps:
@@ -164,6 +167,7 @@ jobs:
       packages: read
     runs-on: macos-26-intel
     environment: release
+    timeout-minutes: 10
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     steps:
@@ -194,6 +198,7 @@ jobs:
       packages: read
     runs-on: windows-signer
     environment: release
+    timeout-minutes: 10
     outputs:
       artifact-links: ${{ steps.build.outputs.artifact-links }}
     steps:
@@ -228,6 +233,7 @@ jobs:
       actions: read
     runs-on: macos-latest
     environment: release
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -273,6 +279,7 @@ jobs:
       packages: read
     runs-on: ubuntu-latest
     environment: release
+    timeout-minutes: 5
     env:
       UPGRADE_KEY: >-
         ${{ github.event.inputs['upgrade-key']
