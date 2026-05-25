@@ -8,20 +8,33 @@ module.exports = class Replicator extends EventEmitter {
     this.drive = drive
     this.swarm = null
     this.announcing = null
+    this.leaving = null
   }
 
   join(swarm, opts) {
     this.swarm = swarm
-    if (!this.announcing) this.announcing = this._join(swarm, opts)
+    if (!this.announcing) {
+      this.announcing = this._join(swarm, opts)
+        .then(() => {
+          this.leaving = null
+        })
+        .catch((err) => LOG.error('internal', 'Replicator join error', err))
+    }
     return this.announcing
   }
 
   async leave(swarm) {
+    if (this.leaving) return
     this.swarm = null
     if (!this.announcing) return
     await this.announcing
-    this.announcing = null
-    swarm.leave(this.drive.discoveryKey)
+    this.leaving = swarm
+      .leave(this.drive.discoveryKey)
+      .then(() => {
+        this.announcing = null
+      })
+      .catch((err) => LOG.error('internal', 'Replicator leave error', err))
+    return this.leaving
   }
 
   async _join(swarm, { server, client }) {
@@ -66,6 +79,12 @@ module.exports = class Replicator extends EventEmitter {
 
     this.emit('announce')
     swarm.flush().then(fin, fin)
+  }
+
+  ready() {}
+
+  close() {
+    return this.leave(this.swarm)
   }
 }
 

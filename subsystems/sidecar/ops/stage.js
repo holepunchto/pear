@@ -8,7 +8,7 @@ const ReadyResource = require('ready-resource')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const Opstream = require('../lib/opstream')
-const Pod = require('../lib/pod')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
@@ -37,18 +37,15 @@ module.exports = class Stage extends Opstream {
     const corestore = sidecar.getCorestore({ writable: true })
     await corestore.ready()
 
-    const pod = new Pod({
-      key,
-      corestore,
-      truncate,
-      stage: true
-    })
-    await session.add(pod)
-    await pod.ready()
+    const drive = await session.add(new Hyperdrive(corestore, key))
 
-    const currentVersion = pod.version
+    if (Number.isInteger(truncate)) {
+      await drive.truncate(truncate)
+    }
+
+    const currentVersion = drive.version
     const verlink = plink.serialize({
-      drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+      drive: { length: drive.core.length, fork: drive.core.fork, key: drive.key }
     })
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
@@ -64,7 +61,7 @@ module.exports = class Stage extends Opstream {
       )
     }
 
-    const applink = plink.serialize(pod.drive.key)
+    const applink = plink.serialize(drive.key)
     const z32 = applink.slice(7)
 
     this.push({
@@ -98,7 +95,7 @@ module.exports = class Stage extends Opstream {
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
     const ignored = glob.ignorer()
-    const dst = pod.drive
+    const dst = drive
 
     const prefix = only.length > 0 ? [...new Set(only)] : undefined
 
@@ -174,11 +171,11 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: pod.drive.version,
+        version: drive.version,
         key: z32,
         link: applink,
         verlink: plink.serialize({
-          drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+          drive: { length: drive.core.length, fork: drive.core.fork, key: drive.key }
         })
       }
     })
