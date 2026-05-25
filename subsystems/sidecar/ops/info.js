@@ -5,8 +5,8 @@ const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
+const Replicator = require('../lib/replicator')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
@@ -15,8 +15,6 @@ module.exports = class Info extends Opstream {
 
   async #op({ link, showKey, metadata, manifest, multisig, changelog = null } = {}) {
     const { session } = this
-    let pod = null
-    let drive = null
     let { full = false, max = 10, semver = '^*' } = changelog ?? {}
     if (full) max = Infinity
 
@@ -28,18 +26,7 @@ module.exports = class Info extends Opstream {
 
     const corestore = this.sidecar.getCorestore()
     const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-
-    if (link) {
-      drive = new Hyperdrive(corestore, key)
-      await drive.ready()
-    } else {
-      drive = this.sidecar.drive
-    }
-
-    if (link) {
-      pod = new Pod({ swarm: this.sidecar.swarm, corestore, key, drive })
-      await pod.ready()
-    }
+    const drive = link ? await session.add(new Hyperdrive(corestore, key)) : this.sidecar.drive
 
     const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
     if (isEnabled(showKey)) {
@@ -48,9 +35,9 @@ module.exports = class Info extends Opstream {
     }
 
     await this.sidecar.ready()
-    if (pod) {
-      await session.add(pod)
-      await pod.join()
+    if (link) {
+      const replicator = await session.add(new Replicator(drive))
+      await replicator.join(this.sidecar.swarm, { server: false, client: true })
     }
 
     if (drive.core.length === 0) {

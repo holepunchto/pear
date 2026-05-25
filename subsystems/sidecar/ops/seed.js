@@ -3,15 +3,16 @@ const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
+const Hyperdrive = require('hyperdrive')
+const Replicator = require('../lib/replicator')
 
 module.exports = class Seed extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ pod } = {}) {
+  _stats({ drive } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -20,10 +21,10 @@ module.exports = class Seed extends Opstream {
       tag: 'stats',
       data: {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
-        peers: pod.drive.core.peers.length,
-        driveKey: pod.drive.key?.toString('hex'),
-        discoveryKey: pod.drive.discoveryKey?.toString('hex'),
-        contentKey: pod.drive.contentKey?.toString('hex'),
+        peers: drive.core.peers.length,
+        driveKey: drive.key?.toString('hex'),
+        discoveryKey: drive.discoveryKey?.toString('hex'),
+        contentKey: drive.contentKey?.toString('hex'),
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,
@@ -58,11 +59,21 @@ module.exports = class Seed extends Opstream {
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const pod = new Pod({
-      swarm: this.sidecar.swarm,
-      corestore,
-      key,
-      status
+    const drive = await session.add(new Hyperdrive(corestore, key))
+    const replicator = await session.add(new Replicator(drive))
+
+    replicator.on('announce', () => status({ tag: 'announced' }))
+    drive.core.on('peer-add', (peer) => {
+      status({
+        tag: 'peer-add',
+        data: peer.remotePublicKey.toString('hex')
+      })
+    })
+    drive.core.on('peer-remove', (peer) => {
+      status({
+        tag: 'peer-remove',
+        data: peer.remotePublicKey.toString('hex')
+      })
     })
 
     this.stats = {
@@ -76,35 +87,33 @@ module.exports = class Seed extends Opstream {
       }
     }
 
-    pod.drive.db.core.on('upload', (index, byteLength) => {
+    drive.db.core.on('upload', (index, byteLength) => {
       LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
-    pod.drive.db.core.on('download', (index, byteLength) => {
+    drive.db.core.on('download', (index, byteLength) => {
       LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
     })
 
-    await session.add(pod)
-    await pod.ready()
-    if (!pod.drive.opened) throw new Error('Cannot open Hyperdrive')
+    if (!drive.opened) throw new Error('Cannot open Hyperdrive')
 
-    await pod.join({ server: true })
+    await replicator.join(this.sidecar.swarm, { server: true, client: true })
 
-    await pod.drive.get('/package.json')
+    await drive.get('/package.json')
 
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ pod }))
+      this.push(this._stats({ drive }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
     })
 
-    const blobs = await pod.drive.getBlobs()
+    const blobs = await drive.getBlobs()
     blobs.core.on('upload', (index, byteLength) => {
       LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
@@ -119,7 +128,7 @@ module.exports = class Seed extends Opstream {
     })
     blobs.core.download({ start: 0, end: -1 })
 
-    this.push({ tag: 'key', data: hypercoreid.encode(pod.drive.key) })
+    this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     for await (const { msg } of notices) this.push(msg)
     // no need for teardown, seed is tied to the lifecycle of the client
