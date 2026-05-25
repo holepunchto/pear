@@ -32,9 +32,6 @@ class Data {
     let out = ''
     for (const bundle of bundles) {
       out += `- ${ansi.bold(bundle.link)}\n`
-      if (bundle.encryptionKey) {
-        out += `${padding}encryptionKey: ${ansi.dim(bundle.encryptionKey.toString('hex'))}\n`
-      }
       if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
       out += '\n'
     }

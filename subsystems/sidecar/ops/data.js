@@ -20,7 +20,7 @@ module.exports = class Data extends Opstream {
         data = await this.sidecar.model.allTraits()
       }
       if (!secrets) {
-        data = data.map(({ encryptionKey, checkout, current, appStorage, ...rest }) => rest)
+        data = data.map(({ checkout, current, appStorage, ...rest }) => rest)
       }
       this.final = { data }
     }

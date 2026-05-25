@@ -2,9 +2,8 @@
 const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
-const hypercoreid = require('hypercore-id-encoding')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_INVALID_CONFIG, ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const { ERR_INVALID_CONFIG, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 const Opstream = require('../lib/opstream')
 const Pod = require('../lib/pod')
@@ -37,33 +36,14 @@ module.exports = class Stage extends Opstream {
     const corestore = sidecar.getCorestore({ writable: true })
     await corestore.ready()
 
-    const encrypted = state.options.encrypted
-    const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
-    const encryptionKey = traits?.encryptionKey
-
-    if (encrypted === true && !encryptionKey) {
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', {
-        key,
-        encrypted: true
-      })
-    }
-
     const pod = new Pod({
       key,
       corestore,
       truncate,
-      stage: true,
-      encryptionKey
+      stage: true
     })
     await session.add(pod)
     await pod.ready()
-
-    if (pod.drive?.core?.writable === false) {
-      throw new ERR_PERMISSION_REQUIRED(
-        `No write access for ${plink.serialize(key)}. Make sure this device has the writer key for this drive.`,
-        { key, encrypted: !!encryptionKey }
-      )
-    }
 
     const currentVersion = pod.version
     const verlink = pod.verlink()

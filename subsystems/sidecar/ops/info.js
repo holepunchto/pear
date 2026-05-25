@@ -4,7 +4,7 @@ const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
-const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 
@@ -28,20 +28,10 @@ module.exports = class Info extends Opstream {
 
     const corestore = this.sidecar.getCorestore()
     const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-    const traits = link ? await this.sidecar.model.getTraits(link) : null
-    const encryptionKey = traits?.encryptionKey
 
     if (link) {
-      try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey })
-        await drive.ready()
-      } catch (err) {
-        if (err.code !== 'DECODING_ERROR') throw err
-        throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-          key,
-          encrypted: true
-        })
-      }
+      drive = new Hyperdrive(corestore, key)
+      await drive.ready()
     } else {
       drive = this.sidecar.drive
     }
@@ -74,16 +64,7 @@ module.exports = class Info extends Opstream {
 
     let pkg = null
     if (drive.core.length > 0) {
-      try {
-        pkg = JSON.parse(await drive.get('./package.json'))
-      } catch (err) {
-        if (err.code === 'DECODING_ERROR') {
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-            key,
-            encrypted: true
-          })
-        } else throw err
-      }
+      pkg = JSON.parse(await drive.get('./package.json'))
 
       if (manifest) {
         this.push({ tag: 'manifest', data: { manifest: pkg } })
@@ -105,14 +86,7 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const release = await drive.db.get('release').catch((error) => {
-        if (error.code === 'DECODING_ERROR') {
-          throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-            key,
-            encrypted: true
-          })
-        }
-      })
+      const release = await drive.db.get('release')
 
       if (isEnabled(metadata)) {
         const name = pkg?.pear?.name || pkg?.name
