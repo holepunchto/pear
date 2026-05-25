@@ -21,7 +21,7 @@ module.exports = class Stage extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, dir, dryRun, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
+  async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
     const { session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
