@@ -86,7 +86,6 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const release = await drive.db.get('release')
 
       if (isEnabled(metadata)) {
         const name = pkg?.pear?.name || pkg?.name
@@ -103,7 +102,6 @@ module.exports = class Info extends Opstream {
         this.push({
           tag: 'info',
           data: {
-            release: release?.value || ['Unreleased'],
             link,
             name,
             length,

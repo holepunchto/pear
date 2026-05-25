@@ -2,35 +2,36 @@
 const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
-const { randomBytes } = require('hypercore-crypto')
-const { ERR_INVALID_CONFIG, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_CONFIG, ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
+const ReadyResource = require('ready-resource')
+const fs = require('bare-fs')
+const path = require('bare-path')
 const Opstream = require('../lib/opstream')
 const Pod = require('../lib/pod')
-const State = require('../state')
-const ReadyResource = require('ready-resource')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, dir, dryRun, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
+  async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
     const { session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
       throw ERR_INVALID_INPUT('A valid pear link must be specified')
     }
-    const state = new State({
-      id: `stager-${randomBytes(16).toString('hex')}`,
-      flags: { link, stage: true },
-      dir,
-      cmdArgs
-    })
+
+    const { dir: pkgDir, pkg } = await localPkg(dir)
+    if (pkg === null) {
+      throw ERR_INVALID_PROJECT_DIR(
+        `"package.json not found from: ${dir}. Pear project must have a package.json`
+      )
+    }
+
+    const options = pkg?.pear ?? {}
 
     await sidecar.ready()
-
-    await State.build(state, pkg)
 
     const key = parsed.drive.key
     const corestore = sidecar.getCorestore({ writable: true })
@@ -46,23 +47,22 @@ module.exports = class Stage extends Opstream {
     await pod.ready()
 
     const currentVersion = pod.version
-    const verlink = pod.verlink()
-    await state.initialize({ pod, dryRun })
+    const verlink = plink.serialize({
+      drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+    })
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
-    if (state.options?.stage?.ignore) ignore.push(...state.options.stage?.ignore)
+    if (options?.stage?.ignore) ignore.push(...options.stage?.ignore)
     ignore = [...new Set(ignore)]
 
     only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim()) || []
-    const cfgOnly = state.options?.stage?.only
+    const cfgOnly = options?.stage?.only
     if (cfgOnly) {
       only.push(
         ...(Array.isArray(cfgOnly) ? cfgOnly : cfgOnly?.split(',').map((s) => s.trim()) || [])
       )
     }
-
-    const release = (await pod.db.get('release'))?.value || 0
 
     const applink = plink.serialize(pod.drive.key)
     const z32 = applink.slice(7)
@@ -70,26 +70,25 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'staging',
       data: {
-        name: state.name,
+        name: pkg?.pear?.name ?? pkg?.name ?? null,
         key: z32,
         link: applink,
         verlink: verlink,
         current: currentVersion,
-        release,
-        dir
+        dir: pkgDir
       }
     })
 
     if (dryRun) this.push({ tag: 'dry' })
-    const src = new LocalDrive(state.dir, {
+    const src = new LocalDrive(pkgDir, {
       followExternalLinks: true
     })
 
-    const mainExists = (await src.entry(unixPathResolve('/', state.main))) !== null
-    const entrypoints = [
-      ...(mainExists ? [state.main] : []),
-      ...(state.options?.stage?.entrypoints || [])
-    ].map((entrypoint) => unixPathResolve('/', entrypoint))
+    const main = options?.main ?? pkg?.main ?? 'index.js'
+    const mainExists = (await src.entry(unixPathResolve('/', main))) !== null
+    const entrypoints = [...(mainExists ? [main] : []), ...(options?.stage?.entrypoints || [])].map(
+      (entrypoint) => unixPathResolve('/', entrypoint)
+    )
 
     for (const entrypoint of entrypoints) {
       const entry = await src.entry(entrypoint)
@@ -105,7 +104,7 @@ module.exports = class Stage extends Opstream {
 
     const opts = { prefix, ignore: ignored, dryRun, dedup: true, batch: true }
 
-    if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
+    if (!purge && options?.stage?.purge) purge = options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
         if (ignored(entry.key)) {
@@ -175,13 +174,28 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: pod.version,
-        release,
+        version: pod.drive.version,
         key: z32,
         link: applink,
-        verlink: pod.verlink()
+        verlink: plink.serialize({
+          drive: { length: pod.drive.core.length, fork: pod.drive.core.fork, key: pod.drive.key }
+        })
       }
     })
+  }
+}
+
+async function localPkg(dir) {
+  try {
+    const pkg = JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
+    return { dir, pkg }
+  } catch (err) {
+    if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
+    const parent = path.dirname(dir)
+    if (parent === dir || path.resolve(dir) === path.resolve(parent)) {
+      return { dir: null, pkg: null }
+    }
+    return localPkg(parent)
   }
 }
 

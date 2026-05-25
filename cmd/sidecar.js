@@ -55,18 +55,7 @@ module.exports = async function sidecar(cmd) {
   const commands = restarts.filter(({ id = null }) => id !== null)
   if (commands.length > 0) {
     print('Restart Commands:', 0)
-    for (const { dir, cmdArgs = [] } of commands) {
-      const devix = cmdArgs.indexOf('--dev')
-      if (devix > -1) {
-        cmdArgs[devix] = 'dev'
-        if (cmdArgs[devix + 1][0] !== '/' && cmdArgs[devix + 1][0] !== '.') {
-          cmdArgs.splice(devix + 1, 0, dir)
-        }
-        const insix = cmdArgs.indexOf('--inspector-port')
-        cmdArgs.splice(insix, 2)
-      }
-      const swapix = cmdArgs.indexOf('--swap')
-      if (swapix > -1) cmdArgs.splice(swapix, 2)
+    for (const { cmdArgs = [] } of commands) {
       stdio.out.write('  ')
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }

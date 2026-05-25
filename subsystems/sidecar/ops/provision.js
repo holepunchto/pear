@@ -211,11 +211,6 @@ module.exports = class Provision extends Opstream {
       data: { changes }
     })
 
-    if (await to.db.get('release')) {
-      this.push({ tag: 'unsetting', data: { field: 'release' } })
-      await to.db.del('release')
-    }
-
     const fields = ['manifest', 'metadata', 'platformVersion']
 
     for (const field of fields) {

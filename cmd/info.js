@@ -14,11 +14,10 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ release, name, length, byteLength, blobs, fork }) => `
+const info = ({ name, length, byteLength, blobs, fork }) => `
  info              value
 -----------------  -----------------
  name              ${name}
- release           ${release}
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
