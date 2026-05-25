@@ -18,6 +18,7 @@ const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const hyperdb = require('./lib/model')
 const db = require('./lib/db')
+const crypto = require('hypercore-crypto')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
@@ -247,9 +248,9 @@ class Sidecar extends ReadyResource {
     for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       if (client === originClient) continue
 
-      if (client.userData?.state && !client.userData.state.parent) {
-        const { id, cmdArgs, cwd, dir, env, options } = client.userData.state
-        metadata.push({ id, cmdArgs, cwd, dir, env, options })
+      if (client.userData?.state) {
+        const { cmdArgs } = client.userData.state
+        metadata.push({ cmdArgs })
       }
 
       this.#endRPCStreams(client).then(() => client.close())
@@ -391,6 +392,18 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
+}
+
+function storageFromLink(link) {
+  const parsed = typeof link === 'string' ? plink.parse(link) : link
+  const appStorage = path.join(PLATFORM_DIR, 'app-storage')
+  return parsed.protocol !== 'pear:'
+    ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
+    : path.join(
+        appStorage,
+        'by-dkey',
+        crypto.discoveryKey(hypercoreid.decode(parsed.drive.key)).toString('hex')
+      )
 }
 
 module.exports = Sidecar

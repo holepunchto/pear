@@ -6,7 +6,6 @@ const plink = require('pear-link')
 const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Seed extends Opstream {
   constructor(...args) {
@@ -47,14 +46,9 @@ module.exports = class Seed extends Opstream {
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
     if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
-    const state = new State({
-      id: `seeder-${randomBytes(16).toString('hex')}`,
-      flags: { link },
-      cmdArgs
-    })
 
     // not an app but a long running process, setting userData for restart recognition:
-    client.userData = { state }
+    client.userData = { state: { cmdArgs, flags: { link } } }
 
     this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
