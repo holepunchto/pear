@@ -367,7 +367,7 @@ jobs:
 
       - name: Slack Notification
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.HOLEPUNCH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_MESSAGE: ${{ steps.message.outputs.message }}
