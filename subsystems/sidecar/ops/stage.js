@@ -28,7 +28,7 @@ module.exports = class Stage extends Opstream {
       throw ERR_INVALID_INPUT('A valid pear link must be specified')
     }
 
-    const { pkgDir, pkg } = localPkg(dir)
+    const { dir: pkgDir, pkg } = await localPkg(dir)
     if (pkg === null) {
       throw ERR_INVALID_PROJECT_DIR(
         `"package.json not found from: ${dir}. Pear project must have a package.json`
