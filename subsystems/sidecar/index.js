@@ -11,12 +11,11 @@ const PearRuntimeUpdater = require('pear-runtime-updater')
 const IPC = require('pear-ipc')
 const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
-const deriveEncryptionKey = require('pw-to-ek')
 const hypercoreid = require('hypercore-id-encoding')
 const { version, upgrade } = require('../../package.json')
+const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT } = require('../../lib/terminal.js')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const State = require('./state')
 const hyperdb = require('./lib/model')
 const db = require('./lib/db')
 const ops = {
@@ -195,21 +194,6 @@ class Sidecar extends ReadyResource {
 
   touch(params, client) {
     return new ops.Touch(params, client, this)
-  }
-
-  async permit(params) {
-    let encryptionKey
-    if (params.password || params.encryptionKey) {
-      encryptionKey = params.encryptionKey || (await deriveEncryptionKey(params.password, SALT))
-    }
-    if (params.key !== null) {
-      const link = `pear://${hypercoreid.encode(params.key)}`
-      const traits = await this.model.getTraits(link)
-      if (!traits) {
-        await this.model.addTraits(link, State.storageFromLink(link))
-      }
-      return await this.model.updateEncryptionKey(link, encryptionKey)
-    }
   }
 
   versions(params, client) {

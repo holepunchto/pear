@@ -4,7 +4,7 @@ const plink = require('pear-link')
 const bareTTY = require('bare-tty')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, permit, isTTY, byteSize, stdio } = require('../lib/terminal.js')
+const { outputter, ansi, isTTY, byteSize, stdio } = require('../lib/terminal.js')
 const { EventEmitter } = require('bare-events')
 
 class Table extends EventEmitter {
@@ -455,11 +455,7 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     error: (err, info, ipc) => {
-      if (err.info && err.info.encrypted && info.ask && !appendMode) {
-        return permit(ipc, err.info, 'seed')
-      } else {
-        return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
-      }
+      return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   })
 

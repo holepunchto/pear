@@ -17,7 +17,7 @@ module.exports = class Stage extends Opstream {
   }
 
   async #op({ link, dir, dryRun, truncate, cmdArgs, ignore, purge, only, pkg = null }) {
-    const { client, session, sidecar } = this
+    const { session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
       throw ERR_INVALID_INPUT('A valid pear link must be specified')
@@ -68,8 +68,6 @@ module.exports = class Stage extends Opstream {
     const currentVersion = pod.version
     const verlink = pod.verlink()
     await state.initialize({ pod, dryRun })
-
-    await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []

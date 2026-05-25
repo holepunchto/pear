@@ -1,7 +1,7 @@
 'use strict'
 const context = require('../context')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('../lib/terminal.js')
+const { outputter, ansi, byteSize, byteDiff } = require('../lib/terminal.js')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>
@@ -25,9 +25,6 @@ const output = outputter('dump', {
     }
   },
   error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'dump')
-    }
     if (err.code === 'ERR_DIR_NONEMPTY') {
       return 'Dir is not empty. To overwrite: --force'
     }
