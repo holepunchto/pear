@@ -1,9 +1,8 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
-const { randomBytes } = require('hypercore-crypto')
 const speedometer = require('speedometer')
 const plink = require('pear-link')
-const { ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 
@@ -59,15 +58,11 @@ module.exports = class Seed extends Opstream {
     const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
     const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
 
-    const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
-    const encryptionKey = traits?.encryptionKey
-
     const pod = new Pod({
       swarm: this.sidecar.swarm,
       corestore,
       key,
-      status,
-      encryptionKey
+      status
     })
 
     this.stats = {
@@ -94,29 +89,13 @@ module.exports = class Seed extends Opstream {
       this.stats.speed.download.bytes(byteLength)
     })
 
-    try {
-      await session.add(pod)
-      await pod.ready()
-      if (!pod.drive.opened) throw new Error('Cannot open Hyperdrive')
-    } catch (err) {
-      if (err.code !== 'DECODING_ERROR') throw err
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-        key,
-        encrypted: true
-      })
-    }
+    await session.add(pod)
+    await pod.ready()
+    if (!pod.drive.opened) throw new Error('Cannot open Hyperdrive')
 
     await pod.join({ server: true })
 
-    try {
-      await pod.drive.get('/package.json')
-    } catch (err) {
-      if (err.code !== 'DECODING_ERROR') throw err
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-        key,
-        encrypted: true
-      })
-    }
+    await pod.drive.get('/package.json')
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))

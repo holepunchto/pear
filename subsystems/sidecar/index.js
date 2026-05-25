@@ -18,7 +18,6 @@ const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const hyperdb = require('./lib/model')
 const db = require('./lib/db')
-const crypto = require('hypercore-crypto')
 const ops = {
   GC: require('./ops/gc'),
   Stage: require('./ops/stage'),
@@ -392,18 +391,6 @@ class Sidecar extends ReadyResource {
       Bare.exit(124) // timeout
     }, ms).unref()
   }
-}
-
-function storageFromLink(link) {
-  const parsed = typeof link === 'string' ? plink.parse(link) : link
-  const appStorage = path.join(PLATFORM_DIR, 'app-storage')
-  return parsed.protocol !== 'pear:'
-    ? path.join(appStorage, 'by-random', crypto.randomBytes(16).toString('hex'))
-    : path.join(
-        appStorage,
-        'by-dkey',
-        crypto.discoveryKey(hypercoreid.decode(parsed.drive.key)).toString('hex')
-      )
 }
 
 module.exports = Sidecar

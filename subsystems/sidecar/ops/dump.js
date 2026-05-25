@@ -4,12 +4,7 @@ const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
-const {
-  ERR_PERMISSION_REQUIRED,
-  ERR_DIR_NONEMPTY,
-  ERR_INVALID_INPUT,
-  ERR_NOT_FOUND
-} = require('pear-errors')
+const { ERR_DIR_NONEMPTY, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
 
@@ -43,24 +38,13 @@ module.exports = class Dump extends Opstream {
     const key = parsed.drive.key
     checkout = checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
-    const traits = await this.sidecar.model.getTraits(link)
-    const encryptionKey = traits?.encryptionKey
-
     const corestore = isFileLink ? null : sidecar.getCorestore()
     let drive = null
 
     if (corestore) {
       await corestore.ready()
-      try {
-        drive = new Hyperdrive(corestore, key, { encryptionKey })
-        await drive.ready()
-      } catch (err) {
-        if (err.code !== 'DECODING_ERROR') throw err
-        throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-          key,
-          encrypted: true
-        })
-      }
+      drive = new Hyperdrive(corestore, key)
+      await drive.ready()
     }
     const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
     const pod = new Pod({

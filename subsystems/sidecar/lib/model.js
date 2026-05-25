@@ -76,24 +76,6 @@ class Model {
     return traits
   }
 
-  async updateEncryptionKey(link, encryptionKey) {
-    let result
-    const tx = await this.lock.enter()
-    const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/traits', get)
-    const traits = await tx.get('@pear/traits', get)
-    if (!traits) {
-      result = null
-    } else {
-      const update = { ...traits, encryptionKey }
-      LOG.trace('db', 'INSERT', '@pear/traits', update)
-      await tx.insert('@pear/traits', update)
-      result = update
-    }
-    await this.lock.exit()
-    return result
-  }
-
   async allGc() {
     LOG.trace('db', 'FIND', '@pear/gc')
     return await this.db.find('@pear/gc').toArray()

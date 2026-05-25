@@ -18,8 +18,7 @@ module.exports = class Pod {
       key,
       stage = false,
       status = noop,
-      truncate,
-      encryptionKey = null
+      truncate
     } = opts
     this.swarm = swarm
     this.checkout = checkout ?? 'release'
@@ -27,7 +26,7 @@ module.exports = class Pod {
     this.status = status
     this.corestore = corestore
     this.stage = stage
-    this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.drive = drive || new Hyperdrive(this.corestore, this.key)
     this.current = current ?? this.drive?.core?.length ?? 0
     this.link = null
     this.truncate = Number.isInteger(+truncate) ? +truncate : null
