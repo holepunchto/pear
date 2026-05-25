@@ -231,8 +231,8 @@ try {
 
     Set-Content -NoNewline -Path $msixContentBuilder -Value $patchedMsixContentBuilder
 
-    Write-Host "[$(Get-Date -Format HH:mm:ss)] bare-build (MSIX content dir)"
-    Invoke-Checked bare-build @('--base', '.', '--name', $productName, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
+    Write-Host "[$(Get-Date -Format HH:mm:ss)] bare-build (MSIX content dir, publisher=$Subject)"
+    Invoke-Checked bare-build @('--base', '.', '--name', $productName, '--description', 'Pear runtime command line interface', '--host', 'win32-x64', '--subject', $Subject, '--thumbprint', $cert.Thumbprint, '--out', './out/win32-x64-msix-dir', 'scripts/standalone-entry.js')
 
     Write-Host "[$(Get-Date -Format HH:mm:ss)] makeappx pack"
     New-Item -ItemType Directory -Force -Path $msixOut | Out-Null
