@@ -96,7 +96,6 @@
     "pear-build": "^1.0.0",
     "pear-changelog": "^1.0.1",
     "pear-cmd": "^1.0.2",
-    "pear-crasher": "github:holepunchto/pear-crasher#only-runs-in-bare",
     "pear-dump": "^1.0.0",
     "pear-errors": "^1.0.1",
     "pear-gracedown": "^1.0.1",

@@ -1,6 +1,6 @@
 'use strict'
 const IPC = require('pear-ipc')
-const crasher = require('pear-crasher')
+const crasher = require('./lib/crasher.js')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
