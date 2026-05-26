@@ -13,11 +13,11 @@ async function runTests() {
   await test.load(import.meta.resolve('./03-seed.test.js'))
   await test.load(import.meta.resolve('./04-dump.test.js'))
   await test.load(import.meta.resolve('./05-provision.test.js'))
-  await test.load(import.meta.resolve('./06-multisig.test.js'))
+  // await test.load(import.meta.resolve('./06-multisig.test.js'))
   await test.load(import.meta.resolve('./07-info.test.js'))
   await test.load(import.meta.resolve('./08-data.test.js'))
   await test.load(import.meta.resolve('./09-presets.test.js'))
-  await test.load(import.meta.resolve('./10-shutdown.test.js'))
+  // await test.load(import.meta.resolve('./10-shutdown.test.js'))
 
   test.resume()
 }

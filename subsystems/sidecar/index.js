@@ -13,7 +13,7 @@ const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
 const { version, upgrade } = require('../../package.json')
-const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT } = require('../../lib/terminal.js')
+const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT } = require('../../constants.js')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const hyperdb = require('./lib/model')
@@ -30,7 +30,6 @@ const ops = {
   Presets: require('./ops/presets'),
   Multisig: require('./ops/multisig')
 }
-const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, SALT } = require('../../constants.js')
 
 const SWARM_DELAY = 5000
 const CHECKMARK = isWindows ? '^' : '✔'
