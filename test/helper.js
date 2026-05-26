@@ -53,7 +53,6 @@ class Helper extends IPC.Client {
   constructor(opts = {}) {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
-    const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = opts.platformDir
       ? path.resolve(opts.platformDir, '..', BY_ARCH)
       : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
