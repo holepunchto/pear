@@ -5,7 +5,6 @@ const path = require('bare-path')
 const os = require('bare-os')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
-const Iambus = require('iambus')
 const safetyCatch = require('safety-catch')
 const PearRuntimeUpdater = require('pear-runtime-updater')
 const IPC = require('pear-ipc')
@@ -62,12 +61,6 @@ class Sidecar extends ReadyResource {
     this.db = {
       model: new db.Model(rocksNext)
     }
-
-    this.bus = new Iambus()
-
-    this.bus.sub({}).on('data', (msg) => {
-      LOG.trace('bus', 'PUB', msg)
-    })
 
     this.updater = updater
     if (this.updater) this.#bindUpdaterEvents(updater)
@@ -365,7 +358,6 @@ class Sidecar extends ReadyResource {
       }
       await this.updater.close()
     }
-    this.bus.destroy()
   }
 
   deathClock(ms = 20000) {

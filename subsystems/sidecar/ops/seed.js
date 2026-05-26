@@ -56,21 +56,18 @@ module.exports = class Seed extends Opstream {
     const corestore = this.sidecar.getCorestore()
     await corestore.ready()
 
-    const status = (msg) => this.sidecar.bus.pub({ topic: 'seed', id: client.id, msg })
-    const notices = this.sidecar.bus.sub({ topic: 'seed', id: client.id })
-
     const drive = await session.add(new Hyperdrive(corestore, key))
     const replicator = await session.add(new Replicator(drive))
 
-    replicator.on('announce', () => status({ tag: 'announced' }))
+    replicator.on('announce', () => this.push({ tag: 'announced' }))
     drive.core.on('peer-add', (peer) => {
-      status({
+      this.push({
         tag: 'peer-add',
         data: peer.remotePublicKey.toString('hex')
       })
     })
     drive.core.on('peer-remove', (peer) => {
-      status({
+      this.push({
         tag: 'peer-remove',
         data: peer.remotePublicKey.toString('hex')
       })
@@ -130,9 +127,6 @@ module.exports = class Seed extends Opstream {
 
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
-    for await (const { msg } of notices) this.push(msg)
-    // no need for teardown, seed is tied to the lifecycle of the client
-
-    clearInterval(this._statsInterval)
+    await new Promise((resolve) => this.session.teardown(resolve))
   }
 }
