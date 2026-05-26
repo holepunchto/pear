@@ -2,10 +2,12 @@
 'use strict'
 const { isWindows } = require('which-runtime')
 
+const app = {}
 class API {
   static RTI = { checkout: require('./checkout') }
   static CONSTANTS = null
-  config = {}
+  app = app
+  config = app
 }
 global.Pear = new API()
 API.CONSTANTS = require('pear-constants')
@@ -17,9 +19,7 @@ if (isWindows === false) {
   const user = os.userInfo()
 
   if (stat.uid !== user.uid) {
-    const err = new Error(
-      `Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`
-    )
+    const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
     err.name = 'User Permissions Error'
     throw err
   }

@@ -1,5 +1,173 @@
 # Pear Runtime Changelog
 
+## v2.6.5
+
+# Fixes
+
+* CLI - `pear provision` - preinitialized 0 length production link crash fix
+
+## v2.6.4
+
+# Improvements
+
+* CLI - `pear multisig` uses ~/.pear dir
+* CLI - `pear multisig keys get` and `pear multisig sign` prints error if no password supplied
+
+## v2.6.3
+
+# Improvements
+
+* CLI - `pear multisig` uses ~/.pear-sign dir
+
+## v2.6.2
+
+# Fixes
+
+* CLI - `pear multisig verify` - response validation and output fixe
+
+## v2.6.1
+
+# Fixes
+
+* CLI - `pear provision` - dry run output fix
+
+## v2.6.0
+
+# Fixes
+
+* CLI - `pear provision` - target metadata crash fix
+* CLI - `pear seed --json` - log ordering fix
+
+# Improvements
+
+* CLI - `pear multisig` introduces `pear.json` for multisig config
+* Internal - deps bump
+
+## v2.5.0
+
+### Features
+
+* CLI - `pear build` - new command - create a multi-architecture deployment folder from build sources
+* CLI - `pear multisig` - new command - production signing coordination. Gather enough cryptographic signatures to approve a release to synchronize onto a production link
+* CLI - `pear seed` realtime stats status updates table with `--no-tty` and `--stats-interval` flags
+
+### Improvements
+
+* CLI/Internal - `pear stage` - `package.json` `name` no longer used to generate pear link - always use `pear touch`
+* CLI - `pear seed` defunct `--dir` flag removed
+
+## v2.4.1
+
+### Improvements
+
+* CLI/Internal - `pear stage` now dedups - enables incremental updates to signed files/data
+
+## v2.4.0
+
+### Fixes
+
+* CLI - `pear info` empty output for seeded links fixed
+* CLI - `pear init` interactive fix
+
+### Improvements
+
+* CLI - `pear info` empty output more clear
+* CLI - `pear data [link]` - link made optional
+* CLI - `channel` removed from all commands, links only, use `pear touch` to make links
+* CLI - `pear stage` default ignores of `pear stage` removed, **.git, **.github, **.DS_Store, node_modules/.package-lock.json are no longer auto-ignored. Add to `pear.stage.ignore` as needed.
+* CLI - `pear run` **DEPRECATED** - use `pear-runtime` module instead for embeddable runtime with P2P OTA updates
+
+## v2.3.2
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
+## v2.3.1
+
+### Fixes
+
+* Internal - launch lib bump
+
+## v2.3.0
+
+### Features
+
+* Internal - tweaks, test refactors, 
+* CLI - `pear presets` - set default flags for apps per pear command & link
+
+### Fixes
+
+* CLI - `pear stage` - tweaks of `--ignore`, `--only`, `--compact` 
+* CLI - `pear run` - ensure prefetch when without preflight
+* CLI - `pear run` - preflight warmup timeout
+
+### Improvements
+
+* Internal - tweaks, test refactors
+
+## v2.2.16
+
+### Improvements
+
+* Full prefetch happens during preflight
+
+### Fixes
+
+* Run - use correct import map resolutions
+
+## v2.2.15
+
+* Internal - fix slow warmup prefetch
+
+## v2.2.14
+
+* Internal - bump runtimes for launcher fix
+
+## v2.2.13
+
+* Run Prefetch - network ops reording to solve slow installer ux
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
+## v2.2.12
+
+### Fixes
+
+* Internal - runtime drives bootstrap length lock
+
+## v2.2.11
+
+### Fixes
+
+* Internal - hyperbee bump
+
+## v2.2.10
+
+### Fixes
+
+* Internal - runtime bump
+
+## v2.2.9
+
+### Fixes
+
+* Internal - libappling launch lib
+
+## v2.2.8
+
+### Fixes
+
+* Internal -libappling bump for win fix
+
+## v2.2.7
+
+### Fixes
+
+* Internal -libappling launch lib
+
 ## v2.2.6
 
 ### Fixes

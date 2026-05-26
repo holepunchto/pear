@@ -1,8 +1,0 @@
-{
-  "name": "worker-zombie",
-  "main": "index.js",
-  "pear": {
-    "name": "worker-zombie",
-    "type": "terminal"
-  }
-}

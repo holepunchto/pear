@@ -1,6 +1,0 @@
-{
-  "name": "worker-length",
-  "main": "index.js",
-  "type": "module",
-  "pear": {}
-}

@@ -24,8 +24,13 @@ module.exports = class Data extends Opstream {
     }
 
     if (resource === 'dht') {
-      const nodes = await this.sidecar.model.getDhtNodes()
+      const nodes = this.sidecar.swarm.dht.toArray()
       this.final = { nodes }
+    }
+
+    if (resource === 'multisig') {
+      const records = await this.sidecar.db.model.allMultisig()
+      this.final = { records }
     }
 
     if (resource === 'gc') {
@@ -40,14 +45,14 @@ module.exports = class Data extends Opstream {
 
     if (resource === 'assets') {
       await this.sidecar.model.allocatedAssets()
-      let assets
       if (link) {
         const asset = await this.sidecar.model.getAsset(link)
         if (asset === null) throw ERR_NOT_FOUND(link + ' not found', { link })
-        this.final = { assets: assets }
+        const assets = [asset]
+        this.final = { assets }
       } else {
         const assets = await this.sidecar.model.allAssets()
-        this.final = { assets: assets }
+        this.final = { assets }
       }
     }
 

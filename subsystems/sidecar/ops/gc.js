@@ -7,8 +7,9 @@ const { spawn } = require('bare-subprocess')
 const { PLATFORM_DIR } = require('pear-constants')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
-const b4a = require('b4a')
 const hypercoreid = require('hypercore-id-encoding')
+const Hyperdrive = require('hyperdrive')
+const plink = require('pear-link')
 
 module.exports = class GC extends Opstream {
   constructor(...args) {
@@ -20,7 +21,7 @@ module.exports = class GC extends Opstream {
     if (params.resource === 'sidecars') return this.sidecars(params)
     if (params.resource === 'assets') return this.assets(params)
     if (params.resource === 'cores') return this.cores(params)
-    throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + resource)
+    throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + params.resource)
   }
 
   async releases(params) {
@@ -42,9 +43,7 @@ module.exports = class GC extends Opstream {
 
     const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
 
-    const dirNames = dirs
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name)
+    const dirNames = dirs.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name)
 
     for (const dirName of dirNames) {
       if (dirName !== currentDirName) {
@@ -71,10 +70,7 @@ module.exports = class GC extends Opstream {
             `wmic process where (name like '%${name}%') get name,executablepath,processid,commandline /format:csv`
           ]
         ]
-      : [
-          '/bin/sh',
-          ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]
-        ]
+      : ['/bin/sh', ['-c', `ps ax | grep -i -- '${name}' | grep -i -- '${flag}'`]]
 
     const sp = spawn(sh, args)
     let output = ''
@@ -90,9 +86,7 @@ module.exports = class GC extends Opstream {
         if (!line.trim()) continue
         const columns = line.split(isWindows ? ',' : ' ').filter((col) => col)
         if (isHeader && isWindows) {
-          const index = columns.findIndex((col) =>
-            /processid/i.test(col.trim())
-          )
+          const index = columns.findIndex((col) => /processid/i.test(col.trim()))
           pidIndex = index !== -1 ? index : 4
           isHeader = false
         } else {
@@ -109,9 +103,7 @@ module.exports = class GC extends Opstream {
     return new Promise((resolve, reject) => {
       sp.on('exit', (code, signal) => {
         if (code !== 0 || signal) {
-          reject(
-            new Error(`Process exited with code: ${code}, signal: ${signal}`)
-          )
+          reject(new Error(`Process exited with code: ${code}, signal: ${signal}`))
           return
         }
         this.push({ tag: 'complete', data: { resource, count } })
@@ -137,9 +129,9 @@ module.exports = class GC extends Opstream {
     for (const { client } of sidecar.running.values()) {
       // skip running assets
       if (client.userData instanceof sidecar.App === false) return
-      const links = Object.values(
-        client.userData.state.manifest.pear?.assets ?? {}
-      ).map((asset) => asset.link)
+      const links = Object.values(client.userData.state.manifest.pear?.assets ?? {}).map(
+        (asset) => asset.link
+      )
       removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
     }
     for (const asset of removeAssets) {
@@ -151,31 +143,47 @@ module.exports = class GC extends Opstream {
   }
 
   async cores(params) {
-    const { resource } = params
+    const { resource, data = {} } = params
+    const { link } = data
     const { sidecar } = this
     const ignore = !sidecar.drive.core
       ? new Set()
-      : new Set([
-          sidecar.drive.core.discoveryKey,
-          sidecar.drive.blobs.core.discoveryKey
-        ])
+      : new Set([sidecar.drive.core.discoveryKey, sidecar.drive.blobs.core.discoveryKey])
 
-    for await (const discoveryKey of sidecar.corestore.list()) {
-      if (ignore.has(hypercoreid.encode(discoveryKey))) continue
+    const discoveryKeys = []
+    if (link) {
+      const parsed = plink.parse(link)
+      const traits = await sidecar.model.getTraits(link)
+      const encryptionKey = traits?.encryptionKey
+      const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key, { encryptionKey })
+      await drive.ready()
+      discoveryKeys.push(drive.core.discoveryKey)
+      if (drive.blobs) discoveryKeys.push(drive.blobs.core.discoveryKey)
+      await drive.close()
+    } else {
+      for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
+    }
+    for (const discoveryKey of discoveryKeys) {
+      const dkey = hypercoreid.encode(discoveryKey)
+      if (ignore.has(dkey)) continue
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
+
       const core = sidecar.corestore.get({
         discoveryKey: info.discoveryKey,
         active: false
       })
       await core.ready()
       await core.clear(0, core.length)
+      const dlink =
+        info.auth && info.auth.key ? plink.serialize({ drive: { key: info.auth.key } }) : null
       this.push({
         tag: 'remove',
         data: {
-          operation: 'cleared',
+          operation: 'clear',
           resource: resource,
-          id: hypercoreid.encode(discoveryKey)
+          id: dkey,
+          link: dlink
         }
       })
       await core.close()

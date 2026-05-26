@@ -51,10 +51,7 @@ module.exports = class Replicator extends EventEmitter {
       done()
     }
 
-    LOG.info(
-      'sidecar',
-      '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key)
-    )
+    LOG.info('sidecar', '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
     const topic = swarm.join(this.drive.discoveryKey, {
       server,
       client,

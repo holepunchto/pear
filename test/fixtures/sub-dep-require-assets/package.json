@@ -1,5 +1,6 @@
 {
   "name": "sub-dep-require-assets",
+  "version": "1.0.0",
   "main": "index.js",
   "pear": {
     "name": "sub-dep-require-assets",

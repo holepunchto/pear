@@ -7,25 +7,13 @@ const Hyperdrive = require('hyperdrive')
 const { ERR_PERMISSION_REQUIRED, ERR_INVALID_INPUT } = require('pear-errors')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({
-    link,
-    channel,
-    showKey,
-    metadata,
-    manifest,
-    changelog = null,
-    dir
-  } = {}) {
-    if (link && channel)
-      throw ERR_INVALID_INPUT('Must be link or channel cannot be both')
-
+  async #op({ link, showKey, metadata, manifest, multisig, changelog = null } = {}) {
     const { session } = this
     let pod = null
     let drive = null
@@ -33,26 +21,17 @@ module.exports = class Info extends Opstream {
     if (full) max = Infinity
 
     const enabledFlags = new Set(
-      [full, metadata, showKey].filter((value) => value === true)
+      [full, metadata, showKey, multisig].filter((value) => value === true)
     )
 
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
-    const corestore = channel
-      ? this.sidecar.getCorestore(
-          State.appname(await State.localPkg({ dir })),
-          channel
-        )
-      : this.sidecar.getCorestore(null, null)
-
-    const key = link
-      ? plink.parse(link).drive.key
-      : await Hyperdrive.getDriveKey(corestore)
-
+    const corestore = this.sidecar.getCorestore()
+    const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
     const traits = link ? await this.sidecar.model.getTraits(link) : null
     const encryptionKey = traits?.encryptionKey
 
-    if (link || channel) {
+    if (link) {
       try {
         drive = new Hyperdrive(corestore, key, { encryptionKey })
         await drive.ready()
@@ -67,7 +46,7 @@ module.exports = class Info extends Opstream {
       drive = this.sidecar.drive
     }
 
-    if (link || channel) {
+    if (link) {
       pod = new Pod({ swarm: this.sidecar.swarm, corestore, key, drive })
       await pod.ready()
     }
@@ -84,20 +63,37 @@ module.exports = class Info extends Opstream {
       await pod.join()
     }
 
-    if (drive.key && drive.contentKey && drive.discoveryKey) {
-      const appManifest = await drive.db.get('manifest').catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+    if (drive.core.length === 0) {
+      await drive.core.update()
+    }
+
+    if (drive.core.length === 0 && drive.core.fork === 0) {
+      this.push({ tag: 'empty' })
+      return
+    }
+
+    let pkg = null
+    if (drive.core.length > 0) {
+      try {
+        pkg = JSON.parse(await drive.get('./package.json'))
+      } catch (err) {
+        if (err.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
-      })
+        } else throw err
+      }
 
       if (manifest) {
-        this.push({ tag: 'manifest', data: { manifest: appManifest.value } })
-        this.final = { manifest: appManifest.value }
+        this.push({ tag: 'manifest', data: { manifest: pkg } })
+        this.final = { manifest: pkg }
         return
       }
+
+      const coreManifest = drive.core.manifest
+      const isMultisig = coreManifest !== null && coreManifest.signers.length > 1
+      if (multisig && !isMultisig) throw ERR_INVALID_INPUT('Link has no multisig signers')
 
       if (isEnabled(metadata)) {
         this.push({
@@ -109,19 +105,17 @@ module.exports = class Info extends Opstream {
           }
         })
       }
-      const [channel, release] = await Promise.all([
-        drive.db.get('channel'),
-        drive.db.get('release')
-      ]).catch((error) => {
-        if (error.code === 'DECODING_ERROR')
+      const release = await drive.db.get('release').catch((error) => {
+        if (error.code === 'DECODING_ERROR') {
           throw ERR_PERMISSION_REQUIRED('Encryption key required', {
             key,
             encrypted: true
           })
+        }
       })
 
       if (isEnabled(metadata)) {
-        const name = appManifest?.value?.pear?.name || appManifest?.value?.name
+        const name = pkg?.pear?.name || pkg?.name
         const length = drive.core.length
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
@@ -135,8 +129,8 @@ module.exports = class Info extends Opstream {
         this.push({
           tag: 'info',
           data: {
-            channel: channel?.value,
             release: release?.value || ['Unreleased'],
+            link,
             name,
             length,
             byteLength,
@@ -144,6 +138,15 @@ module.exports = class Info extends Opstream {
             fork
           }
         })
+      }
+
+      if (isEnabled(multisig) && isMultisig) {
+        const publicKeys = coreManifest.signers.map((s) => hypercoreid.encode(s.publicKey))
+        this.push({
+          tag: 'multisig',
+          data: { quorum: coreManifest.quorum, publicKeys, only: !!multisig }
+        })
+        if (multisig) return
       }
     }
 

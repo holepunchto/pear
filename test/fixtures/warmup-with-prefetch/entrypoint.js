@@ -1,1 +1,1 @@
-const dep = require('./dep')
+require('./dep')

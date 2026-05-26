@@ -1,10 +1,10 @@
 'use strict'
 const plink = require('pear-link')
 const { outputter } = require('pear-terminal')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 const { permit, isTTY } = require('pear-terminal')
 const os = require('bare-os')
 const path = require('bare-path')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -14,11 +14,10 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ channel, release, name, length, byteLength, blobs, fork }) => `
+const info = ({ release, name, length, byteLength, blobs, fork }) => `
  info              value
 -----------------  -----------------
  name              ${name}
- channel           ${channel}
  release           ${release}
  length            ${length}
  fork              ${fork}
@@ -43,6 +42,10 @@ const output = outputter('info', {
     info.onlyShowKey = onlyShowKey
     return onlyShowKey ? `pear://${z32}` : `---:\n pear://${z32}\n...`
   },
+  empty: (data, info) => {
+    info.empty = true
+    return '[ Empty ]'
+  },
   keys,
   info,
   changelog,
@@ -56,43 +59,55 @@ const output = outputter('info', {
   manifest: (data) => {
     return JSON.stringify(data.manifest, 0, 2)
   },
+  multisig: ({ quorum, publicKeys, only }) => {
+    let out =
+      (only ? '' : '\n') +
+      ' multisig\n-----------\n quorum: ' +
+      quorum +
+      ' / ' +
+      publicKeys.length +
+      '\n public signing keys:'
+    for (const key of publicKeys) out += '\n    ' + key
+    return out + '\n'
+  },
   final(data, info) {
+    if (info.empty) return { success: 2 }
     return info.onlyShowKey && data.success ? {} : false
   }
 })
 
-module.exports = (ipc) =>
-  async function info(cmd) {
-    const {
-      json,
-      changelog,
-      fullChangelog: full,
-      metadata,
-      key: showKey,
-      manifest
-    } = cmd.flags
-    const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
-    const channel = isKey ? null : cmd.args.link
-    const link = isKey ? cmd.args.link : null
-    if (link && isKey === false)
-      throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-    let dir = cmd.args.dir
-    if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
-    if (!dir) dir = os.cwd()
-
-    await output(
-      json,
-      ipc.info({
-        link,
-        channel,
-        showKey,
-        metadata,
-        changelog: full || changelog ? { full, max: 1 } : null,
-        manifest,
-        cmdArgs: Bare.argv.slice(1),
-        dir
-      }),
-      { ask: cmd.flags.ask },
-      ipc
-    )
+module.exports = async function info(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const {
+    json,
+    changelog,
+    fullChangelog: full,
+    metadata,
+    key: showKey,
+    manifest,
+    multisig
+  } = cmd.flags
+  const link = cmd.args.link || null
+  if (link && plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
+  let dir = cmd.args.dir
+  if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
+  if (!dir) dir = os.cwd()
+
+  await output(
+    json,
+    ipc.info({
+      link,
+      showKey,
+      metadata,
+      changelog: full || changelog ? { full, max: 1 } : null,
+      manifest,
+      multisig,
+      cmdArgs: Bare.argv.slice(1),
+      dir
+    }),
+    { ask: cmd.flags.ask },
+    ipc
+  )
+}

@@ -22,11 +22,7 @@ module.exports = class Session {
     await resource.ready()
 
     if (this.closed) {
-      LOG.info(
-        'session',
-        'closed, closing resource and not adding to session',
-        this._identifier
-      )
+      LOG.info('session', 'closed, closing resource and not adding to session', this._identifier)
       await resource.close()
       throw ERR_INTERNAL_ERROR('Session is closed')
     }
@@ -40,11 +36,7 @@ module.exports = class Session {
     LOG.info('session', 'removing resource from session', this._identifier)
     this.resources.delete(resource)
     await resource.close()
-    LOG.info(
-      'session',
-      'resource closed and removed from session',
-      this._identifier
-    )
+    LOG.info('session', 'resource closed and removed from session', this._identifier)
   }
 
   async close() {

@@ -1,30 +1,28 @@
 'use strict'
-const path = require('bare-path')
 const hypercoreid = require('hypercore-id-encoding')
-const Hyperdrive = require('hyperdrive')
-const { ERR_INVALID_PROJECT_DIR } = require('pear-errors')
+const { randomBytes } = require('hypercore-crypto')
 const Opstream = require('../lib/opstream')
-const State = require('../state')
 
 module.exports = class Touch extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ dir, channel }) {
+  async #op() {
     const { sidecar } = this
     await sidecar.ready()
-    const pkg = await State.localPkg({ dir })
-    if (pkg === null)
-      throw ERR_INVALID_PROJECT_DIR(
-        `"${path.join(dir, 'package.json')}" not found. Pear project must have a package.json`
-      )
-    const corestore = sidecar.getCorestore(State.appname(pkg), channel)
+
+    const corestore = sidecar.getCorestore()
     await corestore.ready()
-    const key = await Hyperdrive.getDriveKey(corestore)
-    this.push({
-      tag: 'result',
-      data: { key: hypercoreid.normalize(key), channel }
-    })
+    const keyPair = await corestore.createKeyPair(randomBytes(16).toString('hex'))
+    const core = corestore.get({ keyPair, exclusive: true })
+    await core.ready()
+    const key = core.key
+    await core.close()
+    const normalized = hypercoreid.normalize(key)
+    this.final = {
+      key: normalized,
+      link: 'pear://' + normalized
+    }
   }
 }

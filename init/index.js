@@ -18,11 +18,7 @@ async function init(link = 'default', dir, opts = {}) {
   let { ask = true } = opts
   const isPear = link.startsWith('pear://')
   const isFile = link.startsWith('file://')
-  const isPath =
-    link[0] === '.' ||
-    link[0] === '/' ||
-    link[1] === ':' ||
-    link.startsWith('\\')
+  const isPath = link[0] === '.' || link[0] === '/' || link[1] === ':' || link.startsWith('\\')
   const isName = !isPear && !isFile && !isPath
 
   if (isName) {
@@ -75,18 +71,14 @@ async function init(link = 'default', dir, opts = {}) {
           ? prompt.override.reduce((o, k) => o?.[k], pkg)
           : (prompt.default ?? defaults[prompt.name])
         if (typeof prompt.validation !== 'string') continue
-        prompt.validation = new Function(
-          'value',
-          'return (' + prompt.validation + ')(value)'
-        ) // eslint-disable-line
+        prompt.validation = new Function('value', 'return (' + prompt.validation + ')(value)') // eslint-disable-line
       }
     } catch {
       params = null
     }
     break
   }
-  if (params === null)
-    throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
+  if (params === null) throw ERR_INVALID_TEMPLATE('Invalid Template or Unreachable Link')
   const dst = new Localdrive(dir)
   if (force === false) {
     let empty = true
@@ -96,8 +88,7 @@ async function init(link = 'default', dir, opts = {}) {
         break
       }
     }
-    if (empty === false)
-      throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
+    if (empty === false) throw ERR_DIR_NONEMPTY('Dir is not empty. To overwrite: --force')
   }
   const output = new Readable({ objectMode: true })
   const prompt = new Interact(header, params, { defaults })
@@ -114,10 +105,7 @@ async function init(link = 'default', dir, opts = {}) {
     if (value === null) continue // dir
     const file = stamp.sync(key, fields)
     const writeStream = dst.createWriteStream(file)
-    const promise = pipelinePromise(
-      stamp.stream(value, fields, shave),
-      writeStream
-    )
+    const promise = pipelinePromise(stamp.stream(value, fields, shave), writeStream)
     promise.catch((err) => {
       output.push({ tag: 'error', data: err })
     })

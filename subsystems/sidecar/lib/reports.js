@@ -7,8 +7,7 @@ const generic = (message, stack, info) => ({
   info,
   headline: { content: 'Something has gone wrong' },
   tagline: {
-    content:
-      'An error has occurred which cannot be recovered from. Upgrading might help.'
+    content: 'An error has occurred which cannot be recovered from. Upgrading might help.'
   },
   cta: { content: 'QUIT', action: 'quit' }
 })
@@ -57,19 +56,9 @@ const update = (report) => {
   const { version } = report
   const { current } = version
   const from =
-    'pear://' +
-    current.fork +
-    '.' +
-    current.length +
-    '.' +
-    hypercoreid.normalize(current.key)
+    'pear://' + current.fork + '.' + current.length + '.' + hypercoreid.normalize(current.key)
   const to =
-    'pear://' +
-    version.fork +
-    '.' +
-    version.length +
-    '.' +
-    hypercoreid.normalize(version.key)
+    'pear://' + version.fork + '.' + version.length + '.' + hypercoreid.normalize(version.key)
   return {
     type: 'update',
     headline: {

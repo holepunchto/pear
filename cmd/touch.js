@@ -1,24 +1,21 @@
 'use strict'
-const { outputter, ansi } = require('pear-terminal')
-const { randomBytes } = require('hypercore-crypto')
-const os = require('bare-os')
+const { outputter } = require('pear-terminal')
 
 const output = outputter('touch', {
-  result: ({ key }, { header, channel }) => {
-    return `${header}\n\n${ansi.bold(channel)}\n${key}\n`
+  final: ({ link }) => {
+    return {
+      output: 'print',
+      success: Infinity, // omit success ansi tick
+      message: link
+    }
   },
   error: ({ message }) => {
     return `Error: ${message}\n`
   }
 })
 
-module.exports = (ipc) =>
-  async function touch(cmd) {
-    const dir = os.cwd()
-    const json = cmd.flags.json
-    const channel = cmd.args.channel || randomBytes(16).toString('hex')
-    await output(json, ipc.touch({ dir, channel }), {
-      channel,
-      header: cmd.command.header
-    })
-  }
+module.exports = async function touch(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const json = cmd.flags.json
+  await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.touch({}))
+}

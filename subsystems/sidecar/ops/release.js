@@ -1,7 +1,6 @@
 'use strict'
-const Hyperdrive = require('hyperdrive')
 const { randomBytes } = require('hypercore-crypto')
-const { ERR_UNSTAGED } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_UNSTAGED } = require('pear-errors')
 const plink = require('pear-link')
 const Pod = require('../lib/pod')
 const Opstream = require('../lib/opstream')
@@ -12,12 +11,12 @@ module.exports = class Release extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ name, channel, checkout, link, dir, cmdArgs }) {
+  async #op({ name, checkout, link, dir, cmdArgs }) {
     const parsed = link ? plink.parse(link) : null
-    let key = parsed?.drive.key ?? null
+    const key = parsed?.drive.key ?? null
     const state = new State({
       id: `releaser-${randomBytes(16).toString('hex')}`,
-      flags: { checkout, channel, link },
+      flags: { checkout, link },
       dir,
       cmdArgs
     })
@@ -26,25 +25,21 @@ module.exports = class Release extends Opstream {
     await State.build(state, pkg)
     name = name || state.name
 
-    this.push({ tag: 'releasing', data: { name, channel, link } })
+    this.push({ tag: 'releasing', data: { name, link } })
 
     await this.sidecar.ready()
 
-    const corestore = this.sidecar.getCorestore(name, channel, {
-      writable: true
-    })
+    if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+
+    const corestore = this.sidecar.getCorestore({ writable: true })
     await corestore.ready()
 
-    if (key === null) await Hyperdrive.getDriveKey(corestore)
-
-    const pod = new Pod({ corestore, channel, key })
+    const pod = new Pod({ corestore, key })
     await session.add(pod)
     const manifest = await pod.db.get('manifest')
 
     if (manifest === null) {
-      throw ERR_UNSTAGED(
-        `Failed to release "${name}" app on ${channel ? '"' + channel + '" channel' : link}.`
-      )
+      throw ERR_UNSTAGED(`Failed to release "${name}" app on ${link}.`)
     }
 
     const currentLength = pod.db.feed.length
@@ -56,7 +51,7 @@ module.exports = class Release extends Opstream {
 
     this.push({
       tag: 'released',
-      data: { name, channel, link, length: pod.db.feed.length }
+      data: { name, link, length: pod.db.feed.length }
     })
   }
 }

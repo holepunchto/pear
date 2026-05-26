@@ -39,15 +39,18 @@ const { ERR_INTERNAL_ERROR, ERR_INVALID_INPUT } = require('pear-errors')
 const reports = require('./lib/reports')
 const Applings = require('./lib/applings')
 const Replicator = require('./lib/replicator')
-const Model = require('./lib/model')
+const HyperDB = require('hyperdb')
+const hyperdb = require('pear-hyperdb') // FROZEN: remove with pear run removal
+const db = require('./lib/db')
 const registerUrlHandler = require('../../url-handler')
 const { version } = require('../../package.json')
 const State = require('./state')
 const ops = {
   GC: require('./ops/gc'),
-  Release: require('./ops/release'),
   Stage: require('./ops/stage'),
   Seed: require('./ops/seed'),
+  Provision: require('./ops/provision'),
+  Release: require('./ops/release'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
   Shift: require('./ops/shift'),
@@ -55,7 +58,8 @@ const ops = {
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Run: require('./ops/run'),
-  Presets: require('./ops/presets')
+  Presets: require('./ops/presets'),
+  Multisig: require('./ops/multisig')
 }
 
 // ensure that we are registered as a link handler
@@ -82,7 +86,16 @@ class Sidecar extends ReadyResource {
   constructor({ updater, drive, corestore, nodes, gunk }) {
     super()
 
-    this.model = new Model(corestore.session())
+    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
+    this.model = new hyperdb.Model(rocks)
+
+    const rocksNext = HyperDB.rocks(
+      path.join(path.dirname(path.dirname(corestore.storage.path)), 'db'),
+      db.spec
+    )
+    this.db = {
+      model: new db.Model(rocksNext)
+    }
 
     const all = {}
 
@@ -132,8 +145,7 @@ class Sidecar extends ReadyResource {
           if (client.userData instanceof this.App === false) {
             LOG.info(
               'sidecar',
-              'Unresponsive non-app process detected with closed client id ' +
-                client.id
+              'Unresponsive non-app process detected with closed client id ' + client.id
             )
             return
           }
@@ -146,18 +158,13 @@ class Sidecar extends ReadyResource {
             )
             return
           }
-          LOG.info(
-            'sidecar',
-            `Unresponsive process detected with pid ${client.userData.pid}`
-          )
+          LOG.info('sidecar', `Unresponsive process detected with pid ${client.userData.pid}`)
         }
         this.#spindownCountdown()
       })
     })
 
-    this.replicator = updater
-      ? new Replicator(updater.drive, { appling: true })
-      : null
+    this.replicator = updater ? new Replicator(updater.drive, { appling: true }) : null
 
     this.applings = new Applings(APPLINGS_PATH)
 
@@ -188,16 +195,10 @@ class Sidecar extends ReadyResource {
         if (report.type === 'update') return reports.update(report)
         if (report.type === 'upgrade') return reports.upgrade()
         if (report.type === 'restarting') return reports.restarting()
-        if (report.err?.code === 'ERR_PERMISSION_REQUIRED')
-          return reports.permission(report)
-        if (report.err?.code === 'ERR_CONNECTION')
-          return reports.connection(report)
+        if (report.err?.code === 'ERR_PERMISSION_REQUIRED') return reports.permission(report)
+        if (report.err?.code === 'ERR_CONNECTION') return reports.connection(report)
         if (report.err) console.trace('REPORT', report.err) // send generic errors to the text error log as well
-        const args = [
-          report.err?.message,
-          report.err?.stack,
-          report.info || report.err
-        ]
+        const args = [report.err?.message, report.err?.stack, report.info || report.err]
         if (report.err?.code === 'ERR_OPEN') return reports.dev(...args)
         if (report.err?.code === 'ERR_CRASH') return reports.crash(...args)
         return reports.generic(...args)
@@ -306,13 +307,7 @@ class Sidecar extends ReadyResource {
         return this.unloader
       }
 
-      constructor({
-        id = '',
-        startId = '',
-        state = null,
-        pod = null,
-        session
-      }) {
+      constructor({ id = '', startId = '', state = null, pod = null, session }) {
         this.app = this
         this.session = session
         this.pod = pod
@@ -321,14 +316,8 @@ class Sidecar extends ReadyResource {
         this.startId = startId
         this.clients = new Set()
         const opts = { retain: true }
-        const reporter = this.sidecar.bus.sub(
-          { topic: 'reports', id: this.startId },
-          opts
-        )
-        const warming = this.sidecar.bus.sub(
-          { topic: 'warming', id: this.startId },
-          opts
-        )
+        const reporter = this.sidecar.bus.sub({ topic: 'reports', id: this.startId }, opts)
+        const warming = this.sidecar.bus.sub({ topic: 'warming', id: this.startId }, opts)
         const updates = this.messages({ type: 'pear/updates' }, opts)
         this.cutover = (params) => {
           // closure scoped to keep cutover refs to top ancestor subs
@@ -353,14 +342,14 @@ class Sidecar extends ReadyResource {
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
       if (this.closed) return
-      this.ready().catch((err) =>
-        LOG.error('internal', 'Failed to Open Sidecar', err)
-      )
+      this.ready().catch((err) => LOG.error('internal', 'Failed to Open Sidecar', err))
     }, SWARM_DELAY)
     global.sidecar = this
   }
 
   async _open() {
+    await this.model.db.ready()
+    await this.db.model.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
     const gcCycle = async () => {
@@ -389,10 +378,7 @@ class Sidecar extends ReadyResource {
       if (!started) return
 
       if (started.client.userData instanceof this.App === false) {
-        LOG.error(
-          'internal',
-          'subscriber pattern id invalid - no clients matched'
-        )
+        LOG.error('internal', 'subscriber pattern id invalid - no clients matched')
         return
       }
 
@@ -421,10 +407,7 @@ class Sidecar extends ReadyResource {
     return Array.from(
       new Set(
         this.ipc.clients
-          .filter(
-            (client) =>
-              client?.userData instanceof this.App && client.userData.head
-          )
+          .filter((client) => client?.userData instanceof this.App && client.userData.head)
           .map((client) => client.userData)
       )
     )
@@ -434,7 +417,7 @@ class Sidecar extends ReadyResource {
     clearTimeout(this.spindownt)
     if (this.decomissioned) return
     if (this.hasClients) return
-    this.spindownt = setTimeout(async () => {
+    this.spindownt = setTimeout(() => {
       if (this.hasClients || this.updater?.updating) return
       this.close().catch((err) => {
         LOG.error('internal', 'Failed to Close Sidecar', err)
@@ -459,12 +442,9 @@ class Sidecar extends ReadyResource {
 
   async updateNotify(version, info = {}) {
     if (info.link) LOG.info('sidecar', 'Application update available:')
-    else if (version.force)
-      LOG.info(
-        'sidecar',
-        'Platform Force update (' + version.force.reason + '). Updating to:'
-      )
-    else LOG.info('sidecar', 'Platform update available. Restart to update to:')
+    else if (version.force) {
+      LOG.info('sidecar', 'Platform Force update (' + version.force.reason + '). Updating to:')
+    } else LOG.info('sidecar', 'Platform update available. Restart to update to:')
     if (version.key === null) LOG.info('sidecar', ` ${info.link}`)
     else LOG.info('sidecar', ' ' + plink.serialize({ drive: version }))
 
@@ -511,33 +491,31 @@ class Sidecar extends ReadyResource {
     if (params.startId) {
       const started = this.running.get(params.startId)
       if (started) {
-        client.userData = started.client.userData.register(
-          client,
-          params.startId,
-          params.pid
-        )
+        client.userData = started.client.userData.register(client, params.startId, params.pid)
         if (params.startWait) await started.running
-      } else
-        throw ERR_INVALID_INPUT(
-          'identify failure unrecognized startId - did the origin app close?'
-        )
+      } else {
+        throw ERR_INVALID_INPUT('identify failure unrecognized startId - did the origin app close?')
+      }
     }
-    if (!client.userData)
-      throw ERR_INTERNAL_ERROR('identify failure no userData')
+    if (!client.userData) throw ERR_INTERNAL_ERROR('identify failure no userData')
     const id = client.userData.id
     return { id }
+  }
+
+  stage(params, client) {
+    return new ops.Stage(params, client, this)
   }
 
   seed(params, client) {
     return new ops.Seed(params, client, this)
   }
 
-  release(params, client) {
-    return new ops.Release(params, client, this)
+  provision(params, client) {
+    return new ops.Provision(params, client, this)
   }
 
-  stage(params, client) {
-    return new ops.Stage(params, client, this)
+  release(params, client) {
+    return new ops.Release(params, client, this)
   }
 
   dump(params, client) {
@@ -582,7 +560,7 @@ class Sidecar extends ReadyResource {
     return client.userData.unwrapped.warming
   }
 
-  async versions(params, client) {
+  versions(params, client) {
     const runtimes = { bare: Bare.versions.bare, pear: version }
     return {
       platform: this.version,
@@ -595,6 +573,10 @@ class Sidecar extends ReadyResource {
     return new ops.Presets(params, client, this)
   }
 
+  multisig(params, client) {
+    return new ops.Multisig(params, client, this)
+  }
+
   cutover(params, client) {
     const app = client.userData
     if (app instanceof this.App === false) return
@@ -604,10 +586,7 @@ class Sidecar extends ReadyResource {
   reports(params, client) {
     const app = client.userData
     if (app === null && params.id) {
-      return pipeline(
-        this.bus.sub({ topic: 'reports', id: params.id }),
-        unwrap()
-      )
+      return pipeline(this.bus.sub({ topic: 'reports', id: params.id }), unwrap())
     }
     if (app instanceof this.App === false) {
       LOG.error('reporting', 'invalid reports requests', params)
@@ -629,23 +608,18 @@ class Sidecar extends ReadyResource {
     return client.userData.reported
   }
 
-  async config(params, client) {
+  config(params, client) {
     if (client.userData instanceof this.App === false) return
-    const cfg = client.userData.state.constructor.configFrom(
-      client.userData.state
-    )
+    const cfg = client.userData.state.constructor.configFrom(client.userData.state)
     return cfg
   }
 
   async checkpoint(params, client) {
     if (client.userData instanceof this.App === false) return
-    await fs.promises.writeFile(
-      path.join(client.userData.state.storage, 'checkpoint'),
-      params
-    )
+    await fs.promises.writeFile(path.join(client.userData.state.storage, 'checkpoint'), params)
   }
 
-  async message(params, client) {
+  message(params, client) {
     if (client.userData instanceof this.App === false) return
     return client.userData.message(params)
   }
@@ -689,9 +663,7 @@ class Sidecar extends ReadyResource {
   async permit(params) {
     let encryptionKey
     if (params.password || params.encryptionKey) {
-      encryptionKey =
-        params.encryptionKey ||
-        (await deriveEncryptionKey(params.password, SALT))
+      encryptionKey = params.encryptionKey || (await deriveEncryptionKey(params.password, SALT))
     }
     if (params.key !== null) {
       const link = `pear://${hypercoreid.encode(params.key)}`
@@ -705,9 +677,7 @@ class Sidecar extends ReadyResource {
 
   async trusted(link) {
     const aliases = Object.keys(ALIASES).map((alias) => 'pear://' + alias)
-    const aliasesKeys = Object.values(ALIASES).map(
-      (key) => `pear://${hypercoreid.encode(key)}`
-    )
+    const aliasesKeys = Object.values(ALIASES).map((key) => `pear://${hypercoreid.encode(key)}`)
     return (
       aliases.includes(link) ||
       aliasesKeys.includes(link) ||
@@ -780,15 +750,13 @@ class Sidecar extends ReadyResource {
       if (seen.has(client.userData.state.id)) continue
       seen.add(client.userData.state.id)
       const isApp = client.userData instanceof this.App
-      const { id, cmdArgs, cwd, dir, appling, env, options } =
-        client.userData.state
+      const { id, cmdArgs, cwd, dir, appling, env, options } = client.userData.state
       if (!client.userData.state.parent) {
         metadata.push({ id, cmdArgs, cwd, dir, appling, env, options, isApp })
       }
       const tearingDown = isApp && client.userData.teardown()
       // TODO: close timeout for tearingDown clients
-      if (tearingDown === false)
-        this.#endRPCStreams(client).then(() => client.close())
+      if (tearingDown === false) this.#endRPCStreams(client).then(() => client.close())
     }
     return metadata
   }
@@ -815,8 +783,7 @@ class Sidecar extends ReadyResource {
         }
       }
       if (appling) {
-        const applingPath =
-          typeof appling === 'string' ? appling : appling?.path
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) {
           spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
         } else {
@@ -829,8 +796,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -841,9 +809,7 @@ class Sidecar extends ReadyResource {
       return
     }
 
-    const sidecarClosed = new Promise((resolve) =>
-      this.corestore.once('close', resolve)
-    )
+    const sidecarClosed = new Promise((resolve) => this.corestore.once('close', resolve))
     let restarts = await this.#shutdown(client)
     // ample time for any OS cleanup operations:
     await new Promise((resolve) => setTimeout(resolve, 1500))
@@ -858,23 +824,16 @@ class Sidecar extends ReadyResource {
 
     for (const { dir, cwd, appling, cmdArgs, env } of restarts) {
       if (appling) {
-        const applingPath =
-          typeof appling === 'string' ? appling : appling?.path
+        const applingPath = typeof appling === 'string' ? appling : appling?.path
         if (isMac) {
-          const openProc = spawn(
-            'open',
-            ['-n', applingPath.split('.app')[0] + '.app'],
-            { env }
-          ) // appling owns cwd
+          const openProc = spawn('open', ['-n', applingPath.split('.app')[0] + '.app'], { env }) // appling owns cwd
           await once(openProc, 'exit')
         } else {
           daemon.spawn(applingPath, { env }) // appling owns cwd
         }
       } else {
         const TARGET_RUNTIME =
-          this.updater === null
-            ? RUNTIME
-            : this.updater.swap + RUNTIME.slice(SWAP.length)
+          this.updater === null ? RUNTIME : this.updater.swap + RUNTIME.slice(SWAP.length)
 
         const cmd = command('run', ...rundef)
         cmd.parse(cmdArgs.slice(1))
@@ -882,8 +841,9 @@ class Sidecar extends ReadyResource {
         const linkIndex = cmd?.indices?.args?.link
         const link = cmd?.args?.link
         if (linkIndex !== undefined) {
-          if (!link.startsWith('pear://') && !link.startsWith('file://'))
+          if (!link.startsWith('pear://') && !link.startsWith('file://')) {
             cmdArgs[linkIndex + 1] = dir
+          }
         } else {
           cmdArgs.push(dir)
         }
@@ -915,17 +875,14 @@ class Sidecar extends ReadyResource {
             (appdev
               ? app.state.dir === appdev
               : app.state.key &&
-                hypercoreid.encode(app.state.key) ===
-                  hypercoreid.encode(parsed.drive.key))
+                hypercoreid.encode(app.state.key) === hypercoreid.encode(parsed.drive.key))
           )
         })
         for (const app of matches) {
           const pathname = parsed.pathname
           const fragment = parsed.hash ? parsed.hash.slice(1) : null
           const query = parsed.search ? parsed.search.slice(1) : null
-          const linkData = pathname?.startsWith('/')
-            ? pathname.slice(1)
-            : pathname
+          const linkData = pathname?.startsWith('/') ? pathname.slice(1) : pathname
           app.message({
             type: 'pear/wakeup',
             link,
@@ -956,17 +913,11 @@ class Sidecar extends ReadyResource {
     }
     this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.nodes) LOG.info('sidecar', 'DHT bootstrap set', this.nodes)
-    const knownNodes = await this.model.getDhtNodes()
+    const knownNodes = await this.db.model.getDhtNodes()
     const nodes = this.nodes ? undefined : knownNodes
     if (nodes) {
-      LOG.info(
-        'dht',
-        '- DHT known-nodes read from database ' + nodes.length + ' nodes'
-      )
-      LOG.trace(
-        'dht',
-        nodes.map((node) => `  - ${node.host}:${node.port}`).join('\n')
-      )
+      LOG.info('dht', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
+      LOG.trace('dht', nodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
     }
     this.swarm = new Hyperswarm({
       keyPair: this.keyPair,
@@ -979,27 +930,19 @@ class Sidecar extends ReadyResource {
     this.swarm.on('connection', (connection) => {
       this.corestore.replicate(connection)
     })
-    if (this.replicator !== null)
-      this.replicator
-        .join(this.swarm, { server: false, client: true })
-        .catch(safetyCatch)
+    if (this.replicator !== null) {
+      this.replicator.join(this.swarm, { server: false, client: true }).catch(safetyCatch)
+    }
   }
 
-  getCorestore(name, channel, opts) {
-    if (!name || !channel)
-      return this.corestore.session({ writable: false, ...opts })
-    return this.corestore.namespace(`${name}~${channel}`, {
-      writable: false,
-      ...opts
-    })
+  getCorestore(opts) {
+    return this.corestore.session({ writable: false, ...opts })
   }
 
   async #shutdown(client) {
     LOG.info('sidecar', '- Sidecar Shutting Down...')
-    const tearingDown =
-      client.userData instanceof this.App && client.userData.teardown()
-    if (tearingDown === false)
-      await this.#endRPCStreams(client).then(() => client.close())
+    const tearingDown = client.userData instanceof this.App && client.userData.teardown()
+    if (tearingDown === false) await this.#endRPCStreams(client).then(() => client.close())
     this.spindownms = 0
     const restarts = this.closeClients()
     this.#spindownCountdown()
@@ -1016,22 +959,15 @@ class Sidecar extends ReadyResource {
       if (!this.nodes) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
         if (knownNodes.length) {
-          await this.model.setDhtNodes(knownNodes)
-          LOG.info(
-            'dht',
-            '- DHT known-nodes wrote to database ' +
-              knownNodes.length +
-              ' nodes'
-          )
-          LOG.trace(
-            'dht',
-            knownNodes.map((node) => `  - ${node.host}:${node.port}`).join('\n')
-          )
+          await this.db.model.setDhtNodes(knownNodes)
+          LOG.info('dht', '- DHT known-nodes wrote to database ' + knownNodes.length + ' nodes')
+          LOG.trace('dht', knownNodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
         }
       }
       await this.swarm.destroy()
     }
     await this.model.close()
+    await this.db.model.close()
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
   }
@@ -1079,10 +1015,7 @@ class Sidecar extends ReadyResource {
         os.kill(app.pid, 'SIGKILL')
       }
 
-      LOG.error(
-        'internal',
-        'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124'
-      )
+      LOG.error('internal', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
       Bare.exit(124) // timeout
     }, ms).unref()
   }

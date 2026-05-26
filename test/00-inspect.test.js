@@ -18,7 +18,7 @@ test('inspect', async function ({ ok, teardown, alike, plan }) {
   )
 
   const key = await helper.inspect()
-  session = new Session({ inspectorKey: key, bootstrap: null })
+  session = new Session({ inspectorKey: key, bootstrap: Helper.dhtBootstrap })
   ok(key, 'inspect returns sidecar inspect key')
   alike(key, await helper.inspect(), 'sidecar returns same inspect key')
   session.connect()

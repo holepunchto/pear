@@ -23,11 +23,7 @@ module.exports = class Drop extends Opstream {
       'by-random',
       crypto.randomBytes(16).toString('hex')
     )
-    await this.sidecar.model.updateAppStorage(
-      link,
-      newAppStorage,
-      oldAppStorage
-    )
+    await this.sidecar.model.updateAppStorage(link, newAppStorage, oldAppStorage)
     this.push({ tag: 'complete' })
   }
 }

@@ -6,9 +6,7 @@ const { permit, isTTY } = require('pear-terminal')
 
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>
-    (index > 0 ? '\n____________\n\n' : '') +
-    changelog +
-    (index === max - 1 ? '\n' : ''),
+    (index > 0 ? '\n____________\n\n' : '') + changelog + (index === max - 1 ? '\n' : ''),
   error: (err, info, ipc) => {
     if (err.info && err.info.encrypted && info.ask && isTTY) {
       return permit(ipc, err.info, 'info')
@@ -21,28 +19,26 @@ const output = outputter('changelog', {
   }
 })
 
-module.exports = (ipc) =>
-  async function changelog(cmd) {
-    const { json, full, max = 10 } = cmd.flags
-    const isKey = cmd.args.link && plink.parse(cmd.args.link).drive.key !== null
-    const channel = isKey ? null : cmd.args.link
-    const link = isKey ? cmd.args.link : null
-    if (link && isKey === false)
-      throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
-    const nmax = +max
-    if (Number.isInteger(nmax) === false) {
-      throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
-    }
-
-    await output(
-      json,
-      ipc.info({
-        link,
-        channel,
-        changelog: { max: nmax, semver: cmd.flags.of, full },
-        cmdArgs: Bare.argv.slice(1)
-      }),
-      { ask: cmd.flags.ask },
-      ipc
-    )
+module.exports = async function changelog(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { json, full, max = 10 } = cmd.flags
+  const link = cmd.args.link || null
+  if (link && plink.parse(link).drive.key === null) {
+    throw ERR_INVALID_INPUT('Link "' + link + '" is not a valid key')
   }
+  const nmax = +max
+  if (Number.isInteger(nmax) === false) {
+    throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
+  }
+
+  await output(
+    json,
+    ipc.info({
+      link,
+      changelog: { max: nmax, semver: cmd.flags.of, full },
+      cmdArgs: Bare.argv.slice(1)
+    }),
+    { ask: cmd.flags.ask },
+    ipc
+  )
+}

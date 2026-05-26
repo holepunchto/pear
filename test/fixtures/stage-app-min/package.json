@@ -1,5 +1,6 @@
 {
   "name": "stage-app-min",
+  "version": "1.0.1",
   "pear": {
     "name": "stage-app-min",
     "gui": {

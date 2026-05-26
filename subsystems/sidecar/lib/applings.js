@@ -128,10 +128,7 @@ class Applings extends ReadyResource {
     this._writes++
 
     if (!this.flushable) {
-      LOG.error(
-        'internal',
-        'Cannot flush applings file to disk (not flushable)'
-      )
+      LOG.error('internal', 'Cannot flush applings file to disk (not flushable)')
       return
     }
 

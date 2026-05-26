@@ -1,5 +1,9 @@
-/* global Pear */
 'use strict'
+if (!global.Pear) {
+  const path = require('bare-path')
+  const checkout = require('../checkout')
+  global.Pear = { constructor: { RTI: { checkout, mount: path.dirname(__dirname) } }, config: {} }
+}
 const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
@@ -8,43 +12,191 @@ const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
 const { arch, platform, isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
-const pear = require('pear-cmd')
 const sodium = require('sodium-native')
+const Corestore = require('corestore')
+const Hyperdrive = require('hyperdrive')
+const Hyperswarm = require('hyperswarm')
 const updaterBootstrap = require('pear-updater-bootstrap')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join(
-  'by-arch',
-  HOST,
-  'bin',
-  `pear-runtime${isWindows ? '.exe' : ''}`
-)
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
 const constants = require('pear-constants')
-const run = require('pear-run')
-const { PLATFORM_DIR, RUNTIME } = constants
-const { pathname } = new URL(global.Pear.app.applink)
-const NO_GC = global.Pear.app.args.includes('--no-tmp-gc')
+const { PLATFORM_DIR } = constants
+const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
+const testtmp = require('test-tmp')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
 const rigPear = path.join(tmp, 'rig-pear')
-const STOP_CHAR = '\n'
-const { RUNTIME_ARGV } = Pear.constructor
-Pear.teardown(async () => {
-  console.log('# Teardown: Shutting Down Local Sidecar')
-  const local = new Helper()
-  console.log('# Teardown: Connecting Local Sidecar')
-  await local.ready()
-  console.log('# Teardown: Triggering Shutdown of Local Sidecar')
-  await local.shutdown()
-  console.log('# Teardown: Local Sidecar Shutdown')
-})
+
+const DHT_BOOTSTRAP = env.PEAR_TEST_BOOTSTRAP
+  ? env.PEAR_TEST_BOOTSTRAP.split(',').map((addr) => {
+      const [host, port] = addr.split(':')
+      return { host, port: +port }
+    })
+  : []
+
+class OperationError extends Error {
+  constructor({ code, message, stack }) {
+    super(message)
+    this.code = code
+    this.sidecarStack = stack
+  }
+}
+
+class Helper extends IPC.Client {
+  static fixture(name) {
+    return path.join(Helper.localDir, 'test', 'fixtures', name)
+  }
+  static setupPeers = setupPeers
+  static setupDestPeers = setupDestPeers
+  static makePwd = makePwd
+  static tmp = tmp
+  static PLATFORM_DIR = PLATFORM_DIR
+  static dhtBootstrap = DHT_BOOTSTRAP
+  // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
+  constructor(opts = {}) {
+    const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
+    const log = logging.length > 0
+    const platformDir = opts.platformDir || PLATFORM_DIR
+    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
+    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
+    const pipeId = (s) => {
+      const buf = b4a.allocUnsafe(32)
+      sodium.crypto_generichash(buf, b4a.from(s))
+      return b4a.toString(buf, 'hex')
+    }
+    const lock = path.join(platformDir, 'pear.lock')
+    const socketPath = isWindows
+      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
+      : `${platformDir}/pear.sock`
+    const connectTimeout = 20_000
+    const connect = opts.expectSidecar
+      ? true
+      : () => {
+          if (log) spawn(runtime, args, { stdio: 'inherit' })
+          else daemon(runtime, args)
+        }
+    super({ lock, socketPath, connectTimeout, connect })
+    this.log = log
+    this.runtime = runtime
+  }
+
+  static getRandomId() {
+    const buf = Buffer.alloc(32)
+    sodium.randombytes_buf(buf)
+    return buf.toString('hex')
+  }
+
+  static async touchLink(helper) {
+    const touching = await helper.touch()
+    const until = await Helper.pick(touching, [{ tag: 'final' }])
+    const { link } = await until.final
+    return link
+  }
+
+  static teardownStream(stream) {
+    if (stream.destroyed) return
+    stream.end()
+    return new Promise((resolve) => stream.on('close', resolve))
+  }
+
+  // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
+  static localDir = path.dirname(__dirname)
+
+  static async pick(stream, ptn = {}, by = 'tag') {
+    if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
+    for await (const output of stream) {
+      if (ptn?.[by] !== 'error' && output[by] === 'error') throw new OperationError(output.data)
+      if (this.matchesPattern(output, ptn)) return output.data
+    }
+    return null
+  }
+
+  static #untils(stream, patterns = [], by) {
+    const untils = {}
+    for (const ptn of patterns) {
+      untils[ptn[by]] = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(
+            new Error(
+              'Helper: Data Timeout for ' +
+                JSON.stringify(ptn) +
+                ' after ' +
+                MAX_OP_STEP_WAIT +
+                'ms'
+            )
+          )
+        }, MAX_OP_STEP_WAIT)
+        const onclose = () => reject(new Error('Helper: Unexpected close on stream'))
+        const onerror = (err) => reject(err)
+        const ondata = (data) => {
+          if (data === null || data?.tag === 'final') stream.off('close', onclose)
+        }
+        stream.on('data', ondata)
+        stream.on('close', onclose)
+        stream.on('error', onerror)
+        const onpick = (data) => {
+          const result = data === undefined ? true : data
+          resolve(result)
+        }
+        this.pick(new Reiterate(stream), ptn, by)
+          .then(onpick, reject)
+          .finally(() => {
+            clearTimeout(timeout)
+            stream.off('data', ondata)
+            stream.off('close', onclose)
+            stream.off('error', onerror)
+          })
+      })
+    }
+    return untils
+  }
+
+  static async sink(stream) {
+    for await (const output of stream) {
+      if (output.tag === 'error') throw new Error(output.data?.stack)
+    }
+  }
+
+  static matchesPattern(message, pattern) {
+    if (typeof pattern !== 'object' || pattern === null) return false
+    for (const key in pattern) {
+      if (Object.hasOwnProperty.call(pattern, key) === false) continue
+      if (Object.hasOwnProperty.call(message, key) === false) return false
+      const messageValue = message[key]
+      const patternValue = pattern[key]
+      const nested =
+        typeof patternValue === 'object' &&
+        patternValue !== null &&
+        typeof messageValue === 'object' &&
+        messageValue !== null
+      if (nested) {
+        if (!this.matchesPattern(messageValue, patternValue)) return false
+      } else if (messageValue !== patternValue) {
+        return false
+      }
+    }
+    return true
+  }
+
+  static async bootstrap(key, dir) {
+    await Helper.gc(dir)
+    await fs.promises.mkdir(dir, { recursive: true })
+    await updaterBootstrap(key, dir, { bootstrap: DHT_BOOTSTRAP })
+  }
+
+  static async gc(dir) {
+    if (NO_GC) return
+    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
+  }
+}
 
 class Rig {
   platformDir = rigPear
   artefactDir = Helper.localDir
-  id = Math.floor(Math.random() * 10000)
   local = new Helper()
   tmp = tmp
   keepAlive = true
@@ -58,10 +210,11 @@ class Rig {
     await this.local.ready()
     comment('connected to sidecar')
 
+    this.link = await Helper.touchLink(this.local)
+
     comment('staging platform...')
     const staging = this.local.stage({
-      channel: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       dryRun: false
     })
@@ -72,16 +225,12 @@ class Rig {
     this.seeder = new Helper()
     await this.seeder.ready()
     this.seeding = this.seeder.seed({
-      channel: `test-${this.id}`,
-      name: `test-${this.id}`,
+      link: this.link,
       dir: this.artefactDir,
       key: null,
       cmdArgs: []
     })
-    const until = await Helper.pick(this.seeding, [
-      { tag: 'key' },
-      { tag: 'announced' }
-    ])
+    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
     this.key = await until.key
     await until.announced
     comment('platform seeding')
@@ -113,264 +262,7 @@ class Rig {
   }
 }
 
-class OperationError extends Error {
-  constructor({ code, message, stack }) {
-    super(message)
-    this.code = code
-    this.sidecarStack = stack
-  }
-}
-
-class Helper extends IPC.Client {
-  static fixture(name) {
-    return path.join(Helper.localDir, 'test', 'fixtures', name)
-  }
-  static Rig = Rig
-  static tmp = tmp
-  static PLATFORM_DIR = PLATFORM_DIR
-  // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
-  constructor(opts = {}) {
-    const cmd = pear(Pear.argv.slice(1))
-    const logging = Object.entries(cmd.flags)
-      .filter(([k, v]) => k.startsWith('log') && v && cmd._definedFlags.get(k))
-      .map(
-        ([k, v]) =>
-          '--' +
-          cmd._definedFlags.get(k).aliases[0] +
-          (typeof v === 'boolean' ? '' : '=' + v)
-      )
-    const log = logging.length > 0
-    const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
-    const dhtBootstrap = Pear.app.dht.bootstrap
-      .map((e) => `${e.host}:${e.port}`)
-      .join(',')
-    const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
-    const pipeId = (s) => {
-      const buf = b4a.allocUnsafe(32)
-      sodium.crypto_generichash(buf, b4a.from(s))
-      return b4a.toString(buf, 'hex')
-    }
-    const lock = path.join(platformDir, 'pear.lock')
-    const socketPath = isWindows
-      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
-      : `${platformDir}/pear.sock`
-    const connectTimeout = 20_000
-    const connect = opts.expectSidecar
-      ? true
-      : () => {
-          if (this.log) spawn(runtime, args, { stdio: 'inherit' })
-          else daemon(runtime, args)
-        }
-    super({ lock, socketPath, connectTimeout, connect })
-    this.log = log
-    this.runtime = runtime
-  }
-
-  static getRandomId() {
-    const buf = Buffer.alloc(32)
-    sodium.randombytes_buf(buf)
-    return buf.toString('hex')
-  }
-
-  static async teardownStream(stream) {
-    if (stream.destroyed) return
-    stream.end()
-    return new Promise((resolve) => stream.on('close', resolve))
-  }
-
-  // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)
-  static localDir = isWindows ? path.normalize(pathname.slice(1)) : pathname
-
-  static async run({ link, platformDir, args = [], argv = RUNTIME_ARGV }) {
-    if (platformDir) {
-      Pear.constructor.RUNTIME = path.join(platformDir, 'current', BY_ARCH)
-      Pear.constructor.RUNTIME_ARGV = argv
-    }
-
-    const pipe = run(link, args)
-
-    if (platformDir) {
-      Pear.constructor.RUNTIME = RUNTIME
-      Pear.constructor.RUNTIME_ARGV = RUNTIME_ARGV
-    }
-
-    return { pipe }
-  }
-
-  static async untilResult(pipe, opts = {}) {
-    const timeout = opts.timeout || 10000
-    const res = new Promise((resolve, reject) => {
-      let buffer = ''
-      const timeoutId = setTimeout(
-        () => reject(new Error('timed out ' + timeout)),
-        timeout
-      )
-      pipe.on('data', (data) => {
-        buffer += data.toString()
-        if (buffer[buffer.length - 1] === STOP_CHAR) {
-          clearTimeout(timeoutId)
-          resolve(buffer.trim())
-        }
-      })
-      pipe.on('close', () => {
-        clearTimeout(timeoutId)
-        reject(new Error('unexpected closed'))
-      })
-      pipe.on('end', () => {
-        clearTimeout(timeoutId)
-        reject(new Error('unexpected ended'))
-      })
-    })
-    if (opts.runFn) {
-      await opts.runFn()
-    } else {
-      pipe.write(opts.info ?? 'start')
-    }
-    return res
-  }
-
-  static untilData(pipe, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      const tid = setTimeout(reject, timeout, new Error('timeout'))
-      pipe.once('data', (data) => {
-        clearTimeout(tid)
-        resolve(data)
-      })
-    })
-  }
-
-  static async untilClose(pipe, timeout = 5000) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const res = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(
-        () => reject(new Error('timed out')),
-        timeout
-      )
-      pipe.on('close', () => {
-        clearTimeout(timeoutId)
-        resolve('closed')
-      })
-      pipe.on('end', () => {
-        clearTimeout(timeoutId)
-        resolve('ended')
-      })
-    })
-    pipe.end()
-    return res
-  }
-
-  static async isRunning(pid) {
-    try {
-      // 0 is a signal that doesn't kill the process, just checks if it's running
-      return process.kill(pid, 0)
-    } catch (err) {
-      return err.code === 'EPERM'
-    }
-  }
-
-  static async untilWorkerExit(pid, timeout = 5000) {
-    if (!pid) throw new Error('Invalid pid')
-    const start = Date.now()
-    while (await this.isRunning(pid)) {
-      if (Date.now() - start > timeout) throw new Error('timed out')
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
-  }
-
-  static async pick(stream, ptn = {}, by = 'tag') {
-    if (Array.isArray(ptn)) return this.#untils(stream, ptn, by)
-    for await (const output of stream) {
-      if (ptn?.[by] !== 'error' && output[by] === 'error')
-        throw new OperationError(output.data)
-      if (this.matchesPattern(output, ptn)) return output.data
-    }
-    return null
-  }
-
-  static #untils(stream, patterns = [], by) {
-    const untils = {}
-    for (const ptn of patterns) {
-      untils[ptn[by]] = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(
-            new Error(
-              'Helper: Data Timeout for ' +
-                JSON.stringify(ptn) +
-                ' after ' +
-                MAX_OP_STEP_WAIT +
-                'ms'
-            )
-          )
-        }, MAX_OP_STEP_WAIT)
-        const onclose = () =>
-          reject(new Error('Helper: Unexpected close on stream'))
-        const onerror = (err) => reject(err)
-        const ondata = (data) => {
-          if (data === null || data?.tag === 'final')
-            stream.off('close', onclose)
-        }
-        stream.on('data', ondata)
-        stream.on('close', onclose)
-        stream.on('error', onerror)
-        const onpick = (data) => {
-          const result = data === undefined ? true : data
-          resolve(result)
-        }
-        this.pick(new Reiterate(stream), ptn, by)
-          .then(onpick, reject)
-          .finally(() => {
-            clearTimeout(timeout)
-            stream.off('data', ondata)
-            stream.off('close', onclose)
-            stream.off('error', onerror)
-          })
-      })
-    }
-    return untils
-  }
-
-  static async sink(stream, ptn) {
-    for await (const output of stream) {
-      if (output.tag === 'error') throw new Error(output.data?.stack)
-    }
-  }
-
-  static matchesPattern(message, pattern) {
-    if (typeof pattern !== 'object' || pattern === null) return false
-    for (const key in pattern) {
-      if (Object.hasOwnProperty.call(pattern, key) === false) continue
-      if (Object.hasOwnProperty.call(message, key) === false) return false
-      const messageValue = message[key]
-      const patternValue = pattern[key]
-      const nested =
-        typeof patternValue === 'object' &&
-        patternValue !== null &&
-        typeof messageValue === 'object' &&
-        messageValue !== null
-      if (nested) {
-        if (!this.matchesPattern(messageValue, patternValue)) return false
-      } else if (messageValue !== patternValue) {
-        return false
-      }
-    }
-    return true
-  }
-
-  static async bootstrap(key, dir) {
-    await Helper.gc(dir)
-    await fs.promises.mkdir(dir, { recursive: true })
-
-    await updaterBootstrap(key, dir, { bootstrap: Pear.app.dht.bootstrap })
-  }
-
-  static async gc(dir) {
-    if (NO_GC) return
-
-    await fs.promises.rm(dir, { recursive: true }).catch(() => {})
-  }
-}
+Helper.Rig = Rig
 
 module.exports = Helper
 
@@ -417,9 +309,7 @@ class Reiterate {
           if (done) break
           yield value
         } else {
-          await new Promise((resolve, reject) =>
-            this.readers.push({ resolve, reject })
-          )
+          await new Promise((resolve, reject) => this.readers.push({ resolve, reject }))
         }
       }
     } finally {
@@ -434,87 +324,55 @@ class Reiterate {
   }
 }
 
-class Restack {
-  static at = (link, line, col) => `${link}:${line}:${col}`
+function makePwd(str) {
+  const buf = sodium.sodium_malloc(Buffer.byteLength(str))
+  buf.write(str)
+  return buf
+}
 
-  constructor({ at = this.constructor.at } = {}) {
-    this.at =
-      at === this.constructor.at
-        ? at
-        : (link, line, col) => at(link, line, col, this.constructor.at)
+async function setupDestPeers(dbKey, blobsKey, n, teardown) {
+  for (let i = 0; i < n; i++) {
+    const store = new Corestore(await testtmp())
+    teardown(() => store.close())
+    await store.ready()
+    const dbCore = store.get({ key: dbKey })
+    const blobsCore = store.get({ key: blobsKey })
+    await Promise.all([dbCore.ready(), blobsCore.ready()])
+    dbCore.download({ start: 0, end: -1 })
+    blobsCore.download({ start: 0, end: -1 })
 
-    const { prepareStackTrace } = Error
-    this.restore = () => {
-      Error.prepareStackTrace = prepareStackTrace
-    }
-
-    Error.prepareStackTrace = (err, frames) => {
-      const name = err && err.name ? err.name : 'Error'
-      const msg = err && err.message != null ? String(err.message) : ''
-      const head = msg ? `${name}: ${msg}` : name
-      return head + '\n' + frames.map((cs) => this._callsite(cs)).join('\n')
-    }
-  }
-
-  _callsite(cs) {
-    const frm = this._frame(cs)
-    const loc = this._location(cs)
-    if (frm && loc) return `    at ${frm} (${loc})`
-    if (frm) return `    at ${frm}`
-    return `    at ${loc}`
-  }
-
-  _frame(cs) {
-    const frm = cs.getFunctionName()
-    const meth = cs.getMethodName()
-    const type = cs.getTypeName()
-
-    if (cs.isConstructor()) return frm ? `new ${frm}` : 'new <anonymous>'
-
-    if (meth) {
-      if (type && frm)
-        return frm.indexOf(type + '.') === 0 ? frm : `${type}.${meth}`
-      if (type) return `${type}.${meth}`
-      return meth
-    }
-
-    if (type && frm)
-      return frm.indexOf(type + '.') === 0 ? frm : `${type}.${frm}`
-
-    return frm || ''
-  }
-
-  _location(cs) {
-    if (cs.isNative()) return 'native'
-
-    let link = cs.getFileName()
-    const line = cs.getLineNumber()
-    const col = cs.getColumnNumber()
-
-    if (cs.isEval()) {
-      const origin = cs.getEvalOrigin()
-      const inner = link ? this._pos(link, line, col) : ''
-      return inner ? `eval at ${origin}, ${inner}` : `eval at ${origin}`
-    }
-
-    if (!link) link = '<anonymous>'
-    return this._pos(link, line, col)
-  }
-
-  _pos(link, line, col) {
-    link = link ? String(link) : '<anonymous>'
-    if (line == null) return link
-    if (col == null) return `${link}:${line}`
-    return this.at(link, line, col)
+    const swarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    teardown(() => swarm.destroy())
+    swarm.on('connection', (conn) => store.replicate(conn))
+    const topic = swarm.join(dbCore.discoveryKey, { server: true, client: false })
+    await topic.flushed()
   }
 }
 
-function restack(opts) {
-  return new Restack(opts)
-}
+async function setupPeers(key, n, teardown) {
+  for (let i = 0; i < n; i++) {
+    const store = new Corestore(await testtmp())
+    teardown(() => store.close())
+    await store.ready()
+    const drive = new Hyperdrive(store, key)
+    await drive.ready()
 
-restack({
-  at(link, line, col, at) {
-    return at(link.startsWith('pear://dev/') ? link.slice(11) : link, line, col)
+    const dlSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    const done = store.findingPeers()
+    dlSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
+    dlSwarm.join(drive.discoveryKey)
+    await dlSwarm.flush()
+    await drive.db.core.update()
+    done()
+    await drive.db.core.download({ start: 0, end: drive.db.core.length }).done()
+    await drive.download().done()
+    await drive.blobs.core.download({ start: 0, end: drive.blobs.core.length }).done()
+    await dlSwarm.destroy()
+
+    const serverSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+    teardown(() => serverSwarm.destroy())
+    serverSwarm.on('connection', (conn) => drive.corestore.replicate(conn))
+    const topic = serverSwarm.join(drive.discoveryKey, { server: true, client: false })
+    await topic.flushed()
   }
-})
+}

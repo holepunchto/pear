@@ -38,7 +38,6 @@ module.exports = class Pod {
       current,
       appling,
       key,
-      channel,
       stage = false,
       status = noop,
       failure,
@@ -53,14 +52,12 @@ module.exports = class Pod {
     this.appling = appling
     this.key = key ? Buffer.from(key, 'hex') : null
     this.hexKey = this.key ? this.key.toString('hex') : null
-    this.channel = channel || null
     this.local = !this.key
     this.status = status
     this.failure = failure
     this.corestore = corestore
     this.stage = stage
-    this.drive =
-      drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
+    this.drive = drive || new Hyperdrive(this.corestore, this.key, { encryptionKey })
     this.current = current ?? this.drive?.core?.length ?? 0
     this.updatesDiff = updatesDiff
     this.link = null
@@ -105,21 +102,12 @@ module.exports = class Pod {
     this.updateNotify = updateNotify
   }
 
-  async pack({
-    cache = false,
-    prebuilds,
-    entry,
-    builtins = [],
-    conditions,
-    extensions
-  } = {}) {
+  async pack({ cache = false, prebuilds, entry, builtins = [], conditions, extensions } = {}) {
     let filename = null
     let metadata = null
 
     if (cache) {
-      filename =
-        crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') +
-        '.bundle'
+      filename = crypto.hash(Buffer.from(this.verlink() + entry)).toString('hex') + '.bundle'
       metadata = {
         file: pathToFileURL(path.join(bundles.root, filename)).toString()
       }
@@ -138,8 +126,7 @@ module.exports = class Pod {
     })
 
     const addons = new Localdrive(prebuilds)
-    for (const [prebuild, addon] of packed.prebuilds)
-      await addons.put(prebuild, addon)
+    for (const [prebuild, addon] of packed.prebuilds) await addons.put(prebuild, addon)
 
     if (cache) {
       await bundles.put(filename, packed.bundle)
@@ -182,7 +169,7 @@ module.exports = class Pod {
         ? this.release > this.drive.version
         : this.current < this.drive.version)
 
-    if (shouldNotify)
+    if (shouldNotify) {
       await updateNotify(
         {
           key: this.hexKey,
@@ -194,6 +181,7 @@ module.exports = class Pod {
           diff: null
         }
       )
+    }
 
     try {
       if (this.updatesDiff) {
@@ -241,13 +229,6 @@ module.exports = class Pod {
     this.link = this.drive.key
       ? plink.serialize(this.drive.key)
       : pathToFileURL(this.drive.root).href
-
-    if (this.channel && this.drive.db.feed.writable) {
-      const existing = await this.drive.db.get('channel')
-      if (!existing || existing.value !== this.channel) {
-        await this.drive.db.put('channel', this.channel)
-      }
-    }
   }
 
   verlink() {
@@ -304,11 +285,11 @@ module.exports = class Pod {
     return this.drive.compare(...args)
   }
 
-  async get(key) {
+  get(key) {
     return this.drive.get(key)
   }
 
-  async exists(key) {
+  exists(key) {
     return this.drive.exists(key)
   }
 
@@ -377,7 +358,7 @@ module.exports = class Pod {
   }
 
   // does not throw, must never throw:
-  async join({ server = false, client = true } = {}) {
+  join({ server = false, client = true } = {}) {
     if (!this.swarm) return
     if (this.announcing) return this.announcing
     if (this.replicator === null) return
@@ -390,7 +371,7 @@ module.exports = class Pod {
   }
 
   // does not throw, must never throw:
-  async leave() {
+  leave() {
     if (!this.swarm) return
     if (this.leaving) return this.leaving
     if (this.replicator === null) return
@@ -409,8 +390,7 @@ module.exports = class Pod {
       await this.drive.core.update()
     }
 
-    if (this.release === null)
-      this.release = (await this.db.get('release'))?.value ?? null
+    if (this.release === null) this.release = (await this.db.get('release'))?.value ?? null
 
     if (this.stage === false) {
       if (this.current === 0) this.current = this.drive.core.length
@@ -431,13 +411,8 @@ module.exports = class Pod {
     }
 
     const { db } = this.drive
-    const [platformVersionNode, channelNode] = await Promise.all([
-      db.get('platformVersion'),
-      db.get('channel')
-    ])
+    const platformVersionNode = await db.get('platformVersion')
     this.platformVersion = platformVersionNode?.value || null
-
-    if (this.channel === null) this.channel = channelNode?.value || ''
 
     return this.ver
   }
@@ -462,7 +437,7 @@ module.exports = class Pod {
     const warmupNode = await this.drive.db.get('warmup')
     const warmup = warmupNode?.value
     if (warmup) {
-      const { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
+      let { meta, data } = DriveAnalyzer.decode(warmup.meta, warmup.data)
       if (Array.isArray(meta) === false) meta = [meta]
       if (Array.isArray(data) === false) data = [data]
       return await this.drive.downloadRange(meta, data)
@@ -544,14 +519,13 @@ class PodUpdater extends ReadyResource {
     if (
       fork < this.checkout.fork ||
       (fork === this.checkout.fork && length <= this.checkout.length)
-    )
+    ) {
       return this.checkout
+    }
     for await (const checkout of this.watch(opts)) {
-      if (
-        fork < checkout.fork ||
-        (fork === checkout.fork && length <= checkout.length)
-      )
+      if (fork < checkout.fork || (fork === checkout.fork && length <= checkout.length)) {
         return checkout
+      }
     }
 
     return null
@@ -673,8 +647,9 @@ class PodUpdater extends ReadyResource {
 
   async assets() {
     const pkg = await this.snapshot.db.get('manifest')
-    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {}))
+    for (const [ns, asset] of Object.entries(pkg?.pear?.assets || {})) {
       await this._asset({ ns, ...asset })
+    }
   }
 
   async _getLock() {
@@ -773,9 +748,7 @@ class DownloadMonitor extends EventEmitter {
     this._drive.blobs.core.on('download', () => this._downloaded++)
 
     this._interval = setInterval(() => {
-      const downloaded = mirror
-        ? this._downloaded + mirror.downloadedBlocks
-        : this._downloaded
+      const downloaded = mirror ? this._downloaded + mirror.downloadedBlocks : this._downloaded
       const estimated = mirror
         ? downloadEstimate + mirror.downloadedBlocksEstimate
         : downloadEstimate

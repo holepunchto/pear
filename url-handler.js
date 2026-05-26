@@ -63,9 +63,7 @@ function registerLinuxHandler(executable) {
 
   function checkDesktopFile() {
     try {
-      return fs
-        .readFileSync(DESKTOP_FILE_PATH, 'utf-8')
-        .includes(`Exec=${executable} run %U`)
+      return fs.readFileSync(DESKTOP_FILE_PATH, 'utf-8').includes(`Exec=${executable} run %U`)
     } catch (err) {
       if (err.code !== 'ENOENT') throw err
       return false
@@ -75,11 +73,8 @@ function registerLinuxHandler(executable) {
   function checkMimeType(mimeType) {
     try {
       return (
-        spawnSync('xdg-mime', [
-          'query',
-          'default',
-          mimeType
-        ]).stdout.toString() === DESKTOP_FILE_NAME
+        spawnSync('xdg-mime', ['query', 'default', mimeType]).stdout.toString() ===
+        DESKTOP_FILE_NAME
       )
     } catch {
       return false
@@ -125,32 +120,9 @@ function registerWindowsHandler(executable) {
   const REGISTRY_COMMAND_PATH = `${REGISTRY_PATH}\\shell\\open\\command`
 
   try {
-    if (
-      spawnSync('reg', ['query', REGISTRY_PATH, '/v', 'URL Protocol'])
-        .status !== 0
-    ) {
-      spawnSync('reg', [
-        'add',
-        REGISTRY_PATH,
-        '/v',
-        'URL Protocol',
-        '/t',
-        'REG_SZ',
-        '/d',
-        '',
-        '/f'
-      ])
-      spawnSync('reg', [
-        'add',
-        REGISTRY_PATH,
-        '/v',
-        '',
-        '/t',
-        'REG_SZ',
-        '/d',
-        HANDLER_NAME,
-        '/f'
-      ])
+    if (spawnSync('reg', ['query', REGISTRY_PATH, '/v', 'URL Protocol']).status !== 0) {
+      spawnSync('reg', ['add', REGISTRY_PATH, '/v', 'URL Protocol', '/t', 'REG_SZ', '/d', '', '/f'])
+      spawnSync('reg', ['add', REGISTRY_PATH, '/v', '', '/t', 'REG_SZ', '/d', HANDLER_NAME, '/f'])
     }
 
     const currentHandler = spawnSync('reg', ['query', REGISTRY_COMMAND_PATH])

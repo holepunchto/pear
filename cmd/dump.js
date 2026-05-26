@@ -1,19 +1,10 @@
 'use strict'
 const { isAbsolute, resolve } = require('bare-path')
-const {
-  outputter,
-  permit,
-  ansi,
-  isTTY,
-  byteSize,
-  byteDiff
-} = require('pear-terminal')
+const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-terminal')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>
-    dir === '-'
-      ? `${ansi.pear} Output ${link}`
-      : `\n${ansi.pear} Dump ${link} into ${dir}`,
+    dir === '-' ? `${ansi.pear} Output ${link}` : `\n${ansi.pear} Dump ${link} into ${dir}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => {
     return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n'
@@ -44,26 +35,26 @@ const output = outputter('dump', {
   ['byte-diff']: byteDiff
 })
 
-module.exports = (ipc) =>
-  async function dump(cmd) {
-    const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
-    const { link } = cmd.args
-    let { dir } = cmd.args
-    dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
-    await output(
-      json,
-      ipc.dump({
-        id: Bare.pid,
-        link,
-        dir,
-        dryRun,
-        checkout,
-        only,
-        force,
-        prune,
-        list
-      }),
-      { ask },
-      ipc
-    )
-  }
+module.exports = async function dump(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
+  const { link } = cmd.args
+  let { dir } = cmd.args
+  dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
+  await output(
+    json,
+    ipc.dump({
+      id: Bare.pid,
+      link,
+      dir,
+      dryRun,
+      checkout,
+      only,
+      force,
+      prune,
+      list
+    }),
+    { ask },
+    ipc
+  )
+}

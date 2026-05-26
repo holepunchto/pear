@@ -1,0 +1,100 @@
+'use strict'
+const { outputter, ansi, byteDiff } = require('pear-terminal')
+const { ERR_INVALID_LINK } = require('pear-errors')
+const plink = require('pear-link')
+
+const output = outputter('provision', {
+  ['byte-diff']: byteDiff,
+  syncing: ({ type }) => 'Syncing existing ' + type + ', please wait...',
+  blocks: ({ type, targetLength, productionLength }) => {
+    return {
+      output: 'status',
+      message: 'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
+    }
+  },
+  synced: ({ type }) => '\nCompleted ' + type + ' sync',
+  diffing: () => 'Checking diff\n',
+  diffed: ({ changes, semver, target }) => {
+    const { core, blobs } = target
+    return (
+      'Diffing complete\nTotal changes: ' +
+      changes +
+      '\nPackage version: ' +
+      semver +
+      '\n\nCore:\n' +
+      '  Key: ' +
+      core.id +
+      '\n  Length: ' +
+      core.length +
+      '\n  Hash: ' +
+      core.hash +
+      '\n\nBlobs:\n' +
+      '  Key: ' +
+      blobs.id +
+      '\n  Length: ' +
+      blobs.length +
+      '\n  Hash: ' +
+      blobs.hash +
+      '\n'
+    )
+  },
+  dry: () => 'Dry Run Complete\n',
+  cooldown: ({ time }) => {
+    return (
+      ansi.bold('NOT A DRY RUN!') +
+      ' Waiting ' +
+      time / 1000 +
+      's for certainty. Use ctrl+c to bail'
+    )
+  },
+  staging: () => 'Staging to target...',
+  staged: ({ changes }) => (changes === 0 ? '(Empty)' : ''),
+  unsetting: ({ field }) => 'Dropping ' + field + ' field from target',
+  setting: ({ field }) => 'Updating ' + field + ' field on target',
+  final: ({ target }) => {
+    const dryRun = !target
+    if (dryRun) return
+    const { verlink, hashlink, link } = target
+    return {
+      output: 'print',
+      success: Infinity, // omit success tick
+      message:
+        '\nProvisioned:\n  Verlink: ' +
+        verlink +
+        '\n\n  Hashlink: ' +
+        hashlink +
+        '\n\nSeed with:\n\n   pear seed ' +
+        link +
+        '\n'
+    }
+  },
+  seeding: ({ cooloff, peers }) => {
+    return peers + ' connected. Seeding until exit or inactive after ' + cooloff / 1000 + 's'
+  },
+  inactive: () => 'Inactive, exiting'
+})
+
+module.exports = async function provision(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const { json, dryRun } = cmd.flags
+  const sourceVerlink = cmd.args.sourceVerlink
+  const targetLink = cmd.args.targetLink
+  const productionVerlink = cmd.args.productionVerlink
+
+  const source = plink.parse(sourceVerlink)
+  if (source.drive.length === null) {
+    throw ERR_INVALID_LINK('<source-link> must be versioned', {
+      link: sourceVerlink
+    })
+  }
+
+  plink.parse(targetLink) // validates
+
+  const production = plink.parse(productionVerlink)
+  if (production.drive.length === null) {
+    throw ERR_INVALID_LINK('<target-link> must be versioned', {
+      link: productionVerlink
+    })
+  }
+  await output(json, ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun }))
+}

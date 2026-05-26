@@ -1,4 +1,5 @@
 'use strict'
+const paparam = require('paparam')
 const {
   header,
   footer,
@@ -12,23 +13,55 @@ const {
   rest,
   validate,
   hiddenCommand
-} = require('paparam')
-const { usage, print, ansi } = require('pear-terminal')
+} = paparam
+const { usage, ansi, print } = require('pear-terminal')
 const { CHECKOUT } = require('pear-constants')
-const errors = require('pear-errors')
 const opwait = require('pear-opwait')
+const run = require('pear-run')
+const pdump = require('pear-dump')
+const { once } = require('bare-events')
+const errors = require('pear-errors')
 const def = {
   run: require('pear-cmd/run'),
   pear: require('pear-cmd/pear')
 }
-const runners = {
-  init: require('./init'),
+
+class Plugin {
+  constructor(link) {
+    this.link = link
+  }
+  runner() {
+    return async (cmd) => {
+      const ipc = global.Pear[global.Pear.constructor.IPC]
+      const { platform } = await ipc.versions()
+      global.Pear.app.fork = platform.fork
+      global.Pear.app.length = platform.length
+      global.Pear.app.key = platform.key
+      global.Pear.app.applink = 'pear://pear'
+      Bare.argv.unshift('pear')
+      const pipe = run(this.link, cmd.argv.slice(1))
+      await once(pipe, 'end')
+      await ipc.close()
+    }
+  }
+  async definition(cmd) {
+    const pkg = await opwait(pdump(this.link + '/package.json', { dir: '-' }))
+    const definition = JSON.parse(pkg.value)?.pear?.platform?.command
+    if (definition) cmd.add(definition)
+  }
+}
+
+const commands = {
+  touch: require('./touch'),
   stage: require('./stage'),
+  build: require('pear-build'),
   seed: require('./seed'),
+  provision: require('./provision'),
+  multisig: require('./multisig'),
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
-  touch: require('./touch'),
+  install: require('./install'),
   data: require('./data'),
   changelog: require('./changelog'),
   shift: require('./shift'),
@@ -42,122 +75,260 @@ const runners = {
 
 module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   await ipc.ready()
+
   Bare.prependListener('exit', () => {
     ipc.close()
   })
 
-  const init = command(
-    'init',
-    summary('Create initial project files'),
-    description`
-    Links:
-      pear://electron/template
-      ${ansi.italic(ansi.dim('pear://your.key.here/your/path/here'))}
-
-    Names:
-      default, ui, node-compat
-    `,
-    arg('[link|name]', 'Link or core template to init from'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--yes|-y', 'Autoselect all defaults'),
-    flag('--force|-f', 'Force overwrite existing files'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    runners.init(ipc)
+  const touch = command(
+    'touch',
+    summary('Generate a project link'),
+    description`Create a new randomly generated Pear link`,
+    flag('--json', 'Newline delimited JSON output'),
+    commands.touch
   )
-
-  const dev = command('dev', sloppy({ args: true, flags: true }), () => {
-    print('pear dev has been removed, use pear run --dev instead.', false)
-    ipc.close()
-  }).hide()
 
   const seed = command(
     'seed',
     summary('Seed or reseed a project'),
     description`
-      Specify channel or link to seed a project.
-
-      Specify a remote link to reseed.
+      Specify a link to seed a project.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to seed'),
-    arg('[dir]', 'Project directory path (default: .)'),
-    flag('--verbose|-v', 'Additional output'),
-    flag('--name <name>', 'Advanced. Override app name'),
+    arg('<link>', 'Pear link to seed'),
+    flag('--no-tty', 'Disable tty features'),
     flag('--no-ask', 'Suppress permission prompt'),
+    flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.seed(ipc)
+    commands.seed
   )
+
+  const build = command('build', require('pear-build/package.json').command, (cmd) => {
+    if (!cmd.flags.package) return console.log(build.help())
+    return commands.build(cmd.flags).done()
+  })
 
   const stage = command(
     'stage',
-    summary('Synchronize local changes to key'),
+    summary('Sync disk changes into project'),
     description`
-      Channel name must be specified on first stage,
-      in order to generate the initial key.
+      Stage local changes to a project link.
 
       Outputs diff information and project link.
     `,
-    arg('<channel|link>', 'Channel name or Pear link to stage'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('<link>', 'Pear link to stage'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
     flag('--purge', 'Remove ignored files if present in previous stage'),
     flag('--compact|-c', 'Tree-shaking minimal stage via static-analysis'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--name <name>', 'Advanced. Override app name'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-pre', 'Skip pre scripts'),
     flag('--pre-io', 'Show stdout & stderr of pre scripts'),
     flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.stage(ipc)
+    commands.stage
+  )
+
+  const provision = command(
+    'provision',
+    summary('Block-sync source & production'),
+    description`
+      Synchronize blocks to a pre-production target link
+
+      The target can then be multisig'd against a production link
+
+      Use pear touch to generate target link
+    `,
+    arg('<source-verlink>', 'Versioned source link'),
+    arg('<target-link>', 'Target link to sync to'),
+    arg('<production-verlink>', 'Versioned link to sync against'),
+    flag('--dry-run|-d', 'Execute provision without writing'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.provision
+  )
+
+  const multisig = command(
+    'multisig',
+    summary('Production signing coordination'),
+    description`
+      Quorum-based cryptographic cosigning for production releases
+
+      Gather enough signatures to approve a release to synchronize
+      onto a production link
+
+      Example - 2/3 must sign to approve
+      pear.json: {
+        "multisig": {
+          "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+          "namespace": "my-org/my-app",
+          "quorum": 2
+        }
+      }
+    `,
+    command(
+      'keys',
+      summary('Manage signing keys'),
+      command(
+        'get',
+        summary('Get signing key, initializing if needed'),
+        description`
+          Idempotent. 
+          
+          Creates public/private keypair if it doesn't exist.
+          
+          Always prints the public key
+        `,
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--secret', 'Also output the private key'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'paths',
+        summary('Print paths to public & private key files'),
+        arg('[name=default]', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'list',
+        summary('List signing keys'),
+        description`
+          Output all names and public keys
+        `,
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'add',
+        summary('Add signing keys'),
+        description`
+          Import a signing keypair or add a known public key
+        `,
+        arg('<name>', 'As used for public/private key filenames'),
+        arg('<public-key>', 'public key path or string'),
+        arg('[private-key]', 'private key path or string'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      command(
+        'remove',
+        summary('Remove signing keys'),
+        arg('<name>', 'As used for public/private key filenames'),
+        flag('--json', 'Newline delimited JSON output'),
+        commands.multisig
+      ),
+      (cmd) => console.log(cmd.command.help())
+    ),
+    command(
+      'link',
+      summary('Print project multisig link'),
+      description`
+        The publicKeys, quorum & namespace values of the pear.json
+        multisig field determine the multisig link
+
+        Example - 2/3 must sign to approve
+        pear.json: {
+          "multisig": {
+            "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
+            "namespace": "my-org/my-app",
+            "quorum": 2
+          }
+        }`,
+      flag('--config [./pear.json]', 'Config file path'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.multisig
+    ),
+    command(
+      'request',
+      summary('Create a multisig request'),
+      description`
+        Create a signing request to synchronize from a versioned source link
+        onto the project multisig link as output by the pear multisig link command
+      `,
+      flag('--force', 'Skip sanity checks'),
+      flag('--config [./pear.json]', 'Config file path'),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<verlink>', 'Versioned source link to sign off'),
+      commands.multisig
+    ),
+    command(
+      'sign',
+      summary('Sign a multisig request'),
+      description`
+        Sign a multisig request using a local signing key
+
+        The key's public counterpart must be listed in multisig.publicKeys
+        in the pear.json of the source link supplied to pear multisig request
+      `,
+      arg('<request>', 'As returned by pear multisig request'),
+      arg('[name=default]', 'Name of local key to sign with'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.multisig
+    ),
+    command(
+      'verify',
+      summary('Verify multisig request & responses'),
+      description('Verify inputs & peform commit dry-run'),
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
+      flag('--config [./pear.json]', 'Config file path'),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<source-link>', 'Source pear link'),
+      arg('<request>', 'Signing request'),
+      rest('[...responses]', 'Signing responses'),
+      commands.multisig
+    ),
+    command(
+      'commit',
+      summary('Commit multisig to go live'),
+      description('Apply signatures to allow sync from source drive to multisig drive'),
+      flag('--config [./pear.json]', 'Config file path'),
+      flag('--force-dangerous', 'Advanced. Careful, this may break the core').hide(),
+      flag('--peer-update-timeout <ms>', 'Peer update timeout in ms'),
+      flag('--json', 'Newline delimited JSON output'),
+      arg('<source-link>', 'Source pear link'),
+      arg('<request>', 'Signing request'),
+      rest('[...responses]', 'Signing responses'),
+      commands.multisig
+    ),
+    (cmd) => console.log(cmd.command.help())
   )
 
   const release = command(
     'release',
-    summary('Set production release version'),
-    description`
-      Set the release pointer against a version (default latest).
-
-      Use this to indicate production release points.
-    `,
-    arg('<channel|link>', 'Channel name or Pear link to release'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    summary('DEPRECATED: pear provision incompat'),
+    description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
+    arg('<link>', 'Pear link to release'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--checkout <n>', 'Set release checkout n is version length'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.release(ipc)
-  )
-
-  const run = command(
-    'run',
-    summary('Run an application from a link or dir'),
-    description`
-      ${ansi.bold('link')}   pear://<key> | pear://<alias>
-      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
-    `,
-    ...def.run,
-    runners.run(ipc)
-  )
+    commands.release
+  ).hide()
 
   const info = command(
     'info',
     summary('View project information'),
     description`
-      Supply a link or channel to view application information.
+      Supply a link to view application information.
 
       Supply no argument to view platform information.
     `,
-    arg('[link|channel]', 'Project to view info for'),
-    arg('[dir]', 'Project directory path (default: .)'),
+    arg('[link]', 'Project to view info for'),
+    arg('[dir=.]', 'Project directory path'),
     flag('--changelog', 'View changelog only').hide(),
     flag('--full-changelog', 'Full record of changes').hide(),
     flag('--changelog-max <n>', 'Maximum changelog entries').hide(),
     flag('--metadata', 'View metadata only'),
     flag('--manifest', 'View app manifest only'),
+    flag('--multisig', 'View multisig info only'),
     flag('--key', 'View key only'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.info(ipc)
+    commands.info
   )
 
   const dump = command(
@@ -167,10 +338,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     arg('<dir>', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
-    flag(
-      '--only <paths>',
-      'Filter by paths. Implies --no-prune. Comma-seperated'
-    ),
+    flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
     flag('--no-ask', 'Suppress permission prompt'),
@@ -181,16 +349,16 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       return true
     }),
     validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
-    runners.dump(ipc)
+    commands.dump
   )
 
-  const touch = command(
-    'touch',
-    summary('Ensure Pear link'),
-    description("Initialize a project Pear link if it doesn't already exist."),
-    arg('[channel]', 'Channel name. Default: randomly generated'),
+  const install = command(
+    'install',
+    summary('Install applications from peers'),
+    description('Installs from peers directly into OS application folder'),
+    arg('<link>', 'Pear link origin to install from'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.touch(ipc)
+    commands.install
   )
 
   const data = command(
@@ -198,42 +366,37 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Explore platform database'),
     command(
       'apps',
-      summary('Installed apps'),
+      summary('DEPRECATED. Installed apps'),
       arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).apps(cmd)
+      commands.data
     ),
-    command('dht', summary('DHT known-nodes cache'), (cmd) =>
-      runners.data(ipc).dht(cmd)
-    ),
-    command('gc', summary('Garbage collection records'), (cmd) =>
-      runners.data(ipc).gc(cmd)
-    ),
-    command('manifest', summary('Database internal versioning'), (cmd) =>
-      runners.data(ipc).manifest(cmd)
-    ),
+    command('dht', summary('DHT known-nodes cache'), commands.data),
+    command('multisig', summary('Multisig records'), commands.data),
+    command('gc', summary('Garbage collection records'), commands.data),
+    command('manifest', summary('Database internal versioning'), commands.data),
     command(
       'assets',
       summary('On-disk assets for app'),
       arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).assets(cmd)
+      commands.data
     ),
     command(
       'currents',
       summary('Current working versions'),
       arg('[link]', 'Filter by link'),
-      (cmd) => runners.data(ipc).currents(cmd)
+      commands.data
     ),
     command(
       'presets',
       summary('Presets by link and command'),
       arg('[link]', 'Filter by link'),
       arg('[command]', 'Filter by command'),
-      (cmd) => runners.data(ipc).presets(cmd)
+      commands.data
     ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
-    () => {
-      console.log(data.help())
+    (cmd) => {
+      console.log(cmd.command.help())
     }
   )
 
@@ -241,27 +404,31 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     'changelog',
     summary('View project changelog'),
     description`
-      Supply a link or channel to view application changelog
+      Supply a link to view application changelog
 
       Shows Pear changelog by default
     `,
-    arg('[link|channel]', 'Project to view changelog of'),
+    arg('[link]', 'Project to view changelog of'),
     flag('--max|-m <n=10>', 'Maximum entries to show'),
     flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
     flag('--full', 'Show entire changelog'),
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.changelog(ipc)
+    commands.changelog
   )
 
-  const shift = command(
-    'shift',
-    summary('Advanced. Move storage between apps'),
-    arg('<source>', 'Source application Pear link'),
-    arg('<destination>', 'Destination application Pear link'),
-    flag('--force', 'Overwrite existing application storage if present'),
+  const presets = command(
+    'presets',
+    summary('Default flags per command & link'),
+    description`
+      Pin flags to a given pear command per app link
+    `,
+    arg('<command>', 'Command to apply default flags to'),
+    arg('<link>', 'App link to apply default flags to'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.shift(ipc)
+    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
+    sloppy({ flags: true }),
+    commands.presets
   )
 
   const drop = command(
@@ -269,11 +436,11 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     summary('Advanced. Permanent data deletion'),
     command(
       'app',
-      summary('Reset an application to initial state'),
-      description('Clear application storage for supplied link.'),
+      summary('DEPRECATED Reset app to initial state'),
+      description('DEPRECATED. WILL BE REMOVED.\nClear application storage for supplied link.'),
       arg('<link>', 'Application link'),
       flag('--json', 'Newline delimited JSON output'),
-      runners.drop(ipc)
+      commands.drop
     ),
     () => {
       console.log(drop.help())
@@ -281,25 +448,15 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   )
 
   const reset = hiddenCommand('reset', arg('[link]'), () => {
-    console.log(
-      `${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`
-    )
+    console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
     console.log(drop.help())
     Bare.exit(1)
   })
 
   const sidecar = command(
     'sidecar',
-    command(
-      'shutdown',
-      runners.sidecar(ipc),
-      summary('Shutdown running sidecar')
-    ),
-    command(
-      'inspect',
-      runners.sidecar(ipc),
-      summary('Enable running sidecar inspector')
-    ),
+    command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
+    command('inspect', commands.sidecar, summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description`
       The sidecar is a local-running IPC server for corestore access.
@@ -307,11 +464,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       The pear sidecar command shuts down any existing sidecar process
       and then becomes the sidecar.
     `,
-    command(
-      'shutdown',
-      runners.sidecar(ipc),
-      summary('Shutdown running sidecar')
-    ),
+    command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     flag('--mem', 'Memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
@@ -319,81 +472,155 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
     flag('--log-stacks', 'Add a stack trace to each log message'),
     flag('--dht-bootstrap <nodes>').hide(),
-    runners.sidecar(ipc)
+    commands.sidecar
   )
 
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), runners.gc(ipc)),
-    command('sidecars', summary('Clear running sidecars'), runners.gc(ipc)),
+    command('releases', summary('Clear inactive releases'), commands.gc),
+    command('sidecars', summary('Clear running sidecars'), commands.gc),
     command(
       'assets',
       summary('Clear synced assets'),
       arg('[link]', 'Clear asset by link'),
-      runners.gc(ipc)
+      commands.gc
     ),
-    command('cores', summary('Clear corestore cores'), runners.gc(ipc)),
+    command(
+      'cores',
+      summary('Clear corestore cores'),
+      arg('[link]', 'Clear cores by link'),
+      commands.gc
+    ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
     }
   )
 
+  const run = command(
+    'run',
+    summary('DEPRECATED: use pear-runtime module'),
+    description`
+      DEPRECATED. WILL BE REMOVED.
+      Use pear-runtime module with any JS project instead.
+
+      ${ansi.bold('link')}   pear://<key> | pear://<alias>
+      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
+    `,
+    ...def.run,
+    commands.run
+  ).hide()
+
+  const shift = command(
+    'shift',
+    summary('DEPRECATED: use pear-runtime module'),
+    description(
+      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
+    ),
+    arg('<source>', 'Source application Pear link'),
+    arg('<destination>', 'Destination application Pear link'),
+    flag('--force', 'Overwrite existing application storage if present'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.shift
+  ).hide()
+
+  const init = command(
+    'init',
+    summary('DEPRECATED & REMOVED'),
+    description`
+    Feature Removed
+    pear run is deprecated making templates out of scope
+    `,
+    sloppy({ flags: true, args: true }),
+    () => {
+      throw errors.ERR_LEGACY('pear init has been removed')
+    }
+  ).hide()
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
     flag('--modules|-m', 'Include module versions'),
     flag('--json', 'Newline delimited JSON output'),
-    runners.versions(ipc)
+    commands.versions
   )
 
-  const presets = command(
-    'presets',
-    summary('Default flags for apps per command & link'),
-    arg('<command>', 'Command to apply default flags to'),
-    arg('<link>', 'App link to apply default flags to'),
-    flag('--json', 'Newline delimited JSON output'),
-    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
-    sloppy({ flags: true }),
-    runners.presets(ipc)
-  )
-
-  const help = command(
-    'help',
-    arg('[command]'),
-    summary('View help for command'),
-    (h) => {
-      if (h.args.command) console.log(cmd.help(h.args.command))
-      else console.log(cmd.overview({ full: true }))
-    }
-  )
+  const help = command('help', arg('[command]'), summary('View help for command'), (h) => {
+    if (h.args.command) console.log(cmd.help(h.args.command))
+    else console.log(cmd.overview({ full: true }))
+  })
 
   const cmd = command(
     'pear',
     ...def.pear,
     header(usage.header),
-    init,
-    dev,
-    stage,
+    touch,
     seed,
-    run,
-    release,
+    stage,
+    build,
+    provision,
+    multisig,
     info,
     dump,
-    touch,
+    install,
     data,
     changelog,
-    shift,
+    presets,
     drop,
     reset,
     sidecar,
     gc,
+    run,
+    shift,
+    release,
     versions,
-    presets,
     help,
+    init, // legacy
     footer(usage.footer),
-    bail(explain),
+    bail(function explain(bail = {}) {
+      if (!bail.reason && bail.err) {
+        const known = errors.known()
+        if (known.includes(bail.err.code) === false) {
+          print(
+            errors.ERR_UNKNOWN(
+              'Unknown [ code: ' + (bail.err.code || '(none)') + ' ] ' + bail.err.stack
+            ),
+            false
+          )
+          Bare.exit(1)
+        }
+      }
+      const messageUsage = (bail) => bail.err.message
+      const messageOnly = (bail) => bail.err.message
+      const opFail = (cmd) => cmd.err.info.message
+      const codemap = new Map([
+        ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
+        [
+          'UNKNOWN_ARG',
+          (bail) =>
+            'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value
+        ],
+        ['MISSING_ARG', (bail) => bail.arg.value],
+        ['INVALID', messageUsage],
+        ['ERR_INVALID_INPUT', messageUsage],
+        ['ERR_LEGACY', messageOnly],
+        ['ERR_INVALID_TEMPLATE', messageOnly],
+        ['ERR_DIR_NONEMPTY', messageOnly],
+        ['ERR_OPERATION_FAILED', opFail]
+      ])
+      const nouse = [messageOnly, opFail]
+      const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
+      const ref = codemap.get(code)
+      const reason = codemap.has(code) ? (codemap.get(code)(bail) ?? bail.reason) : bail.reason
+      Bare.exitCode = 1
+
+      print(reason, false)
+
+      if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
+
+      print('\n' + bail.command.usage())
+    }),
     pear
   )
 
@@ -407,17 +634,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       }
       const { key, fork, length } = CHECKOUT
 
-      console.log(
-        'v' +
-          ~~fork +
-          '.' +
-          (length || 'dev') +
-          '.' +
-          key +
-          ' / v' +
-          semver +
-          '\n'
-      )
+      console.log('v' + ~~fork + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
       console.log('Key=' + key)
       console.log('Fork=' + fork)
       console.log('Length=' + length)
@@ -438,10 +655,13 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
   run.argv = argv
 
-  const presetsArgs = await getPresets(
-    cmd.parse(argv, { run: false, silent: true }),
-    ipc
-  )
+  const preparse = cmd.parse(argv, { run: false, silent: true, bails: false })
+  if (commands[cmd.current?.name] instanceof Plugin) {
+    await commands[cmd.current.name].definition(cmd.current)
+  }
+
+  const presetsArgs = await getPresets(preparse)
+
   const args = [...argv.slice(0, 1), ...presetsArgs, ...argv.slice(1)]
   const program = cmd.parse(args)
 
@@ -450,67 +670,17 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     return null
   }
 
-  if (program.running)
+  if (program.running) {
     program.running.finally(() => {
       ipc.close()
     })
+  }
 
   return program
-
-  function explain(bail = {}) {
-    if (!bail.reason && bail.err) {
-      const known = errors.known()
-      if (known.includes(bail.err.code) === false) {
-        print(
-          errors.ERR_UNKNOWN(
-            'Unknown [ code: ' +
-              (bail.err.code || '(none)') +
-              ' ] ' +
-              bail.err.stack
-          ),
-          false
-        )
-        Bare.exit(1)
-      }
-    }
-    const messageUsage = (bail) => bail.err.message
-    const messageOnly = (bail) => bail.err.message
-    const opFail = (cmd) => cmd.err.info.message
-    const codemap = new Map([
-      ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
-      [
-        'UNKNOWN_ARG',
-        (bail) =>
-          'Unrecognized Argument at index ' +
-          bail.arg.index +
-          ' with value ' +
-          bail.arg.value
-      ],
-      ['MISSING_ARG', (bail) => bail.arg.value],
-      ['INVALID', messageUsage],
-      ['ERR_INVALID_INPUT', messageUsage],
-      ['ERR_LEGACY', messageOnly],
-      ['ERR_INVALID_TEMPLATE', messageOnly],
-      ['ERR_DIR_NONEMPTY', messageOnly],
-      ['ERR_OPERATION_FAILED', opFail]
-    ])
-    const nouse = [messageOnly, opFail]
-    const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
-    const ref = codemap.get(code)
-    const reason = codemap.has(code)
-      ? (codemap.get(code)(bail) ?? bail.reason)
-      : bail.reason
-    Bare.exitCode = 1
-
-    print(reason, false)
-
-    if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
-
-    print('\n' + bail.command.usage())
-  }
 }
 
-async function getPresets(cmd, ipc) {
+async function getPresets(cmd) {
+  const ipc = global.Pear[global.Pear.constructor.IPC]
   if (!cmd || !cmd.args.link) return []
   const command = cmd.name
   const link = cmd.args.link
