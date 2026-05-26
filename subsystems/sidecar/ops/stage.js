@@ -2,7 +2,7 @@
 const LocalDrive = require('localdrive')
 const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
-const { ERR_INVALID_CONFIG, ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 const ReadyResource = require('ready-resource')
 const fs = require('bare-fs')
@@ -80,17 +80,6 @@ module.exports = class Stage extends Opstream {
     const src = new LocalDrive(pkgDir, {
       followExternalLinks: true
     })
-
-    const main = options?.main ?? pkg?.main ?? 'index.js'
-    const mainExists = (await src.entry(unixPathResolve('/', main))) !== null
-    const entrypoints = [...(mainExists ? [main] : []), ...(options?.stage?.entrypoints || [])].map(
-      (entrypoint) => unixPathResolve('/', entrypoint)
-    )
-
-    for (const entrypoint of entrypoints) {
-      const entry = await src.entry(entrypoint)
-      if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
-    }
 
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
