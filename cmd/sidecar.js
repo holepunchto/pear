@@ -52,10 +52,9 @@ module.exports = async function sidecar(cmd) {
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)
   print(ansi.gray('Version: ' + JSON.stringify({ key, version }, 0, 4).slice(0, -1) + '  }'), 0)
-  const commands = restarts.filter(({ id = null }) => id !== null)
-  if (commands.length > 0) {
+  if (restarts.length > 0) {
     print('Restart Commands:', 0)
-    for (const { cmdArgs = [] } of commands) {
+    for (const { cmdArgs = [] } of restarts) {
       stdio.out.write('  ')
       print(ansi.gray('pear ' + cmdArgs.join(' ')), 0)
     }
