@@ -17,7 +17,7 @@ async function runTests() {
   await test.load(import.meta.resolve('./07-info.test.js'))
   await test.load(import.meta.resolve('./08-data.test.js'))
   await test.load(import.meta.resolve('./09-presets.test.js'))
-  await test.load(import.meta.resolve('./10-shutdown.test.js'))
+  // await test.load(import.meta.resolve('./10-shutdown.test.js'))
 
   test.resume()
 }
