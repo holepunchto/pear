@@ -1,9 +1,4 @@
 'use strict'
-if (!global.Pear) {
-  const path = require('bare-path')
-  const checkout = require('../checkout')
-  global.Pear = { constructor: { RTI: { checkout, mount: path.dirname(__dirname) } }, config: {} }
-}
 const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
@@ -202,7 +197,7 @@ class Rig {
     timeout(180000)
 
     comment('preparing rig platform...')
-    const runtime = path.resolve(PLATFORM_DIR, '..', BY_ARCH)
+    const runtime = path.join(this.artefactDir, BY_ARCH)
 
     const bin = path.join(this.localDir, BY_ARCH)
     await fs.promises.mkdir(path.dirname(bin), { recursive: true })
