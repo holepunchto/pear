@@ -8,21 +8,9 @@ const path = require('bare-path')
 const process = require('bare-process')
 const { userArgv } = require('../argv')
 const opwait = require('pear-opwait')
-const pdump = require('pear-dump')
 const errors = require('pear-errors')
 const def = {
   pear: require('pear-cmd/pear')
-}
-
-class Plugin {
-  constructor(link) {
-    this.link = link
-  }
-  async definition(cmd) {
-    const pkg = await opwait(pdump(this.link + '/package.json', { dir: '-' }))
-    const definition = JSON.parse(pkg.value)?.pear?.platform?.command
-    if (definition) cmd.add(definition)
-  }
 }
 
 const commands = {
@@ -555,9 +543,6 @@ module.exports = async (ipc, argv = userArgv()) => {
   }
 
   const preparse = cmd.parse(argv, { run: false, silent: true, bails: false })
-  if (commands[cmd.current?.name] instanceof Plugin) {
-    await commands[cmd.current.name].definition(cmd.current)
-  }
 
   const presetsArgs = await getPresets(preparse)
 
