@@ -92,7 +92,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
   t.comment(`Waiting for sidecar to spindown (${SPINDOWN_TIMEOUT / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 40_000)
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
     untilExit.finally(() => {
       clearTimeout(timeout)
       resolve()
@@ -111,7 +111,7 @@ unhookPlatform('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })
 
-test.skip('sidecar should not spindown until ongoing update is finished', async (t) => {
+test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 

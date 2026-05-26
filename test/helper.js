@@ -66,11 +66,11 @@ class Helper extends IPC.Client {
       return b4a.toString(buf, 'hex')
     }
 
-    const local = opts.localDir
-      ? path.join(opts.localDir, 'pear')
-      : path.join(path.dirname(__dirname), 'pear')
-    const lock = path.join(local, 'pear.lock')
-    const socketPath = isWindows ? `\\\\.\\pipe\\pear-${pipeId(local)}` : `${local}/pear.sock`
+    const platformDir = opts.platformDir ?? path.join(Helper.localDir, 'pear')
+    const lock = path.join(platformDir, 'pear.lock')
+    const socketPath = isWindows
+      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
+      : `${platformDir}/pear.sock`
     const connectTimeout = 20_000
     const connect = opts.expectSidecar
       ? true
