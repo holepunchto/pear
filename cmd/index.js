@@ -399,7 +399,12 @@ module.exports = async (ipc, argv = userArgv()) => {
     'gc',
     summary('Advanced. Clear dangling resources'),
     command('sidecars', summary('Clear running sidecars'), commands.gc),
-    command('cores', summary('Clear corestore cores'), commands.gc),
+    command(
+      'cores',
+      summary('Clear corestore cores'),
+      arg('[link]', 'Clear cores by link'),
+      commands.gc
+    ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
