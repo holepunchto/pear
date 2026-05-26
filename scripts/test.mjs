@@ -11,8 +11,7 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
-const { default: checkout } = await import('../checkout')
-global.Pear = { constructor: { RTI: { checkout, mount: root } }, config: {} }
+global.Pear = { config: {} }
 
 const { RUNTIME } = await import('../constants')
 const HOST = `${platform}-${arch}`
