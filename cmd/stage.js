@@ -4,8 +4,8 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi } = require('pear-terminal')
-const { byteDiff } = require('pear-terminal')
+const { outputter, ansi } = require('../lib/terminal.js')
+const { byteDiff } = require('../lib/terminal.js')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current }) => {

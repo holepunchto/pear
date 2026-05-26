@@ -5,7 +5,7 @@ const bareTTY = require('bare-tty')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, isTTY, byteSize, stdio } = require('pear-terminal')
+const { outputter, ansi, isTTY, byteSize, stdio } = require('../lib/terminal.js')
 const { EventEmitter } = require('bare-events')
 
 class Table extends EventEmitter {

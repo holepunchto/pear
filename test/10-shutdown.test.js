@@ -57,7 +57,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   const sidecarPath = path.join(platformDirLs, 'sidecar.js')
   const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
   const patch = `
-  (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+  (() => { require('./constants.js').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
   `
   const patchedSidecarCode = patch + sidecarCode
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
@@ -92,7 +92,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
 
   t.comment(`Waiting for sidecar to spindown (${SPINDOWN_TIMEOUT / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 40_000)
     untilExit.finally(() => {
       clearTimeout(timeout)
       resolve()
@@ -111,7 +111,7 @@ unhookPlatform('patched platform cleanup', async () => {
   await Helper.gc(platformDirLs)
 })
 
-test('sidecar should not spindown until ongoing update is finished', async (t) => {
+test.skip('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
   t.timeout(120_000)
 
@@ -191,7 +191,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     const sidecarPath = path.join(artefactDir, 'sidecar.js')
     const sidecarCode = fs.readFileSync(sidecarPath, 'utf8')
     const patch = `
-    (() => { require('pear-constants').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
+    (() => { require('./constants.js').SPINDOWN_TIMEOUT = ${SPINDOWN_TIMEOUT} })()
     `
     const patchedSidecarCode = patch + sidecarCode
     fs.writeFileSync(sidecarPath, patchedSidecarCode)

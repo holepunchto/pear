@@ -1,6 +1,6 @@
 'use strict'
 const context = require('../context')
-const { outputter, ansi, byteDiff } = require('pear-terminal')
+const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
 const { ERR_INVALID_LINK } = require('pear-errors')
 const plink = require('pear-link')
 

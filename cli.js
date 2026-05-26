@@ -1,15 +1,15 @@
 'use strict'
 const IPC = require('pear-ipc')
-const crasher = require('pear-crasher')
+const crasher = require('./lib/crasher.js')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const { spawn: daemon } = require('bare-daemon')
-const { SWAP, SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('pear-constants')
+const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('./constants.js')
 const process = require('bare-process')
 const context = require('./context')
 const cmd = require('./cmd')
-crasher('cli', SWAP)
+crasher('cli')
 
 cli()
 

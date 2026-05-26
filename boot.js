@@ -1,11 +1,12 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 const { isWindows } = require('which-runtime')
-const bootstrapRTI = require('./rti-bootstrap')
 const { normalizeBareArgv } = require('./argv')
-bootstrapRTI(global.__PEAR_MOUNT || null)
 normalizeBareArgv()
-const CONSTANTS = require('pear-constants')
+const CONSTANTS = require('./constants.js')
+const Logger = require('./lib/logger.js')
+
+global.Pear = { config: {} } // TODO remove after moving pear-ref
 
 {
   const fs = require('bare-fs')
@@ -26,7 +27,6 @@ const CONSTANTS = require('pear-constants')
   }
 }
 
-const Logger = require('pear-logger')
 global.LOG = new Logger({
   labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
   pretty: Logger.switches.log

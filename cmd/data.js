@@ -2,7 +2,7 @@
 const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
-const { outputter, ansi } = require('pear-terminal')
+const { outputter, ansi } = require('../lib/terminal.js')
 
 const padding = '    '
 const placeholder = '[ No results ]\n'

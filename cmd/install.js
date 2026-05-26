@@ -10,9 +10,9 @@ const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 const opwait = require('pear-opwait')
 const Opstream = require('pear-opstream')
-const { GC } = require('pear-constants')
 const { ERR_INVALID_MANIFEST } = require('pear-errors')
-const { outputter, byteSize, ansi } = require('pear-terminal')
+const { outputter, byteSize, ansi } = require('../lib/terminal.js')
+const { GC } = require('../constants.js')
 
 const output = outputter('install', {
   installing: ({ link }) => `Installing... ${ansi.dim(link)}`,

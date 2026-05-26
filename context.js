@@ -1,6 +1,6 @@
 'use strict'
 
-const constants = require('pear-constants')
+const constants = require('./constants.js')
 
 let ipc = null
 

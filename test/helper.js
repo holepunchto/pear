@@ -1,9 +1,4 @@
 'use strict'
-if (!global.Pear) {
-  const path = require('bare-path')
-  const checkout = require('../checkout')
-  global.Pear = { constructor: { RTI: { checkout, mount: path.dirname(__dirname) } }, config: {} }
-}
 const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
@@ -20,7 +15,7 @@ const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
 
-const constants = require('pear-constants')
+const constants = require('../constants.js')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
@@ -58,7 +53,6 @@ class Helper extends IPC.Client {
   constructor(opts = {}) {
     const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
-    const platformDir = opts.platformDir || PLATFORM_DIR
     const runtime = opts.platformDir
       ? path.resolve(opts.platformDir, '..', BY_ARCH)
       : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
@@ -71,10 +65,12 @@ class Helper extends IPC.Client {
       sodium.crypto_generichash(buf, b4a.from(s))
       return b4a.toString(buf, 'hex')
     }
-    const lock = path.join(platformDir, 'pear.lock')
-    const socketPath = isWindows
-      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
-      : `${platformDir}/pear.sock`
+
+    const local = opts.localDir
+      ? path.join(opts.localDir, 'pear')
+      : path.join(path.dirname(__dirname), 'pear')
+    const lock = path.join(local, 'pear.lock')
+    const socketPath = isWindows ? `\\\\.\\pipe\\pear-${pipeId(local)}` : `${local}/pear.sock`
     const connectTimeout = 20_000
     const connect = opts.expectSidecar
       ? true
@@ -202,7 +198,7 @@ class Rig {
     timeout(180000)
 
     comment('preparing rig platform...')
-    const runtime = path.resolve(PLATFORM_DIR, '..', BY_ARCH)
+    const runtime = path.join(this.artefactDir, BY_ARCH)
 
     const bin = path.join(this.localDir, BY_ARCH)
     await fs.promises.mkdir(path.dirname(bin), { recursive: true })
