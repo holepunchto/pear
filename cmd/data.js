@@ -13,10 +13,6 @@ class Data {
           return Data.dht(result.nodes)
         case 'multisig':
           return Data.multisig(result.records)
-        case 'gc':
-          return Data.gc(result.records)
-        case 'presets':
-          return Data.presets(result.presets)
         default:
           throw new Error(`Unknown output tag: ${tag}`)
       }
@@ -41,24 +37,6 @@ class Data {
     return out
   }
 
-  static gc = (records) => {
-    if (!records.length) return placeholder
-    let out = ''
-    for (const gc of records) {
-      out += `- ${ansi.bold(gc.path)}\n`
-    }
-    return out
-  }
-
-  static presets = (presets) => {
-    let out = ''
-    if (presets) {
-      out += `${presets.flags}\n`
-    } else {
-      out += `[ none ]\n`
-    }
-    return out
-  }
   constructor(cmd) {
     this.cmd = cmd
     this.ipc = context.getIPC()
@@ -71,17 +49,6 @@ class Data {
 
   async multisig() {
     await Data.output(this.json, this.ipc.data({ resource: 'multisig' }), { tag: 'multisig' })
-  }
-
-  async gc() {
-    await Data.output(this.json, this.ipc.data({ resource: 'gc' }), { tag: 'gc' })
-  }
-
-  async presets() {
-    const { cmd } = this
-    const command = cmd.args.command
-    const link = cmd.args.link
-    await Data.output(this.json, this.ipc.presets({ command, link }), { tag: 'presets' })
   }
 }
 
