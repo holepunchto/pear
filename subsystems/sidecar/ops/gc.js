@@ -113,15 +113,11 @@ module.exports = class GC extends Opstream {
   async cores(params) {
     const { resource, data = {} } = params
     const { sidecar } = this
-    const ignore = !sidecar.drive.core
-      ? new Set()
-      : new Set([sidecar.drive.core.discoveryKey, sidecar.drive.blobs.core.discoveryKey])
 
     const discoveryKeys = []
     for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
     for (const discoveryKey of discoveryKeys) {
       const dkey = hypercoreid.encode(discoveryKey)
-      if (ignore.has(dkey)) continue
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
 
