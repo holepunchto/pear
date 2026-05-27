@@ -17,12 +17,20 @@ permissions:
 
 jobs:
   build:
+    name: ${{ matrix.host }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
+            host: linux-x64
+          - os: ubuntu-24.04-arm
+            host: linux-arm64
           - os: macos-latest
+            host: darwin-arm64
           - os: windows-latest
+            host: win32-x64
+          - os: windows-11-arm
+            host: win32-arm64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -32,17 +40,8 @@ jobs:
       - name: Install w/ dev deps
         run: npm install
 
-      - name: Build Local Runtime (macOS)
-        if: runner.os == 'macOS'
-        run: npm run make:darwin-arm64
-
-      - name: Build Local Runtime (Linux)
-        if: runner.os == 'Linux'
-        run: npm run make:linux-x64
-
-      - name: Build Local Runtime (Windows)
-        if: runner.os == 'Windows'
-        run: npm run make:win32-x64
+      - name: Build Local Runtime
+        run: npm run make:${{ matrix.host }}
 
       - name: Install Bare
         run: npm i -g bare-runtime
