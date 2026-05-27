@@ -1,13 +1,10 @@
 'use strict'
-const context = require('../context')
 const paparam = require('paparam')
-const { header, footer, command, flag, arg, summary, description, bail, sloppy, rest, validate } =
-  paparam
+const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
 const { usage, print } = require('../lib/terminal.js')
 const path = require('bare-path')
 const process = require('bare-process')
 const { userArgv } = require('../argv')
-const opwait = require('pear-opwait')
 const errors = require('pear-errors')
 const def = {
   pear: require('pear-cmd/pear')
@@ -27,8 +24,7 @@ const commands = {
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
-  versions: require('./versions'),
-  presets: require('./presets')
+  versions: require('./versions')
 }
 
 module.exports = async (ipc, argv = userArgv()) => {
@@ -307,22 +303,8 @@ module.exports = async (ipc, argv = userArgv()) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command(
-      'apps',
-      summary('DEPRECATED. Installed apps'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
     command('dht', summary('DHT known-nodes cache'), commands.data),
     command('multisig', summary('Multisig records'), commands.data),
-    command('gc', summary('Garbage collection records'), commands.data),
-    command(
-      'presets',
-      summary('Presets by link and command'),
-      arg('[link]', 'Filter by link'),
-      arg('[command]', 'Filter by command'),
-      commands.data
-    ),
     flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     (cmd) => {
@@ -345,20 +327,6 @@ module.exports = async (ipc, argv = userArgv()) => {
     flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.changelog
-  )
-
-  const presets = command(
-    'presets',
-    summary('Default flags per command & link'),
-    description`
-      Pin flags to a given pear command per app link
-    `,
-    arg('<command>', 'Command to apply default flags to'),
-    arg('<link>', 'App link to apply default flags to'),
-    flag('--json', 'Newline delimited JSON output'),
-    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
-    sloppy({ flags: true }),
-    commands.presets
   )
 
   const sidecar = command(
@@ -427,7 +395,6 @@ module.exports = async (ipc, argv = userArgv()) => {
     install,
     data,
     changelog,
-    presets,
     sidecar,
     gc,
     versions,
@@ -542,12 +509,7 @@ module.exports = async (ipc, argv = userArgv()) => {
     return null
   }
 
-  const preparse = cmd.parse(argv, { run: false, silent: true, bails: false })
-
-  const presetsArgs = await getPresets(preparse)
-
-  const args = [...argv.slice(0, 1), ...presetsArgs, ...argv.slice(1)]
-  const program = cmd.parse(args)
+  const program = cmd.parse(argv)
 
   if (program === null) {
     ipc.close()
@@ -561,14 +523,4 @@ module.exports = async (ipc, argv = userArgv()) => {
   }
 
   return program
-}
-
-async function getPresets(cmd) {
-  const ipc = context.getIPC()
-  if (!cmd || !cmd.args.link) return []
-  const command = cmd.name
-  const link = cmd.args.link
-  const presetsStream = await ipc.presets({ link, command })
-  const { presets } = await opwait(presetsStream)
-  return presets?.flags ? presets.flags.split(' ') : []
 }

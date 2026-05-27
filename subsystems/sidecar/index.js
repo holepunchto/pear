@@ -15,7 +15,6 @@ const { version, upgrade } = require('../../package.json')
 const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT } = require('../../constants.js')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
-const hyperdb = require('./lib/model')
 const db = require('./lib/db')
 const ops = {
   GC: require('./ops/gc'),
@@ -26,7 +25,6 @@ const ops = {
   Info: require('./ops/info'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  Presets: require('./ops/presets'),
   Multisig: require('./ops/multisig')
 }
 
@@ -51,15 +49,12 @@ class Sidecar extends ReadyResource {
 
     global.sidecar = this
 
-    const rocks = HyperDB.rocks(corestore.storage.rocks.session(), hyperdb.spec)
-    this.model = new hyperdb.Model(rocks)
-
-    const rocksNext = HyperDB.rocks(
+    const rocks = HyperDB.rocks(
       path.join(path.dirname(path.dirname(corestore.storage.path)), 'db'),
       db.spec
     )
     this.db = {
-      model: new db.Model(rocksNext)
+      model: new db.Model(rocks)
     }
 
     this.updater = updater
@@ -102,18 +97,9 @@ class Sidecar extends ReadyResource {
   }
 
   async _open() {
-    await this.model.db.ready()
     await this.db.model.ready()
     await this.#ensureSwarm()
     LOG.info('sidecar', '- Sidecar Booted')
-    const gcCycle = async () => {
-      await this.model.gc()
-    }
-    gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
-    const gcCycleMs = 10 * 60 * 1000 // 10 minutes
-    this.gcInterval = setInterval(() => {
-      gcCycle().catch((err) => LOG.error('sidecar', 'GC error', err))
-    }, gcCycleMs)
   }
 
   get clients() {
@@ -195,10 +181,6 @@ class Sidecar extends ReadyResource {
       platform: { key: upgrade, version, fork, length },
       runtimes
     }
-  }
-
-  presets(params, client) {
-    return new ops.Presets(params, client, this)
   }
 
   multisig(params, client) {
@@ -296,7 +278,6 @@ class Sidecar extends ReadyResource {
   }
 
   async #close() {
-    clearInterval(this.gcInterval)
     clearTimeout(this.lazySwarmTimeout)
     if (this.replicator) await this.replicator.leave(this.swarm)
     if (this.swarm) {
@@ -310,7 +291,6 @@ class Sidecar extends ReadyResource {
       }
       await this.swarm.destroy()
     }
-    await this.model.close()
     await this.db.model.close()
     if (this.corestore) await this.corestore.close()
     LOG.info('sidecar', CHECKMARK + ' Sidecar Closed')
