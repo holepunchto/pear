@@ -4,7 +4,7 @@
   "main": "./boot.js",
   "bin": "pear",
   "productName": "pear",
-  "upgrade": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+  "upgrade": "pear://wwerh7m45zmtuko5zu1hij6qy9u1fczxs8ngajyriz6zkrnpnhfo",
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.mjs test/*.test.js",
@@ -16,8 +16,8 @@
     "make:darwin-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host darwin-x64 --out ./by-arch/darwin-x64/bin scripts/standalone-entry.js && rm -f ./pear.dev && ln -s ./by-arch/darwin-x64/bin/pear ./pear.dev && chmod 775 ./pear.dev",
     "make:linux-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-arm64 --out ./by-arch/linux-arm64/bin scripts/standalone-entry.js && rm -f ./pear.dev && ln -s ./by-arch/linux-arm64/bin/pear ./pear.dev && chmod 775 ./pear.dev",
     "make:linux-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-x64 --out ./by-arch/linux-x64/bin scripts/standalone-entry.js && rm -f ./pear.dev && ln -s ./by-arch/linux-x64/bin/pear ./pear.dev && chmod 775 ./pear.dev",
-    "make:win32-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-x64 --out ./by-arch/win32-x64/bin scripts/standalone-entry.js && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Write-Win32Ps1Wrapper.ps1 -OutDir by-arch/win32-x64/bin",
-    "make:win32-x64:msix": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Win32X64.ps1",
+    "make:win32-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-arm64 --out ./by-arch/win32-arm64/bin scripts/standalone-entry.js && node scripts/link-win32-dev.js",
+    "make:win32-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-x64 --out ./by-arch/win32-x64/bin scripts/standalone-entry.js && node scripts/link-win32-dev.js",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
@@ -101,7 +101,7 @@
     "pear-link": "^4.1.0",
     "pear-opstream": "^1.0.0",
     "pear-opwait": "^1.0.0",
-    "pear-runtime-updater": "^3.0.8",
+    "pear-runtime-updater": "github:holepunchto/pear-runtime-updater#support-cli",
     "rache": "^1.0.0",
     "ready-resource": "^1.1.2",
     "safety-catch": "^1.0.2",
