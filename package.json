@@ -4,7 +4,7 @@
   "main": "./boot.js",
   "bin": "pear",
   "productName": "pear",
-  "upgrade": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+  "upgrade": "pear://wwerh7m45zmtuko5zu1hij6qy9u1fczxs8ngajyriz6zkrnpnhfo",
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.mjs test/*.test.js",
