@@ -8,7 +8,6 @@ const { PLATFORM_DIR } = require('../../../constants.js')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
-const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
 
 module.exports = class GC extends Opstream {
@@ -113,25 +112,13 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { resource, data = {} } = params
-    const { link } = data
     const { sidecar } = this
     const ignore = !sidecar.drive.core
       ? new Set()
       : new Set([sidecar.drive.core.discoveryKey, sidecar.drive.blobs.core.discoveryKey])
 
     const discoveryKeys = []
-    if (link) {
-      const parsed = plink.parse(link)
-      const traits = await sidecar.model.getTraits(link)
-      const encryptionKey = traits?.encryptionKey
-      const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key, { encryptionKey })
-      await drive.ready()
-      discoveryKeys.push(drive.core.discoveryKey)
-      if (drive.blobs) discoveryKeys.push(drive.blobs.core.discoveryKey)
-      await drive.close()
-    } else {
-      for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
-    }
+    for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
     for (const discoveryKey of discoveryKeys) {
       const dkey = hypercoreid.encode(discoveryKey)
       if (ignore.has(dkey)) continue

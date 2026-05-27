@@ -1,18 +1,14 @@
 'use strict'
 const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
-const plink = require('pear-link')
 const { outputter, ansi } = require('../lib/terminal.js')
 
-const padding = '    '
 const placeholder = '[ No results ]\n'
 
 class Data {
   static output = outputter('data', {
     final: (result, { tag }) => {
       switch (tag) {
-        case 'apps':
-          return Data.apps(result.data)
         case 'dht':
           return Data.dht(result.nodes)
         case 'multisig':
@@ -26,17 +22,6 @@ class Data {
       }
     }
   })
-
-  static apps = (bundles) => {
-    if (!bundles.length || !bundles[0]) return placeholder
-    let out = ''
-    for (const bundle of bundles) {
-      out += `- ${ansi.bold(bundle.link)}\n`
-      if (bundle.tags) out += `${padding}tags: ${ansi.dim(bundle.tags)}\n`
-      out += '\n'
-    }
-    return out
-  }
 
   static dht = (nodes) => {
     if (!nodes.length) return placeholder
@@ -78,20 +63,6 @@ class Data {
     this.cmd = cmd
     this.ipc = context.getIPC()
     this.json = cmd.command.parent.flags.json
-  }
-
-  async apps() {
-    const { cmd } = this
-    const { command } = cmd
-    const { secrets } = command.parent.flags
-    const link = command.args.link
-    if (link) plink.parse(link) // validates
-    await Data.output(
-      this.json,
-      this.ipc.data({ resource: 'apps', secrets, link }),
-      { tag: 'apps' },
-      this.ipc
-    )
   }
 
   async dht() {

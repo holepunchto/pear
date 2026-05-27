@@ -55,27 +55,6 @@ class Model {
     this.lock = new Lock(this.db)
   }
 
-  async getTraits(link) {
-    const get = { link: applink(link) }
-    LOG.trace('db', 'GET', '@pear/traits', get)
-    const traits = await this.db.get('@pear/traits', get)
-    return traits
-  }
-
-  async allTraits() {
-    LOG.trace('db', 'FIND', '@pear/traits')
-    return await this.db.find('@pear/traits').toArray()
-  }
-
-  async addTraits(link) {
-    const tx = await this.lock.enter()
-    const traits = { link: applink(link), appStorage: '' }
-    LOG.trace('db', 'INSERT', '@pear/traits', traits)
-    await tx.insert('@pear/traits', traits)
-    await this.lock.exit()
-    return traits
-  }
-
   async allGc() {
     LOG.trace('db', 'FIND', '@pear/gc')
     return await this.db.find('@pear/gc').toArray()
