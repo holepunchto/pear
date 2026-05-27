@@ -446,8 +446,8 @@ module.exports = async function seed(cmd) {
         : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
-        driveKey: driveKey && hypercoreid.normalize(driveKey),
-        discoveryKey: discoveryKey && hypercoreid.normalize(discoveryKey),
+        driveKey: hypercoreid.normalize(driveKey),
+        discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: contentKey && hypercoreid.normalize(contentKey),
         firewalled,
         natType,
