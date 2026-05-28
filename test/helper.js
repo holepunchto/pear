@@ -11,6 +11,7 @@ const sodium = require('sodium-native')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
+const LocalDrive = require('localdrive')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
 const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
@@ -201,10 +202,27 @@ class Rig {
     comment('preparing rig platform...')
     const runtime = path.join(this.artefactDir, BY_ARCH)
 
-    const bin = path.join(this.localDir, BY_ARCH)
-    await fs.promises.mkdir(path.dirname(bin), { recursive: true })
-    await fs.promises.cp(runtime, bin)
+    if (fs.existsSync(runtime)) {
+      const bin = path.join(this.localDir, BY_ARCH)
+      await fs.promises.mkdir(path.dirname(bin), { recursive: true })
+      await fs.promises.cp(runtime, bin)
+    } else {
+      await fs.promises.mkdir(this.localDir, { recursive: true })
 
+      await new LocalDrive(this.artefactDir)
+        .mirror(new LocalDrive(this.localDir), {
+          prune: false,
+          ignore: ['/pear', '/.git', '/test', '/by-arch']
+        })
+        .done()
+
+      const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make:${HOST}`], {
+        cwd: this.localDir,
+        stdio: 'ignore'
+      })
+
+      await new Promise((resolve) => build.once('exit', resolve))
+    }
     comment('rig platform prepared')
   }
 
