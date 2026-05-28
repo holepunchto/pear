@@ -3,6 +3,7 @@ const context = require('../context')
 const plink = require('pear-link')
 const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { cmdArgs } = require('../argv')
 
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>
@@ -32,7 +33,7 @@ module.exports = async function changelog(cmd) {
     ipc.info({
       link,
       changelog: { max: nmax, semver: cmd.flags.of, full },
-      cmdArgs: Bare.argv.slice(1)
+      cmdArgs
     }),
     { ask: cmd.flags.ask },
     ipc

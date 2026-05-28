@@ -37,9 +37,6 @@ module.exports = async function sidecar(cmd) {
   if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
-  Bare.argv.splice(Bare.argv.lastIndexOf('sidecar'), 1)
-  Bare.argv.splice(1, 0, '--sidecar')
-
   Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
   if (Logger.switches.level < 2) {
     Logger.switches.level = 2

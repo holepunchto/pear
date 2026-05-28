@@ -1,10 +1,9 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
 const { isWindows } = require('which-runtime')
-const { normalizeBareArgv } = require('./argv')
-normalizeBareArgv()
 const CONSTANTS = require('./constants.js')
 const Logger = require('./lib/logger.js')
+const { cmdArgs } = require('./argv')
 
 global.Pear = { config: {} } // TODO remove after moving pear-ref
 
@@ -46,6 +45,6 @@ switch (getBootType()) {
 }
 
 function getBootType() {
-  if (global.Bare.argv[1] === '--sidecar') return BOOT_SIDECAR
+  if (cmdArgs[0] === '--sidecar') return BOOT_SIDECAR
   return BOOT_CLI
 }

@@ -5,10 +5,11 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const { spawn: daemon } = require('bare-daemon')
-const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR } = require('./constants.js')
+const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
 const process = require('bare-process')
 const context = require('./context')
 const cmd = require('./cmd')
+const { normalizedArgv } = require('./argv')
 crasher('cli')
 
 cli()
@@ -24,7 +25,7 @@ async function cli() {
 }
 
 function tryboot() {
-  const argv = global.Bare?.argv || global.process.argv
+  const argv = normalizedArgv
   const args = ['--sidecar']
   const bootstrapArgIndex = argv.indexOf('--dht-bootstrap')
   if (bootstrapArgIndex !== -1 && argv[bootstrapArgIndex + 1]) {
@@ -36,6 +37,7 @@ function tryboot() {
       `Unable to resolve pear runtime executable for sidecar spawn (cwd=${safeCwd() || 'n/a'})`
     )
   }
+  if (LOCALDEV) args.unshift(argv[0])
   daemon(runtime, args, { cwd: resolveSpawnCwd(runtime) })
 }
 

@@ -4,12 +4,11 @@ const { platform, arch, isWindows, isLinux } = require('which-runtime')
 const { fileURLToPath, pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const os = require('bare-os')
-const process = require('bare-process')
 const b4a = require('b4a')
 const pkg = require('./package.json')
 
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
-const LOCALDEV = process.execPath
+const LOCALDEV = !global.__STANDALONE
 const IPC_ID = 'pear'
 const PLATFORM_PATH = platformDir()
 const PLATFORM_BASE_URL = ensureDirURL(pathToFileURL(PLATFORM_PATH))
@@ -52,6 +51,7 @@ function ensureDirURL(url) {
 }
 
 function platformDir() {
+  if (LOCALDEV) return path.join(__dirname, 'pear')
   if (global.__PEAR_DEV_ROOT) return path.join(global.__PEAR_DEV_ROOT, 'pear')
   if (isWindows) return path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
   if (isLinux) return path.join(os.homedir(), '.config', 'pear')

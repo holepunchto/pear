@@ -5,6 +5,7 @@ const { outputter } = require('../lib/terminal.js')
 const os = require('bare-os')
 const path = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { cmdArgs } = require('../argv')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -99,7 +100,7 @@ module.exports = async function info(cmd) {
       changelog: full || changelog ? { full, max: 1 } : null,
       manifest,
       multisig,
-      cmdArgs: Bare.argv.slice(1),
+      cmdArgs,
       dir
     }),
     { ask: cmd.flags.ask },

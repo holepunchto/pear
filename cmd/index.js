@@ -4,7 +4,7 @@ const { header, footer, command, flag, arg, summary, description, bail, rest, va
 const { usage, print } = require('../lib/terminal.js')
 const path = require('bare-path')
 const process = require('bare-process')
-const { userArgv } = require('../argv')
+const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const def = {
   pear: require('pear-cmd/pear')
@@ -27,7 +27,7 @@ const commands = {
   versions: require('./versions')
 }
 
-module.exports = async (ipc, argv = userArgv()) => {
+module.exports = async (ipc, argv = cmdArgs) => {
   await ipc.ready()
 
   Bare.prependListener('exit', () => {

@@ -20,6 +20,7 @@ const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
 const testtmp = require('test-tmp')
+const { cmdArgs } = require('../argv')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
 
@@ -51,7 +52,7 @@ class Helper extends IPC.Client {
   static BY_ARCH = BY_ARCH
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
-    const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
+    const logging = cmdArgs.filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const runtime = opts.platformDir
       ? path.resolve(opts.platformDir, '..', BY_ARCH)

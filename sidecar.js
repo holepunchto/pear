@@ -8,9 +8,10 @@ const process = require('bare-process')
 const os = require('bare-os')
 const pear = require('pear-cmd')
 const path = require('bare-path')
-const { GC, PLATFORM_CORESTORE, PLATFORM_DIR } = require('./constants.js')
+const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
+const { cmdArgs } = require('./argv')
 crasher('sidecar')
 
 os.setProcessTitle('pear-sidecar')
@@ -31,7 +32,7 @@ async function bootSidecar() {
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
-  const nodes = pear(Bare.argv.slice(1))
+  const nodes = pear(cmdArgs.filter((arg) => arg !== 'sidecar'))
     .flags.dhtBootstrap?.split(',')
     .map((tuple) => {
       const [host, port] = tuple.split(':')
@@ -61,7 +62,7 @@ async function bootSidecar() {
   await sidecar.ipc.ready()
 
   function createUpdater() {
-    // if (!global.__STANDALONE || !upgrade) return null
+    if (LOCALDEV || !upgrade) return null
     const app = process.execPath
     if (!app) return null
 

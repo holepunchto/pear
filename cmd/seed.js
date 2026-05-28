@@ -7,6 +7,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, isTTY, byteSize, stdio } = require('../lib/terminal.js')
 const { EventEmitter } = require('bare-events')
+const { cmdArgs } = require('../argv')
 
 class Table extends EventEmitter {
   constructor(rows = [], opts = {}) {
@@ -468,7 +469,7 @@ module.exports = async function seed(cmd) {
       id,
       link,
       statsInterval,
-      cmdArgs: Bare.argv.slice(1)
+      cmdArgs
     }),
     { ask },
     ipc

@@ -6,6 +6,7 @@ const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
+const { cmdArgs } = require('../argv')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current }) => {
@@ -48,7 +49,7 @@ module.exports = async function stage(cmd) {
     name,
     truncate,
     only,
-    cmdArgs: Bare.argv.slice(1)
+    cmdArgs
   })
   await output(json, stream, { ask: cmd.flags.ask }, ipc)
 }
