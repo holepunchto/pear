@@ -5,8 +5,6 @@ boot.bundle
 by-arch
 pear.new.dev
 pear.new.exe
-pear.ps1
-pear.cmd
 pear/current
 *.log
 .DS_Store
