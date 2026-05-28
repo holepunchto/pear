@@ -449,7 +449,7 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         discoveryKey: hypercoreid.normalize(discoveryKey),
-        contentKey: hypercoreid.normalize(contentKey),
+        contentKey: contentKey && hypercoreid.normalize(contentKey),
         firewalled,
         natType,
         network
