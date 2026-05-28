@@ -69,10 +69,10 @@ tests.on('exit', async (code, signal) => {
 function resolveRuntime() {
   const candidates = [
     RUNTIME,
-    ...(isWindows ? [] : [path.join(root, 'pear.dev')]),
     path.join(root, 'by-arch', HOST, 'bin', BIN),
     path.join(root, 'by-arch', HOST, 'bin', LEGACY_BIN),
-    path.join(root, 'current', 'by-arch', HOST, 'bin', LEGACY_BIN)
+    path.join(root, 'current', 'by-arch', HOST, 'bin', LEGACY_BIN),
+    ...(isWindows ? [] : [path.join(root, 'pear.dev')])
   ]
   for (const candidate of candidates) {
     if (!candidate) continue
