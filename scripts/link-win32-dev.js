@@ -4,7 +4,6 @@
 const fs = require('fs')
 const path = require('path')
 const { arch } = require('which-runtime')
-
 const root = path.resolve(__dirname, '..')
 const runtimeRel = path.join('by-arch', `win32-${arch}`, 'bin', 'pear.exe')
 const runtime = path.join(root, runtimeRel)
