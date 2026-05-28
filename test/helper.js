@@ -56,7 +56,7 @@ class Helper extends IPC.Client {
     const log = logging.length > 0
     const runtime = opts.platformDir
       ? path.resolve(opts.platformDir, '..', BY_ARCH)
-      : fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
+      : !isWindows && fs.existsSync(path.join(Helper.localDir, 'pear.dev'))
         ? path.join(Helper.localDir, 'pear.dev')
         : path.join(Helper.localDir, BY_ARCH)
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
