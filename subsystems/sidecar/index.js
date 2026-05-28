@@ -2,7 +2,6 @@
 const bareInspector = require('bare-inspector')
 const { Inspector } = require('pear-inspect')
 const path = require('bare-path')
-const os = require('bare-os')
 const ReadyResource = require('ready-resource')
 const Hyperswarm = require('hyperswarm')
 const safetyCatch = require('safety-catch')
@@ -343,13 +342,6 @@ class Sidecar extends ReadyResource {
         } catch (err) {
           LOG.error('sidecar', err)
         }
-      }
-
-      // terminate any remaining unresponsive processes
-      for (const app of this.apps) {
-        if (!app.pid) continue
-        LOG.info('sidecar', `Killing unresponsive process with PID ${app.pid}`)
-        os.kill(app.pid, 'SIGKILL')
       }
 
       LOG.error('internal', 'DEATH CLOCK TRIGGERED, FORCE KILLING. EXIT CODE 124')
