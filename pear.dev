@@ -1,0 +1,2 @@
+#!/bin/sh
+exec bare "$(dirname "$0")/boot.js" "$@"
