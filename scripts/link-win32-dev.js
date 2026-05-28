@@ -3,9 +3,10 @@
 
 const fs = require('fs')
 const path = require('path')
+const os = require('os')
 
 const root = path.resolve(__dirname, '..')
-const arch = process.argv[2]
+const arch = os.arch()
 const runtimeRel = path.join('by-arch', `win32-${arch}`, 'bin', 'pear.exe')
 const runtime = path.join(root, runtimeRel)
 const ps1 = path.join(root, 'pear.ps1')
