@@ -61,7 +61,7 @@ const commands = {
   release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
-  install: require('./install'),
+  install: require('pear-install/cmd').runner,
   data: require('./data'),
   changelog: require('./changelog'),
   shift: require('./shift'),
@@ -354,10 +354,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const install = command(
     'install',
-    summary('Install applications from peers'),
-    description('Installs from peers directly into OS application folder'),
     arg('<link>', 'Pear link origin to install from'),
-    flag('--json', 'Newline delimited JSON output'),
+    require('pear-install/package.json').command,
     commands.install
   )
 
