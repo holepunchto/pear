@@ -203,10 +203,12 @@ class Rig {
     const runtime = path.join(this.artefactDir, BY_ARCH)
 
     if (fs.existsSync(runtime)) {
+      comment('using existing platform runtime...')
       const bin = path.join(this.localDir, BY_ARCH)
       await fs.promises.mkdir(path.dirname(bin), { recursive: true })
       await fs.promises.cp(runtime, bin)
     } else {
+      comment('building rig platform runtime...')
       await fs.promises.mkdir(this.localDir, { recursive: true })
 
       await new LocalDrive(this.artefactDir)
