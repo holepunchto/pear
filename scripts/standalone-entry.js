@@ -2,7 +2,6 @@
 const path = require('bare-path')
 const fs = require('bare-fs')
 const os = require('bare-os')
-const process = require('bare-process')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
 
 const executable = resolveExecutable()
@@ -15,9 +14,9 @@ migrateMisplacedPlatformState()
 require('../boot.js')
 
 function resolveExecutable() {
-  const executable = process.execPath
+  const executable = os.execPath()
   if (!executable) {
-    throw new Error('Unable to resolve runtime executable from bare-process.execPath')
+    throw new Error('Unable to resolve runtime executable from execPath')
   }
   return executable
 }
