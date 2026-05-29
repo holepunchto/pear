@@ -46,34 +46,21 @@ git clone https://github.com/holepunchto/pear && cd pear
 npm install
 ```
 
-Bootstrap the runtime binaries with
+Build the runtime binaries with:
 
 ```sh
-npm run bootstrap [KEY]
+npm run make
 ```
 
-Key defaults to production key `npm run bootstrap` bootstraps from production runtimes.
-
-Builds place standalone runtimes in `out/by-arch`.
+Built artifacts are placed as standalone runtimes in `by-arch/`.
 
 Use `./pear.dev` (`.\pear.ps1` / `.\pear.cmd` on Windows) to execute this checkout directly in localdev.
 
+## OS Support
 
-## Drives
-
-The following are public drives for the Production Pear.
-
-### Runtimes Bootstrap
-
-```
-pear://gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho
-```
-
-### Production Build
-
-```
-pear://pqbzjhqyonxprx8hghxexnmctw75mr91ewqw5dxe1zmntfyaddqy
-```
+- **macOS** — arm64, x64
+- **Linux** — arm64, x64
+- **Windows** — arm64, x64
 
 ## License
 
