@@ -6,7 +6,6 @@ const path = require('bare-path')
 const os = require('bare-os')
 const { spawn: daemon } = require('bare-daemon')
 const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
-const process = require('bare-process')
 const context = require('./context')
 const cmd = require('./cmd')
 const { normalizedArgv } = require('./argv')
@@ -31,7 +30,7 @@ function tryboot() {
   if (bootstrapArgIndex !== -1 && argv[bootstrapArgIndex + 1]) {
     args.push('--dht-bootstrap', argv[bootstrapArgIndex + 1])
   }
-  const runtime = process.execPath
+  const runtime = os.execPath()
   if (!runtime) {
     throw new Error(
       `Unable to resolve pear runtime executable for sidecar spawn (cwd=${safeCwd() || 'n/a'})`

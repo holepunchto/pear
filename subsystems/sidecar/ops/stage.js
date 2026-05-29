@@ -1,6 +1,5 @@
 'use strict'
 const LocalDrive = require('localdrive')
-const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
 const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
@@ -107,7 +106,7 @@ module.exports = class Stage extends Opstream {
       }
     }
 
-    const mirror = new Mirror(src, dst, opts)
+    const mirror = src.mirror(dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({

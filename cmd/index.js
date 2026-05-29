@@ -3,9 +3,9 @@ const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
 const { usage, print } = require('../lib/terminal.js')
 const path = require('bare-path')
-const process = require('bare-process')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
+const os = require('bare-os')
 const def = {
   pear: require('pear-cmd/pear')
 }
@@ -480,7 +480,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   function getDevRoot() {
     if (global.__PEAR_DEV_ROOT) return global.__PEAR_DEV_ROOT
-    const execPath = process.execPath
+    const execPath = os.execPath()
     if (!execPath) return null
     const normalized = execPath.replace(/\\/g, '/')
     const ix = normalized.indexOf('/by-arch/')

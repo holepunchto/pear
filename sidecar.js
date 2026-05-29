@@ -4,7 +4,6 @@ const fs = require('bare-fs')
 const Rache = require('rache')
 const crasher = require('./lib/crasher.js')
 const gracedown = require('pear-gracedown')
-const process = require('bare-process')
 const os = require('bare-os')
 const pear = require('pear-cmd')
 const path = require('bare-path')
@@ -63,7 +62,7 @@ async function bootSidecar() {
 
   function createUpdater() {
     if (LOCALDEV || !upgrade) return null
-    const app = process.execPath
+    const app = os.execPath()
     if (!app) return null
 
     const name = path.basename(app) || productName || 'pear'
