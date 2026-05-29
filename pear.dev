@@ -1,2 +1,29 @@
 #!/bin/sh
-exec bare "$(dirname "$0")/boot.js" "$@"
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+case "$(uname -s)" in
+  Darwin) platform=darwin ;;
+  Linux) platform=linux ;;
+  *)
+    echo "Unsupported platform: $(uname -s)" >&2
+    exit 1
+    ;;
+esac
+
+case "$(uname -m)" in
+  x86_64 | amd64) arch=x64 ;;
+  arm64 | aarch64) arch=arm64 ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+bare="$root/node_modules/bare-runtime-$platform-$arch/bin/bare"
+
+if [ ! -x "$bare" ]; then
+  echo "Missing Bare runtime: $bare" >&2
+  exit 1
+fi
+
+exec "$bare" "$root/boot.js" "$@"
