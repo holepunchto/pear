@@ -35,6 +35,9 @@ swap: incremental integer dirname (default: 0) - incremented with `swap + 1 & 3`
   - /assets/[random] -> assets (such as UI Runtimes) are dumped here, link<->path is stored in platform db
 ```
 
+The repository-level `pear.dev`, `pear.cmd`, and `pear.ps1` files are localdev
+wrappers. They run `boot.js` with the checkout's `bare-runtime` dev dependency.
+
 `boot.bundle` has just enough code to run itself with the bare js runtime and open the hyperdrive that contains the rest of the code.
 
 When the platform updates, `boot.bundle` updates the drive in the background and makes a new version of `boot.bundle` that it atomically swaps in.

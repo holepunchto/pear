@@ -54,9 +54,9 @@ npm run bootstrap [KEY]
 
 Key defaults to production key `npm run bootstrap` bootstraps from production runtimes.
 
-First run will install runtimes in `by-arch`, create platform directory called `pear` and add a `pear.dev` symlink (Linux, Mac)or `pear.ps1` and `pear.cmd` files (Windows). These are system-specific and .gitignore'd.
+Builds place standalone runtimes in `out/by-arch`.
 
-Use `./pear.dev` (`\\pear.ps1` / `\\pear.cmd`) to execute the Pear Runtime directly in localdev.
+Use `./pear.dev` (`.\pear.ps1` / `.\pear.cmd` on Windows) to execute this checkout directly in localdev.
 
 
 ## Drives
