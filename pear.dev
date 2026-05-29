@@ -1,16 +1,8 @@
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-platform=$(uname -s | tr '[:upper:]' '[:lower:]')
-arch=$(uname -m)
+bare="$root/node_modules/.bin/bare"
 
-case "$arch" in
-  x86_64 | amd64) arch=x64 ;;
-  arm64 | aarch64) arch=arm64 ;;
-esac
-
-bare="$root/node_modules/bare-runtime-$platform-$arch/bin/bare"
-
-if [ ! -x "$bare" ]; then
+if [ ! -e "$bare" ]; then
   echo "Missing Bare runtime: $bare" >&2
   exit 1
 fi
