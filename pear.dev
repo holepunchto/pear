@@ -1,22 +1,11 @@
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+platform=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
 
-case "$(uname -s)" in
-  Darwin) platform=darwin ;;
-  Linux) platform=linux ;;
-  *)
-    echo "Unsupported platform: $(uname -s)" >&2
-    exit 1
-    ;;
-esac
-
-case "$(uname -m)" in
+case "$arch" in
   x86_64 | amd64) arch=x64 ;;
   arm64 | aarch64) arch=arm64 ;;
-  *)
-    echo "Unsupported architecture: $(uname -m)" >&2
-    exit 1
-    ;;
 esac
 
 bare="$root/node_modules/bare-runtime-$platform-$arch/bin/bare"
