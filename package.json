@@ -96,7 +96,7 @@
     "pear-link": "^4.1.0",
     "pear-opstream": "^1.0.0",
     "pear-opwait": "^1.0.0",
-    "pear-runtime-updater": "github:holepunchto/pear-runtime-updater#support-cli",
+    "pear-runtime-updater": "^3.1.0",
     "rache": "^1.0.0",
     "ready-resource": "^1.2.0",
     "safety-catch": "^1.0.2",
