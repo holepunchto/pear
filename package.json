@@ -21,43 +21,6 @@
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
-  "pear": {
-    "name": "pear",
-    "stage": {
-      "ignore": [
-        "prebuilds",
-        "pear",
-        "pear.dev",
-        "pear.cmd",
-        "pear.ps1",
-        ".git",
-        ".gitattributes",
-        ".gitignore",
-        ".github",
-        ".DS_Store",
-        ".prettierignore",
-        ".prettierrc",
-        ".lunterc",
-        "coverage",
-        ".vscode",
-        "corestore",
-        "test",
-        "examples",
-        "todo",
-        "scripts",
-        "sidecar.crash.log",
-        "electron-main.crash.log",
-        "cli.crash.log",
-        "package-lock.json",
-        "node_modules/.package-lock.json",
-        "node_modules/.bin"
-      ]
-    },
-    "platform": {
-      "fullSync": 0,
-      "runtimes": "pear://0.3278.gd4n8itmfs6x7tzioj6jtxexiu4x4ijiu3grxdjwkbtkczw5dwho"
-    }
-  },
   "dependencies": {
     "b4a": "^1.6.7",
     "bare-daemon": "^1.1.0",
