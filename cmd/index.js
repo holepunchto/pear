@@ -6,9 +6,7 @@ const path = require('bare-path')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const os = require('bare-os')
-const def = {
-  pear: require('pear-cmd/pear')
-}
+const { definition } = require('../lib/cmd')
 
 const commands = {
   touch: require('./touch'),
@@ -380,7 +378,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const cmd = command(
     'pear',
-    ...def.pear,
+    ...definition,
     header(usage.header),
     touch,
     seed,
@@ -494,7 +492,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     }
   }
 
-  const shell = require('pear-cmd')(argv)
+  const shell = require('../lib/cmd').command(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 

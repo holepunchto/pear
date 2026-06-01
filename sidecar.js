@@ -5,7 +5,7 @@ const Rache = require('rache')
 const crasher = require('./lib/crasher.js')
 const gracedown = require('pear-gracedown')
 const os = require('bare-os')
-const pear = require('pear-cmd')
+const pear = require('./lib/cmd').command
 const path = require('bare-path')
 const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
 
