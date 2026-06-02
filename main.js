@@ -7,8 +7,8 @@ const { init } = require('./constants.js')
 const executable = resolveExecutable()
 const devRoot = resolveDevRoot(executable)
 
-module.exports = (channel) => {
-  init(channel, true, devRoot)
+module.exports = (channel, standalone = true) => {
+  init(channel, standalone, devRoot)
   require('./boot.js')
 }
 

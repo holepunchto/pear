@@ -1,10 +1,10 @@
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-bare="$root/node_modules/.bin/bare"
+bare="$root/node_modules/bare-runtime/bin/bare"
 
 if [ ! -e "$bare" ]; then
   echo "Missing Bare runtime: $bare" >&2
   exit 1
 fi
 
-exec "$bare" "$root/boot.js" "$@"
+exec "$bare" "$root/targets/main.dev.js" "$@"
