@@ -29,7 +29,7 @@ module.exports = {
     return !standalone
   },
   get UPGRADE() {
-    if (channel === null) throw new Error('UPGRADE read before setChannel()')
+    if (channel === null) throw new Error('UPGRADE read before init()')
     return pkg.upgrade[channel]
   },
   get PEAR_DEV_ROOT() {
