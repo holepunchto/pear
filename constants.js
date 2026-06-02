@@ -10,13 +10,18 @@ const pkg = require('./package.json')
 const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
 const IPC_ID = 'pear'
 const RUNTIME_EXEC = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
+const dir = (p) => toPath(new URL(p, platformUrl()))
 
-const url = (p) => new URL(p, platformUrl())
-const dir = (p) => toPath(url(p))
-
-let channel = null
-let standalone = null
-let pearDevRoot = null
+let _channel = null
+let _standalone = null
+let _pearDevRoot = null
+let _platformDir = null
+let _platformLock = null
+let _platformHyperdb = null
+let _platformCorestore = null
+let _gc = null
+let _runtime = null
+let _socketPath = null
 
 module.exports = {
   VERSION: pkg.version,
@@ -26,44 +31,53 @@ module.exports = {
   SPINDOWN_TIMEOUT: 60_000,
   KNOWN_NODES_LIMIT: 100,
   get LOCALDEV() {
-    return !standalone
+    return !_standalone
   },
   get UPGRADE() {
-    if (channel === null) throw new Error('UPGRADE read before init()')
-    return pkg.upgrade[channel]
+    if (_channel === null) throw new Error('UPGRADE read before init()')
+    return pkg.upgrade[_channel]
   },
   get PEAR_DEV_ROOT() {
-    return pearDevRoot
+    return _pearDevRoot
   },
   get PLATFORM_DIR() {
-    return toPath(platformUrl())
+    return _platformDir
   },
   get PLATFORM_LOCK() {
-    return dir('pear.lock')
+    return _platformLock
   },
   get PLATFORM_HYPERDB() {
-    return dir('db')
+    return _platformHyperdb
   },
   get PLATFORM_CORESTORE() {
-    return dir('corestores/platform')
+    return _platformCorestore
   },
   get GC() {
-    return dir('gc')
+    return _gc
   },
   get RUNTIME() {
-    return dir(BIN + RUNTIME_EXEC)
+    return _runtime
   },
   get SOCKET_PATH() {
-    const d = toPath(platformUrl())
-    return isWindows ? `\\\\.\\pipe\\${IPC_ID}-${pipeId(d)}` : `${d}/${IPC_ID}.sock`
+    return _socketPath
   },
-  init: (initChannel, initStandalone, initPearDevRoot) => {
+  init(channel, standalone, pearDevRoot) {
     const valid = ['production', 'stage', 'dev']
-    if (channel !== null) throw new Error('channel already set')
-    if (!valid.includes(initChannel)) throw new Error(`invalid channel: ${initChannel}`)
-    channel = initChannel
-    standalone = initStandalone
-    pearDevRoot = initPearDevRoot
+    if (_channel !== null) throw new Error('channel already set')
+    if (!valid.includes(channel)) throw new Error(`invalid channel: ${channel}`)
+
+    _channel = channel
+    _standalone = standalone
+    _pearDevRoot = pearDevRoot
+    _platformDir = toPath(platformUrl())
+    _platformLock = dir('pear.lock')
+    _platformHyperdb = dir('db')
+    _platformCorestore = dir('corestores/platform')
+    _gc = dir('gc')
+    _runtime = dir(BIN + RUNTIME_EXEC)
+    _socketPath = isWindows
+      ? `\\\\.\\pipe\\${IPC_ID}-${pipeId(_platformDir)}`
+      : `${_platformDir}/${IPC_ID}.sock`
   }
 }
 
@@ -74,8 +88,8 @@ function platformUrl() {
 }
 
 function platformDir() {
-  if (!standalone) return path.join(__dirname, 'pear')
-  if (pearDevRoot) return path.join(pearDevRoot, 'pear')
+  if (!_standalone) return path.join(__dirname, 'pear')
+  if (_pearDevRoot) return path.join(_pearDevRoot, 'pear')
   if (isWindows) return path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
   if (isLinux) return path.join(os.homedir(), '.config', 'pear')
   return path.join(os.homedir(), 'Library', 'Application Support', 'pear')
