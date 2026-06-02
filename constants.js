@@ -21,7 +21,7 @@ const RUNTIME_EXEC = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 
 exports.LOCALDEV = LOCALDEV
 
-exports.UPGRADE = pkg.upgrade
+exports.UPGRADE = pkg.upgrade[global.__CHANNEL]
 exports.VERSION = pkg.version
 
 exports.PLATFORM_DIR = PLATFORM_DIR

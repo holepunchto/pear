@@ -10,8 +10,8 @@ const IPC = require('pear-ipc')
 const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
-const { version, upgrade } = require('../../package.json')
-const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT } = require('../../constants.js')
+const { version } = require('../../package.json')
+const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, UPGRADE } = require('../../constants.js')
 const Replicator = require('./lib/replicator')
 const HyperDB = require('hyperdb')
 const db = require('./lib/db')
@@ -170,7 +170,7 @@ class Sidecar extends ReadyResource {
       ? this.updater.drive.core.length
       : null
     return {
-      platform: { key: upgrade, version, fork, length },
+      platform: { key: UPGRADE, version, fork, length },
       runtimes
     }
   }
@@ -291,7 +291,7 @@ class Sidecar extends ReadyResource {
   #bindUpdaterEvents(updater) {
     updater.on('updating', () => {
       const key = hypercoreid.normalize(updater.key)
-      const currentKey = upgrade ? hypercoreid.normalize(upgrade) : null
+      const currentKey = UPGRADE ? hypercoreid.normalize(UPGRADE) : null
       const length = updater.drive.core.length
       LOG.info(
         'sidecar',

@@ -218,7 +218,7 @@ class Rig {
         })
         .done()
 
-      const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make:${HOST}`], {
+      const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make`], {
         cwd: this.localDir,
         stdio: 'ignore'
       })

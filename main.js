@@ -11,7 +11,7 @@ global.__PEAR_MOUNT = resolveMount()
 global.__STANDALONE = true
 migrateMisplacedPlatformState()
 
-require('../boot.js')
+require('./boot.js')
 
 function resolveExecutable() {
   const executable = os.execPath()

@@ -7,6 +7,7 @@ const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const os = require('bare-os')
 const { definition } = require('../lib/cmd')
+const { UPGRADE } = require('../constants.js')
 
 const commands = {
   touch: require('./touch'),
@@ -448,7 +449,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       const { version } = pkg
       const devRoot = getDevRoot()
       const vinfo = await ipc.versions()
-      const key = vinfo?.platform?.key || pkg.upgrade
+      const key = vinfo?.platform?.key || UPGRADE
       const fork = devRoot ? null : (vinfo?.platform?.fork ?? null)
       const length = devRoot ? null : (vinfo?.platform?.length ?? null)
       const hasVersioned = fork !== null && length !== null

@@ -7,7 +7,7 @@ const gracedown = require('pear-gracedown')
 const os = require('bare-os')
 const pear = require('./lib/cmd').command
 const path = require('bare-path')
-const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
+const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
@@ -71,7 +71,7 @@ async function bootSidecar() {
       dir: PLATFORM_DIR,
       store: corestore,
       version,
-      upgrade,
+      upgrade: UPGRADE,
       app,
       name
     })

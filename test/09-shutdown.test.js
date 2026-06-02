@@ -63,7 +63,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
   t.comment('Building low-spindown sidecar')
-  const build = spawn(npm, ['run', `make:${HOST}`], {
+  const build = spawn(npm, ['run', `make`], {
     cwd: platformDirLs,
     stdio: 'ignore'
   })
@@ -145,7 +145,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
     t.comment('Building throttled sidecar')
-    const build = spawn(npm, ['run', `make:${HOST}`], {
+    const build = spawn(npm, ['run', `make`], {
       cwd: patchedArtefactDir,
       stdio: 'ignore'
     })
@@ -197,7 +197,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     fs.writeFileSync(sidecarPath, patchedSidecarCode)
 
     t.comment('Building platform')
-    const build = spawn(npm, ['run', `make:${HOST}`], {
+    const build = spawn(npm, ['run', `make`], {
       cwd: artefactDir,
       stdio: 'ignore'
     })
