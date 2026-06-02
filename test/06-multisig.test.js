@@ -31,7 +31,7 @@ test('pear multisig link', async function ({ ok, plan, teardown }) {
   ok(result.link.startsWith('pear://'), 'multisig link is a pear link')
 })
 
-test('pear multisig request', async function ({ ok, plan, comment, teardown, timeout }) {
+test('pear multisig request', async function ({ ok, plan, comment, teardown, timeout, tmp }) {
   timeout(180000)
   plan(2)
 
@@ -64,7 +64,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   const key = await seedUntil.key
 
   comment('setting up external peers')
-  await Helper.setupPeers(key, 2, teardown)
+  await Helper.setupPeers(key, 2, teardown, tmp)
 
   comment('creating multisig request')
   const multisig = helper.multisig({
@@ -85,7 +85,7 @@ test('pear multisig request', async function ({ ok, plan, comment, teardown, tim
   )
 })
 
-test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, timeout }) {
+test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, timeout, tmp }) {
   timeout(180000)
   plan(3)
 
@@ -121,7 +121,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   const key = await seedUntil.key
 
   comment('setting up external peers')
-  await Helper.setupPeers(key, 2, teardown)
+  await Helper.setupPeers(key, 2, teardown, tmp)
 
   comment('creating multisig request')
   const reqStream = helper.multisig({
@@ -157,7 +157,7 @@ test('pear multisig commit', async function ({ ok, is, plan, comment, teardown, 
   comment('setting up destination peers')
   const dstDbKey = hypercoreid.decode(verified.dstKey)
   const dstBlobsKey = hypercoreid.decode(verified.result.blobs.destCore.key)
-  await Helper.setupDestPeers(dstDbKey, dstBlobsKey, 2, teardown)
+  await Helper.setupDestPeers(dstDbKey, dstBlobsKey, 2, teardown, tmp)
 
   comment('committing')
   const commitStream = helper.multisig({

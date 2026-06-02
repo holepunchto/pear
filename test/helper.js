@@ -20,7 +20,6 @@ const constants = require('../constants.js')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
-const testtmp = require('test-tmp')
 const { cmdArgs } = require('../argv')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
@@ -302,9 +301,9 @@ function makePwd(str) {
   return buf
 }
 
-async function setupDestPeers(dbKey, blobsKey, n, teardown) {
+async function setupDestPeers(dbKey, blobsKey, n, teardown, tmp) {
   for (let i = 0; i < n; i++) {
-    const store = new Corestore(await testtmp())
+    const store = new Corestore(await tmp())
     teardown(() => store.close())
     await store.ready()
     const dbCore = store.get({ key: dbKey })
@@ -321,9 +320,9 @@ async function setupDestPeers(dbKey, blobsKey, n, teardown) {
   }
 }
 
-async function setupPeers(key, n, teardown) {
+async function setupPeers(key, n, teardown, tmp) {
   for (let i = 0; i < n; i++) {
-    const store = new Corestore(await testtmp())
+    const store = new Corestore(await tmp())
     teardown(() => store.close())
     await store.ready()
     const drive = new Hyperdrive(store, key)

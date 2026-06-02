@@ -1,6 +1,5 @@
 'use strict'
 const test = require('brittle')
-const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
@@ -232,7 +231,7 @@ test('pear stage with ignore and unignore', async function ({ ok, is, teardown }
   ok(stagingFiles.includes('/modules-test/dir4/subdir/prebuilds-example/file2.js'))
 })
 
-test('pear stage with purge', async function ({ ok, is, comment, teardown }) {
+test('pear stage with purge', async function ({ ok, is, comment, teardown, tmp }) {
   const dir = Helper.fixture('app-with-subdir')
 
   const helper = new Helper()
@@ -460,7 +459,7 @@ test('pear stage with purge config', async function ({ ok, is, comment, teardown
   ok(removedFiles.includes('/config-purge-file.js'), 'config-purge-file.js should be purged')
 })
 
-test('pear stage versions increase monotonically', async ({ teardown, comment, ok }) => {
+test('pear stage versions increase monotonically', async ({ teardown, comment, ok, tmp }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -502,7 +501,12 @@ test('pear stage versions increase monotonically', async ({ teardown, comment, o
   ok(lengthA < lengthB, 'second stage version is greater than first')
 })
 
-test('pear stage keeps the same key when restaging with new name', async ({ teardown, ok, is }) => {
+test('pear stage keeps the same key when restaging with new name', async ({
+  teardown,
+  ok,
+  is,
+  tmp
+}) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
