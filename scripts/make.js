@@ -13,14 +13,14 @@ const child = spawn(
     '--name',
     'pear',
     '--description',
-    'Pear runtime command line interface',
+    '"Pear runtime command line interface"',
     '--host',
     host,
     '--out',
     `./by-arch/${host}/bin`,
     `targets/main.${channel}.js`
   ],
-  { stdio: 'inherit' }
+  { stdio: 'inherit', shell: true }
 )
 
 child.on('close', (code) => Bare.exit(code))
