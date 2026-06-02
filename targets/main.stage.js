@@ -1,2 +1,1 @@
-global.__CHANNEL = 'stage'
-require('../main.js')
+require('../main.js')('stage')

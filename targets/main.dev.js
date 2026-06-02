@@ -1,2 +1,1 @@
-global.__CHANNEL = 'dev'
-require('../main.js')
+require('../main.js')('dev')

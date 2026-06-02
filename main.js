@@ -3,15 +3,16 @@ const path = require('bare-path')
 const fs = require('bare-fs')
 const os = require('bare-os')
 const { platform, arch, isWindows, isLinux } = require('which-runtime')
+const { init } = require('./constants.js')
 
 const executable = resolveExecutable()
 const devRoot = resolveDevRoot(executable)
-global.__PEAR_DEV_ROOT = devRoot
-global.__PEAR_MOUNT = resolveMount()
-global.__STANDALONE = true
-migrateMisplacedPlatformState()
 
-require('./boot.js')
+module.exports = (channel) => {
+  init(channel, true, devRoot)
+  migrateMisplacedPlatformState()
+  require('./boot.js')
+}
 
 function resolveExecutable() {
   const executable = os.execPath()
@@ -19,22 +20,6 @@ function resolveExecutable() {
     throw new Error('Unable to resolve runtime executable from execPath')
   }
   return executable
-}
-
-function resolveMount() {
-  const mount = global.__PEAR_DEV_ROOT ? devRootMountPath() : runtimeMountPath()
-  try {
-    fs.mkdirSync(mount, { recursive: true })
-  } catch {}
-  return mount
-}
-
-function runtimeMountPath() {
-  return platformDir()
-}
-
-function devRootMountPath() {
-  return global.__PEAR_DEV_ROOT || safeResolveDot()
 }
 
 function resolveDevRoot(resolvedExecutable) {
@@ -125,7 +110,7 @@ function mergeDir(from, to) {
 }
 
 function platformDir() {
-  if (global.__PEAR_DEV_ROOT) return path.join(global.__PEAR_DEV_ROOT, 'pear')
+  if (devRoot) return path.join(devRoot, 'pear')
   if (isWindows) return path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
   if (isLinux) return path.join(os.homedir(), '.config', 'pear')
   return path.join(os.homedir(), 'Library', 'Application Support', 'pear')
@@ -133,17 +118,4 @@ function platformDir() {
 
 function normalize(p) {
   return p.replace(/\\/g, '/')
-}
-
-function safeResolveDot() {
-  const cwd = safeCwd()
-  return cwd || '/'
-}
-
-function safeCwd() {
-  try {
-    return os.cwd()
-  } catch {
-    return null
-  }
 }
