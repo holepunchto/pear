@@ -183,7 +183,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     t.comment('Updating upgrade link and version to 1.0.0')
     const packageJsonFile = path.join(artefactDir, 'package.json')
     const packageJson = require(packageJsonFile)
-    packageJson.upgrade = rcvLink
+    packageJson.upgrade = { production: rcvLink }
     packageJson.version = '1.0.0'
     await fs.promises.writeFile(packageJsonFile, JSON.stringify(packageJson, null, 2), 'utf8')
 
