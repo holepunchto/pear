@@ -14,5 +14,5 @@ if not exist "%bare%" (
   exit /b 1
 )
 
-"%bare%" "%~dp0boot.js" %*
+"%bare%" "%~dp0targets/main.dev.js" %*
 exit /b %ERRORLEVEL%

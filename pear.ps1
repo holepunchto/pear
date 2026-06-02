@@ -13,5 +13,5 @@ if (-not (Test-Path $bare)) {
   exit 1
 }
 
-& $bare "$PSScriptRoot\boot.js" @args
+& $bare "$PSScriptRoot\targets\main.dev.js" @args
 exit $LASTEXITCODE
