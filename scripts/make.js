@@ -23,4 +23,6 @@ const child = spawn(
   { stdio: 'inherit', shell: true }
 )
 
-child.on('close', (code) => Bare.exit(code))
+child.on('exit', (code, signal) => {
+  Bare.exitCode = signal ? 128 + signal : code
+})
