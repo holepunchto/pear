@@ -1,11 +1,10 @@
 'use strict'
 const test = require('brittle')
-const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
 
 const Helper = require('./helper')
 
-test('pear dump', async function ({ ok, plan, teardown }) {
+test('pear dump', async function ({ ok, plan, teardown, tmp }) {
   plan(2)
 
   const helper = new Helper()
@@ -35,7 +34,7 @@ test('pear dump', async function ({ ok, plan, teardown }) {
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown }) {
+test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teardown, tmp }) {
   plan(4)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -67,7 +66,7 @@ test('pear dump dumping subdirectory', async function ({ ok, absent, plan, teard
   ok(await dumped.exists('/lib/pear.js'), 'lib/pear.js should exist')
 })
 
-test('pear dump dumping to existing dir', async function ({ absent, is, plan, teardown }) {
+test('pear dump dumping to existing dir', async function ({ absent, is, plan, teardown, tmp }) {
   plan(3)
 
   const helper = new Helper()
@@ -103,7 +102,7 @@ test('pear dump dumping to existing dir', async function ({ absent, is, plan, te
   absent(await dumped.exists('/package.json'), 'package.json should not exist')
 })
 
-test('pear dump dumping to existing dir with force', async function ({ ok, plan, teardown }) {
+test('pear dump dumping to existing dir with force', async function ({ ok, plan, teardown, tmp }) {
   plan(2)
 
   const helper = new Helper()
@@ -132,7 +131,7 @@ test('pear dump dumping to existing dir with force', async function ({ ok, plan,
   ok(await dumped.exists('/package.json'), 'package.json should exist')
 })
 
-test('pear dump dumping a single file', async function ({ ok, absent, is, plan, teardown }) {
+test('pear dump dumping a single file', async function ({ ok, absent, is, plan, teardown, tmp }) {
   plan(3)
 
   const helper = new Helper()
@@ -171,7 +170,8 @@ test('pear dump dumping a single file in a subdirectory', async function ({
   ok,
   is,
   plan,
-  teardown
+  teardown,
+  tmp
 }) {
   plan(2)
 
@@ -351,7 +351,8 @@ test('pear dump dumping a single file in a subdirectory to stdout', async functi
 test('pear dump should throw when dumping non-existant filepath', async function ({
   plan,
   teardown,
-  exception
+  exception,
+  tmp
 }) {
   plan(1)
 
@@ -385,7 +386,8 @@ test('pear dump should throw when dumping non-existant filepath', async function
 test('pear dump should throw when dumping non-existant dirpath', async function ({
   plan,
   teardown,
-  exception
+  exception,
+  tmp
 }) {
   plan(1)
 

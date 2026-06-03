@@ -2,7 +2,6 @@
 const fs = require('bare-fs')
 const path = require('bare-path')
 const test = require('brittle')
-const tmp = require('test-tmp')
 const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
@@ -59,7 +58,12 @@ test('pear provision syncs blocks from source to target per production key', asy
   ok(provision.target.verlink.startsWith('pear://'), 'target verlink is a pear link')
 })
 
-test('pear provision succeeds with standalone stage metadata', async ({ teardown, ok, plan }) => {
+test('pear provision succeeds with standalone stage metadata', async ({
+  teardown,
+  ok,
+  plan,
+  tmp
+}) => {
   plan(1)
   const src = await tmp()
   const prod = Helper.fixture('warmup')
