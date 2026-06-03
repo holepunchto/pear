@@ -1,7 +1,6 @@
 {
   "name": "pear",
-  "version": "2.0.0",
-  "main": "./boot.js",
+  "version": "3.0.0",
   "bin": "pear",
   "productName": "pear",
   "upgrade": {
