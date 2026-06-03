@@ -2,10 +2,8 @@
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
 const { usage, print } = require('../lib/terminal.js')
-const path = require('bare-path')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
-const os = require('bare-os')
 const { definition } = require('../lib/cmd')
 const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
 
@@ -447,7 +445,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     if (flags.v) {
       const pkg = require('../package.json')
       const { version } = pkg
-      const devRoot = PEAR_DEV_ROOT || getDevRoot()
+      const devRoot = PEAR_DEV_ROOT
       const vinfo = await ipc.versions()
       const key = vinfo?.platform?.key || UPGRADE
       const fork = devRoot ? null : (vinfo?.platform?.fork ?? null)
@@ -475,21 +473,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
   function stripPearPrefix(link) {
     if (typeof link !== 'string') return ''
     return link.startsWith('pear://') ? link.slice('pear://'.length) : link
-  }
-
-  function getDevRoot() {
-    const execPath = os.execPath()
-    if (!execPath) return null
-    const normalized = execPath.replace(/\\/g, '/')
-    const ix = normalized.indexOf('/by-arch/')
-    if (ix === -1) return null
-    const root = normalized.slice(0, ix)
-    if (!root) return null
-    try {
-      return path.resolve(root)
-    } catch {
-      return root
-    }
   }
 
   const shell = require('../lib/cmd').command(argv)
