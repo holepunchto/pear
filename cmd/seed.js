@@ -312,7 +312,7 @@ let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
-  const { json, ask, tty } = cmd.flags
+  const { json, tty } = cmd.flags
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -470,8 +470,6 @@ module.exports = async function seed(cmd) {
       link,
       statsInterval,
       cmdArgs
-    }),
-    { ask },
-    ipc
+    })
   )
 }

@@ -51,5 +51,5 @@ module.exports = async function stage(cmd) {
     only,
     cmdArgs
   })
-  await output(json, stream, { ask: cmd.flags.ask }, ipc)
+  await output(json, stream)
 }
