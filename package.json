@@ -4,20 +4,20 @@
   "main": "./boot.js",
   "bin": "pear",
   "productName": "pear",
-  "upgrade": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+  "upgrade": {
+    "production": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+    "stage": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+    "dev": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto"
+  },
   "private": true,
   "scripts": {
     "test:gen": "brittle -r test/index.mjs test/*.test.js",
     "test": "bare scripts/test.mjs",
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
-    "make": "node scripts/build-local-runtime.js",
-    "make:darwin-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host darwin-arm64 --out ./by-arch/darwin-arm64/bin scripts/standalone-entry.js",
-    "make:darwin-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host darwin-x64 --out ./by-arch/darwin-x64/bin scripts/standalone-entry.js",
-    "make:linux-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-arm64 --out ./by-arch/linux-arm64/bin scripts/standalone-entry.js",
-    "make:linux-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host linux-x64 --out ./by-arch/linux-x64/bin scripts/standalone-entry.js",
-    "make:win32-arm64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-arm64 --out ./by-arch/win32-arm64/bin scripts/standalone-entry.js",
-    "make:win32-x64": "bare-build --standalone --base . --name pear --description \"Pear runtime command line interface\" --host win32-x64 --out ./by-arch/win32-x64/bin scripts/standalone-entry.js",
+    "make": "bare scripts/make.js production",
+    "make:stage": "bare scripts/make.js stage",
+    "make:dev": "bare scripts/make.js dev",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",

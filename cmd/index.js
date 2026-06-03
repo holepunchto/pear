@@ -7,6 +7,7 @@ const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const os = require('bare-os')
 const { definition } = require('../lib/cmd')
+const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
 
 const commands = {
   touch: require('./touch'),
@@ -446,9 +447,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     if (flags.v) {
       const pkg = require('../package.json')
       const { version } = pkg
-      const devRoot = getDevRoot()
+      const devRoot = PEAR_DEV_ROOT || getDevRoot()
       const vinfo = await ipc.versions()
-      const key = vinfo?.platform?.key || pkg.upgrade
+      const key = vinfo?.platform?.key || UPGRADE
       const fork = devRoot ? null : (vinfo?.platform?.fork ?? null)
       const length = devRoot ? null : (vinfo?.platform?.length ?? null)
       const hasVersioned = fork !== null && length !== null
@@ -477,7 +478,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
   }
 
   function getDevRoot() {
-    if (global.__PEAR_DEV_ROOT) return global.__PEAR_DEV_ROOT
     const execPath = os.execPath()
     if (!execPath) return null
     const normalized = execPath.replace(/\\/g, '/')

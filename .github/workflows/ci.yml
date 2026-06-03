@@ -41,7 +41,7 @@ jobs:
         run: npm install
 
       - name: Build Local Runtime
-        run: npm run make:${{ matrix.host }}
+        run: npm run make
 
       - name: Install Bare
         run: npm i -g bare-runtime
