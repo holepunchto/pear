@@ -1,8 +1,13 @@
+const fs = require('bare-fs')
+const path = require('bare-path')
+const env = require('bare-env')
 const { spawn } = require('bare-subprocess')
-const { platform, arch } = require('which-runtime')
+const { platform, arch, isWindows } = require('which-runtime')
 
-const channel = global.Bare.argv[2]
+const channel = global.Bare.argv[2] || env.CHANNEL || 'production'
 const host = `${platform}-${arch}`
+const bin = isWindows ? 'pear.exe' : 'pear'
+const out = path.join('.', 'by-arch', host, 'bin')
 
 const child = spawn(
   'bare-build',
@@ -17,12 +22,23 @@ const child = spawn(
     '--host',
     host,
     '--out',
-    `./by-arch/${host}/bin`,
+    out,
     `targets/main.${channel}.js`
   ],
   { stdio: 'inherit', shell: true }
 )
 
 child.on('exit', (code, signal) => {
-  Bare.exitCode = signal ? 128 + signal : code
+  if (signal) return Bare.exit(128 + signal)
+  if (code !== 0) return Bare.exit(code)
+
+  const src = path.join(out, bin)
+  const ext = isWindows ? '.exe' : ''
+  const dest = path.join('out', 'make', `pear-${host}${ext}`)
+
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.copyFileSync(src, dest)
+  fs.chmodSync(dest, 0o755)
+
+  console.log(`wrote ${dest}`)
 })
