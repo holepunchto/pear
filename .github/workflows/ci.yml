@@ -32,8 +32,6 @@ jobs:
             host: linux-x64
           - os: ubuntu-24.04-arm
             host: linux-arm64
-          - os: macos-13
-            host: darwin-x64
           - os: macos-latest
             host: darwin-arm64
           - os: windows-latest
