@@ -6,8 +6,9 @@ const { init } = require('./constants.js')
 
 const executable = resolveExecutable()
 const devRoot = resolveDevRoot(executable)
+const standalone = path.basename(Bare.argv[0]) !== 'bare'
 
-module.exports = (channel, standalone = true) => {
+module.exports = (channel) => {
   init(channel, standalone, devRoot)
   require('./boot.js')
 }
