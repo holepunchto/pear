@@ -17,7 +17,6 @@ let _standalone = null
 let _pearDevRoot = null
 let _platformDir = null
 let _platformLock = null
-let _platformHyperdb = null
 let _platformCorestore = null
 let _gc = null
 let _runtime = null
@@ -25,9 +24,7 @@ let _socketPath = null
 
 module.exports = {
   VERSION: pkg.version,
-  BOOT: require.main?.filename,
   CONNECT_TIMEOUT: 20_000,
-  IDLE_TIMEOUT: 30_000,
   SPINDOWN_TIMEOUT: 60_000,
   KNOWN_NODES_LIMIT: 100,
   get LOCALDEV() {
@@ -45,9 +42,6 @@ module.exports = {
   },
   get PLATFORM_LOCK() {
     return _platformLock
-  },
-  get PLATFORM_HYPERDB() {
-    return _platformHyperdb
   },
   get PLATFORM_CORESTORE() {
     return _platformCorestore
@@ -71,7 +65,6 @@ module.exports = {
     _pearDevRoot = pearDevRoot
     _platformDir = toPath(platformUrl())
     _platformLock = dir('pear.lock')
-    _platformHyperdb = dir('db')
     _platformCorestore = dir('corestores/platform')
     _gc = dir('gc')
     _runtime = dir(BIN + RUNTIME_EXEC)

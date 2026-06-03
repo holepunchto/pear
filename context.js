@@ -1,7 +1,5 @@
 'use strict'
 
-const constants = require('./constants.js')
-
 let ipc = null
 
 function setIPC(next) {
@@ -13,7 +11,6 @@ function getIPC() {
 }
 
 module.exports = {
-  constants,
   setIPC,
   getIPC
 }
