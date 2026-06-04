@@ -1,9 +1,9 @@
 const pipe = require('pear-pipe')()
 pipe.on('data', () => {
-  Pear.versions().then((versions) => {
-    pipe.write(JSON.stringify(versions) + '\n')
-  }).catch((err) => {
+  try {
+    pipe.write(JSON.stringify(Bare.versions) + '\n')
+  } catch (err) {
     console.error(err)
-    Pear.exit()
-  })
+    Bare.exit()
+  }
 })

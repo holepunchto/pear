@@ -4,6 +4,6 @@ pipe.on('data', () => {
     pipe.write('hello world\n')
   } catch (err) {
     console.error(err)
-    Pear.exit()
+    Bare.exit()
   }
 })

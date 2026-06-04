@@ -7,8 +7,6 @@ const { PLATFORM_DIR } = require('./constants.js')
 const Logger = require('./lib/logger.js')
 const { cmdArgs } = require('./argv')
 
-global.Pear = { config: {} } // TODO remove after moving pear-ref
-
 if (fs.existsSync(PLATFORM_DIR) === false) {
   fs.mkdirSync(PLATFORM_DIR, { recursive: true })
 }

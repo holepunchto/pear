@@ -11,8 +11,6 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
-global.Pear = { config: {} }
-
 const { RUNTIME } = await import('../constants')
 const HOST = `${platform}-${arch}`
 const BIN = isWindows ? 'pear.exe' : 'pear'
