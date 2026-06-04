@@ -53,7 +53,7 @@
     "pear-errors": "^1.0.1",
     "pear-gracedown": "^1.0.1",
     "pear-inspect": "^1.2.5",
-    "pear-install": "^1.0.7",
+    "pear-install": "^1.0.8",
     "pear-ipc": "^6.11.0",
     "pear-link": "^4.1.0",
     "pear-opstream": "^1.0.0",
