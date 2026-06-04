@@ -17,7 +17,7 @@ const output = outputter('stage', {
   complete: ({ dryRun }) => {
     return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
   },
-  error: (err, info, ipc) => {
+  error: (err) => {
     return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   addendum: ({ version, link, verlink }) => {

@@ -8,7 +8,7 @@ const { cmdArgs } = require('../argv')
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>
     (index > 0 ? '\n____________\n\n' : '') + changelog + (index === max - 1 ? '\n' : ''),
-  error: (err, info, ipc) => {
+  error: (err) => {
     return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   final(data) {

@@ -24,7 +24,7 @@ const output = outputter('dump', {
       message: `[ Peers: ${peers} ] ${dl}${ul}`
     }
   },
-  error: (err, info, ipc) => {
+  error: (err) => {
     if (err.code === 'ERR_DIR_NONEMPTY') {
       return 'Dir is not empty. To overwrite: --force'
     }

@@ -49,7 +49,7 @@ const output = outputter('info', {
   keys,
   info,
   changelog,
-  error: (err, info, ipc) => {
+  error: (err) => {
     return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   manifest: (data) => {

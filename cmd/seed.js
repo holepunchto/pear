@@ -159,7 +159,7 @@ module.exports = async function seed(cmd) {
 
       layout.print(stdio)
     },
-    error: (err, info, ipc) => {
+    error: (err) => {
       return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   })
