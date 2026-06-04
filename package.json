@@ -10,7 +10,7 @@
   },
   "private": true,
   "scripts": {
-    "test:gen": "brittle -r test/index.mjs test/*.test.js",
+    "test:gen": "brittle -r test/all.mjs test/*.test.js",
     "test": "bare scripts/test.mjs",
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
