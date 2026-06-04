@@ -16,6 +16,13 @@ permissions:
   checks: write
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint
+    steps:
+      - uses: holepunchto/actions/node-base@v1
+      - run: npm run lint
+
   build:
     name: ${{ matrix.host }}
     strategy:
@@ -48,6 +55,3 @@ jobs:
 
       - name: Test
         run: npm test
-
-      - name: Lint
-        run: npm run lint

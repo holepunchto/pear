@@ -102,8 +102,6 @@ module.exports = async function info(cmd) {
       multisig,
       cmdArgs,
       dir
-    }),
-    { ask: cmd.flags.ask },
-    ipc
+    })
   )
 }

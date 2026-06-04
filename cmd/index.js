@@ -47,7 +47,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     `,
     arg('<link>', 'Pear link to seed'),
     flag('--no-tty', 'Disable tty features'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed
@@ -73,7 +72,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--purge', 'Remove ignored files if present in previous stage'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.stage
   )
@@ -262,7 +260,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--manifest', 'View app manifest only'),
     flag('--multisig', 'View multisig info only'),
     flag('--key', 'View key only'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.info
   )
@@ -277,7 +274,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-prune', 'Prevent removal of existing paths'),
     flag('--json', 'Newline delimited JSON output'),
     validate((cmd) => {
@@ -300,7 +296,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     summary('Explore platform database'),
     command('dht', summary('DHT known-nodes cache'), commands.data),
     command('multisig', summary('Multisig records'), commands.data),
-    flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     (cmd) => {
       console.log(cmd.command.help())
@@ -319,7 +314,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--max|-m <n=10>', 'Maximum entries to show'),
     flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
     flag('--full', 'Show entire changelog'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.changelog
   )

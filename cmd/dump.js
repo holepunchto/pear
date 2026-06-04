@@ -35,7 +35,7 @@ const output = outputter('dump', {
 
 module.exports = async function dump(cmd) {
   const ipc = context.getIPC()
-  const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
+  const { dryRun, checkout, json, only, force, prune, list } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
   dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
@@ -51,8 +51,6 @@ module.exports = async function dump(cmd) {
       force,
       prune,
       list
-    }),
-    { ask },
-    ipc
+    })
   )
 }

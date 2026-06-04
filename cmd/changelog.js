@@ -34,8 +34,6 @@ module.exports = async function changelog(cmd) {
       link,
       changelog: { max: nmax, semver: cmd.flags.of, full },
       cmdArgs
-    }),
-    { ask: cmd.flags.ask },
-    ipc
+    })
   )
 }
