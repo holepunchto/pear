@@ -330,7 +330,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
       and then becomes the sidecar.
     `,
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
-    flag('--mem', 'Memory mode: RAM corestore'),
     flag('--key <key>', 'Advanced. Switch release lines'),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
     flag('--log-labels <list>', 'Labels to log (internal, always logged)'),

@@ -34,7 +34,6 @@ module.exports = async function sidecar(cmd) {
 
   print('Rebooting current process as Sidecar\n  - [ ' + key + ' ]', 0)
   print(ansi.gray('Runtime: ' + path.basename(constants.RUNTIME)), 0)
-  if (cmd.flags.mem) print(ansi.green('Memory Mode On') + ansi.gray(' [ --mem ]'), 0)
   print('\n========================= INIT ===================================\n')
 
   Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
