@@ -1,18 +1,15 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
-const { outputter } = require('pear-terminal')
+const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { permit, isTTY } = require('pear-terminal')
+const { cmdArgs } = require('../argv')
 
 const output = outputter('changelog', {
   changelog: ({ changelog, index, max }) =>
     (index > 0 ? '\n____________\n\n' : '') + changelog + (index === max - 1 ? '\n' : ''),
-  error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'info')
-    } else {
-      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
-    }
+  error: (err) => {
+    return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   final(data) {
     return data.success ? {} : false
@@ -20,7 +17,7 @@ const output = outputter('changelog', {
 })
 
 module.exports = async function changelog(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { json, full, max = 10 } = cmd.flags
   const link = cmd.args.link || null
   if (link && plink.parse(link).drive.key === null) {
@@ -36,9 +33,7 @@ module.exports = async function changelog(cmd) {
     ipc.info({
       link,
       changelog: { max: nmax, semver: cmd.flags.of, full },
-      cmdArgs: Bare.argv.slice(1)
-    }),
-    { ask: cmd.flags.ask },
-    ipc
+      cmdArgs
+    })
   )
 }

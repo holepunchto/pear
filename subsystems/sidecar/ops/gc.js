@@ -4,11 +4,10 @@ const os = require('bare-os')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
-const { PLATFORM_DIR } = require('pear-constants')
+const { PLATFORM_DIR } = require('../../../constants.js')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
-const Hyperdrive = require('hyperdrive')
 const plink = require('pear-link')
 
 module.exports = class GC extends Opstream {
@@ -19,7 +18,6 @@ module.exports = class GC extends Opstream {
   #op(params) {
     if (params.resource === 'releases') return this.releases(params)
     if (params.resource === 'sidecars') return this.sidecars(params)
-    if (params.resource === 'assets') return this.assets(params)
     if (params.resource === 'cores') return this.cores(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + params.resource)
   }
@@ -112,60 +110,14 @@ module.exports = class GC extends Opstream {
     })
   }
 
-  async assets(params) {
-    const { resource, data = {} } = params
-    const { link } = data
-    const { sidecar } = this
-    await sidecar.ready()
-    let count = 0
-    let removeAssets = []
-    if (link) {
-      const asset = await sidecar.model.getAsset(link)
-      if (asset) removeAssets = [asset]
-    } else {
-      const assets = await sidecar.model.allAssets()
-      if (assets) removeAssets = assets
-    }
-    for (const { client } of sidecar.running.values()) {
-      // skip running assets
-      if (client.userData instanceof sidecar.App === false) return
-      const links = Object.values(client.userData.state.manifest.pear?.assets ?? {}).map(
-        (asset) => asset.link
-      )
-      removeAssets = removeAssets.filter((asset) => !links.includes(asset.link))
-    }
-    for (const asset of removeAssets) {
-      await sidecar.model.removeAsset(asset.link)
-      this.push({ tag: 'remove', data: { resource, id: asset.link } })
-      count += 1
-    }
-    this.push({ tag: 'complete', data: { resource, count } })
-  }
-
   async cores(params) {
     const { resource, data = {} } = params
-    const { link } = data
     const { sidecar } = this
-    const ignore = !sidecar.drive.core
-      ? new Set()
-      : new Set([sidecar.drive.core.discoveryKey, sidecar.drive.blobs.core.discoveryKey])
 
     const discoveryKeys = []
-    if (link) {
-      const parsed = plink.parse(link)
-      const traits = await sidecar.model.getTraits(link)
-      const encryptionKey = traits?.encryptionKey
-      const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key, { encryptionKey })
-      await drive.ready()
-      discoveryKeys.push(drive.core.discoveryKey)
-      if (drive.blobs) discoveryKeys.push(drive.blobs.core.discoveryKey)
-      await drive.close()
-    } else {
-      for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
-    }
+    for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
     for (const discoveryKey of discoveryKeys) {
       const dkey = hypercoreid.encode(discoveryKey)
-      if (ignore.has(dkey)) continue
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
       if (info.auth && info.auth.keyPair) continue
 

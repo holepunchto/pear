@@ -1,6 +1,5 @@
 'use strict'
 const test = require('brittle')
-const tmp = require('test-tmp')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
@@ -44,7 +43,14 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
   ok(hypercoreid.isValid(key), 'app key is valid')
 })
 
-test('pear seed announces, join, drop', async function ({ ok, plan, comment, teardown, timeout }) {
+test('pear seed announces, join, drop', async function ({
+  ok,
+  plan,
+  comment,
+  teardown,
+  timeout,
+  tmp
+}) {
   timeout(180000)
   plan(3)
 

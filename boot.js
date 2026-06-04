@@ -1,31 +1,29 @@
 /** @typedef {import('pear-interface')} */
 'use strict'
+const fs = require('bare-fs')
+const os = require('bare-os')
 const { isWindows } = require('which-runtime')
+const { PLATFORM_DIR } = require('./constants.js')
+const Logger = require('./lib/logger.js')
+const { cmdArgs } = require('./argv')
 
-const app = {}
-class API {
-  static RTI = { checkout: require('./checkout') }
-  static CONSTANTS = null
-  app = app
-  config = app
+global.Pear = { config: {} } // TODO remove after moving pear-ref
+
+if (fs.existsSync(PLATFORM_DIR) === false) {
+  fs.mkdirSync(PLATFORM_DIR, { recursive: true })
 }
-global.Pear = new API()
-API.CONSTANTS = require('pear-constants')
 
 if (isWindows === false) {
-  const fs = require('bare-fs')
-  const os = require('bare-os')
-  const stat = fs.statSync(API.CONSTANTS.PLATFORM_DIR)
+  const stat = fs.statSync(PLATFORM_DIR)
   const user = os.userInfo()
 
   if (stat.uid !== user.uid) {
-    const err = new Error(`Current user does not own ${API.CONSTANTS.PLATFORM_DIR}`)
+    const err = new Error(`Current user does not own ${PLATFORM_DIR}`)
     err.name = 'User Permissions Error'
     throw err
   }
 }
 
-const Logger = require('pear-logger')
 global.LOG = new Logger({
   labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
   pretty: Logger.switches.log
@@ -45,6 +43,6 @@ switch (getBootType()) {
 }
 
 function getBootType() {
-  if (global.Bare.argv[1] === '--sidecar') return BOOT_SIDECAR
+  if (cmdArgs[0] === '--sidecar') return BOOT_SIDECAR
   return BOOT_CLI
 }

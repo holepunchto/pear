@@ -1,9 +1,4 @@
 'use strict'
-if (!global.Pear) {
-  const path = require('bare-path')
-  const checkout = require('../checkout')
-  global.Pear = { constructor: { RTI: { checkout, mount: path.dirname(__dirname) } }, config: {} }
-}
 const os = require('bare-os')
 const env = require('bare-env')
 const path = require('bare-path')
@@ -16,19 +11,18 @@ const sodium = require('sodium-native')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
-const updaterBootstrap = require('pear-updater-bootstrap')
+const LocalDrive = require('localdrive')
 const b4a = require('b4a')
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear-runtime${isWindows ? '.exe' : ''}`)
-const constants = require('pear-constants')
+const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+
+const constants = require('../constants.js')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
-const testtmp = require('test-tmp')
+const { cmdArgs } = require('../argv')
 const tmp = fs.realpathSync(os.tmpdir())
 Error.stackTraceLimit = Infinity
-
-const rigPear = path.join(tmp, 'rig-pear')
 
 const DHT_BOOTSTRAP = env.PEAR_TEST_BOOTSTRAP
   ? env.PEAR_TEST_BOOTSTRAP.split(',').map((addr) => {
@@ -55,12 +49,16 @@ class Helper extends IPC.Client {
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   static dhtBootstrap = DHT_BOOTSTRAP
+  static BY_ARCH = BY_ARCH
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
-    const logging = Bare.argv.slice(2).filter((arg) => arg.startsWith('--log'))
+    const logging = cmdArgs.filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
-    const platformDir = opts.platformDir || PLATFORM_DIR
-    const runtime = path.join(platformDir, 'current', BY_ARCH)
+    const runtime = opts.platformDir
+      ? path.resolve(opts.platformDir, '..', BY_ARCH)
+      : isWindows || fs.existsSync(path.join(Helper.localDir, BY_ARCH))
+        ? path.join(Helper.localDir, BY_ARCH)
+        : path.join(Helper.localDir, 'pear.dev')
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
     const pipeId = (s) => {
@@ -68,6 +66,8 @@ class Helper extends IPC.Client {
       sodium.crypto_generichash(buf, b4a.from(s))
       return b4a.toString(buf, 'hex')
     }
+
+    const platformDir = opts.platformDir ?? path.join(Helper.localDir, 'pear')
     const lock = path.join(platformDir, 'pear.lock')
     const socketPath = isWindows
       ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
@@ -182,12 +182,6 @@ class Helper extends IPC.Client {
     return true
   }
 
-  static async bootstrap(key, dir) {
-    await Helper.gc(dir)
-    await fs.promises.mkdir(dir, { recursive: true })
-    await updaterBootstrap(key, dir, { bootstrap: DHT_BOOTSTRAP })
-  }
-
   static async gc(dir) {
     if (NO_GC) return
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
@@ -195,70 +189,47 @@ class Helper extends IPC.Client {
 }
 
 class Rig {
-  platformDir = rigPear
+  localDir = path.join(tmp, 'rig-pear')
+  platformDir = path.join(this.localDir, 'pear')
   artefactDir = Helper.localDir
-  local = new Helper()
   tmp = tmp
-  keepAlive = true
-  constructor({ keepAlive = true } = {}) {
-    this.keepAlive = keepAlive
-  }
+  constructor() {}
 
   setup = async ({ comment, timeout }) => {
     timeout(180000)
-    comment('connecting to sidecar')
-    await this.local.ready()
-    comment('connected to sidecar')
 
-    this.link = await Helper.touchLink(this.local)
+    comment('preparing rig platform...')
+    const runtime = path.join(this.artefactDir, BY_ARCH)
 
-    comment('staging platform...')
-    const staging = this.local.stage({
-      link: this.link,
-      dir: this.artefactDir,
-      dryRun: false
-    })
-    await Helper.pick(staging, { tag: 'final' })
-    comment('platform staged')
+    if (fs.existsSync(runtime)) {
+      comment('using existing platform runtime...')
+      const bin = path.join(this.localDir, BY_ARCH)
+      await fs.promises.mkdir(path.dirname(bin), { recursive: true })
+      await fs.promises.cp(runtime, bin)
+    } else {
+      comment('building rig platform runtime...')
+      await fs.promises.mkdir(this.localDir, { recursive: true })
 
-    comment('seeding platform')
-    this.seeder = new Helper()
-    await this.seeder.ready()
-    this.seeding = this.seeder.seed({
-      link: this.link,
-      dir: this.artefactDir,
-      key: null,
-      cmdArgs: []
-    })
-    const until = await Helper.pick(this.seeding, [{ tag: 'key' }, { tag: 'announced' }])
-    this.key = await until.key
-    await until.announced
-    comment('platform seeding')
+      await new LocalDrive(this.artefactDir)
+        .mirror(new LocalDrive(this.localDir), {
+          prune: false,
+          ignore: ['/pear', '/.git', '/test', '/by-arch']
+        })
+        .done()
 
-    comment('bootstrapping rig platform...')
-    await Helper.bootstrap(this.key, this.platformDir)
-    comment('rig platform bootstrapped')
-    if (this.keepAlive) {
-      comment('connecting to rig sidecar')
-      this.rig = new Helper(this)
-      await this.rig.ready()
-      comment('connected to rig sidecar')
+      const build = spawn(isWindows ? 'npm.cmd' : 'npm', ['run', `make`], {
+        cwd: this.localDir,
+        stdio: 'ignore'
+      })
+
+      await new Promise((resolve) => build.once('exit', resolve))
     }
+    comment('rig platform prepared')
   }
 
   cleanup = async ({ comment }) => {
-    comment('closing seeder client')
-    await Helper.teardownStream(this.seeding)
-    await this.seeder.close()
-    comment('seeder client closed')
-    if (this.keepAlive) {
-      comment('shutting down rig sidecar')
-      await this.rig.shutdown()
-      comment('rig sidecar shutdown')
-    }
-    comment('closing local client')
-    await this.local.close()
-    comment('local client closed')
+    await fs.promises.rm(this.localDir, { recursive: true })
+    comment('rig sidecar cleaned up')
   }
 }
 
@@ -330,9 +301,9 @@ function makePwd(str) {
   return buf
 }
 
-async function setupDestPeers(dbKey, blobsKey, n, teardown) {
+async function setupDestPeers(dbKey, blobsKey, n, teardown, tmp) {
   for (let i = 0; i < n; i++) {
-    const store = new Corestore(await testtmp())
+    const store = new Corestore(await tmp())
     teardown(() => store.close())
     await store.ready()
     const dbCore = store.get({ key: dbKey })
@@ -349,9 +320,9 @@ async function setupDestPeers(dbKey, blobsKey, n, teardown) {
   }
 }
 
-async function setupPeers(key, n, teardown) {
+async function setupPeers(key, n, teardown, tmp) {
   for (let i = 0; i < n; i++) {
-    const store = new Corestore(await testtmp())
+    const store = new Corestore(await tmp())
     teardown(() => store.close())
     await store.ready()
     const drive = new Hyperdrive(store, key)

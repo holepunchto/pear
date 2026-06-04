@@ -1,6 +1,7 @@
 'use strict'
+const context = require('../context')
 const { isAbsolute, resolve } = require('bare-path')
-const { outputter, permit, ansi, isTTY, byteSize, byteDiff } = require('pear-terminal')
+const { outputter, ansi, byteSize, byteDiff } = require('../lib/terminal.js')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>
@@ -23,10 +24,7 @@ const output = outputter('dump', {
       message: `[ Peers: ${peers} ] ${dl}${ul}`
     }
   },
-  error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'dump')
-    }
+  error: (err) => {
     if (err.code === 'ERR_DIR_NONEMPTY') {
       return 'Dir is not empty. To overwrite: --force'
     }
@@ -36,8 +34,8 @@ const output = outputter('dump', {
 })
 
 module.exports = async function dump(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
-  const { dryRun, checkout, json, only, force, ask, prune, list } = cmd.flags
+  const ipc = context.getIPC()
+  const { dryRun, checkout, json, only, force, prune, list } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
   dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
@@ -53,8 +51,6 @@ module.exports = async function dump(cmd) {
       force,
       prune,
       list
-    }),
-    { ask },
-    ipc
+    })
   )
 }

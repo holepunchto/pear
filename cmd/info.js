@@ -1,10 +1,11 @@
 'use strict'
+const context = require('../context')
 const plink = require('pear-link')
-const { outputter } = require('pear-terminal')
-const { permit, isTTY } = require('pear-terminal')
+const { outputter } = require('../lib/terminal.js')
 const os = require('bare-os')
 const path = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { cmdArgs } = require('../argv')
 
 const keys = ({ content, discovery, project }) => `
  keys         hex
@@ -14,11 +15,10 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ release, name, length, byteLength, blobs, fork }) => `
+const info = ({ name, length, byteLength, blobs, fork }) => `
  info              value
 -----------------  -----------------
  name              ${name}
- release           ${release}
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
@@ -49,12 +49,8 @@ const output = outputter('info', {
   keys,
   info,
   changelog,
-  error: (err, info, ipc) => {
-    if (err.info && err.info.encrypted && info.ask && isTTY) {
-      return permit(ipc, err.info, 'info')
-    } else {
-      return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
-    }
+  error: (err) => {
+    return `Info Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   manifest: (data) => {
     return JSON.stringify(data.manifest, 0, 2)
@@ -77,7 +73,7 @@ const output = outputter('info', {
 })
 
 module.exports = async function info(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const {
     json,
     changelog,
@@ -104,10 +100,8 @@ module.exports = async function info(cmd) {
       changelog: full || changelog ? { full, max: 1 } : null,
       manifest,
       multisig,
-      cmdArgs: Bare.argv.slice(1),
+      cmdArgs,
       dir
-    }),
-    { ask: cmd.flags.ask },
-    ipc
+    })
   )
 }

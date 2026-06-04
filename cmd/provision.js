@@ -1,5 +1,6 @@
 'use strict'
-const { outputter, ansi, byteDiff } = require('pear-terminal')
+const context = require('../context')
+const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
 const { ERR_INVALID_LINK } = require('pear-errors')
 const plink = require('pear-link')
 
@@ -75,7 +76,7 @@ const output = outputter('provision', {
 })
 
 module.exports = async function provision(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { json, dryRun } = cmd.flags
   const sourceVerlink = cmd.args.sourceVerlink
   const targetLink = cmd.args.targetLink

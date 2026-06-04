@@ -1,166 +1,95 @@
 'use strict'
-const ScriptLinker = require('script-linker')
 const LocalDrive = require('localdrive')
-const Mirror = require('mirror-drive')
 const unixPathResolve = require('unix-path-resolve')
-const hypercoreid = require('hypercore-id-encoding')
-const { randomBytes } = require('hypercore-crypto')
-const DriveAnalyzer = require('drive-analyzer')
-const { ERR_INVALID_CONFIG, ERR_INVALID_INPUT, ERR_PERMISSION_REQUIRED } = require('pear-errors')
+const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
-const Opstream = require('../lib/opstream')
-const Pod = require('../lib/pod')
-const State = require('../state')
-const PearShake = require('pear-shake')
 const ReadyResource = require('ready-resource')
+const fs = require('bare-fs')
+const path = require('bare-path')
+const Opstream = require('../lib/opstream')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, dir, dryRun, truncate, compact, cmdArgs, ignore, purge, only, pkg = null }) {
-    const { client, session, sidecar } = this
+  async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
+    const { session, sidecar } = this
     const parsed = link ? plink.parse(link) : null
     if (parsed === null || parsed.drive?.key === null) {
       throw ERR_INVALID_INPUT('A valid pear link must be specified')
     }
-    const state = new State({
-      id: `stager-${randomBytes(16).toString('hex')}`,
-      flags: { link, stage: true },
-      dir,
-      cmdArgs
-    })
+
+    const { dir: pkgDir, pkg } = await localPkg(dir)
+    if (pkg === null) {
+      throw ERR_INVALID_PROJECT_DIR(
+        `"package.json not found from: ${dir}. Pear project must have a package.json`
+      )
+    }
+
+    const options = pkg?.pear ?? {}
 
     await sidecar.ready()
-
-    await State.build(state, pkg)
 
     const key = parsed.drive.key
     const corestore = sidecar.getCorestore({ writable: true })
     await corestore.ready()
 
-    const encrypted = state.options.encrypted
-    const traits = await this.sidecar.model.getTraits(`pear://${hypercoreid.encode(key)}`)
-    const encryptionKey = traits?.encryptionKey
+    const drive = await session.add(new Hyperdrive(corestore, key))
 
-    if (encrypted === true && !encryptionKey) {
-      throw new ERR_PERMISSION_REQUIRED('Encryption key required', {
-        key,
-        encrypted: true
-      })
+    if (Number.isInteger(truncate)) {
+      await drive.truncate(truncate)
     }
 
-    const pod = new Pod({
-      key,
-      corestore,
-      truncate,
-      stage: true,
-      encryptionKey
+    const currentVersion = drive.version
+    const verlink = plink.serialize({
+      drive: { length: drive.core.length, fork: drive.core.fork, key: drive.key }
     })
-    await session.add(pod)
-
-    const currentVersion = pod.version
-    const verlink = pod.verlink()
-    await state.initialize({ pod, dryRun })
-
-    await sidecar.permit({ key: pod.drive.key, encryptionKey }, client)
 
     if (ignore) ignore = Array.isArray(ignore) ? ignore : ignore.split(',')
     else ignore = []
-    if (state.options?.stage?.ignore) ignore.push(...state.options.stage?.ignore)
+    if (options?.stage?.ignore) ignore.push(...options.stage?.ignore)
     ignore = [...new Set(ignore)]
 
     only = Array.isArray(only) ? only : only?.split(',').map((s) => s.trim()) || []
-    const cfgOnly = state.options?.stage?.only
+    const cfgOnly = options?.stage?.only
     if (cfgOnly) {
       only.push(
         ...(Array.isArray(cfgOnly) ? cfgOnly : cfgOnly?.split(',').map((s) => s.trim()) || [])
       )
     }
 
-    const release = (await pod.db.get('release'))?.value || 0
-
-    const applink = plink.serialize(pod.drive.key)
+    const applink = plink.serialize(drive.key)
     const z32 = applink.slice(7)
 
     this.push({
       tag: 'staging',
       data: {
-        name: state.name,
+        name: pkg?.pear?.name ?? pkg?.name ?? null,
         key: z32,
         link: applink,
         verlink: verlink,
         current: currentVersion,
-        release,
-        dir
+        dir: pkgDir
       }
     })
 
     if (dryRun) this.push({ tag: 'dry' })
-    const src = new LocalDrive(state.dir, {
-      followExternalLinks: true,
-      metadata: new Map()
+    const src = new LocalDrive(pkgDir, {
+      followExternalLinks: true
     })
-    const builtins = state.options.assets?.ui ? sidecar.gunk.builtins : sidecar.gunk.bareBuiltins
-    const linker = new ScriptLinker(src, { builtins })
-
-    const mainExists = (await src.entry(unixPathResolve('/', state.main))) !== null
-    const entrypoints = [
-      ...(mainExists ? [state.main] : []),
-      ...(state.options?.stage?.entrypoints || [])
-    ].map((entrypoint) => unixPathResolve('/', entrypoint))
-
-    const include = [
-      ...(state.options?.stage?.include || []),
-      ...(state.options?.stage?.prefetch || [])
-    ]
-
-    for (const entrypoint of entrypoints) {
-      const entry = await src.entry(entrypoint)
-      if (!entry) throw ERR_INVALID_CONFIG('Invalid main or stage entrypoint in package.json')
-    }
 
     const glob = new GlobDrive(src, ignore)
     await glob.ready()
     const ignored = glob.ignorer()
-    // Cached versions of files and skips for warmup map generation,
-    // preventing a second round of static analysis
-    let compactFiles = null
-    let compactSkips = null
-
-    if (compact) {
-      const pearShake = new PearShake(src, entrypoints)
-      const shake = await pearShake.run({
-        defer: state.options?.stage?.defer
-      })
-      compactFiles = shake.files
-      compactSkips = shake.skips
-      const { files } = shake
-      const skips = shake.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-      let main = state.options?.gui?.main || null
-      if (typeof main === 'string') {
-        if (main.startsWith('/') === false) main = '/' + main
-        only.push(main)
-      }
-      only.push(...files.filter((file) => !ignored(file)), ...include)
-      this.push({
-        tag: 'compact',
-        data: { files: files, skips, success: true }
-      })
-    }
-
-    const dst = pod.drive
+    const dst = drive
 
     const prefix = only.length > 0 ? [...new Set(only)] : undefined
 
     const opts = { prefix, ignore: ignored, dryRun, dedup: true, batch: true }
 
-    const mods = await linker.warmup(entrypoints)
-    for await (const [filename, mod] of mods) src.metadata.put(filename, mod.cache())
-    if (!purge && state.options?.stage?.purge) purge = state.options?.stage?.purge
+    if (!purge && options?.stage?.purge) purge = options?.stage?.purge
     if (purge) {
       for await (const entry of dst) {
         if (ignored(entry.key)) {
@@ -177,7 +106,7 @@ module.exports = class Stage extends Opstream {
       }
     }
 
-    const mirror = new Mirror(src, dst, opts)
+    const mirror = src.mirror(dst, opts)
     for await (const diff of mirror) {
       if (diff.op === 'add') {
         this.push({
@@ -219,44 +148,8 @@ module.exports = class Stage extends Opstream {
       }
     })
 
-    const isTemplate = (await pod.drive.entry('/_template.json')) !== null
     if (dryRun) {
       this.push({ tag: 'skipping', data: { reason: 'dry-run', success: true } })
-    } else if (state.options?.stage?.skipWarmup) {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'configured', success: true }
-      })
-    } else if (isTemplate) {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'template', success: true }
-      })
-    } else if (mirror.count.add || mirror.count.remove || mirror.count.change) {
-      const analyzer = new DriveAnalyzer(pod.drive)
-      await analyzer.ready()
-      const analyzed = await analyzer.analyze(entrypoints, include, {
-        defer: state.options?.stage?.defer,
-        files: compact ? await stagedFiles(pod.drive) : null,
-        skips: compact ? compactSkips : null
-      })
-      const { warmup } = analyzed
-      const skips = analyzed.skips.map(({ specifier, referrer }) => {
-        return { specifier, referrer: referrer.pathname }
-      })
-
-      await pod.db.put('warmup', warmup)
-      const total = pod.drive.core.length + (pod.drive.blobs?.core.length || 0)
-      const blocks = warmup.meta.length + warmup.data.length
-      this.push({
-        tag: 'warmed',
-        data: { total, blocks, skips: skips, success: true }
-      })
-    } else {
-      this.push({
-        tag: 'skipping',
-        data: { reason: 'no changes', success: true }
-      })
     }
 
     this.push({ tag: 'complete', data: { dryRun } })
@@ -266,13 +159,28 @@ module.exports = class Stage extends Opstream {
     this.push({
       tag: 'addendum',
       data: {
-        version: pod.version,
-        release,
+        version: drive.version,
         key: z32,
         link: applink,
-        verlink: pod.verlink()
+        verlink: plink.serialize({
+          drive: { length: drive.core.length, fork: drive.core.fork, key: drive.key }
+        })
       }
     })
+  }
+}
+
+async function localPkg(dir) {
+  try {
+    const pkg = JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
+    return { dir, pkg }
+  } catch (err) {
+    if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
+    const parent = path.dirname(dir)
+    if (parent === dir || path.resolve(dir) === path.resolve(parent)) {
+      return { dir: null, pkg: null }
+    }
+    return localPkg(parent)
   }
 }
 
@@ -357,11 +265,4 @@ class GlobDrive extends ReadyResource {
     }
     return this.ignore
   }
-}
-
-// Lists all staged files without reprocessing ignore
-async function stagedFiles(drive) {
-  const files = []
-  for await (const file of drive.list()) files.push(file)
-  return files
 }

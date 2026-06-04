@@ -1,55 +1,11 @@
 'use strict'
 const paparam = require('paparam')
-const {
-  header,
-  footer,
-  command,
-  flag,
-  arg,
-  summary,
-  description,
-  bail,
-  sloppy,
-  rest,
-  validate,
-  hiddenCommand
-} = paparam
-const { usage, ansi, print } = require('pear-terminal')
-const { CHECKOUT } = require('pear-constants')
-const opwait = require('pear-opwait')
-const run = require('pear-run')
-const pdump = require('pear-dump')
-const { once } = require('bare-events')
+const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
+const { usage, print } = require('../lib/terminal.js')
+const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
-const def = {
-  run: require('pear-cmd/run'),
-  pear: require('pear-cmd/pear')
-}
-
-class Plugin {
-  constructor(link) {
-    this.link = link
-  }
-  runner() {
-    return async (cmd) => {
-      const ipc = global.Pear[global.Pear.constructor.IPC]
-      const { platform } = await ipc.versions()
-      global.Pear.app.fork = platform.fork
-      global.Pear.app.length = platform.length
-      global.Pear.app.key = platform.key
-      global.Pear.app.applink = 'pear://pear'
-      Bare.argv.unshift('pear')
-      const pipe = run(this.link, cmd.argv.slice(1))
-      await once(pipe, 'end')
-      await ipc.close()
-    }
-  }
-  async definition(cmd) {
-    const pkg = await opwait(pdump(this.link + '/package.json', { dir: '-' }))
-    const definition = JSON.parse(pkg.value)?.pear?.platform?.command
-    if (definition) cmd.add(definition)
-  }
-}
+const { definition } = require('../lib/cmd')
+const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
 
 const commands = {
   touch: require('./touch'),
@@ -58,22 +14,17 @@ const commands = {
   seed: require('./seed'),
   provision: require('./provision'),
   multisig: require('./multisig'),
-  release: require('./release'),
   info: require('./info'),
   dump: require('./dump'),
   install: require('pear-install/cmd').runner,
   data: require('./data'),
   changelog: require('./changelog'),
-  shift: require('./shift'),
-  drop: require('./drop'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
-  run: require('./run'),
-  versions: require('./versions'),
-  presets: require('./presets')
+  versions: require('./versions')
 }
 
-module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
+module.exports = async (ipc, argv = cmdArgs) => {
   await ipc.ready()
 
   Bare.prependListener('exit', () => {
@@ -96,7 +47,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     `,
     arg('<link>', 'Pear link to seed'),
     flag('--no-tty', 'Disable tty features'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed
@@ -120,13 +70,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--dry-run|-d', 'Execute a stage without writing'),
     flag('--ignore <paths>', 'Comma-separated path ignore list'),
     flag('--purge', 'Remove ignored files if present in previous stage'),
-    flag('--compact|-c', 'Tree-shaking minimal stage via static-analysis'),
     flag('--only <paths>', 'Filter by paths. Comma-separated'),
     flag('--truncate <n>', 'Advanced. Truncate to version length n'),
-    flag('--no-ask', 'Suppress permission prompt'),
-    flag('--no-pre', 'Skip pre scripts'),
-    flag('--pre-io', 'Show stdout & stderr of pre scripts'),
-    flag('--pre-q', 'Suppress piped output of pre scripts'),
     flag('--json', 'Newline delimited JSON output'),
     commands.stage
   )
@@ -298,17 +243,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     (cmd) => console.log(cmd.command.help())
   )
 
-  const release = command(
-    'release',
-    summary('DEPRECATED: pear provision incompat'),
-    description('DEPRECATED. WILL BE REMOVED.\nUse pear provision and pear multisig.'),
-    arg('<link>', 'Pear link to release'),
-    arg('[dir=.]', 'Project directory path'),
-    flag('--checkout <n>', 'Set release checkout n is version length'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.release
-  ).hide()
-
   const info = command(
     'info',
     summary('View project information'),
@@ -326,7 +260,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--manifest', 'View app manifest only'),
     flag('--multisig', 'View multisig info only'),
     flag('--key', 'View key only'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.info
   )
@@ -341,7 +274,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
     flag('--force|-f', 'Force overwrite existing files'),
     flag('--list', 'List paths at link. Sets <dir> to -'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--no-prune', 'Prevent removal of existing paths'),
     flag('--json', 'Newline delimited JSON output'),
     validate((cmd) => {
@@ -362,36 +294,8 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const data = command(
     'data',
     summary('Explore platform database'),
-    command(
-      'apps',
-      summary('DEPRECATED. Installed apps'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
     command('dht', summary('DHT known-nodes cache'), commands.data),
     command('multisig', summary('Multisig records'), commands.data),
-    command('gc', summary('Garbage collection records'), commands.data),
-    command('manifest', summary('Database internal versioning'), commands.data),
-    command(
-      'assets',
-      summary('On-disk assets for app'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
-    command(
-      'currents',
-      summary('Current working versions'),
-      arg('[link]', 'Filter by link'),
-      commands.data
-    ),
-    command(
-      'presets',
-      summary('Presets by link and command'),
-      arg('[link]', 'Filter by link'),
-      arg('[command]', 'Filter by command'),
-      commands.data
-    ),
-    flag('--secrets', 'Show sensitive information'),
     flag('--json', 'Newline delimited JSON output'),
     (cmd) => {
       console.log(cmd.command.help())
@@ -410,46 +314,9 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     flag('--max|-m <n=10>', 'Maximum entries to show'),
     flag('--of <semver=^*>', 'SemVer filter - default: latest major'),
     flag('--full', 'Show entire changelog'),
-    flag('--no-ask', 'Suppress permission prompt'),
     flag('--json', 'Newline delimited JSON output'),
     commands.changelog
   )
-
-  const presets = command(
-    'presets',
-    summary('Default flags per command & link'),
-    description`
-      Pin flags to a given pear command per app link
-    `,
-    arg('<command>', 'Command to apply default flags to'),
-    arg('<link>', 'App link to apply default flags to'),
-    flag('--json', 'Newline delimited JSON output'),
-    rest('[...flags]', 'Default flags to set. Omit flags to reset'),
-    sloppy({ flags: true }),
-    commands.presets
-  )
-
-  const drop = command(
-    'drop',
-    summary('Advanced. Permanent data deletion'),
-    command(
-      'app',
-      summary('DEPRECATED Reset app to initial state'),
-      description('DEPRECATED. WILL BE REMOVED.\nClear application storage for supplied link.'),
-      arg('<link>', 'Application link'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.drop
-    ),
-    () => {
-      console.log(drop.help())
-    }
-  )
-
-  const reset = hiddenCommand('reset', arg('[link]'), () => {
-    console.log(`${ansi.warning} Deprecated. Use ${ansi.bold('pear drop app <link>')} instead.\n`)
-    console.log(drop.help())
-    Bare.exit(1)
-  })
 
   const sidecar = command(
     'sidecar',
@@ -463,8 +330,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       and then becomes the sidecar.
     `,
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
-    flag('--mem', 'Memory mode: RAM corestore'),
-    flag('--key <key>', 'Advanced. Switch release lines'),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
     flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
     flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
@@ -476,14 +341,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('releases', summary('Clear inactive releases'), commands.gc),
     command('sidecars', summary('Clear running sidecars'), commands.gc),
-    command(
-      'assets',
-      summary('Clear synced assets'),
-      arg('[link]', 'Clear asset by link'),
-      commands.gc
-    ),
     command(
       'cores',
       summary('Clear corestore cores'),
@@ -495,46 +353,6 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
       console.log(gc.help())
     }
   )
-
-  const run = command(
-    'run',
-    summary('DEPRECATED: use pear-runtime module'),
-    description`
-      DEPRECATED. WILL BE REMOVED.
-      Use pear-runtime module with any JS project instead.
-
-      ${ansi.bold('link')}   pear://<key> | pear://<alias>
-      ${ansi.bold('dir')}    file://<absolute-path> | <absolute-path> | <relative-path>
-    `,
-    ...def.run,
-    commands.run
-  ).hide()
-
-  const shift = command(
-    'shift',
-    summary('DEPRECATED: use pear-runtime module'),
-    description(
-      'DEPRECATED. WILL BE REMOVED.\nUse pear-runtime module with any JS project instead.'
-    ),
-    arg('<source>', 'Source application Pear link'),
-    arg('<destination>', 'Destination application Pear link'),
-    flag('--force', 'Overwrite existing application storage if present'),
-    flag('--json', 'Newline delimited JSON output'),
-    commands.shift
-  ).hide()
-
-  const init = command(
-    'init',
-    summary('DEPRECATED & REMOVED'),
-    description`
-    Feature Removed
-    pear run is deprecated making templates out of scope
-    `,
-    sloppy({ flags: true, args: true }),
-    () => {
-      throw errors.ERR_LEGACY('pear init has been removed')
-    }
-  ).hide()
 
   const versions = command(
     'versions',
@@ -551,7 +369,7 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
 
   const cmd = command(
     'pear',
-    ...def.pear,
+    ...definition,
     header(usage.header),
     touch,
     seed,
@@ -564,17 +382,10 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     install,
     data,
     changelog,
-    presets,
-    drop,
-    reset,
     sidecar,
     gc,
-    run,
-    shift,
-    release,
     versions,
     help,
-    init, // legacy
     footer(usage.footer),
     bail(function explain(bail = {}) {
       if (!bail.reason && bail.err) {
@@ -622,46 +433,54 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
     pear
   )
 
-  function pear({ flags }) {
+  async function pear({ flags }) {
     if (flags.v) {
-      const semver = require('../package.json').version
+      const pkg = require('../package.json')
+      const { version } = pkg
+      const devRoot = PEAR_DEV_ROOT
+      const vinfo = await ipc.versions()
+      const key = vinfo?.platform?.key || UPGRADE
+      const fork = devRoot ? null : (vinfo?.platform?.fork ?? null)
+      const length = devRoot ? null : (vinfo?.platform?.length ?? null)
+      const hasVersioned = fork !== null && length !== null
+      const versionedKey = hasVersioned ? `pear://${fork}.${length}.${stripPearPrefix(key)}` : key
       if (flags.json) {
-        const checkout = JSON.stringify(CHECKOUT)
-        console.log({ ...checkout, semver })
+        console.log(
+          JSON.stringify({ key, version, path: devRoot, fork: fork, length, versionedKey })
+        )
         return
       }
-      const { key, fork, length } = CHECKOUT
+      console.log(versionedKey + ' / v' + version + '\n')
 
-      console.log('v' + ~~fork + '.' + (length || 'dev') + '.' + key + ' / v' + semver + '\n')
-      console.log('Key=' + key)
-      console.log('Fork=' + fork)
-      console.log('Length=' + length)
-      console.log('SemVer=' + semver)
+      if (devRoot) console.log('Path=' + devRoot)
+      else console.log('Key=' + key)
+      console.log('SemVer=' + version)
+      if (fork !== null) console.log('Fork=' + fork)
+      if (length !== null) console.log('Length=' + length)
       return
     }
     console.log(cmd.overview())
   }
 
-  const shell = require('pear-cmd')(argv)
+  function stripPearPrefix(link) {
+    if (typeof link !== 'string') return ''
+    return link.startsWith('pear://') ? link.slice('pear://'.length) : link
+  }
+
+  const shell = require('../lib/cmd').command(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
   if (cmdIx > -1) argv = argv.slice(cmdIx)
 
-  // support for `#!/usr/bin/env pear` in npm bin:
-  if (shell?.positionals?.[0]?.includes('/node_modules/.bin/')) {
-    argv[0] = 'run'
-    argv.push('-f', shell.positionals[0])
-  }
-  run.argv = argv
-
-  const preparse = cmd.parse(argv, { run: false, silent: true, bails: false })
-  if (commands[cmd.current?.name] instanceof Plugin) {
-    await commands[cmd.current.name].definition(cmd.current)
+  if (argv[0] === 'run') {
+    const message =
+      'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
+    print(message, false)
+    Bare.exitCode = 1
+    ipc.close()
+    return null
   }
 
-  const presetsArgs = await getPresets(preparse)
-
-  const args = [...argv.slice(0, 1), ...presetsArgs, ...argv.slice(1)]
-  const program = cmd.parse(args)
+  const program = cmd.parse(argv)
 
   if (program === null) {
     ipc.close()
@@ -675,14 +494,4 @@ module.exports = async (ipc, argv = Bare.argv.slice(1)) => {
   }
 
   return program
-}
-
-async function getPresets(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
-  if (!cmd || !cmd.args.link) return []
-  const command = cmd.name
-  const link = cmd.args.link
-  const presetsStream = await ipc.presets({ link, command })
-  const { presets } = await opwait(presetsStream)
-  return presets?.flags ? presets.flags.split(' ') : []
 }

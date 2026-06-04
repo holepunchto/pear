@@ -1,7 +1,8 @@
 'use strict'
+const context = require('../context')
 const path = require('bare-path')
 const os = require('bare-os')
-const { outputter, password } = require('pear-terminal')
+const { outputter, password } = require('../lib/terminal.js')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
 const fs = require('bare-fs')
@@ -218,7 +219,7 @@ class Multisig {
 
   constructor(cmd) {
     this.cmd = cmd
-    this.ipc = global.Pear[global.Pear.constructor.IPC]
+    this.ipc = context.getIPC()
     this.json = cmd.command.flags.json && replacer
     this.config = cmd.command.flags.config ?? path.resolve('pear.json')
   }

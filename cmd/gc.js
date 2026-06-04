@@ -1,6 +1,7 @@
 'use strict'
 const plink = require('pear-link')
-const { outputter, confirm, ansi } = require('pear-terminal')
+const context = require('../context')
+const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
@@ -13,7 +14,7 @@ const output = outputter('gc', {
 })
 
 module.exports = async function gc(cmd) {
-  const ipc = global.Pear[global.Pear.constructor.IPC]
+  const ipc = context.getIPC()
   const { command } = cmd
   const { json } = command.parent.flags
   const gc = new GC()
@@ -23,31 +24,8 @@ module.exports = async function gc(cmd) {
 }
 
 class GC {
-  releases() {
-    return null
-  }
-
   sidecars() {
     return { pid: Bare.pid }
-  }
-
-  async assets(cmd) {
-    const { command } = cmd
-    const link = command.args.link
-    if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
-    const dialog =
-      ansi.warning +
-      `  ${ansi.bold('WARNING')} synced assets will be cleared from disk. To confirm type "CLEAR"\n\n`
-    const target = link || 'all assets'
-    const ask = `Clear ${target}`
-    const delim = '?'
-    const validation = (v) => v === 'CLEAR'
-    const msg = '\n' + ansi.cross + ' type uppercase CLEAR to confirm\n'
-    await confirm(dialog, ask, delim, validation, msg)
-    return { link }
   }
 
   cores(cmd) {

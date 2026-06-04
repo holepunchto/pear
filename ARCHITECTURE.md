@@ -28,12 +28,15 @@ swap: incremental integer dirname (default: 0) - incremented with `swap + 1 & 3`
     - /prebuilds <-- native bundled prebuilds
   - /current -> symlink -> /by-dkey/[platform-dkey]/[swap]
   - /next -> symlink -> /by-dkey/[platform-dkey]/[swap] <-- Windows only, atomic swap
-  - /bin - prefixed to PATH to enable pear executable and pear run [key] --save-command flow
+  - /bin - prefixed to PATH to enable pear executable and saved-command flow
     - /pear -> symlink -> ../current/by-arch/[os]-[arch]/bin/pear-runtime <-- linux/mac
     - /pear.cmd | pear.ps1 -> win cmd/powershell script wrapper for ../current/by-arch/[os]-[arch]/bin/pear-runtime.exe
     - /[name] | ([name].cmd | [name].ps1) -> reserved
   - /assets/[random] -> assets (such as UI Runtimes) are dumped here, link<->path is stored in platform db
 ```
+
+The repository-level `pear.dev`, `pear.cmd`, and `pear.ps1` files are localdev
+wrappers. They run `boot.js` with the checkout's `bare-runtime` dev dependency.
 
 `boot.bundle` has just enough code to run itself with the bare js runtime and open the hyperdrive that contains the rest of the code.
 
