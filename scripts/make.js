@@ -9,6 +9,19 @@ const host = `${platform}-${arch}`
 const bin = isWindows ? 'pear.exe' : 'pear'
 const out = path.join('.', 'by-arch', host, 'bin')
 
+const signFlags = []
+const sign = !!(env.MAC_CODESIGN_IDENTITY || env.WINDOWS_CERT_SHA1 || env.KEYCHAIN_PROFILE)
+if (sign) {
+  signFlags.push('--sign')
+  if (env.WINDOWS_CERT_SHA1) signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
+  if (env.MAC_CODESIGN_IDENTITY) {
+    signFlags.push('--identity', env.MAC_CODESIGN_IDENTITY)
+    signFlags.push('--installer-identity', env.MAC_CODESIGN_IDENTITY)
+    signFlags.push('--application-identity', env.MAC_CODESIGN_IDENTITY)
+  }
+  if (env.KEYCHAIN_PROFILE) signFlags.push('--keychain', env.KEYCHAIN_PROFILE)
+}
+
 const child = spawn(
   'bare-build',
   [
@@ -19,6 +32,7 @@ const child = spawn(
     'pear',
     '--description',
     '"Pear runtime command line interface"',
+    ...signFlags,
     '--host',
     host,
     '--out',
