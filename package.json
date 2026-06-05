@@ -55,7 +55,7 @@
     "pear-inspect": "^1.2.5",
     "pear-install": "^1.0.8",
     "pear-ipc": "^6.11.0",
-    "pear-link": "^4.1.0",
+    "pear-link": "^5.0.0",
     "pear-opstream": "^1.0.0",
     "pear-opwait": "^1.0.0",
     "pear-runtime-updater": "^3.1.0",
