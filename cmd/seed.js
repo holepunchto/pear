@@ -51,7 +51,7 @@ module.exports = async function seed(cmd) {
       key: 'contentKey',
       label: appendMode ? `${ansi.gray('...')} content key` : 'Content Key:',
       initial: loading,
-      transform: (v) => ansi.gray(v)
+      transform: (v) => (v === undefined ? ansi.yellow('loading...') : ansi.gray(v))
     },
     {
       key: 'firewalled',
