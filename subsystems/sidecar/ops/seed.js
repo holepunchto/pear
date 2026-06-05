@@ -114,16 +114,7 @@ module.exports = class Seed extends Opstream {
 
     await pod.join({ server: true })
 
-    try {
-      await pod.drive.get('/package.json')
-    } catch (err) {
-      if (err.code !== 'DECODING_ERROR') throw err
-      throw ERR_PERMISSION_REQUIRED('Encryption key required', {
-        key,
-        encrypted: true
-      })
-    }
-
+    pod.drive.db.core.download({ start: 0, end: -1 })
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ pod }))
     }, statsInterval)
