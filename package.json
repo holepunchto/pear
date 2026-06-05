@@ -17,6 +17,7 @@
     "make": "bare scripts/make.js production",
     "make:stage": "bare scripts/make.js stage",
     "make:dev": "bare scripts/make.js dev",
+    "build:deploy": "bare scripts/build-deploy.js",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
