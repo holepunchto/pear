@@ -1,16 +1,16 @@
 'use strict'
 
 const { spawn } = require('bare-subprocess')
+const { platform, arch, isWindows } = require('which-runtime')
 
-const hosts = ['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-x64', 'win32-arm64', 'win32-x64']
-const args = ['--package', './package.json', '--target', './out/build']
+const host = `${platform}-${arch}`
+const app = `./by-arch/${host}/bin/pear${isWindows ? '.exe' : ''}`
 
-for (const host of hosts) {
-  const app = `./by-arch/${host}/bin/pear${host.startsWith('win32-') ? '.exe' : ''}`
-  args.push(`--${host}-app`, app)
-}
-
-const child = spawn('pear-build', args, { stdio: 'inherit', shell: true })
+const child = spawn(
+  'pear-build',
+  ['--package', './package.json', `--${host}-app`, app, '--target', './out/build'],
+  { stdio: 'inherit', shell: true }
+)
 
 child.on('exit', (code, signal) => {
   Bare.exitCode = signal ? 128 + signal : code

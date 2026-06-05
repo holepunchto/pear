@@ -1,0 +1,298 @@
+name: Build Release
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+      channel:
+        type: string
+        default: production
+      run-stage:
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        description: Select the channel
+        default: production
+        options:
+          - production
+          - stage
+          - dev
+        required: true
+      run-stage:
+        type: boolean
+        description: Stage the merged deploy folder
+        default: false
+
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  CHANNEL: ${{ inputs.channel || github.event.inputs.channel || 'production' }}
+
+jobs:
+  build-linux-x64:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if [ "$CHANNEL" = "production" ]; then
+            npm run make
+          else
+            npm run "make:$CHANNEL"
+          fi
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-linux-x64
+          path: out/build
+          if-no-files-found: error
+
+  build-linux-arm64:
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04-arm
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if [ "$CHANNEL" = "production" ]; then
+            npm run make
+          else
+            npm run "make:$CHANNEL"
+          fi
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-linux-arm64
+          path: out/build
+          if-no-files-found: error
+
+  build-macos-arm64:
+    permissions:
+      contents: read
+    runs-on: macos-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if [ "$CHANNEL" = "production" ]; then
+            npm run make
+          else
+            npm run "make:$CHANNEL"
+          fi
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-darwin-arm64
+          path: out/build
+          if-no-files-found: error
+
+  build-macos-x64:
+    permissions:
+      contents: read
+    runs-on: macos-13
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if [ "$CHANNEL" = "production" ]; then
+            npm run make
+          else
+            npm run "make:$CHANNEL"
+          fi
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-darwin-x64
+          path: out/build
+          if-no-files-found: error
+
+  build-win32-x64:
+    permissions:
+      contents: read
+    runs-on: windows-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if ($env:CHANNEL -eq 'production') {
+            npm run make
+          } else {
+            npm run "make:$env:CHANNEL"
+          }
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-win32-x64
+          path: out/build
+          if-no-files-found: error
+
+  build-win32-arm64:
+    permissions:
+      contents: read
+    runs-on: windows-11-arm
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - name: Build deploy artifact
+        run: |
+          if ($env:CHANNEL -eq 'production') {
+            npm run make
+          } else {
+            npm run "make:$env:CHANNEL"
+          }
+          npm run build:deploy
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy-win32-arm64
+          path: out/build
+          if-no-files-found: error
+
+  deploy:
+    needs:
+      - build-linux-x64
+      - build-linux-arm64
+      - build-macos-arm64
+      - build-macos-x64
+      - build-win32-x64
+      - build-win32-arm64
+    if: ${{ !cancelled() && !failure() }}
+    permissions:
+      actions: read
+      contents: read
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: deploy-*
+          path: out/build
+          merge-multiple: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: deploy
+          path: out/build
+          if-no-files-found: error
+
+  stage:
+    needs: deploy
+    if: >-
+      ${{ !cancelled()
+        && !failure()
+        && (inputs.run-stage == true || github.event.inputs['run-stage'] == 'true') }}
+    permissions:
+      actions: read
+      contents: read
+    runs-on: macos-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: holepunchto/actions/node-base@v1
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: deploy
+          path: out/build
+
+      - name: Stage deploy folder
+        run: |
+          npm run make:dev
+          upgrade=$(node -p "require('./package.json').upgrade[process.env.CHANNEL]")
+          if [ -z "$upgrade" ] || [ "$upgrade" = "undefined" ]; then
+            echo "Missing package.json upgrade link for channel: $CHANNEL"
+            exit 1
+          fi
+          ./by-arch/darwin-arm64/bin/pear stage "$upgrade" out/build
+
+  release:
+    needs: deploy
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    permissions:
+      actions: read
+      contents: write
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: deploy
+          path: out/build
+
+      - name: Package deploy folder
+        run: tar -czf "pear-${GITHUB_REF_NAME}-deploy.tar.gz" -C out build
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "pear-${GITHUB_REF_NAME}-deploy.tar.gz" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "pear-${GITHUB_REF_NAME}-deploy.tar.gz" --title "$GITHUB_REF_NAME"
+          fi
