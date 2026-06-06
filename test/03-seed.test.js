@@ -4,7 +4,6 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
-const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
 test('pear seed basic stage and seed', async function ({ ok, plan, comment, teardown, timeout }) {
@@ -127,9 +126,9 @@ test('pear seed fully syncs db and blobs cores', async function ({
   await sourceStore.ready()
   const sourceDrive = new Hyperdrive(sourceStore)
   await sourceDrive.ready()
-  await new Localdrive(Helper.fixture('minimal')).mirror(sourceDrive).done()
+  await sourceDrive.put('/index.js', 'module.exports = {}\n')
+  await sourceDrive.put('/test.txt', 'test')
   const sourceBlobs = await sourceDrive.getBlobs()
-  const blocks = sourceDrive.db.core.length + sourceBlobs.core.length
 
   let dbBlocks = 0
   sourceDrive.db.core.on('upload', () => dbBlocks++)
@@ -149,12 +148,13 @@ test('pear seed fully syncs db and blobs cores', async function ({
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  comment('seeding external app')
+  comment('seeding source drive')
   const link = `pear://${hypercoreid.encode(sourceDrive.key)}`
   const seeding = helper.seed({ link })
   teardown(() => Helper.teardownStream(seeding))
-  await Helper.pick(seeding, { tag: 'stats', data: { download: { totalBlocks: blocks } } })
+  const totalBlocks = sourceDrive.db.core.length + sourceBlobs.core.length
+  await Helper.pick(seeding, { tag: 'stats', data: { download: { totalBlocks } } })
 
-  is(dbBlocks, sourceDrive.db.core.length, 'seed synced db core')
-  is(blobBlocks, sourceBlobs.core.length, 'seed synced blobs core')
+  is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
+  is(blobBlocks, sourceBlobs.core.length, 'synced blobs core')
 })
