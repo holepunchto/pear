@@ -46,8 +46,8 @@ async function make() {
     })
   })
 
-  if (buildExitCode !== 0) throw new Error(`bare-build failed with exit code ${buildExitCode}`)
-  else console.log('bare-build successful')
+  if (buildExitCode === 0) console.log('bare-build successful')
+  else throw new Error(`bare-build failed with exit code ${buildExitCode}`)
 
   if (env.CI) {
     if (sign && env.KEYCHAIN_PROFILE) {
@@ -71,9 +71,8 @@ async function make() {
         })
       })
 
-      if (notarizeExitCode !== 0)
-        throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
-      else console.log('Notarization successful')
+      if (notarizeExitCode === 0) console.log('Notarization successful')
+      else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
     }
 
     console.log('Copying binary to out/make for CI release...')
