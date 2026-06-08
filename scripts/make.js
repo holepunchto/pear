@@ -47,13 +47,15 @@ async function make() {
 
   if (exitCode !== 0) throw new Error(`bare-build failed with exit code ${exitCode}`)
 
-  const src = path.join(out, bin)
-  const ext = isWindows ? '.exe' : ''
-  const dest = path.join('out', 'make', `pear-${host}${ext}`)
+  if (env.CI) {
+    const src = path.join(out, bin)
+    const ext = isWindows ? '.exe' : ''
+    const dest = path.join('out', 'make', `pear-${host}${ext}`)
 
-  await fsp.mkdir(path.dirname(dest), { recursive: true })
-  await fsp.copyFile(src, dest)
-  await fsp.chmod(dest, 0o755)
+    await fsp.mkdir(path.dirname(dest), { recursive: true })
+    await fsp.copyFile(src, dest)
+    await fsp.chmod(dest, 0o755)
+  }
 }
 
 make().catch((err) => {
