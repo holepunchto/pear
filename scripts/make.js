@@ -19,6 +19,7 @@ async function make() {
     if (env.KEYCHAIN_PROFILE) signFlags.push('--keychain', env.KEYCHAIN_PROFILE)
   }
 
+  console.log('Running bare-build for channel', channel, sign ? 'with signing' : 'without signing')
   const child = spawn(
     'bare-build',
     [
@@ -48,6 +49,7 @@ async function make() {
   if (exitCode !== 0) throw new Error(`bare-build failed with exit code ${exitCode}`)
 
   if (env.CI) {
+    console.log('Copying binary to out/make for CI release')
     const src = path.join(out, bin)
     const ext = isWindows ? '.exe' : ''
     const dest = path.join('out', 'make', `pear-${host}${ext}`)
