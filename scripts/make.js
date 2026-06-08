@@ -39,16 +39,14 @@ const child = spawn(
 )
 
 child.on('exit', (code, signal) => {
-  if (signal) return Bare.exit(128 + signal)
-  if (code !== 0) return Bare.exit(code)
+  Bare.exitCode = signal ? 128 + signal : code
+  if (code === 0 && !signal) {
+    const src = path.join(out, bin)
+    const ext = isWindows ? '.exe' : ''
+    const dest = path.join('out', 'make', `pear-${host}${ext}`)
 
-  const src = path.join(out, bin)
-  const ext = isWindows ? '.exe' : ''
-  const dest = path.join('out', 'make', `pear-${host}${ext}`)
-
-  fs.mkdirSync(path.dirname(dest), { recursive: true })
-  fs.copyFileSync(src, dest)
-  fs.chmodSync(dest, 0o755)
-
-  console.log(`wrote ${dest}`)
+    fs.mkdirSync(path.dirname(dest), { recursive: true })
+    fs.copyFileSync(src, dest)
+    fs.chmodSync(dest, 0o755)
+  }
 })
