@@ -110,6 +110,21 @@ test('pear seed announces, join, drop', async function ({
   ok(dropped, 'peer drops')
 })
 
+test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  const seeding = helper.seed({ link })
+  teardown(() => Helper.teardownStream(seeding))
+  const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
+
+  is(stats.contentKey, 'pending', 'content key is pending')
+})
+
 test('pear seed fully syncs db and blobs cores', async function ({
   is,
   plan,

@@ -24,7 +24,7 @@ module.exports = class Seed extends Opstream {
         peers: drive.core.peers.length,
         driveKey: drive.key?.toString('hex'),
         discoveryKey: drive.discoveryKey?.toString('hex'),
-        contentKey: drive.contentKey?.toString('hex'),
+        contentKey: drive.contentKey?.toString('hex') ?? 'pending',
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,
