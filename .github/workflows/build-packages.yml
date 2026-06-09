@@ -1,0 +1,50 @@
+name: Build Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        default: dev
+        options:
+          - dev
+          - stage
+          - production
+      signed:
+        type: boolean
+        default: false
+      run-macos:
+        type: boolean
+        default: true
+      run-windows:
+        type: boolean
+        default: true
+      run-stage:
+        type: boolean
+        default: false
+      stage-dry-run:
+        type: boolean
+        default: true
+      notify:
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: read
+  actions: write
+  pull-requests: write
+
+jobs:
+  build:
+    uses: holepunchto/pear-ci-build/.github/workflows/build.yml@main
+    secrets: inherit
+    with:
+      ref: ${{ github.sha }}
+      channel: ${{ inputs.channel }}
+      signed: ${{ inputs.signed }}
+      run-macos: ${{ inputs.run-macos }}
+      run-windows: ${{ inputs.run-windows }}
+      run-stage: ${{ inputs.run-stage }}
+      stage-dry-run: ${{ inputs.stage-dry-run }}
+      notify: ${{ inputs.notify }}
