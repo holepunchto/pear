@@ -25,9 +25,18 @@ on:
       stage-dry-run:
         type: boolean
         default: true
+      stage-namespace:
+        type: string
+        default: ''
+      stage-primary-key:
+        type: string
+        default: '0000000000000000000000000000000000000000000000000000000000000000'
       notify:
         type: boolean
         default: true
+      slack-channel-id:
+        type: string
+        default: C0B65QL8L84
 
 permissions:
   contents: write
@@ -47,4 +56,7 @@ jobs:
       run-windows: ${{ inputs.run-windows }}
       run-stage: ${{ inputs.run-stage }}
       stage-dry-run: ${{ inputs.stage-dry-run }}
+      stage-namespace: ${{ inputs.stage-namespace }}
+      stage-primary-key: ${{ inputs.stage-primary-key }}
       notify: ${{ inputs.notify }}
+      slack-channel-id: ${{ inputs.slack-channel-id }}
