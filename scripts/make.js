@@ -1,9 +1,11 @@
 const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const env = require('bare-env')
+const os = require('bare-os')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
 
+const gc = []
 async function make() {
   const channel = global.Bare.argv[2] || env.CHANNEL || 'production'
   const host = `${platform}-${arch}`
@@ -55,17 +57,29 @@ async function make() {
 
   if (env.CI) {
     if (sign && env.KEYCHAIN_PROFILE) {
+      console.log('Compressing binary into a zip file for notarization...')
+      const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'pear-notarize-'))
+      gc.push(tmpDir)
+      const zipPath = path.join(tmpDir, 'pear.zip')
+      const compress = spawn(
+        'ditto',
+        ['-c', '-k', '--sequesterRsrc', path.join(out, bin), zipPath],
+        { stdio: 'inherit' }
+      )
+
+      const compressExitCode = await new Promise((resolve) => {
+        compress.on('exit', (code, signal) => {
+          resolve(signal ? 128 + signal : code)
+        })
+      })
+
+      if (compressExitCode === 0) console.log('Compression successful')
+      else throw new Error(`Compression failed with exit code ${compressExitCode}`)
+
       console.log('Notarizing binary for CI release...')
       const notarize = spawn(
         'xcrun',
-        [
-          'notarytool',
-          'submit',
-          path.join(out, bin),
-          '--keychain-profile',
-          env.KEYCHAIN_PROFILE,
-          '--wait'
-        ],
+        ['notarytool', 'submit', zipPath, '--keychain-profile', env.KEYCHAIN_PROFILE, '--wait'],
         { stdio: 'inherit', shell: true }
       )
 
@@ -92,7 +106,17 @@ async function make() {
   }
 }
 
-make().catch((err) => {
-  console.error(err)
-  Bare.exitCode = 1
-})
+make()
+  .catch((err) => {
+    console.error(err)
+    Bare.exitCode = 1
+  })
+  .finally(async () => {
+    for (const dir of gc) {
+      try {
+        await fsp.rm(dir, { recursive: true, force: true })
+      } catch (err) {
+        console.error(`Failed to cleanup ${dir}:`, err)
+      }
+    }
+  })
