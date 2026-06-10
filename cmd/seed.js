@@ -51,7 +51,7 @@ module.exports = async function seed(cmd) {
       key: 'contentKey',
       label: appendMode ? `${ansi.gray('...')} content key` : 'Content Key:',
       initial: loading,
-      transform: (v) => ansi.gray(v)
+      transform: (v) => (v === 'pending' ? ansi.yellow(v) : ansi.gray(v))
     },
     {
       key: 'firewalled',
@@ -151,7 +151,9 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         discoveryKey: hypercoreid.normalize(discoveryKey),
-        contentKey: contentKey && hypercoreid.normalize(contentKey),
+        contentKey: hypercoreid.isValid(contentKey)
+          ? hypercoreid.normalize(contentKey)
+          : contentKey,
         firewalled,
         natType,
         network

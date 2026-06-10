@@ -109,3 +109,67 @@ test('pear seed announces, join, drop', async function ({
   const dropped = await until['peer-remove']
   ok(dropped, 'peer drops')
 })
+
+test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  const seeding = helper.seed({ link })
+  teardown(() => Helper.teardownStream(seeding))
+  const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
+
+  is(stats.contentKey, 'pending', 'content key is pending')
+})
+
+test('pear seed fully syncs db and blobs cores', async function ({
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout,
+  tmp
+}) {
+  timeout(180000)
+  plan(2)
+
+  const sourceStore = new Corestore(await tmp())
+  teardown(() => sourceStore.close())
+  await sourceStore.ready()
+  const sourceDrive = new Hyperdrive(sourceStore)
+  await sourceDrive.ready()
+  await sourceDrive.put('/index.js', 'module.exports = {}\n')
+  await sourceDrive.put('/test.txt', 'test')
+  const sourceBlobs = await sourceDrive.getBlobs()
+
+  let dbBlocks = 0
+  sourceDrive.db.core.on('upload', () => dbBlocks++)
+
+  let blobBlocks = 0
+  sourceBlobs.core.on('upload', () => blobBlocks++)
+
+  const sourceSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+  teardown(() => sourceSwarm.destroy())
+  sourceSwarm.on('connection', (conn) => {
+    sourceStore.replicate(conn)
+  })
+  const topic = sourceSwarm.join(sourceDrive.discoveryKey, { server: true, client: false })
+  await topic.flushed()
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  comment('seeding source drive')
+  const link = `pear://${hypercoreid.encode(sourceDrive.key)}`
+  const seeding = helper.seed({ link })
+  teardown(() => Helper.teardownStream(seeding))
+  const totalBlocks = sourceDrive.db.core.length + sourceBlobs.core.length
+  await Helper.pick(seeding, { tag: 'stats', data: { download: { totalBlocks } } })
+
+  is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
+  is(blobBlocks, sourceBlobs.core.length, 'synced blobs core')
+})

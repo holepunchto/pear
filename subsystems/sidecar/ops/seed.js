@@ -24,7 +24,7 @@ module.exports = class Seed extends Opstream {
         peers: drive.core.peers.length,
         driveKey: drive.key?.toString('hex'),
         discoveryKey: drive.discoveryKey?.toString('hex'),
-        contentKey: drive.contentKey?.toString('hex'),
+        contentKey: drive.contentKey?.toString('hex') ?? 'pending',
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,
@@ -101,7 +101,7 @@ module.exports = class Seed extends Opstream {
 
     await replicator.join(this.sidecar.swarm, { server: true, client: true })
 
-    await drive.get('/package.json')
+    drive.db.core.download({ start: 0, end: -1 })
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ drive }))
