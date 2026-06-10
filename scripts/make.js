@@ -5,6 +5,14 @@ const os = require('bare-os')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
 
+function waitForExit(child) {
+  return new Promise((resolve) => {
+    child.on('exit', (code, signal) => {
+      resolve(signal ? 128 + signal : code)
+    })
+  })
+}
+
 const gc = []
 async function make() {
   const channel = global.Bare.argv[2] || env.CHANNEL || 'production'
@@ -46,12 +54,7 @@ async function make() {
     { stdio: 'inherit', shell: true }
   )
 
-  const buildExitCode = await new Promise((resolve) => {
-    build.on('exit', (code, signal) => {
-      resolve(signal ? 128 + signal : code)
-    })
-  })
-
+  const buildExitCode = await waitForExit(build)
   if (buildExitCode === 0) console.log('bare-build successful')
   else throw new Error(`bare-build failed with exit code ${buildExitCode}`)
 
@@ -64,12 +67,7 @@ async function make() {
       stdio: 'inherit'
     })
 
-    const compressExitCode = await new Promise((resolve) => {
-      compress.on('exit', (code, signal) => {
-        resolve(signal ? 128 + signal : code)
-      })
-    })
-
+    const compressExitCode = await waitForExit(compress)
     if (compressExitCode === 0) console.log('Compression successful')
     else throw new Error(`Compression failed with exit code ${compressExitCode}`)
 
@@ -80,12 +78,7 @@ async function make() {
       { stdio: 'inherit', shell: true }
     )
 
-    const notarizeExitCode = await new Promise((resolve) => {
-      notarize.on('exit', (code, signal) => {
-        resolve(signal ? 128 + signal : code)
-      })
-    })
-
+    const notarizeExitCode = await waitForExit(notarize)
     if (notarizeExitCode === 0) console.log('Notarization successful')
     else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
   }
