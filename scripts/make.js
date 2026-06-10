@@ -15,7 +15,11 @@ async function make() {
   if (sign) {
     signFlags.push('--sign')
     if (env.WINDOWS_CERT_SHA1) signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
-    if (env.MAC_CODESIGN_IDENTITY) signFlags.push('--identity', env.MAC_CODESIGN_IDENTITY)
+    if (env.MAC_CODESIGN_IDENTITY) {
+      signFlags.push('--hardened-runtime')
+      signFlags.push('--entitlements', path.resolve(__dirname, '..', 'entitlements.plist'))
+      signFlags.push('--identity', env.MAC_CODESIGN_IDENTITY)
+    }
     if (env.KEYCHAIN_PROFILE) signFlags.push('--keychain', env.KEYCHAIN_PROFILE)
   }
 
