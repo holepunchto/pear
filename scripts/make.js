@@ -55,8 +55,6 @@ async function make() {
   if (buildExitCode === 0) console.log('bare-build successful')
   else throw new Error(`bare-build failed with exit code ${buildExitCode}`)
 
-  if (!env.CI) return
-
   if (sign && env.KEYCHAIN_PROFILE) {
     console.log('Compressing binary into a zip file for notarization...')
     const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'pear-notarize-'))
@@ -75,7 +73,7 @@ async function make() {
     if (compressExitCode === 0) console.log('Compression successful')
     else throw new Error(`Compression failed with exit code ${compressExitCode}`)
 
-    console.log('Notarizing binary for CI release...')
+    console.log('Notarizing binary...')
     const notarize = spawn(
       'xcrun',
       ['notarytool', 'submit', zipPath, '--keychain-profile', env.KEYCHAIN_PROFILE, '--wait'],
@@ -92,16 +90,18 @@ async function make() {
     else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
   }
 
-  console.log('Copying binary to out/make for CI release...')
-  const src = path.join(out, bin)
-  const ext = isWindows ? '.exe' : ''
-  const dest = path.join('out', 'make', `pear-${host}${ext}`)
+  if (env.CI) {
+    console.log('Copying binary to out/make for CI release...')
+    const src = path.join(out, bin)
+    const ext = isWindows ? '.exe' : ''
+    const dest = path.join('out', 'make', `pear-${host}${ext}`)
 
-  await fsp.mkdir(path.dirname(dest), { recursive: true })
-  await fsp.copyFile(src, dest)
-  await fsp.chmod(dest, 0o755)
+    await fsp.mkdir(path.dirname(dest), { recursive: true })
+    await fsp.copyFile(src, dest)
+    await fsp.chmod(dest, 0o755)
 
-  console.log(`Binary copied to ${dest}`)
+    console.log(`Binary copied to ${dest}`)
+  }
 }
 
 make()
