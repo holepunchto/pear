@@ -10,12 +10,20 @@ on:
           - dev
           - stage
           - production
-      signed:
+      upgrade-key:
+        type: string
+        description: Value for package.json upgrade field
+        default: ''
+        required: false
+      run-linux-arm:
         type: boolean
-        default: false
+        default: true
       run-macos:
         type: boolean
         default: true
+      run-macos-intel:
+        type: boolean
+        default: false
       run-windows:
         type: boolean
         default: true
@@ -28,15 +36,9 @@ on:
       stage-namespace:
         type: string
         default: ''
-      stage-primary-key:
-        type: string
-        default: '0000000000000000000000000000000000000000000000000000000000000000'
       notify:
         type: boolean
         default: true
-      slack-channel-id:
-        type: string
-        default: C0B65QL8L84
 
 permissions:
   contents: write
@@ -51,12 +53,12 @@ jobs:
     with:
       ref: ${{ github.sha }}
       channel: ${{ inputs.channel }}
-      signed: ${{ inputs.signed }}
+      upgrade-key: ${{ inputs.upgrade-key }}
+      run-linux-arm: ${{ inputs.run-linux-arm }}
       run-macos: ${{ inputs.run-macos }}
+      run-macos-intel: ${{ inputs.run-macos-intel }}
       run-windows: ${{ inputs.run-windows }}
       run-stage: ${{ inputs.run-stage }}
       stage-dry-run: ${{ inputs.stage-dry-run }}
       stage-namespace: ${{ inputs.stage-namespace }}
-      stage-primary-key: ${{ inputs.stage-primary-key }}
       notify: ${{ inputs.notify }}
-      slack-channel-id: ${{ inputs.slack-channel-id }}
