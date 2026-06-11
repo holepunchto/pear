@@ -51,7 +51,7 @@ async function make() {
       out,
       `targets/main.${channel}.js`
     ],
-    { stdio: 'inherit', shell: true }
+    { stdio: 'inherit', shell: isWindows }
   )
 
   const buildExitCode = await waitForExit(build)
@@ -75,7 +75,7 @@ async function make() {
     const notarize = spawn(
       'xcrun',
       ['notarytool', 'submit', zipPath, '--keychain-profile', env.KEYCHAIN_PROFILE, '--wait'],
-      { stdio: 'inherit', shell: true }
+      { stdio: 'inherit' }
     )
 
     const notarizeExitCode = await waitForExit(notarize)
