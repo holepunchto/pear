@@ -42,6 +42,11 @@ module.exports = async function seed(cmd) {
       transform: (v) => ansi.gray(v)
     },
     {
+      key: 'driveLength',
+      label: appendMode ? `${ansi.gray('...')} drive length` : 'Drive Length:',
+      initial: loading
+    },
+    {
       key: 'discoveryKey',
       label: appendMode ? `${ansi.gray('...')} discovery key` : 'Discovery Key:',
       initial: loading,
@@ -64,6 +69,12 @@ module.exports = async function seed(cmd) {
       label: appendMode ? `${ansi.gray('...')} NAT type` : 'NAT Type:',
       initial: loading,
       transform: (v) => String(v ?? 'unknown').toLowerCase()
+    },
+    {
+      key: 'whoami',
+      label: appendMode ? `${ansi.gray('...')} whoami` : 'Whoami:',
+      initial: loading,
+      transform: (v) => `${ansi.bold(v.slice(0, 4))}${ansi.gray(v.slice(4))}`
     },
     {
       key: 'network',
@@ -143,19 +154,32 @@ module.exports = async function seed(cmd) {
       peers.append([msg])
       layout.print(stdio)
     },
-    stats({ peers, driveKey, discoveryKey, contentKey, firewalled, natType, upload, download }) {
+    stats({
+      peers,
+      driveKey,
+      driveLength,
+      discoveryKey,
+      contentKey,
+      firewalled,
+      natType,
+      whoami,
+      upload,
+      download
+    }) {
       const network = appendMode
         ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)}`
         : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
 
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
+        driveLength,
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
           : contentKey,
         firewalled,
         natType,
+        whoami: hypercoreid.normalize(whoami),
         network
       })
 

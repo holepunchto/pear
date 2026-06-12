@@ -8,7 +8,7 @@ const Helper = require('./helper')
 
 test('pear seed basic stage and seed', async function ({ ok, plan, comment, teardown, timeout }) {
   timeout(180000)
-  plan(3)
+  plan(5)
 
   const dir = Helper.fixture('versions')
 
@@ -35,12 +35,16 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }, { tag: 'stats' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const stats = await until.stats
+  ok(Number.isInteger(stats.driveLength), 'drive length is valid')
+  ok(hypercoreid.isValid(stats.whoami), 'whoami is valid')
 })
 
 test('pear seed announces, join, drop', async function ({
