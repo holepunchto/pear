@@ -85,9 +85,9 @@ module.exports = async function seed(cmd) {
   const peers = new Table()
   const layout = new TableLayout(
     [
-      { type: 'border' },
+      { type: 'border', char: ' ' },
       { type: 'table', table: stats },
-      { type: 'border' },
+      { type: 'border', char: '─' },
       { type: 'table', table: peers }
     ],
     { appendMode }
