@@ -6,9 +6,16 @@ const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
-test('pear seed basic stage and seed', async function ({ ok, plan, comment, teardown, timeout }) {
+test('pear seed basic stage and seed', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
   timeout(180000)
-  plan(5)
+  plan(15)
 
   const dir = Helper.fixture('versions')
 
@@ -24,8 +31,9 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, { tag: 'final' })
-  ok(staged.success, 'stage succeeded')
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendum = await staged.addendum
+  ok((await staged.final).success, 'stage succeeded')
 
   comment('seeding')
   const seeding = helper.seed({
@@ -43,8 +51,18 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const stats = await until.stats
-  ok(Number.isInteger(stats.driveLength), 'drive length is valid')
-  ok(hypercoreid.isValid(stats.whoami), 'whoami is valid')
+  ok(Number.isInteger(stats.peers), 'peers')
+  ok(hypercoreid.isValid(stats.driveKey), 'driveKey')
+  is(stats.driveLength, addendum.version, 'driveLength')
+  ok(hypercoreid.isValid(stats.discoveryKey), 'discoveryKey')
+  ok(hypercoreid.isValid(stats.contentKey), 'contentKey')
+  ok(hypercoreid.isValid(stats.whoami), 'whoami')
+  ok(Number.isInteger(stats.upload.totalBytes), 'upload.totalBytes')
+  ok(Number.isInteger(stats.upload.totalBlocks), 'upload.totalBlocks')
+  ok(Number.isFinite(stats.upload.speed), 'upload.speed')
+  ok(Number.isInteger(stats.download.totalBytes), 'download.totalBytes')
+  ok(Number.isInteger(stats.download.totalBlocks), 'download.totalBlocks')
+  ok(Number.isFinite(stats.download.speed), 'download.speed')
 })
 
 test('pear seed announces, join, drop', async function ({
