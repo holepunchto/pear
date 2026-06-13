@@ -52,18 +52,18 @@ test('pear seed basic stage and seed', async function ({
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const stats = await until.stats
-  ok(Number.isInteger(stats.peers), 'stats have peers')
   ok(hypercoreid.isValid(stats.driveKey), 'stats have driveKey')
   is(stats.driveLength, addendum.version, 'stats have driveLength')
   ok(hypercoreid.isValid(stats.discoveryKey), 'stats have discoveryKey')
   ok(hypercoreid.isValid(stats.contentKey), 'stats have contentKey')
   ok(hypercoreid.isValid(stats.whoami), 'stats have whoami')
+  ok(Number.isInteger(stats.peers), 'stats have peers')
+  ok(Number.isFinite(stats.upload.speed), 'stats have upload.speed')
   ok(Number.isInteger(stats.upload.totalBytes), 'stats have upload.totalBytes')
   ok(Number.isInteger(stats.upload.totalBlocks), 'stats have upload.totalBlocks')
-  ok(Number.isFinite(stats.upload.speed), 'stats have upload.speed')
+  ok(Number.isFinite(stats.download.speed), 'stats have download.speed')
   ok(Number.isInteger(stats.download.totalBytes), 'stats have download.totalBytes')
   ok(Number.isInteger(stats.download.totalBlocks), 'stats have download.totalBlocks')
-  ok(Number.isFinite(stats.download.speed), 'stats have download.speed')
 })
 
 test('pear seed announces, join, drop', async function ({
