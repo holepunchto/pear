@@ -33,7 +33,8 @@ test('pear seed basic stage and seed', async function ({
   teardown(() => Helper.teardownStream(staging))
   const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
   const addendum = await staged.addendum
-  ok((await staged.final).success, 'stage succeeded')
+  const final = await staged.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
   const seeding = helper.seed({
