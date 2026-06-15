@@ -57,7 +57,7 @@ async function make() {
       out,
       `targets/main.${channel}.js`
     ],
-    { stdio: 'inherit', shell: isWindows, env: { ...process.env, ...extraEnv } }
+    { stdio: 'inherit', shell: isWindows, env: { ...env, ...extraEnv } }
   )
 
   const buildExitCode = await waitForExit(build)
