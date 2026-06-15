@@ -27,7 +27,7 @@ async function make() {
   if (sign) {
     signFlags.push('--sign')
     if (env.WINDOWS_CERT_SHA1) {
-      extraEnv.PATH = `${findSigntoolDir()};${env.PATH}`
+      if (isWindows) extraEnv.PATH = `${findSigntoolDir()};${env.PATH}`
       signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
     }
 
