@@ -109,10 +109,10 @@ function findSigntoolDir() {
   if (!fs.existsSync(base)) throw new Error(`Windows SDK bin directory not found: ${base}`)
 
   const versions = fs
-    .readdirSync(base)
-    .filter((name) => fs.statSync(path.join(base, name)).isDirectory())
-    .sort()
-    .reverse()
+    .readdirSync(base, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^\d+(\.\d+)*$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort(semverSortDesc)
 
   for (const version of versions) {
     const candidate = path.join(base, version, 'x64', 'signtool.exe')
@@ -120,6 +120,19 @@ function findSigntoolDir() {
   }
 
   throw new Error('signtool.exe not found in Windows SDK')
+}
+
+function semverSortDesc(a, b) {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  const len = Math.max(pa.length, pb.length)
+
+  for (let i = 0; i < len; i++) {
+    const diff = (pb[i] ?? 0) - (pa[i] ?? 0)
+    if (diff !== 0) return diff
+  }
+
+  return 0
 }
 
 make()
