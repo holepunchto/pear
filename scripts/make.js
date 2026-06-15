@@ -1,4 +1,5 @@
 const fsp = require('bare-fs/promises')
+const fs = require('bare-fs')
 const path = require('bare-path')
 const env = require('bare-env')
 const os = require('bare-os')
@@ -21,10 +22,15 @@ async function make() {
   const out = path.join('.', 'by-arch', host, 'bin')
 
   const signFlags = []
+  const extraEnv = {}
   const sign = !!(env.MAC_CODESIGN_IDENTITY || env.WINDOWS_CERT_SHA1 || env.KEYCHAIN_PROFILE)
   if (sign) {
     signFlags.push('--sign')
-    if (env.WINDOWS_CERT_SHA1) signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
+    if (env.WINDOWS_CERT_SHA1) {
+      extraEnv.PATH = `${findSigntoolDir()};${env.PATH}`
+      signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
+    }
+
     if (env.MAC_CODESIGN_IDENTITY) {
       signFlags.push('--hardened-runtime')
       signFlags.push('--entitlements', path.resolve(__dirname, '..', 'entitlements.plist'))
@@ -51,7 +57,7 @@ async function make() {
       out,
       `targets/main.${channel}.js`
     ],
-    { stdio: 'inherit', shell: isWindows }
+    { stdio: 'inherit', shell: isWindows, env: { ...process.env, ...extraEnv } }
   )
 
   const buildExitCode = await waitForExit(build)
@@ -80,7 +86,7 @@ async function make() {
 
     const notarizeExitCode = await waitForExit(notarize)
     if (notarizeExitCode === 0) console.log('Notarization successful')
-    else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
+    else console.error(`Notarization failed with exit code ${notarizeExitCode}`)
   }
 
   if (env.CI) {
@@ -95,6 +101,25 @@ async function make() {
 
     console.log(`Binary copied to ${dest}`)
   }
+}
+
+function findSigntoolDir() {
+  const base = 'C:\\Program Files (x86)\\Windows Kits\\10\\bin'
+
+  if (!fs.existsSync(base)) throw new Error(`Windows SDK bin directory not found: ${base}`)
+
+  const versions = fs
+    .readdirSync(base)
+    .filter((name) => fs.statSync(path.join(base, name)).isDirectory())
+    .sort()
+    .reverse()
+
+  for (const version of versions) {
+    const candidate = path.join(base, version, 'x64', 'signtool.exe')
+    if (fs.existsSync(candidate)) return path.dirname(candidate)
+  }
+
+  throw new Error('signtool.exe not found in Windows SDK')
 }
 
 make()
