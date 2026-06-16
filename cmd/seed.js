@@ -74,7 +74,7 @@ module.exports = async function seed(cmd) {
       key: 'whoami',
       label: ctrlTTY ? 'Whoami:' : '... whoami',
       initial,
-      transform: (v) => (ctrlTTY ? `${v.slice(0, 4)}${ansi.gray(v.slice(4))}` : v)
+      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
     },
     {
       key: 'network',
@@ -147,7 +147,7 @@ module.exports = async function seed(cmd) {
     'peer-add': (info) => {
       info = hypercoreid.normalize(info)
       const msg = ctrlTTY
-        ? `${ansi.gray('o-o')} ${ansi.green('peer join')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+        ? `${ansi.gray('o-o')} ${ansi.green('peer join')} ${ansi.gray(info)}`
         : `o-o peer join ${info}`
       peers.append([msg])
       layout.print(stdio)
@@ -155,7 +155,7 @@ module.exports = async function seed(cmd) {
     'peer-remove': (info) => {
       info = hypercoreid.normalize(info)
       const msg = ctrlTTY
-        ? `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+        ? `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${ansi.gray(info)}`
         : `-_- peer drop ${info}`
       peers.append([msg])
       layout.print(stdio)
