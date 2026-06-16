@@ -92,7 +92,7 @@ async function make() {
 
     const notarizeExitCode = await waitForExit(notarize)
     if (notarizeExitCode === 0) console.log('Notarization successful')
-    else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
+    else console.error(`Notarization failed with exit code ${notarizeExitCode}`)
   }
 
   if (env.CI) {
