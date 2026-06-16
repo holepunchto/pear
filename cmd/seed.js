@@ -25,61 +25,61 @@ module.exports = async function seed(cmd) {
   }
   const id = Bare.pid
   const { width } = stdio.size()
-  const appendMode = json || tty === false || !isTTY || !width
-  const loading = ansi.dim('loading...')
+  const ctrlTTY = !json && tty !== false && isTTY && width
+  const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
   const stats = new DictTable([
     {
       key: 'link',
-      label: appendMode ? `${ansi.gray('...')} seeding` : 'Seeding:',
-      initial: loading,
-      transform: (v) => ansi.bold(ansi.green(v))
+      label: ctrlTTY ? 'Seeding:' : '... seeding',
+      initial,
+      transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
       key: 'driveKey',
-      label: appendMode ? `${ansi.gray('...')} drive key` : 'Drive Key:',
-      initial: loading,
-      transform: (v) => ansi.gray(v)
+      label: ctrlTTY ? 'Drive Key:' : '... drive key',
+      initial,
+      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
     },
     {
       key: 'driveLength',
-      label: appendMode ? `${ansi.gray('...')} drive length` : 'Drive Length:',
-      initial: loading
+      label: ctrlTTY ? 'Drive Length:' : '... drive length',
+      initial
     },
     {
       key: 'discoveryKey',
-      label: appendMode ? `${ansi.gray('...')} discovery key` : 'Discovery Key:',
-      initial: loading,
-      transform: (v) => ansi.gray(v)
+      label: ctrlTTY ? 'Discovery Key:' : '... discovery key',
+      initial,
+      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
     },
     {
       key: 'contentKey',
-      label: appendMode ? `${ansi.gray('...')} content key` : 'Content Key:',
-      initial: loading,
-      transform: (v) => (v === 'pending' ? ansi.yellow(v) : ansi.gray(v))
+      label: ctrlTTY ? 'Content Key:' : '... content key',
+      initial,
+      transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
     },
     {
       key: 'firewalled',
-      label: appendMode ? `${ansi.gray('...')} firewalled` : 'Firewalled:',
-      initial: loading,
+      label: ctrlTTY ? 'Firewalled:' : '... firewalled',
+      initial,
       transform: (v) => v ?? 'unknown'
     },
     {
       key: 'natType',
-      label: appendMode ? `${ansi.gray('...')} NAT type` : 'NAT Type:',
-      initial: loading,
+      label: ctrlTTY ? 'NAT Type:' : '... NAT type',
+      initial,
       transform: (v) => String(v ?? 'unknown').toLowerCase()
     },
     {
       key: 'whoami',
-      label: appendMode ? `${ansi.gray('...')} whoami` : 'Whoami:',
-      initial: loading,
-      transform: (v) => `${ansi.bold(v.slice(0, 4))}${ansi.gray(v.slice(4))}`
+      label: ctrlTTY ? 'Whoami:' : '... whoami',
+      initial,
+      transform: (v) => (ctrlTTY ? `${v.slice(0, 4)}${ansi.gray(v.slice(4))}` : v)
     },
     {
       key: 'network',
-      label: appendMode ? ansi.gray('---') : 'Network:',
-      initial: loading
+      label: ctrlTTY ? 'Network:' : '---',
+      initial
     }
   ])
   const peers = new Table()
@@ -90,10 +90,10 @@ module.exports = async function seed(cmd) {
       { type: 'border', char: '─' },
       { type: 'table', table: peers }
     ],
-    { appendMode }
+    { appendMode: !ctrlTTY }
   )
 
-  if (!appendMode) {
+  if (ctrlTTY) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       // Ctrl-C
@@ -126,7 +126,7 @@ module.exports = async function seed(cmd) {
 
   stats.set('link', link)
 
-  if (!appendMode) {
+  if (ctrlTTY) {
     stdio.out.off('resize', resizeHandler)
     resizeHandler = () => {
       layout.print(stdio, { clearScrollback: true })
@@ -138,19 +138,25 @@ module.exports = async function seed(cmd) {
 
   const output = outputter('seed', {
     announced: () => {
-      const msg = `${ansi.gray('^_^')} ${ansi.bold(ansi.green('announced'))}`
+      const msg = ctrlTTY
+        ? `${ansi.gray('^_^')} ${ansi.bold(ansi.green('announced'))}`
+        : '^_^ announced'
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-add': (info) => {
       info = hypercoreid.normalize(info)
-      const msg = `${ansi.gray('o-o')} ${ansi.green('peer join')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
+      const msg = ctrlTTY
+        ? `${ansi.gray('o-o')} ${ansi.green('peer join')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+        : `o-o peer join ${info}`
       peers.append([msg])
       layout.print(stdio)
     },
     'peer-remove': (info) => {
       info = hypercoreid.normalize(info)
-      const msg = `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${ansi.bold(info.slice(0, 4))}${ansi.gray(info.slice(4))}`
+      const msg = ctrlTTY
+        ? `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${info.slice(0, 4)}${ansi.gray(info.slice(4))}`
+        : `-_- peer drop ${info}`
       peers.append([msg])
       layout.print(stdio)
     },
@@ -166,9 +172,9 @@ module.exports = async function seed(cmd) {
       upload,
       download
     }) {
-      const network = appendMode
-        ? `network ${ansi.green(peers)} peers, upload ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)}, download ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)}`
-        : `[ Peers ${ansi.green(peers)} ] [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+      const network = ctrlTTY
+        ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
 
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
@@ -191,7 +197,7 @@ module.exports = async function seed(cmd) {
   })
 
   await output(
-    { json, ctrlTTY: !appendMode },
+    { json, ctrlTTY },
     ipc.seed({
       id,
       link,
