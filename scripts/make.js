@@ -1,10 +1,15 @@
 const fsp = require('bare-fs/promises')
-const fs = require('bare-fs')
 const path = require('bare-path')
 const env = require('bare-env')
 const os = require('bare-os')
 const { spawn } = require('bare-subprocess')
 const { platform, arch, isWindows } = require('which-runtime')
+
+const exists = (filepath) =>
+  fsp
+    .access(filepath)
+    .then(() => true)
+    .catch(() => false)
 
 function waitForExit(child) {
   return new Promise((resolve) => {
@@ -27,7 +32,7 @@ async function make() {
   if (sign) {
     signFlags.push('--sign')
     if (env.WINDOWS_CERT_SHA1) {
-      if (isWindows) extraEnv.Path = `${findSigntoolDir()};${env.Path}`
+      if (isWindows) extraEnv.Path = `${await findSigntoolDir()};${env.Path}`
       signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
     }
 
@@ -103,20 +108,19 @@ async function make() {
   }
 }
 
-function findSigntoolDir() {
+async function findSigntoolDir() {
   const base = 'C:\\Program Files (x86)\\Windows Kits\\10\\bin'
 
-  if (!fs.existsSync(base)) throw new Error(`Windows SDK bin directory not found: ${base}`)
+  if (!(await exists(base))) throw new Error(`Windows SDK bin directory not found: ${base}`)
 
-  const versions = fs
-    .readdirSync(base, { withFileTypes: true })
+  const versions = (await fsp.readdir(base, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory() && /^\d+(\.\d+)*$/.test(entry.name))
     .map((entry) => entry.name)
     .sort(semverSortDesc)
 
   for (const version of versions) {
     const candidate = path.join(base, version, 'x64', 'signtool.exe')
-    if (fs.existsSync(candidate)) return path.dirname(candidate)
+    if (await exists(candidate)) return path.dirname(candidate)
   }
 
   throw new Error('signtool.exe not found in Windows SDK')
