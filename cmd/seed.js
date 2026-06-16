@@ -25,7 +25,7 @@ module.exports = async function seed(cmd) {
   }
   const id = Bare.pid
   const { width } = stdio.size()
-  const ctrlTTY = !json && tty !== false && isTTY && width
+  const ctrlTTY = !json && tty !== false && isTTY && !!width
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
   const stats = new DictTable([
