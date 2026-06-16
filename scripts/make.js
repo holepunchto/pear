@@ -111,6 +111,7 @@ async function make() {
 
 async function findSigntoolDir() {
   const base = 'C:\\Program Files (x86)\\Windows Kits\\10\\bin'
+  const arch = os.arch() === 'arm64' ? 'arm64' : 'x64'
 
   if (!(await exists(base))) throw new Error(`Windows SDK bin directory not found: ${base}`)
 
@@ -120,7 +121,7 @@ async function findSigntoolDir() {
     .sort(semverSortDesc)
 
   for (const version of versions) {
-    const candidate = path.join(base, version, 'x64', 'signtool.exe')
+    const candidate = path.join(base, version, arch, 'signtool.exe')
     if (await exists(candidate)) return path.dirname(candidate)
   }
 
