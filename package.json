@@ -98,15 +98,6 @@
     "brittle": {
       "bare-subprocess": "$bare-subprocess"
     },
-    "hypercore-sign": {
-      "compact-encoding": "^3.2.0"
-    },
-    "hypercore-sign-lib": {
-      "compact-encoding": "^3.2.0"
-    },
-    "hypercore-signing-request": {
-      "compact-encoding": "^3.2.0"
-    },
     "lunte": {
       "bare-subprocess": "$bare-subprocess"
     },
