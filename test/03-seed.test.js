@@ -6,9 +6,16 @@ const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
-test('pear seed basic stage and seed', async function ({ ok, plan, comment, teardown, timeout }) {
+test('pear seed basic stage and seed', async function ({
+  ok,
+  is,
+  plan,
+  comment,
+  teardown,
+  timeout
+}) {
   timeout(180000)
-  plan(3)
+  plan(15)
 
   const dir = Helper.fixture('versions')
 
@@ -24,8 +31,10 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
     dryRun: false
   })
   teardown(() => Helper.teardownStream(staging))
-  const staged = await Helper.pick(staging, { tag: 'final' })
-  ok(staged.success, 'stage succeeded')
+  const staged = await Helper.pick(staging, [{ tag: 'addendum' }, { tag: 'final' }])
+  const addendum = await staged.addendum
+  const final = await staged.final
+  ok(final.success, 'stage succeeded')
 
   comment('seeding')
   const seeding = helper.seed({
@@ -35,12 +44,26 @@ test('pear seed basic stage and seed', async function ({ ok, plan, comment, tear
     cmdArgs: []
   })
   teardown(() => Helper.teardownStream(seeding))
-  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  const until = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }, { tag: 'stats' }])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
 
   const key = await until.key
   ok(hypercoreid.isValid(key), 'app key is valid')
+
+  const stats = await until.stats
+  ok(hypercoreid.isValid(stats.driveKey), 'stats have driveKey')
+  is(stats.driveLength, addendum.version, 'stats have driveLength')
+  ok(hypercoreid.isValid(stats.discoveryKey), 'stats have discoveryKey')
+  ok(hypercoreid.isValid(stats.contentKey), 'stats have contentKey')
+  ok(hypercoreid.isValid(stats.whoami), 'stats have whoami')
+  ok(Number.isInteger(stats.peers), 'stats have peers')
+  ok(Number.isFinite(stats.upload.speed), 'stats have upload.speed')
+  ok(Number.isInteger(stats.upload.totalBytes), 'stats have upload.totalBytes')
+  ok(Number.isInteger(stats.upload.totalBlocks), 'stats have upload.totalBlocks')
+  ok(Number.isFinite(stats.download.speed), 'stats have download.speed')
+  ok(Number.isInteger(stats.download.totalBytes), 'stats have download.totalBytes')
+  ok(Number.isInteger(stats.download.totalBlocks), 'stats have download.totalBlocks')
 })
 
 test('pear seed announces, join, drop', async function ({
