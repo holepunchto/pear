@@ -50,7 +50,9 @@ module.exports = class Dump extends Opstream {
       replicator = await session.add(new Replicator(drive))
     }
 
-    if (sidecar.swarm && replicator) replicator.join(sidecar.swarm, { server: false, client: true })
+    if (sidecar.swarm && replicator) {
+      await replicator.join(sidecar.swarm, { server: false, client: true })
+    }
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
