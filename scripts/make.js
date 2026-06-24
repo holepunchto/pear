@@ -17,7 +17,7 @@ const child = spawn(
     '--host',
     host,
     '--out',
-    `./by-arch/${host}/bin`,
+    `./out/make`,
     `targets/main.${channel}.js`
   ],
   { stdio: 'inherit', shell: true }

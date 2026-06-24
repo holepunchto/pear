@@ -1,13 +1,13 @@
 'use strict'
 const sodium = require('sodium-native')
-const { platform, arch, isWindows, isLinux } = require('which-runtime')
+const { isWindows, isLinux } = require('which-runtime')
 const { fileURLToPath, pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const os = require('bare-os')
 const b4a = require('b4a')
 const pkg = require('./package.json')
 
-const BIN = 'by-arch/' + platform + '-' + arch + '/bin/'
+const BIN = 'out/make/'
 const IPC_ID = 'pear'
 const RUNTIME_EXEC = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 const dir = (p) => toPath(new URL(p, platformUrl()))

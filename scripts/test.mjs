@@ -12,7 +12,6 @@ const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
 const { RUNTIME } = await import('../constants')
-const HOST = `${platform}-${arch}`
 const BIN = isWindows ? 'pear.exe' : 'pear'
 const LEGACY_BIN = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 
@@ -67,9 +66,9 @@ tests.on('exit', async (code, signal) => {
 function resolveRuntime() {
   const candidates = [
     RUNTIME,
-    path.join(root, 'by-arch', HOST, 'bin', BIN),
-    path.join(root, 'by-arch', HOST, 'bin', LEGACY_BIN),
-    path.join(root, 'current', 'by-arch', HOST, 'bin', LEGACY_BIN),
+    path.join(root, 'out', 'make', BIN),
+    path.join(root, 'out', 'make', LEGACY_BIN),
+    path.join(root, 'current', 'out', 'make', LEGACY_BIN),
     ...(isWindows ? [] : [path.join(root, 'pear.dev')])
   ]
   for (const candidate of candidates) {

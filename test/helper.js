@@ -5,7 +5,7 @@ const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const { spawn: daemon } = require('bare-daemon')
 const fs = require('bare-fs')
-const { arch, platform, isWindows } = require('which-runtime')
+const { isWindows } = require('which-runtime')
 const IPC = require('pear-ipc')
 const sodium = require('sodium-native')
 const Corestore = require('corestore')
@@ -13,8 +13,7 @@ const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const LocalDrive = require('localdrive')
 const b4a = require('b4a')
-const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+const OUT = path.join('out', 'make', `pear${isWindows ? '.exe' : ''}`)
 
 const constants = require('../constants.js')
 const { PLATFORM_DIR } = constants
@@ -49,15 +48,15 @@ class Helper extends IPC.Client {
   static tmp = tmp
   static PLATFORM_DIR = PLATFORM_DIR
   static dhtBootstrap = DHT_BOOTSTRAP
-  static BY_ARCH = BY_ARCH
+  static OUT = OUT
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
     const logging = cmdArgs.filter((arg) => arg.startsWith('--log'))
     const log = logging.length > 0
     const runtime = opts.platformDir
-      ? path.resolve(opts.platformDir, '..', BY_ARCH)
-      : isWindows || fs.existsSync(path.join(Helper.localDir, BY_ARCH))
-        ? path.join(Helper.localDir, BY_ARCH)
+      ? path.resolve(opts.platformDir, '..', OUT)
+      : isWindows || fs.existsSync(path.join(Helper.localDir, OUT))
+        ? path.join(Helper.localDir, OUT)
         : path.join(Helper.localDir, 'pear.dev')
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
@@ -199,11 +198,11 @@ class Rig {
     timeout(180000)
 
     comment('preparing rig platform...')
-    const runtime = path.join(this.artefactDir, BY_ARCH)
+    const runtime = path.join(this.artefactDir, OUT)
 
     if (fs.existsSync(runtime)) {
       comment('using existing platform runtime...')
-      const bin = path.join(this.localDir, BY_ARCH)
+      const bin = path.join(this.localDir, OUT)
       await fs.promises.mkdir(path.dirname(bin), { recursive: true })
       await fs.promises.cp(runtime, bin)
     } else {
@@ -213,7 +212,7 @@ class Rig {
       await new LocalDrive(this.artefactDir)
         .mirror(new LocalDrive(this.localDir), {
           prune: false,
-          ignore: ['/pear', '/.git', '/test', '/by-arch']
+          ignore: ['/pear', '/.git', '/test', '/out']
         })
         .done()
 
