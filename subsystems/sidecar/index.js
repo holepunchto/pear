@@ -338,7 +338,7 @@ class Sidecar extends ReadyResource {
       if (this.updater) {
         try {
           await this.updater.applyUpdate()
-          LOG.info('sidecar', LOG.CHECKMARK + ' Applied update')
+          LOG.info('sidecar', CHECKMARK + ' Applied update')
         } catch (err) {
           LOG.error('sidecar', err)
         }

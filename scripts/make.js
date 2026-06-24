@@ -60,7 +60,7 @@ async function make() {
       '--host',
       host,
       '--out',
-      out,
+      './out/make',
       `targets/main.${channel}.js`
     ],
     { stdio: 'inherit', shell: isWindows, env: { ...env, ...extraEnv } }
@@ -93,19 +93,6 @@ async function make() {
     const notarizeExitCode = await waitForExit(notarize)
     if (notarizeExitCode === 0) console.log('Notarization successful')
     else throw new Error(`Notarization failed with exit code ${notarizeExitCode}`)
-  }
-
-  if (env.CI) {
-    console.log('Copying binary to out/make for CI release...')
-    const src = path.join(out, bin)
-    const ext = isWindows ? '.exe' : ''
-    const dest = path.join('out', 'make', `pear-${host}${ext}`)
-
-    await fsp.mkdir(path.dirname(dest), { recursive: true })
-    await fsp.copyFile(src, dest)
-    await fsp.chmod(dest, 0o755)
-
-    console.log(`Binary copied to ${dest}`)
   }
 }
 

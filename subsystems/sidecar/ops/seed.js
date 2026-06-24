@@ -23,8 +23,10 @@ module.exports = class Seed extends Opstream {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
         peers: drive.core.peers.length,
         driveKey: drive.key?.toString('hex'),
+        driveLength: drive.core.length,
         discoveryKey: drive.discoveryKey?.toString('hex'),
         contentKey: drive.contentKey?.toString('hex') ?? 'pending',
+        whoami: this.sidecar.keyPair.publicKey.toString('hex'),
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,

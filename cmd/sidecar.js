@@ -32,8 +32,8 @@ module.exports = async function sidecar(cmd) {
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
 
-  print('Rebooting current process as Sidecar\n  - [ ' + key + ' ]', 0)
-  print(ansi.gray('Runtime: ' + path.basename(constants.RUNTIME)), 0)
+  print('Rebooting current process as Sidecar', 0)
+  print('Runtime: ' + path.basename(constants.RUNTIME), 0)
   print('\n========================= INIT ===================================\n')
 
   Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
@@ -47,7 +47,7 @@ module.exports = async function sidecar(cmd) {
 
   print('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
   print('Current process is now Sidecar', true)
-  print(ansi.gray('Version: ' + JSON.stringify({ key, version }, 0, 4).slice(0, -1) + '  }'), 0)
+  print(ansi.gray(JSON.stringify({ version, key }, 0, 4)))
   if (restarts.length > 0) {
     print('Restart Commands:', 0)
     for (const { cmdArgs = [] } of restarts) {
