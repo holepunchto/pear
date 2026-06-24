@@ -52,7 +52,7 @@ Build the runtime binaries with:
 npm run make
 ```
 
-Built artifacts are placed as standalone runtimes in `by-arch/`.
+Built artifacts are placed as standalone runtimes in `out/make`.
 
 Use `./pear.dev` (`.\pear.ps1` / `.\pear.cmd` on Windows) to execute this checkout directly in localdev.
 
