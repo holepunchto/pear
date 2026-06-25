@@ -13,7 +13,8 @@ const rig = new Helper.Rig({ keepAlive: false })
 const SPINDOWN_TIMEOUT = 15_000
 
 const HOST = platform + '-' + arch
-const BY_ARCH = path.join('by-arch', HOST, 'bin', `pear${isWindows ? '.exe' : ''}`)
+const BIN = isWindows ? 'pear.exe' : 'pear'
+const OUT = path.join('out', 'make', BIN)
 const npm = isWindows ? 'npm.cmd' : 'npm'
 
 const unhookShutdown = test.hook('shutdown setup', rig.setup)
@@ -49,7 +50,7 @@ const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
   await fs.promises.mkdir(platformDirLs, { recursive: true })
   const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(platformDirLs), {
     prune: false,
-    ignore: ['/pear', '/.git', '/test', '/by-arch']
+    ignore: ['/pear', '/.git', '/test', '/out']
   })
   await mirror.done()
 
@@ -75,7 +76,7 @@ test('sidecar should spindown after a period of inactivity', async (t) => {
   t.timeout(SPINDOWN_TIMEOUT + 20_000)
 
   t.comment('Starting sidecar')
-  const runtime = path.join(platformDirLs, Helper.BY_ARCH)
+  const runtime = path.join(platformDirLs, Helper.OUT)
   const sidecar = spawn(runtime, ['sidecar'], {
     stdio: 'ignore',
     cwd: platformDirLs
@@ -124,7 +125,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     t.teardown(() => Helper.gc(patchedArtefactDir))
     const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(patchedArtefactDir), {
       prune: false,
-      ignore: ['/pear', '/.git', '/test', '/by-arch']
+      ignore: ['/pear', '/.git', '/test', '/out']
     })
     await mirror.done()
 
@@ -176,7 +177,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     t.teardown(() => Helper.gc(artefactDir))
     const mirror = new LocalDrive(rig.artefactDir).mirror(new LocalDrive(artefactDir), {
       prune: false,
-      ignore: ['/pear', '/.git', '/test', '/by-arch']
+      ignore: ['/pear', '/.git', '/test', '/out']
     })
     await mirror.done()
 
@@ -205,19 +206,21 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
 
     t.comment('Copying build to build dir')
     buildDir = path.join(artefactDir, 'build')
-    await fs.promises.mkdir(path.join(buildDir, path.dirname(BY_ARCH)), { recursive: true })
+    await fs.promises.mkdir(path.join(buildDir, path.dirname(OUT)), { recursive: true })
     t.teardown(() => {
       Helper.gc(artefactDir)
     })
-    await fs.promises.cp(path.join(artefactDir, BY_ARCH), path.join(buildDir, BY_ARCH))
+    await fs.promises.cp(path.join(artefactDir, OUT), path.join(buildDir, OUT))
 
     t.comment('Copying build to app dir')
-    const byApp = BY_ARCH.replace('bin', 'app')
-    await fs.promises.mkdir(path.join(buildDir, path.dirname(byApp)), { recursive: true })
+    await fs.promises.mkdir(path.join(buildDir, 'by-arch', HOST, 'app'), { recursive: true })
     t.teardown(() => {
       Helper.gc(artefactDir)
     })
-    await fs.promises.cp(path.join(artefactDir, BY_ARCH), path.join(buildDir, byApp))
+    await fs.promises.cp(
+      path.join(artefactDir, OUT),
+      path.join(buildDir, 'by-arch', HOST, 'app', BIN)
+    )
 
     t.comment('Staging as version 2.0.0')
     packageJson.version = '2.0.0'
@@ -258,7 +261,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment('4. Start sidecar and update using the throttle seeder')
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(path.join(buildDir, BY_ARCH), ['sidecar', '--dhtBootstrap', dhtBootstrap], {
+  const sidecar = spawn(path.join(buildDir, OUT), ['sidecar', '--dhtBootstrap', dhtBootstrap], {
     stdio: 'ignore'
   })
   t.teardown(() => {
