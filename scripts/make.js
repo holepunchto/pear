@@ -5,7 +5,7 @@ const env = require('bare-env')
 const channel = env.CHANNEL && env.CHANNEL.length > 0 ? env.CHANNEL : global.Bare.argv[2]
 const host = `${platform}-${arch}`
 
-if (channel !== 'dev' && channel !== 'stage' && channel !== 'production') {
+if (!['dev', 'stage', 'production'].includes(channel)) {
   throw new Error(`Channel ${channel} not supported`)
 }
 
