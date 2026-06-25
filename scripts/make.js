@@ -4,6 +4,7 @@ const env = require('bare-env')
 
 const channel = env.CHANNEL && env.CHANNEL.length > 0 ? env.CHANNEL : global.Bare.argv[2]
 const host = `${platform}-${arch}`
+const name = env.CI_STAGE ? `pear-${host}` : 'pear'
 
 if (!['dev', 'stage', 'production'].includes(channel)) {
   throw new Error(`Channel ${channel} not supported`)
@@ -16,7 +17,7 @@ const child = spawn(
     '--base',
     '.',
     '--name',
-    'pear',
+    name,
     '--description',
     '"Pear runtime command line interface"',
     '--host',
