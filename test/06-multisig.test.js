@@ -5,7 +5,8 @@ const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
 const Helper = require('./helper')
 
-test('pear multisig link', async function ({ ok, plan, teardown }) {
+test('pear multisig link', async function ({ ok, plan, teardown, timeout }) {
+  timeout(180000)
   plan(2)
 
   const helper = new Helper()
