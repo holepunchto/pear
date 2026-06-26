@@ -4,7 +4,7 @@
   "bin": "pear",
   "productName": "pear",
   "upgrade": {
-    "production": "pear://6jkngbnqj6rzpq1aip3fiqfyc4bh7epfr91qmct1q95djc73whto",
+    "production": "pear://smw4thqaqed9iq6bae7a9cxd4fesruixgkafe38jny33ahs33igy",
     "stage": "pear://ixhpogtfu9fd3drcbwqf7rebab8wsr1idwmmqchaxuoby4math9o",
     "dev": "pear://w35om9zdgi6nwdbtjhk3m378tne3izsnotpd7syfiebgzcd6czio"
   },
