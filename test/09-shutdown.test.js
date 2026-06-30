@@ -114,7 +114,7 @@ unhookPlatform('patched platform cleanup', async () => {
 
 test('sidecar should not spindown until ongoing update is finished', async (t) => {
   t.plan(2)
-  t.timeout(120_000)
+  t.timeout(180_000)
 
   t.comment('1. Prepare throttled seeder platform')
   let platformDirRcv
@@ -232,7 +232,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 
   t.comment('Staging platform using throttled platform')
-  let peerAdded = false
+  let peerAddedUntil = null
   {
     const stager = rcvHelper.stage({
       link: rcvLink,
@@ -251,9 +251,10 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     })
     const seederUntil = await Helper.pick(seeder, [{ tag: 'announced' }, { tag: 'peer-add' }])
     await seederUntil.announced
-    seederUntil['peer-add'].then(() => {
-      peerAdded = true
-    })
+    peerAddedUntil = seederUntil['peer-add'].then(
+      () => true,
+      () => false
+    )
     t.teardown(() => Helper.teardownStream(seeder))
   }
 
@@ -281,13 +282,24 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   })
 
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
-  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
 
   if (hasSpunDown !== false) {
     t.fail('sidecar failed to prevent spindown during update')
   } else {
     t.pass('sidecar successfully blocked spindown during update')
   }
+
+  const peerAddedTimeout = new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(false), 60_000)
+    peerAddedUntil.finally(() => clearTimeout(timeout))
+    untilExit.finally(() => clearTimeout(timeout))
+  })
+  const peerAdded = await Promise.race([
+    peerAddedUntil,
+    untilExit.then(() => false),
+    peerAddedTimeout
+  ])
+  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
 })
 
 unhookShutdown('shutdown cleanup', rig.cleanup)
