@@ -30,7 +30,7 @@ async function make() {
 
   const host = `${platform}-${arch}`
   const bin = isWindows ? 'pear.exe' : 'pear'
-  const out = path.join('.', 'by-arch', host, 'bin')
+  const out = path.join('.', 'out', 'make')
 
   const signFlags = []
   const extraEnv = {}
@@ -65,7 +65,7 @@ async function make() {
       '--host',
       host,
       '--out',
-      './out/make',
+      out,
       `targets/main.${channel}.js`
     ],
     { stdio: 'inherit', shell: isWindows, env: { ...env, ...extraEnv } }
