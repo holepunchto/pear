@@ -14,7 +14,7 @@
     "test": "bare scripts/test.mjs",
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
-    "make": "bare scripts/make.js production",
+    "make": "bare scripts/make.js",
     "make:stage": "bare scripts/make.js stage",
     "make:dev": "bare scripts/make.js dev",
     "hyperdb:build": "node scripts/build-hyperdb.js"
