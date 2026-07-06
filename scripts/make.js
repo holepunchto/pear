@@ -1,9 +1,10 @@
-const fsp = require('bare-fs/promises')
-const path = require('bare-path')
-const env = require('bare-env')
-const os = require('bare-os')
-const { spawn } = require('bare-subprocess')
-const { platform, arch, isWindows } = require('which-runtime')
+const fsp = require('fs/promises')
+const path = require('path')
+const os = require('os')
+const { spawn } = require('child_process')
+
+const { env, platform, arch } = process
+const isWindows = platform === 'win32'
 
 const exists = (filepath) =>
   fsp
@@ -22,7 +23,7 @@ function waitForExit(child) {
 
 const gc = []
 async function make() {
-  const channel = env.CHANNEL ? env.CHANNEL : (global.Bare.argv[2] ?? 'production')
+  const channel = env.CHANNEL ? env.CHANNEL : (process.argv[2] ?? 'production')
 
   if (!['dev', 'stage', 'production'].includes(channel)) {
     throw new Error(`Channel ${channel} not supported`)
@@ -136,7 +137,7 @@ function semverSortDesc(a, b) {
 make()
   .catch((err) => {
     console.error(err)
-    Bare.exitCode = 1
+    process.exitCode = 1
   })
   .finally(async () => {
     for (const dir of gc) {
