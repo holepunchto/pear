@@ -29,7 +29,14 @@ const output = outputter('stage', {
 
 module.exports = async function stage(cmd) {
   const ipc = context.getIPC()
-  const { dryRun, bare, json, ignore, purge, name, truncate, only } = cmd.flags
+  const { dryRun, bare, json, ignore, purge, name, only } = cmd.flags
+  let truncate = cmd.flags.truncate
+  if (truncate !== undefined) {
+    truncate = +truncate
+    if (Number.isInteger(truncate) === false) {
+      throw ERR_INVALID_INPUT('--truncate flag must supply an integer if set')
+    }
+  }
   const cwd = os.cwd()
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
