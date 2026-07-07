@@ -101,6 +101,7 @@ test('pear info on committed multisig link includes multisig by default', async 
   })
   teardown(() => Helper.teardownStream(seeding))
   const seedUntil = await Helper.pick(seeding, [{ tag: 'key' }, { tag: 'announced' }])
+  await seedUntil.key
   await seedUntil.announced
 
   comment('creating multisig request')
@@ -148,8 +149,7 @@ test('pear info on committed multisig link includes multisig by default', async 
   comment('pear info on multisig link')
   const infoStream = helper.info({ link: multisigLink, cmdArgs: [] })
   teardown(() => Helper.teardownStream(infoStream))
-  const until = await Helper.pick(infoStream, [{ tag: 'multisig' }, { tag: 'final' }])
-  const multisig = await until.multisig
+  const multisig = await Helper.pick(infoStream, { tag: 'multisig' })
   is(multisig.quorum, 2, 'quorum is 2')
   is(multisig.publicKeys.length, 2, 'two public keys')
   ok(multisig.publicKeys.includes(hypercoreid.encode(pub1)), 'pub1 present')
