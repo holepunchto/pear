@@ -1,5 +1,28 @@
 # Pear Runtime Changelog
 
+## v3.0.0
+
+### Features
+
+* CLI - `pear install` - install any application or binary from a pear link
+
+### Improvements
+
+* MAJOR - `pear run` has been removed
+* pear://<alias> has been removed
+* CLI - `pear sidecar` - `--key <key>` flag (switch release lines) removed (use npx pear-install <link>)
+* CLI - `pear seed` - `whoami` and drive length reporting, colored output, and UI clean up
+* CLI - `pear seed` - use z32 encoding for all keys
+* Internal - New pear-runtime architecture - platform reworked onto the new modular pear-runtime structure
+* Internal - deps bump
+
+### Fixes
+
+* CLI - `pear stage --truncate` fix
+* CLI - `pear dump` - fails on first run fix (await replicator, log ordering, cursor handling)
+* CLI - `pear seed` - undefined guards and various fixes
+* Internal - sidecar log fixes
+
 ## v2.6.5
 
 # Fixes
