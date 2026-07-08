@@ -27,10 +27,11 @@ module.exports = async function touch(cmd) {
       throw new Error(`Vanity key must contain only z32 characters (${e.message})`)
     }
 
-    if (vanity.length > 4)
+    if (vanity.length > 4) {
       console.warn(
         'Warning: Vanity strings longer than 4 characters may take a long time to generate.'
       )
+    }
   }
 
   const keyPair = vanity ? await findVanityKey(vanity) : undefined
