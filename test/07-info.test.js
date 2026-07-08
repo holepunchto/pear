@@ -31,7 +31,7 @@ test('pear info on unseeded key shows empty', async ({ ok, comment, teardown }) 
 
 test('pear info seeded link returns info', async ({ ok, is, comment, teardown, timeout }) => {
   timeout(TEST_TIMEOUT)
-  const dir = Helper.fixture('hello-world')
+  const dir = Helper.fixture('minimal')
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -62,7 +62,9 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   teardown(() => Helper.teardownStream(info))
 
   const until = await Helper.pick(info, [{ tag: 'info' }, { tag: 'final' }])
-  is((await until.info).link, link)
+  const data = await until.info
+  is(data.link, link)
+  is(data.version, '1.0.0')
 })
 
 test('pear info on committed multisig link includes multisig by default', async ({

@@ -76,6 +76,7 @@ module.exports = class Info extends Opstream {
 
       if (isEnabled(metadata)) {
         const name = pkg?.pear?.name || pkg?.name
+        const version = pkg?.version
         const length = drive.core.length
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
@@ -91,6 +92,7 @@ module.exports = class Info extends Opstream {
           data: {
             link,
             name,
+            version,
             length,
             byteLength,
             blobs,
