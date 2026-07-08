@@ -17,8 +17,8 @@ const output = outputter('touch', {
 })
 
 module.exports = async function touch(cmd) {
-  const startsWith = cmd.flags.startsWith
-  const keyPair = startsWith ? await findVanityKey(startsWith) : undefined
+  const vanity = cmd.flags.vanity
+  const keyPair = vanity ? await findVanityKey(vanity) : undefined
 
   const ipc = context.getIPC()
   const json = cmd.flags.json
