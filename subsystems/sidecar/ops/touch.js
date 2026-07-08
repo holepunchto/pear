@@ -8,13 +8,13 @@ module.exports = class Touch extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op() {
+  async #op({ keyPair = undefined }) {
     const { sidecar } = this
     await sidecar.ready()
 
     const corestore = sidecar.getCorestore()
     await corestore.ready()
-    const keyPair = await corestore.createKeyPair(randomBytes(16).toString('hex'))
+    if (!keyPair) keyPair = await corestore.createKeyPair(randomBytes(16).toString('hex'))
     const core = corestore.get({ keyPair, exclusive: true })
     await core.ready()
     const key = core.key

@@ -36,6 +36,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     summary('Generate a project link'),
     description`Create a new randomly generated Pear link`,
     flag('--json', 'Newline delimited JSON output'),
+    flag('--starts-with <startsWith>', 'Specify the starting characters for the generated link'),
     commands.touch
   )
 
