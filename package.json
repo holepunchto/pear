@@ -35,7 +35,6 @@
     "bare-stream": "^2.13.1",
     "bare-subprocess": "^5.1.5",
     "bare-tty": "^5.0.2",
-    "bare-worker": "^4.4.0",
     "corestore": "^7.2.1",
     "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
