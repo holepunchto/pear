@@ -1,4 +1,5 @@
 'use strict'
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
 
@@ -25,7 +26,7 @@ module.exports = async function touch(cmd) {
     try {
       z32.decode(vanity)
     } catch (e) {
-      throw new Error(`Vanity key must contain only z32 characters (${e.message})`)
+      throw new ERR_INVALID_INPUT(`Vanity key must contain only z32 characters (${e.message})`)
     }
 
     if (vanity.length > 4) {
