@@ -35,7 +35,7 @@ module.exports = async function touch(cmd) {
     }
 
     const findVanityKey = require('../lib/vanity.js')
-    keyPair = findVanityKey(vanity)
+    keyPair = await findVanityKey(vanity)
   }
 
   const ipc = context.getIPC()
