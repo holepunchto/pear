@@ -11,7 +11,6 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const root = path.dirname(dirname)
 
-const { RUNTIME } = await import('../constants')
 const BIN = isWindows ? 'pear.exe' : 'pear'
 const LEGACY_BIN = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 
@@ -65,14 +64,12 @@ tests.on('exit', async (code, signal) => {
 
 function resolveRuntime() {
   const candidates = [
-    RUNTIME,
     path.join(root, 'out', 'make', BIN),
     path.join(root, 'out', 'make', LEGACY_BIN),
     path.join(root, 'current', 'out', 'make', LEGACY_BIN),
     ...(isWindows ? [] : [path.join(root, 'pear.dev')])
   ]
   for (const candidate of candidates) {
-    if (!candidate) continue
     try {
       if (fs.existsSync(candidate)) return candidate
     } catch {}

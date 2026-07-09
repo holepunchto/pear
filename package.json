@@ -77,7 +77,7 @@
     "@hyperswarm/testnet": "^3.1.4",
     "bare-build": "^1.0.0",
     "bare-env": "^3.0.0",
-    "bare-runtime": "^1.28.5",
+    "bare-runtime": "^1.28.6",
     "brittle": "^4.0.0",
     "lunte": "^1.6.0",
     "pear-interface": "^1.1.0",
