@@ -1,8 +1,6 @@
 'use strict'
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
-const findVanityKey = require('../lib/vanity.js')
-const z32 = require('z32')
 
 const output = outputter('touch', {
   final: ({ link }) => {
@@ -20,7 +18,10 @@ const output = outputter('touch', {
 module.exports = async function touch(cmd) {
   const vanity = cmd.flags.vanity
 
+  let keyPair
   if (vanity) {
+    const z32 = require('z32')
+
     try {
       z32.decode(vanity)
     } catch (e) {
@@ -32,9 +33,11 @@ module.exports = async function touch(cmd) {
         'Warning: Vanity strings longer than 4 characters may take a long time to generate.'
       )
     }
+
+    const findVanityKey = require('../lib/vanity.js')
+    keyPair = findVanityKey(vanity)
   }
 
-  const keyPair = vanity ? await findVanityKey(vanity) : undefined
   const ipc = context.getIPC()
   const json = cmd.flags.json
   await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.touch({ keyPair }))
