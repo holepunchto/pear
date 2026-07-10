@@ -22,7 +22,6 @@
   "author": "Holepunch",
   "dependencies": {
     "b4a": "^1.6.7",
-    "bare-channel": "^5.2.4",
     "bare-daemon": "^1.1.0",
     "bare-events": "^2.8.3",
     "bare-format": "^1.0.2",
