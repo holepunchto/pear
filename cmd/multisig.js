@@ -225,9 +225,8 @@ class Multisig {
   }
 
   _config() {
-    let config
     try {
-      config = JSON.parse(fs.readFileSync(this.config))
+      this._parsedConfig = JSON.parse(fs.readFileSync(this.config))
     } catch (err) {
       const invalidPath =
         err.code === 'ENOENT' ||
@@ -239,6 +238,7 @@ class Multisig {
       if (invalidPath) throw ERR_INVALID_INPUT(err.message)
       throw ERR_INVALID_CONFIG('Could not parse config ' + this.config + ': ' + err.message)
     }
+    const config = this._parsedConfig
     if (!config.multisig) throw ERR_INVALID_CONFIG('multisig field required in ' + this.config)
     if (!config.multisig.publicKeys) {
       throw ERR_INVALID_CONFIG('multisig.publicKeys field required in ' + this.config)
@@ -254,6 +254,31 @@ class Multisig {
 
   async link() {
     const config = this._config()
+    const { vanity } = this.cmd.flags
+
+    if (vanity) {
+      try {
+        z32.decode(vanity)
+      } catch (e) {
+        throw new ERR_INVALID_INPUT(`Vanity key must contain only z32 characters (${e.message})`)
+      }
+
+      if (vanity.length > 4) {
+        console.warn(
+          'Warning: Vanity strings longer than 4 characters may take a long time to generate.'
+        )
+      }
+
+      const findVanityKey = require('../lib/vanity.js')
+      const newNamespace = await findVanityKey(vanity, 'multisig', config)
+      if (newNamespace !== config.namespace) {
+        this._parsedConfig.multisig.namespace = newNamespace
+        config.namespace = newNamespace
+        fs.writeFileSync(this.config, JSON.stringify(this._parsedConfig, null, 2))
+        console.warn('Namespace has been updated to', newNamespace)
+      }
+    }
+
     await Multisig.output(this.json, this.ipc.multisig({ action: 'link', ...config }))
   }
 

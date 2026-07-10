@@ -184,6 +184,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
           }
         }`,
       flag('--config [./pear.json]', 'Config file path'),
+      flag('--vanity <vanity>', 'Generate a vanity link with this prefix'),
       flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
