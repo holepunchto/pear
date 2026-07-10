@@ -8,7 +8,7 @@ function pearKey(publicKey) {
   return z32.encode(Hypercore.key({ signers: [{ publicKey }] }))
 }
 
-test('vanity key should start with given two-char prefix', async ({ plan, ok }) => {
+test('touch vanity key should start with given two-char prefix', async ({ plan, ok }) => {
   plan(3)
   {
     const prefix = 'pe'
@@ -32,7 +32,7 @@ test('vanity key should start with given two-char prefix', async ({ plan, ok }) 
   }
 })
 
-test('repeated calls should return different keys', async ({ plan, not }) => {
+test('repeated calls to touch should return different keys', async ({ plan, not }) => {
   plan(2)
   const prefix = 'cd'
   const keyPair1 = await findVanityKey(prefix)
