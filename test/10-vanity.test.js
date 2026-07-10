@@ -8,7 +8,7 @@ function pearKey(publicKey) {
   return z32.encode(Hypercore.key({ signers: [{ publicKey }] }))
 }
 
-test('vanity key shoudl start with given two-char prefix', async ({ plan, ok }) => {
+test('vanity key should start with given two-char prefix', async ({ plan, ok }) => {
   plan(3)
   {
     const prefix = 'pe'
