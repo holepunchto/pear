@@ -5,6 +5,7 @@ const gracedown = require('pear-gracedown')
 const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('../lib/terminal.js')
 const Logger = require('../lib/logger.js')
+const diagnostics = require('../lib/diagnostics.js')
 const constants = require('../constants.js')
 const { upgrade: key, version } = require('../package.json')
 module.exports = async function sidecar(cmd) {
@@ -37,8 +38,16 @@ module.exports = async function sidecar(cmd) {
   print('\n========================= INIT ===================================\n')
 
   Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
+  let refreshLog = false
+  if (cmd.flags.logFile) {
+    Logger.switches.logFile = diagnostics.resolveLogFile(cmd.flags.logFile)
+    refreshLog = true
+  }
   if (Logger.switches.level < 2) {
     Logger.switches.level = 2
+    refreshLog = true
+  }
+  if (refreshLog) {
     global.LOG = new Logger({ pretty: true })
   }
 

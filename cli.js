@@ -8,7 +8,7 @@ const { spawn: daemon } = require('bare-daemon')
 const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR, LOCALDEV } = require('./constants.js')
 const context = require('./context')
 const cmd = require('./cmd')
-const { normalizedArgv } = require('./argv')
+const { cmdArgs, normalizedArgv } = require('./argv')
 crasher('cli')
 
 cli()
@@ -24,20 +24,52 @@ async function cli() {
 }
 
 function tryboot() {
-  const argv = normalizedArgv
-  const args = ['--sidecar']
-  const bootstrapArgIndex = argv.indexOf('--dht-bootstrap')
-  if (bootstrapArgIndex !== -1 && argv[bootstrapArgIndex + 1]) {
-    args.push('--dht-bootstrap', argv[bootstrapArgIndex + 1])
-  }
+  const args = ['--sidecar', ...forwardSidecarArgs(cmdArgs)]
   const runtime = os.execPath()
   if (!runtime) {
     throw new Error(
       `Unable to resolve pear runtime executable for sidecar spawn (cwd=${safeCwd() || 'n/a'})`
     )
   }
-  if (LOCALDEV) args.unshift(argv[0])
+  if (LOCALDEV) args.unshift(normalizedArgv[0])
   daemon(runtime, args, { cwd: resolveSpawnCwd(runtime) })
+}
+
+function forwardSidecarArgs(argv) {
+  const valueFlags = new Set([
+    '--dht-bootstrap',
+    '--log-fields',
+    '-F',
+    '--log-file',
+    '--log-labels',
+    '-l',
+    '--log-level',
+    '-L'
+  ])
+  const boolFlags = new Set([
+    '--log',
+    '--log-max',
+    '-M',
+    '--log-stacks',
+    '-S',
+    '--log-verbose',
+    '-V'
+  ])
+  const forwarded = []
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg === '--') break
+    if (boolFlags.has(arg)) forwarded.push(arg)
+    else if (valueFlags.has(arg) && argv[i + 1]) forwarded.push(arg, argv[++i])
+    else if (arg.startsWith('--dht-bootstrap=')) forwarded.push(arg)
+    else if (arg.startsWith('--log-fields=')) forwarded.push(arg)
+    else if (arg.startsWith('--log-file=')) forwarded.push(arg)
+    else if (arg.startsWith('--log-labels=')) forwarded.push(arg)
+    else if (arg.startsWith('--log-level=')) forwarded.push(arg)
+  }
+
+  return forwarded
 }
 
 function safeCwd() {

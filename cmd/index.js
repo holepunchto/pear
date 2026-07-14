@@ -21,6 +21,7 @@ const commands = {
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
+  logs: require('./logs'),
   versions: require('./versions')
 }
 
@@ -333,6 +334,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
     flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
     flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
+    flag('--log-file <path>', 'Append sidecar logs and crashes to a file'),
     flag('--log-stacks', 'Add a stack trace to each log message'),
     flag('--dht-bootstrap <nodes>').hide(),
     commands.sidecar
@@ -352,6 +354,29 @@ module.exports = async (ipc, argv = cmdArgs) => {
     () => {
       console.log(gc.help())
     }
+  )
+
+  const logs = command(
+    'logs',
+    summary('Show platform log files'),
+    description`
+      Print or collect platform logs for debugging.
+    `,
+    command(
+      'bundle',
+      summary('Copy logs into a shareable directory'),
+      arg('[dir]'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.logs
+    ),
+    command(
+      'clear',
+      summary('Remove platform log files'),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.logs
+    ),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.logs
   )
 
   const versions = command(
@@ -384,6 +409,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     changelog,
     sidecar,
     gc,
+    logs,
     versions,
     help,
     footer(usage.footer),
