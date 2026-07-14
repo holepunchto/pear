@@ -11,7 +11,7 @@ const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./c
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
-crasher('sidecar')
+crasher('sidecar', true)
 
 os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
