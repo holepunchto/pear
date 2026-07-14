@@ -3,8 +3,8 @@ const test = require('brittle')
 const hs = require('hypercore-sign')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
-const env = require('bare-env')
 const fs = require('bare-fs')
+const os = require('bare-os')
 const path = require('bare-path')
 const constants = require('../constants.js')
 const Helper = require('./helper')
@@ -25,14 +25,14 @@ test('pear multisig key generation confirms password', async function ({
 }) {
   plan(8)
   const home = await tmp()
-  const previousHome = env.HOME
+  const homedir = os.homedir
   const terminal = require('../lib/terminal.js')
   const outputter = terminal.outputter
   const password = terminal.password
   let readPassword = null
   let run = null
 
-  env.HOME = home
+  os.homedir = () => home
   terminal.outputter = () => () => {}
   terminal.password = (...args) => readPassword(...args)
   try {
@@ -40,8 +40,7 @@ test('pear multisig key generation confirms password', async function ({
   } finally {
     terminal.outputter = outputter
     terminal.password = password
-    if (previousHome === undefined) delete env.HOME
-    else env.HOME = previousHome
+    os.homedir = homedir
   }
 
   const mismatchPrompts = []
