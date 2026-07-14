@@ -5,8 +5,38 @@ const hypercoreid = require('hypercore-id-encoding')
 const hs = require('hypercore-sign')
 const z32 = require('z32')
 const Helper = require('./helper')
+const pkg = require('../package.json')
 
 const TEST_TIMEOUT = env.CI ? 120000 : 60000
+
+test('pear info without link returns platform info', async ({ ok, is, alike, teardown }) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const info = helper.info({ link: null, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(info))
+
+  const until = await Helper.pick(info, [{ tag: 'info' }, { tag: 'final' }])
+  const data = await until.info
+  is(data.productName, pkg.productName)
+  alike(data.upgrade, pkg.upgrade)
+
+  const final = await until.final
+  ok(final, 'stream completed with final tag')
+})
+
+test('pear changelog without link returns platform changelog', async ({ not, teardown }) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const info = helper.info({ link: null, changelog: { max: 1 }, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(info))
+
+  const data = await Helper.pick(info, { tag: 'changelog' })
+  not(data.changelog, '[ No Changelog ]')
+})
 
 test('pear info on unseeded key shows empty', async ({ ok, comment, teardown }) => {
   const helper = new Helper()
@@ -61,10 +91,16 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   const info = helper.info({ link, cmdArgs: [] })
   teardown(() => Helper.teardownStream(info))
 
-  const until = await Helper.pick(info, [{ tag: 'info' }, { tag: 'final' }])
+  const until = await Helper.pick(info, [{ tag: 'keys' }, { tag: 'info' }, { tag: 'final' }])
+  const keys = await until.keys
+  is(hypercoreid.normalize(keys.project), keys.project, 'project key is z32')
+  is(hypercoreid.normalize(keys.discovery), keys.discovery, 'discovery key is z32')
+  is(hypercoreid.normalize(keys.content), keys.content, 'content key is z32')
   const data = await until.info
   is(data.link, link)
   is(data.version, '1.0.0')
+  is(data.productName, 'Pear Minimal')
+  is(data.upgrade, 'pear://t8p9t3ec55qdm5mk5i8pyehr7zbi15ax76h8wamt63dk3j7su77y')
 })
 
 test('pear info on committed multisig link includes multisig by default', async ({
