@@ -36,6 +36,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     summary('Generate a project link'),
     description`Create a new randomly generated Pear link`,
     flag('--json', 'Newline delimited JSON output'),
+    flag('--vanity <vanity>', 'Generate a vanity link with this prefix'),
     commands.touch
   )
 
@@ -183,6 +184,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
           }
         }`,
       flag('--config [./pear.json]', 'Config file path'),
+      flag('--vanity <vanity>', 'Generate a vanity link with this prefix'),
       flag('--json', 'Newline delimited JSON output'),
       commands.multisig
     ),
