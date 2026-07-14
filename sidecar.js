@@ -11,15 +11,15 @@ const {
   GC,
   PLATFORM_CORESTORE,
   PLATFORM_DIR,
-  SIDECAR_CRASH_LOG,
+  SIDECAR_ERROR_LOG_PATH,
   LOCALDEV,
   UPGRADE
 } = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
-crasher('sidecar', true, SIDECAR_CRASH_LOG)
-LOG.persistErrors(SIDECAR_CRASH_LOG)
+crasher('sidecar', true, SIDECAR_ERROR_LOG_PATH)
+LOG.persistErrors(SIDECAR_ERROR_LOG_PATH)
 
 os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
