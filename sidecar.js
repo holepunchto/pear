@@ -18,7 +18,7 @@ const {
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
-crasher('sidecar', true, SIDECAR_ERROR_LOG_PATH)
+crasher('sidecar', true)
 LOG.persistErrors(SIDECAR_ERROR_LOG_PATH)
 
 os.setProcessTitle('pear-sidecar')
