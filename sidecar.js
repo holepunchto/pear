@@ -7,12 +7,19 @@ const gracedown = require('pear-gracedown')
 const os = require('bare-os')
 const pear = require('./lib/cmd').command
 const path = require('bare-path')
-const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./constants.js')
+const {
+  GC,
+  PLATFORM_CORESTORE,
+  PLATFORM_DIR,
+  SIDECAR_CRASH_LOG,
+  LOCALDEV,
+  UPGRADE
+} = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
-const errorLog = crasher('sidecar', true)
-LOG.persistErrors(errorLog)
+crasher('sidecar', true, SIDECAR_CRASH_LOG)
+LOG.persistErrors(SIDECAR_CRASH_LOG)
 
 os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
