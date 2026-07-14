@@ -77,6 +77,8 @@ class Keys {
     }
     const input = await password()
     if (!input) throw new ERR_INVALID_INPUT('password required')
+    const confirmation = await password('Confirm password: ')
+    if (input !== confirmation) throw ERR_INVALID_INPUT('Passwords do not match')
     const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
     pwd.write(input)
     const { publicKey, secretKey } = hs.generateKeys(pwd)
