@@ -18,7 +18,7 @@ let _pearDevRoot = null
 let _platformDir = null
 let _platformLock = null
 let _platformCorestore = null
-let _sidecarErrorLogPath = null
+let _sidecarLogPath = null
 let _gc = null
 let _runtime = null
 let _socketPath = null
@@ -47,8 +47,8 @@ module.exports = {
   get PLATFORM_CORESTORE() {
     return _platformCorestore
   },
-  get SIDECAR_ERROR_LOG_PATH() {
-    return _sidecarErrorLogPath
+  get SIDECAR_LOG_PATH() {
+    return _sidecarLogPath
   },
   get GC() {
     return _gc
@@ -70,7 +70,7 @@ module.exports = {
     _platformDir = toPath(platformUrl())
     _platformLock = dir('pear.lock')
     _platformCorestore = dir('corestores/platform-next')
-    _sidecarErrorLogPath = dir('sidecar.error.log')
+    _sidecarLogPath = dir('sidecar.log')
     _gc = dir('gc')
     _runtime = dir(BIN + RUNTIME_EXEC)
     _socketPath = isWindows
