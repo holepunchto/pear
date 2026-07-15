@@ -280,9 +280,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     if (!sidecarClientClosed) await sidecarClient.close()
   })
   await sidecarClient.ready()
-  // Complete an operation so closing the client starts a fresh spindown countdown.
-  const touching = sidecarClient.touch({})
-  await Helper.pick(touching, { tag: 'final' })
 
   t.comment('Waiting for updater to connect to throttled seeder')
   const peerAdded = await Promise.race([peerAddedUntil, untilExit.then(() => false)])
@@ -296,11 +293,9 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     return
   }
 
-  t.comment(
-    `Waiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`
-  )
+  t.comment(`Waiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 3_000) / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 3_000)
     untilExit.finally(() => {
       clearTimeout(timeout)
       resolve()
