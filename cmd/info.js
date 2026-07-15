@@ -8,18 +8,19 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { cmdArgs } = require('../argv')
 
 const keys = ({ content, discovery, project }) => `
- keys         hex
------------  ------------------------------------------------------------------
+ keys         z32
+-----------  ------------------------------------------------------
  project      ${project}
  discovery    ${discovery}
  content      ${content}
 `
 
-const info = ({ name, version, length, byteLength, blobs, fork }) => `
+const info = ({ name, version, productName, upgrade, length, byteLength, blobs, fork }) => `
  info              value
 -----------------  -----------------
  name              ${name}
  version           ${version}
+ productName       ${productName}
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
@@ -30,6 +31,7 @@ const info = ({ name, version, length, byteLength, blobs, fork }) => `
  blobs.byteLength  ${blobs?.byteLength}`
      : ''
  }
+ upgrade           ${typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)}
 `
 
 const changelog = ({ changelog, full }) => `
