@@ -19,8 +19,8 @@ const info = ({ name, version, productName, upgrade, length, byteLength, blobs, 
  info              value
 -----------------  -----------------
  name              ${name}
- productName       ${productName}
  version           ${version}
+ productName       ${productName}
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
