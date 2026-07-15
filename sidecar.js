@@ -19,7 +19,7 @@ const {
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
 crasher('sidecar', true)
-LOG.saveLog(SIDECAR_LOG_PATH)
+LOG.setLogPath(SIDECAR_LOG_PATH)
 
 os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
