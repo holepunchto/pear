@@ -48,7 +48,7 @@
     "localdrive": "^2.2.0",
     "localwatch": "^1.4.3",
     "paparam": "^1.10.0",
-    "pear-build": "^1.0.0",
+    "pear-build": "^1.1.1",
     "pear-changelog": "^1.0.1",
     "pear-errors": "^1.0.1",
     "pear-gracedown": "^1.0.1",
