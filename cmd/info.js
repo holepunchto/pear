@@ -31,7 +31,7 @@ const info = ({ name, version, productName, upgrade, length, byteLength, blobs, 
  blobs.byteLength  ${blobs?.byteLength}`
      : ''
  }
- upgrade           ${typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade)}
+ upgrade           ${typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)}
 `
 
 const changelog = ({ changelog, full }) => `
