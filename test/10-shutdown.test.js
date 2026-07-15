@@ -261,7 +261,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   t.comment('4. Start sidecar and update using the throttle seeder')
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(path.join(buildDir, OUT), ['sidecar', '--dhtBootstrap', dhtBootstrap], {
+  const sidecar = spawn(path.join(buildDir, OUT), ['--sidecar', '--dht-bootstrap', dhtBootstrap], {
     stdio: 'ignore'
   })
   t.teardown(() => {
@@ -282,7 +282,16 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   await sidecarClient.ready()
 
   t.comment('Waiting for updater to connect to throttled seeder')
-  const peerAdded = await Promise.race([peerAddedUntil, untilExit.then(() => false)])
+  let peerAddedTimer = null
+  const peerAddedTimeout = new Promise((resolve) => {
+    peerAddedTimer = setTimeout(() => resolve(false), 30_000)
+  })
+  const peerAdded = await Promise.race([
+    peerAddedUntil,
+    untilExit.then(() => false),
+    peerAddedTimeout
+  ])
+  clearTimeout(peerAddedTimer)
   t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
 
   await sidecarClient.close()
