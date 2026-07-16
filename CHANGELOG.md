@@ -6,7 +6,7 @@
 
 * CLI - `pear build` fix package relative path
 * CLI - Linux libatomic check
-* CLI - `pear install` fix and unset SHELL guard
+* CLI - `pear install` fix SHELL guard
 
 ## v3.0.0
 
