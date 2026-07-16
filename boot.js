@@ -2,7 +2,7 @@
 'use strict'
 const fs = require('bare-fs')
 const os = require('bare-os')
-const { isWindows } = require('which-runtime')
+const { isWindows, isLinux } = require('which-runtime')
 const { PLATFORM_DIR } = require('./constants.js')
 const Logger = require('./lib/logger.js')
 const { cmdArgs } = require('./argv')
@@ -10,6 +10,24 @@ const flags = require('./lib/cmd.js').command(cmdArgs)?.flags ?? {}
 
 if (fs.existsSync(PLATFORM_DIR) === false) {
   fs.mkdirSync(PLATFORM_DIR, { recursive: true })
+}
+
+if (isLinux) {
+  try {
+    require('rocksdb-native')
+  } catch {
+    console.log('The required library libatomic.so was not found on the system.')
+    console.log(`
+Please install it first using the appropriate package manager for your system.
+
+- Debian/Ubuntu:   sudo apt install libatomic1
+- Fedora:          sudo dnf install libatomic
+- Arch Linux:      sudo pacman -S libatomic_ops
+- Alpine Linux:    sudo apk add libatomic
+- RHEL/CentOS:     sudo yum install libatomic
+`)
+    Bare.exit(1)
+  }
 }
 
 if (isWindows === false) {

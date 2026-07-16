@@ -1,10 +1,14 @@
 'use strict'
+const fs = require('bare-fs')
 const hypercoreid = require('hypercore-id-encoding')
 const clog = require('pear-changelog')
 const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { UPGRADE } = require('../../../constants.js')
+const platformPkg = require('../../../package.json')
+const platformChangelog = fs.readFileSync(require.asset('../../../CHANGELOG.md', __filename))
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
 
@@ -25,8 +29,8 @@ module.exports = class Info extends Opstream {
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
     const corestore = this.sidecar.getCorestore()
-    const key = link ? plink.parse(link).drive.key : await Hyperdrive.getDriveKey(corestore)
-    const drive = link ? await session.add(new Hyperdrive(corestore, key)) : this.sidecar.drive
+    const key = link ? plink.parse(link).drive.key : plink.parse(UPGRADE).drive.key
+    const drive = await session.add(new Hyperdrive(corestore, key))
 
     const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
     if (isEnabled(showKey)) {
@@ -40,19 +44,17 @@ module.exports = class Info extends Opstream {
       await replicator.join(this.sidecar.swarm, { server: false, client: true })
     }
 
-    if (drive.core.length === 0) {
+    if (link && drive.core.length === 0) {
       await drive.core.update()
     }
 
-    if (drive.core.length === 0 && drive.core.fork === 0) {
+    if (link && drive.core.length === 0 && drive.core.fork === 0) {
       this.push({ tag: 'empty' })
       return
     }
 
-    let pkg = null
-    if (drive.core.length > 0) {
-      pkg = JSON.parse(await drive.get('./package.json'))
-
+    if (link === null || drive.core.length > 0) {
+      const pkg = link ? JSON.parse(await drive.get('./package.json')) : platformPkg
       if (manifest) {
         this.push({ tag: 'manifest', data: { manifest: pkg } })
         this.final = { manifest: pkg }
@@ -67,9 +69,9 @@ module.exports = class Info extends Opstream {
         this.push({
           tag: 'keys',
           data: {
-            project: drive.key.toString('hex'),
-            content: drive.contentKey.toString('hex'),
-            discovery: drive.discoveryKey.toString('hex')
+            project: hypercoreid.encode(drive.key),
+            content: drive.contentKey ? hypercoreid.encode(drive.contentKey) : null,
+            discovery: hypercoreid.encode(drive.discoveryKey)
           }
         })
       }
@@ -77,6 +79,8 @@ module.exports = class Info extends Opstream {
       if (isEnabled(metadata)) {
         const name = pkg?.pear?.name || pkg?.name
         const version = pkg?.version
+        const productName = pkg?.productName
+        const upgrade = pkg?.upgrade
         const length = drive.core.length
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
@@ -93,6 +97,8 @@ module.exports = class Info extends Opstream {
             link,
             name,
             version,
+            productName,
+            upgrade,
             length,
             byteLength,
             blobs,
@@ -113,7 +119,7 @@ module.exports = class Info extends Opstream {
 
     if (!changelog) return
 
-    const contents = await drive.get('/CHANGELOG.md')
+    const contents = link === null ? platformChangelog : await drive.get('/CHANGELOG.md')
     const blank = '[ No Changelog ]'
     const parsed = clog.parse(contents)
     const top = parsed[0]?.[0]
