@@ -26,7 +26,6 @@
     "bare-events": "^2.8.3",
     "bare-format": "^1.0.2",
     "bare-fs": "^4.1.2",
-    "bare-hrtime": "^2.1.1",
     "bare-inspector": "^6.1.0",
     "bare-os": "^3.6.1",
     "bare-path": "^3.0.0",

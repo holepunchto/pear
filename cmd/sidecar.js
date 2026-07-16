@@ -36,11 +36,8 @@ module.exports = async function sidecar(cmd) {
   print('Runtime: ' + path.basename(constants.RUNTIME), 0)
   print('\n========================= INIT ===================================\n')
 
-  Logger.switches.labels += (Logger.switches.labels.length > 0 ? ',' : '') + 'sidecar'
-  if (Logger.switches.level < 2) {
-    Logger.switches.level = 2
-    global.LOG = new Logger({ pretty: true })
-  }
+  LOG.labels.add('sidecar')
+  if (Logger.levels[LOG.level] < Logger.levels.info) LOG.setLevel('info')
 
   constants.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
   require('../sidecar')

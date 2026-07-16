@@ -6,6 +6,7 @@ const { isWindows } = require('which-runtime')
 const { PLATFORM_DIR } = require('./constants.js')
 const Logger = require('./lib/logger.js')
 const { cmdArgs } = require('./argv')
+const flags = require('./lib/cmd.js').command(cmdArgs)?.flags ?? {}
 
 if (fs.existsSync(PLATFORM_DIR) === false) {
   fs.mkdirSync(PLATFORM_DIR, { recursive: true })
@@ -22,9 +23,16 @@ if (isWindows === false) {
   }
 }
 
+const max = !!flags.logMax
+const logging = !!(flags.log || flags.logLabels || max)
+const labels = ['internal']
+if (logging) labels.push('sidecar')
+if (flags.logLabels) labels.push(...flags.logLabels.split(','))
+
 global.LOG = new Logger({
-  labels: Logger.switches.log ? ['internal', 'sidecar'] : ['internal'],
-  pretty: Logger.switches.log
+  labels,
+  level: flags.logLevel ?? (max ? 'trace' : logging ? 'info' : 'error'),
+  all: max
 })
 
 const BOOT_SIDECAR = 1
