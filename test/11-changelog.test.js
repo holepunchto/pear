@@ -1,11 +1,10 @@
 'use strict'
-const env = require('bare-env')
 const test = require('brittle')
 const Helper = require('./helper')
 
-const TEST_TIMEOUT = env.CI ? 120000 : 60000
+test('pear changelog without link returns platform changelog', async ({ not, plan, teardown }) => {
+  plan(1)
 
-test('pear changelog without link returns platform changelog', async ({ not, teardown }) => {
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -17,8 +16,9 @@ test('pear changelog without link returns platform changelog', async ({ not, tea
   not(data.changelog, '[ No Changelog ]')
 })
 
-test('pear changelog with link', async ({ ok, is, teardown, timeout }) => {
-  timeout(TEST_TIMEOUT)
+test('pear changelog with link', async ({ ok, is, plan, teardown }) => {
+  plan(3)
+
   const dir = Helper.fixture('minimal')
 
   const helper = new Helper()
