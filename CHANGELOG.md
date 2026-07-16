@@ -1,5 +1,13 @@
 # Pear Runtime Changelog
 
+## v3.0.1
+
+### Fixes
+
+* CLI - `pear build` fix package relative path
+* CLI - Linux libatomic check
+* CLI - `pear install` fix SHELL guard
+
 ## v3.0.0
 
 ### Features
