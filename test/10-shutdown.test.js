@@ -232,7 +232,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   }
 
   t.comment('Staging platform using throttled platform')
-  let peerAdded = false
+  let peerAddedUntil = null
   {
     const stager = rcvHelper.stage({
       link: rcvLink,
@@ -251,16 +251,17 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     })
     const seederUntil = await Helper.pick(seeder, [{ tag: 'announced' }, { tag: 'peer-add' }])
     await seederUntil.announced
-    seederUntil['peer-add'].then(() => {
-      peerAdded = true
-    })
+    peerAddedUntil = seederUntil['peer-add'].then(
+      () => true,
+      () => false
+    )
     t.teardown(() => Helper.teardownStream(seeder))
   }
 
   t.comment('4. Start sidecar and update using the throttle seeder')
   t.comment('Starting sidecar')
   const dhtBootstrap = Helper.dhtBootstrap.map((e) => `${e.host}:${e.port}`).join(',')
-  const sidecar = spawn(path.join(buildDir, OUT), ['sidecar', '--dhtBootstrap', dhtBootstrap], {
+  const sidecar = spawn(path.join(buildDir, OUT), ['--sidecar', '--dht-bootstrap', dhtBootstrap], {
     stdio: 'ignore'
   })
   t.teardown(() => {
@@ -269,11 +270,41 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const untilExit = new Promise((resolve) => sidecar.once('exit', resolve))
   t.teardown(() => untilExit, { order: Infinity })
 
-  t.comment(
-    `Waiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 10_000) / 1000}s)`
-  )
+  // Keep the updater sidecar alive until peer discovery completes.
+  const sidecarClient = new Helper({
+    platformDir: path.join(buildDir, 'pear'),
+    expectSidecar: true
+  })
+  let sidecarClientClosed = false
+  t.teardown(async () => {
+    if (!sidecarClientClosed) await sidecarClient.close()
+  })
+  await sidecarClient.ready()
+
+  t.comment('Waiting for updater to connect to throttled seeder')
+  let peerAddedTimer = null
+  const peerAddedTimeout = new Promise((resolve) => {
+    peerAddedTimer = setTimeout(() => resolve(false), 30_000)
+  })
+  const peerAdded = await Promise.race([
+    peerAddedUntil,
+    untilExit.then(() => false),
+    peerAddedTimeout
+  ])
+  clearTimeout(peerAddedTimer)
+  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
+
+  await sidecarClient.close()
+  sidecarClientClosed = true
+
+  if (!peerAdded) {
+    t.fail('cannot test spindown before updater connects')
+    return
+  }
+
+  t.comment(`Waiting for sidecar spindown timeout to lapse (${(SPINDOWN_TIMEOUT + 3_000) / 1000}s)`)
   const timeoutUntil = new Promise((resolve) => {
-    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 10_000)
+    const timeout = setTimeout(() => resolve(false), SPINDOWN_TIMEOUT + 3_000)
     untilExit.finally(() => {
       clearTimeout(timeout)
       resolve()
@@ -281,7 +312,6 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   })
 
   const hasSpunDown = await Promise.race([untilExit, timeoutUntil])
-  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
 
   if (hasSpunDown !== false) {
     t.fail('sidecar failed to prevent spindown during update')
