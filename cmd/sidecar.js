@@ -36,8 +36,17 @@ module.exports = async function sidecar(cmd) {
   print('Runtime: ' + path.basename(constants.RUNTIME), 0)
   print('\n========================= INIT ===================================\n')
 
+  const { logLevel, logLabels, logMax } = cmd.flags
   LOG.labels.add('sidecar')
-  if (Logger.levels[LOG.level] < Logger.levels.info) LOG.setLevel('info')
+  if (logLabels) {
+    for (const label of logLabels.split(',')) {
+      if (label.trim()) LOG.labels.add(label.trim())
+    }
+  }
+  if (logMax) LOG.all = true
+  if (logLevel !== undefined) LOG.setLevel(logLevel)
+  else if (logMax) LOG.setLevel('trace')
+  else if (Logger.levels[LOG.level] < Logger.levels.info) LOG.setLevel('info')
 
   constants.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
   require('../sidecar')
