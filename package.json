@@ -24,6 +24,7 @@
     "b4a": "^1.6.7",
     "bare-daemon": "^1.2.4",
     "bare-events": "^2.9.1",
+    "bare-file-logger": "^1.2.3",
     "bare-format": "^1.0.2",
     "bare-fs": "^4.7.4",
     "bare-inspector": "^6.1.0",
