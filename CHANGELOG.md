@@ -17,7 +17,7 @@
 ### Improvements
 
 * MAJOR - `pear run` has been removed
-* pear://alias has been removed
+* `pear://<alias>` has been removed
 * CLI - `pear sidecar` - `--key <key>` flag (switch release lines) removed (use npx pear-install <link>)
 * CLI - `pear seed` - `whoami` and drive length reporting, colored output, and UI clean up
 * CLI - `pear seed` - use z32 encoding for all keys
