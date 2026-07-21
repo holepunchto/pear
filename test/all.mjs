@@ -19,6 +19,7 @@ async function runTests() {
   await test.load(import.meta.resolve('./09-vanity.test.js'))
   await test.load(import.meta.resolve('./10-shutdown.test.js'))
   await test.load(import.meta.resolve('./11-changelog.test.js'))
+  await test.load(import.meta.resolve('./12-list.test.js'))
 
   test.resume()
 }

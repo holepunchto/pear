@@ -21,6 +21,7 @@ const commands = {
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
+  list: require('./list'),
   versions: require('./versions')
 }
 
@@ -353,6 +354,14 @@ module.exports = async (ipc, argv = cmdArgs) => {
     }
   )
 
+  const list = command(
+    'list',
+    summary('List cores'),
+    description`List corestore cores`,
+    flag('--json', 'Newline delimited JSON output'),
+    commands.list
+  )
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -383,6 +392,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     changelog,
     sidecar,
     gc,
+    list,
     versions,
     help,
     footer(usage.footer),

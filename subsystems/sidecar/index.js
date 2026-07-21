@@ -24,7 +24,8 @@ const ops = {
   Info: require('./ops/info'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
-  Multisig: require('./ops/multisig')
+  Multisig: require('./ops/multisig'),
+  List: require('./ops/list')
 }
 
 const SWARM_DELAY = 5000
@@ -159,6 +160,10 @@ class Sidecar extends ReadyResource {
 
   touch(params, client) {
     return new ops.Touch(params, client, this)
+  }
+
+  list(params, client) {
+    return new ops.List(params, client, this)
   }
 
   versions(params, client) {
