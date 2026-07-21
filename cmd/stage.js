@@ -4,7 +4,7 @@ const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi } = require('../lib/terminal.js')
+const { outputter, ansi, hint } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 
@@ -59,4 +59,15 @@ module.exports = async function stage(cmd) {
     cmdArgs
   })
   await output(json, stream)
+
+  if (!json) {
+    const target = link + (cmd.args.dir ? ' ' + cmd.args.dir : '')
+    if (dryRun) {
+      hint('Dry run only - nothing was persisted. Once the diff looks right, stage for real:', [
+        'pear stage ' + target
+      ])
+    } else {
+      hint('Seed the staged version so peers can access it:', ['pear seed ' + link])
+    }
+  }
 }

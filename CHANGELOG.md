@@ -1,5 +1,12 @@
 # Pear Runtime Changelog
 
+## v3.1.0
+
+### Improvements
+
+* CLI - next-step onboarding hints for the release flow (`stage`, `provision`, `multisig keys get`/`link`/`request`/`sign`/`verify`/`commit`) - printed to stderr, suppressed by `--json`, so stdout and `--json` output are unchanged
+* CLI - `pear multisig verify` no longer suggests seeding after a dry run; it now points to the next verify/commit step
+
 ## v3.0.1
 
 ### Fixes

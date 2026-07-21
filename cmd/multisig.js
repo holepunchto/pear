@@ -2,7 +2,7 @@
 const context = require('../context')
 const path = require('bare-path')
 const os = require('bare-os')
-const { outputter, password } = require('../lib/terminal.js')
+const { outputter, password, hint } = require('../lib/terminal.js')
 const hypercoreid = require('hypercore-id-encoding')
 const z32 = require('z32')
 const fs = require('bare-fs')
@@ -73,6 +73,7 @@ class Keys {
         data.privateKey = fs.existsSync(this.prv) ? fs.readFileSync(this.prv) : '(no secret key)'
       }
       await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
+      if (!this.json) this.#nextHint()
       return
     }
     const input = await password()
@@ -94,6 +95,13 @@ class Keys {
     }
     if (secret) data.privateKey = secretKey
     await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
+    if (!this.json) this.#nextHint()
+  }
+
+  #nextHint() {
+    hint('Add this public key to multisig.publicKeys in pear.json, then get the multisig link:', [
+      'pear multisig link'
+    ])
   }
 
   async paths() {
@@ -211,10 +219,7 @@ class Multisig {
         link +
         '\n' +
         'verlink: ' +
-        verlink +
-        '\n' +
-        'seed: pear seed ' +
-        link
+        verlink
       )
     }
   })
@@ -282,6 +287,13 @@ class Multisig {
     }
 
     await Multisig.output(this.json, this.ipc.multisig({ action: 'link', ...config }))
+
+    if (!this.json) {
+      hint(
+        'Set this as the upgrade link in package.json. When you have a versioned, seeded source link, request signatures:',
+        ['pear multisig request <verlink>']
+      )
+    }
   }
 
   async sign() {
@@ -307,12 +319,16 @@ class Multisig {
     const at = { pub: pub.replace(HOME, '~'), prv: prv.replace(HOME, '~') }
     const response = z32.encode(hs.sign(req, key, pwd))
     await Multisig.output(this.json, [{ tag: 'sign', data: { response, at } }, { tag: 'final' }])
+
+    if (!this.json) {
+      hint('Send this response back to the release coordinator, who verifies and commits it.')
+    }
   }
 
   async request() {
     const { force, peerUpdateTimeout } = this.cmd.flags
     const { verlink } = this.cmd.args
-    await Multisig.output(
+    const final = await Multisig.output(
       this.json,
       this.ipc.multisig({
         action: 'request',
@@ -322,6 +338,12 @@ class Multisig {
         peerUpdateTimeout
       })
     )
+
+    if (!this.json && final?.request) {
+      hint('Send this request to each signer. Each signs it with their key:', [
+        'pear multisig sign ' + final.request
+      ])
+    }
   }
 
   async verify() {
@@ -346,6 +368,18 @@ class Multisig {
         peerUpdateTimeout
       })
     )
+
+    if (!this.json) {
+      if (responses.length === 0) {
+        hint('Request verified. Once signers return their responses, verify again with them:', [
+          'pear multisig verify ' + sourceLink + ' ' + request + ' <response> [<response> ...]'
+        ])
+      } else {
+        hint('If verification passed, commit to go live:', [
+          'pear multisig commit ' + sourceLink + ' ' + request + ' ' + responses.join(' ')
+        ])
+      }
+    }
   }
 
   async commit() {
@@ -358,7 +392,7 @@ class Multisig {
       const res = z32.decode(response)
       if (!hs.isResponse(res)) throw ERR_INVALID_INPUT('Invalid response: ' + response)
     }
-    await Multisig.output(
+    const final = await Multisig.output(
       this.json,
       this.ipc.multisig({
         action: 'commit',
@@ -371,6 +405,13 @@ class Multisig {
         peerUpdateTimeout
       })
     )
+
+    if (!this.json && final?.dstKey) {
+      const link = plink.serialize({ drive: { key: final.dstKey } })
+      hint('The commit is not safe until peers seed it. Seed the multisig link:', [
+        'pear seed ' + link
+      ])
+    }
   }
 }
 
