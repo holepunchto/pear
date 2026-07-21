@@ -34,6 +34,7 @@
     "bare-stream": "^2.13.3",
     "bare-subprocess": "^6.1.0",
     "bare-tty": "^5.1.2",
+    "bare-tui-paparam": "^0.0.1",
     "bare-worker": "^4.4.0",
     "corestore": "^7.2.1",
     "db-lock": "^1.2.0",

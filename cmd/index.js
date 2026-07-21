@@ -1,11 +1,12 @@
 'use strict'
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
-const { usage, print } = require('../lib/terminal.js')
+const { usage, print, isTTY } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
 const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
+const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
   touch: require('./touch'),
@@ -471,18 +472,39 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const shell = require('../lib/cmd').command(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
-  if (cmdIx > -1) argv = argv.slice(cmdIx)
 
-  if (argv[0] === 'run') {
-    const message =
-      'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
-    print(message, false)
-    Bare.exitCode = 1
-    ipc.close()
-    return null
+  let program = null
+
+  if (shell?.flags?.menu) {
+    if (!isTTY) {
+      print('pear --menu requires an interactive terminal', false)
+      Bare.exitCode = 1
+      ipc.close()
+      return null
+    }
+    const confirmed = await runMenu(cmd, {
+      onComplete: (result, { argv: menuArgv }) => {
+        program = cmd.parse(menuArgv)
+      }
+    })
+    if (!confirmed || !confirmed.run) {
+      ipc.close()
+      return null
+    }
+  } else {
+    if (cmdIx > -1) argv = argv.slice(cmdIx)
+
+    if (argv[0] === 'run') {
+      const message =
+        'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
+      print(message, false)
+      Bare.exitCode = 1
+      ipc.close()
+      return null
+    }
+
+    program = cmd.parse(argv)
   }
-
-  const program = cmd.parse(argv)
 
   if (program === null) {
     ipc.close()
