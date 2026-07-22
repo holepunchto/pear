@@ -3,7 +3,7 @@
 const fs = require('bare-fs')
 const os = require('bare-os')
 const { isWindows, isLinux } = require('which-runtime')
-const { PLATFORM_DIR } = require('./constants.js')
+const { PLATFORM_DIR, LOG_PATH } = require('./constants.js')
 const Logger = require('./lib/logger.js')
 const { cmdArgs } = require('./argv')
 const flags = require('./lib/cmd.js').command(cmdArgs)?.flags ?? {}
@@ -41,7 +41,7 @@ if (isWindows === false) {
   }
 }
 
-global.LOG = new Logger({
+global.LOG = new Logger(LOG_PATH, {
   level: flags.logLevel || 'info'
 })
 

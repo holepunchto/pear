@@ -2,24 +2,17 @@
 const Corestore = require('corestore')
 const fs = require('bare-fs')
 const Rache = require('rache')
-const crasher = require('./lib/crasher.js')
+const setupCrashHandlers = require('./lib/crasher.js')
 const gracedown = require('pear-gracedown')
 const os = require('bare-os')
 const pear = require('./lib/cmd').command
 const path = require('bare-path')
-const {
-  GC,
-  PLATFORM_CORESTORE,
-  PLATFORM_DIR,
-  SIDECAR_LOG_PATH,
-  LOCALDEV,
-  UPGRADE
-} = require('./constants.js')
+const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
-crasher('sidecar', true)
-LOG.setLogPath(SIDECAR_LOG_PATH)
+
+setupCrashHandlers('sidecar')
 
 os.setProcessTitle('pear-sidecar')
 LOG.info('sidecar', '- Sidecar Booting')
