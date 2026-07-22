@@ -41,16 +41,8 @@ if (isWindows === false) {
   }
 }
 
-const max = !!flags.logMax
-const logging = !!(flags.log || flags.logLabels || max)
-const labels = ['internal']
-if (logging) labels.push('sidecar')
-if (flags.logLabels) labels.push(...flags.logLabels.split(','))
-
 global.LOG = new Logger({
-  labels,
-  level: flags.logLevel ?? (max ? 'trace' : logging ? 'info' : 'error'),
-  all: max
+  level: flags.logLevel || 'info'
 })
 
 const BOOT_SIDECAR = 1

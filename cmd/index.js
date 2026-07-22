@@ -333,8 +333,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     `,
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
-    flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
-    flag('--log-max|-M', 'Log all levels and labels'),
     flag('--dht-bootstrap <nodes>').hide(),
     commands.sidecar
   )

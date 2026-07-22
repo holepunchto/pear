@@ -4,7 +4,6 @@ const path = require('bare-path')
 const gracedown = require('pear-gracedown')
 const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('../lib/terminal.js')
-const Logger = require('../lib/logger.js')
 const constants = require('../constants.js')
 const { upgrade: key, version } = require('../package.json')
 module.exports = async function sidecar(cmd) {
@@ -35,18 +34,6 @@ module.exports = async function sidecar(cmd) {
   print('Rebooting current process as Sidecar', 0)
   print('Runtime: ' + path.basename(constants.RUNTIME), 0)
   print('\n========================= INIT ===================================\n')
-
-  const { logLevel, logLabels, logMax } = cmd.flags
-  LOG.labels.add('sidecar')
-  if (logLabels) {
-    for (const label of logLabels.split(',')) {
-      if (label.trim()) LOG.labels.add(label.trim())
-    }
-  }
-  if (logMax) LOG.all = true
-  if (logLevel !== undefined) LOG.setLevel(logLevel)
-  else if (logMax) LOG.setLevel('trace')
-  else if (Logger.levels[LOG.level] < Logger.levels.info) LOG.setLevel('info')
 
   constants.SPINDOWN_TIMEOUT = Number.MAX_SAFE_INTEGER // keep-alive
   require('../sidecar')
