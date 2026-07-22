@@ -1,6 +1,6 @@
 'use strict'
 const IPC = require('pear-ipc')
-const crasher = require('./lib/crasher.js')
+const setupCrashHandlers = require('./lib/crasher.js')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
@@ -9,7 +9,8 @@ const { SOCKET_PATH, CONNECT_TIMEOUT, PLATFORM_DIR, LOCALDEV } = require('./cons
 const context = require('./context')
 const cmd = require('./cmd')
 const { normalizedArgv } = require('./argv')
-crasher('cli')
+
+setupCrashHandlers('cli')
 
 cli()
 
