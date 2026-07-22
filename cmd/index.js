@@ -48,6 +48,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
     `,
     arg('<link>', 'Pear link to seed'),
     flag('--no-tty', 'Disable tty features'),
+    flag(
+      '--until-sync [key]',
+      'Exit when sync completes. Use [key] for one or multiple specific peers'
+    ).multiple(),
     flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed

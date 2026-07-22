@@ -43,14 +43,14 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, untilSync, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
     if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
 
     // not an app but a long running process, setting userData for restart recognition:
-    client.userData = { state: { cmdArgs, flags: { link } } }
+    client.userData = { state: { cmdArgs, flags: { link, untilSync } } }
 
     this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
@@ -128,6 +128,40 @@ module.exports = class Seed extends Opstream {
     blobs.core.download({ start: 0, end: -1 })
 
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
+
+    if (untilSync) {
+      const keys = untilSync.filter(Boolean).map(hypercoreid.normalize)
+      if (keys.length) {
+        while (
+          keys.some((key) => {
+            const db = drive.db.core.peers.find(
+              (peer) => hypercoreid.normalize(peer.remotePublicKey) === key
+            )
+            const blobsPeer = blobs.core.peers.find(
+              (peer) => hypercoreid.normalize(peer.remotePublicKey) === key
+            )
+            return (
+              !db ||
+              (drive.db.core.length && db.remoteContiguousLength < drive.db.core.length) ||
+              (blobs.core.length &&
+                (!blobsPeer || blobsPeer.remoteContiguousLength < blobs.core.length))
+            )
+          })
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 20))
+        }
+      } else {
+        while (drive.db.core.remoteContiguousLength < drive.db.core.length) {
+          await new Promise((resolve) => setTimeout(resolve, 20))
+        }
+        while (blobs.core.remoteContiguousLength < blobs.core.length) {
+          await new Promise((resolve) => setTimeout(resolve, 20))
+        }
+      }
+
+      await this.session.close()
+      return
+    }
 
     await new Promise((resolve) => this.session.teardown(resolve))
   }
