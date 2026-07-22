@@ -3,12 +3,11 @@ const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
 
 const output = outputter('cores', {
-  core: ({ id, link, open }) => `${open ? '●' : '○'} ${link || `discovery key: ${id}`}`,
-  final: ({ count, open }) => ({
+  core: ({ id, link, writable }) => `${link || `discovery key: ${id}`}${writable && ' (writable)'}`,
+  final: ({ count, writable }) => ({
     output: 'print',
     success: Infinity, // omit success ansi tick
-    message:
-      count > 0 ? `Total cores: ${count} | Open: ${open} | Closed: ${count - open}` : 'No cores'
+    message: count > 0 ? `Total cores: ${count} | Writable: ${writable}` : 'No cores'
   }),
   error: ({ code, message, stack }) => `Cores Error (code: ${code || 'none'}) ${message} ${stack}`
 })

@@ -14,15 +14,15 @@ module.exports = class Cores extends Opstream {
     const discoveryKeys = []
     for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
 
-    let openCount = 0
+    let writableCount = 0
 
     for (const discoveryKey of discoveryKeys) {
       const dkey = hypercoreid.encode(discoveryKey)
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
 
-      const open = Boolean(info.auth?.keyPair)
-      if (open) {
-        ++openCount
+      const writable = Boolean(info.auth?.keyPair)
+      if (writable) {
+        ++writableCount
       }
 
       const key = info.auth?.key
@@ -32,11 +32,11 @@ module.exports = class Cores extends Opstream {
         data: {
           id: dkey,
           link: dlink,
-          open
+          writable
         }
       })
     }
 
-    this.final = { count: discoveryKeys.length, open: openCount }
+    this.final = { count: discoveryKeys.length, writable: writableCount }
   }
 }
