@@ -14,6 +14,7 @@ let resizeHandler
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
+  const untilSync = cmd.flags.untilSync
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -22,6 +23,9 @@ module.exports = async function seed(cmd) {
   statsInterval = +statsInterval
   if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
+  }
+  if (untilSync?.some((key) => key && hypercoreid.isValid(key) === false)) {
+    throw ERR_INVALID_INPUT('--until-sync [key] must supply a valid z32 key')
   }
   const id = Bare.pid
   const { width } = stdio.size()
@@ -201,6 +205,7 @@ module.exports = async function seed(cmd) {
     ipc.seed({
       id,
       link,
+      untilSync,
       statsInterval,
       cmdArgs
     })
