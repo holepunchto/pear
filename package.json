@@ -95,5 +95,8 @@
     "url": "https://github.com/holepunchto/pear/issues"
   },
   "homepage": "https://github.com/holepunchto/pear#readme",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "overrides": {
+    "bare-tui-form": "0.0.3"
+  }
 }
