@@ -347,7 +347,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command(
       'cores',
       summary('Clear corestore cores'),
-      arg('[link]', 'Clear cores by link'),
+      arg('<link>', 'Clear cores by link'),
       commands.gc
     ),
     flag('--json', 'Newline delimited JSON output'),
