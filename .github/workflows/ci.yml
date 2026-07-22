@@ -45,7 +45,7 @@ jobs:
         uses: holepunchto/actions/.github/steps/setup-repo@v1
 
       - name: Install w/ dev deps
-        run: npm install
+        run: npm ci
 
       - name: Build Local Runtime
         run: npm run make
