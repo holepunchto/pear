@@ -3,7 +3,7 @@ const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
 
-module.exports = class List extends Opstream {
+module.exports = class Cores extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
