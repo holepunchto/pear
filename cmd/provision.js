@@ -84,7 +84,7 @@ module.exports = async function provision(cmd) {
 
   const source = plink.parse(sourceVerlink)
   if (source.drive.length === null) {
-    throw ERR_INVALID_LINK('<source-link> must be versioned', {
+    throw ERR_INVALID_LINK('<source-verlink> must be versioned', {
       link: sourceVerlink
     })
   }
@@ -93,7 +93,7 @@ module.exports = async function provision(cmd) {
 
   const production = plink.parse(productionVerlink)
   if (production.drive.length === null) {
-    throw ERR_INVALID_LINK('<target-link> must be versioned', {
+    throw ERR_INVALID_LINK('<production-verlink> must be versioned', {
       link: productionVerlink
     })
   }
