@@ -20,18 +20,17 @@ module.exports = class Cores extends Opstream {
       const dkey = hypercoreid.encode(discoveryKey)
       const info = await sidecar.corestore.storage.getInfo(discoveryKey)
 
-      const writable = Boolean(info.auth?.keyPair)
+      const writable = Boolean(info.auth.keyPair)
       if (writable) {
         ++writableCount
       }
 
-      const key = info.auth?.key
-      const dlink = key ? plink.serialize({ drive: { key } }) : null
+      const key = info.auth.key
+      const link = plink.serialize({ drive: { key } })
       this.push({
         tag: 'core',
         data: {
-          id: dkey,
-          link: dlink,
+          link,
           writable
         }
       })

@@ -3,7 +3,7 @@ const test = require('brittle')
 const Helper = require('./helper')
 
 test('pear cores lists default cores', async ({ teardown, plan, is, ok }) => {
-  plan(6)
+  plan(5)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -11,7 +11,6 @@ test('pear cores lists default cores', async ({ teardown, plan, is, ok }) => {
   const cores = await Helper.pick(coresStream, [{ tag: 'core' }, { tag: 'final' }])
 
   const core = await cores.core
-  ok(/^[a-z0-9]{52}$/.test(core.id))
   ok(/^pear:\/\/[a-z0-9]{52}$/.test(core.link))
   is(typeof core.writable, 'boolean')
 

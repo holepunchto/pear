@@ -356,8 +356,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const cores = command(
     'cores',
-    summary('List cores'),
-    description`List corestore cores`,
+    summary('List platform cores'),
+    description`List platform corestore cores`,
     flag('--json', 'Newline delimited JSON output'),
     commands.cores
   )
