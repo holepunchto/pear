@@ -1,7 +1,8 @@
 'use strict'
-const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
+const Hyperdrive = require('hyperdrive')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 
@@ -36,27 +37,35 @@ module.exports = class GC extends Opstream {
     const metadataInfo = await sidecar.corestore.storage.getInfo(metadataDiscoveryKey)
     if (!metadataInfo) return
 
-    const discoveryKeys = []
-    for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
-    for (const discoveryKey of discoveryKeys) {
-      const dkey = hypercoreid.encode(discoveryKey)
-      const info = await sidecar.corestore.storage.getInfo(discoveryKey)
-      if (info.auth && info.auth.keyPair) continue
+    const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key)
+    try {
+      await this.session.add(drive)
+    } catch {
+      await drive.close()
+      throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
+    }
+    if (!drive.blobs) throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
+    const contentDiscoveryKey = drive.blobs.core.discoveryKey
+    await drive.close()
 
-      const core = sidecar.corestore.get({
-        discoveryKey: info.discoveryKey,
-        active: false
-      })
-      await core.ready()
+    const coreInfos = [await sidecar.corestore.storage.getInfo(contentDiscoveryKey), metadataInfo]
+    const dlink = plink.serialize({ drive: { key: parsed.drive.key } })
+    for (const coreInfo of coreInfos) {
+      if (!coreInfo || (coreInfo.auth && coreInfo.auth.keyPair)) continue
+
+      const core = await this.session.add(
+        sidecar.corestore.get({
+          discoveryKey: coreInfo.discoveryKey,
+          active: false
+        })
+      )
       await core.clear(0, core.length)
-      const dlink =
-        info.auth && info.auth.key ? plink.serialize({ drive: { key: info.auth.key } }) : null
       this.push({
         tag: 'remove',
         data: {
           operation: 'clear',
           resource: resource,
-          id: dkey,
+          id: hypercoreid.encode(coreInfo.discoveryKey),
           link: dlink
         }
       })
