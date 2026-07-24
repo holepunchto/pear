@@ -6,7 +6,7 @@ const { init } = require('./constants.js')
 
 const executable = resolveExecutable()
 const devRoot = resolveDevRoot(executable)
-const standalone = path.basename(Bare.argv[0]) !== 'bare'
+const standalone = path.basename(Bare.argv[0]) !== (isWindows ? 'bare.exe' : 'bare')
 
 module.exports = (channel) => {
   init(channel, standalone, devRoot)
