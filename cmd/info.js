@@ -15,7 +15,17 @@ const keys = ({ content, discovery, project }) => `
  content      ${content}
 `
 
-const info = ({ name, version, productName, upgrade, length, byteLength, blobs, fork }) => `
+const info = ({
+  name,
+  version,
+  productName,
+  upgrade,
+  length,
+  byteLength,
+  blobs,
+  fork,
+  verlink
+}) => `
  info              value
 -----------------  -----------------
  name              ${name}
@@ -31,6 +41,7 @@ const info = ({ name, version, productName, upgrade, length, byteLength, blobs, 
  blobs.byteLength  ${blobs?.byteLength}`
      : ''
  }
+ verlink           ${verlink}
  upgrade           ${typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)}
 `
 
