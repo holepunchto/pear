@@ -5,7 +5,7 @@ const fs = require('bare-fs')
 const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const { PLATFORM_DIR } = require('../../../constants.js')
-const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
+const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
 const plink = require('pear-link')
@@ -112,7 +112,20 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { resource, data = {} } = params
+    const { link } = data
     const { sidecar } = this
+
+    if (!link) throw ERR_INVALID_INPUT('A link must be specified')
+
+    let parsed = null
+    try {
+      parsed = plink.parse(link)
+    } catch {
+      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    if (parsed.drive.key === null) {
+      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
 
     const discoveryKeys = []
     for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
