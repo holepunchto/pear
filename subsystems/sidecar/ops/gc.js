@@ -35,7 +35,7 @@ module.exports = class GC extends Opstream {
 
     const metadataDiscoveryKey = crypto.discoveryKey(parsed.drive.key)
     const metadataInfo = await sidecar.corestore.storage.getInfo(metadataDiscoveryKey)
-    if (!metadataInfo) return
+    if (!metadataInfo || (metadataInfo.auth && metadataInfo.auth.keyPair)) return
 
     const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key)
     try {
