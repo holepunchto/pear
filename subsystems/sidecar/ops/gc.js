@@ -133,16 +133,26 @@ module.exports = class GC extends Opstream {
     const metadataInfo = await sidecar.corestore.storage.getInfo(metadataDiscoveryKey)
     if (!metadataInfo || (metadataInfo.auth && metadataInfo.auth.keyPair)) return
 
-    const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key)
-    try {
-      await this.session.add(drive)
-    } catch {
+    let contentDiscoveryKey = null
+    const contentKey =
+      metadataInfo.auth && metadataInfo.auth.manifest
+        ? Hyperdrive.getContentKey(metadataInfo.auth.manifest, parsed.drive.key)
+        : null
+
+    if (contentKey) {
+      contentDiscoveryKey = crypto.discoveryKey(contentKey)
+    } else {
+      const drive = new Hyperdrive(sidecar.getCorestore(), parsed.drive.key)
+      try {
+        await this.session.add(drive)
+      } catch {
+        await drive.close()
+        throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
+      }
+      if (!drive.blobs) throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
+      contentDiscoveryKey = drive.blobs.core.discoveryKey
       await drive.close()
-      throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
     }
-    if (!drive.blobs) throw ERR_NOT_FOUND(`Could not resolve blob core for "${link}"`)
-    const contentDiscoveryKey = drive.blobs.core.discoveryKey
-    await drive.close()
 
     const coreInfos = [await sidecar.corestore.storage.getInfo(contentDiscoveryKey), metadataInfo]
     const dlink = plink.serialize({ drive: { key: parsed.drive.key } })
