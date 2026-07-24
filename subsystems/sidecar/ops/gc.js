@@ -2,6 +2,7 @@
 const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
+const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 
 module.exports = class GC extends Opstream {
@@ -30,6 +31,10 @@ module.exports = class GC extends Opstream {
     if (parsed.drive.key === null) {
       throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
+
+    const metadataDiscoveryKey = crypto.discoveryKey(parsed.drive.key)
+    const metadataInfo = await sidecar.corestore.storage.getInfo(metadataDiscoveryKey)
+    if (!metadataInfo) return
 
     const discoveryKeys = []
     for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
