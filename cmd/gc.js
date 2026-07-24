@@ -31,10 +31,21 @@ class GC {
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link
+
     if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      let parsed = null
+      try {
+        parsed = plink.parse(link)
+      } catch {
+        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      }
+      if (parsed.drive.key === null) {
+        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      }
+    } else {
+      throw ERR_INVALID_INPUT('A link must be specified')
     }
+
     return { link }
   }
 }
