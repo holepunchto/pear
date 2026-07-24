@@ -129,9 +129,13 @@ module.exports = class GC extends Opstream {
       throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
 
+    let count = 0
     const metadataDiscoveryKey = crypto.discoveryKey(parsed.drive.key)
     const metadataInfo = await sidecar.corestore.storage.getInfo(metadataDiscoveryKey)
-    if (!metadataInfo || (metadataInfo.auth && metadataInfo.auth.keyPair)) return
+    if (!metadataInfo || (metadataInfo.auth && metadataInfo.auth.keyPair)) {
+      this.final = { count }
+      return
+    }
 
     let contentDiscoveryKey = null
     const contentKey =
@@ -175,8 +179,10 @@ module.exports = class GC extends Opstream {
           link: dlink
         }
       })
+      count++
       await core.close()
     }
     await sidecar.corestore.storage.compact()
+    this.final = { count }
   }
 }
