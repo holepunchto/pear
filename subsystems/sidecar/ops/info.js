@@ -91,10 +91,12 @@ module.exports = class Info extends Opstream {
             }
           : null
         const fork = drive.core.fork
+        const verlink = plink.serialize({ drive: { key, fork, length } })
         this.push({
           tag: 'info',
           data: {
             link,
+            verlink,
             name,
             version,
             productName,
