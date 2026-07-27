@@ -24,8 +24,8 @@ module.exports = async function seed(cmd) {
   if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
-  if (untilSync?.some((key) => key && hypercoreid.isValid(key) === false)) {
-    throw ERR_INVALID_INPUT('--until-sync [key] must supply a valid z32 key')
+  if (untilSync?.some((key) => hypercoreid.isValid(key) === false)) {
+    throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
   }
   const id = Bare.pid
   const { width } = stdio.size()

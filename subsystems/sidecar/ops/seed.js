@@ -130,33 +130,25 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     if (untilSync) {
-      const keys = untilSync.filter(Boolean).map(hypercoreid.normalize)
-      if (keys.length) {
-        while (
-          keys.some((key) => {
-            const db = drive.db.core.peers.find(
-              (peer) => hypercoreid.normalize(peer.remotePublicKey) === key
-            )
-            const blobsPeer = blobs.core.peers.find(
-              (peer) => hypercoreid.normalize(peer.remotePublicKey) === key
-            )
-            return (
-              !db ||
-              (drive.db.core.length && db.remoteContiguousLength < drive.db.core.length) ||
-              (blobs.core.length &&
-                (!blobsPeer || blobsPeer.remoteContiguousLength < blobs.core.length))
-            )
-          })
-        ) {
+      LOG.trace('seed', 'WAITING FOR PEER TO SYNC...')
+
+      const synced = (core, key) => {
+        const peer = core.peers.find((peer) => hypercoreid.normalize(peer.remotePublicKey) === key)
+        return peer && peer.remoteContiguousLength >= core.length
+      }
+
+      for (const key of untilSync.map(hypercoreid.normalize)) {
+        while (!synced(drive.db.core, key)) {
           await new Promise((resolve) => setTimeout(resolve, 20))
         }
-      } else {
-        while (drive.db.core.remoteContiguousLength < drive.db.core.length) {
-          await new Promise((resolve) => setTimeout(resolve, 20))
+
+        if (blobs.core.length) {
+          while (!synced(blobs.core, key)) {
+            await new Promise((resolve) => setTimeout(resolve, 20))
+          }
         }
-        while (blobs.core.remoteContiguousLength < blobs.core.length) {
-          await new Promise((resolve) => setTimeout(resolve, 20))
-        }
+
+        LOG.trace('seed', `SYNCED PEER ${key}`)
       }
 
       await this.session.close()
