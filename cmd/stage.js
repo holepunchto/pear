@@ -67,7 +67,11 @@ module.exports = async function stage(cmd) {
         'pear stage ' + target
       ])
     } else {
-      hint('Seed the staged version so peers can access it:', ['pear seed ' + link])
+      hint('Keep the staged version available', ['pear seed <stage-link>'])
+      hint('Provision for prerelease, stakeholder preview, QA, or dogfooding', [
+        'pear touch',
+        'pear provision --dry-run <versioned-stage-link> <provision-link> <versioned-production-link>'
+      ])
     }
   }
 }

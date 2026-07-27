@@ -101,12 +101,8 @@ module.exports = async function provision(cmd) {
         'pear provision ' + sourceVerlink + ' ' + targetLink + ' ' + productionVerlink
       ])
     } else if (final?.target) {
-      hint('Seed the provisioned release so peers can access it:', [
-        'pear seed ' + final.target.link
-      ])
-      hint('When ready to cut a production release, request signatures:', [
-        'pear multisig request ' + final.target.verlink
-      ])
+      hint('Keep the provisioned release available', ['pear seed <provision-link>'])
+      hint('Multisig for stakeholder-approved production', ['pear multisig keys get'])
     }
   }
 }

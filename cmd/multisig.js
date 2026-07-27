@@ -290,8 +290,8 @@ class Multisig {
 
     if (!this.json) {
       hint(
-        'Set this as the upgrade link in package.json. When you have a versioned, seeded source link, request signatures:',
-        ['pear multisig request <verlink>']
+        'Before requesting signatures, set this as package.json upgrade and produce a seeded provisioned build against the multisig link:',
+        ['pear multisig request <versioned-provision-link>']
       )
     }
   }
@@ -341,7 +341,7 @@ class Multisig {
 
     if (!this.json && final?.request) {
       hint('Send this request to each signer. Each signs it with their key:', [
-        'pear multisig sign ' + final.request
+        'pear multisig sign <request>'
       ])
     }
   }
@@ -372,11 +372,11 @@ class Multisig {
     if (!this.json) {
       if (responses.length === 0) {
         hint('Request verified. Once signers return their responses, verify again with them:', [
-          'pear multisig verify ' + sourceLink + ' ' + request + ' <response> [<response> ...]'
+          'pear multisig verify <source-link> <request> <response> [<response> ...]'
         ])
       } else {
         hint('If verification passed, commit to go live:', [
-          'pear multisig commit ' + sourceLink + ' ' + request + ' ' + responses.join(' ')
+          'pear multisig commit <source-link> <request> <response> [<response> ...]'
         ])
       }
     }
@@ -407,9 +407,8 @@ class Multisig {
     )
 
     if (!this.json && final?.dstKey) {
-      const link = plink.serialize({ drive: { key: final.dstKey } })
       hint('The commit is not safe until peers seed it. Seed the multisig link:', [
-        'pear seed ' + link
+        'pear seed <multisig-link>'
       ])
     }
   }
