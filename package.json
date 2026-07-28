@@ -77,7 +77,7 @@
   "devDependencies": {
     "@hyperswarm/secret-stream": "^6.9.1",
     "@hyperswarm/testnet": "^3.1.4",
-    "bare-build": "^1.0.0",
+    "bare-build": "^1.0.4",
     "bare-env": "^3.0.0",
     "bare-runtime": "^1.30.3",
     "brittle": "^4.0.0",
