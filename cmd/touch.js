@@ -61,9 +61,6 @@ module.exports = async function touch(cmd) {
         description: 'Production; stakeholder multisig, machine-independent, tamper-resistant'
       }
     ])
-    hint('Use the link above', [
-      'pear seed <link>',
-      'pear stage --dry-run <link> <deployment-directory>'
-    ])
+    hint('Use the link above', ['pear stage --dry-run <link> <dir>'])
   }
 }

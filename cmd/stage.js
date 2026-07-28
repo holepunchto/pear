@@ -61,13 +61,12 @@ module.exports = async function stage(cmd) {
   await output(json, stream)
 
   if (!json) {
-    const target = link + (cmd.args.dir ? ' ' + cmd.args.dir : '')
     if (dryRun) {
       hint('Dry run only - nothing was persisted. Once the diff looks right, stage for real:', [
-        'pear stage ' + target
+        'pear stage <link> <dir>'
       ])
     } else {
-      hint('Keep the staged version available', ['pear seed <stage-link>'])
+      hint('Keep the staged version available', ['pear seed <link>'])
       hint('Provision for prerelease, stakeholder preview, QA, or dogfooding', [
         'pear touch',
         'pear provision --dry-run <versioned-stage-link> <provision-link> <versioned-production-link>'

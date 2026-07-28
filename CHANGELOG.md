@@ -1,11 +1,5 @@
 # Pear Runtime Changelog
 
-## v3.1.0
-
-### Improvements
-
-* CLI - `pear multisig verify` no longer suggests seeding after a dry run; it now points to the next verify/commit step
-
 ## v3.0.1
 
 ### Fixes

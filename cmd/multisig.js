@@ -343,6 +343,9 @@ class Multisig {
       hint('Send this request to each signer. Each signs it with their key:', [
         'pear multisig sign <request>'
       ])
+      hint('Once signers return their responses, verify them:', [
+        'pear multisig verify <source-link> <request> <response> [<response> ...]'
+      ])
     }
   }
 
@@ -408,7 +411,7 @@ class Multisig {
 
     if (!this.json && final?.dstKey) {
       hint('The commit is not safe until peers seed it. Seed the multisig link:', [
-        'pear seed <multisig-link>'
+        'pear seed <link>'
       ])
     }
   }
