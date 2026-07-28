@@ -1,5 +1,24 @@
 # Pear Runtime Changelog
 
+## v3.1.0
+
+### Features
+
+* CLI - `pear cores` - list the cores of an application
+* CLI - `pear touch` - multithreaded vanity key generation (`--vanity`)
+* Internal - sidecar errors are now persisted to `pear.log`
+
+### Improvements
+
+* CLI - `pear info` - adds `productName`, `version`, `upgrade` and `verlink` fields
+* CLI - `pear multisig` - password confirmation prompt
+* Internal - deps bump
+
+### Fixes
+
+* CLI - `pear info` and `pear changelog` fixes
+* CLI - password input no longer ignores backspace
+
 ## v3.0.1
 
 ### Fixes
