@@ -50,6 +50,38 @@ jobs:
       - name: Build Local Runtime
         run: npm run make
 
+      - name: Run Pear on Windows
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          Write-Host "=== make contains ==="
+          Get-ChildItem .\out\make
+
+          Write-Host "=== running pear ==="
+          .\out\make\pear.exe
+
+          Write-Host "=== running pear -v ==="
+          .\out\make\pear.exe -v
+
+          Write-Host "=== running pear help ==="
+          .\out\make\pear.exe help
+        shell: pwsh
+
+      - name: Run Pear on Linux/macOS
+        if: ${{ runner.os != 'Windows' }}
+        run: |
+          echo "=== make contains ==="
+          ls ./out/make
+
+          echo "=== running pear ==="
+          ./out/make/pear
+
+          echo "=== running pear -v ==="
+          ./out/make/pear -v
+
+          echo "=== running pear help ==="
+          ./out/make/pear help
+        shell: pwsh
+
       - name: Install Bare
         run: npm i -g bare-runtime
 
