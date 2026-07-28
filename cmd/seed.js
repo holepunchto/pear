@@ -121,7 +121,7 @@ module.exports = async function seed(cmd) {
 
       layout.print(stdio)
     })
-  } else if (tty === false && isTTY) {
+  } else if (tty === false && isTTY && !untilSync) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       if (key.toString() === '\u0003') Bare.exit(0)
@@ -163,6 +163,18 @@ module.exports = async function seed(cmd) {
         : `-_- peer drop ${info}`
       peers.append([msg])
       layout.print(stdio)
+    },
+    'peer-sync': (info) => {
+      info = hypercoreid.normalize(info)
+      const msg = ctrlTTY
+        ? `${ansi.gray('^_^')} ${ansi.bold(ansi.green('peer sync'))} ${ansi.gray(info)}`
+        : `^_^ peer sync ${info}`
+      peers.append([msg])
+      layout.print(stdio)
+    },
+    final: () => {
+      if (ctrlTTY) stdio.out.write('\n\n')
+      return false
     },
     stats({
       peers,
@@ -210,4 +222,6 @@ module.exports = async function seed(cmd) {
       cmdArgs
     })
   )
+
+  if (ctrlTTY && untilSync) Bare.exit(0)
 }

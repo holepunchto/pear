@@ -130,8 +130,6 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     if (untilSync) {
-      LOG.trace('seed', 'WAITING FOR PEER TO SYNC...')
-
       const synced = (core, key) => {
         const peer = core.peers.find((peer) => hypercoreid.normalize(peer.remotePublicKey) === key)
         return peer && peer.remoteContiguousLength >= core.length
@@ -148,9 +146,10 @@ module.exports = class Seed extends Opstream {
           }
         }
 
-        LOG.trace('seed', `SYNCED PEER ${key}`)
+        this.push({ tag: 'peer-sync', data: key })
       }
 
+      LOG.trace('seed', '--until-sync COMPLETED')
       await this.session.close()
       return
     }

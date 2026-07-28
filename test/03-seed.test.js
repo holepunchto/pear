@@ -205,7 +205,7 @@ test('pear seed --until-sync one specific peer', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(1)
+  plan(2)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -233,14 +233,15 @@ test('pear seed --until-sync one specific peer', async function ({
     untilSync: [hypercoreid.encode(peerSwarm.keyPair.publicKey)]
   })
   teardown(() => Helper.teardownStream(seeding))
-  const final = Helper.pick(seeding, { tag: 'final' })
+  const until = await Helper.pick(seeding, [{ tag: 'peer-sync' }, { tag: 'final' }])
 
   await peerDrive.db.core.update()
   await peerDrive.db.core.download({ start: 0, end: peerDrive.db.core.length }).done()
   await peerDrive.download().done()
   await peerDrive.blobs.core.download({ start: 0, end: peerDrive.blobs.core.length }).done()
 
-  const seeded = await final
+  ok(await until['peer-sync'], 'selected peer syncs')
+  const seeded = await until.final
   ok(seeded.success, 'seed exited after specific peer fully synced')
 })
 
