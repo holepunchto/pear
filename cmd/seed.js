@@ -173,8 +173,10 @@ module.exports = async function seed(cmd) {
       layout.print(stdio)
     },
     final: () => {
-      if (ctrlTTY) stdio.out.write('\n\n')
-      return false
+      if (ctrlTTY) {
+        stdio.out.write('\n\n')
+        return false
+      }
     },
     stats({
       peers,
