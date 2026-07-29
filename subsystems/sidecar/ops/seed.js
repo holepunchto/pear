@@ -139,13 +139,11 @@ module.exports = class Seed extends Opstream {
         while (!synced(drive.db.core, key)) {
           await new Promise((resolve) => setTimeout(resolve, 20))
         }
-
         if (blobs.core.length) {
           while (!synced(blobs.core, key)) {
             await new Promise((resolve) => setTimeout(resolve, 20))
           }
         }
-
         this.push({ tag: 'peer-sync', data: key })
       }
 
