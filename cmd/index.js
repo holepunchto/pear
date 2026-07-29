@@ -58,10 +58,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.seed
   )
 
-  const build = command('build', require('pear-build/package.json').command, (cmd) => {
-    if (!cmd.flags.package) return console.log(build.help())
-    return commands.build(cmd.flags).done()
-  })
+  const build = command('build', require('pear-build/package.json').command, (cmd) =>
+    commands.build(cmd.flags).done()
+  )
 
   const stage = command(
     'stage',
