@@ -429,6 +429,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_LEGACY', messageOnly],
         ['ERR_INVALID_TEMPLATE', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
+        ['ERR_NOT_FOUND', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]
       ])
       const nouse = [messageOnly, opFail]
