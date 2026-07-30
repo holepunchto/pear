@@ -14,6 +14,7 @@ let resizeHandler
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
+  const untilSync = cmd.flags.untilSync
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   if (!link || plink.parse(link).drive.key === null) {
@@ -22,6 +23,9 @@ module.exports = async function seed(cmd) {
   statsInterval = +statsInterval
   if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
+  }
+  if (untilSync?.some((key) => hypercoreid.isValid(key) === false)) {
+    throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
   }
   const id = Bare.pid
   const { width } = stdio.size()
@@ -117,7 +121,7 @@ module.exports = async function seed(cmd) {
 
       layout.print(stdio)
     })
-  } else if (tty === false && isTTY) {
+  } else if (tty === false && isTTY && !untilSync) {
     stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
     stdio.in?.on('data', (key) => {
       if (key.toString() === '\u0003') Bare.exit(0)
@@ -160,6 +164,20 @@ module.exports = async function seed(cmd) {
       peers.append([msg])
       layout.print(stdio)
     },
+    'peer-sync': (info) => {
+      info = hypercoreid.normalize(info)
+      const msg = ctrlTTY
+        ? `${ansi.gray('^_^')} ${ansi.bold(ansi.green('peer sync'))} ${ansi.gray(info)}`
+        : `^_^ peer sync ${info}`
+      peers.append([msg])
+      layout.print(stdio)
+    },
+    final: () => {
+      if (ctrlTTY) {
+        stdio.out.write('\n\n')
+        return false
+      }
+    },
     stats({
       peers,
       driveKey,
@@ -201,8 +219,11 @@ module.exports = async function seed(cmd) {
     ipc.seed({
       id,
       link,
+      untilSync,
       statsInterval,
       cmdArgs
     })
   )
+
+  if (ctrlTTY && untilSync) Bare.exit(0)
 }

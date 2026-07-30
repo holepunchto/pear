@@ -43,14 +43,14 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, untilSync, statsInterval = 500 } = {}) {
     const { client, session } = this
     const parsed = link ? plink.parse(link) : null
     const key = parsed?.drive.key ?? null
     if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
 
     // not an app but a long running process, setting userData for restart recognition:
-    client.userData = { state: { cmdArgs, flags: { link } } }
+    client.userData = { state: { cmdArgs, flags: { link, untilSync } } }
 
     this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
@@ -87,13 +87,13 @@ module.exports = class Seed extends Opstream {
     }
 
     drive.db.core.on('upload', (index, byteLength) => {
-      LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Uploading db block ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
     drive.db.core.on('download', (index, byteLength) => {
-      LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Downloading db block ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
@@ -114,13 +114,13 @@ module.exports = class Seed extends Opstream {
 
     const blobs = await drive.getBlobs()
     blobs.core.on('upload', (index, byteLength) => {
-      LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Uploading blob block ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
     blobs.core.on('download', (index, byteLength) => {
-      LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Downloading blob block ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
@@ -128,6 +128,34 @@ module.exports = class Seed extends Opstream {
     blobs.core.download({ start: 0, end: -1 })
 
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
+
+    if (untilSync) {
+      const synced = (core, key) => {
+        const peer = core.peers.find((peer) => hypercoreid.normalize(peer.remotePublicKey) === key)
+        return peer && peer.remoteContiguousLength >= core.length
+      }
+
+      for (const key of untilSync.map(hypercoreid.normalize)) {
+        while (!synced(drive.db.core, key)) {
+          await new Promise((resolve) => setTimeout(resolve, 20))
+        }
+        if (blobs.core.length) {
+          while (!synced(blobs.core, key)) {
+            await new Promise((resolve) => setTimeout(resolve, 20))
+          }
+        }
+
+        LOG.info(
+          'seed',
+          `synced drive ${hypercoreid.encode(drive.key)} with ${key} (length db: ${drive.db.core.length} blob: ${blobs.core.length})`
+        )
+        this.push({ tag: 'peer-sync', data: key })
+      }
+
+      LOG.info('seed', `--until-sync ${untilSync} completed`)
+      await this.session.close()
+      return
+    }
 
     await new Promise((resolve) => this.session.teardown(resolve))
   }
