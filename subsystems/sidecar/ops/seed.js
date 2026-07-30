@@ -87,13 +87,13 @@ module.exports = class Seed extends Opstream {
     }
 
     drive.db.core.on('upload', (index, byteLength) => {
-      LOG.trace('seed', `UPLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Uploading db block ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
     drive.db.core.on('download', (index, byteLength) => {
-      LOG.trace('seed', `DOWNLOADING DB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Downloading db block ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
@@ -114,13 +114,13 @@ module.exports = class Seed extends Opstream {
 
     const blobs = await drive.getBlobs()
     blobs.core.on('upload', (index, byteLength) => {
-      LOG.trace('seed', `UPLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Uploading blob block ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
       this.stats.totals.upload.bytes += byteLength
       this.stats.speed.upload.bytes(byteLength)
     })
     blobs.core.on('download', (index, byteLength) => {
-      LOG.trace('seed', `DOWNLOADING BLOB BLOCK ${index} - ${byteLength}`)
+      LOG.trace('seed', `Downloading blob block ${index} - ${byteLength}`)
       this.stats.totals.download.blocks += 1
       this.stats.totals.download.bytes += byteLength
       this.stats.speed.download.bytes(byteLength)
@@ -144,10 +144,15 @@ module.exports = class Seed extends Opstream {
             await new Promise((resolve) => setTimeout(resolve, 20))
           }
         }
+
+        LOG.info(
+          'seed',
+          `synced drive ${hypercoreid.encode(drive.key)} with ${key} (length db: ${drive.db.core.length} blob: ${blobs.core.length})`
+        )
         this.push({ tag: 'peer-sync', data: key })
       }
 
-      LOG.trace('seed', '--until-sync COMPLETED')
+      LOG.info('seed', `--until-sync ${untilSync} completed`)
       await this.session.close()
       return
     }
