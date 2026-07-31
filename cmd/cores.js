@@ -15,5 +15,6 @@ const output = outputter('cores', {
 module.exports = async function cores(cmd) {
   const ipc = context.getIPC()
   const json = cmd.flags.json
-  await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.cores({}))
+  const allCores = cmd.flags.allCores
+  await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.cores({ allCores }))
 }

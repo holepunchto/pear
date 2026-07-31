@@ -11,6 +11,8 @@ module.exports = class Cores extends Opstream {
   async #op(params) {
     LOG.info('cores', 'Enumerating cores')
 
+    const allCores = params.allCores
+
     const { sidecar } = this
 
     const discoveryKeys = []
@@ -34,7 +36,7 @@ module.exports = class Cores extends Opstream {
       })
       await core.ready()
       const coreInfo = await core.info()
-      if (coreInfo.contiguousLength === 0) {
+      if (!allCores && coreInfo.contiguousLength === 0) {
         LOG.trace('cores', `Skipping empty core ${link}`)
         continue
       }

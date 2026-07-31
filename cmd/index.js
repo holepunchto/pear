@@ -362,6 +362,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'cores',
     summary('List platform cores'),
     description`List platform corestore cores`,
+    flag('--all-cores', 'List all cores, including empty cores'),
     flag('--json', 'Newline delimited JSON output'),
     commands.cores
   )
