@@ -24,10 +24,6 @@ module.exports = async function gc(cmd) {
 }
 
 class GC {
-  sidecars() {
-    return { pid: Bare.pid }
-  }
-
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link

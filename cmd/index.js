@@ -345,7 +345,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('sidecars', summary('Clear running sidecars'), commands.gc),
     command(
       'cores',
       summary('Clear corestore cores'),
