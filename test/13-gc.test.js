@@ -8,7 +8,7 @@ const plink = require('pear-link')
 const Helper = require('./helper')
 
 test('pear gc cores with link', async (t) => {
-  t.plan(5)
+  t.plan(6)
 
   const helper = new Helper()
   t.teardown(() => helper.close(), { order: Infinity })
@@ -36,6 +36,20 @@ test('pear gc cores with link', async (t) => {
   t.alike(
     removed.map(({ link }) => link),
     [target.link, target.link]
+  )
+
+  const links = []
+  const cores = helper.cores()
+  t.teardown(() => Helper.teardownStream(cores))
+  cores.on('data', ({ tag, data }) => {
+    if (tag === 'core') links.push(data.link)
+  })
+  const listed = await Helper.pick(cores, [{ tag: 'final' }])
+  await listed.final
+
+  t.ok(
+    target.coreLinks.every((link) => !links.includes(link)),
+    'gc cores are not listed'
   )
 })
 
@@ -75,7 +89,10 @@ async function createDrive(t) {
     ids: [
       hypercoreid.encode(drive.core.discoveryKey),
       hypercoreid.encode(drive.blobs.core.discoveryKey)
-    ]
+    ],
+    coreLinks: [drive.core.key, drive.blobs.core.key].map((key) =>
+      plink.serialize({ drive: { key } })
+    )
   }
 }
 
