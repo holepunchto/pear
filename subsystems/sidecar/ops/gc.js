@@ -1,7 +1,4 @@
 'use strict'
-const fs = require('bare-fs')
-const path = require('bare-path')
-const { PLATFORM_DIR } = require('../../../constants.js')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
