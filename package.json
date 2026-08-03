@@ -34,7 +34,7 @@
     "bare-stream": "^2.13.3",
     "bare-subprocess": "^6.1.0",
     "bare-tty": "^5.1.2",
-    "bare-tui-paparam": "^0.0.1",
+    "bare-tui-paparam": "^0.0.2",
     "bare-worker": "^4.4.0",
     "corestore": "^7.2.1",
     "db-lock": "^1.2.0",
@@ -95,8 +95,5 @@
     "url": "https://github.com/holepunchto/pear/issues"
   },
   "homepage": "https://github.com/holepunchto/pear#readme",
-  "license": "Apache-2.0",
-  "overrides": {
-    "bare-tui-form": "0.0.3"
-  }
+  "license": "Apache-2.0"
 }
