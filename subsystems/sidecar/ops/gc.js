@@ -1,7 +1,4 @@
 'use strict'
-const fs = require('bare-fs')
-const path = require('bare-path')
-const { PLATFORM_DIR } = require('../../../constants.js')
 const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const hypercoreid = require('hypercore-id-encoding')
@@ -13,41 +10,8 @@ module.exports = class GC extends Opstream {
   }
 
   #op(params) {
-    if (params.resource === 'releases') return this.releases(params)
     if (params.resource === 'cores') return this.cores(params)
     throw ERR_INVALID_GC_RESOURCE('Invalid resource to gc: ' + params.resource)
-  }
-
-  async releases(params) {
-    const { resource } = params
-    let count = 0
-    const symlinkPath = path.join(PLATFORM_DIR, 'current')
-    const dkeyDir = path.join(PLATFORM_DIR, 'by-dkey')
-
-    try {
-      await fs.promises.stat(dkeyDir)
-    } catch {
-      this.push({ tag: 'complete', data: { resource, count } })
-      return
-    }
-
-    const current = await fs.promises.readlink(symlinkPath)
-    const currentDirPath = path.dirname(current)
-    const currentDirName = path.basename(currentDirPath)
-
-    const dirs = await fs.promises.readdir(dkeyDir, { withFileTypes: true })
-
-    const dirNames = dirs.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name)
-
-    for (const dirName of dirNames) {
-      if (dirName !== currentDirName) {
-        const dirPath = path.join(dkeyDir, dirName)
-        await fs.promises.rm(dirPath, { recursive: true })
-        this.push({ tag: 'remove', data: { resource, id: dirName } })
-        count++
-      }
-    }
-    this.push({ tag: 'complete', data: { resource, count } })
   }
 
   async cores(params) {
