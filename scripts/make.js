@@ -2,6 +2,8 @@ const fsp = require('fs/promises')
 const path = require('path')
 const os = require('os')
 const { spawn } = require('child_process')
+const paparam = require('paparam')
+const { command, flag } = paparam
 
 const { env, platform, arch } = process
 const isWindows = platform === 'win32'
@@ -21,15 +23,18 @@ function waitForExit(child) {
   })
 }
 
+const cmd = command('make', flag('--host <host>', 'target host').default(`${platform}-${arch}`))
+const flags = cmd.parse(process.argv.slice(2)).flags
+
 const gc = []
 async function make() {
-  const channel = env.CHANNEL ? env.CHANNEL : (process.argv[2] ?? 'production')
+  const channel = env.CHANNEL || 'production'
 
   if (!['dev', 'stage', 'production'].includes(channel)) {
     throw new Error(`Channel ${channel} not supported`)
   }
 
-  const host = `${platform}-${arch}`
+  const host = flags.host
   const bin = isWindows ? 'pear.exe' : 'pear'
   const out = path.join('.', 'out', 'make')
 
