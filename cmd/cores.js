@@ -3,7 +3,8 @@ const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
 
 const output = outputter('cores', {
-  core: ({ link, writable }) => `${link} ${writable ? '(writable)' : ''}`,
+  core: ({ link, writable, length }) =>
+    `${link} ${writable ? `(length: ${length}, writable)` : `(length: ${length})`}`,
   final: ({ count, writable }) => ({
     output: 'print',
     success: Infinity, // omit success ansi tick

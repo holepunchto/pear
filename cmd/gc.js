@@ -5,10 +5,12 @@ const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
-  remove: ({ resource, id, operation = 'removed', link }) =>
-    `${id} ${resource.slice(0, -1)} ${operation}${link ? ' ~ ' + link : ''}`,
-  complete: ({ resource, count }) => {
-    return count > 0 ? `Total ${resource} removed: ${count}` : `No ${resource} removed`
+  cores: ({ link, skipped }) => {
+    if (skipped) {
+      return `Skipped clearing writable core ~ ${link}. Use --force to clear it anyway`
+    } else {
+      return `Cleared core ~ ${link}`
+    }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
