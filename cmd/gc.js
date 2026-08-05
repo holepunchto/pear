@@ -7,7 +7,7 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const output = outputter('gc', {
   cores: ({ link, skipped }) => {
     if (skipped) {
-      return `Skipped clearing writable core ~ ${link}. Use --force to clear it anyway`
+      return `Skipped clearing writable core ~ ${link}.`
     } else {
       return `Cleared core ~ ${link}`
     }
