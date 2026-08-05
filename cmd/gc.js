@@ -5,11 +5,11 @@ const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
-  cores: ({ link, skipped }) => {
+  cores: ({ link, skipped, content }) => {
     if (skipped) {
-      return `Skipped clearing writable core ~ ${link}.`
+      return `Skipped clearing core ~ ${link}. The core is writable or does not exist in the corestore`
     } else {
-      return `Cleared core ~ ${link}`
+      return `Cleared core ~ ${link}\nCleared content core ~ ${content}`
     }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`

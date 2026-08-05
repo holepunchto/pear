@@ -3,6 +3,7 @@ const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class GC extends Opstream {
   constructor(...args) {
@@ -34,20 +35,23 @@ module.exports = class GC extends Opstream {
 
     const cleared = await this._clearCore(link)
 
-    if (cleared) {
-      this.push({
-        tag: 'cores',
-        data: {
-          skipped: false,
-          link
-        }
-      })
-    } else {
+    if (!cleared) {
       this.push({
         tag: 'cores',
         data: {
           skipped: true,
           link
+        }
+      })
+    } else {
+      const contentKey = await this._getContentKey(link)
+      await this._clearCore(contentKey)
+      this.push({
+        tag: 'cores',
+        data: {
+          skipped: false,
+          link,
+          content: plink.serialize(contentKey)
         }
       })
     }
@@ -58,9 +62,7 @@ module.exports = class GC extends Opstream {
   }
 
   async _clearCore(link) {
-    const key = plink.parse(link).drive.key
-    const discoveryKey = crypto.discoveryKey(key)
-    const info = await this.sidecar.corestore.storage.getInfo(discoveryKey)
+    const info = await this._getInfo(link)
 
     if (!info) {
       LOG.trace('gc cores', 'core not found', { link })
@@ -72,15 +74,11 @@ module.exports = class GC extends Opstream {
       return false
     }
 
-    const core = this.sidecar.corestore.get({
-      discoveryKey: info.discoveryKey,
-      active: false
-    })
+    const core = this._getCore(info)
     await core.ready()
     const coreLength = core.length
 
     LOG.info('gc cores', 'clearing core', {
-      discoveryKey,
       link,
       coreLength
     })
@@ -89,5 +87,29 @@ module.exports = class GC extends Opstream {
     await core.close()
 
     return true
+  }
+
+  async _getContentKey(link) {
+    const info = await this._getInfo(link)
+    if (!info) return null
+
+    const core = this._getCore(info)
+    await core.ready()
+    await core.close()
+
+    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, core.key))
+  }
+
+  _getInfo(link) {
+    const key = plink.parse(link).drive.key
+    const discoveryKey = crypto.discoveryKey(key)
+    return this.sidecar.corestore.storage.getInfo(discoveryKey)
+  }
+
+  _getCore(info) {
+    return this.sidecar.corestore.get({
+      discoveryKey: info.discoveryKey,
+      active: false
+    })
   }
 }
