@@ -98,8 +98,18 @@ module.exports = async function info(cmd) {
     multisig
   } = cmd.flags
   const link = cmd.args.link || null
-  if (link && plink.parse(link).drive.key === null) {
-    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+  if (link) {
+    let parsed
+
+    try {
+      parsed = plink.parse(link)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+    }
+
+    if (parsed.drive?.key === null) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+    }
   }
   let dir = cmd.args.dir
   if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
