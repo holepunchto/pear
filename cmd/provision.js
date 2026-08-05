@@ -1,8 +1,7 @@
 'use strict'
 const context = require('../context')
 const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
-const { ERR_INVALID_LINK, ERR_INVALID_INPUT } = require('pear-errors')
-const plink = require('pear-link')
+const { parse } = require('../lib/link')
 
 const output = outputter('provision', {
   ['byte-diff']: byteDiff,
@@ -82,34 +81,9 @@ module.exports = async function provision(cmd) {
   const targetLink = cmd.args.targetLink
   const productionVerlink = cmd.args.productionVerlink
 
-  let source
-  try {
-    source = plink.parse(sourceVerlink)
-  } catch (err) {
-    throw ERR_INVALID_INPUT('<source-verlink> must be a valid pear link', { err })
-  }
-  if (source.drive.length === null) {
-    throw ERR_INVALID_LINK('<source-verlink> must be versioned', {
-      link: sourceVerlink
-    })
-  }
+  parse(sourceVerlink, '<source-verlink>')
+  parse(targetLink, '<target-link>')
+  parse(productionVerlink, '<production-verlink>')
 
-  try {
-    plink.parse(targetLink) // validates
-  } catch (err) {
-    throw ERR_INVALID_INPUT('<target-link> must be a valid pear link', { err })
-  }
-
-  let production
-  try {
-    production = plink.parse(productionVerlink)
-  } catch (err) {
-    throw ERR_INVALID_INPUT('<production-verlink> must be a valid pear link', { err })
-  }
-  if (production.drive.length === null) {
-    throw ERR_INVALID_LINK('<production-verlink> must be versioned', {
-      link: productionVerlink
-    })
-  }
   await output(json, ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun }))
 }

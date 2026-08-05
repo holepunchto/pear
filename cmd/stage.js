@@ -2,11 +2,11 @@
 const context = require('../context')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
-const plink = require('pear-link')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
+const { parse } = require('../lib/link')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current }) => {
@@ -39,15 +39,8 @@ module.exports = async function stage(cmd) {
   }
   const cwd = os.cwd()
   const link = cmd.args.link
-  let parsed
-  try {
-    parsed = plink.parse(link)
-  } catch (err) {
-    throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
-  }
-  if (parsed === null || parsed.drive.key === null) {
-    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
-  }
+  parse(link)
+
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
   const id = Bare.pid

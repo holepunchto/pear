@@ -1,8 +1,7 @@
 'use strict'
-const plink = require('pear-link')
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { parse } = require('../lib/link')
 
 const output = outputter('gc', {
   remove: ({ resource, id, operation = 'removed', link }) =>
@@ -28,8 +27,7 @@ class GC {
     const { command } = cmd
     const link = command.args.link
     if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      parse(link)
     }
     return { link }
   }
