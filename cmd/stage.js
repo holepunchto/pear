@@ -39,7 +39,13 @@ module.exports = async function stage(cmd) {
   }
   const cwd = os.cwd()
   const link = cmd.args.link
-  if (!link || plink.parse(link).drive.key === null) {
+  let parsed
+  try {
+    parsed = plink.parse(link)
+  } catch (err) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+  }
+  if (parsed === null || parsed.drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
   let { dir = cwd } = cmd.args

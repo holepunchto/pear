@@ -48,7 +48,12 @@ module.exports = class Multisig extends Opstream {
     const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
     const { verlink, force, peerUpdateTimeout } = params
-    const parsed = plink.parse(verlink)
+    let parsed
+    try {
+      parsed = plink.parse(verlink)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+    }
     if (parsed === null || parsed.drive.key === null || parsed.drive.length === null) {
       throw ERR_INVALID_LINK('A valid versioned source link must be specified', { verlink })
     }
@@ -88,7 +93,12 @@ module.exports = class Multisig extends Opstream {
     const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
 
-    const parsed = plink.parse(link)
+    let parsed
+    try {
+      parsed = plink.parse(link)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+    }
     if (parsed === null || parsed.drive.key === null) {
       throw ERR_INVALID_LINK('A valid source link must be specified', { link })
     }

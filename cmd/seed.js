@@ -17,7 +17,13 @@ module.exports = async function seed(cmd) {
   const untilSync = cmd.flags.untilSync
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
-  if (!link || plink.parse(link).drive.key === null) {
+  let parsed
+  try {
+    parsed = plink.parse(link)
+  } catch (err) {
+    throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+  }
+  if (parsed === null || parsed.drive.key === null) {
     throw ERR_INVALID_INPUT('A valid pear link must be specified.')
   }
   statsInterval = +statsInterval

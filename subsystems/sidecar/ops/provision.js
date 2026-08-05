@@ -1,7 +1,7 @@
 'use strict'
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_LINK, ERR_INVALID_MANIFEST } = require('pear-errors')
+const { ERR_INVALID_LINK, ERR_INVALID_MANIFEST, ERR_INVALID_INPUT } = require('pear-errors')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
 
@@ -11,18 +11,33 @@ module.exports = class Provision extends Opstream {
   }
 
   async #op({ sourceVerlink, targetLink, productionVerlink, dryRun, cooldown = 10_000 }) {
-    const source = plink.parse(sourceVerlink)
+    let source
+    try {
+      source = plink.parse(sourceVerlink)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid sourceVerLink must be specified.', { err })
+    }
     if (source.drive.length === null) {
       throw ERR_INVALID_LINK('sourceVerlink must be versioned', {
         link: sourceVerlink
       })
     }
 
-    const target = plink.parse(targetLink) // validates
+    let target
+    try {
+      target = plink.parse(targetLink)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid targetLink must be specified.', { err })
+    }
 
-    const production = plink.parse(productionVerlink)
+    let production
+    try {
+      production = plink.parse(productionVerlink)
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid productionVerLink must be specified.', { err })
+    }
     if (production.drive.length === null) {
-      throw ERR_INVALID_LINK('targetLink must be versioned', {
+      throw ERR_INVALID_LINK('productionVerlink must be versioned', {
         link: productionVerlink
       })
     }

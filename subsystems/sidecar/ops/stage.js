@@ -16,7 +16,12 @@ module.exports = class Stage extends Opstream {
 
   async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
     const { session, sidecar } = this
-    const parsed = link ? plink.parse(link) : null
+    let parsed
+    try {
+      parsed = link ? plink.parse(link) : null
+    } catch (err) {
+      throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+    }
     if (parsed === null || parsed.drive?.key === null) {
       throw ERR_INVALID_INPUT('A valid pear link must be specified')
     }

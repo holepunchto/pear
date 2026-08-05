@@ -35,7 +35,7 @@ module.exports = class Dump extends Opstream {
     try {
       parsed = plink.parse(link)
     } catch (err) {
-      throw ERR_INVALID_INPUT('A valid pear link must be specified.', { err })
+      throw new Error('A valid pear link must be specified.', { err })
     }
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false

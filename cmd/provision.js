@@ -1,7 +1,7 @@
 'use strict'
 const context = require('../context')
 const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
-const { ERR_INVALID_LINK } = require('pear-errors')
+const { ERR_INVALID_LINK, ERR_INVALID_INPUT } = require('pear-errors')
 const plink = require('pear-link')
 
 const output = outputter('provision', {
@@ -82,16 +82,30 @@ module.exports = async function provision(cmd) {
   const targetLink = cmd.args.targetLink
   const productionVerlink = cmd.args.productionVerlink
 
-  const source = plink.parse(sourceVerlink)
+  let source
+  try {
+    source = plink.parse(sourceVerlink)
+  } catch (err) {
+    throw ERR_INVALID_INPUT('<source-verlink> must be a valid pear link', { err })
+  }
   if (source.drive.length === null) {
     throw ERR_INVALID_LINK('<source-verlink> must be versioned', {
       link: sourceVerlink
     })
   }
 
-  plink.parse(targetLink) // validates
+  try {
+    plink.parse(targetLink) // validates
+  } catch (err) {
+    throw ERR_INVALID_INPUT('<target-link> must be a valid pear link', { err })
+  }
 
-  const production = plink.parse(productionVerlink)
+  let production
+  try {
+    production = plink.parse(productionVerlink)
+  } catch (err) {
+    throw ERR_INVALID_INPUT('<production-verlink> must be a valid pear link', { err })
+  }
   if (production.drive.length === null) {
     throw ERR_INVALID_LINK('<production-verlink> must be versioned', {
       link: productionVerlink
