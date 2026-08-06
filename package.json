@@ -15,8 +15,8 @@
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
     "make": "node scripts/make.js",
-    "make:stage": "node scripts/make.js stage",
-    "make:dev": "node scripts/make.js dev",
+    "make:stage": "CHANNEL=stage node scripts/make.js",
+    "make:dev": "CHANNEL=dev node scripts/make.js",
     "hyperdb:build": "node scripts/build-hyperdb.js"
   },
   "author": "Holepunch",
