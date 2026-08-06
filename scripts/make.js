@@ -23,13 +23,13 @@ function waitForExit(child) {
 
 const gc = []
 async function make() {
-  const channel = env.CHANNEL ? env.CHANNEL : (process.argv[2] ?? 'production')
+  const channel = env.CHANNEL || 'production'
 
   if (!['dev', 'stage', 'production'].includes(channel)) {
     throw new Error(`Channel ${channel} not supported`)
   }
 
-  const host = `${platform}-${arch}`
+  const host = env.HOST || `${platform}-${arch}`
   const bin = isWindows ? 'pear.exe' : 'pear'
   const out = path.join('.', 'out', 'make')
 
