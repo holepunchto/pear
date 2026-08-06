@@ -36,6 +36,8 @@
     "bare-tty": "^5.1.2",
     "bare-tui-paparam": "^0.1.0",
     "bare-worker": "^4.4.0",
+    "blind-peer": "^3.12.6",
+    "blind-peering": "^2.6.0",
     "corestore": "^7.2.1",
     "db-lock": "^1.2.0",
     "debounceify": "^1.1.0",
