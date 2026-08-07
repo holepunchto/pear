@@ -14,9 +14,7 @@ test('pear gc cores with link', async (t) => {
   await helper.ready()
 
   const target = await createDrive(t)
-  const other = await createDrive(t)
   await cacheDrive(t, helper, target.link)
-  await cacheDrive(t, helper, other.link)
 
   const collecting = helper.gc({ resource: 'cores', data: { link: target.link } })
   t.teardown(() => Helper.teardownStream(collecting))
