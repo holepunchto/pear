@@ -52,7 +52,8 @@ module.exports = class Cores extends Opstream {
         tag: 'core',
         data: {
           link,
-          writable
+          writable,
+          length: core.length
         }
       })
     }
