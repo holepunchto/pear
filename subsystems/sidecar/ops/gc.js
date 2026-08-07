@@ -93,11 +93,8 @@ module.exports = class GC extends Opstream {
     const info = await this._getInfo(link)
     if (!info) return null
 
-    const core = this._getCore(info)
-    await core.ready()
-    await core.close()
-
-    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, core.key))
+    const key = plink.parse(link).drive.key
+    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, key))
   }
 
   _getInfo(link) {
