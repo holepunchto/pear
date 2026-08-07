@@ -75,18 +75,20 @@ module.exports = class GC extends Opstream {
     }
 
     const core = this._getCore(info)
-    await core.ready()
-    const coreLength = core.length
+    try {
+      await core.ready()
+      const coreLength = core.length
 
-    LOG.info('gc cores', 'clearing core', {
-      link,
-      coreLength
-    })
+      LOG.info('gc cores', 'clearing core', {
+        link,
+        coreLength
+      })
 
-    await core.clear(0, coreLength)
-    await core.close()
-
-    return true
+      await core.clear(0, coreLength)
+      return true
+    } finally {
+      await core.close()
+    }
   }
 
   async _getContentKey(link) {
