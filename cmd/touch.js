@@ -1,7 +1,7 @@
 'use strict'
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const context = require('../context')
-const { outputter } = require('../lib/terminal.js')
+const { outputter, hint } = require('../lib/terminal.js')
 
 const output = outputter('touch', {
   final: ({ link }) => {
@@ -41,5 +41,26 @@ module.exports = async function touch(cmd) {
 
   const ipc = context.getIPC()
   const json = cmd.flags.json
-  await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, ipc.touch({ keyPair }))
+  const final = await output(
+    { json, ctrlTTY: false, log: (line) => console.log(line) },
+    ipc.touch({ keyPair })
+  )
+
+  if (!json && final?.link) {
+    hint('Deployment operations', [
+      {
+        label: 'stage',
+        description: 'Local/dev checks, unsigned builds, branches, throwaways'
+      },
+      {
+        label: 'provision',
+        description: 'Prereleases, stakeholder preview, QA, dogfooding'
+      },
+      {
+        label: 'multisig',
+        description: 'Production; stakeholder multisig, machine-independent, tamper-resistant'
+      }
+    ])
+    hint('Use the link above', ['pear stage --dry-run <link> <dir>'])
+  }
 }
