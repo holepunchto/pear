@@ -1,7 +1,8 @@
 'use strict'
+const plink = require('pear-link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
-const { parse } = require('../lib/link')
 
 const output = outputter('gc', {
   cores: ({ link, skipped, content }) => {
