@@ -1,11 +1,10 @@
 'use strict'
 const context = require('../context')
-const plink = require('pear-link')
 const { outputter } = require('../lib/terminal.js')
 const os = require('bare-os')
 const path = require('bare-path')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 const { cmdArgs } = require('../argv')
+const { parse } = require('../lib/link')
 
 const keys = ({ content, discovery, project }) => `
  keys         z32
@@ -98,9 +97,7 @@ module.exports = async function info(cmd) {
     multisig
   } = cmd.flags
   const link = cmd.args.link || null
-  if (link && plink.parse(link).drive.key === null) {
-    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
-  }
+  if (link) parse(link)
   let dir = cmd.args.dir
   if (dir && path.isAbsolute(dir) === false) dir = path.resolve(os.cwd(), dir)
   if (!dir) dir = os.cwd()

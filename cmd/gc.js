@@ -1,8 +1,7 @@
 'use strict'
-const plink = require('pear-link')
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { parse } = require('../lib/link')
 
 const output = outputter('gc', {
   cores: ({ link, skipped, content }) => {
@@ -29,21 +28,7 @@ class GC {
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link
-
-    if (link) {
-      let parsed = null
-      try {
-        parsed = plink.parse(link)
-      } catch {
-        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      }
-      if (parsed.drive.key === null) {
-        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-      }
-    } else {
-      throw ERR_INVALID_INPUT('A link must be specified')
-    }
-
+    if (link) parse(link)
     return { link }
   }
 }

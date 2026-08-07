@@ -4,6 +4,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_LINK, ERR_INVALID_MANIFEST } = require('pear-errors')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Provision extends Opstream {
   constructor(...args) {
@@ -11,18 +12,17 @@ module.exports = class Provision extends Opstream {
   }
 
   async #op({ sourceVerlink, targetLink, productionVerlink, dryRun, cooldown = 10_000 }) {
-    const source = plink.parse(sourceVerlink)
+    const source = parse(sourceVerlink, 'source verlink')
     if (source.drive.length === null) {
       throw ERR_INVALID_LINK('sourceVerlink must be versioned', {
         link: sourceVerlink
       })
     }
 
-    const target = plink.parse(targetLink) // validates
-
-    const production = plink.parse(productionVerlink)
+    const target = parse(targetLink, 'target link')
+    const production = parse(productionVerlink, 'production verlink')
     if (production.drive.length === null) {
-      throw ERR_INVALID_LINK('targetLink must be versioned', {
+      throw ERR_INVALID_LINK('productionVerlink must be versioned', {
         link: productionVerlink
       })
     }

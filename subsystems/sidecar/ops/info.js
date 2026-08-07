@@ -11,6 +11,7 @@ const platformPkg = require('../../../package.json')
 const platformChangelog = fs.readFileSync(require.asset('../../../CHANGELOG.md', __filename))
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
@@ -29,7 +30,7 @@ module.exports = class Info extends Opstream {
     const isEnabled = (flag) => (enabledFlags.size > 0 ? !!flag : !flag)
 
     const corestore = this.sidecar.getCorestore()
-    const key = link ? plink.parse(link).drive.key : plink.parse(UPGRADE).drive.key
+    const key = link ? parse(link).drive.key : plink.parse(UPGRADE).drive.key
     const drive = await session.add(new Hyperdrive(corestore, key))
 
     const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
