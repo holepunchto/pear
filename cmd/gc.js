@@ -28,7 +28,7 @@ class GC {
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link
-    parse(link)
+    if (link) parse(link)
     return { link }
   }
 }

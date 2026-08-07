@@ -20,7 +20,8 @@ module.exports = async function changelog(cmd) {
   const ipc = context.getIPC()
   const { json, full, max = 10 } = cmd.flags
   const link = cmd.args.link || null
-  parse(link)
+  if (link) parse(link)
+
   const nmax = +max
   if (Number.isInteger(nmax) === false) {
     throw ERR_INVALID_INPUT('Changelog maximum must be an integer')
