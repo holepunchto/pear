@@ -44,6 +44,9 @@ jobs:
       - name: Setup repo
         uses: holepunchto/actions/.github/steps/setup-repo@v1
 
+      - name: Setup Socket.dev
+        uses: holepunchto/actions/setup-socket@v1
+
       - name: Install w/ dev deps
         run: npm ci
 
