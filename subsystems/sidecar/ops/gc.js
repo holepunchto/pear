@@ -45,13 +45,13 @@ module.exports = class GC extends Opstream {
         }
       })
     } else {
-      await this._clearCore(contentKey)
+      const contentCleared = await this._clearCore(contentKey)
       this.push({
         tag: 'cores',
         data: {
           skipped: false,
           link,
-          content: plink.serialize(contentKey)
+          content: contentCleared ? plink.serialize(contentKey) : null
         }
       })
     }
