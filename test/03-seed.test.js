@@ -196,3 +196,125 @@ test('pear seed fully syncs db and blobs cores', async function ({
   is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
   is(blobBlocks, sourceBlobs.core.length, 'synced blobs core')
 })
+
+test('pear seed --until-sync one specific peer', async function ({
+  ok,
+  plan,
+  teardown,
+  timeout,
+  tmp
+}) {
+  timeout(180000)
+  plan(2)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  const staging = helper.stage({ link, dir: Helper.fixture('minimal'), dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  await Helper.pick(staging, { tag: 'final' })
+
+  const peerStore = new Corestore(await tmp())
+  teardown(() => peerStore.close())
+  await peerStore.ready()
+  const peerDrive = new Hyperdrive(peerStore, hypercoreid.decode(link))
+  await peerDrive.ready()
+
+  const peerSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+  teardown(() => peerSwarm.destroy())
+  peerSwarm.on('connection', (conn) => peerStore.replicate(conn))
+  peerSwarm.join(peerDrive.discoveryKey)
+  await peerSwarm.flush()
+
+  const seeding = helper.seed({
+    link,
+    untilSync: [hypercoreid.encode(peerSwarm.keyPair.publicKey)]
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const until = await Helper.pick(seeding, [{ tag: 'peer-sync' }, { tag: 'final' }])
+
+  await peerDrive.db.core.update()
+  await peerDrive.db.core.download({ start: 0, end: peerDrive.db.core.length }).done()
+  await peerDrive.download().done()
+  await peerDrive.blobs.core.download({ start: 0, end: peerDrive.blobs.core.length }).done()
+
+  ok(await until['peer-sync'], 'selected peer syncs')
+  const seeded = await until.final
+  ok(seeded.success, 'seed exited after specific peer fully synced')
+})
+
+test('pear seed --until-sync two specific peers', async function ({
+  is,
+  ok,
+  plan,
+  teardown,
+  timeout,
+  tmp
+}) {
+  timeout(180000)
+  plan(2)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+
+  const staging = helper.stage({ link, dir: Helper.fixture('minimal'), dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+  await Helper.pick(staging, { tag: 'final' })
+
+  const firstStore = new Corestore(await tmp())
+  teardown(() => firstStore.close())
+  await firstStore.ready()
+  const firstDrive = new Hyperdrive(firstStore, hypercoreid.decode(link))
+  await firstDrive.ready()
+
+  const firstSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+  teardown(() => firstSwarm.destroy())
+  firstSwarm.on('connection', (conn) => firstStore.replicate(conn))
+  firstSwarm.join(firstDrive.discoveryKey)
+  await firstSwarm.flush()
+
+  const secondStore = new Corestore(await tmp())
+  teardown(() => secondStore.close())
+  await secondStore.ready()
+  const secondDrive = new Hyperdrive(secondStore, hypercoreid.decode(link))
+  await secondDrive.ready()
+
+  const secondSwarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
+  teardown(() => secondSwarm.destroy())
+  secondSwarm.on('connection', (conn) => secondStore.replicate(conn))
+  secondSwarm.join(secondDrive.discoveryKey)
+  await secondSwarm.flush()
+
+  const seeding = helper.seed({
+    link,
+    untilSync: [
+      hypercoreid.encode(firstSwarm.keyPair.publicKey),
+      hypercoreid.encode(secondSwarm.keyPair.publicKey)
+    ]
+  })
+  teardown(() => Helper.teardownStream(seeding))
+  const final = Helper.pick(seeding, { tag: 'final' })
+
+  await firstDrive.db.core.update()
+  await firstDrive.db.core.download({ start: 0, end: firstDrive.db.core.length }).done()
+  await firstDrive.download().done()
+  await firstDrive.blobs.core.download({ start: 0, end: firstDrive.blobs.core.length }).done()
+
+  const pending = await Promise.race([
+    final.then(() => false),
+    new Promise((resolve) => setTimeout(() => resolve(true), 100))
+  ])
+  is(pending, true, 'seeding waits for the second selected peer')
+
+  await secondDrive.db.core.update()
+  await secondDrive.db.core.download({ start: 0, end: secondDrive.db.core.length }).done()
+  await secondDrive.download().done()
+  await secondDrive.blobs.core.download({ start: 0, end: secondDrive.blobs.core.length }).done()
+
+  const seeded = await final
+  ok(seeded.success, 'seed exited after two specific peers fully synced')
+})

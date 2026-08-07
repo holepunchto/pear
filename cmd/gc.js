@@ -5,10 +5,12 @@ const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
-  remove: ({ resource, id, operation = 'removed', link }) =>
-    `${id} ${resource.slice(0, -1)} ${operation}${link ? ' ~ ' + link : ''}`,
-  complete: ({ resource, count }) => {
-    return count > 0 ? `Total ${resource} removed: ${count}` : `No ${resource} removed`
+  cores: ({ link, skipped, content }) => {
+    if (skipped) {
+      return `Skipped clearing core ~ ${link}. The core is writable or does not exist in the corestore`
+    } else {
+      return `Cleared core ~ ${link}\nCleared content core ~ ${content}`
+    }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
 })
@@ -24,17 +26,24 @@ module.exports = async function gc(cmd) {
 }
 
 class GC {
-  sidecars() {
-    return { pid: Bare.pid }
-  }
-
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link
+
     if (link) {
-      const parsed = plink.parse(link)
-      if (!parsed) throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      let parsed = null
+      try {
+        parsed = plink.parse(link)
+      } catch {
+        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      }
+      if (parsed.drive.key === null) {
+        throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+      }
+    } else {
+      throw ERR_INVALID_INPUT('A link must be specified')
     }
+
     return { link }
   }
 }

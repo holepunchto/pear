@@ -9,7 +9,7 @@ module.exports = class Session {
     this._tearingDown = null
     this._teardowns = []
     this._identifier = identifier
-    LOG.info('session', 'new session', this._identifier)
+    LOG.trace('session', 'new session', this._identifier)
     client.on('close', this._eagerTeardownBound)
   }
 
@@ -18,25 +18,25 @@ module.exports = class Session {
   }
 
   async add(resource) {
-    LOG.info('session', 'adding resource to session', this._identifier)
+    LOG.trace('session', 'adding resource to session', this._identifier)
     await resource.ready()
 
     if (this.closed) {
-      LOG.info('session', 'closed, closing resource and not adding to session', this._identifier)
+      LOG.trace('session', 'closed, closing resource and not adding to session', this._identifier)
       await resource.close()
       throw ERR_INTERNAL_ERROR('Session is closed')
     }
 
     this.resources.add(resource)
-    LOG.info('session', 'resource added to session', this._identifier)
+    LOG.trace('session', 'resource added to session', this._identifier)
     return resource
   }
 
   async delete(resource) {
-    LOG.info('session', 'removing resource from session', this._identifier)
+    LOG.trace('session', 'removing resource from session', this._identifier)
     this.resources.delete(resource)
     await resource.close()
-    LOG.info('session', 'resource closed and removed from session', this._identifier)
+    LOG.trace('session', 'resource closed and removed from session', this._identifier)
   }
 
   async close() {
@@ -44,7 +44,7 @@ module.exports = class Session {
     try {
       return await this._tearingDown
     } finally {
-      LOG.info('session', 'closed session', this._identifier)
+      LOG.trace('session', 'closed session', this._identifier)
     }
   }
 
@@ -60,7 +60,7 @@ module.exports = class Session {
   }
 
   async _teardown() {
-    LOG.info('session', 'tearing down session', this._identifier)
+    LOG.trace('session', 'tearing down session', this._identifier)
     const closing = []
     for (const resource of this.resources) {
       const close = resource.close()

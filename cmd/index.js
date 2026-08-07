@@ -1,11 +1,12 @@
 'use strict'
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
-const { usage, print } = require('../lib/terminal.js')
+const { usage, print, isTTY } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
 const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
+const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
   touch: require('./touch'),
@@ -21,6 +22,7 @@ const commands = {
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
   gc: require('./gc'),
+  cores: require('./cores'),
   versions: require('./versions')
 }
 
@@ -48,6 +50,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
     `,
     arg('<link>', 'Pear link to seed'),
     flag('--no-tty', 'Disable tty features'),
+    flag(
+      '--until-sync <key>',
+      'Exit when specified peer fully sync. Pass multiple flags to wait for more peers'
+    ).multiple(),
     flag('--stats-interval <ms>', 'Stats refresh interval in milliseconds'),
     flag('--json', 'Newline delimited JSON output'),
     commands.seed
@@ -333,9 +339,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
     `,
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
-    flag('--log-labels <list>', 'Labels to log (internal, always logged)'),
-    flag('--log-fields <list>', 'Show/hide: date,time,h:level,h:label,h:delta'),
-    flag('--log-stacks', 'Add a stack trace to each log message'),
     flag('--dht-bootstrap <nodes>').hide(),
     commands.sidecar
   )
@@ -343,17 +346,25 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
-    command('sidecars', summary('Clear running sidecars'), commands.gc),
     command(
       'cores',
       summary('Clear corestore cores'),
-      arg('[link]', 'Clear cores by link'),
+      arg('<link>', 'Clear cores by link'),
       commands.gc
     ),
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(gc.help())
     }
+  )
+
+  const cores = command(
+    'cores',
+    summary('List platform cores'),
+    description`List platform corestore cores`,
+    flag('--all-cores', 'List all cores, including empty cores'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.cores
   )
 
   const versions = command(
@@ -386,6 +397,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     changelog,
     sidecar,
     gc,
+    cores,
     versions,
     help,
     footer(usage.footer),
@@ -471,18 +483,39 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const shell = require('../lib/cmd').command(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
-  if (cmdIx > -1) argv = argv.slice(cmdIx)
 
-  if (argv[0] === 'run') {
-    const message =
-      'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
-    print(message, false)
-    Bare.exitCode = 1
-    ipc.close()
-    return null
+  let program = null
+
+  if (shell?.flags?.menu) {
+    if (!isTTY) {
+      print('pear --menu requires an interactive terminal', false)
+      Bare.exitCode = 1
+      ipc.close()
+      return null
+    }
+    const confirmed = await runMenu(cmd, {
+      onComplete: (result, { argv: menuArgv }) => {
+        program = cmd.parse(menuArgv)
+      }
+    })
+    if (!confirmed || !confirmed.run) {
+      ipc.close()
+      return null
+    }
+  } else {
+    if (cmdIx > -1) argv = argv.slice(cmdIx)
+
+    if (argv[0] === 'run') {
+      const message =
+        'pear run has been removed.\nUse the pear-runtime module instead: https://www.npmjs.com/package/pear-runtime'
+      print(message, false)
+      Bare.exitCode = 1
+      ipc.close()
+      return null
+    }
+
+    program = cmd.parse(argv)
   }
-
-  const program = cmd.parse(argv)
 
   if (program === null) {
     ipc.close()
