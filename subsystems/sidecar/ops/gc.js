@@ -1,8 +1,9 @@
 'use strict'
-const { ERR_INVALID_GC_RESOURCE } = require('pear-errors')
+const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
-const hypercoreid = require('hypercore-id-encoding')
+const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class GC extends Opstream {
   constructor(...args) {
@@ -15,35 +16,100 @@ module.exports = class GC extends Opstream {
   }
 
   async cores(params) {
-    const { resource } = params
-    const { sidecar } = this
+    const { data = {} } = params
+    const { link } = data
 
-    const discoveryKeys = []
-    for await (const dkey of sidecar.corestore.list()) discoveryKeys.push(dkey)
-    for (const discoveryKey of discoveryKeys) {
-      const dkey = hypercoreid.encode(discoveryKey)
-      const info = await sidecar.corestore.storage.getInfo(discoveryKey)
-      if (info.auth && info.auth.keyPair) continue
+    if (!link) throw ERR_INVALID_INPUT('A link must be specified')
 
-      const core = sidecar.corestore.get({
-        discoveryKey: info.discoveryKey,
-        active: false
-      })
-      await core.ready()
-      await core.clear(0, core.length)
-      const dlink =
-        info.auth && info.auth.key ? plink.serialize({ drive: { key: info.auth.key } }) : null
+    LOG.trace('gc cores', 'starting', { link })
+
+    let parsed = null
+    try {
+      parsed = plink.parse(link)
+    } catch {
+      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+    if (parsed.drive.key === null) {
+      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
+    }
+
+    const cleared = await this._clearCore(link)
+
+    if (!cleared) {
       this.push({
-        tag: 'remove',
+        tag: 'cores',
         data: {
-          operation: 'clear',
-          resource: resource,
-          id: dkey,
-          link: dlink
+          skipped: true,
+          link
         }
       })
-      await core.close()
+    } else {
+      const contentKey = await this._getContentKey(link)
+      await this._clearCore(contentKey)
+      this.push({
+        tag: 'cores',
+        data: {
+          skipped: false,
+          link,
+          content: plink.serialize(contentKey)
+        }
+      })
     }
-    await sidecar.corestore.storage.compact()
+
+    LOG.info('gc cores', 'completed', {
+      link
+    })
+  }
+
+  async _clearCore(link) {
+    const info = await this._getInfo(link)
+
+    if (!info) {
+      LOG.trace('gc cores', 'core not found', { link })
+      return false
+    }
+
+    if (info.auth.keyPair) {
+      LOG.trace('gc cores', 'core is writable, skipping', { link })
+      return false
+    }
+
+    const core = this._getCore(info)
+    await core.ready()
+    const coreLength = core.length
+
+    LOG.info('gc cores', 'clearing core', {
+      link,
+      coreLength
+    })
+
+    await core.clear(0, coreLength)
+    await core.close()
+
+    return true
+  }
+
+  async _getContentKey(link) {
+    const info = await this._getInfo(link)
+    if (!info) return null
+
+    const core = this._getCore(info)
+    await core.ready()
+    await core.close()
+
+    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, core.key))
+  }
+
+  _getInfo(link) {
+    const key = plink.parse(link).drive.key
+    const discoveryKey = crypto.discoveryKey(key)
+    return this.sidecar.corestore.storage.getInfo(discoveryKey)
+  }
+
+  _getCore(info) {
+    return this.sidecar.corestore.get({
+      discoveryKey: info.discoveryKey,
+      active: false
+    })
   }
 }
