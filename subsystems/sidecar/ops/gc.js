@@ -33,6 +33,7 @@ module.exports = class GC extends Opstream {
       throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
     }
 
+    const contentKey = await this._getContentKey(link)
     const cleared = await this._clearCore(link)
 
     if (!cleared) {
@@ -44,7 +45,6 @@ module.exports = class GC extends Opstream {
         }
       })
     } else {
-      const contentKey = await this._getContentKey(link)
       await this._clearCore(contentKey)
       this.push({
         tag: 'cores',
