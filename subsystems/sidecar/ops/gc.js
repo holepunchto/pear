@@ -1,6 +1,7 @@
 'use strict'
 const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
+const { parse } = require('../../../lib/link')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
@@ -23,16 +24,7 @@ module.exports = class GC extends Opstream {
 
     LOG.trace('gc cores', 'starting', { link })
 
-    let parsed = null
-    try {
-      parsed = plink.parse(link)
-    } catch {
-      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
-    if (parsed.drive.key === null) {
-      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
-
+    parse(link)
     const cleared = await this._clearCore(link)
 
     if (!cleared) {
