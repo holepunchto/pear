@@ -71,7 +71,7 @@ async function createDrive(t) {
 
   return {
     link: plink.serialize({ drive: { key: drive.key } }),
-    content: drive.blobs.core.key
+    content: plink.serialize({ drive: { key: drive.blobs.core.key } })
   }
 }
 
