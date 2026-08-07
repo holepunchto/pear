@@ -58,9 +58,12 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.seed
   )
 
-  const build = command('build', require('pear-build/package.json').command, (cmd) =>
-    commands.build(cmd.flags).done()
-  )
+  const build = command('build', require('pear-build/package.json').command, async (cmd) => {
+    const builder = commands.build(cmd.flags)
+    // suppress error event as .done also rejects on error
+    builder.on('error', () => {})
+    await builder.done()
+  })
 
   const stage = command(
     'stage',
