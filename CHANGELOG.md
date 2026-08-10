@@ -1,5 +1,28 @@
 # Pear Runtime Changelog
 
+## v3.2.0
+
+### Features
+
+* CLI - `pear --menu` - interactive menu for browsing commands
+* CLI - `pear seed --until-sync <public-key>` - seed until the given public-keys are synced
+
+### Improvements
+
+* CLI - `pear gc cores` - link argument
+* CLI - `pear gc sidecars` removed
+* CLI - `pear cores` - cores with zero contiguous length are skipped
+* Internal - pear link parsing and validation unified across commands, with invalid link errors handled
+* CLI - dead `pear gc releases` removed
+* Internal - Windows cross build support
+
+### Fixes
+
+* CLI - `--json` - invalid output fix, errors are now emitted as valid JSON
+* CLI - `pear --unknown-flags` output fix
+* CLI - `pear provision` error message fixes
+* CLI - `pear gc cores` - content cores are resolved before clearing, uncleared cores are no longer reported
+
 ## v3.1.0
 
 ### Features
