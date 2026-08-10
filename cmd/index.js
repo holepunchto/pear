@@ -438,6 +438,20 @@ module.exports = async (ipc, argv = cmdArgs) => {
       const reason = codemap.has(code) ? (codemap.get(code)(bail) ?? bail.reason) : bail.reason
       Bare.exitCode = 1
 
+      if (argv.includes('--json')) {
+        console.log(
+          JSON.stringify({
+            cmd: argv[0],
+            tag: 'error',
+            data: {
+              success: false,
+              message: reason
+            }
+          })
+        )
+        return
+      }
+
       print(reason, false)
 
       if (nouse.some((fn) => fn === ref) || codemap.has(code) === false) return
