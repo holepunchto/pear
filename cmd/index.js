@@ -46,7 +46,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'seed',
     summary('Seed or reseed a project'),
     description`
-      Specify a link to seed a project.
+      Announce a project link on the network and serve its blocks to peers. 
+      Runs until you exit, or until every --until-sync peer has fully synced.
     `,
     arg('<link>', 'Pear link to seed'),
     flag('--no-tty', 'Disable tty features'),
@@ -70,9 +71,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'stage',
     summary('Sync disk changes into project'),
     description`
-      Stage local changes to a project link.
-
-      Outputs diff information and project link.
+      Stage local changes to a project link. 
+      Outputs diff information and the resulting project link.
     `,
     arg('<link>', 'Pear link to stage'),
     arg('[dir=.]', 'Project directory path'),
@@ -89,11 +89,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'provision',
     summary('Block-sync source & production'),
     description`
-      Synchronize blocks to a pre-production target link
-
-      The target can then be multisig'd against a production link
-
-      Use pear touch to generate target link
+      Synchronize blocks from a source link to a pre-production target link. 
+      The target can then be multisig'd against a production link. 
+      Use pear touch to generate the target link first.
     `,
     arg('<source-verlink>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
@@ -107,18 +105,17 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'multisig',
     summary('Production signing coordination'),
     description`
-      Quorum-based cryptographic cosigning for production releases
+      Quorum-based cryptographic cosigning for production releases. 
+      Gather enough signatures to approve a release to synchronize 
+      onto a production link. 
 
-      Gather enough signatures to approve a release to synchronize
-      onto a production link
-
-      Example - 2/3 must sign to approve
-      pear.json: {
-        "multisig": {
-          "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-          "namespace": "my-org/my-app",
-          "quorum": 2
-        }
+      Example - 2/3 must sign to approve 
+      pear.json: { 
+        "multisig": { 
+          "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"], 
+          "namespace": "my-org/my-app", 
+          "quorum": 2 
+        } 
       }
     `,
     command(
@@ -129,10 +126,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
         summary('Get signing key, initializing if needed'),
         description`
           Idempotent. 
-          
-          Creates public/private keypair if it doesn't exist.
-          
-          Always prints the public key
+          Creates a public/private keypair if one doesn't already exist, 
+          then prints the public key.
         `,
         arg('[name=default]', 'As used for public/private key filenames'),
         flag('--secret', 'Also output the private key'),
@@ -180,17 +175,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
       'link',
       summary('Print project multisig link'),
       description`
-        The publicKeys, quorum & namespace values of the pear.json
-        multisig field determine the multisig link
-
-        Example - 2/3 must sign to approve
-        pear.json: {
-          "multisig": {
-            "publicKeys": ["<pubkey1>", "<pubkey2>", "<pubkey3>"],
-            "namespace": "my-org/my-app",
-            "quorum": 2
-          }
-        }`,
+        The multisig link is derived from the publicKeys, quorum and 
+        namespace fields of your project's pear.json. 
+        Run pear help multisig for an example config.
+      `,
       flag('--config [./pear.json]', 'Config file path'),
       flag('--vanity <vanity>', 'Generate a vanity link with this prefix'),
       flag('--json', 'Newline delimited JSON output'),
@@ -200,8 +188,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
       'request',
       summary('Create a multisig request'),
       description`
-        Create a signing request to synchronize from a versioned source link
-        onto the project multisig link as output by the pear multisig link command
+        Create a signing request to synchronize a versioned source link 
+        onto the project's multisig link, as printed by pear multisig link.
       `,
       flag('--force', 'Skip sanity checks'),
       flag('--config [./pear.json]', 'Config file path'),
@@ -214,10 +202,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
       'sign',
       summary('Sign a multisig request'),
       description`
-        Sign a multisig request using a local signing key
-
-        The key's public counterpart must be listed in multisig.publicKeys
-        in the pear.json of the source link supplied to pear multisig request
+        Sign a multisig request using a local signing key. 
+        The key's public counterpart must be listed in the 
+        multisig.publicKeys field of the pear.json at the source link 
+        supplied to pear multisig request.
       `,
       arg('<request>', 'As returned by pear multisig request'),
       arg('[name=default]', 'Name of local key to sign with'),
@@ -257,9 +245,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'info',
     summary('View project information'),
     description`
-      Supply a link to view application information.
-
-      Supply no argument to view platform information.
+      View information about a project. 
+      Supply a link to inspect a specific project, or omit it to view 
+      platform information.
     `,
     arg('[link]', 'Project to view info for'),
     arg('[dir=.]', 'Project directory path'),
@@ -316,9 +304,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'changelog',
     summary('View project changelog'),
     description`
-      Supply a link to view application changelog
-
-      Shows Pear changelog by default
+      View a project's changelog. 
+      Supply a link to inspect a specific project, or omit it to view 
+      Pear's own changelog.
     `,
     arg('[link]', 'Project to view changelog of'),
     flag('--max|-m <n=10>', 'Maximum entries to show'),
@@ -334,10 +322,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command('inspect', commands.sidecar, summary('Enable running sidecar inspector')),
     summary('Advanced. Run sidecar in terminal'),
     description`
-      The sidecar is a local-running IPC server for corestore access.
-
-      The pear sidecar command shuts down any existing sidecar process
-      and then becomes the sidecar.
+      The sidecar is a local IPC server that brokers corestore access 
+      for every running Pear app. 
+      Running pear sidecar shuts down any existing sidecar and takes 
+      over as the new one, staying attached to this terminal.
     `,
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
     flag('--log-level <level>', 'Level to log at. 0,1,2,3 (OFF,ERR,INF,TRC)'),
@@ -363,7 +351,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const cores = command(
     'cores',
     summary('List platform cores'),
-    description`List platform corestore cores`,
+    description`
+      Lists the cores in the platform corestore. 
+      Empty cores are omitted unless --all-cores is set.
+    `,
     flag('--all-cores', 'List all cores, including empty cores'),
     flag('--json', 'Newline delimited JSON output'),
     commands.cores
