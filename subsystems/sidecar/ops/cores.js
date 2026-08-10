@@ -29,7 +29,7 @@ module.exports = class Cores extends Opstream {
     LOG.info('cores', `Found ${discoveryKeys.length} discovery keys`)
 
     const contentLinks = new Map() // content link -> metadata link
-    const cores = new Map()
+    const cores = new Map() // link -> core
 
     for (const discoveryKey of discoveryKeys) {
       const dkey = hypercoreid.encode(discoveryKey)
