@@ -1,8 +1,7 @@
 'use strict'
 const context = require('../context')
 const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
-const { ERR_INVALID_LINK } = require('pear-errors')
-const plink = require('pear-link')
+const { parse } = require('../lib/link')
 
 const output = outputter('provision', {
   ['byte-diff']: byteDiff,
@@ -82,20 +81,9 @@ module.exports = async function provision(cmd) {
   const targetLink = cmd.args.targetLink
   const productionVerlink = cmd.args.productionVerlink
 
-  const source = plink.parse(sourceVerlink)
-  if (source.drive.length === null) {
-    throw ERR_INVALID_LINK('<source-verlink> must be versioned', {
-      link: sourceVerlink
-    })
-  }
+  parse(sourceVerlink, '<source-verlink>')
+  parse(targetLink, '<target-link>')
+  parse(productionVerlink, '<production-verlink>')
 
-  plink.parse(targetLink) // validates
-
-  const production = plink.parse(productionVerlink)
-  if (production.drive.length === null) {
-    throw ERR_INVALID_LINK('<production-verlink> must be versioned', {
-      link: productionVerlink
-    })
-  }
   await output(json, ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun }))
 }

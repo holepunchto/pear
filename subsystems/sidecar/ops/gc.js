@@ -1,6 +1,7 @@
 'use strict'
 const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
+const { parse } = require('../../../lib/link')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
@@ -23,15 +24,7 @@ module.exports = class GC extends Opstream {
 
     LOG.trace('gc cores', 'starting', { link })
 
-    let parsed = null
-    try {
-      parsed = plink.parse(link)
-    } catch {
-      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
-    if (parsed.drive.key === null) {
-      throw ERR_INVALID_INPUT(`Link "${link}" is not a valid key`)
-    }
+    parse(link)
 
     const contentKey = await this._getContentKey(link)
     const cleared = await this._clearCore(link)
@@ -95,12 +88,12 @@ module.exports = class GC extends Opstream {
     const info = await this._getInfo(link)
     if (!info) return null
 
-    const key = plink.parse(link).drive.key
+    const key = parse(link).drive.key
     return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, key))
   }
 
   _getInfo(link) {
-    const key = plink.parse(link).drive.key
+    const key = parse(link).drive.key
     const discoveryKey = crypto.discoveryKey(key)
     return this.sidecar.corestore.storage.getInfo(discoveryKey)
   }
