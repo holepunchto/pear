@@ -61,29 +61,36 @@ class Keys {
 
   async get() {
     const { secret } = this.cmd.flags
-    let publicKey
-    let privateKey
-
     if (fs.existsSync(this.pub)) {
-      publicKey = fs.readFileSync(this.pub)
-      if (secret) {
-        privateKey = fs.existsSync(this.prv) ? fs.readFileSync(this.prv) : '(no secret key)'
+      const data = {
+        name: this.name,
+        pub: this.pub,
+        prv: this.prv,
+        publicKey: fs.readFileSync(this.pub),
+        at: { pub: this.pub.replace(HOME, '~'), prv: this.prv.replace(HOME, '~') }
       }
-    } else {
-      const input = await password()
-      if (!input) throw new ERR_INVALID_INPUT('password required')
-      const confirmation = await password('Confirm password: ')
-      if (input !== confirmation) throw ERR_INVALID_INPUT('Passwords do not match')
-      const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
-      pwd.write(input)
-      const keyPair = hs.generateKeys(pwd)
-      publicKey = keyPair.publicKey
-      fs.mkdirSync(SIGN, { recursive: true })
-      fs.writeFileSync(this.pub, publicKey)
-      fs.writeFileSync(this.prv, keyPair.secretKey)
-      if (secret) privateKey = keyPair.secretKey
+      if (secret) {
+        data.privateKey = fs.existsSync(this.prv) ? fs.readFileSync(this.prv) : '(no secret key)'
+      }
+      await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
+      if (!this.json) {
+        hint(
+          'Add this public key to multisig.publicKeys in pear.json, then get the multisig link:',
+          ['pear multisig link']
+        )
+      }
+      return
     }
-
+    const input = await password()
+    if (!input) throw new ERR_INVALID_INPUT('password required')
+    const confirmation = await password('Confirm password: ')
+    if (input !== confirmation) throw ERR_INVALID_INPUT('Passwords do not match')
+    const pwd = sodium.sodium_malloc(Buffer.byteLength(input))
+    pwd.write(input)
+    const { publicKey, secretKey } = hs.generateKeys(pwd)
+    fs.mkdirSync(SIGN, { recursive: true })
+    fs.writeFileSync(this.pub, publicKey)
+    fs.writeFileSync(this.prv, secretKey)
     const data = {
       name: this.name,
       pub: this.pub,
@@ -91,7 +98,7 @@ class Keys {
       publicKey,
       at: { pub: this.pub.replace(HOME, '~'), prv: this.prv.replace(HOME, '~') }
     }
-    if (secret) data.privateKey = privateKey
+    if (secret) data.privateKey = secretKey
     await Keys.output(this.json, [{ tag: 'key', data }, { tag: 'final' }])
     if (!this.json) {
       hint('Add this public key to multisig.publicKeys in pear.json, then get the multisig link:', [
