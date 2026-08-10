@@ -3,7 +3,7 @@ const test = require('brittle')
 const Helper = require('./helper')
 
 test('pear cores lists default cores', async ({ teardown, plan, is, ok }) => {
-  plan(5)
+  plan(7)
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
@@ -13,6 +13,8 @@ test('pear cores lists default cores', async ({ teardown, plan, is, ok }) => {
   const core = await cores.core
   ok(/^pear:\/\/[a-z0-9]{52}$/.test(core.link))
   is(typeof core.writable, 'boolean')
+  is(typeof core.blobs, 'boolean')
+  ok(Object.hasOwn(core, 'name'))
 
   const result = await cores.final
 

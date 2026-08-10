@@ -3,8 +3,11 @@ const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
 
 const output = outputter('cores', {
-  core: ({ link, writable, length }) =>
-    `${link} ${writable ? `(length: ${length}, writable)` : `(length: ${length})`}`,
+  core: ({ link, writable, length, name, blobs }) => {
+    const label = [name, blobs ? '[blobs]' : null].filter(Boolean).join(' ')
+    const meta = writable ? `(length: ${length}, writable)` : `(length: ${length})`
+    return `${link}${label ? ` ${label}` : ''} ${meta}`
+  },
   final: ({ count, writable }) => ({
     output: 'print',
     success: Infinity, // omit success ansi tick
