@@ -25,6 +25,8 @@ module.exports = class GC extends Opstream {
     LOG.trace('gc cores', 'starting', { link })
 
     parse(link)
+
+    const contentKey = await this._getContentKey(link)
     const cleared = await this._clearCore(link)
 
     if (!cleared) {
@@ -36,14 +38,13 @@ module.exports = class GC extends Opstream {
         }
       })
     } else {
-      const contentKey = await this._getContentKey(link)
-      await this._clearCore(contentKey)
+      const contentCleared = await this._clearCore(contentKey)
       this.push({
         tag: 'cores',
         data: {
           skipped: false,
           link,
-          content: plink.serialize(contentKey)
+          content: contentCleared ? plink.serialize(contentKey) : null
         }
       })
     }
@@ -67,33 +68,32 @@ module.exports = class GC extends Opstream {
     }
 
     const core = this._getCore(info)
-    await core.ready()
-    const coreLength = core.length
+    try {
+      await core.ready()
+      const coreLength = core.length
 
-    LOG.info('gc cores', 'clearing core', {
-      link,
-      coreLength
-    })
+      LOG.info('gc cores', 'clearing core', {
+        link,
+        coreLength
+      })
 
-    await core.clear(0, coreLength)
-    await core.close()
-
-    return true
+      await core.clear(0, coreLength)
+      return true
+    } finally {
+      await core.close()
+    }
   }
 
   async _getContentKey(link) {
     const info = await this._getInfo(link)
     if (!info) return null
 
-    const core = this._getCore(info)
-    await core.ready()
-    await core.close()
-
-    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, core.key))
+    const key = parse(link).drive.key
+    return plink.serialize(Hyperdrive.getContentKey(info.auth.manifest, key))
   }
 
   _getInfo(link) {
-    const key = plink.parse(link).drive.key
+    const key = parse(link).drive.key
     const discoveryKey = crypto.discoveryKey(key)
     return this.sidecar.corestore.storage.getInfo(discoveryKey)
   }

@@ -8,7 +8,7 @@ const output = outputter('gc', {
     if (skipped) {
       return `Skipped clearing core ~ ${link}. The core is writable or does not exist in the corestore`
     } else {
-      return `Cleared core ~ ${link}\nCleared content core ~ ${content}`
+      return `Cleared core ~ ${link}${content ? `\nCleared content core ~ ${content}` : ''}`
     }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`
