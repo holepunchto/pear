@@ -105,5 +105,5 @@ async function getName(corestore, key) {
   const buffer = await drive.get('/package.json', { wait: false })
   if (buffer === null) return null
   const pkg = JSON.parse(buffer)
-  return pkg?.pear?.name || pkg?.name || null
+  return pkg?.productName || pkg?.name || null
 }
