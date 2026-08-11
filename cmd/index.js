@@ -279,7 +279,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'dump',
     summary('Synchronize files from link to dir'),
     arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
-    arg('<dir>', 'Directory path to dump to. Use - for output-only'),
+    arg('[dir]', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
