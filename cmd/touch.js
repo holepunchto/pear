@@ -46,7 +46,7 @@ module.exports = async function touch(cmd) {
     ipc.touch({ keyPair })
   )
 
-  if (!json && final?.link) {
+  if (!json) {
     hint('Deployment operations', [
       {
         label: 'stage',
@@ -61,6 +61,6 @@ module.exports = async function touch(cmd) {
         description: 'Production, stakeholder multisig, machine-independent'
       }
     ])
-    hint('Use the link above', ['pear stage --dry-run <link> <dir>'])
+    hint('Use the link above', ['pear stage --dry-run ' + final.link + ' <dir>'])
   }
 }

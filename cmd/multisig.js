@@ -342,7 +342,7 @@ class Multisig {
       })
     )
 
-    if (!this.json && final?.request) {
+    if (!this.json) {
       hint('Send this request to each signer. Each signs it with their key:', [
         'pear multisig sign <request>'
       ])
@@ -412,9 +412,10 @@ class Multisig {
       })
     )
 
-    if (!this.json && final?.dstKey) {
+    if (!this.json) {
+      const link = plink.serialize({ drive: { key: final.dstKey } })
       hint('The commit is not safe until peers seed it. Seed the multisig link:', [
-        'pear seed <link>'
+        'pear seed ' + link
       ])
     }
   }
