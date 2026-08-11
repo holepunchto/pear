@@ -11,7 +11,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ drive } = {}) {
+  _stats({ drive, semver } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -23,6 +23,7 @@ module.exports = class Seed extends Opstream {
         peers: drive.core.peers.length,
         driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
         driveLength: drive.core.length,
+        semver,
         discoveryKey: drive.discoveryKey ? hypercoreid.encode(drive.discoveryKey) : undefined,
         contentKey: drive.contentKey ? hypercoreid.encode(drive.contentKey) : 'pending',
         whoami: hypercoreid.encode(this.sidecar.keyPair.publicKey),
@@ -103,8 +104,11 @@ module.exports = class Seed extends Opstream {
 
     drive.db.core.download({ start: 0, end: -1 })
 
+    const manifest = await drive.get('/package.json')
+    const semver = manifest ? (JSON.parse(manifest).version ?? null) : null
+
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ drive }))
+      this.push(this._stats({ drive, semver }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
