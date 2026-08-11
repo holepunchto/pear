@@ -98,7 +98,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     arg('<source-verlink>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
     arg('<production-verlink>', 'Versioned link to sync against'),
-    flag('--dry-run|-d', 'Execute provision without writing'),
+    flag('--dry-run|-d', 'Execute provision to a disposable target'),
     flag('--json', 'Newline delimited JSON output'),
     commands.provision
   )
