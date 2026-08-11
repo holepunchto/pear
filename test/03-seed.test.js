@@ -68,6 +68,7 @@ test('pear seed basic stage and seed', async function ({
 
 test('pear seed announces, join, drop', async function ({
   ok,
+  is,
   plan,
   comment,
   teardown,
@@ -75,7 +76,7 @@ test('pear seed announces, join, drop', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(3)
+  plan(4)
 
   const dir = Helper.fixture('minimal')
   const helper = new Helper()
@@ -103,12 +104,15 @@ test('pear seed announces, join, drop', async function ({
   const until = await Helper.pick(seeding, [
     { tag: 'key' },
     { tag: 'announced' },
+    { tag: 'stats', data: { semver: '1.0.0' } },
     { tag: 'peer-add' },
     { tag: 'peer-remove' }
   ])
   const announced = await until.announced
   ok(announced, 'seeding is announced')
   const key = await until.key
+  const stats = await until.stats
+  is(stats.semver, '1.0.0', 'stats have semantic version')
 
   const peerStore = new Corestore(await tmp())
   teardown(() => peerStore.close())
