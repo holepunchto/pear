@@ -452,6 +452,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
             tag: 'error',
             data: {
               success: false,
+              code,
               message: reason
             }
           })
