@@ -58,26 +58,18 @@ module.exports = async function stage(cmd) {
     only,
     cmdArgs
   })
-  let staged = null
-  stream.on('data', ({ tag, data }) => {
-    if (tag === 'addendum') staged = data
-  })
   await output(json, stream)
 
   if (!json) {
     if (dryRun) {
-      const command = [
-        'pear',
-        ...cmdArgs.filter((arg) => arg !== '--dry-run' && arg !== '-d')
-      ].join(' ')
       hint('Dry run only - nothing was persisted. Once the diff looks right, stage for real:', [
-        command
+        'pear stage ' + link + ' ' + dir
       ])
-    } else if (staged) {
-      hint('Keep the staged version available', ['pear seed ' + staged.link])
+    } else {
+      hint('Keep the staged version available', ['pear seed ' + link])
       hint('Provision for prerelease, stakeholder preview, QA, or dogfooding', [
         'pear touch',
-        'pear provision --dry-run ' + staged.verlink + ' <provision-link> <production-verlink>'
+        'pear provision --dry-run <versioned-stage-link> <provision-link> <production-verlink>'
       ])
     }
   }
