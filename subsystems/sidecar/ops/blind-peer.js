@@ -72,7 +72,6 @@ module.exports = class BlindPeerOp extends Opstream {
   async request({ key, peerKey, announce = true } = {}) {
     const { sidecar, session } = this
 
-    console.log('identity', hypercoreid.normalize(sidecar.keyPair.publicKey))
     this.push({
       tag: 'identity',
       data: { publicKey: hypercoreid.normalize(sidecar.keyPair.publicKey) }
@@ -82,7 +81,7 @@ module.exports = class BlindPeerOp extends Opstream {
     if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')
 
     const coreKey = hypercoreid.decode(key)
-    const blindPeerKey = hypercoreid.normalize(peerKey)
+    const blindPeerKey = hypercoreid.decode(peerKey)
 
     const corestore = sidecar.getCorestore()
     await corestore.ready()
