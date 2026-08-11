@@ -52,11 +52,11 @@ test('pear seed basic stage and seed', async function ({
   ok(hypercoreid.isValid(key), 'app key is valid')
 
   const stats = await until.stats
-  ok(hypercoreid.isValid(stats.driveKey), 'stats have driveKey')
+  is(stats.driveKey, hypercoreid.normalize(stats.driveKey), 'stats driveKey is z32')
   is(stats.driveLength, addendum.version, 'stats have driveLength')
-  ok(hypercoreid.isValid(stats.discoveryKey), 'stats have discoveryKey')
-  ok(hypercoreid.isValid(stats.contentKey), 'stats have contentKey')
-  ok(hypercoreid.isValid(stats.whoami), 'stats have whoami')
+  is(stats.discoveryKey, hypercoreid.normalize(stats.discoveryKey), 'stats discoveryKey is z32')
+  is(stats.contentKey, hypercoreid.normalize(stats.contentKey), 'stats contentKey is z32')
+  is(stats.whoami, hypercoreid.normalize(stats.whoami), 'stats whoami is z32')
   ok(Number.isInteger(stats.peers), 'stats have peers')
   ok(Number.isFinite(stats.upload.speed), 'stats have upload.speed')
   ok(Number.isInteger(stats.upload.totalBytes), 'stats have upload.totalBytes')
@@ -68,6 +68,7 @@ test('pear seed basic stage and seed', async function ({
 
 test('pear seed announces, join, drop', async function ({
   ok,
+  is,
   plan,
   comment,
   teardown,
@@ -125,12 +126,12 @@ test('pear seed announces, join, drop', async function ({
   await peerDrive.get('/package.json')
 
   const joined = await until['peer-add']
-  ok(joined, 'peer joins')
+  is(joined, hypercoreid.normalize(joined), 'peer join key is z32')
 
   await peerSwarm.destroy()
 
   const dropped = await until['peer-remove']
-  ok(dropped, 'peer drops')
+  is(dropped, hypercoreid.normalize(dropped), 'peer drop key is z32')
 })
 
 test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
