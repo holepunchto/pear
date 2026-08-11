@@ -10,7 +10,7 @@ test('pear provision syncs blocks from source to target per production key', asy
   ok,
   plan
 }) => {
-  plan(2)
+  plan(4)
   const prod = Helper.fixture('stage-app-min')
   const src = Helper.fixture('minimal')
 
@@ -43,6 +43,24 @@ test('pear provision syncs blocks from source to target per production key', asy
   const production = await prodStaged.addendum
 
   const targetLink = await Helper.touchLink(helper)
+
+  const dryRunning = helper.provision({
+    sourceVerlink: source.verlink,
+    targetLink,
+    productionVerlink: production.verlink,
+    dryRun: true,
+    cooldown: 0
+  })
+  teardown(() => Helper.teardownStream(dryRunning))
+  const dryRun = await Helper.pick(dryRunning, [{ tag: 'dry' }, { tag: 'final' }])
+  ok(await dryRun.dry, 'dry-run completed')
+  await dryRun.final
+
+  const info = helper.info({ link: targetLink, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(info))
+  const inspected = await Helper.pick(info, [{ tag: 'empty' }, { tag: 'final' }])
+  ok(await inspected.empty, 'dry-run leaves target empty')
+  await inspected.final
 
   const provisioning = helper.provision({
     sourceVerlink: source.verlink,

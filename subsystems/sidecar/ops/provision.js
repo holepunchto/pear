@@ -2,6 +2,10 @@
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_LINK, ERR_INVALID_MANIFEST } = require('pear-errors')
+const fs = require('bare-fs')
+const os = require('bare-os')
+const path = require('bare-path')
+const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
 const { parse } = require('../../../lib/link')
@@ -19,7 +23,7 @@ module.exports = class Provision extends Opstream {
       })
     }
 
-    const target = parse(targetLink, 'target link')
+    const target = dryRun ? null : parse(targetLink, 'target link')
     const production = parse(productionVerlink, 'production verlink')
     if (production.drive.length === null) {
       throw ERR_INVALID_LINK('productionVerlink must be versioned', {
@@ -30,12 +34,6 @@ module.exports = class Provision extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const to = new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
-      compat: false
-    })
-    this.session.add(to)
-    await to.ready()
-
     const prod = new Hyperdrive(sidecar.getCorestore(), production.drive.key)
     this.session.add(prod)
     await prod.ready()
@@ -44,10 +42,31 @@ module.exports = class Provision extends Opstream {
     this.session.add(from)
     await from.ready()
 
-    sidecar.swarm.join(to.discoveryKey, {
-      client: true,
-      server: true
-    })
+    let to
+    if (dryRun) {
+      const tmp = path.join(os.tmpdir(), 'pear-provision-' + Math.random().toString(16).slice(2))
+      const store = new Corestore(tmp)
+      to = new Hyperdrive(store)
+      this.session.teardown(async () => {
+        await to.close()
+        await store.close()
+        await fs.promises.rm(tmp, { recursive: true, force: true })
+      })
+      await to.ready()
+    } else {
+      to = new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
+        compat: false
+      })
+      this.session.add(to)
+      await to.ready()
+    }
+
+    if (!dryRun) {
+      sidecar.swarm.join(to.discoveryKey, {
+        client: true,
+        server: true
+      })
+    }
     sidecar.swarm.join(from.discoveryKey, {
       client: true,
       server: false
@@ -58,7 +77,7 @@ module.exports = class Provision extends Opstream {
     })
 
     this.session.teardown(() => {
-      sidecar.swarm.leave(to.discoveryKey)
+      if (!dryRun) sidecar.swarm.leave(to.discoveryKey)
       sidecar.swarm.leave(from.discoveryKey)
       sidecar.swarm.leave(prod.discoveryKey)
     })
