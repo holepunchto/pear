@@ -60,6 +60,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
   )
 
   const build = command('build', require('pear-build/package.json').command, async (cmd) => {
+    if (!cmd.flags.package) return console.log(cmd.command.help())
     const builder = commands.build(cmd.flags)
     // suppress error event as .done also rejects on error
     builder.on('error', () => {})
@@ -98,7 +99,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     arg('<source-verlink>', 'Versioned source link'),
     arg('<target-link>', 'Target link to sync to'),
     arg('<production-verlink>', 'Versioned link to sync against'),
-    flag('--dry-run|-d', 'Execute provision without writing'),
+    flag('--dry-run|-d', 'Execute provision to a disposable target'),
     flag('--json', 'Newline delimited JSON output'),
     commands.provision
   )
@@ -278,7 +279,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'dump',
     summary('Synchronize files from link to dir'),
     arg('<link>', 'Link to dump from. May be file:, pear: or dir'),
-    arg('<dir>', 'Directory path to dump to. Use - for output-only'),
+    arg('[dir]', 'Directory path to dump to. Use - for output-only'),
     flag('--dry-run|-d', 'Execute a dump without writing'),
     flag('--checkout <n>', 'Dump from specified checkout, n is version length'),
     flag('--only <paths>', 'Filter by paths. Implies --no-prune. Comma-seperated'),
@@ -452,6 +453,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
             tag: 'error',
             data: {
               success: false,
+              code,
               message: reason
             }
           })

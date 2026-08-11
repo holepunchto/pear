@@ -75,7 +75,7 @@ module.exports = async function provision(cmd) {
   const productionVerlink = cmd.args.productionVerlink
 
   parse(sourceVerlink, '<source-verlink>')
-  parse(targetLink, '<target-link>')
+  if (!dryRun) parse(targetLink, '<target-link>')
   parse(productionVerlink, '<production-verlink>')
 
   const final = await output(
