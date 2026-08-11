@@ -30,12 +30,6 @@ module.exports = class Provision extends Opstream {
     const { sidecar } = this
     await sidecar.ready()
 
-    const to = new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
-      compat: false
-    })
-    this.session.add(to)
-    await to.ready()
-
     const prod = new Hyperdrive(sidecar.getCorestore(), production.drive.key)
     this.session.add(prod)
     await prod.ready()
@@ -44,10 +38,20 @@ module.exports = class Provision extends Opstream {
     this.session.add(from)
     await from.ready()
 
-    sidecar.swarm.join(to.discoveryKey, {
-      client: true,
-      server: true
-    })
+    const to = dryRun
+      ? prod.checkout(production.drive.length || prod.core.length)
+      : new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
+          compat: false
+        })
+    this.session.add(to)
+    await to.ready()
+
+    if (!dryRun) {
+      sidecar.swarm.join(to.discoveryKey, {
+        client: true,
+        server: true
+      })
+    }
     sidecar.swarm.join(from.discoveryKey, {
       client: true,
       server: false
@@ -58,7 +62,7 @@ module.exports = class Provision extends Opstream {
     })
 
     this.session.teardown(() => {
-      sidecar.swarm.leave(to.discoveryKey)
+      if (!dryRun) sidecar.swarm.leave(to.discoveryKey)
       sidecar.swarm.leave(from.discoveryKey)
       sidecar.swarm.leave(prod.discoveryKey)
     })
@@ -70,7 +74,7 @@ module.exports = class Provision extends Opstream {
 
     this.push({ tag: 'syncing', data: { type: 'metadata' } })
 
-    while (to.core.length < prod.core.length) {
+    while (!dryRun && to.core.length < prod.core.length) {
       await to.core.append(await prod.core.get(to.core.length))
       this.push({
         tag: 'blocks',
@@ -90,7 +94,7 @@ module.exports = class Provision extends Opstream {
 
       this.push({ tag: 'syncing', data: { type: 'blobs' } })
 
-      while (to.blobs.core.length < prod.blobs.core.length) {
+      while (!dryRun && to.blobs.core.length < prod.blobs.core.length) {
         await to.blobs.core.append(await prod.blobs.core.get(to.blobs.core.length))
         this.push({
           tag: 'blocks',

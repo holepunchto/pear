@@ -58,6 +58,46 @@ test('pear provision syncs blocks from source to target per production key', asy
   ok(provision.target.verlink.startsWith('pear://'), 'target verlink is a pear link')
 })
 
+test('pear provision dry-run does not write to target', async ({ teardown, ok, is, plan }) => {
+  plan(2)
+  const prod = Helper.fixture('stage-app-min')
+  const src = Helper.fixture('minimal')
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const sourceLink = await Helper.touchLink(helper)
+  const sourceStaging = helper.stage({ link: sourceLink, dir: src, dryRun: false })
+  teardown(() => Helper.teardownStream(sourceStaging))
+  const sourceStaged = await Helper.pick(sourceStaging, { tag: 'addendum' })
+
+  const productionLink = await Helper.touchLink(helper)
+  const productionStaging = helper.stage({ link: productionLink, dir: prod, dryRun: false })
+  teardown(() => Helper.teardownStream(productionStaging))
+  const productionStaged = await Helper.pick(productionStaging, { tag: 'addendum' })
+
+  const targetLink = await Helper.touchLink(helper)
+  const provisioning = helper.provision({
+    sourceVerlink: sourceStaged.verlink,
+    targetLink,
+    productionVerlink: productionStaged.verlink,
+    dryRun: true,
+    cooldown: 0
+  })
+  teardown(() => Helper.teardownStream(provisioning))
+
+  const provisioned = await Helper.pick(provisioning, [{ tag: 'dry' }, { tag: 'final' }])
+  ok(await provisioned.dry, 'dry-run completed')
+  await provisioned.final
+
+  const infoAfter = helper.info({ link: targetLink, cmdArgs: [] })
+  teardown(() => Helper.teardownStream(infoAfter))
+  const after = await Helper.pick(infoAfter, [{ tag: 'empty' }, { tag: 'final' }])
+  is(await after.empty, null, 'target remains empty')
+  await after.final
+})
+
 test('pear provision succeeds with standalone stage metadata', async ({
   teardown,
   ok,
