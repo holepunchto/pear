@@ -28,7 +28,8 @@ const ops = {
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Multisig: require('./ops/multisig'),
-  Cores: require('./ops/cores')
+  Cores: require('./ops/cores'),
+  BlindPeer: require('./ops/blind-peer')
 }
 
 const SWARM_DELAY = 5000
@@ -181,6 +182,10 @@ class Sidecar extends ReadyResource {
       platform: { key: UPGRADE, version, fork, length },
       runtimes
     }
+  }
+
+  blindPeer(params, client) {
+    return new ops.BlindPeer(params, client, this)
   }
 
   multisig(params, client) {
