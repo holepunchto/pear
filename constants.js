@@ -1,14 +1,12 @@
 'use strict'
-const sodium = require('sodium-native')
 const { isWindows, isLinux } = require('which-runtime')
 const { fileURLToPath, pathToFileURL } = require('url-file-url')
 const path = require('bare-path')
 const os = require('bare-os')
-const b4a = require('b4a')
 const pkg = require('./package.json')
+const socketPath = require('./lib/socket-path')
 
 const BIN = 'out/make/'
-const IPC_ID = 'pear'
 const RUNTIME_EXEC = isWindows ? 'pear-runtime.exe' : 'pear-runtime'
 const dir = (p) => toPath(new URL(p, platformUrl()))
 
@@ -73,9 +71,7 @@ module.exports = {
     _logPath = dir('pear.log')
     _gc = dir('gc')
     _runtime = dir(BIN + RUNTIME_EXEC)
-    _socketPath = isWindows
-      ? `\\\\.\\pipe\\${IPC_ID}-${pipeId(_platformDir)}`
-      : `${_platformDir}/${IPC_ID}.sock`
+    _socketPath = socketPath(_platformDir)
   }
 }
 
@@ -95,10 +91,4 @@ function platformDir() {
 
 function toPath(u) {
   return fileURLToPath(u).replace(/[/\\]$/, '') || '/'
-}
-
-function pipeId(s) {
-  const buf = b4a.allocUnsafe(32)
-  sodium.crypto_generichash(buf, b4a.from(s))
-  return b4a.toString(buf, 'hex')
 }

@@ -12,10 +12,10 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const LocalDrive = require('localdrive')
-const b4a = require('b4a')
 const OUT = path.join('out', 'make', `pear${isWindows ? '.exe' : ''}`)
 
 const constants = require('../constants.js')
+const socketPath = require('../lib/socket-path')
 const { PLATFORM_DIR } = constants
 const NO_GC = Bare.argv.includes('--no-tmp-gc')
 const MAX_OP_STEP_WAIT = env.CI ? 360000 : 120000
@@ -60,17 +60,9 @@ class Helper extends IPC.Client {
         : path.join(Helper.localDir, 'pear.dev')
     const dhtBootstrap = DHT_BOOTSTRAP.map((e) => `${e.host}:${e.port}`).join(',')
     const args = ['--sidecar', '--dht-bootstrap', dhtBootstrap, ...logging]
-    const pipeId = (s) => {
-      const buf = b4a.allocUnsafe(32)
-      sodium.crypto_generichash(buf, b4a.from(s))
-      return b4a.toString(buf, 'hex')
-    }
-
     const platformDir = opts.platformDir ?? path.join(Helper.localDir, 'pear')
     const lock = path.join(platformDir, 'pear.lock')
-    const socketPath = isWindows
-      ? `\\\\.\\pipe\\pear-${pipeId(platformDir)}`
-      : `${platformDir}/pear.sock`
+    const socket = socketPath(platformDir)
     const connectTimeout = 20_000
     const connect = opts.expectSidecar
       ? true
@@ -78,7 +70,7 @@ class Helper extends IPC.Client {
           if (log) spawn(runtime, args, { stdio: 'inherit' })
           else daemon(runtime, args)
         }
-    super({ lock, socketPath, connectTimeout, connect })
+    super({ lock, socketPath: socket, connectTimeout, connect })
     this.log = log
     this.runtime = runtime
   }
