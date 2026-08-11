@@ -1,6 +1,5 @@
 'use strict'
 const context = require('../context')
-const plink = require('pear-link')
 const bareTTY = require('bare-tty')
 const hypercoreid = require('hypercore-id-encoding')
 
@@ -8,6 +7,7 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, isTTY, byteSize, stdio } = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
+const { parse } = require('../lib/link')
 
 let resizeHandler
 
@@ -17,9 +17,8 @@ module.exports = async function seed(cmd) {
   const untilSync = cmd.flags.untilSync
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
-  if (!link || plink.parse(link).drive.key === null) {
-    throw ERR_INVALID_INPUT('A valid pear link must be specified.')
-  }
+  parse(link)
+
   statsInterval = +statsInterval
   if (Number.isInteger(+statsInterval) === false) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')

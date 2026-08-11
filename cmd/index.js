@@ -59,9 +59,11 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.seed
   )
 
-  const build = command('build', require('pear-build/package.json').command, (cmd) => {
-    if (!cmd.flags.package) return console.log(build.help())
-    return commands.build(cmd.flags).done()
+  const build = command('build', require('pear-build/package.json').command, async (cmd) => {
+    const builder = commands.build(cmd.flags)
+    // suppress error event as .done also rejects on error
+    builder.on('error', () => {})
+    await builder.done()
   })
 
   const stage = command(
@@ -430,13 +432,32 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_LEGACY', messageOnly],
         ['ERR_INVALID_TEMPLATE', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
+        ['ERR_NOT_FOUND', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]
       ])
       const nouse = [messageOnly, opFail]
-      const code = codemap.has(bail.err?.code) ? bail.err.code : bail.reason
+      const subcode = bail.err?.code === 'ERR_OPERATION_FAILED' ? bail.err?.info?.code : null
+      const code = codemap.has(subcode ?? bail.err?.code) ? (subcode ?? bail.err.code) : bail.reason
       const ref = codemap.get(code)
-      const reason = codemap.has(code) ? (codemap.get(code)(bail) ?? bail.reason) : bail.reason
+      let reason = bail.reason
+      if (codemap.has(code)) {
+        reason = subcode ? bail.err?.info?.message : (codemap.get(code)(bail) ?? bail.reason)
+      }
       Bare.exitCode = 1
+
+      if (argv.includes('--json')) {
+        console.log(
+          JSON.stringify({
+            cmd: argv[0],
+            tag: 'error',
+            data: {
+              success: false,
+              message: reason
+            }
+          })
+        )
+        return
+      }
 
       print(reason, false)
 

@@ -1,13 +1,14 @@
 'use strict'
 const LocalDrive = require('localdrive')
 const unixPathResolve = require('unix-path-resolve')
-const { ERR_INVALID_PROJECT_DIR, ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_PROJECT_DIR } = require('pear-errors')
 const plink = require('pear-link')
 const ReadyResource = require('ready-resource')
 const fs = require('bare-fs')
 const path = require('bare-path')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
@@ -16,10 +17,7 @@ module.exports = class Stage extends Opstream {
 
   async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
     const { session, sidecar } = this
-    const parsed = link ? plink.parse(link) : null
-    if (parsed === null || parsed.drive?.key === null) {
-      throw ERR_INVALID_INPUT('A valid pear link must be specified')
-    }
+    const parsed = parse(link)
 
     const { dir: pkgDir, pkg } = await localPkg(dir)
     if (pkg === null) {

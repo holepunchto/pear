@@ -3,10 +3,10 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
-const plink = require('pear-link')
 const { ERR_DIR_NONEMPTY, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -31,7 +31,7 @@ module.exports = class Dump extends Opstream {
       }
     }
 
-    const parsed = plink.parse(link)
+    const parsed = parse(link)
     const isFileLink = parsed.protocol === 'file:'
     const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
 

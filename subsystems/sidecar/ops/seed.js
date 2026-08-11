@@ -1,11 +1,10 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
-const plink = require('pear-link')
-const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const Replicator = require('../lib/replicator')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Seed extends Opstream {
   constructor(...args) {
@@ -45,9 +44,8 @@ module.exports = class Seed extends Opstream {
 
   async #op({ link, cmdArgs, untilSync, statsInterval = 500 } = {}) {
     const { client, session } = this
-    const parsed = link ? plink.parse(link) : null
-    const key = parsed?.drive.key ?? null
-    if (key === null) throw ERR_INVALID_INPUT('A valid pear link must be specified.')
+    const parsed = parse(link)
+    const key = parsed?.drive.key
 
     // not an app but a long running process, setting userData for restart recognition:
     client.userData = { state: { cmdArgs, flags: { link, untilSync } } }

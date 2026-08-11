@@ -6,6 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Hyperdrive = require('hyperdrive')
 const z32 = require('z32')
 const Opstream = require('../lib/opstream')
+const { parse } = require('../../../lib/link')
 
 module.exports = class Multisig extends Opstream {
   constructor(...args) {
@@ -48,8 +49,8 @@ module.exports = class Multisig extends Opstream {
     const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
     const { verlink, force, peerUpdateTimeout } = params
-    const parsed = plink.parse(verlink)
-    if (parsed === null || parsed.drive.key === null || parsed.drive.length === null) {
+    const parsed = parse(verlink, 'source link')
+    if (parsed.drive.length === null) {
       throw ERR_INVALID_LINK('A valid versioned source link must be specified', { verlink })
     }
     const { key, length } = parsed.drive
@@ -88,10 +89,7 @@ module.exports = class Multisig extends Opstream {
     const { publicKeys, namespace, quorum } = this.config
     const multisig = new HyperMultisig(this.sidecar.corestore, this.sidecar.swarm)
 
-    const parsed = plink.parse(link)
-    if (parsed === null || parsed.drive.key === null) {
-      throw ERR_INVALID_LINK('A valid source link must be specified', { link })
-    }
+    const parsed = parse(link, 'source link')
     const corestore = this.sidecar.getCorestore()
     const srcDrive = new Hyperdrive(corestore, parsed.drive.key)
     const key = HyperMultisig.getCoreKey(publicKeys, namespace, { quorum })
