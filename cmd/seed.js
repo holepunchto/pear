@@ -50,6 +50,11 @@ module.exports = async function seed(cmd) {
       initial
     },
     {
+      key: 'semver',
+      label: ctrlTTY ? 'Semantic Version:' : '... semantic version',
+      initial
+    },
+    {
       key: 'discoveryKey',
       label: ctrlTTY ? 'Discovery Key:' : '... discovery key',
       initial,
@@ -181,6 +186,7 @@ module.exports = async function seed(cmd) {
       peers,
       driveKey,
       driveLength,
+      semver,
       discoveryKey,
       contentKey,
       firewalled,
@@ -196,6 +202,7 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength,
+        semver,
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)

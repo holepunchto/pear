@@ -11,7 +11,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ drive } = {}) {
+  _stats({ drive, semver } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -21,11 +21,12 @@ module.exports = class Seed extends Opstream {
       data: {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
         peers: drive.core.peers.length,
-        driveKey: drive.key?.toString('hex'),
+        driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
         driveLength: drive.core.length,
-        discoveryKey: drive.discoveryKey?.toString('hex'),
-        contentKey: drive.contentKey?.toString('hex') ?? 'pending',
-        whoami: this.sidecar.keyPair.publicKey.toString('hex'),
+        semver,
+        discoveryKey: drive.discoveryKey ? hypercoreid.encode(drive.discoveryKey) : undefined,
+        contentKey: drive.contentKey ? hypercoreid.encode(drive.contentKey) : 'pending',
+        whoami: hypercoreid.encode(this.sidecar.keyPair.publicKey),
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,
@@ -63,13 +64,13 @@ module.exports = class Seed extends Opstream {
     drive.core.on('peer-add', (peer) => {
       this.push({
         tag: 'peer-add',
-        data: peer.remotePublicKey.toString('hex')
+        data: hypercoreid.encode(peer.remotePublicKey)
       })
     })
     drive.core.on('peer-remove', (peer) => {
       this.push({
         tag: 'peer-remove',
-        data: peer.remotePublicKey.toString('hex')
+        data: hypercoreid.encode(peer.remotePublicKey)
       })
     })
 
@@ -103,8 +104,11 @@ module.exports = class Seed extends Opstream {
 
     drive.db.core.download({ start: 0, end: -1 })
 
+    const manifest = await drive.get('/package.json')
+    const semver = manifest ? (JSON.parse(manifest).version ?? null) : null
+
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ drive }))
+      this.push(this._stats({ drive, semver }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)

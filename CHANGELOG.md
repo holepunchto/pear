@@ -14,14 +14,20 @@
 * CLI - `pear cores` - cores with zero contiguous length are skipped
 * Internal - pear link parsing and validation unified across commands, with invalid link errors handled
 * CLI - dead `pear gc releases` removed
+* CLI - `pear dump` - `dir` argument is now optional
+* CLI - `pear seed` - semver is included in the output
+* CLI - `--json` - errors include the error code
 * Internal - Windows cross build support
 
 ### Fixes
 
 * CLI - `--json` - invalid output fix, errors are now emitted as valid JSON
+* CLI - `--json` - `pear seed` keys are normalized to z32
 * CLI - `pear --unknown-flags` output fix
 * CLI - `pear provision` error message fixes
+* CLI - `pear provision --dry-run` no longer writes
 * CLI - `pear gc cores` - content cores are resolved before clearing, uncleared cores are no longer reported
+* CLI - `pear build` - help output is shown when the `--package` flag is missing
 
 ## v3.1.0
 
