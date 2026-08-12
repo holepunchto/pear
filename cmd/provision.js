@@ -1,6 +1,6 @@
 'use strict'
 const context = require('../context')
-const { outputter, ansi, byteDiff } = require('../lib/terminal.js')
+const { outputter, ansi, byteDiff, hint } = require('../lib/terminal.js')
 const { parse } = require('../lib/link')
 
 const output = outputter('provision', {
@@ -54,18 +54,11 @@ const output = outputter('provision', {
   final: ({ target }) => {
     const dryRun = !target
     if (dryRun) return
-    const { verlink, hashlink, link } = target
+    const { verlink, hashlink } = target
     return {
       output: 'print',
       success: Infinity, // omit success tick
-      message:
-        '\nProvisioned:\n  Verlink: ' +
-        verlink +
-        '\n\n  Hashlink: ' +
-        hashlink +
-        '\n\nSeed with:\n\n   pear seed ' +
-        link +
-        '\n'
+      message: '\nProvisioned:\n  Verlink: ' + verlink + '\n\n  Hashlink: ' + hashlink + '\n'
     }
   },
   seeding: ({ cooloff, peers }) => {
@@ -85,5 +78,20 @@ module.exports = async function provision(cmd) {
   if (!dryRun) parse(targetLink, '<target-link>')
   parse(productionVerlink, '<production-verlink>')
 
-  await output(json, ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun }))
+  const final = await output(
+    json,
+    ipc.provision({ sourceVerlink, targetLink, productionVerlink, dryRun })
+  )
+
+  if (!json) {
+    if (dryRun) {
+      hint(
+        'Dry run only — nothing was persisted. Once the diff looks right, properly provision with:',
+        ['pear provision ' + sourceVerlink + ' ' + targetLink + ' ' + productionVerlink]
+      )
+    } else {
+      hint('Keep the provisioned release available', ['pear seed ' + final.target.link])
+      hint('Multisig for stakeholder-approved production', ['pear multisig keys get'])
+    }
+  }
 }
