@@ -85,9 +85,10 @@ module.exports = async function provision(cmd) {
 
   if (!json) {
     if (dryRun) {
-      hint('Dry run only — nothing was persisted. Once the diff looks right, properly provision with:', [
-        'pear provision ' + sourceVerlink + ' ' + targetLink + ' ' + productionVerlink
-      ])
+      hint(
+        'Dry run only — nothing was persisted. Once the diff looks right, properly provision with:',
+        ['pear provision ' + sourceVerlink + ' ' + targetLink + ' ' + productionVerlink]
+      )
     } else {
       hint('Keep the provisioned release available', ['pear seed ' + final.target.link])
       hint('Multisig for stakeholder-approved production', ['pear multisig keys get'])
