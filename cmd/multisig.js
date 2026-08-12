@@ -294,7 +294,7 @@ class Multisig {
     if (!this.json) {
       hint(
         'Before requesting signatures, set this as the upgrade link in package.json, then produce a seeded, provisioned build against the multisig link:',
-        ['pear multisig request <versioned-provision-link>']
+        ['pear multisig request <verlink>']
       )
     }
   }
