@@ -16,9 +16,7 @@ module.exports = class Cores extends Opstream {
 
     const { sidecar, session } = this
 
-    const corestore = this.sidecar.getCorestore().session({ writable: false })
-    await corestore.ready()
-    session.add(corestore)
+    const corestore = await session.add(sidecar.getCorestore())
 
     const discoveryKeys = []
     for await (const dkey of corestore.list()) discoveryKeys.push(dkey)
