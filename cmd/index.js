@@ -62,7 +62,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
   )
 
   const build = command('build', require('pear-build/package.json').command, async (cmd) => {
-    if (!cmd.flags.package) return console.log(cmd.command.help())
     const builder = commands.build(cmd.flags)
     // suppress error event as .done also rejects on error
     builder.on('error', () => {})
