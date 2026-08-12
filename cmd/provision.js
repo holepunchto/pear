@@ -85,7 +85,7 @@ module.exports = async function provision(cmd) {
 
   if (!json) {
     if (dryRun) {
-      hint('Dry run only - nothing was persisted. Once the diff looks right, provision for real:', [
+      hint('Dry run only — nothing was persisted. Once the diff looks right, properly provision with:', [
         'pear provision ' + sourceVerlink + ' ' + targetLink + ' ' + productionVerlink
       ])
     } else {
