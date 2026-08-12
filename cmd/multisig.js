@@ -414,7 +414,7 @@ class Multisig {
 
     if (!this.json) {
       const link = plink.serialize({ drive: { key: final.dstKey } })
-      hint('The commit is not safe until peers seed it. Seed the multisig link:', [
+      hint('The commit can not propagate unless peers seed it. Seed the multisig link:', [
         'pear seed ' + link
       ])
     }
