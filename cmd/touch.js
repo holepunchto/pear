@@ -54,7 +54,7 @@ module.exports = async function touch(cmd) {
       },
       {
         label: 'provision',
-        description: 'Prereleases, stakeholder preview, QA, dogfooding'
+        description: 'Prerelease, stakeholder preview, QA, or dogfooding'
       },
       {
         label: 'multisig',
