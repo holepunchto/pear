@@ -28,7 +28,8 @@ class GC {
   cores(cmd) {
     const { command } = cmd
     const link = command.args.link
+    const force = command.flags.force
     if (link) parse(link)
-    return { link }
+    return { link, force }
   }
 }

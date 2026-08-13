@@ -374,6 +374,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command(
       'cores',
       summary('Clear corestore cores'),
+      flag('--force', 'Skip confirmation prompt for writable cores'),
       arg('<link>', 'Clear the cores belonging to this link'),
       commands.gc
     ),

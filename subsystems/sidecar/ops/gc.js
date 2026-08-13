@@ -18,7 +18,7 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { data = {} } = params
-    const { link } = data
+    const { link, force } = data
 
     if (!link) throw ERR_INVALID_INPUT('A link must be specified')
 
@@ -27,7 +27,7 @@ module.exports = class GC extends Opstream {
     parse(link)
 
     const contentKey = await this._getContentKey(link)
-    const cleared = await this._clearCore(link)
+    const cleared = await this._clearCore(link, force)
 
     if (!cleared) {
       this.push({
@@ -38,7 +38,7 @@ module.exports = class GC extends Opstream {
         }
       })
     } else {
-      const contentCleared = await this._clearCore(contentKey)
+      const contentCleared = await this._clearCore(contentKey, force)
       this.push({
         tag: 'cores',
         data: {
@@ -54,7 +54,7 @@ module.exports = class GC extends Opstream {
     })
   }
 
-  async _clearCore(link) {
+  async _clearCore(link, force) {
     const info = await this._getInfo(link)
 
     if (!info) {
@@ -62,7 +62,7 @@ module.exports = class GC extends Opstream {
       return false
     }
 
-    if (info.auth.keyPair) {
+    if (info.auth.keyPair && !force) {
       LOG.trace('gc cores', 'core is writable, skipping', { link })
       return false
     }
