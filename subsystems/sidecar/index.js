@@ -196,6 +196,11 @@ class Sidecar extends ReadyResource {
     }
   }
 
+  isWritable(params, client) {
+    // TODO implement isWritabble given params.link
+    return true
+  }
+
   #endRPCStreams(client) {
     // TODO: instead of client._rpc collect src and dst streams in sidecar, do push(null) on src stream, listen for close on dst stream
     const streams = client._rpc._handlers
