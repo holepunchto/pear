@@ -73,13 +73,15 @@ module.exports = class Cores extends Opstream {
     }
 
     for (const [link, { writable, length }] of cores) {
+      const blobs = contentLinks.has(link)
       this.push({
         tag: 'core',
         data: {
           link,
           writable,
           length,
-          blobs: contentLinks.has(link),
+          blobs,
+          drive: blobs ? contentLinks.get(link) : link,
           name: names.get(link) ?? null
         }
       })
