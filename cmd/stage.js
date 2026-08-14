@@ -3,7 +3,7 @@ const context = require('../context')
 const os = require('bare-os')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi } = require('../lib/terminal.js')
+const { outputter, ansi, hint } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
@@ -58,4 +58,19 @@ module.exports = async function stage(cmd) {
     cmdArgs
   })
   await output(json, stream)
+
+  if (!json) {
+    if (dryRun) {
+      hint(
+        'Dry run only - nothing was persisted. Once the diff looks right, properly stage with:',
+        ['pear stage ' + link + ' ' + dir]
+      )
+    } else {
+      hint('Keep the staged version available', ['pear seed ' + link])
+      hint('Provision for prerelease, stakeholder preview, QA, or dogfooding', [
+        'pear touch',
+        'pear provision --dry-run <source-verlink> <target-link> <production-verlink>'
+      ])
+    }
+  }
 }
