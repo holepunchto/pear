@@ -9,6 +9,7 @@ const PearRuntimeUpdater = require('pear-runtime-updater')
 const IPC = require('pear-ipc')
 const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
+const { parse } = require('../../lib/link.js')
 const hypercoreid = require('hypercore-id-encoding')
 const { version } = require('../../package.json')
 const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, UPGRADE } = require('../../constants.js')
@@ -196,9 +197,12 @@ class Sidecar extends ReadyResource {
     }
   }
 
-  isWritable(params, client) {
-    // TODO implement isWritabble given params.link
-    return true
+  async isWritable(params, client) {
+    const link = params.link
+    const key = parse(link).drive.key
+    const core = this.corestore.get(key)
+    await core.ready()
+    return core.writable
   }
 
   #endRPCStreams(client) {
