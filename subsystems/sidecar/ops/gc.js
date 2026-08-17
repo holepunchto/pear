@@ -18,9 +18,12 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { data = {} } = params
-    const { link, force } = data
+    const { force, name } = data
 
-    if (!link) throw ERR_INVALID_INPUT('A link must be specified')
+    const link = name ? await this.sidecar.getLinkByName(name) : data.link
+
+    if (name && !link) throw ERR_INVALID_INPUT(`No cores found with name ${name}`)
+    if (!link) throw ERR_INVALID_INPUT('A link or name must be specified')
 
     LOG.trace('gc cores', 'starting', { link })
 

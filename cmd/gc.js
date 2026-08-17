@@ -27,7 +27,9 @@ module.exports = async function gc(cmd) {
 class GC {
   async cores(cmd, { ipc }) {
     const { command } = cmd
-    const link = command.args.link
+    const link = command.args.link.startsWith('pear://')
+      ? command.args.link
+      : await ipc.getLinkByName({ name: command.args.link })
     let force = command.flags.force
     if (link) parse(link)
     if (link && !force && (await ipc.isWritable({ link }))) {
