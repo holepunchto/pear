@@ -19,27 +19,30 @@ const npm = isWindows ? 'npm.cmd' : 'npm'
 
 const unhookShutdown = test.hook('shutdown setup', rig.setup)
 
-test('lock released after shutdown', async function ({ pass, plan, exception, comment, teardown }) {
-  plan(2)
-  comment('shutting down sidecar')
-  const helper = new Helper(rig)
-  await helper.ready()
+test.solo(
+  'lock released after shutdown',
+  async function ({ pass, plan, exception, comment, teardown }) {
+    plan(2)
+    comment('shutting down sidecar')
+    const helper = new Helper(rig)
+    await helper.ready()
 
-  const corestorePath = path.join(rig.platformDir, 'corestores', 'platform-next')
+    const corestorePath = path.join(rig.platformDir, 'corestores', 'platform-next')
 
-  await exception(async () => {
-    const corestore = new Corestore(corestorePath)
-    await corestore.ready()
-  }, 'platform corestore is locked')
+    await exception(async () => {
+      const corestore = new Corestore(corestorePath)
+      await corestore.ready()
+    }, 'platform corestore is locked')
 
-  comment('sidecar shutdown')
-  await helper.shutdown()
+    comment('sidecar shutdown')
+    await helper.shutdown()
 
-  const store = new Corestore(corestorePath, { wait: true })
-  teardown(() => store.close())
-  await store.ready()
-  pass('platform corestore is free after platform shutdown')
-})
+    const store = new Corestore(corestorePath, { wait: true })
+    teardown(() => store.close())
+    await store.ready()
+    pass('platform corestore is free after platform shutdown')
+  }
+)
 
 let platformDirLs
 const unhookPlatform = test.hook('prepare low-spindown platform', async (t) => {
