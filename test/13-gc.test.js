@@ -49,7 +49,7 @@ test('pear gc cores without link', async (t) => {
   await t.exception(async () => {
     const result = await Helper.pick(collecting, [{ tag: 'final' }])
     await result.final
-  }, /A link must be specified/)
+  }, /A link or name must be specified/)
 })
 
 async function createDrive(t) {
