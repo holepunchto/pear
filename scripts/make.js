@@ -52,6 +52,8 @@ async function make() {
   }
 
   console.log('Running bare-build for channel', channel, sign ? 'with signing' : 'without signing')
+  const buildEnv = { ...env, ...extraEnv }
+  console.log('buildEnv', buildEnv)
   const build = spawn(
     'bare-build',
     [
