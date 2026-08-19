@@ -115,7 +115,7 @@ module.exports = class BlindPeerOp extends Opstream {
 
     this.push({
       tag: 'identity',
-      data: { publicKey: hid.normalize(sidecar.keyPair.publicKey) }
+      data: { publicKey: hid.normalize(sidecar.swarm.dht.defaultKeyPair.publicKey) }
     })
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
