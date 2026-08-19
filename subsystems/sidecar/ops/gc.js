@@ -18,42 +18,41 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { data = {} } = params
-    const { force, name } = data
+    const { force, links } = data
 
-    const link = name ? await this.sidecar.getLinkByName(name) : data.link
+    if (!links || !links.length) throw ERR_INVALID_INPUT('At least a link or name must be specified')
 
-    if (name && !link) throw ERR_INVALID_INPUT(`No cores found with name ${name}`)
-    if (!link) throw ERR_INVALID_INPUT('A link or name must be specified')
+    for (const link of links) {
+      LOG.trace('gc cores', 'starting', { link })
 
-    LOG.trace('gc cores', 'starting', { link })
+      parse(link)
 
-    parse(link)
+      const contentKey = await this._getContentKey(link)
+      const cleared = await this._clearCore(link, force)
 
-    const contentKey = await this._getContentKey(link)
-    const cleared = await this._clearCore(link, force)
-
-    if (!cleared) {
-      this.push({
-        tag: 'cores',
-        data: {
-          skipped: true,
-          link
-        }
-      })
-    } else {
-      const contentCleared = await this._clearCore(contentKey, force)
-      this.push({
-        tag: 'cores',
-        data: {
-          skipped: false,
-          link,
-          content: contentCleared ? plink.serialize(contentKey) : null
-        }
-      })
+      if (!cleared) {
+        this.push({
+          tag: 'cores',
+          data: {
+            skipped: true,
+            link
+          }
+        })
+      } else {
+        const contentCleared = await this._clearCore(contentKey, force)
+        this.push({
+          tag: 'cores',
+          data: {
+            skipped: false,
+            link,
+            content: contentCleared ? plink.serialize(contentKey) : null
+          }
+        })
+      }
     }
 
     LOG.info('gc cores', 'completed', {
-      link
+      links
     })
   }
 

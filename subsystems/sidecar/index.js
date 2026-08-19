@@ -206,8 +206,8 @@ class Sidecar extends ReadyResource {
     return Boolean(info?.auth.keyPair)
   }
 
-  // the link of the metadata core of the app named name, its content core follows from it
-  async getLinkByName(params, client) {
+  // the links of the metadata core of the app or apps named name, their content core follows from it
+  async getLinksByName(params, client) {
     const name = params.name
     const links = []
     const contentLinks = new Set()
@@ -222,12 +222,13 @@ class Sidecar extends ReadyResource {
       if (contentKey) contentLinks.add(plink.serialize(contentKey))
     }
 
+    const result = []
     for (const link of links) {
       if (contentLinks.has(link)) continue // content cores hold no package.json
-      if ((await this.#getName(link)) === name) return link
+      if ((await this.#getName(link)) === name) result.push(link)
     }
 
-    return null
+    return result
   }
 
   async #getName(link) {

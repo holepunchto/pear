@@ -2,6 +2,7 @@
 const context = require('../context')
 const { outputter, confirm, ansi } = require('../lib/terminal.js')
 const { parse } = require('../lib/link')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 
 const output = outputter('gc', {
   cores: ({ link, skipped, content }) => {
@@ -27,22 +28,25 @@ module.exports = async function gc(cmd) {
 class GC {
   async cores(cmd, { ipc }) {
     const { command } = cmd
-    const link = command.args.link.startsWith('pear://')
-      ? command.args.link
-      : await ipc.getLinkByName({ name: command.args.link })
+    const links = command.args.link.startsWith('pear://')
+      ? [command.args.link]
+      : await ipc.getLinksByName({ name: command.args.link })
+    if (!links.length) throw ERR_INVALID_INPUT(`No cores found with name ${command.args.link}`)
     let force = command.flags.force
-    if (link) parse(link)
-    if (link && !force && (await ipc.isWritable({ link }))) {
+    links.forEach((link) => parse(link))
+    const writables = await Promise.all(links.map((link) => ipc.isWritable({ link })))
+    const anyWritable = writables.some(Boolean)
+    if (!force && anyWritable) {
       const dialog =
         ansi.warning +
-        `  ${ansi.bold('WARNING')} the cores of ${ansi.bold(link)} are writable, clearing them cannot be undone. To confirm type "CLEAR"\n`
-      const ask = `Clear ${link} cores`
+        `  ${ansi.bold('WARNING')} one or more cores of ${ansi.bold(command.args.link)} are writable, clearing them cannot be undone. To confirm type "CLEAR"\n`
+      const ask = `Clear ${command.args.link} cores`
       const delim = '?'
       const validation = (value) => value === 'CLEAR'
       const msg = '\n' + ansi.cross + ' uppercase CLEAR to confirm\n'
       await confirm(dialog, ask, delim, validation, msg)
       force = true
     }
-    return { link, force }
+    return { links, force }
   }
 }
