@@ -3,20 +3,6 @@ const test = require('brittle')
 const hid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
-const rig = new Helper.Rig({ keepAlive: false })
-const unhookRig = test.hook('blind peer setup', rig.setup)
-
-async function shutdownRigSidecar() {
-  const rigHelper = new Helper(rig)
-  await rigHelper.ready()
-  await rigHelper.shutdown()
-
-  // Give it time to fully shutdown
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  await rigHelper.close()
-}
-
 test('blind peer serves and untrusted client adds a core', async function ({
   teardown,
   plan,
@@ -25,9 +11,7 @@ test('blind peer serves and untrusted client adds a core', async function ({
 }) {
   plan(3)
 
-  teardown(() => shutdownRigSidecar(), { order: Infinity })
-
-  const server = new Helper(rig)
+  const server = new Helper()
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
@@ -65,8 +49,6 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
 }) {
   plan(4)
 
-  teardown(() => shutdownRigSidecar(), { order: Infinity })
-
   const client = new Helper()
   teardown(() => client.close(), { order: Infinity })
   await client.ready()
@@ -83,7 +65,7 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
     await Helper.teardownStream(clientIdentityStream)
   }
 
-  const server = new Helper(rig)
+  const server = new Helper()
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
@@ -110,8 +92,4 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
   ok(seedingResult.announce, 'core announced')
   is(seedingResult.peerKey, peerKey, 'peer key matches')
   is(seedingResult.key, coreKey, 'core key matches')
-})
-
-unhookRig('blind peer cleanup', async (t) => {
-  await rig.cleanup(t)
 })
