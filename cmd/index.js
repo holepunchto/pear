@@ -589,6 +589,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_INVALID_INPUT', messageUsage],
         ['ERR_LEGACY', messageOnly],
         ['ERR_INVALID_TEMPLATE', messageOnly],
+        ['ERR_INVALID_PROJECT_DIR', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
         ['ERR_NOT_FOUND', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]
