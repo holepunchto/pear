@@ -1,6 +1,6 @@
 'use strict'
 const path = require('bare-path')
-const hypercoreid = require('hypercore-id-encoding')
+const hid = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
@@ -31,23 +31,64 @@ module.exports = class BlindPeerOp extends Opstream {
       new BlindPeer(storagePath, {
         bootstrap: sidecar.nodes,
         swarm: sidecar.swarm,
-        trustedPubKeys: trustedPeer ? [hypercoreid.decode(trustedPeer)] : []
+        trustedPubKeys: trustedPeer ? [hid.decode(trustedPeer)] : []
       })
     )
 
     blindPeer.on('flush-error', (err) => LOG.error('blind-peer', 'Flush error', err))
     blindPeer.on('muxer-error', (err, stream) => {
-      LOG.error(
-        'blind-peer',
-        'Muxer error from ' + hypercoreid.normalize(stream.remotePublicKey),
-        err
-      )
+      LOG.error('blind-peer', 'Muxer error from ' + hid.normalize(stream.remotePublicKey), err)
     })
     blindPeer.on('add-new-core', (record) => {
       this.push({ tag: 'add-core', data: { announce: record.announce } })
     })
+    blindPeer.on('delete-blocked', (stream, { key }) => {
+      this.push({
+        tag: 'delete-blocked',
+        data: {
+          key: hid.normalize(key),
+          peerKey: hid.normalize(stream.remotePublicKey)
+        }
+      })
+    })
+    blindPeer.on('delete-core', (stream, { key }) => {
+      this.push({
+        tag: 'delete-core',
+        data: { key: hid.normalize(key), peerKey: hid.normalize(stream.remotePublicKey) }
+      })
+    })
+    blindPeer.on('delete-core-end', (stream, { key }) => {
+      this.push({ tag: 'delete-core-end', data: { key: hid.normalize(key) } })
+    })
+    blindPeer.on('downgrade-announce', ({ record, remotePublicKey }) => {
+      this.push({
+        tag: 'downgrade-announce',
+        data: { record, peerKey: hid.normalize(remotePublicKey) }
+      })
+    })
+    blindPeer.on('add-cores-downgrade-announce', ({ remotePublicKey }) => {
+      this.push({
+        tag: 'add-cores-downgrade-announce',
+        data: { peerKey: hid.normalize(remotePublicKey) }
+      })
+    })
     blindPeer.on('announce-core', (core) => {
-      this.push({ tag: 'announce-core', data: { key: hypercoreid.normalize(core.key) } })
+      this.push({ tag: 'announce-core', data: { key: hid.normalize(core.key) } })
+    })
+    blindPeer.on('announced-initial-cores', () => {
+      this.push({ tag: 'announced-initial-cores', data: {} })
+    })
+    blindPeer.on('core-downloaded', (core) => {
+      this.push({ tag: 'core-downloaded', data: { key: hid.normalize(core.key) } })
+    })
+    blindPeer.on('core-append', (core) => {
+      this.push({ tag: 'core-append', data: { key: hid.normalize(core.key), length: core.length } })
+    })
+    blindPeer.on('core-client-mode-changed', (core, isClient) => {
+      this.push({
+        tag: 'core-client-mode-changed',
+        data: { key: hid.normalize(core.key), isClient }
+      })
     })
     blindPeer.on('gc-start', ({ bytesToClear }) => {
       this.push({ tag: 'gc-start', data: { bytesToClear } })
@@ -61,8 +102,8 @@ module.exports = class BlindPeerOp extends Opstream {
     this.push({
       tag: 'listening',
       data: {
-        publicKey: hypercoreid.normalize(blindPeer.publicKey),
-        encryptionPublicKey: hypercoreid.normalize(blindPeer.encryptionPublicKey)
+        publicKey: hid.normalize(blindPeer.publicKey),
+        encryptionPublicKey: hid.normalize(blindPeer.encryptionPublicKey)
       }
     })
 
@@ -74,14 +115,16 @@ module.exports = class BlindPeerOp extends Opstream {
 
     this.push({
       tag: 'identity',
-      data: { publicKey: hypercoreid.normalize(sidecar.keyPair.publicKey) }
+      data: { publicKey: hid.normalize(sidecar.keyPair.publicKey) }
     })
+
+    console.log('request', { key, peerKey, announce })
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
     if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')
 
-    const coreKey = hypercoreid.decode(key)
-    const blindPeerKey = hypercoreid.decode(peerKey)
+    const coreKey = hid.decode(key)
+    const blindPeerKey = hid.decode(peerKey)
 
     const corestore = sidecar.getCorestore()
     await corestore.ready()
@@ -97,12 +140,13 @@ module.exports = class BlindPeerOp extends Opstream {
 
     const result = await client.addCore(core.session(), blindPeerKey, { announce })
     // TODO: Request drive core and blob core
+    console.log('request result', result)
 
     this.push({
       tag: 'seeding',
       data: {
-        key: hypercoreid.normalize(coreKey),
-        peerKey: hypercoreid.normalize(blindPeerKey),
+        key: hid.normalize(coreKey),
+        peerKey: hid.normalize(blindPeerKey),
         announce: result ? result.announce : false
       }
     })

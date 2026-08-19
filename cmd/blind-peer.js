@@ -15,7 +15,19 @@ const output = outputter('blind-peer', {
   seeding: ({ key, peerKey, announce }) =>
     `Requested blind peer ${peerKey} to seed core ${key} (announce: ${announce})`,
   error: ({ code, message, stack }) =>
-    `Blind Peer Error (code: ${code || 'none'}) ${message} ${stack}`
+    `Blind Peer Error (code: ${code || 'none'}) ${message} ${stack}`,
+  'delete-blocked': ({ key, peerKey }) => `Blocked delete request from ${peerKey} for core ${key}`,
+  'delete-core': ({ key, peerKey }) => `Received delete request from ${peerKey} for core ${key}`,
+  'delete-core-end': ({ key }) => `Deleted core ${key}`,
+  'downgrade-announce': ({ peerKey }) =>
+    `Downgraded announce for peer ${peerKey} because peer is not trusted`,
+  'add-cores-downgrade-announce': ({ peerKey }) =>
+    `Downgraded announce for peer ${peerKey} because peer is not trusted`,
+  'announced-initial-cores': () => `Announced all initial cores`,
+  'core-downloaded': ({ key }) => `Core fully downloaded: ${key}`,
+  'core-append': ({ key, length }) => `Core length updated: ${key} (length: ${length})`,
+  'core-client-mode-changed': ({ key, isClient }) =>
+    `Core client mode changed for ${key} to ${isClient ? 'client' : 'non-client'}`
 })
 
 module.exports = async function blindPeer(cmd) {
