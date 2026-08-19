@@ -118,8 +118,6 @@ module.exports = class BlindPeerOp extends Opstream {
       data: { publicKey: hid.normalize(sidecar.keyPair.publicKey) }
     })
 
-    console.log('request', { key, peerKey, announce })
-
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
     if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')
 
@@ -139,8 +137,6 @@ module.exports = class BlindPeerOp extends Opstream {
     session.teardown(() => client.close().catch(safetyCatch))
 
     const result = await client.addCore(core.session(), blindPeerKey, { announce })
-    // TODO: Request drive core and blob core
-    console.log('request result', result)
 
     this.push({
       tag: 'seeding',
