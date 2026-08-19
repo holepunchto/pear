@@ -143,7 +143,7 @@ module.exports = class BlindPeerOp extends Opstream {
       data: {
         key: hid.normalize(coreKey),
         peerKey: hid.normalize(blindPeerKey),
-        announce: result ? result.announce : false
+        announce: result[0].announce
       }
     })
   }
