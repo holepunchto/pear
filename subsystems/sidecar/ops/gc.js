@@ -20,7 +20,7 @@ module.exports = class GC extends Opstream {
     const { data = {} } = params
     const { force, links } = data
 
-    if (!links || !links.length) throw ERR_INVALID_INPUT('At least a link or name must be specified')
+    if (!links || !links.length) throw ERR_INVALID_INPUT('At least a link must be specified')
 
     for (const link of links) {
       LOG.trace('gc cores', 'starting', { link })

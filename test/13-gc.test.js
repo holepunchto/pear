@@ -16,7 +16,7 @@ test('pear gc cores with link', async (t) => {
   const target = await createDrive(t)
   await cacheDrive(t, helper, target.link)
 
-  const collecting = helper.gc({ resource: 'cores', data: { link: target.link } })
+  const collecting = helper.gc({ resource: 'cores', data: { links: [target.link] } })
   t.teardown(() => Helper.teardownStream(collecting))
 
   const result = await Helper.pick(collecting, [{ tag: 'final' }])
@@ -49,7 +49,23 @@ test('pear gc cores without link', async (t) => {
   await t.exception(async () => {
     const result = await Helper.pick(collecting, [{ tag: 'final' }])
     await result.final
-  }, /A link or name must be specified/)
+  }, /At least a link must be specified/)
+})
+
+test('pear gc cores with empty links', async (t) => {
+  t.plan(1)
+
+  const helper = new Helper()
+  t.teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const collecting = helper.gc({ resource: 'cores', data: { links: [] } })
+  t.teardown(() => Helper.teardownStream(collecting))
+
+  await t.exception(async () => {
+    const result = await Helper.pick(collecting, [{ tag: 'final' }])
+    await result.final
+  }, /At least a link must be specified/)
 })
 
 async function createDrive(t) {
