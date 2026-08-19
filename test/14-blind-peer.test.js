@@ -54,9 +54,6 @@ test('blind peer serves and untrusted client adds a core', async function ({
 
   const result = await seeding
   absent(result.announce, 'should not announce to untrusted peer')
-
-  await Helper.teardownStream(requestStream)
-  await Helper.teardownStream(serverStream)
 })
 
 test('blind peer serves with a trusted key and trusted client adds a core', async function ({
