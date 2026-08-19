@@ -39,7 +39,9 @@ async function make() {
   if (sign) {
     signFlags.push('--sign')
     if (env.WINDOWS_CERT_SHA1) {
-      if (isWindows) extraEnv.Path = `${await findSigntoolDir()};${env.Path}`
+      // On Windows, env keys are case-insensitive, but Node.js resolves duplicate variants lexicographically.
+      // Socket Firewall sets PATH, so use PATH consistently to avoid Node.js dropping the Path variant.
+      if (isWindows) extraEnv.PATH = `${await findSigntoolDir()};${env.PATH}`
       signFlags.push('--thumbprint', env.WINDOWS_CERT_SHA1)
     }
 
