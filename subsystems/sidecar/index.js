@@ -240,7 +240,7 @@ class Sidecar extends ReadyResource {
       const buffer = await drive.get('/package.json', { wait: false })
       if (buffer === null) return null
       const pkg = JSON.parse(buffer)
-      return pkg?.name || pkg?.productName || null
+      return pkg?.name || null
     } catch (err) {
       LOG.trace('sidecar', 'unable to read name', { link, err })
       return null
