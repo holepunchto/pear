@@ -2,7 +2,7 @@
 const path = require('bare-path')
 const hid = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const BlindPeer = require('blind-peer')
 const BlindPeering = require('blind-peering')
@@ -22,6 +22,11 @@ module.exports = class BlindPeerOp extends Opstream {
   async start({ trustedPeer } = {}) {
     const { sidecar, session } = this
 
+    if (sidecar.activeBlindPeer) {
+      if (sidecar.activeBlindPeer.closing) await sidecar.activeBlindPeer.closing
+      else throw new ERR_OPERATION_FAILED('Blind peer is already running, cannot start another')
+    }
+
     const storagePath = path.join(
       path.dirname(path.dirname(sidecar.corestore.storage.path)),
       'blind-peer'
@@ -34,6 +39,7 @@ module.exports = class BlindPeerOp extends Opstream {
         trustedPubKeys: trustedPeer ? [hid.decode(trustedPeer)] : []
       })
     )
+    sidecar.activeBlindPeer = blindPeer
 
     blindPeer.on('flush-error', (err) => LOG.error('blind-peer', 'Flush error', err))
     blindPeer.on('muxer-error', (err, stream) => {
