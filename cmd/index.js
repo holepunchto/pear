@@ -618,12 +618,15 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_OPERATION_FAILED', opFail]
       ])
       const nouse = [messageOnly, opFail]
-      const subcode = bail.err?.code === 'ERR_OPERATION_FAILED' ? bail.err?.info?.code : null
-      const code = codemap.has(subcode ?? bail.err?.code) ? (subcode ?? bail.err.code) : bail.reason
+      const operationFailed = bail.err?.code === 'ERR_OPERATION_FAILED'
+      const subcode = operationFailed ? (bail.err?.info?.code ?? null) : null
+      const code = subcode ?? (codemap.has(bail.err?.code) ? bail.err.code : bail.reason)
       const ref = codemap.get(code)
       let reason = bail.reason
-      if (codemap.has(code)) {
-        reason = subcode ? bail.err?.info?.message : (codemap.get(code)(bail) ?? bail.reason)
+      if (operationFailed) {
+        reason = bail.err?.info?.message ?? bail.reason
+      } else if (codemap.has(code)) {
+        reason = codemap.get(code)(bail) ?? bail.reason
       }
       Bare.exitCode = 1
 
