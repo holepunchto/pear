@@ -12,6 +12,7 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const LocalDrive = require('localdrive')
+const plink = require('pear-link')
 const b4a = require('b4a')
 const OUT = path.join('out', 'make', `pear${isWindows ? '.exe' : ''}`)
 
@@ -100,6 +101,37 @@ class Helper extends IPC.Client {
     if (stream.destroyed) return
     stream.end()
     return new Promise((resolve) => stream.on('close', resolve))
+  }
+
+  // seeds a drive, pkg is written to /package.json when set
+  static async createDrive(t, { pkg = null } = {}) {
+    const store = new Corestore(await t.tmp())
+    t.teardown(() => store.close())
+    await store.ready()
+
+    const drive = new Hyperdrive(store)
+    await drive.ready()
+    if (pkg !== null) await drive.put('/package.json', Buffer.from(JSON.stringify(pkg)))
+    await drive.put('/index.js', Buffer.from('module.exports = true'))
+
+    const swarm = new Hyperswarm({ bootstrap: DHT_BOOTSTRAP })
+    t.teardown(() => swarm.destroy())
+    swarm.on('connection', (connection) => store.replicate(connection))
+    const topic = swarm.join(drive.discoveryKey, { server: true, client: false })
+    await topic.flushed()
+
+    return {
+      link: plink.serialize({ drive: { key: drive.key } }),
+      content: plink.serialize({ drive: { key: drive.blobs.core.key } })
+    }
+  }
+
+  // pulls a seeded drive into the platform corestore
+  static async cacheDrive(t, helper, link) {
+    const dumping = helper.dump({ link, dir: await t.tmp() })
+    t.teardown(() => Helper.teardownStream(dumping))
+    const result = await Helper.pick(dumping, [{ tag: 'final' }])
+    await result.final
   }
 
   // ONLY ADD STATICS, NEVER ADD PUBLIC METHODS OR PROPERTIES (see pear-ipc)

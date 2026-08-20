@@ -493,7 +493,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command(
       'cores',
       summary('Clear corestore cores'),
-      arg('<link>', 'Clear the cores belonging to this link').hint(
+      flag('--force|-f', 'Clear writable cores without confirmation'),
+      arg('<link|name>', 'Clear the cores belonging to this link or app name').hint(
         "Clears this link's core, then its content core if the first one cleared. A core you can write to, or one the local corestore has never seen, is skipped rather than treated as an error — the output says which."
       ),
       commands.gc

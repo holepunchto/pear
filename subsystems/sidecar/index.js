@@ -10,6 +10,9 @@ const IPC = require('pear-ipc')
 const { isWindows } = require('which-runtime')
 const plink = require('pear-link')
 const hypercoreid = require('hypercore-id-encoding')
+const crypto = require('hypercore-crypto')
+const Hyperdrive = require('hyperdrive')
+const { parse } = require('../../lib/link.js')
 const { version } = require('../../package.json')
 const { SOCKET_PATH, SPINDOWN_TIMEOUT, KNOWN_NODES_LIMIT, UPGRADE } = require('../../constants.js')
 const Replicator = require('./lib/replicator')
@@ -193,6 +196,56 @@ class Sidecar extends ReadyResource {
       return this._inspector.enable()
     } else {
       return this._inspector.inspectorKey
+    }
+  }
+
+  async isWritable(params, client) {
+    const link = params.link
+    if (!link) return false
+    const info = await this.corestore.storage.getInfo(crypto.discoveryKey(parse(link).drive.key))
+    return Boolean(info?.auth.keyPair)
+  }
+
+  // the links of the metadata core of the app or apps named name, their content core follows from it
+  async getLinksByName(params, client) {
+    const name = params.name
+    const links = []
+    const contentLinks = new Set()
+
+    for await (const discoveryKey of this.corestore.list()) {
+      const info = await this.corestore.storage.getInfo(discoveryKey)
+      const key = info.auth.key
+      links.push(plink.serialize(key))
+      const contentKey = info.auth.manifest
+        ? Hyperdrive.getContentKey(info.auth.manifest, key)
+        : null
+      if (contentKey) contentLinks.add(plink.serialize(contentKey))
+    }
+
+    const result = []
+    for (const link of links) {
+      if (contentLinks.has(link)) continue // content cores hold no package.json
+      if ((await this.#getName(link)) === name) result.push(link)
+    }
+
+    return result
+  }
+
+  async #getName(link) {
+    const store = this.getCorestore()
+    await store.ready()
+    const drive = new Hyperdrive(store, parse(link).drive.key)
+    try {
+      await drive.ready()
+      const buffer = await drive.get('/package.json', { wait: false })
+      if (buffer === null) return null
+      const pkg = JSON.parse(buffer)
+      return pkg?.name || null
+    } catch (err) {
+      LOG.trace('sidecar', 'unable to read name', { link, err })
+      return null
+    } finally {
+      await drive.close()
     }
   }
 

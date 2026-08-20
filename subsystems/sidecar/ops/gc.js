@@ -18,43 +18,45 @@ module.exports = class GC extends Opstream {
 
   async cores(params) {
     const { data = {} } = params
-    const { link } = data
+    const { force, links } = data
 
-    if (!link) throw ERR_INVALID_INPUT('A link must be specified')
+    if (!links || !links.length) throw ERR_INVALID_INPUT('At least a link must be specified')
 
-    LOG.trace('gc cores', 'starting', { link })
+    for (const link of links) {
+      LOG.trace('gc cores', 'starting', { link })
 
-    parse(link)
+      parse(link)
 
-    const contentKey = await this._getContentKey(link)
-    const cleared = await this._clearCore(link)
+      const contentKey = await this._getContentKey(link)
+      const cleared = await this._clearCore(link, force)
 
-    if (!cleared) {
-      this.push({
-        tag: 'cores',
-        data: {
-          skipped: true,
-          link
-        }
-      })
-    } else {
-      const contentCleared = await this._clearCore(contentKey)
-      this.push({
-        tag: 'cores',
-        data: {
-          skipped: false,
-          link,
-          content: contentCleared ? plink.serialize(contentKey) : null
-        }
-      })
+      if (!cleared) {
+        this.push({
+          tag: 'cores',
+          data: {
+            skipped: true,
+            link
+          }
+        })
+      } else {
+        const contentCleared = await this._clearCore(contentKey, force)
+        this.push({
+          tag: 'cores',
+          data: {
+            skipped: false,
+            link,
+            content: contentCleared ? plink.serialize(contentKey) : null
+          }
+        })
+      }
     }
 
     LOG.info('gc cores', 'completed', {
-      link
+      links
     })
   }
 
-  async _clearCore(link) {
+  async _clearCore(link, force) {
     const info = await this._getInfo(link)
 
     if (!info) {
@@ -62,7 +64,7 @@ module.exports = class GC extends Opstream {
       return false
     }
 
-    if (info.auth.keyPair) {
+    if (info.auth.keyPair && !force) {
       LOG.trace('gc cores', 'core is writable, skipping', { link })
       return false
     }
