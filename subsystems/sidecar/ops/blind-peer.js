@@ -35,7 +35,6 @@ module.exports = class BlindPeerOp extends Opstream {
     const blindPeer = await session.add(
       new BlindPeer(storagePath, {
         bootstrap: sidecar.nodes,
-        swarm: sidecar.swarm,
         trustedPubKeys: trustedPeer ? [hid.decode(trustedPeer)] : []
       })
     )
