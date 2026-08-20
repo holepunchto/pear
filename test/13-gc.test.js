@@ -13,8 +13,8 @@ test('pear gc cores with link', async (t) => {
   t.teardown(() => helper.close(), { order: Infinity })
   await helper.ready()
 
-  const target = await createDrive(t)
-  await cacheDrive(t, helper, target.link)
+  const target = await Helper.createDrive(t)
+  await Helper.cacheDrive(t, helper, target.link)
 
   const collecting = helper.gc({ resource: 'cores', data: { links: [target.link] } })
   t.teardown(() => Helper.teardownStream(collecting))
@@ -67,31 +67,3 @@ test('pear gc cores with empty links', async (t) => {
     await result.final
   }, /At least a link must be specified/)
 })
-
-async function createDrive(t) {
-  const store = new Corestore(await t.tmp())
-  t.teardown(() => store.close())
-  await store.ready()
-
-  const drive = new Hyperdrive(store)
-  await drive.ready()
-  await drive.put('/index.js', Buffer.from('module.exports = true'))
-
-  const swarm = new Hyperswarm({ bootstrap: Helper.dhtBootstrap })
-  t.teardown(() => swarm.destroy())
-  swarm.on('connection', (connection) => store.replicate(connection))
-  const topic = swarm.join(drive.discoveryKey, { server: true, client: false })
-  await topic.flushed()
-
-  return {
-    link: plink.serialize({ drive: { key: drive.key } }),
-    content: plink.serialize({ drive: { key: drive.blobs.core.key } })
-  }
-}
-
-async function cacheDrive(t, helper, link) {
-  const dumping = helper.dump({ link, dir: await t.tmp() })
-  t.teardown(() => Helper.teardownStream(dumping))
-  const result = await Helper.pick(dumping, [{ tag: 'final' }])
-  await result.final
-}
