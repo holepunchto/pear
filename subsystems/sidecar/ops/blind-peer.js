@@ -118,6 +118,7 @@ module.exports = class BlindPeerOp extends Opstream {
   async request({ key, peerKey, announce = true } = {}) {
     const { sidecar, session } = this
 
+    // TODO: Persist identity
     this.push({
       tag: 'identity',
       data: { publicKey: hid.normalize(sidecar.swarm.dht.defaultKeyPair.publicKey) }
@@ -142,6 +143,7 @@ module.exports = class BlindPeerOp extends Opstream {
     session.teardown(() => client.close().catch(safetyCatch))
 
     const result = await client.addCore(core.session(), blindPeerKey, { announce })
+    // TODO: Also add blobs core
 
     this.push({
       tag: 'seeding',
