@@ -1,9 +1,5 @@
 'use strict'
 const test = require('brittle')
-const Corestore = require('corestore')
-const Hyperdrive = require('hyperdrive')
-const Hyperswarm = require('hyperswarm')
-const plink = require('pear-link')
 const Helper = require('./helper')
 
 test('pear gc cores with link', async (t) => {
