@@ -15,8 +15,16 @@ module.exports = class BlindPeerOp extends Opstream {
   async #op({ subcommand, data } = {}) {
     await this.sidecar.ready()
     if (subcommand === 'start') return this.start(data)
+    if (subcommand === 'identity') return this.identity()
     if (subcommand === 'request') return this.request(data)
     throw ERR_INVALID_INPUT('Unknown subcommand: ' + subcommand)
+  }
+
+  async identity() {
+    this.push({
+      tag: 'identity',
+      data: { publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey) }
+    })
   }
 
   async start({ trustedPeer } = {}) {
@@ -117,11 +125,6 @@ module.exports = class BlindPeerOp extends Opstream {
 
   async request({ key, peerKey, announce = true } = {}) {
     const { sidecar, session } = this
-
-    this.push({
-      tag: 'identity',
-      data: { publicKey: hid.normalize(sidecar.dhtKeypair.publicKey) }
-    })
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
     if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')

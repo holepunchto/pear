@@ -497,6 +497,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       flag('--trusted-peer <peer>', 'Trusted peer key to allow requests from'),
       commands.blindPeer
     ),
+    command('identity', summary('Show peer identity key'), commands.blindPeer),
     command(
       'request',
       summary('Request a blind peer to seed'),

@@ -6,8 +6,7 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const output = outputter('blind-peer', {
   listening: ({ publicKey, encryptionPublicKey }) =>
     `Blind peer listening\n  Public key: ${publicKey}\n  Encryption key: ${encryptionPublicKey}`,
-  identity: ({ publicKey }) =>
-    `To make a request, use the following key as trusted key: ${publicKey}`,
+  identity: ({ publicKey }) => `Peer identity: ${publicKey}`,
   'add-core': ({ announce }) => `Core added (announce: ${announce})`,
   'announce-core': ({ key }) => `Announcing core: ${key}`,
   'gc-start': ({ bytesToClear }) => `GC started, clearing ${bytesToClear} bytes`,
@@ -44,6 +43,10 @@ class BlindPeer {
     const { command } = cmd
     const trustedPeer = command.flags.trustedPeer
     return { trustedPeer }
+  }
+
+  identity() {
+    return null
   }
 
   request(cmd) {
