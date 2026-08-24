@@ -26,7 +26,7 @@ module.exports = class BlindPeerOp extends Opstream {
     }
   }
 
-  async start({ trustedPeer } = {}) {
+  async start({ trustedPeers = [] } = {}) {
     const { sidecar, session } = this
 
     if (sidecar.activeBlindPeer) {
@@ -45,7 +45,7 @@ module.exports = class BlindPeerOp extends Opstream {
     const blindPeer = await session.add(
       new BlindPeer(storagePath, {
         bootstrap: sidecar.nodes,
-        trustedPubKeys: trustedPeer ? [hid.decode(trustedPeer)] : []
+        trustedPubKeys: trustedPeers.map((peer) => hid.decode(peer))
       })
     )
     sidecar.activeBlindPeer = blindPeer

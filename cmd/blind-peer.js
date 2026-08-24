@@ -63,8 +63,8 @@ const hinters = {
 const validators = {
   start(cmd) {
     const { command } = cmd
-    const trustedPeer = command.flags.trustedPeer
-    return { trustedPeer }
+    const trustedPeers = command.flags.trustedPeer
+    return { trustedPeers }
   },
   request(cmd) {
     const { command } = cmd
