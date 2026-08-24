@@ -1,5 +1,6 @@
 'use strict'
 const test = require('brittle')
+const path = require('bare-path')
 const hid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
@@ -57,8 +58,8 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
   {
     const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
-    const clientMsgs = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
-    clientPubKey = (await clientMsgs.final).publicKey
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await final).publicKey
     await Helper.teardownStream(clientIdentityStream)
   }
 
@@ -116,3 +117,52 @@ test('blind peer should not start twice', async function ({ teardown, plan, exce
     )
   }
 })
+
+const rig = new Helper.Rig({ dir: path.join(Helper.tmp, 'blind-peer-pear') })
+const unhookBlindPeerIdentity = test.hook('blind peer identity rig setup', rig.setup)
+
+test('blind peer identity should persist between sidecar restarts', async function ({
+  teardown,
+  plan,
+  is
+}) {
+  plan(1)
+
+  let identity1
+  {
+    const helper = new Helper(rig)
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
+
+    const identityStream = helper.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(identityStream))
+    const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
+    identity1 = (await final).publicKey
+    await Helper.teardownStream(identityStream)
+
+    await helper.shutdown()
+    helper.close()
+
+    await Helper.untilExit(helper.child)
+  }
+
+  let identity2
+  {
+    const helper = new Helper(rig)
+    teardown(() => helper.close(), { order: Infinity })
+    await helper.ready()
+
+    const identityStream = helper.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(identityStream))
+    const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
+    identity2 = (await final).publicKey
+    await Helper.teardownStream(identityStream)
+
+    await helper.shutdown()
+    helper.close()
+  }
+
+  is(identity1, identity2, 'blind peer identity remains the same after restart')
+})
+
+unhookBlindPeerIdentity('blind peer identity rig cleanup', rig.cleanup)
