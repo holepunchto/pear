@@ -45,7 +45,7 @@ test('blind peer should serve and not announce when untrusted client adds a core
   absent(result.announce, 'should not announce to untrusted peer')
 })
 
-test('blind peer should serve with a trusted key and announce when trusted client adds a core', async function ({
+test('blind peer should serve with trusted keys and announce when trusted client adds a core', async function ({
   teardown,
   plan,
   is,
@@ -71,9 +71,10 @@ test('blind peer should serve with a trusted key and announce when trusted clien
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
+  const otherTrustedKey = Helper.getRandomId()
   const serverStream = server.blindPeer({
     subcommand: 'start',
-    data: { trustedPeer: clientPubKey }
+    data: { trustedPeers: [otherTrustedKey, clientPubKey] }
   })
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [{ tag: 'add-core' }, { tag: 'listening' }])
@@ -232,7 +233,7 @@ test('blind peer should download and sync core data from trusted client', async 
 
   const serverStream = server.blindPeer({
     subcommand: 'start',
-    data: { trustedPeer: clientPubKey }
+    data: { trustedPeers: [clientPubKey] }
   })
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [
