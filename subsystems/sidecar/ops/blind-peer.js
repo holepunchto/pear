@@ -31,7 +31,10 @@ module.exports = class BlindPeerOp extends Opstream {
 
     if (sidecar.activeBlindPeer) {
       if (sidecar.activeBlindPeer.closing) await sidecar.activeBlindPeer.closing
-      else throw new ERR_OPERATION_FAILED('Blind peer is already running, cannot start another')
+      if (sidecar.activeBlindPeer?.closed) sidecar.activeBlindPeer = null
+      if (sidecar.activeBlindPeer) {
+        throw new ERR_OPERATION_FAILED('Blind peer is already running, cannot start another')
+      }
     }
 
     const storagePath = path.join(
@@ -46,6 +49,9 @@ module.exports = class BlindPeerOp extends Opstream {
       })
     )
     sidecar.activeBlindPeer = blindPeer
+    blindPeer.on('close', () => {
+      if (sidecar.activeBlindPeer === blindPeer) sidecar.activeBlindPeer = null
+    })
 
     blindPeer.on('flush-error', (err) => LOG.error('blind-peer', 'Flush error', err))
     blindPeer.on('muxer-error', (err, stream) => {
