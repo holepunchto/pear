@@ -150,7 +150,6 @@ module.exports = class BlindPeerOp extends Opstream {
     session.teardown(() => client.close().catch(safetyCatch))
 
     const result = await client.addCore(core.session(), blindPeerKey, { announce })
-    // TODO: Also add blobs core
 
     this.push({
       tag: 'seeding',
