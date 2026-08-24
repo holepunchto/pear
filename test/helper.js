@@ -75,7 +75,7 @@ class Helper extends IPC.Client {
     const connectTimeout = 20_000
     const connect = opts.expectSidecar
       ? true
-      : async () => {
+      : () => {
           this.child = log ? spawn(runtime, args, { stdio: 'inherit' }) : daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
