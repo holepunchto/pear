@@ -57,8 +57,8 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
   {
     const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
-    const clientMsgs = await Helper.pick(clientIdentityStream, [{ tag: 'identity' }])
-    clientPubKey = (await clientMsgs.identity).publicKey
+    const clientMsgs = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await clientMsgs.final).publicKey
     await Helper.teardownStream(clientIdentityStream)
   }
 
