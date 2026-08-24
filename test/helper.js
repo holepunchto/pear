@@ -216,6 +216,18 @@ class Helper extends IPC.Client {
     if (NO_GC) return
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
+
+  static async untilExit(child) {
+    if (child.once) return new Promise((resolve) => child.once('exit', resolve))
+    while (true) {
+      try {
+        os.kill(child.pid, 0)
+      } catch {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+  }
 }
 
 class Rig {
