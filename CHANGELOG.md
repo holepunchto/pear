@@ -1,5 +1,25 @@
 # Pear Runtime Changelog
 
+## v3.3.0
+
+### Features
+
+* CLI - deployment onboarding hints - `pear touch`, `pear stage`, `pear provision` and `pear multisig` print the suggested next command after each step
+* CLI - `pear gc cores <name>` - clear cores by application name, in addition to by link
+* CLI - `pear gc cores --force|-f` - clear writable cores without confirmation
+
+### Improvements
+
+* CLI - `pear cores` - output is a sorted table including the application name and a `[core]`/`[blobs]` type column
+* CLI - `pear gc cores` - clearing writable cores now requires typed confirmation
+* CLI - command summaries, descriptions, argument and flag help text clarified across all commands
+* CLI - per-field help hints added for all commands, covering constraints, interactions and failure modes
+* Internal - deps bump
+
+### Fixes
+
+* CLI - `pear stage` - `ERR_INVALID_PROJECT_DIR` prints the error message instead of a stack trace
+
 ## v3.2.0
 
 ### Features
