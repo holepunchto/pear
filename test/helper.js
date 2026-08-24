@@ -220,13 +220,16 @@ class Helper extends IPC.Client {
 }
 
 class Rig {
-  localDir = path.join(tmp, 'rig-pear')
-  platformDir = path.join(this.localDir, 'pear')
   artefactDir = Helper.localDir
   tmp = tmp
-  constructor() {}
 
-  setup = async ({ comment, timeout }) => {
+  constructor(opts = {}) {
+    this.localDir = opts.dir || path.join(tmp, 'rig-pear')
+    this.platformDir = opts.platformDir || path.join(this.localDir, 'pear')
+    this.artefactDir = opts.artefactDir || Helper.localDir
+  }
+
+  setup = async ({ comment = () => {}, timeout = () => {} } = {}) => {
     timeout(180000)
 
     comment('preparing rig platform...')
@@ -258,7 +261,7 @@ class Rig {
     comment('rig platform prepared')
   }
 
-  cleanup = async ({ comment }) => {
+  cleanup = async ({ comment = () => {} } = {}) => {
     await fs.promises.rm(this.localDir, { recursive: true })
     comment('rig sidecar cleaned up')
   }
