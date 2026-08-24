@@ -93,3 +93,29 @@ test('blind peer serves with a trusted key and trusted client adds a core', asyn
   is(seedingResult.peerKey, peerKey, 'peer key matches')
   is(seedingResult.key, coreKey, 'core key matches')
 })
+
+test('blind peer should not start twice', async function ({ teardown, plan, exception }) {
+  plan(1)
+
+  const server = new Helper()
+  teardown(() => server.close(), { order: Infinity })
+  await server.ready()
+
+  {
+    const serverStream = server.blindPeer({ subcommand: 'start' })
+    teardown(() => Helper.teardownStream(serverStream))
+    const serverMsgs = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    await serverMsgs.listening
+  }
+
+  {
+    const serverStream = server.blindPeer({ subcommand: 'start' })
+    teardown(() => Helper.teardownStream(serverStream))
+    const serverMsgs = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    await exception(
+      serverMsgs.listening,
+      /Blind peer is already running/,
+      'Should fail to start blind-peer when it is already running'
+    )
+  }
+})
