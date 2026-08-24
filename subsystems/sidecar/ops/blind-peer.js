@@ -118,10 +118,9 @@ module.exports = class BlindPeerOp extends Opstream {
   async request({ key, peerKey, announce = true } = {}) {
     const { sidecar, session } = this
 
-    // TODO: Persist identity
     this.push({
       tag: 'identity',
-      data: { publicKey: hid.normalize(sidecar.swarm.dht.defaultKeyPair.publicKey) }
+      data: { publicKey: hid.normalize(sidecar.dhtKeypair.publicKey) }
     })
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')

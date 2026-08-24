@@ -3,6 +3,7 @@ const bareInspector = require('bare-inspector')
 const { Inspector } = require('pear-inspect')
 const path = require('bare-path')
 const ReadyResource = require('ready-resource')
+const HyperDHT = require('hyperdht')
 const Hyperswarm = require('hyperswarm')
 const safetyCatch = require('safety-catch')
 const PearRuntimeUpdater = require('pear-runtime-updater')
@@ -296,7 +297,6 @@ class Sidecar extends ReadyResource {
       err.code = 'ERR_OPEN'
       throw err
     }
-    this.keyPair = await this.corestore.createKeyPair('holepunch')
     if (this.nodes) LOG.info('sidecar', 'DHT bootstrap set', this.nodes)
     const knownNodes = await this.db.model.getDhtNodes()
     const nodes = this.nodes ? undefined : knownNodes
@@ -304,10 +304,14 @@ class Sidecar extends ReadyResource {
       LOG.info('dht', '- DHT known-nodes read from database ' + nodes.length + ' nodes')
       LOG.trace('dht', nodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
     }
+
+    this.dhtKeypair = await this.corestore.createKeyPair('holepunch/dht')
+    this.dht = new HyperDHT({ keyPair: this.dhtKeypair, bootstrap: this.nodes, nodes })
+    this.keyPair = await this.corestore.createKeyPair('holepunch')
+
     this.swarm = new Hyperswarm({
-      keyPair: this.keyPair,
-      bootstrap: this.nodes,
-      nodes
+      dht: this.dht,
+      keyPair: this.keyPair
     })
     this.swarm.once('close', () => {
       this.swarm = null
@@ -346,6 +350,7 @@ class Sidecar extends ReadyResource {
         }
       }
       await this.swarm.destroy()
+      await this.dht.destroy()
     }
     await this.db.model.close()
     if (this.corestore) await this.corestore.close()

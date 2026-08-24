@@ -47,6 +47,7 @@
     "hypercore-id-encoding": "^1.3.0",
     "hypercore-sign": "^4.1.1",
     "hyperdb": "^6.6.3",
+    "hyperdht": "^6.33.2",
     "hyperdrive": "^13.1.1",
     "hyperschema": "^1.10.4",
     "hyperswarm": "^4.11.1",
