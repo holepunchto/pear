@@ -262,7 +262,7 @@ class Rig {
   }
 
   cleanup = async ({ comment = () => {} } = {}) => {
-    await fs.promises.rm(this.localDir, { recursive: true })
+    await Helper.gc(this.localDir)
     comment('rig sidecar cleaned up')
   }
 }
