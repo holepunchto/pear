@@ -2,6 +2,7 @@
 const context = require('../context')
 const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
+const { hint } = require('../lib/terminal')
 
 const output = outputter('blind-peer', {
   listening: ({ publicKey, encryptionPublicKey }) =>
@@ -26,29 +27,45 @@ const output = outputter('blind-peer', {
   'core-downloaded': ({ key }) => `Core fully downloaded: ${key}`,
   'core-append': ({ key, length }) => `Core length updated: ${key} (length: ${length})`,
   'core-client-mode-changed': ({ key, isClient }) =>
-    `Core client mode changed for ${key} to ${isClient ? 'client' : 'non-client'}`
+    `Core client mode changed for ${key} to ${isClient ? 'client' : 'non-client'}`,
+  final: (data) => {
+    return data.publicKey
+      ? {
+          output: 'print',
+          success: Infinity,
+          message: data.publicKey
+        }
+      : false
+  }
 })
 
 module.exports = async function blindPeer(cmd) {
   const ipc = context.getIPC()
   const { json } = cmd.command.parent.flags
-  const handler = new BlindPeer()
-  const data = (await handler[cmd.command.name](cmd)) ?? null
-  const stream = ipc.blindPeer({ subcommand: cmd.command.name, data })
-  await output(json, stream)
+  const subcommand = cmd.command.name
+  const data = validators[subcommand] ? await validators[subcommand](cmd) : null
+  const stream = ipc.blindPeer({ subcommand, data })
+  const final = await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, stream)
+  if (hinters[subcommand]) hinters[subcommand]({ json, final })
 }
 
-class BlindPeer {
+const hinters = {
+  identity({ json, final }) {
+    if (!json) {
+      hint('Use the key above as a trusted peer for your blind peer', [
+        `pear blind-peer start --trusted-peer=${final.publicKey}`
+      ])
+    }
+    return null
+  }
+}
+
+const validators = {
   start(cmd) {
     const { command } = cmd
     const trustedPeer = command.flags.trustedPeer
     return { trustedPeer }
-  }
-
-  identity() {
-    return null
-  }
-
+  },
   request(cmd) {
     const { command } = cmd
     const key = command.args.key

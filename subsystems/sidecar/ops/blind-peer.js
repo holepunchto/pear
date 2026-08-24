@@ -21,10 +21,9 @@ module.exports = class BlindPeerOp extends Opstream {
   }
 
   async identity() {
-    this.push({
-      tag: 'identity',
-      data: { publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey) }
-    })
+    this.final = {
+      publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey)
+    }
   }
 
   async start({ trustedPeer } = {}) {
