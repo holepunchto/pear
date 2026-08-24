@@ -20,7 +20,7 @@ module.exports = class BlindPeerOp extends Opstream {
     throw ERR_INVALID_INPUT('Unknown subcommand: ' + subcommand)
   }
 
-  async identity() {
+  identity() {
     this.final = {
       publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey)
     }
