@@ -23,6 +23,7 @@ const commands = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   cores: require('./cores'),
+  blindRelay: require('./blind-relay'),
   versions: require('./versions')
 }
 
@@ -521,6 +522,26 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.cores
   )
 
+  const blindRelay = command(
+    'blind-relay',
+    summary('Run a blind relay that forwards UDX streams between peers that cannot hole-punch'),
+    command(
+      'start',
+      summary('Start the blind relay'),
+      flag('--no-tty', 'Print plain log lines instead of the live terminal UI').hint(
+        'In the interactive form this appears as an unchecked "tty" box; checking it passes --no-tty and turns off the live UI.'
+      ),
+      flag('--stats-interval <milliseconds>', 'Stats refresh interval in milliseconds').hint(
+        'Defaults to 500 milliseconds with the live UI on, or 3000 milliseconds under --no-tty.'
+      ),
+      flag('--json', 'Newline delimited JSON output'),
+      commands.blindRelay
+    ),
+    () => {
+      console.log(blindRelay.help())
+    }
+  )
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -559,6 +580,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     sidecar,
     gc,
     cores,
+    blindRelay,
     versions,
     help,
     footer(usage.footer),

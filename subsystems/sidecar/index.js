@@ -28,7 +28,8 @@ const ops = {
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Multisig: require('./ops/multisig'),
-  Cores: require('./ops/cores')
+  Cores: require('./ops/cores'),
+  BlindRelay: require('./ops/blind-relay')
 }
 
 const SWARM_DELAY = 5000
@@ -167,6 +168,10 @@ class Sidecar extends ReadyResource {
 
   cores(params, client) {
     return new ops.Cores(params, client, this)
+  }
+
+  blindRelay(params, client) {
+    return new ops.BlindRelay(params, client, this)
   }
 
   versions(params, client) {
