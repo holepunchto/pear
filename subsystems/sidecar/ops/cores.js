@@ -23,6 +23,7 @@ module.exports = class Cores extends Opstream {
 
     let writableCount = 0
     let count = 0
+    let totalByteLength = 0
 
     LOG.info('cores', `Found ${discoveryKeys.length} discovery keys`)
 
@@ -48,6 +49,7 @@ module.exports = class Cores extends Opstream {
       }
 
       ++count
+      totalByteLength += coreInfo.byteLength
 
       const writable = Boolean(info.auth.keyPair)
       if (writable) {
@@ -56,7 +58,7 @@ module.exports = class Cores extends Opstream {
 
       const contentLink = getContentLink(info)
       if (contentLink !== null) contentLinks.set(contentLink, link)
-      cores.set(link, { key, writable, length: core.length })
+      cores.set(link, { key, writable, length: core.length, byteLength: coreInfo.byteLength })
 
       core.close()
     }
@@ -72,7 +74,7 @@ module.exports = class Cores extends Opstream {
       if (names.has(link)) names.set(contentLink, names.get(link))
     }
 
-    for (const [link, { writable, length }] of cores) {
+    for (const [link, { writable, length, byteLength }] of cores) {
       const blobs = contentLinks.has(link)
       this.push({
         tag: 'core',
@@ -80,6 +82,7 @@ module.exports = class Cores extends Opstream {
           link,
           writable,
           length,
+          byteLength,
           blobs,
           drive: blobs ? contentLinks.get(link) : link,
           name: names.get(link) ?? null
@@ -87,7 +90,7 @@ module.exports = class Cores extends Opstream {
       })
     }
 
-    this.final = { count, writable: writableCount }
+    this.final = { count, writable: writableCount, byteLength: totalByteLength }
   }
 }
 
