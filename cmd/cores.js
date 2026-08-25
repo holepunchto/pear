@@ -38,18 +38,18 @@ function table(cores) {
   cores = sort(cores)
   const nameWidth = cores.reduce(
     (max, { name }) => Math.max(max, label(name).length),
-    'NAME'.length
+    'Name'.length
   )
-  const linkWidth = cores.reduce((max, { link }) => Math.max(max, link.length), 'LINK'.length)
+  const linkWidth = cores.reduce((max, { link }) => Math.max(max, link.length), 'Link'.length)
   const lengthWidth = cores.reduce(
     (max, { length }) => Math.max(max, String(length).length),
-    'LENGTH'.length
+    'Length'.length
   )
   const sizeWidth = cores.reduce(
     (max, { byteLength }) => Math.max(max, byteSize(byteLength).length),
-    'SIZE'.length
+    'Size'.length
   )
-  const header = `${'NAME'.padEnd(nameWidth)}  ${'TYPE'.padEnd(TYPE_WIDTH)}  ${'LINK'.padEnd(linkWidth)}  ${'LENGTH'.padEnd(lengthWidth)}  WRITABLE  ${'SIZE'.padEnd(sizeWidth)}`
+  const header = `${'Name'.padEnd(nameWidth)}  ${'Type'.padEnd(TYPE_WIDTH)}  ${'Link'.padEnd(linkWidth)}  ${'Length'.padEnd(lengthWidth)}  Writable  ${'Size'.padEnd(sizeWidth)}`
   const separator = ansi.gray('─'.repeat(header.length + 2))
   return [
     '\n ' + ansi.bold(header),
@@ -59,7 +59,7 @@ function table(cores) {
       const nameLabel = label(name).padEnd(nameWidth)
       const sizeLabel = byteSize(byteLength).padEnd(sizeWidth)
       const prefix = index > 0 && drive !== cores[index - 1].drive ? separator + '\n' : ''
-      const writableLabel = (writable ? '✔' : '').padEnd('WRITABLE'.length)
+      const writableLabel = (writable ? '✔' : '').padEnd('Writable'.length)
       const row = `${nameLabel}  ${type.padEnd(TYPE_WIDTH)}  ${link.padEnd(linkWidth)}  ${String(length).padEnd(lengthWidth)}  `
       if (blobs) {
         return `${prefix} ${ansi.gray(row + writableLabel + '  ' + sizeLabel)}`
