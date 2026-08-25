@@ -46,7 +46,12 @@ module.exports = async function blindPeer(cmd) {
   const subcommand = cmd.command.name
   const data = validators[subcommand] ? await validators[subcommand](cmd) : null
   const stream = ipc.blindPeer({ subcommand, data })
-  const final = await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, stream)
+
+  const isIdentity = subcommand === 'identity'
+  const log = isIdentity ? (line) => console.log(line) : undefined
+
+  const final = await output({ json, ctrlTTY: !isIdentity, log }, stream)
+
   if (hinters[subcommand]) hinters[subcommand]({ json, final })
 }
 
