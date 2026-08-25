@@ -57,8 +57,15 @@ module.exports = class BlindPeerOp extends Opstream {
     blindPeer.on('muxer-error', (err, stream) => {
       LOG.error('blind-peer', 'Muxer error from ' + hid.normalize(stream.remotePublicKey), err)
     })
-    blindPeer.on('add-new-core', (record) => {
-      this.push({ tag: 'add-core', data: { announce: record.announce } })
+    blindPeer.on('add-new-core', (record, _, stream) => {
+      this.push({
+        tag: 'add-core',
+        data: {
+          announce: record.announce,
+          key: hid.normalize(record.key),
+          peerKey: hid.normalize(stream.remotePublicKey)
+        }
+      })
     })
     blindPeer.on('delete-blocked', (stream, { key }) => {
       this.push({

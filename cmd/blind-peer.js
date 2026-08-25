@@ -8,7 +8,8 @@ const output = outputter('blind-peer', {
   listening: ({ publicKey, encryptionPublicKey }) =>
     `Blind peer listening\n  Public key: ${publicKey}\n  Encryption key: ${encryptionPublicKey}`,
   identity: ({ publicKey }) => `Peer identity: ${publicKey}`,
-  'add-core': ({ announce }) => `Core added (announce: ${announce})`,
+  'add-core': ({ announce, key, peerKey }) =>
+    `Received add core request for ${key} from peer ${peerKey} (announce: ${announce})`,
   'announce-core': ({ key }) => `Announcing core: ${key}`,
   'gc-start': ({ bytesToClear }) => `GC started, clearing ${bytesToClear} bytes`,
   'gc-done': ({ bytesCleared }) => `GC done, cleared ${bytesCleared} bytes`,
