@@ -143,7 +143,6 @@ module.exports = async function blindRelay(cmd) {
     listening: ({ publicKey }) => {
       stats.update({ publicKey: hypercoreid.normalize(publicKey) })
       layout.print(stdio)
-      // return `Blind-relay listening on ${publicKey}`
     },
     stats: ({
       stats: {
