@@ -524,7 +524,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const blindRelay = command(
     'blind-relay',
-    summary('Run a blind relay that forwards UDX streams between peers that cannot hole-punch'),
+    summary('Run a blind relay for peers that cannot hole-punch'),
     command(
       'start',
       summary('Start the blind relay'),
