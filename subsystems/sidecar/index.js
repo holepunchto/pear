@@ -68,6 +68,7 @@ class Sidecar extends ReadyResource {
     this.#spindownCountdown()
 
     this.corestore = corestore
+    this.activeBlindRelay = null
     this.nodes = nodes
     this.ipc = new IPC.Server({
       handlers: this,

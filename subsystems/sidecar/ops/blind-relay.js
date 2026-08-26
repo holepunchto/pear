@@ -3,7 +3,7 @@ const Opstream = require('../lib/opstream')
 const ReadyResource = require('ready-resource')
 const RelayServer = require('blind-relay').Server
 const hypercoreid = require('hypercore-id-encoding')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 
 class BlindRelayServer extends ReadyResource {
   constructor({ dht, blindRelayKeyPair }) {
@@ -49,7 +49,8 @@ module.exports = class BlindRelay extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  #op(params) {
+  async #op(params) {
+    await this.sidecar.ready()
     if (params.action === 'start') return this.start(params)
     throw ERR_INVALID_INPUT('Invalid action to blind-relay: ' + params.action)
   }
@@ -57,14 +58,26 @@ module.exports = class BlindRelay extends Opstream {
   async start({ statsInterval = 500 } = {}) {
     LOG.trace('blind-relay start', 'starting', { statsInterval })
 
-    await this.sidecar.ready() // needed for keyPair generation
+    const { sidecar, session } = this
 
-    const blindRelayServer = await this.session.add(
+    if (sidecar.activeBlindRelay) {
+      if (sidecar.activeBlindRelay.closing) await sidecar.activeBlindRelay.closing
+      if (sidecar.activeBlindRelay?.closed) sidecar.activeBlindRelay = null
+      if (sidecar.activeBlindRelay) {
+        throw new ERR_OPERATION_FAILED('Blind relay is already running, cannot start another')
+      }
+    }
+
+    const blindRelayServer = await session.add(
       new BlindRelayServer({
-        dht: this.sidecar.dht,
-        blindRelayKeyPair: this.sidecar.blindRelayKeyPair
+        dht: sidecar.dht,
+        blindRelayKeyPair: sidecar.blindRelayKeyPair
       })
     )
+    sidecar.activeBlindRelay = blindRelayServer
+    blindRelayServer.on('close', () => {
+      if (sidecar.activeBlindRelay === blindRelayServer) sidecar.activeBlindRelay = null
+    })
 
     this.push({
       tag: 'listening',
@@ -74,11 +87,11 @@ module.exports = class BlindRelay extends Opstream {
     this._statsInterval = setInterval(() => {
       this.push({ tag: 'stats', data: { stats: blindRelayServer.relay.stats } })
     }, statsInterval)
-    this.session.teardown(() => {
+    session.teardown(() => {
       LOG.trace('blind-relay start', 'teardown')
       clearInterval(this._statsInterval)
     })
 
-    await new Promise((resolve) => this.session.teardown(resolve))
+    await new Promise((resolve) => session.teardown(resolve))
   }
 }
