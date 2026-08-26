@@ -52,7 +52,7 @@ module.exports = class BlindRelay extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op(params) {
+  #op(params) {
     if (params.action === 'start') return this.start(params)
     throw ERR_INVALID_INPUT('Invalid action to blind-relay: ' + params.action)
   }
