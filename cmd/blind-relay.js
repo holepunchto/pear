@@ -1,5 +1,6 @@
 'use strict'
 const context = require('../context')
+const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, isTTY, stdio, setupTTYInput } = require('../lib/terminal.js')
@@ -139,7 +140,7 @@ module.exports = async function blindRelay(cmd) {
       }
     },
     listening: ({ publicKey }) => {
-      stats.update({ publicKey })
+      stats.update({ publicKey: hypercoreid.normalize(publicKey) })
       layout.print(stdio)
       // return `Blind-relay listening on ${publicKey}`
     },

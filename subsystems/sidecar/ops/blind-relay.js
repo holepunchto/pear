@@ -3,7 +3,7 @@ const DHT = require('hyperdht')
 const Opstream = require('../lib/opstream')
 const ReadyResource = require('ready-resource')
 const RelayServer = require('blind-relay').Server
-const z32 = require('z32')
+const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 class BlindRelayServer extends ReadyResource {
@@ -27,7 +27,7 @@ class BlindRelayServer extends ReadyResource {
 
     this.server = this.dht.createServer((socket) => {
       LOG.trace('blind-relay', 'connection accepted', {
-        remotePublicKey: z32.encode(socket.remotePublicKey)
+        remotePublicKey: hypercoreid.encode(socket.remotePublicKey)
       })
 
       return this.relay.accept(socket, {
@@ -66,7 +66,7 @@ module.exports = class BlindRelay extends Opstream {
 
     this.push({
       tag: 'listening',
-      data: { publicKey: z32.encode(blindRelayServer.server.publicKey) }
+      data: { publicKey: hypercoreid.encode(blindRelayServer.server.publicKey) }
     })
 
     this._statsInterval = setInterval(() => {

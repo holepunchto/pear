@@ -1,10 +1,11 @@
 'use strict'
 const test = require('brittle')
+const hypercoreid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
 let recordedPublicKey
 
-test('pear blind-relay start basic', async function ({ ok, plan, teardown, timeout }) {
+test('pear blind-relay start basic', async function ({ ok, is, plan, teardown, timeout }) {
   timeout(180000)
   plan(14)
 
@@ -17,7 +18,7 @@ test('pear blind-relay start basic', async function ({ ok, plan, teardown, timeo
   const until = await Helper.pick(blindRelay, [{ tag: 'listening' }, { tag: 'stats' }])
 
   const { publicKey } = await until.listening
-  ok(/^[a-z0-9]{52}$/.test(publicKey), 'listening on a z32 encoded public key')
+  is(publicKey, hypercoreid.normalize(publicKey), 'publicKey is z32')
   recordedPublicKey = publicKey
 
   const { stats } = await until.stats
