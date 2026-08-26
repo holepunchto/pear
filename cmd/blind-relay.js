@@ -111,7 +111,8 @@ module.exports = async function blindRelay(cmd) {
   const layout = new TableLayout(
     [
       { type: 'border', char: ' ' },
-      { type: 'table', table: stats }
+      { type: 'table', table: stats },
+      { type: 'border', char: '─' }
     ],
     { appendMode: !ctrlTTY }
   )
