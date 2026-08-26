@@ -1,5 +1,4 @@
 'use strict'
-const DHT = require('hyperdht')
 const Opstream = require('../lib/opstream')
 const ReadyResource = require('ready-resource')
 const RelayServer = require('blind-relay').Server
@@ -7,16 +6,14 @@ const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 
 class BlindRelayServer extends ReadyResource {
-  constructor(keyPair) {
+  constructor({ dht, blindRelayKeyPair }) {
     super()
-    this.keyPair = keyPair
+    this.dht = dht
+    this.blindRelayKeyPair = blindRelayKeyPair
   }
 
   async _open() {
     LOG.trace('blind-relay', 'starting')
-
-    this.dht = new DHT()
-    LOG.trace('blind-relay', 'DHT created')
 
     this.relay = new RelayServer({
       createStream(opts) {
@@ -35,7 +32,7 @@ class BlindRelayServer extends ReadyResource {
       })
     })
 
-    await this.server.listen(this.keyPair)
+    await this.server.listen(this.blindRelayKeyPair)
   }
 
   async _close() {
@@ -62,7 +59,12 @@ module.exports = class BlindRelay extends Opstream {
 
     await this.sidecar.ready() // needed for keyPair generation
 
-    const blindRelayServer = await this.session.add(new BlindRelayServer(this.sidecar.keyPair))
+    const blindRelayServer = await this.session.add(
+      new BlindRelayServer({
+        dht: this.sidecar.dht,
+        blindRelayKeyPair: this.sidecar.blindRelayKeyPair
+      })
+    )
 
     this.push({
       tag: 'listening',
