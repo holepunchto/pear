@@ -60,3 +60,68 @@ test('pear blind-relay restart must have same public key', async function ({
   const { publicKey } = await until.listening
   is(publicKey, recordedPublicKey)
 })
+
+test('pear blind-relay start should not start twice', async function ({
+  teardown,
+  plan,
+  exception
+}) {
+  plan(1)
+
+  const server = new Helper()
+  teardown(() => server.close(), { order: Infinity })
+  await server.ready()
+
+  {
+    const serverStream = server.blindRelay({ action: 'start' })
+    teardown(() => Helper.teardownStream(serverStream))
+    const serverMsgs = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    await serverMsgs.listening
+  }
+
+  {
+    const serverStream = server.blindRelay({ action: 'start' })
+    teardown(() => Helper.teardownStream(serverStream))
+    const serverMsgs = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    await exception(
+      serverMsgs.listening,
+      /Blind relay is already running/,
+      'Should fail to start blind-relay when it is already running'
+    )
+  }
+})
+
+test('pear blind-relay start should restart after stopping previous instance', async function ({
+  teardown,
+  plan,
+  ok
+}) {
+  plan(2)
+
+  {
+    const server = new Helper()
+    teardown(() => server.close(), { order: Infinity })
+    await server.ready()
+
+    const serverStream = server.blindRelay({ action: 'start' })
+    serverStream.on('error', () => {})
+    teardown(() => Helper.teardownStream(serverStream))
+    const { listening } = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    ok((await listening).publicKey, 'first blind-relay started')
+
+    await Helper.teardownStream(serverStream)
+    await server.close()
+  }
+
+  {
+    const server = new Helper()
+    teardown(() => server.close(), { order: Infinity })
+    await server.ready()
+
+    const serverStream = server.blindRelay({ action: 'start' })
+    serverStream.on('error', () => {})
+    teardown(() => Helper.teardownStream(serverStream))
+    const { listening } = await Helper.pick(serverStream, [{ tag: 'listening' }])
+    ok((await listening).publicKey, 'second blind-relay started after previous closed')
+  }
+})
