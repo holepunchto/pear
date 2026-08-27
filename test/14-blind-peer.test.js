@@ -28,7 +28,7 @@ test('blind peer should serve and not announce when untrusted client adds a core
   teardown(() => Helper.teardownStream(serverStream))
 
   const serverMsgs = await Helper.pick(serverStream, [
-    { tag: 'add-core' },
+    { tag: 'add-core', data: { key: coreKey } },
     { tag: 'listening' },
     { tag: 'add-cores-downgrade-announce' },
     { tag: 'announce-core', data: { key: coreKey } }
@@ -99,6 +99,9 @@ test('blind peer should serve with trusted keys and announce when trusted client
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
+  const link = await Helper.touchLink(client)
+  const coreKey = hid.normalize(hid.decode(link))
+
   const otherTrustedKey = Helper.getRandomId()
   const serverStream = server.blindPeer({
     subcommand: 'start',
@@ -106,13 +109,12 @@ test('blind peer should serve with trusted keys and announce when trusted client
   })
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [
-    { tag: 'add-core' },
+    { tag: 'add-core', data: { key: coreKey } },
     { tag: 'listening' },
-    { tag: 'announce-core' }
+    { tag: 'announce-core', data: { key: coreKey } }
   ])
   const { publicKey: peerKey } = await serverMsgs.listening
 
-  const link = await Helper.touchLink(client)
   const staging = client.stage({
     link,
     dir: Helper.fixture('versions'),
@@ -127,7 +129,6 @@ test('blind peer should serve with trusted keys and announce when trusted client
   const seeded = await Helper.pick(seedingClient, [{ tag: 'announced' }])
   await seeded.announced
 
-  const coreKey = hid.normalize(hid.decode(link))
   const requestStream = client.blindPeer({
     subcommand: 'request',
     data: { key: coreKey, peerKey }
@@ -289,7 +290,7 @@ test('blind peer should download and sync core data from trusted client', async 
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [
     { tag: 'listening' },
-    { tag: 'add-core' },
+    { tag: 'add-core', data: { key: coreKey } },
     { tag: 'announce-core', data: { key: coreKey } },
     { tag: 'core-downloaded', data: { key: coreKey } }
   ])
