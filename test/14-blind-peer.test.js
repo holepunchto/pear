@@ -4,6 +4,18 @@ const path = require('bare-path')
 const hid = require('hypercore-id-encoding')
 const Helper = require('./helper')
 
+const rig = new Helper.Rig({ dir: path.join(Helper.tmp, 'blind-peer-pear') })
+const unhookBlindPeer = test.hook('blind peer rig setup', rig.setup)
+
+async function shutdownAndGc(client, child = client.child) {
+  if (client) {
+    await client.shutdown().catch(() => {})
+    client.close()
+  }
+  if (child) await Helper.untilExit(child)
+  await Helper.gc(path.join(rig.platformDir, 'blind-peer'))
+}
+
 test('blind peer should serve and not announce when untrusted client adds a core', async function ({
   teardown,
   plan,
@@ -13,14 +25,14 @@ test('blind peer should serve and not announce when untrusted client adds a core
 }) {
   plan(5)
 
-  const client = new Helper()
-  teardown(() => client.close(), { order: Infinity })
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
   await client.ready()
 
   const link = await Helper.touchLink(client)
   const coreKey = hid.normalize(hid.decode(link))
 
-  const server = new Helper()
+  const server = new Helper(rig)
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
@@ -82,8 +94,8 @@ test('blind peer should serve with trusted keys and announce when trusted client
 }) {
   plan(5)
 
-  const client = new Helper()
-  teardown(() => client.close(), { order: Infinity })
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
   await client.ready()
 
   let clientPubKey
@@ -95,7 +107,7 @@ test('blind peer should serve with trusted keys and announce when trusted client
     await Helper.teardownStream(clientIdentityStream)
   }
 
-  const server = new Helper()
+  const server = new Helper(rig)
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
@@ -149,8 +161,8 @@ test('blind peer should serve with trusted keys and announce when trusted client
 test('blind peer should not start twice', async function ({ teardown, plan, exception }) {
   plan(1)
 
-  const server = new Helper()
-  teardown(() => server.close(), { order: Infinity })
+  const server = new Helper(rig)
+  teardown(() => shutdownAndGc(server), { order: Infinity })
   await server.ready()
 
   {
@@ -179,10 +191,13 @@ test('blind peer should restart after stopping previous instance', async functio
 }) {
   plan(2)
 
+  let child
+  let server
   {
-    const server = new Helper()
-    teardown(() => server.close(), { order: Infinity })
+    server = new Helper(rig)
+    teardown(() => shutdownAndGc(server, child), { order: Infinity })
     await server.ready()
+    child = server.child
 
     const serverStream = server.blindPeer({ subcommand: 'start' })
     serverStream.on('error', () => {})
@@ -195,8 +210,7 @@ test('blind peer should restart after stopping previous instance', async functio
   }
 
   {
-    const server = new Helper()
-    teardown(() => server.close(), { order: Infinity })
+    server = new Helper(rig)
     await server.ready()
 
     const serverStream = server.blindPeer({ subcommand: 'start' })
@@ -214,8 +228,8 @@ test('blind peer should reject invalid subcommand and missing parameters', async
 }) {
   plan(3)
 
-  const helper = new Helper()
-  teardown(() => helper.close(), { order: Infinity })
+  const helper = new Helper(rig)
+  teardown(() => shutdownAndGc(helper), { order: Infinity })
   await helper.ready()
 
   {
@@ -263,8 +277,8 @@ test('blind peer should download and sync core data from trusted client', async 
 }) {
   plan(6)
 
-  const client = new Helper()
-  teardown(() => client.close(), { order: Infinity })
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
   await client.ready()
 
   let clientPubKey
@@ -279,7 +293,7 @@ test('blind peer should download and sync core data from trusted client', async 
   const link = await Helper.touchLink(client)
   const coreKey = hid.normalize(hid.decode(link))
 
-  const server = new Helper()
+  const server = new Helper(rig)
   teardown(() => server.close(), { order: Infinity })
   await server.ready()
 
@@ -327,9 +341,6 @@ test('blind peer should download and sync core data from trusted client', async 
   is(downloaded.key, coreKey, 'blind peer downloaded core data')
 })
 
-const rig = new Helper.Rig({ dir: path.join(Helper.tmp, 'blind-peer-pear') })
-const unhookBlindPeerIdentity = test.hook('blind peer identity rig setup', rig.setup)
-
 test('blind peer identity should persist between sidecar restarts', async function ({
   teardown,
   plan,
@@ -349,16 +360,13 @@ test('blind peer identity should persist between sidecar restarts', async functi
     identity1 = (await final).publicKey
     await Helper.teardownStream(identityStream)
 
-    await helper.shutdown()
-    helper.close()
-
-    await Helper.untilExit(helper.child)
+    await shutdownAndGc(helper)
   }
 
   let identity2
   {
     const helper = new Helper(rig)
-    teardown(() => helper.close(), { order: Infinity })
+    teardown(() => shutdownAndGc(helper), { order: Infinity })
     await helper.ready()
 
     const identityStream = helper.blindPeer({ subcommand: 'identity' })
@@ -366,12 +374,9 @@ test('blind peer identity should persist between sidecar restarts', async functi
     const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
     identity2 = (await final).publicKey
     await Helper.teardownStream(identityStream)
-
-    await helper.shutdown()
-    helper.close()
   }
 
   is(identity1, identity2, 'blind peer identity remains the same after restart')
 })
 
-unhookBlindPeerIdentity('blind peer identity rig cleanup', rig.cleanup)
+unhookBlindPeer('blind peer rig cleanup', rig.cleanup)
