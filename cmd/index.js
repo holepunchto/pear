@@ -501,8 +501,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command(
       'request',
       summary('Request a blind peer to seed'),
-      arg('<key>', 'Corestore key to be seeded'),
+      arg('<key>', 'Key to be seeded'),
       flag('--peer <peer>', 'Peer key to request from'),
+      flag('--core-only', 'Request only the db core instead of also the content core'),
       commands.blindPeer
     ),
     flag('--json', 'Newline delimited JSON output'),

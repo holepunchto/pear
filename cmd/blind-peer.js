@@ -75,8 +75,9 @@ const validators = {
     const { command } = cmd
     const key = command.args.key
     const peerKey = command.flags.peer
+    const coreOnly = command.flags.coreOnly
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
     if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')
-    return { key, peerKey }
+    return { key, peerKey, coreOnly }
   }
 }
