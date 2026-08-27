@@ -5,8 +5,7 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const { hint } = require('../lib/terminal')
 
 const output = outputter('blind-peer', {
-  listening: ({ publicKey, encryptionPublicKey }) =>
-    `Blind peer listening\n  Public key: ${publicKey}\n  Encryption key: ${encryptionPublicKey}`,
+  listening: ({ publicKey }) => `Blind peer started listening using public key: ${publicKey}`,
   'add-core': ({ announce, key, peerKey }) =>
     `Received add core request for ${key} from peer ${peerKey} (announce: ${announce})`,
   'announce-core': ({ key }) => `Announcing core: ${key}`,

@@ -148,10 +148,7 @@ module.exports = class BlindPeerOp extends Opstream {
       publicKey: hid.normalize(blindPeer.publicKey),
       encryptionPublicKey: hid.normalize(blindPeer.encryptionPublicKey)
     }
-    LOG.info(
-      'blind-peer',
-      `Blind peer listening\n  Public key: ${data.publicKey}\n  Encryption key: ${data.encryptionPublicKey}`
-    )
+    LOG.info('blind-peer', `Blind peer started listening using public key: ${data.publicKey}`)
     this.push({ tag: 'listening', data })
 
     await new Promise((resolve) => session.teardown(resolve))
