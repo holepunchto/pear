@@ -7,13 +7,13 @@ const Helper = require('./helper')
 const rig = new Helper.Rig({ dir: path.join(Helper.tmp, 'blind-peer-pear') })
 const unhookBlindPeer = test.hook('blind peer rig setup', rig.setup)
 
-async function shutdownAndGc(client, child = client.child) {
+async function shutdownAndGc(client, child = client?.child, targetRig = rig) {
   if (client) {
     await client.shutdown().catch(() => {})
     client.close()
   }
   if (child) await Helper.untilExit(child)
-  await Helper.gc(path.join(rig.platformDir, 'blind-peer'))
+  await Helper.gc(path.join(targetRig.platformDir, 'blind-peer'))
 }
 
 test('blind peer should serve and not announce when untrusted client adds a core', async function ({
@@ -340,6 +340,86 @@ test('blind peer should download and sync core data from trusted client', async 
   const downloaded = await serverMsgs['core-downloaded']
   is(downloaded.key, coreKey, 'blind peer downloaded core data')
 })
+
+const hostRig = new Helper.Rig({ dir: path.join(Helper.tmp, 'host-pear') })
+const unhookHost = test.hook('host rig setup', hostRig.setup)
+
+test('blind peer should download and sync core data seeded by another host instance', async function ({
+  teardown,
+  plan,
+  is,
+  execution
+}) {
+  plan(5)
+
+  const host = new Helper(hostRig)
+  teardown(() => shutdownAndGc(host, undefined, hostRig), { order: Infinity })
+  await host.ready()
+
+  const link = await Helper.touchLink(host)
+  const coreKey = hid.normalize(hid.decode(link))
+
+  const staging = host.stage({
+    link,
+    dir: Helper.fixture('versions'),
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  const seedingHost = host.seed({ link })
+  teardown(() => Helper.teardownStream(seedingHost))
+  const seeded = await Helper.pick(seedingHost, [{ tag: 'announced' }, { tag: 'peer-add' }])
+  await seeded.announced
+
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  let clientPubKey
+  {
+    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await final).publicKey
+    await Helper.teardownStream(clientIdentityStream)
+  }
+
+  const server = new Helper(rig)
+  teardown(() => server.close(), { order: Infinity })
+  await server.ready()
+
+  const serverStream = server.blindPeer({
+    subcommand: 'start',
+    data: { trustedPeers: [clientPubKey] }
+  })
+  teardown(() => Helper.teardownStream(serverStream))
+  const serverMsgs = await Helper.pick(serverStream, [
+    { tag: 'listening' },
+    { tag: 'add-core', data: { key: coreKey } },
+    { tag: 'announce-core', data: { key: coreKey } },
+    { tag: 'core-downloaded', data: { key: coreKey } }
+  ])
+  const { publicKey: peerKey } = await serverMsgs.listening
+
+  const requestStream = client.blindPeer({
+    subcommand: 'request',
+    data: { key: coreKey, peerKey }
+  })
+  teardown(() => Helper.teardownStream(requestStream))
+
+  const { seeding } = await Helper.pick(requestStream, { tag: 'seeding' })
+
+  await execution(serverMsgs['add-core'], 'server receives add-core request')
+  await execution(serverMsgs['announce-core'], 'server announced core')
+  await execution(seeding, 'client receives seeding confirmation')
+  await execution(seeded['peer-add'], 'host receives peer-add on seed')
+  const downloaded = await serverMsgs['core-downloaded']
+  is(downloaded.key, coreKey, 'blind peer downloaded core data from host')
+})
+
+unhookHost('host rig cleanup', hostRig.cleanup)
 
 test('blind peer identity should persist between sidecar restarts', async function ({
   teardown,
