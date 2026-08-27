@@ -6,6 +6,7 @@ const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const BlindPeer = require('blind-peer')
 const BlindPeering = require('blind-peering')
+const Hyperdrive = require('hyperdrive')
 
 module.exports = class BlindPeerOp extends Opstream {
   constructor(...args) {
@@ -135,7 +136,7 @@ module.exports = class BlindPeerOp extends Opstream {
     await new Promise((resolve) => session.teardown(resolve))
   }
 
-  async request({ key, peerKey, announce = true } = {}) {
+  async request({ key, peerKey, announce = true, coreOnly = false } = {}) {
     const { sidecar, session } = this
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
@@ -147,24 +148,59 @@ module.exports = class BlindPeerOp extends Opstream {
     const corestore = sidecar.getCorestore()
     await corestore.ready()
 
-    const core = corestore.get({ key: coreKey })
-    await core.ready()
-
-    const client = new BlindPeering(sidecar.swarm, corestore, {
-      coreMirrors: [blindPeerKey],
+    const client = new BlindPeering(sidecar.swarm.dht, corestore, {
+      keys: [blindPeerKey],
       pick: 1
     })
     session.teardown(() => client.close().catch(safetyCatch))
 
-    const result = await client.addCore(core.session(), blindPeerKey, { announce })
+    const toAdd = []
+    if (coreOnly) {
+      const core = corestore.get({ key: coreKey })
+      await core.ready()
+      toAdd.push(core)
+    } else {
+      const drive = new Hyperdrive(corestore, key)
+      await drive.ready()
+      await this.untilBlobs(drive)
+
+      toAdd.push(drive.db.core)
+      toAdd.push(drive.blobs.core)
+    }
+
+    await Promise.all(
+      toAdd.map(async (core) => {
+        await client.addCore(core, { announce })
+        await this.untilConnected(core, blindPeerKey)
+      })
+    )
 
     this.push({
       tag: 'seeding',
       data: {
         key: hid.normalize(coreKey),
         peerKey: hid.normalize(blindPeerKey),
-        announce: result[0].announce
+        announce
       }
     })
+  }
+
+  untilBlobs(drive) {
+    return new Promise((resolve) => {
+      if (drive.blobs) resolve()
+      else {
+        drive.once('blobs', resolve)
+        this.sidecar.swarm.join(drive.discoveryKey)
+        drive.getBlobs().catch(safetyCatch)
+      }
+    })
+  }
+
+  async untilConnected(core, peerKey) {
+    while (
+      !core.peers.some((peer) => hid.normalize(peer.remotePublicKey) === hid.normalize(peerKey))
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    }
   }
 }
