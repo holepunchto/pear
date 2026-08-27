@@ -59,79 +59,100 @@ module.exports = class BlindPeerOp extends Opstream {
       LOG.error('blind-peer', 'Muxer error from ' + hid.normalize(stream.remotePublicKey), err)
     })
     blindPeer.on('add-new-core', (record, _, stream) => {
-      this.push({
-        tag: 'add-core',
-        data: {
-          announce: record.announce,
-          key: hid.normalize(record.key),
-          peerKey: hid.normalize(stream.remotePublicKey)
-        }
-      })
+      const data = {
+        announce: record.announce,
+        key: hid.normalize(record.key),
+        peerKey: hid.normalize(stream.remotePublicKey)
+      }
+      LOG.info(
+        'blind-peer',
+        `Received add core request for ${data.key} from peer ${data.peerKey} (announce: ${data.announce})`
+      )
+      this.push({ tag: 'add-core', data })
     })
     blindPeer.on('delete-blocked', (stream, { key }) => {
-      this.push({
-        tag: 'delete-blocked',
-        data: {
-          key: hid.normalize(key),
-          peerKey: hid.normalize(stream.remotePublicKey)
-        }
-      })
+      const data = { key: hid.normalize(key), peerKey: hid.normalize(stream.remotePublicKey) }
+      LOG.info(
+        'blind-peer',
+        `Blocked delete request from untrusted peer ${data.peerKey} for core ${data.key}`
+      )
+      this.push({ tag: 'delete-blocked', data })
     })
     blindPeer.on('delete-core', (stream, { key }) => {
-      this.push({
-        tag: 'delete-core',
-        data: { key: hid.normalize(key), peerKey: hid.normalize(stream.remotePublicKey) }
-      })
+      const data = { key: hid.normalize(key), peerKey: hid.normalize(stream.remotePublicKey) }
+      LOG.info('blind-peer', `Received delete request from ${data.peerKey} for core ${data.key}`)
+      this.push({ tag: 'delete-core', data })
     })
     blindPeer.on('delete-core-end', (stream, { key }) => {
-      this.push({ tag: 'delete-core-end', data: { key: hid.normalize(key) } })
+      const data = { key: hid.normalize(key) }
+      LOG.info('blind-peer', `Deleted core ${data.key}`)
+      this.push({ tag: 'delete-core-end', data })
     })
     blindPeer.on('downgrade-announce', ({ record, remotePublicKey }) => {
-      this.push({
-        tag: 'downgrade-announce',
-        data: { record, peerKey: hid.normalize(remotePublicKey) }
-      })
+      const data = { record, peerKey: hid.normalize(remotePublicKey) }
+      LOG.info(
+        'blind-peer',
+        `Downgraded announce for peer ${data.peerKey} because peer is not trusted`
+      )
+      this.push({ tag: 'downgrade-announce', data })
     })
     blindPeer.on('add-cores-downgrade-announce', ({ remotePublicKey }) => {
-      this.push({
-        tag: 'add-cores-downgrade-announce',
-        data: { peerKey: hid.normalize(remotePublicKey) }
-      })
+      const data = { peerKey: hid.normalize(remotePublicKey) }
+      LOG.info(
+        'blind-peer',
+        `Downgraded announce for peer ${data.peerKey} because peer is not trusted`
+      )
+      this.push({ tag: 'add-cores-downgrade-announce', data })
     })
     blindPeer.on('announce-core', (core) => {
-      this.push({ tag: 'announce-core', data: { key: hid.normalize(core.key) } })
+      const data = { key: hid.normalize(core.key) }
+      LOG.info('blind-peer', `Announcing core: ${data.key}`)
+      this.push({ tag: 'announce-core', data })
     })
     blindPeer.on('announced-initial-cores', () => {
+      LOG.info('blind-peer', 'Announced all initial cores')
       this.push({ tag: 'announced-initial-cores', data: {} })
     })
     blindPeer.on('core-downloaded', (core) => {
-      this.push({ tag: 'core-downloaded', data: { key: hid.normalize(core.key) } })
+      const data = { key: hid.normalize(core.key) }
+      LOG.info('blind-peer', `Core fully downloaded: ${data.key}`)
+      this.push({ tag: 'core-downloaded', data })
     })
     blindPeer.on('core-append', (core) => {
-      this.push({ tag: 'core-append', data: { key: hid.normalize(core.key), length: core.length } })
+      const data = { key: hid.normalize(core.key), length: core.length }
+      LOG.info('blind-peer', `Core length updated: ${data.key} (length: ${data.length})`)
+      this.push({ tag: 'core-append', data })
     })
     blindPeer.on('core-client-mode-changed', (core, isClient) => {
-      this.push({
-        tag: 'core-client-mode-changed',
-        data: { key: hid.normalize(core.key), isClient }
-      })
+      const data = { key: hid.normalize(core.key), isClient }
+      LOG.info(
+        'blind-peer',
+        `Announced core ${isClient ? 'enabled' : 'disabled'} client mode: ${data.key}`
+      )
+      this.push({ tag: 'core-client-mode-changed', data })
     })
     blindPeer.on('gc-start', ({ bytesToClear }) => {
-      this.push({ tag: 'gc-start', data: { bytesToClear } })
+      const data = { bytesToClear }
+      LOG.info('blind-peer', `GC started, clearing ${data.bytesToClear} bytes`)
+      this.push({ tag: 'gc-start', data })
     })
     blindPeer.on('gc-done', ({ bytesCleared }) => {
-      this.push({ tag: 'gc-done', data: { bytesCleared } })
+      const data = { bytesCleared }
+      LOG.info('blind-peer', `GC done, cleared ${data.bytesCleared} bytes`)
+      this.push({ tag: 'gc-done', data })
     })
 
     await blindPeer.listen()
 
-    this.push({
-      tag: 'listening',
-      data: {
-        publicKey: hid.normalize(blindPeer.publicKey),
-        encryptionPublicKey: hid.normalize(blindPeer.encryptionPublicKey)
-      }
-    })
+    const data = {
+      publicKey: hid.normalize(blindPeer.publicKey),
+      encryptionPublicKey: hid.normalize(blindPeer.encryptionPublicKey)
+    }
+    LOG.info(
+      'blind-peer',
+      `Blind peer listening\n  Public key: ${data.publicKey}\n  Encryption key: ${data.encryptionPublicKey}`
+    )
+    this.push({ tag: 'listening', data })
 
     await new Promise((resolve) => session.teardown(resolve))
   }
@@ -175,14 +196,12 @@ module.exports = class BlindPeerOp extends Opstream {
       })
     )
 
-    this.push({
-      tag: 'seeding',
-      data: {
-        key: hid.normalize(coreKey),
-        peerKey: hid.normalize(blindPeerKey),
-        announce
-      }
-    })
+    const data = { key: hid.normalize(coreKey), peerKey: hid.normalize(blindPeerKey), announce }
+    LOG.info(
+      'blind-peer',
+      `Requested blind peer ${data.peerKey} to seed core ${data.key} (announce: ${data.announce})`
+    )
+    this.push({ tag: 'seeding', data })
   }
 
   untilBlobs(drive) {
