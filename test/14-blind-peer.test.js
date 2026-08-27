@@ -7,9 +7,18 @@ const Helper = require('./helper')
 test('blind peer should serve and not announce when untrusted client adds a core', async function ({
   teardown,
   plan,
-  execution
+  absent,
+  execution,
+  exception
 }) {
-  plan(3)
+  plan(5)
+
+  const client = new Helper()
+  teardown(() => client.close(), { order: Infinity })
+  await client.ready()
+
+  const link = await Helper.touchLink(client)
+  const coreKey = hid.normalize(hid.decode(link))
 
   const server = new Helper()
   teardown(() => server.close(), { order: Infinity })
@@ -17,18 +26,15 @@ test('blind peer should serve and not announce when untrusted client adds a core
 
   const serverStream = server.blindPeer({ subcommand: 'start' })
   teardown(() => Helper.teardownStream(serverStream))
+
   const serverMsgs = await Helper.pick(serverStream, [
     { tag: 'add-core' },
     { tag: 'listening' },
-    { tag: 'add-cores-downgrade-announce' }
+    { tag: 'add-cores-downgrade-announce' },
+    { tag: 'announce-core', data: { key: coreKey } }
   ])
   const { publicKey: peerKey } = await serverMsgs.listening
 
-  const client = new Helper()
-  teardown(() => client.close(), { order: Infinity })
-  await client.ready()
-
-  const link = await Helper.touchLink(client)
   const staging = client.stage({
     link,
     dir: Helper.fixture('versions'),
@@ -43,7 +49,6 @@ test('blind peer should serve and not announce when untrusted client adds a core
   const seeded = await Helper.pick(seedingClient, [{ tag: 'announced' }])
   await seeded.announced
 
-  const coreKey = hid.normalize(hid.decode(link))
   const requestStream = client.blindPeer({
     subcommand: 'request',
     data: { key: coreKey, peerKey }
@@ -57,7 +62,15 @@ test('blind peer should serve and not announce when untrusted client adds a core
     serverMsgs['add-cores-downgrade-announce'],
     'server emits add-cores-downgrade-announce'
   )
+  const addCore = await serverMsgs['add-core']
+  absent(addCore.announce, 'server should not announce untrusted peer core')
   await execution(seeding, 'client receives seeding')
+
+  await Helper.teardownStream(serverStream)
+  await exception(
+    serverMsgs['announce-core'],
+    'server does not emit announce-core for untrusted peer'
+  )
 })
 
 test('blind peer should serve with trusted keys and announce when trusted client adds a core', async function ({
@@ -247,7 +260,7 @@ test('blind peer should download and sync core data from trusted client', async 
   is,
   execution
 }) {
-  plan(5)
+  plan(6)
 
   const client = new Helper()
   teardown(() => client.close(), { order: Infinity })
@@ -277,6 +290,7 @@ test('blind peer should download and sync core data from trusted client', async 
   const serverMsgs = await Helper.pick(serverStream, [
     { tag: 'listening' },
     { tag: 'add-core' },
+    { tag: 'announce-core', data: { key: coreKey } },
     { tag: 'core-downloaded', data: { key: coreKey } }
   ])
   const { publicKey: peerKey } = await serverMsgs.listening
@@ -304,6 +318,7 @@ test('blind peer should download and sync core data from trusted client', async 
   const seeding = Helper.pick(requestStream, { tag: 'seeding' })
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
+  await execution(serverMsgs['announce-core'], 'server announced core')
   await execution(seeding, 'client receives seeding confirmation')
   await execution(seeded['peer-add'], 'client receives peer-add on seed')
   is(hid.normalize(await seeded['peer-add']), peerKey, 'connected peer matches blind peer key')
