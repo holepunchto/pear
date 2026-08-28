@@ -39,7 +39,7 @@ module.exports = async function seed(cmd) {
     },
     {
       key: 'name',
-      label: ctrlTTY ? 'Name:' : '... name',
+      label: ctrlTTY ? 'App:' : '... app',
       initial
     },
     {
