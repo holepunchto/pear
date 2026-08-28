@@ -160,7 +160,7 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength,
-        app: name + (semver ? `@${semver}` : ''),
+        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
