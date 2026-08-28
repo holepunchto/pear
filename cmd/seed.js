@@ -38,7 +38,7 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
-      key: 'name',
+      key: 'app',
       label: ctrlTTY ? 'App:' : '... app',
       initial
     },
@@ -176,7 +176,7 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength,
-        name: name + (semver ? `@${semver}` : ''),
+        app: name + (semver ? `@${semver}` : ''),
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
