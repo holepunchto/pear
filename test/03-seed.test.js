@@ -15,7 +15,7 @@ test('pear seed basic stage and seed', async function ({
   timeout
 }) {
   timeout(180000)
-  plan(15)
+  plan(17)
 
   const dir = Helper.fixture('versions')
 
@@ -54,6 +54,8 @@ test('pear seed basic stage and seed', async function ({
   const stats = await until.stats
   is(stats.driveKey, hypercoreid.normalize(stats.driveKey), 'stats driveKey is z32')
   is(stats.driveLength, addendum.version, 'stats have driveLength')
+  is(stats.name, 'versions', 'stats have package name')
+  is(stats.semver, '', 'stats have without semver')
   is(stats.discoveryKey, hypercoreid.normalize(stats.discoveryKey), 'stats discoveryKey is z32')
   is(stats.contentKey, hypercoreid.normalize(stats.contentKey), 'stats contentKey is z32')
   is(stats.whoami, hypercoreid.normalize(stats.whoami), 'stats whoami is z32')
@@ -76,7 +78,7 @@ test('pear seed announces, join, drop', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(4)
+  plan(5)
 
   const dir = Helper.fixture('minimal')
   const helper = new Helper()
@@ -104,7 +106,7 @@ test('pear seed announces, join, drop', async function ({
   const until = await Helper.pick(seeding, [
     { tag: 'key' },
     { tag: 'announced' },
-    { tag: 'stats', data: { semver: '1.0.0' } },
+    { tag: 'stats', data: { name: 'minimal', semver: '1.0.0' } },
     { tag: 'peer-add' },
     { tag: 'peer-remove' }
   ])
@@ -112,7 +114,8 @@ test('pear seed announces, join, drop', async function ({
   ok(announced, 'seeding is announced')
   const key = await until.key
   const stats = await until.stats
-  is(stats.semver, '1.0.0', 'stats have semantic version')
+  is(stats.name, 'minimal', 'stats have name')
+  is(stats.semver, '1.0.0', 'stats have semver')
 
   const peerStore = new Corestore(await tmp())
   teardown(() => peerStore.close())
@@ -138,7 +141,7 @@ test('pear seed announces, join, drop', async function ({
 })
 
 test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
-  plan(1)
+  plan(3)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -150,6 +153,8 @@ test('pear seed empty drive has pending content key', async function ({ is, plan
   const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
 
   is(stats.contentKey, 'pending', 'content key is pending')
+  is(stats.name, '', 'name is empty')
+  is(stats.semver, '', 'semver is empty')
 })
 
 test('pear seed fully syncs db and blobs cores', async function ({
