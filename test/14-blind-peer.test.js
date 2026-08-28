@@ -532,6 +532,33 @@ test('blind peer request for unseeded drive should timeout waiting for blobs', a
   )
 })
 
+test('blind peer request should timeout if blind peer is unreachable', async function ({
+  teardown,
+  plan,
+  exception
+}) {
+  plan(1)
+
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  const unreachablePeerKey = hid.normalize(Helper.getRandomId())
+  const coreKey = hid.normalize(Helper.getRandomId())
+
+  const requestStream = client.blindPeer({
+    subcommand: 'request',
+    data: { key: coreKey, peerKey: unreachablePeerKey, coreOnly: true, timeout: 500 }
+  })
+  teardown(() => Helper.teardownStream(requestStream))
+
+  await exception(
+    Helper.pick(requestStream, { tag: 'seeding' }),
+    /Timed out waiting for blind peer/,
+    'request times out when blind peer is unreachable'
+  )
+})
+
 test('blind peer identity should persist between sidecar restarts', async function ({
   teardown,
   plan,
