@@ -178,7 +178,7 @@ module.exports = class BlindPeerOp extends Opstream {
       await core.ready()
       toAdd.push(core)
     } else {
-      const drive = new Hyperdrive(corestore, key)
+      const drive = new Hyperdrive(corestore, coreKey)
       await drive.ready()
       await this.untilBlobs(drive)
 

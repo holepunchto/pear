@@ -1,8 +1,10 @@
 'use strict'
 const context = require('../context')
+const hypercoreid = require('hypercore-id-encoding')
 const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { hint } = require('../lib/terminal')
+const { parse } = require('../lib/link')
 
 const output = outputter('blind-peer', {
   listening: ({ publicKey }) => `Blind peer started listening using public key: ${publicKey}`,
@@ -69,6 +71,13 @@ const validators = {
   start(cmd) {
     const { command } = cmd
     const trustedPeers = command.flags.trustedPeer
+    if (trustedPeers) {
+      for (const peer of trustedPeers) {
+        if (!peer || !hypercoreid.isValid(peer)) {
+          throw ERR_INVALID_INPUT('A valid trusted peer key must be specified')
+        }
+      }
+    }
     return { trustedPeers }
   },
   request(cmd) {
@@ -76,8 +85,25 @@ const validators = {
     const key = command.args.key
     const peerKey = command.flags.peer
     const coreOnly = command.flags.coreOnly
-    if (!key) throw ERR_INVALID_INPUT('A key must be specified')
-    if (!peerKey) throw ERR_INVALID_INPUT('A blind peer key must be specified')
+
+    if (!peerKey || !hypercoreid.isValid(peerKey)) {
+      throw ERR_INVALID_INPUT('A valid blind peer key must be specified')
+    }
+
+    if (!key) {
+      throw ERR_INVALID_INPUT(
+        coreOnly ? 'A valid core key must be specified' : 'A valid drive key must be specified'
+      )
+    }
+
+    if (key.startsWith('pear:')) {
+      parse(key, coreOnly ? 'core key' : 'drive link')
+    } else if (!hypercoreid.isValid(key)) {
+      throw ERR_INVALID_INPUT(
+        coreOnly ? 'A valid core key must be specified' : 'A valid drive key must be specified'
+      )
+    }
+
     return { key, peerKey, coreOnly }
   }
 }
