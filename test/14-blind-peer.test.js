@@ -16,6 +16,14 @@ async function shutdownAndGc(client, child = client?.child, targetRig = rig) {
   await Helper.gc(path.join(targetRig.platformDir, 'blind-peer'))
 }
 
+function withTimeout(promise, ms = 3000, message = 'Operation timed out') {
+  let timeoutId
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
 test('blind peer should serve and not announce when untrusted client adds a core', async function ({
   teardown,
   plan,
@@ -420,6 +428,109 @@ test('blind peer should download and sync core data seeded by another host insta
 })
 
 unhookHost('host rig cleanup', hostRig.cleanup)
+
+test('blind peer should add an unseeded core when coreOnly is true', async function ({
+  teardown,
+  plan,
+  is,
+  ok,
+  execution
+}) {
+  plan(5)
+
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  let clientPubKey
+  {
+    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await final).publicKey
+    await Helper.teardownStream(clientIdentityStream)
+  }
+
+  const unseededKey = hid.normalize(Helper.getRandomId())
+
+  const server = new Helper(rig)
+  teardown(() => server.close(), { order: Infinity })
+  await server.ready()
+
+  const serverStream = server.blindPeer({
+    subcommand: 'start',
+    data: { trustedPeers: [clientPubKey] }
+  })
+  teardown(() => Helper.teardownStream(serverStream))
+  const serverMsgs = await Helper.pick(serverStream, [
+    { tag: 'listening' },
+    { tag: 'add-core', data: { key: unseededKey } },
+    { tag: 'announce-core', data: { key: unseededKey } }
+  ])
+  const { publicKey: peerKey } = await serverMsgs.listening
+
+  const requestStream = client.blindPeer({
+    subcommand: 'request',
+    data: { key: unseededKey, peerKey, coreOnly: true }
+  })
+  teardown(() => Helper.teardownStream(requestStream))
+
+  const seeding = await Helper.pick(requestStream, { tag: 'seeding' })
+  const seedingResult = await seeding
+
+  await execution(serverMsgs['add-core'], 'server receives add-core request')
+  await execution(serverMsgs['announce-core'], 'server announced unseeded core')
+  ok(seedingResult.announce, 'core announced')
+  is(seedingResult.key, unseededKey, 'core key matches')
+  is(seedingResult.peerKey, peerKey, 'peer key matches')
+})
+
+test('blind peer request for unseeded drive should timeout waiting for blobs', async function ({
+  teardown,
+  plan,
+  exception
+}) {
+  plan(1)
+
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  let clientPubKey
+  {
+    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await final).publicKey
+    await Helper.teardownStream(clientIdentityStream)
+  }
+
+  const unseededDriveKey = hid.normalize(Helper.getRandomId())
+
+  const server = new Helper(rig)
+  teardown(() => server.close(), { order: Infinity })
+  await server.ready()
+
+  const serverStream = server.blindPeer({
+    subcommand: 'start',
+    data: { trustedPeers: [clientPubKey] }
+  })
+  teardown(() => Helper.teardownStream(serverStream))
+  const serverMsgs = await Helper.pick(serverStream, [{ tag: 'listening' }])
+  const { publicKey: peerKey } = await serverMsgs.listening
+
+  const requestStream = client.blindPeer({
+    subcommand: 'request',
+    data: { key: unseededDriveKey, peerKey, coreOnly: false }
+  })
+  teardown(() => Helper.teardownStream(requestStream))
+
+  await exception(
+    withTimeout(Helper.pick(requestStream, { tag: 'seeding' }), 3000),
+    /Operation timed out/,
+    'adding unseeded drive times out waiting for blobs'
+  )
+})
 
 test('blind peer identity should persist between sidecar restarts', async function ({
   teardown,
