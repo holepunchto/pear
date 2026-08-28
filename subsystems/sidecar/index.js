@@ -30,6 +30,7 @@ const ops = {
   Data: require('./ops/data'),
   Multisig: require('./ops/multisig'),
   Cores: require('./ops/cores'),
+  BlindRelay: require('./ops/blind-relay'),
   BlindPeer: require('./ops/blind-peer')
 }
 
@@ -68,6 +69,7 @@ class Sidecar extends ReadyResource {
     this.#spindownCountdown()
 
     this.corestore = corestore
+    this.activeBlindRelay = null
     this.activeBlindPeer = null
     this.nodes = nodes
     this.ipc = new IPC.Server({
@@ -170,6 +172,10 @@ class Sidecar extends ReadyResource {
 
   cores(params, client) {
     return new ops.Cores(params, client, this)
+  }
+
+  blindRelay(params, client) {
+    return new ops.BlindRelay(params, client, this)
   }
 
   versions(params, client) {
@@ -305,9 +311,11 @@ class Sidecar extends ReadyResource {
       LOG.trace('dht', nodes.map((node) => `  - ${node.host}:${node.port}`).join('\n'))
     }
 
-    this.dhtKeypair = await this.corestore.createKeyPair('holepunch/dht')
-    this.dht = new HyperDHT({ keyPair: this.dhtKeypair, bootstrap: this.nodes, nodes })
     this.keyPair = await this.corestore.createKeyPair('holepunch')
+    this.dhtKeypair = await this.corestore.createKeyPair('holepunch/dht')
+    this.blindRelayKeypair = await this.corestore.createKeyPair('holepunch/blind-relay')
+
+    this.dht = new HyperDHT({ keyPair: this.dhtKeypair, bootstrap: this.nodes, nodes })
 
     this.swarm = new Hyperswarm({
       dht: this.dht,

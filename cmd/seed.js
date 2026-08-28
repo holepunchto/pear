@@ -1,10 +1,9 @@
 'use strict'
 const context = require('../context')
-const bareTTY = require('bare-tty')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, isTTY, byteSize, stdio } = require('../lib/terminal.js')
+const { outputter, ansi, isTTY, byteSize, stdio, setupTTYInput } = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
@@ -101,36 +100,11 @@ module.exports = async function seed(cmd) {
     { appendMode: !ctrlTTY }
   )
 
-  if (ctrlTTY) {
-    stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
-    stdio.in?.on('data', (key) => {
-      // Ctrl-C
-      if (key.toString() === '\u0003') {
-        // restore cursor then exit
-        return stdio.out.write(`\x1b[?25h`, () => {
-          Bare.exit(0)
-        })
-      }
-
-      const selectedTable = layout.selectedTable
-      if (selectedTable) {
-        if (key.toString() === '\u001b[A') {
-          selectedTable.up()
-        } else if (key.toString() === '\u001b[B') {
-          selectedTable.down()
-        } else if (key.toString() === '\u0009') {
-          layout.selectNextScrollable()
-        }
-      }
-
-      layout.print(stdio)
-    })
-  } else if (tty === false && isTTY && !untilSync) {
-    stdio.in?.setMode?.(bareTTY.constants.MODE_RAW)
-    stdio.in?.on('data', (key) => {
-      if (key.toString() === '\u0003') Bare.exit(0)
-    })
-  }
+  setupTTYInput({
+    ctrlTTY,
+    listenForCtrlC: tty === false && isTTY && !untilSync,
+    layout
+  })
 
   stats.set('link', link)
 
