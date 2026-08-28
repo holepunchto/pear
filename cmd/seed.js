@@ -3,12 +3,10 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, isTTY, byteSize, stdio, setupTTYInput } = require('../lib/terminal.js')
+const { outputter, ansi, byteSize, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
-
-let resizeHandler
 
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
@@ -26,8 +24,9 @@ module.exports = async function seed(cmd) {
     throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
   }
   const id = Bare.pid
-  const { width } = stdio.size()
-  const ctrlTTY = !json && tty !== false && isTTY && !!width
+
+  const terminalTableRenderer = new TerminalTableRenderer({ tty, json, untilSync })
+  const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
   const stats = new DictTable([
@@ -99,24 +98,9 @@ module.exports = async function seed(cmd) {
     ],
     { appendMode: !ctrlTTY }
   )
-
-  setupTTYInput({
-    ctrlTTY,
-    listenForCtrlC: tty === false && isTTY && !untilSync,
-    layout
-  })
+  terminalTableRenderer.setTable(layout)
 
   stats.set('link', link)
-
-  if (ctrlTTY) {
-    stdio.out.off('resize', resizeHandler)
-    resizeHandler = () => {
-      layout.print(stdio, { clearScrollback: true })
-    }
-    stdio.out.on('resize', resizeHandler)
-  }
-
-  if (!json) layout.print(stdio, { clearScrollback: true })
 
   const output = outputter('seed', {
     announced: () => {
@@ -124,7 +108,7 @@ module.exports = async function seed(cmd) {
         ? `${ansi.gray('^_^')} ${ansi.bold(ansi.green('announced'))}`
         : '^_^ announced'
       peers.append([msg])
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     'peer-add': (info) => {
       info = hypercoreid.normalize(info)
@@ -132,7 +116,7 @@ module.exports = async function seed(cmd) {
         ? `${ansi.gray('o-o')} ${ansi.green('peer join')} ${ansi.gray(info)}`
         : `o-o peer join ${info}`
       peers.append([msg])
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     'peer-remove': (info) => {
       info = hypercoreid.normalize(info)
@@ -140,7 +124,7 @@ module.exports = async function seed(cmd) {
         ? `${ansi.gray('-_-')} ${ansi.yellow('peer drop')} ${ansi.gray(info)}`
         : `-_- peer drop ${info}`
       peers.append([msg])
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     'peer-sync': (info) => {
       info = hypercoreid.normalize(info)
@@ -148,7 +132,7 @@ module.exports = async function seed(cmd) {
         ? `${ansi.gray('^_^')} ${ansi.bold(ansi.green('peer sync'))} ${ansi.gray(info)}`
         : `^_^ peer sync ${info}`
       peers.append([msg])
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     final: () => {
       if (ctrlTTY) {
@@ -187,7 +171,7 @@ module.exports = async function seed(cmd) {
         network
       })
 
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     error: (err) => {
       return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
