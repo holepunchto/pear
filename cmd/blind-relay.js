@@ -3,10 +3,8 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, isTTY, stdio, setupTTYInput } = require('../lib/terminal.js')
+const { outputter, ansi, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
 const { DictTable, TableLayout } = require('../lib/table.js')
-
-let resizeHandler
 
 module.exports = async function blindRelay(cmd) {
   const ipc = context.getIPC()
@@ -18,8 +16,8 @@ module.exports = async function blindRelay(cmd) {
     throw ERR_INVALID_INPUT('--stats-interval flag must supply an integer if set')
   }
 
-  const { width } = stdio.size()
-  const ctrlTTY = !json && tty !== false && isTTY && !!width
+  const terminalTableRenderer = new TerminalTableRenderer({ tty, json })
+  const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
   const stats = new DictTable([
@@ -116,22 +114,7 @@ module.exports = async function blindRelay(cmd) {
     ],
     { appendMode: !ctrlTTY }
   )
-
-  setupTTYInput({
-    ctrlTTY,
-    listenForCtrlC: tty === false && isTTY,
-    layout
-  })
-
-  if (ctrlTTY) {
-    stdio.out.off('resize', resizeHandler)
-    resizeHandler = () => {
-      layout.print(stdio, { clearScrollback: true })
-    }
-    stdio.out.on('resize', resizeHandler)
-  }
-
-  if (!json) layout.print(stdio, { clearScrollback: true })
+  terminalTableRenderer.setTable(layout)
 
   const output = outputter('blind-relay', {
     final: () => {
@@ -142,7 +125,7 @@ module.exports = async function blindRelay(cmd) {
     },
     listening: ({ publicKey }) => {
       stats.update({ publicKey: hypercoreid.normalize(publicKey) })
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     stats: ({
       stats: {
@@ -182,7 +165,7 @@ module.exports = async function blindRelay(cmd) {
         streamsErrors,
         streamsActive
       })
-      layout.print(stdio)
+      terminalTableRenderer.render()
     },
     error: ({ code, message, stack }) =>
       `Blind-relay Error (code: ${code || 'none'}) ${message} ${stack}`
