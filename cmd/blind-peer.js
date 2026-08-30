@@ -13,6 +13,9 @@ const output = outputter('blind-peer', {
   'announce-core': ({ key }) => `Announcing core: ${key}`,
   'gc-start': ({ bytesToClear }) => `GC started, clearing ${bytesToClear} bytes`,
   'gc-done': ({ bytesCleared }) => `GC done, cleared ${bytesCleared} bytes`,
+  connecting: ({ peerKey }) => `Connecting to blind peer ${peerKey}`,
+  'adding-core': ({ key, announce }) => `Adding core ${key} to blind peer (announce: ${announce})`,
+  connected: ({ key }) => `Received connection from blind peer for core ${key}`,
   seeding: ({ key, peerKey, announce }) =>
     `Requested blind peer ${peerKey} to seed core ${key} (announce: ${announce})`,
   error: ({ code, message, stack }) =>

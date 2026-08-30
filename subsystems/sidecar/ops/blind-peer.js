@@ -166,6 +166,12 @@ module.exports = class BlindPeerOp extends Opstream {
     const corestore = sidecar.getCorestore()
     await corestore.ready()
 
+    const normalizedPeerKey = hid.normalize(blindPeerKey)
+    const normalizedCoreKey = hid.normalize(coreKey)
+
+    LOG.info('blind-peer', `Connecting to blind peer ${normalizedPeerKey}`)
+    this.push({ tag: 'connecting', data: { peerKey: normalizedPeerKey, key: normalizedCoreKey } })
+
     const client = new BlindPeering(sidecar.swarm.dht, corestore, {
       keys: [blindPeerKey],
       pick: 1
@@ -188,12 +194,27 @@ module.exports = class BlindPeerOp extends Opstream {
 
     await Promise.all(
       toAdd.map(async (core) => {
+        const subCoreKey = hid.normalize(core.key)
+        LOG.info('blind-peer', `Adding core ${subCoreKey} to blind peer ${normalizedPeerKey}`)
+        this.push({
+          tag: 'adding-core',
+          data: { key: subCoreKey, peerKey: normalizedPeerKey, announce }
+        })
         client.addCore(core, { announce })
+
         await this.untilConnected(core, blindPeerKey, { timeout })
+        LOG.info(
+          'blind-peer',
+          `Received connection from blind peer ${normalizedPeerKey} for core ${subCoreKey}`
+        )
+        this.push({
+          tag: 'connected',
+          data: { key: subCoreKey, peerKey: normalizedPeerKey }
+        })
       })
     )
 
-    const data = { key: hid.normalize(coreKey), peerKey: hid.normalize(blindPeerKey), announce }
+    const data = { key: normalizedCoreKey, peerKey: normalizedPeerKey, announce }
     LOG.info(
       'blind-peer',
       `Requested blind peer ${data.peerKey} to seed core ${data.key} (announce: ${data.announce})`
