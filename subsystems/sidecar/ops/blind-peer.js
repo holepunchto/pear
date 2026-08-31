@@ -215,7 +215,7 @@ module.exports = class BlindPeerOp extends Opstream {
     await Promise.all(
       toAdd.map(async (core) => {
         const subCoreKey = hid.normalize(core.key)
-        LOG.info('blind-peer', `Requesting core ${subCoreKey} to be added`)
+        LOG.info('blind-peer-request', `Requesting core ${subCoreKey} to be added`)
         this.push({
           tag: 'adding-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey, announce }
@@ -223,7 +223,7 @@ module.exports = class BlindPeerOp extends Opstream {
         client.addCore(core, { announce })
 
         await this.untilConnected(core, blindPeerKey, { timeout })
-        LOG.info('blind-peer', `Successfully added core ${subCoreKey}`)
+        LOG.info('blind-peer-request', `Successfully added core ${subCoreKey}`)
         this.push({
           tag: 'added-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey }
@@ -240,7 +240,7 @@ module.exports = class BlindPeerOp extends Opstream {
       coreOnly: !!coreOnly
     }
     LOG.info(
-      'blind-peer',
+      'blind-peer-request',
       `Requested blind peer to seed ${type} ${data.key} (announce: ${data.announce})`
     )
     this.final = data
