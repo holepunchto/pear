@@ -168,8 +168,7 @@ module.exports = class BlindPeerOp extends Opstream {
     await blindPeer.listen()
 
     const data = {
-      publicKey: hid.normalize(blindPeer.publicKey),
-      encryptionPublicKey: hid.normalize(blindPeer.encryptionPublicKey)
+      publicKey: hid.normalize(blindPeer.publicKey)
     }
     LOG.info('blind-peer', `Blind peer started listening using public key: ${data.publicKey}`)
     this.push({ tag: 'listening', data })
