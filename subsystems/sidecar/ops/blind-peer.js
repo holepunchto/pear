@@ -336,9 +336,7 @@ module.exports = class BlindPeerOp extends Opstream {
     timer = setTimeout(() => {
       if (done) return
       cleanup()
-      reject(
-        new ERR_OPERATION_FAILED(`Timed out waiting for blind peer ${normalizedPeerKey} to connect`)
-      )
+      reject(new ERR_OPERATION_FAILED(`Timed out waiting for blind peer ${normalizedPeerKey}`))
     }, timeout)
     timer.unref()
 
