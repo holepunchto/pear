@@ -220,7 +220,7 @@ module.exports = class BlindPeerOp extends Opstream {
           tag: 'adding-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey, announce }
         })
-        client.addCore(core, { announce })
+        await client.addCore(core, { announce })
 
         await this.untilConnected(core, blindPeerKey, { timeout })
         LOG.info('blind-peer-request', `Successfully added core ${subCoreKey}`)
