@@ -202,10 +202,12 @@ module.exports = class BlindPeerOp extends Opstream {
     if (coreOnly) {
       const core = corestore.get({ key: coreKey })
       await core.ready()
+      session.teardown(() => core.close().catch(safetyCatch))
       toAdd.push(core)
     } else {
       const drive = new Hyperdrive(corestore, coreKey)
       await drive.ready()
+      session.teardown(() => drive.close().catch(safetyCatch))
       await this.untilBlobs(drive)
 
       toAdd.push(drive.db.core)
@@ -247,13 +249,29 @@ module.exports = class BlindPeerOp extends Opstream {
   }
 
   untilBlobs(drive) {
-    return new Promise((resolve) => {
-      if (drive.blobs) resolve()
-      else {
-        drive.once('blobs', resolve)
-        this.sidecar.swarm.join(drive.discoveryKey)
-        drive.getBlobs().catch(safetyCatch)
+    return new Promise((resolve, reject) => {
+      if (drive.blobs) return resolve()
+
+      const discovery = this.sidecar.swarm.join(drive.discoveryKey, {
+        server: false,
+        client: true
+      })
+
+      const cleanup = () => {
+        drive.off('blobs', onBlobs)
+        discovery.destroy().catch(safetyCatch)
       }
+
+      const onBlobs = () => {
+        cleanup()
+        resolve()
+      }
+
+      drive.once('blobs', onBlobs)
+      drive.getBlobs().catch((err) => {
+        cleanup()
+        reject(err)
+      })
     })
   }
 
