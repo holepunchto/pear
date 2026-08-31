@@ -37,6 +37,11 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
+      key: 'app',
+      label: ctrlTTY ? 'App:' : '... app',
+      initial
+    },
+    {
       key: 'driveKey',
       label: ctrlTTY ? 'Drive Key:' : '... drive key',
       initial,
@@ -45,11 +50,6 @@ module.exports = async function seed(cmd) {
     {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
-      initial
-    },
-    {
-      key: 'semver',
-      label: ctrlTTY ? 'Semantic Version:' : '... semantic version',
       initial
     },
     {
@@ -144,6 +144,7 @@ module.exports = async function seed(cmd) {
       peers,
       driveKey,
       driveLength,
+      name,
       semver,
       discoveryKey,
       contentKey,
@@ -156,11 +157,10 @@ module.exports = async function seed(cmd) {
       const network = ctrlTTY
         ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
-
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength,
-        semver,
+        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
