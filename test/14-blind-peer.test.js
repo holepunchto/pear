@@ -554,7 +554,7 @@ test('blind peer request should timeout if blind peer is unreachable', async fun
 
   await exception(
     Helper.pick(requestStream, { tag: 'final' }),
-    /Timed out waiting for blind peer/,
+    /Timed out connecting to blind peer/,
     'request times out when blind peer is unreachable'
   )
 })
