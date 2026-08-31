@@ -75,7 +75,7 @@ test('blind peer should serve and not announce when untrusted client adds a core
   })
   teardown(() => Helper.teardownStream(requestStream))
 
-  const seeding = Helper.pick(requestStream, { tag: 'seeding' })
+  const seeding = Helper.pick(requestStream, { tag: 'final' })
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
   await execution(
@@ -155,7 +155,7 @@ test('blind peer should serve with trusted keys and announce when trusted client
   })
   teardown(() => Helper.teardownStream(requestStream))
 
-  const seeding = await Helper.pick(requestStream, { tag: 'seeding' })
+  const seeding = await Helper.pick(requestStream, { tag: 'final' })
   const seedingResult = await seeding
 
   await execution(serverMsgs['add-core'], 'core added')
@@ -338,7 +338,7 @@ test('blind peer should download and sync core data from trusted client', async 
   })
   teardown(() => Helper.teardownStream(requestStream))
 
-  const seeding = Helper.pick(requestStream, { tag: 'seeding' })
+  const seeding = Helper.pick(requestStream, { tag: 'final' })
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
   await execution(serverMsgs['announce-core'], 'server announced core')
@@ -417,7 +417,7 @@ test('blind peer should download and sync core data seeded by another host insta
   })
   teardown(() => Helper.teardownStream(requestStream))
 
-  const { seeding } = await Helper.pick(requestStream, { tag: 'seeding' })
+  const { final: seeding } = await Helper.pick(requestStream, [{ tag: 'final' }])
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
   await execution(serverMsgs['announce-core'], 'server announced core')
@@ -475,7 +475,7 @@ test('blind peer should add an unseeded core when coreOnly is true', async funct
   })
   teardown(() => Helper.teardownStream(requestStream))
 
-  const seeding = await Helper.pick(requestStream, { tag: 'seeding' })
+  const seeding = await Helper.pick(requestStream, { tag: 'final' })
   const seedingResult = await seeding
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
@@ -526,7 +526,7 @@ test('blind peer request for unseeded drive should timeout waiting for blobs', a
   teardown(() => Helper.teardownStream(requestStream))
 
   await exception(
-    withTimeout(Helper.pick(requestStream, { tag: 'seeding' }), 3000),
+    withTimeout(Helper.pick(requestStream, { tag: 'final' }), 3000),
     /Operation timed out/,
     'adding unseeded drive times out waiting for blobs'
   )
@@ -553,7 +553,7 @@ test('blind peer request should timeout if blind peer is unreachable', async fun
   teardown(() => Helper.teardownStream(requestStream))
 
   await exception(
-    Helper.pick(requestStream, { tag: 'seeding' }),
+    Helper.pick(requestStream, { tag: 'final' }),
     /Timed out waiting for blind peer/,
     'request times out when blind peer is unreachable'
   )

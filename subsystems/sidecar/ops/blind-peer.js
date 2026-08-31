@@ -25,6 +25,7 @@ module.exports = class BlindPeerOp extends Opstream {
 
   identity() {
     this.final = {
+      subcommand: 'identity',
       publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey)
     }
   }
@@ -191,9 +192,6 @@ module.exports = class BlindPeerOp extends Opstream {
     const normalizedPeerKey = hid.normalize(blindPeerKey)
     const normalizedCoreKey = hid.normalize(coreKey)
 
-    LOG.info('blind-peer', `Connecting to blind peer ${normalizedPeerKey}`)
-    this.push({ tag: 'connecting', data: { peerKey: normalizedPeerKey, key: normalizedCoreKey } })
-
     const client = new BlindPeering(sidecar.swarm.dht, corestore, {
       keys: [blindPeerKey],
       pick: 1
@@ -217,7 +215,7 @@ module.exports = class BlindPeerOp extends Opstream {
     await Promise.all(
       toAdd.map(async (core) => {
         const subCoreKey = hid.normalize(core.key)
-        LOG.info('blind-peer', `Adding core ${subCoreKey} to blind peer ${normalizedPeerKey}`)
+        LOG.info('blind-peer', `Requesting core ${subCoreKey} to be added`)
         this.push({
           tag: 'adding-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey, announce }
@@ -225,23 +223,27 @@ module.exports = class BlindPeerOp extends Opstream {
         client.addCore(core, { announce })
 
         await this.untilConnected(core, blindPeerKey, { timeout })
-        LOG.info(
-          'blind-peer',
-          `Received connection from blind peer ${normalizedPeerKey} for core ${subCoreKey}`
-        )
+        LOG.info('blind-peer', `Successfully added core ${subCoreKey}`)
         this.push({
-          tag: 'connected',
+          tag: 'added-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey }
         })
       })
     )
 
-    const data = { key: normalizedCoreKey, peerKey: normalizedPeerKey, announce }
+    const type = coreOnly ? 'core' : 'drive'
+    const data = {
+      subcommand: 'request',
+      key: normalizedCoreKey,
+      peerKey: normalizedPeerKey,
+      announce,
+      coreOnly: !!coreOnly
+    }
     LOG.info(
       'blind-peer',
-      `Requested blind peer ${data.peerKey} to seed core ${data.key} (announce: ${data.announce})`
+      `Requested blind peer to seed ${type} ${data.key} (announce: ${data.announce})`
     )
-    this.push({ tag: 'seeding', data })
+    this.final = data
   }
 
   untilBlobs(drive) {

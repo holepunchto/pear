@@ -13,11 +13,9 @@ const output = outputter('blind-peer', {
   'announce-core': ({ key }) => `Announcing core: ${key}`,
   'gc-start': ({ bytesToClear }) => `GC started, clearing ${bytesToClear} bytes`,
   'gc-done': ({ bytesCleared }) => `GC done, cleared ${bytesCleared} bytes`,
-  connecting: ({ peerKey }) => `Connecting to blind peer ${peerKey}`,
-  'adding-core': ({ key, announce }) => `Adding core ${key} to blind peer (announce: ${announce})`,
-  connected: ({ key }) => `Received connection from blind peer for core ${key}`,
-  seeding: ({ key, peerKey, announce }) =>
-    `Requested blind peer ${peerKey} to seed core ${key} (announce: ${announce})`,
+  'adding-core': ({ key, announce }) =>
+    `Requesting core ${key} to be added (announce: ${announce})`,
+  'added-core': ({ key }) => `Successfully added core ${key}`,
   error: ({ code, message, stack }) =>
     `Blind Peer Error (code: ${code || 'none'}) ${message} ${stack}`,
   'delete-blocked': ({ key, peerKey }) =>
@@ -34,13 +32,21 @@ const output = outputter('blind-peer', {
   'core-client-mode-changed': ({ key, isClient }) =>
     `Announced core ${isClient ? 'enabled' : 'disabled'} client mode: ${key}`,
   final: (data) => {
-    return data.publicKey
-      ? {
-          output: 'print',
-          success: Infinity,
-          message: data.publicKey
-        }
-      : false
+    if (data.subcommand === 'identity') {
+      return {
+        output: 'print',
+        success: Infinity,
+        message: data.publicKey
+      }
+    }
+    if (data.subcommand === 'request') {
+      return {
+        output: 'status',
+        success: true,
+        message: `Requested blind peer to seed ${data.coreOnly ? 'core' : 'drive'} ${data.key} (announce: ${data.announce})`
+      }
+    }
+    return false
   }
 })
 
