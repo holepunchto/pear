@@ -8,6 +8,8 @@ const BlindPeer = require('blind-peer')
 const BlindPeering = require('blind-peering')
 const Hyperdrive = require('hyperdrive')
 
+const CORE_DOWNLOADED_DEBOUNCE_MS = 10000
+
 module.exports = class BlindPeerOp extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
@@ -50,9 +52,20 @@ module.exports = class BlindPeerOp extends Opstream {
       })
     )
     sidecar.activeBlindPeer = blindPeer
+
+    const downloadedDebounces = new Map()
+    const clearDownloadedDebounces = () => {
+      for (const timer of downloadedDebounces.values()) {
+        clearTimeout(timer)
+      }
+      downloadedDebounces.clear()
+    }
+
     blindPeer.on('close', () => {
+      clearDownloadedDebounces()
       if (sidecar.activeBlindPeer === blindPeer) sidecar.activeBlindPeer = null
     })
+    session.teardown(clearDownloadedDebounces)
 
     blindPeer.on('flush-error', (err) => LOG.error('blind-peer', 'Flush error', err))
     blindPeer.on('muxer-error', (err, stream) => {
@@ -114,9 +127,18 @@ module.exports = class BlindPeerOp extends Opstream {
       this.push({ tag: 'announced-initial-cores', data: {} })
     })
     blindPeer.on('core-downloaded', (core) => {
-      const data = { key: hid.normalize(core.key) }
-      LOG.info('blind-peer', `Core fully downloaded: ${data.key}`)
-      this.push({ tag: 'core-downloaded', data })
+      const key = hid.normalize(core.key)
+      if (downloadedDebounces.has(key)) {
+        clearTimeout(downloadedDebounces.get(key))
+      }
+      const timer = setTimeout(() => {
+        downloadedDebounces.delete(key)
+        const data = { key }
+        LOG.info('blind-peer', `Core fully downloaded: ${data.key}`)
+        this.push({ tag: 'core-downloaded', data })
+      }, CORE_DOWNLOADED_DEBOUNCE_MS)
+      timer.unref()
+      downloadedDebounces.set(key, timer)
     })
     blindPeer.on('core-append', (core) => {
       const data = { key: hid.normalize(core.key), length: core.length }
