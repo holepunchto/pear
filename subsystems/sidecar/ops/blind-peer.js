@@ -253,47 +253,47 @@ module.exports = class BlindPeerOp extends Opstream {
   }
 
   async addCore(client, core, { announce, peerKey, timeout } = {}) {
+    const { promise, reject } = Promise.withResolvers()
     let timer = null
+
+    timer = setTimeout(() => {
+      reject(new ERR_OPERATION_FAILED(`Timed out connecting to blind peer ${peerKey} to connect`))
+    }, timeout)
+    timer.unref()
+
     try {
-      await Promise.race([
-        client.addCore(core, { announce }),
-        new Promise((_, reject) => {
-          timer = setTimeout(() => {
-            reject(new ERR_OPERATION_FAILED(`Timed out connecting to blind peer ${peerKey}`))
-          }, timeout)
-          timer.unref()
-        })
-      ])
+      await Promise.race([client.addCore(core, { announce }), promise])
     } finally {
       if (timer) clearTimeout(timer)
     }
   }
 
   untilBlobs(drive) {
-    return new Promise((resolve, reject) => {
-      if (drive.blobs) return resolve()
+    if (drive.blobs) return Promise.resolve()
 
-      const discovery = this.sidecar.swarm.join(drive.discoveryKey, {
-        server: false,
-        client: true
-      })
-
-      const cleanup = () => {
-        drive.off('blobs', onBlobs)
-        discovery.destroy().catch(safetyCatch)
-      }
-
-      const onBlobs = () => {
-        cleanup()
-        resolve()
-      }
-
-      drive.once('blobs', onBlobs)
-      drive.getBlobs().catch((err) => {
-        cleanup()
-        reject(err)
-      })
+    const { promise, resolve, reject } = Promise.withResolvers()
+    const discovery = this.sidecar.swarm.join(drive.discoveryKey, {
+      server: false,
+      client: true
     })
+
+    const cleanup = () => {
+      drive.off('blobs', onBlobs)
+      discovery.destroy().catch(safetyCatch)
+    }
+
+    const onBlobs = () => {
+      cleanup()
+      resolve()
+    }
+
+    drive.once('blobs', onBlobs)
+    drive.getBlobs().catch((err) => {
+      cleanup()
+      reject(err)
+    })
+
+    return promise
   }
 
   untilConnected(core, peerKey, { timeout = 15000 } = {}) {
@@ -302,58 +302,55 @@ module.exports = class BlindPeerOp extends Opstream {
       return Promise.resolve()
     }
 
-    return new Promise((resolve, reject) => {
-      let timer = null
-      let done = false
+    const { promise, resolve, reject } = Promise.withResolvers()
+    let timer = null
+    let done = false
 
-      const cleanup = () => {
-        if (done) return
-        done = true
-        if (timer) clearTimeout(timer)
-        core.off('peer-add', onPeerAdd)
-        core.off('close', onClose)
-      }
+    const cleanup = () => {
+      if (done) return
+      done = true
+      if (timer) clearTimeout(timer)
+      core.off('peer-add', onPeerAdd)
+      core.off('close', onClose)
+    }
 
-      const onPeerAdd = (peer) => {
-        if (hid.normalize(peer.remotePublicKey) === normalizedPeerKey) {
-          cleanup()
-          resolve()
-        }
-      }
-
-      const onClose = () => {
-        if (done) return
-        cleanup()
-        reject(new ERR_OPERATION_FAILED('Core was closed before blind peer connected'))
-      }
-
-      const onTeardown = () => {
-        if (done) return
-        cleanup()
-        reject(new ERR_OPERATION_FAILED('Session was closed before blind peer connected'))
-      }
-
-      if (timeout > 0) {
-        timer = setTimeout(() => {
-          if (done) return
-          cleanup()
-          reject(
-            new ERR_OPERATION_FAILED(
-              `Timed out waiting for blind peer ${normalizedPeerKey} to connect`
-            )
-          )
-        }, timeout)
-        timer.unref()
-      }
-
-      core.on('peer-add', onPeerAdd)
-      core.on('close', onClose)
-      this.session.teardown(onTeardown)
-
-      if (core.peers.some((peer) => hid.normalize(peer.remotePublicKey) === normalizedPeerKey)) {
+    const onPeerAdd = (peer) => {
+      if (hid.normalize(peer.remotePublicKey) === normalizedPeerKey) {
         cleanup()
         resolve()
       }
-    })
+    }
+
+    const onClose = () => {
+      if (done) return
+      cleanup()
+      reject(new ERR_OPERATION_FAILED('Core was closed before blind peer connected'))
+    }
+
+    const onTeardown = () => {
+      if (done) return
+      cleanup()
+      reject(new ERR_OPERATION_FAILED('Session was closed before blind peer connected'))
+    }
+
+    timer = setTimeout(() => {
+      if (done) return
+      cleanup()
+      reject(
+        new ERR_OPERATION_FAILED(`Timed out waiting for blind peer ${normalizedPeerKey} to connect`)
+      )
+    }, timeout)
+    timer.unref()
+
+    core.on('peer-add', onPeerAdd)
+    core.on('close', onClose)
+    this.session.teardown(onTeardown)
+
+    if (core.peers.some((peer) => hid.normalize(peer.remotePublicKey) === normalizedPeerKey)) {
+      cleanup()
+      resolve()
+    }
+
+    return promise
   }
 }
