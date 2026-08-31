@@ -222,7 +222,11 @@ module.exports = class BlindPeerOp extends Opstream {
           tag: 'adding-core',
           data: { key: subCoreKey, peerKey: normalizedPeerKey, announce }
         })
-        await client.addCore(core, { announce })
+        await this.addCore(client, core, {
+          announce,
+          peerKey: normalizedPeerKey,
+          timeout
+        })
 
         await this.untilConnected(core, blindPeerKey, { timeout })
         LOG.info('blind-peer-request', `Successfully added core ${subCoreKey}`)
@@ -246,6 +250,23 @@ module.exports = class BlindPeerOp extends Opstream {
       `Requested blind peer to seed ${type} ${data.key} (announce: ${data.announce})`
     )
     this.final = data
+  }
+
+  async addCore(client, core, { announce, peerKey, timeout } = {}) {
+    let timer = null
+    try {
+      await Promise.race([
+        client.addCore(core, { announce }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            reject(new ERR_OPERATION_FAILED(`Timed out connecting to blind peer ${peerKey}`))
+          }, timeout)
+          timer.unref()
+        })
+      ])
+    } finally {
+      if (timer) clearTimeout(timer)
+    }
   }
 
   untilBlobs(drive) {
@@ -322,7 +343,7 @@ module.exports = class BlindPeerOp extends Opstream {
             )
           )
         }, timeout)
-        if (timer.unref) timer.unref()
+        timer.unref()
       }
 
       core.on('peer-add', onPeerAdd)
