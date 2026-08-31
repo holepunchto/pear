@@ -176,7 +176,7 @@ module.exports = class BlindPeerOp extends Opstream {
     await new Promise((resolve) => session.teardown(resolve))
   }
 
-  async request({ key, peerKey, announce = true, coreOnly = false, timeout = 15000 } = {}) {
+  async request({ key, peerKey, announce = true, coreOnly = false, timeout = 30000 } = {}) {
     const { sidecar, session } = this
 
     if (!key) throw ERR_INVALID_INPUT('A core key must be specified')
