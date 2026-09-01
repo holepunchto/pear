@@ -8,7 +8,7 @@ const { platform, arch, isWindows } = require('which-runtime')
 const LocalDrive = require('localdrive')
 const Corestore = require('corestore')
 
-const rig = new Helper.Rig({ keepAlive: false })
+const rig = new Helper.Rig({ dir: path.join(Helper.tmp, 'shutdown-pear') })
 
 const SPINDOWN_TIMEOUT = 15_000
 

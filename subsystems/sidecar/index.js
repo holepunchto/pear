@@ -30,7 +30,8 @@ const ops = {
   Data: require('./ops/data'),
   Multisig: require('./ops/multisig'),
   Cores: require('./ops/cores'),
-  BlindRelay: require('./ops/blind-relay')
+  BlindRelay: require('./ops/blind-relay'),
+  BlindPeer: require('./ops/blind-peer')
 }
 
 const SWARM_DELAY = 5000
@@ -69,6 +70,7 @@ class Sidecar extends ReadyResource {
 
     this.corestore = corestore
     this.activeBlindRelay = null
+    this.activeBlindPeer = null
     this.nodes = nodes
     this.ipc = new IPC.Server({
       handlers: this,
@@ -188,6 +190,10 @@ class Sidecar extends ReadyResource {
       platform: { key: UPGRADE, version, fork, length },
       runtimes
     }
+  }
+
+  blindPeer(params, client) {
+    return new ops.BlindPeer(params, client, this)
   }
 
   multisig(params, client) {

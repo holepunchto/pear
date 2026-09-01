@@ -53,6 +53,12 @@ module.exports = async function seed(cmd) {
       initial
     },
     {
+      key: 'blobsByteLength',
+      label: ctrlTTY ? 'Blobs Size:' : '... blobs size',
+      initial,
+      transform: byteSize
+    },
+    {
       key: 'discoveryKey',
       label: ctrlTTY ? 'Discovery Key:' : '... discovery key',
       initial,
@@ -144,6 +150,7 @@ module.exports = async function seed(cmd) {
       peers,
       driveKey,
       driveLength,
+      blobsByteLength,
       name,
       semver,
       discoveryKey,
@@ -160,6 +167,7 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength,
+        blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)

@@ -15,7 +15,7 @@ test('pear seed basic stage and seed', async function ({
   timeout
 }) {
   timeout(180000)
-  plan(17)
+  plan(18)
 
   const dir = Helper.fixture('versions')
 
@@ -54,6 +54,7 @@ test('pear seed basic stage and seed', async function ({
   const stats = await until.stats
   is(stats.driveKey, hypercoreid.normalize(stats.driveKey), 'stats driveKey is z32')
   is(stats.driveLength, addendum.version, 'stats have driveLength')
+  ok(Number.isInteger(stats.blobsByteLength), 'stats have blobsByteLength')
   is(stats.name, 'versions', 'stats have package name')
   is(stats.semver, '', 'stats have without semver')
   is(stats.discoveryKey, hypercoreid.normalize(stats.discoveryKey), 'stats discoveryKey is z32')
@@ -141,7 +142,7 @@ test('pear seed announces, join, drop', async function ({
 })
 
 test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
-  plan(3)
+  plan(4)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -153,6 +154,7 @@ test('pear seed empty drive has pending content key', async function ({ is, plan
   const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
 
   is(stats.contentKey, 'pending', 'content key is pending')
+  is(stats.blobsByteLength, 0, 'blobs byteLength is zero')
   is(stats.name, '', 'name is empty')
   is(stats.semver, '', 'semver is empty')
 })
@@ -166,7 +168,7 @@ test('pear seed fully syncs db and blobs cores', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(2)
+  plan(3)
 
   const sourceStore = new Corestore(await tmp())
   teardown(() => sourceStore.close())
@@ -200,8 +202,12 @@ test('pear seed fully syncs db and blobs cores', async function ({
   const seeding = helper.seed({ link })
   teardown(() => Helper.teardownStream(seeding))
   const totalBlocks = sourceDrive.db.core.length + sourceBlobs.core.length
-  await Helper.pick(seeding, { tag: 'stats', data: { download: { totalBlocks } } })
+  const stats = await Helper.pick(seeding, {
+    tag: 'stats',
+    data: { download: { totalBlocks } }
+  })
 
+  is(stats.blobsByteLength, sourceBlobs.core.byteLength, 'blobs size matches')
   is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
   is(blobBlocks, sourceBlobs.core.length, 'synced blobs core')
 })

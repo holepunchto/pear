@@ -23,6 +23,7 @@ module.exports = class Seed extends Opstream {
         peers: drive.core.peers.length,
         driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
         driveLength: drive.core.length,
+        blobsByteLength: drive.blobs?.core.byteLength ?? 0,
         name,
         semver,
         discoveryKey: drive.discoveryKey ? hypercoreid.encode(drive.discoveryKey) : undefined,
