@@ -8,8 +8,6 @@ const BlindPeer = require('blind-peer')
 const BlindPeering = require('blind-peering')
 const Hyperdrive = require('hyperdrive')
 
-const CORE_DOWNLOADED_DEBOUNCE_MS = 10000
-
 module.exports = class BlindPeerOp extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
@@ -30,7 +28,7 @@ module.exports = class BlindPeerOp extends Opstream {
     }
   }
 
-  async start({ trustedPeers = [] } = {}) {
+  async start({ trustedPeers = [], downloadedDebounce = 10_000 } = {}) {
     const { sidecar, session } = this
 
     if (sidecar.activeBlindPeer) {
@@ -137,7 +135,7 @@ module.exports = class BlindPeerOp extends Opstream {
         const data = { key }
         LOG.info('blind-peer', `Core fully downloaded: ${data.key}`)
         this.push({ tag: 'core-downloaded', data })
-      }, CORE_DOWNLOADED_DEBOUNCE_MS)
+      }, downloadedDebounce)
       timer.unref()
       downloadedDebounces.set(key, timer)
     })

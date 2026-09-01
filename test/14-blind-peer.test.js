@@ -307,7 +307,7 @@ test('blind peer should download and sync core data from trusted client', async 
 
   const serverStream = server.blindPeer({
     subcommand: 'start',
-    data: { trustedPeers: [clientPubKey] }
+    data: { trustedPeers: [clientPubKey], downloadedDebounce: 500 }
   })
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [
@@ -400,7 +400,7 @@ test('blind peer should download and sync core data seeded by another host insta
 
   const serverStream = server.blindPeer({
     subcommand: 'start',
-    data: { trustedPeers: [clientPubKey] }
+    data: { trustedPeers: [clientPubKey], downloadedDebounce: 500 }
   })
   teardown(() => Helper.teardownStream(serverStream))
   const serverMsgs = await Helper.pick(serverStream, [
