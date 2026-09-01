@@ -24,7 +24,8 @@ const commands = {
   gc: require('./gc'),
   cores: require('./cores'),
   blindRelay: require('./blind-relay'),
-  versions: require('./versions')
+  versions: require('./versions'),
+  blindPeer: require('./blind-peer')
 }
 
 module.exports = async (ipc, argv = cmdArgs) => {
@@ -488,6 +489,30 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.sidecar
   )
 
+  const blindPeer = command(
+    'blind-peer',
+    summary('Manage blind peers'),
+    command(
+      'start',
+      summary('Start a blind peer'),
+      flag('--trusted-peer <peer>', 'Trusted peer key to allow requests from').multiple(),
+      commands.blindPeer
+    ),
+    command('identity', summary('Show peer identity key'), commands.blindPeer),
+    command(
+      'request',
+      summary('Request a blind peer to seed'),
+      arg('<key>', 'Key to be seeded'),
+      flag('--peer <peer>', 'Peer key to request from'),
+      flag('--core-only', 'Request only the db core instead of also the content core'),
+      commands.blindPeer
+    ),
+    flag('--json', 'Newline delimited JSON output'),
+    () => {
+      console.log(blindPeer.help())
+    }
+  )
+
   const gc = command(
     'gc',
     summary('Advanced. Clear dangling resources'),
@@ -578,6 +603,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     data,
     changelog,
     sidecar,
+    blindPeer,
     gc,
     cores,
     blindRelay,

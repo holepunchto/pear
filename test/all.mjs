@@ -22,6 +22,7 @@ async function runTests() {
   await test.load(import.meta.resolve('./12-cores.test.js'))
   await test.load(import.meta.resolve('./13-gc.test.js'))
   await test.load(import.meta.resolve('./14-blind-relay.test.js'))
+  await test.load(import.meta.resolve('./14-blind-peer.test.js'))
 
   test.resume()
 }

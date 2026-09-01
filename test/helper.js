@@ -76,8 +76,7 @@ class Helper extends IPC.Client {
     const connect = opts.expectSidecar
       ? true
       : () => {
-          if (log) spawn(runtime, args, { stdio: 'inherit' })
-          else daemon(runtime, args)
+          this.child = log ? spawn(runtime, args, { stdio: 'inherit' }) : daemon(runtime, args)
         }
     super({ lock, socketPath, connectTimeout, connect })
     this.log = log
@@ -217,16 +216,31 @@ class Helper extends IPC.Client {
     if (NO_GC) return
     await fs.promises.rm(dir, { recursive: true }).catch(() => {})
   }
+
+  static async untilExit(child) {
+    if (child.once) return new Promise((resolve) => child.once('exit', resolve))
+    while (true) {
+      try {
+        os.kill(child.pid, 0)
+      } catch {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+  }
 }
 
 class Rig {
-  localDir = path.join(tmp, 'rig-pear')
-  platformDir = path.join(this.localDir, 'pear')
   artefactDir = Helper.localDir
   tmp = tmp
-  constructor() {}
 
-  setup = async ({ comment, timeout }) => {
+  constructor(opts = {}) {
+    this.localDir = opts.dir || path.join(tmp, 'rig-pear')
+    this.platformDir = opts.platformDir || path.join(this.localDir, 'pear')
+    this.artefactDir = opts.artefactDir || Helper.localDir
+  }
+
+  setup = async ({ comment = () => {}, timeout = () => {} } = {}) => {
     timeout(180000)
 
     comment('preparing rig platform...')
@@ -258,8 +272,8 @@ class Rig {
     comment('rig platform prepared')
   }
 
-  cleanup = async ({ comment }) => {
-    await fs.promises.rm(this.localDir, { recursive: true })
+  cleanup = async ({ comment = () => {} } = {}) => {
+    await Helper.gc(this.localDir)
     comment('rig sidecar cleaned up')
   }
 }
