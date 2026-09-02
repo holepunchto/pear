@@ -3,11 +3,10 @@ const LocalDrive = require('localdrive')
 const unixPathResolve = require('unix-path-resolve')
 const plink = require('pear-link')
 const ReadyResource = require('ready-resource')
-const fs = require('bare-fs')
-const path = require('bare-path')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const { parse } = require('../../../lib/link')
+const { localPkg, validate } = require('../../../lib/package')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
@@ -17,6 +16,7 @@ module.exports = class Stage extends Opstream {
   async #op({ link, dir, dryRun, truncate, ignore, purge, only, pkg }) {
     const { session, sidecar } = this
     const parsed = parse(link)
+    await validate(dir)
 
     pkg = pkg || (await localPkg(dir))
 
@@ -242,13 +242,5 @@ class GlobDrive extends ReadyResource {
       return false
     }
     return this.ignore
-  }
-}
-
-async function localPkg(dir) {
-  try {
-    return JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
-  } catch (err) {
-    LOG.error(err)
   }
 }

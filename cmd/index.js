@@ -94,7 +94,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       'If you pass a versioned verlink, only its key is used — staging always targets the current head, ignoring the version segment.'
     ),
     arg('[dir=.]', 'Project directory to stage from').hint(
-      'Defaults to the directory you run the command from. If it has no package.json, Pear searches upward through parent directories for one.'
+      'Defaults to the directory you run the command from.'
     ),
     flag('--dry-run|-d', 'Execute a stage without writing').hint(
       'Does not guard --truncate: if --truncate is also given, the drive is truncated for real before any dry-run check runs.'
@@ -640,6 +640,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_LEGACY', messageOnly],
         ['ERR_INVALID_TEMPLATE', messageOnly],
         ['ERR_INVALID_PROJECT_DIR', messageOnly],
+        ['ERR_INVALID_MANIFEST', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
         ['ERR_NOT_FOUND', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]

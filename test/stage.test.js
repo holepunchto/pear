@@ -1,5 +1,6 @@
 'use strict'
 const test = require('brittle')
+const path = require('bare-path')
 const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
@@ -550,4 +551,174 @@ test('pear stage keeps the same key when restaging with new name', async ({
   is(addendumB.key, touchedKey, 'restaged key matches touched link key')
   is(addendumA.key, addendumB.key, 'restaging keeps the same app key')
   ok(addendumB.version > addendumA.version, 'restaging increments app version')
+})
+
+test('pear stage folder without package.json', async ({ teardown, ok, is, tmp }) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const to = new Localdrive(tmpdir)
+  await to.put('/index.js', 'module.exports = {}\n')
+
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', (data) => {
+    if (data?.tag === 'byte-diff') stagedFiles.push(data.data.message)
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'staging' }, { tag: 'final' }])
+  const info = await staged.staging
+  await staged.final
+
+  is(info.name, null, 'staging name is null without a package.json')
+  ok(stagedFiles.includes('/index.js'), 'folder without package.json is staged')
+})
+
+test('pear stage does not walk up to a parent package.json', async ({
+  teardown,
+  ok,
+  absent,
+  tmp
+}) => {
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const to = new Localdrive(tmpdir)
+  await to.put('/package.json', JSON.stringify({ name: 'parent', main: 'index.js' }))
+  await to.put('/index.js', 'module.exports = {}\n')
+  await to.put('/src/app.js', 'module.exports = {}\n')
+
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: path.join(tmpdir, 'src'), dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  const stagedFiles = []
+  staging.on('data', (data) => {
+    if (data?.tag === 'byte-diff') stagedFiles.push(data.data.message)
+  })
+
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+
+  ok(stagedFiles.includes('/app.js'), 'subdirectory contents are staged')
+  absent(stagedFiles.includes('/package.json'), 'parent package.json is not staged')
+  absent(stagedFiles.includes('/index.js'), 'parent files are not staged')
+})
+
+test('pear stage with malformed package.json', async ({ teardown, is, fail, plan, tmp }) => {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const to = new Localdrive(tmpdir)
+  await to.put('/package.json', '{ "name": "malformed", }')
+
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  try {
+    const staged = await Helper.pick(staging, [{ tag: 'final' }])
+    await staged.final
+    fail('stage should error on a malformed package.json')
+  } catch (err) {
+    is(err.code, 'ERR_INVALID_MANIFEST', 'malformed package.json errors')
+  }
+})
+
+test('pear stage with a package.json that is not a JSON object', async ({
+  teardown,
+  is,
+  fail,
+  plan,
+  tmp
+}) => {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const to = new Localdrive(tmpdir)
+  await to.put('/package.json', '[]')
+
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: tmpdir, dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  try {
+    const staged = await Helper.pick(staging, [{ tag: 'final' }])
+    await staged.final
+    fail('stage should error on a non-object package.json')
+  } catch (err) {
+    is(err.code, 'ERR_INVALID_MANIFEST', 'non-object package.json errors')
+  }
+})
+
+test('pear stage with a directory that does not exist', async ({
+  teardown,
+  is,
+  fail,
+  plan,
+  tmp
+}) => {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: path.join(tmpdir, 'missing'), dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  try {
+    const staged = await Helper.pick(staging, [{ tag: 'final' }])
+    await staged.final
+    fail('stage should error on a directory that does not exist')
+  } catch (err) {
+    is(err.code, 'ERR_INVALID_PROJECT_DIR', 'missing directory errors')
+  }
+})
+
+test('pear stage with a file as the project directory', async ({
+  teardown,
+  is,
+  fail,
+  plan,
+  tmp
+}) => {
+  plan(1)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+
+  const tmpdir = await tmp()
+  const to = new Localdrive(tmpdir)
+  await to.put('/index.js', 'module.exports = {}\n')
+
+  const link = await Helper.touchLink(helper)
+  const staging = helper.stage({ link, dir: path.join(tmpdir, 'index.js'), dryRun: false })
+  teardown(() => Helper.teardownStream(staging))
+
+  try {
+    const staged = await Helper.pick(staging, [{ tag: 'final' }])
+    await staged.final
+    fail('stage should error when the project directory is a file')
+  } catch (err) {
+    is(err.code, 'ERR_INVALID_PROJECT_DIR', 'file as project directory errors')
+  }
 })

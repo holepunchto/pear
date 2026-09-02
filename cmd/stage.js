@@ -1,14 +1,13 @@
 'use strict'
 const context = require('../context')
 const os = require('bare-os')
-const fs = require('bare-fs')
-const path = require('bare-path')
 const { isAbsolute, resolve } = require('bare-path')
-const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, hint, confirm } = require('../lib/terminal.js')
+const { ERR_INVALID_INPUT, ERR_INVALID_PROJECT_DIR } = require('pear-errors')
+const { outputter, ansi, hint, confirm, isTTY } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
+const { localPkg } = require('../lib/package')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current, dir }) => {
@@ -50,6 +49,11 @@ module.exports = async function stage(cmd) {
   const pkg = await localPkg(dir)
 
   if (!pkg && !skipPackageJson) {
+    if (json || isTTY === false) {
+      throw ERR_INVALID_PROJECT_DIR(
+        `package.json not found in ${dir}. Pass --skip-package-json to stage without one`
+      )
+    }
     const dialog =
       ansi.warning +
       `The folder does not contain a valid package.json file. To confirm type "STAGE"\n`
@@ -91,10 +95,4 @@ module.exports = async function stage(cmd) {
       ])
     }
   }
-}
-
-async function localPkg(dir) {
-  try {
-    return JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
-  } catch {}
 }
