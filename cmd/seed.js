@@ -12,6 +12,7 @@ module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
   const untilSync = cmd.flags.untilSync
+  const blindPeer = cmd.flags.blindPeer
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   parse(link)
@@ -22,6 +23,9 @@ module.exports = async function seed(cmd) {
   }
   if (untilSync?.some((key) => hypercoreid.isValid(key) === false)) {
     throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
+  }
+  if (blindPeer && !hypercoreid.isValid(blindPeer)) {
+    throw ERR_INVALID_INPUT('--blind-peer <key> must supply a valid z32 key')
   }
   const id = Bare.pid
 
@@ -192,6 +196,7 @@ module.exports = async function seed(cmd) {
       id,
       link,
       untilSync,
+      blindPeer,
       statsInterval,
       cmdArgs
     })
