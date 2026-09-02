@@ -1,9 +1,12 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
+const safetyCatch = require('safety-catch')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const Replicator = require('../lib/replicator')
+const { createBlindPeering, requestCores } = require('../lib/blind-peer')
 const { parse } = require('../../../lib/link')
 
 module.exports = class Seed extends Opstream {
@@ -45,13 +48,23 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, untilSync, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, untilSync, blindPeer, statsInterval = 500 } = {}) {
+    if (
+      untilSync &&
+      (!Array.isArray(untilSync) || untilSync.some((k) => !hypercoreid.isValid(k)))
+    ) {
+      throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
+    }
+    if (blindPeer && !hypercoreid.isValid(blindPeer)) {
+      throw ERR_INVALID_INPUT('--blind-peer <key> must supply a valid z32 key')
+    }
+
     const { client, session } = this
     const parsed = parse(link)
     const key = parsed?.drive.key
 
     // not an app but a long running process, setting userData for restart recognition:
-    client.userData = { state: { cmdArgs, flags: { link, untilSync } } }
+    client.userData = { state: { cmdArgs, flags: { link, untilSync, blindPeer } } }
 
     this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
@@ -134,6 +147,16 @@ module.exports = class Seed extends Opstream {
     blobs.core.download({ start: 0, end: -1 })
 
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
+
+    if (blindPeer) {
+      const blindPeerClient = createBlindPeering(this.sidecar.swarm.dht, corestore, blindPeer)
+      session.teardown(() => blindPeerClient.close().catch(safetyCatch))
+      await requestCores(blindPeerClient, [drive.db.core, blobs.core], {
+        peerKey: blindPeer,
+        announce: true,
+        teardown: (fn) => session.teardown(fn)
+      })
+    }
 
     if (untilSync) {
       const synced = (core, key) => {
