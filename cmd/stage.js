@@ -31,9 +31,8 @@ const output = outputter('stage', {
 
 module.exports = async function stage(cmd) {
   const ipc = context.getIPC()
-  const { dryRun, bare, json, ignore, purge, name, only } = cmd.flags
+  const { dryRun, bare, json, ignore, purge, name, only, skipPackageJson } = cmd.flags
   let truncate = cmd.flags.truncate
-  let skipPackageJson = cmd.flags.skipPackageJson
 
   if (truncate !== undefined) {
     truncate = +truncate
@@ -50,7 +49,7 @@ module.exports = async function stage(cmd) {
 
   const pkg = await localPkg(dir)
 
-  if (!pkg) {
+  if (!pkg && !skipPackageJson) {
     const dialog =
       ansi.warning +
       `The folder does not contain a valid package.json file. To confirm type "STAGE"\n`
@@ -59,7 +58,6 @@ module.exports = async function stage(cmd) {
     const validation = (value) => value === 'STAGE'
     const msg = '\n' + ansi.cross + ' uppercase STAGE to confirm\n'
     await confirm(dialog, ask, delim, validation, msg)
-    skipPackageJson = true
   }
 
   const id = Bare.pid
@@ -73,7 +71,6 @@ module.exports = async function stage(cmd) {
     purge,
     name,
     truncate,
-    skipPackageJson,
     only,
     pkg,
     cmdArgs
