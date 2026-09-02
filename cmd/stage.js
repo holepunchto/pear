@@ -1,16 +1,18 @@
 'use strict'
 const context = require('../context')
 const os = require('bare-os')
+const fs = require('bare-fs')
+const path = require('bare-path')
 const { isAbsolute, resolve } = require('bare-path')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, hint } = require('../lib/terminal.js')
+const { outputter, ansi, hint, confirm } = require('../lib/terminal.js')
 const { byteDiff } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
 const output = outputter('stage', {
-  staging: ({ name, link, verlink, current }) => {
-    return `\n${ansi.pear} Staging ${name}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n`
+  staging: ({ name, link, verlink, current, dir }) => {
+    return `\n${ansi.pear} Staging ${name || dir}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n`
   },
   skipping: ({ reason }) => 'Skipping (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
@@ -31,6 +33,8 @@ module.exports = async function stage(cmd) {
   const ipc = context.getIPC()
   const { dryRun, bare, json, ignore, purge, name, only } = cmd.flags
   let truncate = cmd.flags.truncate
+  let skipPackageJson = cmd.flags.skipPackageJson
+
   if (truncate !== undefined) {
     truncate = +truncate
     if (Number.isInteger(truncate) === false) {
@@ -43,6 +47,21 @@ module.exports = async function stage(cmd) {
 
   let { dir = cwd } = cmd.args
   if (isAbsolute(dir) === false) dir = dir ? resolve(os.cwd(), dir) : os.cwd()
+
+  const pkg = await localPkg(dir)
+
+  if (!pkg) {
+    const dialog =
+      ansi.warning +
+      `The folder does not contain a valid package.json file. To confirm type "STAGE"\n`
+    const ask = `Stage folder without package.json`
+    const delim = '?'
+    const validation = (value) => value === 'STAGE'
+    const msg = '\n' + ansi.cross + ' uppercase STAGE to confirm\n'
+    await confirm(dialog, ask, delim, validation, msg)
+    skipPackageJson = true
+  }
+
   const id = Bare.pid
   const stream = ipc.stage({
     id,
@@ -54,7 +73,9 @@ module.exports = async function stage(cmd) {
     purge,
     name,
     truncate,
+    skipPackageJson,
     only,
+    pkg,
     cmdArgs
   })
   await output(json, stream)
@@ -73,4 +94,10 @@ module.exports = async function stage(cmd) {
       ])
     }
   }
+}
+
+async function localPkg(dir) {
+  try {
+    return JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
+  } catch {}
 }

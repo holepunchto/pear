@@ -112,6 +112,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       '--truncate <n>',
       'Advanced. Truncate the project to this version length. Destructive — later versions are dropped'
     ).hint('n is the length segment of a verlink (pear://<fork>.<length>.<key>).'),
+    flag('--skip-package-json', 'Stage a folder without package.json'),
     flag('--json', 'Newline delimited JSON output'),
     commands.stage
   )
