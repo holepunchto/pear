@@ -9,7 +9,9 @@ const unhookBlindPeer = test.hook('blind peer rig setup', rig.setup)
 
 async function shutdownAndGc(client, child = client?.child, targetRig = rig) {
   if (client) {
-    await client.shutdown().catch(() => {})
+    if (!client._rpc?.destroyed && !client.closed && !client.closing) {
+      await client.shutdown().catch(() => {})
+    }
     client.close()
   }
   if (child) await Helper.untilExit(child)
@@ -595,6 +597,115 @@ test('blind peer identity should persist between sidecar restarts', async functi
   }
 
   is(identity1, identity2, 'blind peer identity remains the same after restart')
+})
+
+test('pear seed with --blind-peer flag adds and syncs drive with blind peer', async function ({
+  teardown,
+  plan,
+  is,
+  execution,
+  timeout,
+  comment
+}) {
+  timeout(20000)
+  plan(4)
+
+  comment('1. client ready')
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  comment('2. client identity')
+  let clientPubKey
+  {
+    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
+    clientPubKey = (await final).publicKey
+    await Helper.teardownStream(clientIdentityStream)
+  }
+  comment('3. client pubKey: ' + clientPubKey)
+
+  const link = await Helper.touchLink(client)
+  const coreKey = hid.normalize(hid.decode(link))
+  comment('4. touched link: ' + coreKey)
+
+  const server = new Helper(rig)
+  teardown(() => shutdownAndGc(server), { order: Infinity })
+  await server.ready()
+  comment('5. server ready')
+
+  const serverStream = server.blindPeer({
+    subcommand: 'start',
+    data: { trustedPeers: [clientPubKey], downloadedDebounce: 500 }
+  })
+  serverStream.on('error', () => {})
+  teardown(() => Helper.teardownStream(serverStream))
+  const serverMsgs = await Helper.pick(serverStream, [
+    { tag: 'listening' },
+    { tag: 'add-core', data: { key: coreKey } },
+    { tag: 'announce-core', data: { key: coreKey } },
+    { tag: 'core-downloaded', data: { key: coreKey } }
+  ])
+  const { publicKey: peerKey } = await serverMsgs.listening
+  comment('6. server listening: ' + peerKey)
+
+  comment('7. staging')
+  const staging = client.stage({
+    link,
+    dir: Helper.fixture('versions'),
+    dryRun: false
+  })
+  teardown(() => Helper.teardownStream(staging))
+  const staged = await Helper.pick(staging, [{ tag: 'final' }])
+  await staged.final
+  comment('8. staged')
+
+  comment('9. seeding client')
+  const seedingClient = client.seed({
+    link,
+    blindPeer: peerKey,
+    untilSync: [peerKey]
+  })
+  teardown(() => Helper.teardownStream(seedingClient))
+
+  comment('10. waiting for add-core on server')
+  await execution(serverMsgs['add-core'], 'server receives add-core request')
+  comment('11. waiting for announce-core on server')
+  await execution(serverMsgs['announce-core'], 'server announced core')
+  comment('12. waiting for core-downloaded on server')
+  const downloaded = await serverMsgs['core-downloaded']
+  is(downloaded.key, coreKey, 'blind peer downloaded core data via --blind-peer seed')
+  comment('13. waiting for final synced on client')
+  const { final: synced } = await Helper.pick(seedingClient, [{ tag: 'final' }])
+  is((await synced).success, true, 'seeding completed successfully')
+  comment('14. test completed')
+})
+
+test('pear seed should reject invalid --blind-peer key', async function ({
+  teardown,
+  plan,
+  exception,
+  timeout
+}) {
+  timeout(10000)
+  plan(1)
+
+  const client = new Helper(rig)
+  teardown(() => shutdownAndGc(client), { order: Infinity })
+  await client.ready()
+
+  const link = await Helper.touchLink(client)
+
+  const stream = client.seed({
+    link,
+    blindPeer: 'invalid_key'
+  })
+  teardown(() => Helper.teardownStream(stream))
+  await exception(
+    Helper.pick(stream, { tag: 'final' }),
+    'rejects invalid blind peer key'
+  )
 })
 
 unhookBlindPeer('blind peer rig cleanup', rig.cleanup)
