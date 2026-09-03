@@ -15,15 +15,20 @@ module.exports = class Seed extends Opstream {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
+    const core = drive.core
+    const blobs = drive.blobs?.core
 
     return {
       tag: 'stats',
       data: {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
-        peers: drive.core.peers.length,
+        peers: core.peers.length,
         driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
-        driveLength: drive.core.length,
-        blobsByteLength: drive.blobs?.core.byteLength ?? 0,
+        driveDownloadedBlocks: core.core.bitfield.countSet(0, core.length) ?? 0,
+        driveLength: core.length ?? 0,
+        blobsDownloadedBlocks: blobs?.core.bitfield.countSet(0, blobs.length) ?? 0,
+        blobsLength: blobs?.length ?? 0,
+        blobsByteLength: blobs?.byteLength ?? 0,
         name,
         semver,
         discoveryKey: drive.discoveryKey ? hypercoreid.encode(drive.discoveryKey) : undefined,
