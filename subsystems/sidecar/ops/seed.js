@@ -14,7 +14,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ drive, name, semver } = {}) {
+  _stats({ drive, name, semver, blindPeer } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -43,7 +43,8 @@ module.exports = class Seed extends Opstream {
           speed: this.stats.speed.download.bytes()
         },
         natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
-        connections: totalConnections
+        connections: totalConnections,
+        blindPeer: blindPeer ? { key: blindPeer.key, status: blindPeer.status } : undefined
       }
     }
   }
@@ -124,8 +125,12 @@ module.exports = class Seed extends Opstream {
     const name = pkg.name ?? ''
     const semver = pkg.version ?? ''
 
+    const blindPeerState = blindPeer
+      ? { key: hypercoreid.normalize(blindPeer), status: 'requesting' }
+      : null
+
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ drive, name, semver }))
+      this.push(this._stats({ drive, name, semver, blindPeer: blindPeerState }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
@@ -154,8 +159,12 @@ module.exports = class Seed extends Opstream {
       await requestCores(blindPeerClient, [drive.db.core, blobs.core], {
         peerKey: blindPeer,
         announce: true,
+        onConfirmingCore: () => {
+          blindPeerState.status = 'confirming'
+        },
         teardown: (fn) => session.teardown(fn)
       })
+      blindPeerState.status = 'added'
     }
 
     if (untilSync) {

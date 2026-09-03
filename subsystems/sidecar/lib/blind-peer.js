@@ -110,7 +110,15 @@ function untilConnected(core, peerKey, { timeout = 15000, teardown } = {}) {
 async function requestCores(
   client,
   cores,
-  { peerKey, announce = true, timeout = 30000, onAddingCore, onAddedCore, teardown } = {}
+  {
+    peerKey,
+    announce = true,
+    timeout = 30000,
+    onAddingCore,
+    onConfirmingCore,
+    onAddedCore,
+    teardown
+  } = {}
 ) {
   const normalizedPeerKey = hid.normalize(peerKey)
   await Promise.all(
@@ -123,6 +131,8 @@ async function requestCores(
         peerKey: normalizedPeerKey,
         timeout
       })
+
+      if (onConfirmingCore) onConfirmingCore({ key: subCoreKey, peerKey: normalizedPeerKey })
 
       await untilConnected(core, peerKey, { timeout, teardown })
       LOG.info('blind-peer-request', `Successfully added core ${subCoreKey}`)
