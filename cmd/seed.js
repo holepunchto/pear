@@ -12,6 +12,7 @@ module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
   const untilSync = cmd.flags.untilSync
+  const blindPeer = cmd.flags.blindPeer
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
   parse(link)
@@ -23,9 +24,16 @@ module.exports = async function seed(cmd) {
   if (untilSync?.some((key) => hypercoreid.isValid(key) === false)) {
     throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
   }
+  if (blindPeer && !hypercoreid.isValid(blindPeer)) {
+    throw ERR_INVALID_INPUT('--blind-peer <key> must supply a valid z32 key')
+  }
   const id = Bare.pid
 
-  const terminalTableRenderer = new TerminalTableRenderer({ tty, json, untilSync })
+  const terminalTableRenderer = new TerminalTableRenderer({
+    tty,
+    json,
+    untilSync: untilSync || blindPeer
+  })
   const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
@@ -147,6 +155,33 @@ module.exports = async function seed(cmd) {
       peers.append([msg])
       terminalTableRenderer.render()
     },
+    'adding-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('o-o')} ${ansi.green(`adding core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
+        : `o-o adding core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
+    'confirming-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('>-<')} ${ansi.green(`confirming add core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
+        : `>-< confirming add core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
+    'added-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('^-^')} ${ansi.bold(ansi.green(`added core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`))}`
+        : `^-^ added core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
     final: () => {
       if (ctrlTTY) {
         stdio.out.write('\n\n')
@@ -209,10 +244,11 @@ module.exports = async function seed(cmd) {
       id,
       link,
       untilSync,
+      blindPeer,
       statsInterval,
       cmdArgs
     })
   )
 
-  if (ctrlTTY && untilSync) Bare.exit(0)
+  if (ctrlTTY && (untilSync || blindPeer)) Bare.exit(0)
 }
