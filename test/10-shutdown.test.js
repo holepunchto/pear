@@ -274,10 +274,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     platformDir: path.join(buildDir, 'pear'),
     expectSidecar: true
   })
-  let sidecarClientClosed = false
-  t.teardown(async () => {
-    if (!sidecarClientClosed) await sidecarClient.close()
-  })
+  t.teardown(() => sidecarClient.close())
   await sidecarClient.ready()
 
   t.comment('Waiting for updater to connect to throttled seeder')
