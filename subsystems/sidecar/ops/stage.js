@@ -1,30 +1,24 @@
 'use strict'
 const LocalDrive = require('localdrive')
 const unixPathResolve = require('unix-path-resolve')
-const { ERR_INVALID_PROJECT_DIR } = require('pear-errors')
 const plink = require('pear-link')
 const ReadyResource = require('ready-resource')
-const fs = require('bare-fs')
-const path = require('bare-path')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const { parse } = require('../../../lib/link')
+const { localPkg, validate } = require('../../../lib/package')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ link, dir, dryRun, truncate, ignore, purge, only }) {
+  async #op({ link, dir, dryRun, truncate, ignore, purge, only, pkg }) {
     const { session, sidecar } = this
     const parsed = parse(link)
+    await validate(dir)
 
-    const { dir: pkgDir, pkg } = await localPkg(dir)
-    if (pkg === null) {
-      throw ERR_INVALID_PROJECT_DIR(
-        `"package.json not found from: ${dir}. Pear project must have a package.json`
-      )
-    }
+    pkg = pkg || (await localPkg(dir))
 
     const options = pkg?.pear ?? {}
 
@@ -69,12 +63,12 @@ module.exports = class Stage extends Opstream {
         link: applink,
         verlink: verlink,
         current: currentVersion,
-        dir: pkgDir
+        dir
       }
     })
 
     if (dryRun) this.push({ tag: 'dry' })
-    const src = new LocalDrive(pkgDir, {
+    const src = new LocalDrive(dir, {
       followExternalLinks: true
     })
 
@@ -165,20 +159,6 @@ module.exports = class Stage extends Opstream {
         })
       }
     })
-  }
-}
-
-async function localPkg(dir) {
-  try {
-    const pkg = JSON.parse(await fs.promises.readFile(path.join(dir, 'package.json')))
-    return { dir, pkg }
-  } catch (err) {
-    if (err.code !== 'ENOENT' && err.code !== 'EISDIR' && err.code !== 'ENOTDIR') throw err
-    const parent = path.dirname(dir)
-    if (parent === dir || path.resolve(dir) === path.resolve(parent)) {
-      return { dir: null, pkg: null }
-    }
-    return localPkg(parent)
   }
 }
 
