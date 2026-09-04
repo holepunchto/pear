@@ -74,21 +74,16 @@ module.exports = async function seed(cmd) {
       initial,
       transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
     },
-    ...(blindPeer
-      ? [
-          {
-            key: 'blindPeer',
-            label: ctrlTTY ? 'Blind Peer:' : '... blind peer',
-            initial,
-            transform: (v) => {
-              const key = hypercoreid.normalize(v.key)
-              return ctrlTTY
-                ? `${ansi.gray(key)} ${ansi.dim(`(${v.status})`)}`
-                : `${key} (${v.status})`
-            }
-          }
-        ]
-      : []),
+    {
+      key: 'blindPeer',
+      label: ctrlTTY ? 'Blind Peer:' : '... blind peer',
+      initial,
+      transform: (v) => {
+        if (!v || !v.key) return ctrlTTY ? `${ansi.gray('none')}` : 'none'
+        const key = hypercoreid.normalize(v.key)
+        return ctrlTTY ? `${ansi.gray(key)} ${ansi.dim(`(${v.status})`)}` : `${key} (${v.status})`
+      }
+    },
     {
       key: 'firewalled',
       label: ctrlTTY ? 'Firewalled:' : '... firewalled',
