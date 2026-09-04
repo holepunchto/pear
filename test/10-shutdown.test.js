@@ -291,7 +291,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
     peerAddedTimeout
   ])
   clearTimeout(peerAddedTimer)
-  t.is(peerAdded, true, 'sidecar successfully connected to throttled seeder')
+  t.ok(peerAdded, 'sidecar successfully connected to throttled seeder')
 
   await sidecarClient.close()
   sidecarClientClosed = true
