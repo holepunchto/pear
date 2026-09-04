@@ -17,7 +17,7 @@ async function addCore(client, core, { announce, peerKey, timeout = 30000 } = {}
   let timer = null
 
   timer = setTimeout(() => {
-    reject(new ERR_OPERATION_FAILED(`Timed out connecting to blind peer ${peerKey} to connect`))
+    reject(new ERR_OPERATION_FAILED(`Timed out connecting to blind peer ${peerKey}`))
   }, timeout)
   timer.unref()
 
