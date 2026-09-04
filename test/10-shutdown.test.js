@@ -270,8 +270,7 @@ test('sidecar should not spindown until ongoing update is finished', async (t) =
   const untilExit = new Promise((resolve) => sidecar.once('exit', resolve))
   t.teardown(() => untilExit, { order: Infinity })
 
-  // Keep the updater sidecar alive until peer discovery completes.
-  const sidecarClient = new Helper({
+  const keepAliveClient = new Helper({
     platformDir: path.join(buildDir, 'pear'),
     expectSidecar: true
   })
