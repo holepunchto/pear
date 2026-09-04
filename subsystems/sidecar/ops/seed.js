@@ -168,7 +168,7 @@ module.exports = class Seed extends Opstream {
       untilSync.push(blindPeer)
     }
 
-    if (untilSync) {
+    if (untilSync?.length) {
       const synced = (core, key) => {
         const peer = core.peers.find((peer) => hypercoreid.normalize(peer.remotePublicKey) === key)
         return peer && peer.remoteContiguousLength >= core.length
