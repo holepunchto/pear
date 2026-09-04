@@ -7,6 +7,7 @@ const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
 const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
+const { TIP } = require('../lib/receipts.js')
 const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
@@ -18,7 +19,8 @@ const commands = {
   multisig: require('./multisig'),
   info: require('./info'),
   dump: require('./dump'),
-  install: require('pear-install/cmd').runner,
+  install: require('./install'),
+  tip: require('./tip'),
   data: require('./data'),
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
@@ -432,6 +434,27 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.install
   )
 
+  const tip = command(
+    'tip',
+    summary('Tip an app to unlock installing it'),
+    description`Record a ${TIP.display} tip receipt for a Pear link.
+
+pear install refuses to run without one.
+
+Tip mode is a proof of concept. The receipt is an ordinary local file, nothing is
+paid and nothing is verified, so writing the file by hand bypasses the check. Set
+PEAR_TIP=off to skip it entirely.
+
+Receipts live alongside the platform, so a localdev pear and an installed pear keep
+separate sets.`,
+    arg('[link]', 'Pear link to tip'),
+    flag('--list', 'List existing tip receipts'),
+    flag('--force', 'Skip the confirmation prompt'),
+    flag('--json', 'Newline delimited JSON output'),
+    validate('<link> is required', (cmd) => !!cmd.args.link || cmd.flags.list === true),
+    commands.tip
+  )
+
   const data = command(
     'data',
     summary('Explore platform database'),
@@ -605,6 +628,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     info,
     dump,
     install,
+    tip,
     data,
     changelog,
     sidecar,
