@@ -653,7 +653,6 @@ test('pear seed with --blind-peer flag adds and syncs drive with blind peer', as
   const seedingClient = client.seed({
     link,
     blindPeer: peerKey,
-    untilSync: [peerKey],
     statsInterval: 50
   })
   teardown(() => Helper.teardownStream(seedingClient))
