@@ -6,6 +6,8 @@ const os = require('bare-os')
 const crypto = require('hypercore-crypto')
 const hid = require('hypercore-id-encoding')
 const receipts = require('../lib/receipts.js')
+const { confirms, SEND_WORD } = require('../lib/tip-confirm.js')
+const manifest = require('../lib/manifest.js')
 
 function randomKey() {
   return hid.encode(crypto.keyPair().publicKey)
@@ -125,12 +127,8 @@ test('PEAR_TIP=off disables the gate', ({ plan, is, teardown }) => {
   is(receipts.enabled(), true, 'any other value leaves it on')
 })
 
-test('a new receipt records a stub payment that a real one can fill in', ({
-  plan,
-  is,
-  teardown
-}) => {
-  plan(7)
+test('a receipt is self-describing about what was paid', ({ plan, is, teardown }) => {
+  plan(5)
   sandbox(teardown)
   const key = randomKey()
   const receipt = receipts.create(`pear://0.10.${key}/some/path`)
@@ -139,9 +137,96 @@ test('a new receipt records a stub payment that a real one can fill in', ({
   is(receipt.link, `pear://${key}`, 'link is canonicalised to the bare origin')
   is(receipt.amount, receipts.TIP.amount, 'amount in base units, as transfer() takes it')
   is(receipt.decimals, 6, 'decimals travel with it, so the receipt reads on its own')
-  is(receipt.payment.method, 'stub', 'nothing was actually paid')
-  is(receipt.payment.txHash, null, 'no transaction to point at yet')
-  is(receipt.payer, null, 'nobody paid it')
+  is(receipt.token, receipts.TIP.token, 'and the unit those base units are in')
+})
+
+test('config round-trips and never shows up as a receipt', ({ plan, is, teardown }) => {
+  plan(5)
+  sandbox(teardown)
+
+  is(receipts.config().payee, undefined, 'no payee to start with')
+  is(receipts.config().network, receipts.TIP.network, 'network falls back to the default')
+
+  receipts.setConfig({ payee: '0xabc' })
+  is(receipts.config().payee, '0xabc', 'payee persists')
+
+  // config.json lives in the receipts directory, so list() has to skip it or it comes back
+  // as a junk receipt.
+  is(receipts.list().length, 0, 'config is not a receipt')
+
+  const link = `pear://${randomKey()}`
+  receipts.write(receipts.keyFor(link), receipts.create(link))
+  is(receipts.list().length, 1, 'real receipts still listed alongside it')
+})
+
+test('a receipt records a transfer that actually happened', ({ plan, is, teardown }) => {
+  plan(5)
+  sandbox(teardown)
+  const link = `pear://${randomKey()}`
+
+  const receipt = receipts.create(link, {
+    chain: 'polygon',
+    payer: '0xdead',
+    payment: { rail: 'token', txHash: '0xfeed', payee: '0xbeef', fee: '42' }
+  })
+
+  is(receipt.chain, 'polygon', 'chain recorded')
+  is(receipt.payer, '0xdead', 'payer recorded')
+  is(receipt.payment.txHash, '0xfeed', 'the transaction it came from')
+  is(receipt.payment.rail, 'token', 'which rail settled it')
+  // A dry run writes no receipt at all, so nothing stored should ever say otherwise.
+  is(receipt.payment.method, 'transfer', 'a stored receipt always means funds moved')
+})
+
+test('only a manifest that names a payee asks for payment', ({ plan, is, ok }) => {
+  plan(7)
+
+  // The gate turns on this: no declaration, no block. Most apps are free.
+  is(manifest.paymentOf(null), null, 'no manifest at all')
+  is(manifest.paymentOf({}), null, 'a package.json with no pear field')
+  is(manifest.paymentOf({ pear: {} }), null, 'a pear field with no payment')
+  is(manifest.paymentOf({ pear: { payment: {} } }), null, 'a payment with no payee is not a price')
+  is(
+    manifest.paymentOf({ pear: { payment: 'yes please' } }),
+    null,
+    'a payment that is not an object is ignored, not trusted'
+  )
+
+  const asked = manifest.paymentOf({
+    pear: { payment: { payee: '0xbeef', amount: 990000, token: 'usdt0', network: 'polygon' } }
+  })
+  ok(asked !== null, 'a payee makes it a price')
+  is(asked.amount, '990000', 'amount is normalised to a string, so BigInt can take it')
+})
+
+test('nothing casual can spend money', ({ plan, is }) => {
+  plan(6)
+
+  is(confirms('y'), false, 'y does NOT send')
+  is(confirms('yes'), false, 'yes does NOT send')
+  is(confirms(''), false, 'a bare Enter does NOT send')
+  is(confirms('send'), false, 'the word is case-sensitive')
+  is(confirms(undefined), false, 'no answer at all does NOT send')
+  is(confirms(` ${SEND_WORD} `), true, 'the exact word sends, whitespace forgiven')
+})
+
+test('a lightning tip records sats, not token base units', ({ plan, is, teardown }) => {
+  plan(4)
+  sandbox(teardown)
+  const link = `pear://${randomKey()}`
+
+  const receipt = receipts.create(link, {
+    chain: 'spark',
+    amount: String(receipts.TIP.sats),
+    decimals: 0,
+    token: 'sat',
+    payment: { rail: 'lightning', txHash: 'ln123', payee: 'ryan0@tether.me' }
+  })
+
+  is(receipt.amount, '990', 'whole sats')
+  is(receipt.decimals, 0, 'sats have no sub-unit')
+  is(receipts.format(receipt), '990 sat', 'reads as sats, not 0.00099 usdt')
+  is(receipt.payment.rail, 'lightning', 'rail recorded so the two are tellable apart')
 })
 
 test('base units format back to the advertised price', ({ plan, is }) => {

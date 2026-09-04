@@ -7,7 +7,7 @@ const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
 const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
-const { TIP } = require('../lib/receipts.js')
+const { SEND_WORD } = require('../lib/tip-confirm.js')
 const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
@@ -436,22 +436,46 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const tip = command(
     'tip',
-    summary('Tip an app to unlock installing it'),
-    description`Record a ${TIP.display} tip receipt for a Pear link.
+    summary('Pay an app, or any address'),
+    description`Send funds and record a receipt for a Pear link.
 
-pear install refuses to run without one.
+${'[1mThis sends real money.[22m'} The amount and fee are quoted from your wallet first
+and nothing moves until you type ${SEND_WORD}. Use --dry-run to see the quote and stop.
 
-Tip mode is a proof of concept. The receipt is an ordinary local file, nothing is
-paid and nothing is verified, so writing the file by hand bypasses the check. Set
-PEAR_TIP=off to skip it entirely.
+An app states its price in the "pear" field of its package.json:
+
+  "pear": { "payment": { "amount": "990000", "token": "usdt",
+                         "network": "polygon", "payee": "0x…" } }
+
+pear install blocks on such an app until a receipt exists. Apps that say nothing
+about payment install as they always have.
+
+--payee overrides whatever the app asks for, so you can point a tip at any address
+to try the flow out. A name@domain payee (${'ryan0@tether.me'}) settles over Lightning
+instead; see lib/uma.js for why that is the only option there.
+
+A receipt is written only when funds actually move. --dry-run writes nothing and so
+opens nothing.
+
+Tip mode is a proof of concept. The receipt is an ordinary local file and nothing is
+verified, so writing one by hand bypasses the check. PEAR_TIP=off skips it entirely.
 
 Receipts live alongside the platform, so a localdev pear and an installed pear keep
 separate sets.`,
-    arg('[link]', 'Pear link to tip'),
-    flag('--list', 'List existing tip receipts'),
-    flag('--force', 'Skip the confirmation prompt'),
+    arg('[link]', 'Pear link to pay for'),
+    flag('--dry-run|-d', 'Show the quote and stop. Sends nothing, writes no receipt'),
+    flag('--payee <address>', 'Pay this address instead of the one the app asks for'),
+    flag('--network <network>', 'Network to pay on. See `wdk network list`'),
+    flag('--token <token>', 'Token to pay in. Differs per network — see `wdk token list`'),
+    flag('--wallet <name>', 'WDK wallet to pay from. See `wdk wallet list`'),
+    flag('--list', 'List receipts already held'),
+    flag('--save', 'Remember the settings passed alongside, then exit'),
+    flag('--force', `Send without the ${SEND_WORD} prompt. Careful`),
     flag('--json', 'Newline delimited JSON output'),
-    validate('<link> is required', (cmd) => !!cmd.args.link || cmd.flags.list === true),
+    validate(
+      '<link> is required',
+      (cmd) => !!cmd.args.link || cmd.flags.list === true || cmd.flags.save === true
+    ),
     commands.tip
   )
 
