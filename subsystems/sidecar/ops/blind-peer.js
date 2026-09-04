@@ -24,7 +24,7 @@ module.exports = class BlindPeerOp extends Opstream {
   identity() {
     this.final = {
       subcommand: 'identity',
-      publicKey: hid.normalize(this.sidecar.dhtKeypair.publicKey)
+      publicKey: hid.normalize(this.sidecar.dhtKeyPair.publicKey)
     }
   }
 
