@@ -29,7 +29,11 @@ module.exports = async function seed(cmd) {
   }
   const id = Bare.pid
 
-  const terminalTableRenderer = new TerminalTableRenderer({ tty, json, untilSync })
+  const terminalTableRenderer = new TerminalTableRenderer({
+    tty,
+    json,
+    untilSync: untilSync || blindPeer
+  })
   const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
 
@@ -214,5 +218,5 @@ module.exports = async function seed(cmd) {
     })
   )
 
-  if (ctrlTTY && untilSync) Bare.exit(0)
+  if (ctrlTTY && (untilSync || blindPeer)) Bare.exit(0)
 }
