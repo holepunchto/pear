@@ -605,7 +605,7 @@ test('pear seed with --blind-peer flag adds and syncs drive with blind peer', as
   is,
   execution
 }) {
-  plan(5)
+  plan(7)
 
   const client = new Helper(rig)
   teardown(() => shutdownAndGc(client), { order: Infinity })
@@ -652,18 +652,23 @@ test('pear seed with --blind-peer flag adds and syncs drive with blind peer', as
 
   const seedingClient = client.seed({
     link,
-    blindPeer: peerKey,
-    statsInterval: 50
+    blindPeer: peerKey
   })
   teardown(() => Helper.teardownStream(seedingClient))
-  const clientMsgs = await Helper.pick(seedingClient, [{ tag: 'stats' }, { tag: 'final' }])
+  const clientMsgs = await Helper.pick(seedingClient, [
+    { tag: 'adding-core', data: { key: coreKey } },
+    { tag: 'confirming-core', data: { key: coreKey } },
+    { tag: 'added-core', data: { key: coreKey } },
+    { tag: 'final' }
+  ])
 
   await execution(serverMsgs['add-core'], 'server receives add-core request')
   await execution(serverMsgs['announce-core'], 'server announced core')
   const downloaded = await serverMsgs['core-downloaded']
   is(downloaded.key, coreKey, 'blind peer downloaded core data via --blind-peer seed')
-  const stats = await clientMsgs.stats
-  is(stats.blindPeer.key, peerKey, 'stats contains blind peer key')
+  await execution(clientMsgs['adding-core'], 'client requested adding core to blind peer')
+  await execution(clientMsgs['confirming-core'], 'client confirming core on blind peer')
+  await execution(clientMsgs['added-core'], 'client added core to blind peer')
   const synced = await clientMsgs.final
   is(synced.success, true, 'seeding completed successfully')
 })

@@ -14,7 +14,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ drive, name, semver, blindPeer } = {}) {
+  _stats({ drive, name, semver } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -43,8 +43,7 @@ module.exports = class Seed extends Opstream {
           speed: this.stats.speed.download.bytes()
         },
         natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
-        connections: totalConnections,
-        blindPeer: blindPeer ? { key: blindPeer.key, status: blindPeer.status } : undefined
+        connections: totalConnections
       }
     }
   }
@@ -125,12 +124,8 @@ module.exports = class Seed extends Opstream {
     const name = pkg.name ?? ''
     const semver = pkg.version ?? ''
 
-    const blindPeerState = blindPeer
-      ? { key: hypercoreid.normalize(blindPeer), status: 'requesting' }
-      : null
-
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ drive, name, semver, blindPeer: blindPeerState }))
+      this.push(this._stats({ drive, name, semver }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
@@ -159,12 +154,11 @@ module.exports = class Seed extends Opstream {
       await requestCores(client, [drive.db.core, blobs.core], {
         peerKey: blindPeer,
         announce: true,
-        onConfirmingCore: () => {
-          blindPeerState.status = 'confirming'
-        },
+        onAddingCore: (data) => this.push({ tag: 'adding-core', data }),
+        onConfirmingCore: (data) => this.push({ tag: 'confirming-core', data }),
+        onAddedCore: (data) => this.push({ tag: 'added-core', data }),
         teardown: (fn) => session.teardown(fn)
       })
-      blindPeerState.status = 'added'
       untilSync.push(blindPeer)
     }
 

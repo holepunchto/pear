@@ -79,16 +79,6 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
     },
     {
-      key: 'blindPeer',
-      label: ctrlTTY ? 'Blind Peer:' : '... blind peer',
-      initial,
-      transform: (v) => {
-        if (!v || !v.key) return ctrlTTY ? `${ansi.gray('none')}` : 'none'
-        const key = hypercoreid.normalize(v.key)
-        return ctrlTTY ? `${ansi.gray(key)} ${ansi.dim(`(${v.status})`)}` : `${key} (${v.status})`
-      }
-    },
-    {
       key: 'firewalled',
       label: ctrlTTY ? 'Firewalled:' : '... firewalled',
       initial,
@@ -158,6 +148,33 @@ module.exports = async function seed(cmd) {
       peers.append([msg])
       terminalTableRenderer.render()
     },
+    'adding-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('o-o')} ${ansi.green(`adding core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
+        : `o-o adding core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
+    'confirming-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('o-o')} ${ansi.green(`confirming add core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
+        : `>-< confirming add core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
+    'added-core': ({ key, peerKey }) => {
+      key = hypercoreid.normalize(key)
+      peerKey = hypercoreid.normalize(peerKey)
+      const msg = ctrlTTY
+        ? `${ansi.gray('^-^')} ${ansi.bold(ansi.green(`added core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`))}`
+        : `^-^ added core ${key} to blind peer ${peerKey}`
+      peers.append([msg])
+      terminalTableRenderer.render()
+    },
     final: () => {
       if (ctrlTTY) {
         stdio.out.write('\n\n')
@@ -173,7 +190,6 @@ module.exports = async function seed(cmd) {
       semver,
       discoveryKey,
       contentKey,
-      blindPeer,
       firewalled,
       natType,
       whoami,
@@ -192,7 +208,6 @@ module.exports = async function seed(cmd) {
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
           : contentKey,
-        blindPeer,
         firewalled,
         natType,
         whoami: hypercoreid.normalize(whoami),
