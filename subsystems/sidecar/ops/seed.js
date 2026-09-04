@@ -1,9 +1,12 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
+const safetyCatch = require('safety-catch')
+const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const Replicator = require('../lib/replicator')
+const { createClient, requestCores } = require('../lib/blind-peer')
 const { parse } = require('../../../lib/link')
 
 module.exports = class Seed extends Opstream {
@@ -45,13 +48,23 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, untilSync, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, untilSync = [], blindPeer, statsInterval = 500 } = {}) {
+    if (
+      untilSync &&
+      (!Array.isArray(untilSync) || untilSync.some((k) => !hypercoreid.isValid(k)))
+    ) {
+      throw ERR_INVALID_INPUT('--until-sync <key> must supply a valid z32 key')
+    }
+    if (blindPeer && !hypercoreid.isValid(blindPeer)) {
+      throw ERR_INVALID_INPUT('--blind-peer <key> must supply a valid z32 key')
+    }
+
     const { client, session } = this
     const parsed = parse(link)
     const key = parsed?.drive.key
 
     // not an app but a long running process, setting userData for restart recognition:
-    client.userData = { state: { cmdArgs, flags: { link, untilSync } } }
+    client.userData = { state: { cmdArgs, flags: { link, untilSync, blindPeer } } }
 
     this.push({ tag: 'seeding', data: { key: hypercoreid.encode(key), link } })
     await this.sidecar.ready()
@@ -135,7 +148,21 @@ module.exports = class Seed extends Opstream {
 
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
-    if (untilSync) {
+    if (blindPeer) {
+      const client = createClient(this.sidecar.swarm.dht, corestore, blindPeer)
+      session.teardown(() => client.close().catch(safetyCatch))
+      await requestCores(client, [drive.db.core, blobs.core], {
+        peerKey: blindPeer,
+        announce: true,
+        onAddingCore: (data) => this.push({ tag: 'adding-core', data }),
+        onConfirmingCore: (data) => this.push({ tag: 'confirming-core', data }),
+        onAddedCore: (data) => this.push({ tag: 'added-core', data }),
+        teardown: (fn) => session.teardown(fn)
+      })
+      untilSync.push(blindPeer)
+    }
+
+    if (untilSync?.length) {
       const synced = (core, key) => {
         const peer = core.peers.find((peer) => hypercoreid.normalize(peer.remotePublicKey) === key)
         return peer && peer.remoteContiguousLength >= core.length
