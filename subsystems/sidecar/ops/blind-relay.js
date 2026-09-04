@@ -15,11 +15,10 @@ class BlindRelayServer extends ReadyResource {
   async _open() {
     LOG.trace('blind-relay', 'starting')
 
-    const dht = this.dht
     this.relay = new RelayServer({
-      createStream(opts) {
+      createStream: (opts) => {
         LOG.trace('blind-relay', 'creating raw stream')
-        return dht.createRawStream({ ...opts, framed: true })
+        return this.dht.createRawStream({ ...opts, framed: true })
       }
     })
 
