@@ -1,6 +1,7 @@
 'use strict'
 const paparam = require('paparam')
 const { header, footer, command, flag, arg, summary, description, bail, rest, validate } = paparam
+const hypercoreid = require('hypercore-id-encoding')
 const { usage, print, isTTY } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
@@ -721,6 +722,14 @@ module.exports = async (ipc, argv = cmdArgs) => {
 
   const shell = require('../lib/cmd').command(argv)
   const cmdIx = shell?.indices.args.cmd ?? -1
+  const relay = shell?.flags.relay
+  if (relay && hypercoreid.isValid(relay) === false) {
+    print('--relay <key> must supply a valid public key', false)
+    Bare.exitCode = 1
+    ipc.close()
+    return null
+  }
+  if (relay) await ipc.relay({ publicKey: hypercoreid.decode(relay) })
 
   let program = null
 
