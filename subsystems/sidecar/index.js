@@ -72,6 +72,7 @@ class Sidecar extends ReadyResource {
     this.activeBlindRelay = null
     this.activeBlindPeer = null
     this.nodes = nodes
+    this.relayPublicKey = null
     this.ipc = new IPC.Server({
       handlers: this,
       socketPath: SOCKET_PATH
@@ -176,6 +177,10 @@ class Sidecar extends ReadyResource {
 
   blindRelay(params, client) {
     return new ops.BlindRelay(params, client, this)
+  }
+
+  relay({ publicKey }) {
+    this.relayPublicKey = publicKey
   }
 
   versions(params, client) {
@@ -312,14 +317,15 @@ class Sidecar extends ReadyResource {
     }
 
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.dhtKeypair = await this.corestore.createKeyPair('holepunch/dht')
-    this.blindRelayKeypair = await this.corestore.createKeyPair('holepunch/blind-relay')
+    this.dhtKeyPair = await this.corestore.createKeyPair('holepunch/dht')
+    this.blindRelayKeyPair = await this.corestore.createKeyPair('holepunch/blind-relay')
 
-    this.dht = new HyperDHT({ keyPair: this.dhtKeypair, bootstrap: this.nodes, nodes })
+    this.dht = new HyperDHT({ keyPair: this.dhtKeyPair, bootstrap: this.nodes, nodes })
 
     this.swarm = new Hyperswarm({
       dht: this.dht,
-      keyPair: this.keyPair
+      keyPair: this.keyPair,
+      relayThrough: (force) => (force || this.dht.randomized ? this.relayPublicKey : null)
     })
     this.swarm.once('close', () => {
       this.swarm = null
