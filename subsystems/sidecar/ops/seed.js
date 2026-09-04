@@ -49,7 +49,7 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, untilSync, blindPeer, statsInterval = 500 } = {}) {
+  async #op({ link, cmdArgs, untilSync = [], blindPeer, statsInterval = 500 } = {}) {
     if (
       untilSync &&
       (!Array.isArray(untilSync) || untilSync.some((k) => !hypercoreid.isValid(k)))
@@ -165,6 +165,7 @@ module.exports = class Seed extends Opstream {
         teardown: (fn) => session.teardown(fn)
       })
       blindPeerState.status = 'added'
+      untilSync.push(blindPeer)
     }
 
     if (untilSync) {
