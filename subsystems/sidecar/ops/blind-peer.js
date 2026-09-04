@@ -6,7 +6,7 @@ const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const BlindPeer = require('blind-peer')
 const Hyperdrive = require('hyperdrive')
-const { createBlindPeering, untilBlobs, requestCores } = require('../lib/blind-peer')
+const { createClient, untilBlobs, requestCores } = require('../lib/blind-peer')
 
 module.exports = class BlindPeerOp extends Opstream {
   constructor(...args) {
@@ -189,7 +189,7 @@ module.exports = class BlindPeerOp extends Opstream {
     const normalizedPeerKey = hid.normalize(blindPeerKey)
     const normalizedCoreKey = hid.normalize(coreKey)
 
-    const client = createBlindPeering(sidecar.swarm.dht, corestore, blindPeerKey)
+    const client = createClient(sidecar.swarm.dht, corestore, blindPeerKey)
     session.teardown(() => client.close().catch(safetyCatch))
 
     const toAdd = []

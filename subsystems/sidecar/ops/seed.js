@@ -6,7 +6,7 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const Replicator = require('../lib/replicator')
-const { createBlindPeering, requestCores } = require('../lib/blind-peer')
+const { createClient, requestCores } = require('../lib/blind-peer')
 const { parse } = require('../../../lib/link')
 
 module.exports = class Seed extends Opstream {
@@ -154,9 +154,9 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     if (blindPeer) {
-      const blindPeerClient = createBlindPeering(this.sidecar.swarm.dht, corestore, blindPeer)
-      session.teardown(() => blindPeerClient.close().catch(safetyCatch))
-      await requestCores(blindPeerClient, [drive.db.core, blobs.core], {
+      const client = createClient(this.sidecar.swarm.dht, corestore, blindPeer)
+      session.teardown(() => client.close().catch(safetyCatch))
+      await requestCores(client, [drive.db.core, blobs.core], {
         peerKey: blindPeer,
         announce: true,
         onConfirmingCore: () => {

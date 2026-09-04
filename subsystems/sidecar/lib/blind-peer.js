@@ -4,7 +4,7 @@ const safetyCatch = require('safety-catch')
 const { ERR_OPERATION_FAILED } = require('pear-errors')
 const BlindPeering = require('blind-peering')
 
-function createBlindPeering(dht, corestore, peerKey) {
+function createClient(dht, corestore, peerKey) {
   const blindPeerKey = hid.decode(peerKey)
   return new BlindPeering(dht, corestore, {
     keys: [blindPeerKey],
@@ -142,7 +142,7 @@ async function requestCores(
 }
 
 module.exports = {
-  createBlindPeering,
+  createClient,
   addCore,
   untilBlobs,
   untilConnected,
