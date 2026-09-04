@@ -312,10 +312,10 @@ class Sidecar extends ReadyResource {
     }
 
     this.keyPair = await this.corestore.createKeyPair('holepunch')
-    this.dhtKeypair = await this.corestore.createKeyPair('holepunch/dht')
-    this.blindRelayKeypair = await this.corestore.createKeyPair('holepunch/blind-relay')
+    this.dhtKeyPair = await this.corestore.createKeyPair('holepunch/dht')
+    this.blindRelayKeyPair = await this.corestore.createKeyPair('holepunch/blind-relay')
 
-    this.dht = new HyperDHT({ keyPair: this.dhtKeypair, bootstrap: this.nodes, nodes })
+    this.dht = new HyperDHT({ keyPair: this.dhtKeyPair, bootstrap: this.nodes, nodes })
 
     this.swarm = new Hyperswarm({
       dht: this.dht,
