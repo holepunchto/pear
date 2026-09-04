@@ -161,7 +161,7 @@ module.exports = async function seed(cmd) {
       key = hypercoreid.normalize(key)
       peerKey = hypercoreid.normalize(peerKey)
       const msg = ctrlTTY
-        ? `${ansi.gray('o-o')} ${ansi.green(`confirming add core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
+        ? `${ansi.gray('>-<')} ${ansi.green(`confirming add core ${ansi.gray(key)} to blind peer ${ansi.gray(peerKey)}`)}`
         : `>-< confirming add core ${key} to blind peer ${peerKey}`
       peers.append([msg])
       terminalTableRenderer.render()
