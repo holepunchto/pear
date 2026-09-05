@@ -191,9 +191,9 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
-      driveLengthLocal,
+      driveSynced,
       driveLength,
-      blobsLengthLocal,
+      blobsSynced,
       blobsLength,
       blobsByteLength,
       name,
@@ -212,13 +212,13 @@ module.exports = async function seed(cmd) {
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength:
-          driveLengthLocal === driveLength
+          driveSynced === driveLength
             ? `${driveLength} synced`
-            : `${driveLengthLocal}/${driveLength} syncing...`,
+            : `${driveSynced}/${driveLength} syncing...`,
         blobsLength:
-          contentKey !== 'pending' && blobsLengthLocal === blobsLength
+          contentKey !== 'pending' && blobsSynced === blobsLength
             ? `${blobsLength} synced`
-            : `${blobsLengthLocal}/${blobsLength} syncing...`,
+            : `${blobsSynced}/${blobsLength} syncing...`,
         blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
