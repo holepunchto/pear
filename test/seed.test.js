@@ -154,7 +154,7 @@ test('pear seed empty drive has pending content key', async function ({ is, plan
   const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
 
   is(stats.contentKey, 'pending', 'content key is pending')
-  is(stats.blobsDownloadedBlocks, 0, 'downloaded blob blocks are zero')
+  is(stats.blobsLengthLocal, 0, 'local blobs length is zero')
   is(stats.blobsLength, 0, 'blobs length is zero')
   is(stats.blobsByteLength, 0, 'blobs byteLength is zero')
   is(stats.name, '', 'name is empty')
@@ -208,14 +208,14 @@ test('pear seed fully syncs db and blobs cores', async function ({
     tag: 'stats',
     data: {
       download: { totalBlocks },
-      driveDownloadedBlocks: sourceDrive.db.core.length,
-      blobsDownloadedBlocks: sourceBlobs.core.length,
+      driveLengthLocal: sourceDrive.db.core.length,
+      blobsLengthLocal: sourceBlobs.core.length,
       blobsLength: sourceBlobs.core.length
     }
   })
 
-  is(stats.driveDownloadedBlocks, sourceDrive.db.core.length, 'downloaded drive blocks')
-  is(stats.blobsDownloadedBlocks, sourceBlobs.core.length, 'downloaded blob blocks')
+  is(stats.driveLengthLocal, sourceDrive.db.core.length, 'local drive length')
+  is(stats.blobsLengthLocal, sourceBlobs.core.length, 'local blobs length')
   is(stats.blobsLength, sourceBlobs.core.length, 'blobs length')
   is(stats.blobsByteLength, sourceBlobs.core.byteLength, 'blobs size matches')
   is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
