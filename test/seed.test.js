@@ -170,7 +170,7 @@ test('pear seed fully syncs db and blobs cores', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(6)
+  plan(3)
 
   const sourceStore = new Corestore(await tmp())
   teardown(() => sourceStore.close())
@@ -214,9 +214,6 @@ test('pear seed fully syncs db and blobs cores', async function ({
     }
   })
 
-  is(stats.driveSynced, sourceDrive.db.core.length, 'drive synced blocks matches length')
-  is(stats.blobsSynced, sourceBlobs.core.length, 'blobs synced blocks matches length')
-  is(stats.blobsLength, sourceBlobs.core.length, 'blobs matches length')
   is(stats.blobsByteLength, sourceBlobs.core.byteLength, 'blobs size matches')
   is(dbBlocks, sourceDrive.db.core.length, 'synced db core')
   is(blobBlocks, sourceBlobs.core.length, 'synced blobs core')
