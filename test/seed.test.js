@@ -142,7 +142,7 @@ test('pear seed announces, join, drop', async function ({
 })
 
 test('pear seed empty drive has pending content key', async function ({ is, plan, teardown }) {
-  plan(4)
+  plan(6)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -154,6 +154,8 @@ test('pear seed empty drive has pending content key', async function ({ is, plan
   const stats = await Helper.pick(seeding, { tag: 'stats', data: { contentKey: 'pending' } })
 
   is(stats.contentKey, 'pending', 'content key is pending')
+  is(stats.blobsSynced, 0, 'blobs synced is zero')
+  is(stats.blobsLength, 0, 'blobs length is zero')
   is(stats.blobsByteLength, 0, 'blobs byteLength is zero')
   is(stats.name, '', 'name is empty')
   is(stats.semver, '', 'semver is empty')
@@ -204,7 +206,12 @@ test('pear seed fully syncs db and blobs cores', async function ({
   const totalBlocks = sourceDrive.db.core.length + sourceBlobs.core.length
   const stats = await Helper.pick(seeding, {
     tag: 'stats',
-    data: { download: { totalBlocks } }
+    data: {
+      download: { totalBlocks },
+      driveSynced: sourceDrive.db.core.length,
+      blobsSynced: sourceBlobs.core.length,
+      blobsLength: sourceBlobs.core.length
+    }
   })
 
   is(stats.blobsByteLength, sourceBlobs.core.byteLength, 'blobs size matches')

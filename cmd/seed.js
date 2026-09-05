@@ -58,7 +58,14 @@ module.exports = async function seed(cmd) {
     {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
-      initial
+      initial,
+      transform: (v) => (ctrlTTY ? (v.endsWith(' synced') ? ansi.green(v) : ansi.yellow(v)) : v)
+    },
+    {
+      key: 'blobsLength',
+      label: ctrlTTY ? 'Blobs Length:' : '... blobs length',
+      initial,
+      transform: (v) => (ctrlTTY ? (v.endsWith(' synced') ? ansi.green(v) : ansi.yellow(v)) : v)
     },
     {
       key: 'blobsByteLength',
@@ -184,7 +191,10 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
+      driveSynced,
       driveLength,
+      blobsSynced,
+      blobsLength,
       blobsByteLength,
       name,
       semver,
@@ -201,7 +211,14 @@ module.exports = async function seed(cmd) {
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
-        driveLength,
+        driveLength:
+          driveSynced === driveLength
+            ? `${driveLength} synced`
+            : `${driveSynced}/${driveLength} syncing...`,
+        blobsLength:
+          contentKey !== 'pending' && blobsSynced === blobsLength
+            ? `${blobsLength} synced`
+            : `${blobsSynced}/${blobsLength} syncing...`,
         blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
