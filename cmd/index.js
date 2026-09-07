@@ -69,6 +69,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
       .hint(
         "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Discovery Key, Content Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
       ),
+    flag('--blind-peer <key>', 'Add the drive being seeded to this blind peer key').hint(
+      'The public key of a blind peer to add the drive to.'
+    ),
     flag('--stats-interval <milliseconds>', 'Stats refresh interval in milliseconds').hint(
       'Defaults to 500 milliseconds with the live UI on, or 3000 milliseconds under --no-tty.'
     ),

@@ -240,8 +240,13 @@ class Rig {
     this.artefactDir = opts.artefactDir || Helper.localDir
   }
 
-  setup = async ({ comment = () => {}, timeout = () => {} } = {}) => {
+  setup = async ({ comment = () => {}, timeout = () => {}, cleanFirst = true } = {}) => {
     timeout(180000)
+
+    if (cleanFirst && fs.existsSync(this.localDir)) {
+      comment('cleaning up existing rig platform directory...')
+      await Helper.gc(this.localDir)
+    }
 
     comment('preparing rig platform...')
     const runtime = path.join(this.artefactDir, OUT)
