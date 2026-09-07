@@ -1,4 +1,5 @@
 #!/bin/sh
+# NOTE: macOS only started shipping `realpath` in macOS 13 Ventura
 command -v realpath >/dev/null 2>&1 && script=$(realpath -- "$0") || script=$0
 
 root=$(CDPATH= cd -- "$(dirname -- "$script")" && pwd)
