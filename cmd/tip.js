@@ -117,7 +117,6 @@ module.exports = async function tip(cmd) {
   const decimals = lightning ? 0 : (declared?.decimals ?? receipts.TIP.decimals)
   const unit = lightning ? 'sat' : token
 
-  const payer = await wdk.payer({ network: rail, wallet })
   let resolved = null
   let quote = null
 
@@ -126,10 +125,14 @@ module.exports = async function tip(cmd) {
     quote = await wdk.quoteInvoice({ invoice: resolved.invoice, wallet })
   } else {
     await assertToken({ token, network })
-    await assertFundable({ amount, decimals, token, network, wallet, payer })
+    await assertFundable({ amount, decimals, token, network, wallet })
     if (dryRun === false) await assertGas({ network, wallet })
     quote = await wdk.quote({ payee, amount, token, network, wallet })
   }
+
+  // Quote first, so the sender can come from it once WDK reports one and this stops
+  // costing an extra round trip.
+  const payer = await wdk.payer({ network: rail, wallet, from: quote?.from })
 
   const rows = summary({ quote, payer, payee, rail, lightning, amount, decimals, unit })
 
@@ -210,8 +213,8 @@ function maxFee(quote) {
   return Math.max(Math.ceil(Number(quote?.feeSats ?? 0) * 2), 10)
 }
 
-// The same Tether contract is registered as 'usdt' on ethereum and 'usdt0' on polygon, so a
-// network switch quietly breaks the token name. Say which names that network does have.
+// Chains carry different assets — ethereum has USDT, polygon has USDT0 and no usdt entry —
+// so a token name does not survive a network switch. Say which names that network has.
 async function assertToken({ token, network }) {
   let available
   try {
@@ -275,7 +278,7 @@ async function assertGas({ network, wallet }) {
 
 // An ERC-20 fee estimate simulates the transfer, so it reverts when the balance cannot
 // cover it. Catch that here, where we can say which balance is short.
-async function assertFundable({ amount, decimals, token, network, wallet, payer }) {
+async function assertFundable({ amount, decimals, token, network, wallet }) {
   let held
   try {
     held = await wdk.balance({ network, token, wallet })
@@ -285,6 +288,8 @@ async function assertFundable({ amount, decimals, token, network, wallet, payer 
 
   if (BigInt(held.balance ?? 0) >= BigInt(amount)) return
 
+  // Only worth naming the wallet when we are about to tell someone it is short.
+  const payer = await wdk.payer({ network, wallet })
   const wanted = receipts.format({ amount, decimals, token })
   const message =
     `Not enough ${held.symbol ?? token} on ${network}.\n` +
