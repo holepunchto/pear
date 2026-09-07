@@ -8,6 +8,11 @@ const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
+const syncProgress = (synced, length, isSynced) =>
+  isSynced
+    ? `synced ${length}`
+    : `syncing ${length === 0 ? 0 : Math.floor((synced / length) * 100)}% (${synced}/${length})`
+
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
@@ -59,13 +64,13 @@ module.exports = async function seed(cmd) {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
       initial,
-      transform: (v) => (ctrlTTY ? (v.endsWith(' synced') ? ansi.green(v) : ansi.yellow(v)) : v)
+      transform: (v) => (ctrlTTY ? (v.startsWith('synced ') ? ansi.green(v) : ansi.yellow(v)) : v)
     },
     {
       key: 'blobsLength',
       label: ctrlTTY ? 'Blobs Length:' : '... blobs length',
       initial,
-      transform: (v) => (ctrlTTY ? (v.endsWith(' synced') ? ansi.green(v) : ansi.yellow(v)) : v)
+      transform: (v) => (ctrlTTY ? (v.startsWith('synced ') ? ansi.green(v) : ansi.yellow(v)) : v)
     },
     {
       key: 'blobsByteLength',
@@ -211,14 +216,12 @@ module.exports = async function seed(cmd) {
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
-        driveLength:
-          driveSynced === driveLength
-            ? `${driveLength} synced`
-            : `${driveSynced}/${driveLength} syncing...`,
-        blobsLength:
+        driveLength: syncProgress(driveSynced, driveLength, driveSynced === driveLength),
+        blobsLength: syncProgress(
+          blobsSynced,
+          blobsLength,
           contentKey !== 'pending' && blobsSynced === blobsLength
-            ? `${blobsLength} synced`
-            : `${blobsSynced}/${blobsLength} syncing...`,
+        ),
         blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
