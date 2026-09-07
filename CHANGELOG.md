@@ -1,5 +1,25 @@
 # Pear Runtime Changelog
 
+## v3.4.0
+
+### Features
+
+* CLI - `pear blind-peer` - `start` runs a blind peer (`--trusted-peer <peer>`), `identity` shows the peer identity key, `request <key>` asks a blind peer to seed (`--peer <peer>`, `--core-only`)
+* CLI - `pear blind-relay start` - run a blind relay for peers that cannot hole-punch (`--no-tty`, `--stats-interval <milliseconds>`)
+* CLI - `pear seed --blind-peer <key>` - add the drive being seeded to a blind peer, implies `--until-sync`
+* CLI - `pear --relay <key>` - relay connections through a peer
+* CLI - `pear stage --skip-package-json` - stage a project directory without a `package.json`
+
+### Improvements
+
+* CLI - `pear cores` - tabular output with a header row, plus `Length`, `Writable` and `Size` columns and a total size summary
+* CLI - `pear seed` - `App:  <name>@<version>` field
+* CLI - `pear seed` - blobs size is included in the output
+* CLI - hints are written to stderr instead of stdout
+* CLI - hint alignment and tabulation adjusted
+* CLI - `pear stage` - `package.json` validation hardened, no upward search through parent directories
+* Internal - deps bump
+
 ## v3.3.0
 
 ### Features
