@@ -8,10 +8,10 @@ const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
-const syncProgress = (synced, length, isSynced) =>
-  isSynced
-    ? `synced ${length}`
-    : `syncing ${length === 0 ? 0 : Math.floor((synced / length) * 100)}% (${synced}/${length})`
+const syncProgress = (synced, length, isSynced) => {
+  const percent = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
+  return `${isSynced ? length : `${synced}/${length}`} [ ${percent}% ]`
+}
 
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
@@ -64,13 +64,23 @@ module.exports = async function seed(cmd) {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
       initial,
-      transform: (v) => (ctrlTTY ? (v.startsWith('synced ') ? ansi.green(v) : ansi.yellow(v)) : v)
+      transform: (v) =>
+        ctrlTTY
+          ? v.includes('[ 100% ]')
+            ? v.replace('[ 100% ]', ansi.gray('[ 100% ]'))
+            : ansi.yellow(v)
+          : v
     },
     {
       key: 'blobsLength',
       label: ctrlTTY ? 'Blobs Length:' : '... blobs length',
       initial,
-      transform: (v) => (ctrlTTY ? (v.startsWith('synced ') ? ansi.green(v) : ansi.yellow(v)) : v)
+      transform: (v) =>
+        ctrlTTY
+          ? v.includes('[ 100% ]')
+            ? v.replace('[ 100% ]', ansi.gray('[ 100% ]'))
+            : ansi.yellow(v)
+          : v
     },
     {
       key: 'blobsByteLength',
