@@ -8,11 +8,6 @@ const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
-const syncProgress = (synced, length, isSynced) => {
-  const percent = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
-  return `${isSynced ? length : `${synced}/${length}`} [ ${percent}% ]`
-}
-
 module.exports = async function seed(cmd) {
   const ipc = context.getIPC()
   const { json, tty } = cmd.flags
@@ -41,6 +36,13 @@ module.exports = async function seed(cmd) {
   })
   const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
+  const transformLength = ({ synced, length, isSynced }) => {
+    const percentage = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
+    const blocks = isSynced ? length : `${synced}/${length}`
+    const progress = `${blocks} [ ${percentage}% ]`
+    if (!ctrlTTY) return progress
+    return isSynced ? `${blocks} ${ansi.gray(`[ ${percentage}% ]`)}` : ansi.yellow(progress)
+  }
 
   const stats = new DictTable([
     {
@@ -64,23 +66,13 @@ module.exports = async function seed(cmd) {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
       initial,
-      transform: (v) =>
-        ctrlTTY
-          ? v.includes('[ 100% ]')
-            ? v.replace('[ 100% ]', ansi.gray('[ 100% ]'))
-            : ansi.yellow(v)
-          : v
+      transform: transformLength
     },
     {
       key: 'blobsLength',
       label: ctrlTTY ? 'Blobs Length:' : '... blobs length',
       initial,
-      transform: (v) =>
-        ctrlTTY
-          ? v.includes('[ 100% ]')
-            ? v.replace('[ 100% ]', ansi.gray('[ 100% ]'))
-            : ansi.yellow(v)
-          : v
+      transform: transformLength
     },
     {
       key: 'blobsByteLength',
@@ -226,12 +218,16 @@ module.exports = async function seed(cmd) {
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
-        driveLength: syncProgress(driveSynced, driveLength, driveSynced === driveLength),
-        blobsLength: syncProgress(
-          blobsSynced,
-          blobsLength,
-          contentKey !== 'pending' && blobsSynced === blobsLength
-        ),
+        driveLength: {
+          synced: driveSynced,
+          length: driveLength,
+          isSynced: driveSynced === driveLength
+        },
+        blobsLength: {
+          synced: blobsSynced,
+          length: blobsLength,
+          isSynced: hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
+        },
         blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
