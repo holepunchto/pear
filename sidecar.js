@@ -5,6 +5,8 @@ const Rache = require('rache')
 const setupCrashHandlers = require('./lib/crasher.js')
 const gracedown = require('pear-gracedown')
 const os = require('bare-os')
+const env = require('bare-env')
+const { isLinux } = require('which-runtime')
 const pear = require('./lib/cmd').command
 const path = require('bare-path')
 const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./constants.js')
@@ -63,7 +65,7 @@ async function bootSidecar() {
 
   function createUpdater() {
     if (LOCALDEV || !upgrade) return null
-    const app = os.execPath()
+    const app = (isLinux && env.APPIMAGE) || os.execPath()
     if (!app) return null
 
     const name = path.basename(app) || productName || 'pear'
