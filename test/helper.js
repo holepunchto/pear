@@ -52,7 +52,7 @@ class Helper extends IPC.Client {
   static OUT = OUT
   // DO NOT UNDER ANY CIRCUMSTANCES ADD PUBLIC METHODS OR PROPERTIES TO HELPER (see pear-ipc)
   constructor(opts = {}) {
-    const logging = cmdArgs.filter((arg) => arg.startsWith('--log'))
+    const logging = cmdArgs.filter((arg) => arg.startsWith('--log-level'))
     const log = logging.length > 0
     const runtime = opts.platformDir
       ? path.resolve(opts.platformDir, '..', OUT)
