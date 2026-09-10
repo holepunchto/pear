@@ -1,5 +1,6 @@
 'use strict'
 const hypercoreid = require('hypercore-id-encoding')
+const plink = require('pear-link')
 const speedometer = require('speedometer')
 const safetyCatch = require('safety-catch')
 const { ERR_INVALID_INPUT } = require('pear-errors')
@@ -27,6 +28,9 @@ module.exports = class Seed extends Opstream {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
         peers: core.peers.length,
         driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
+        verlink: plink.serialize({
+          drive: { length: core.length, fork: core.fork, key: drive.key }
+        }),
         driveSynced: core.core.bitfield.countSet(0, core.length) ?? 0,
         driveLength: core.length ?? 0,
         blobsSynced: blobs?.core.bitfield.countSet(0, blobs.length) ?? 0,

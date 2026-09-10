@@ -60,6 +60,12 @@ module.exports = async function seed(cmd) {
       initial
     },
     {
+      key: 'verlink',
+      label: ctrlTTY ? 'Verlink:' : '... verlink',
+      initial,
+      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
+    },
+    {
       key: 'driveKey',
       label: ctrlTTY ? 'Drive Key:' : '... drive key',
       initial,
@@ -201,6 +207,7 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
+      verlink,
       driveSynced,
       driveLength,
       blobsSynced,
@@ -225,6 +232,8 @@ module.exports = async function seed(cmd) {
       const blobsBlocks = isBlobsSynced ? blobsLength : `${blobsSynced}/${blobsLength}`
       blocksWidth = Math.max(String(driveBlocks).length, String(blobsBlocks).length) + 1
       stats.update({
+        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
+        verlink,
         driveKey: hypercoreid.normalize(driveKey),
         driveLength: {
           synced: driveSynced,
@@ -237,7 +246,6 @@ module.exports = async function seed(cmd) {
           isSynced: isBlobsSynced
         },
         blobsByteLength,
-        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
