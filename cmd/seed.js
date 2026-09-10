@@ -55,22 +55,17 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
-      key: 'app',
-      label: ctrlTTY ? 'App:' : '... app',
-      initial
-    },
-    {
       key: 'verlink',
       label: ctrlTTY ? 'Verlink:' : '... verlink',
       initial,
       transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
     },
     {
-      key: 'driveKey',
-      label: ctrlTTY ? 'Drive Key:' : '... drive key',
-      initial,
-      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
+      key: 'app',
+      label: ctrlTTY ? 'App:' : '... app',
+      initial
     },
+    ...(ctrlTTY ? [] : [{ key: 'driveKey', label: '... drive key', initial }]),
     {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
@@ -207,7 +202,7 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
-      verlink,
+      driveFork,
       driveSynced,
       driveLength,
       blobsSynced,
@@ -232,9 +227,9 @@ module.exports = async function seed(cmd) {
       const blobsBlocks = isBlobsSynced ? blobsLength : `${blobsSynced}/${blobsLength}`
       blocksWidth = Math.max(String(driveBlocks).length, String(blobsBlocks).length) + 1
       stats.update({
+        verlink: `pear://${driveFork}.${driveLength}.${driveKey}`,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
-        verlink,
-        driveKey: hypercoreid.normalize(driveKey),
+        ...(ctrlTTY ? {} : { driveKey: hypercoreid.normalize(driveKey) }),
         driveLength: {
           synced: driveSynced,
           length: driveLength,
