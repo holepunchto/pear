@@ -40,10 +40,11 @@ module.exports = async function seed(cmd) {
   const transformLength = ({ synced, length, isSynced }) => {
     const percentage = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
     const blocks = isSynced ? length : `${synced}/${length}`
-    const blocksLabel = ctrlTTY ? String(blocks).padEnd(blocksWidth) : `${blocks} `
-    const progress = `${blocksLabel}[ ${percentage}% ]`
-    if (!ctrlTTY) return progress
-    return isSynced ? `${blocksLabel}${ansi.gray(`[ ${percentage}% ]`)}` : ansi.yellow(progress)
+    if (!ctrlTTY) return `${blocks} [ ${percentage}% ]`
+    const blocksLabel = String(blocks).padEnd(blocksWidth)
+    const percentageLabel = `[${String(percentage).padStart(3)}%]`
+    const progress = `${blocksLabel}${percentageLabel}`
+    return isSynced ? `${blocksLabel}${ansi.gray(percentageLabel)}` : ansi.yellow(progress)
   }
 
   const stats = new DictTable([
