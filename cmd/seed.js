@@ -36,12 +36,14 @@ module.exports = async function seed(cmd) {
   })
   const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
+  let blocksWidth = 0
   const transformLength = ({ synced, length, isSynced }) => {
     const percentage = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
     const blocks = isSynced ? length : `${synced}/${length}`
-    const progress = `${blocks} [ ${percentage}% ]`
+    const blocksLabel = ctrlTTY ? String(blocks).padEnd(blocksWidth) : `${blocks} `
+    const progress = `${blocksLabel}[ ${percentage}% ]`
     if (!ctrlTTY) return progress
-    return isSynced ? `${blocks} ${ansi.gray(`[ ${percentage}% ]`)}` : ansi.yellow(progress)
+    return isSynced ? `${blocksLabel}${ansi.gray(`[ ${percentage}% ]`)}` : ansi.yellow(progress)
   }
 
   const stats = new DictTable([
@@ -216,17 +218,22 @@ module.exports = async function seed(cmd) {
       const network = ctrlTTY
         ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
+      const isDriveSynced = driveSynced === driveLength
+      const isBlobsSynced = hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
+      const driveBlocks = isDriveSynced ? driveLength : `${driveSynced}/${driveLength}`
+      const blobsBlocks = isBlobsSynced ? blobsLength : `${blobsSynced}/${blobsLength}`
+      blocksWidth = Math.max(String(driveBlocks).length, String(blobsBlocks).length) + 1
       stats.update({
         driveKey: hypercoreid.normalize(driveKey),
         driveLength: {
           synced: driveSynced,
           length: driveLength,
-          isSynced: driveSynced === driveLength
+          isSynced: isDriveSynced
         },
         blobsLength: {
           synced: blobsSynced,
           length: blobsLength,
-          isSynced: hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
+          isSynced: isBlobsSynced
         },
         blobsByteLength,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
