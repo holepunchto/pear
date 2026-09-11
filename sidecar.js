@@ -32,7 +32,10 @@ async function bootSidecar() {
 
   const maxCacheSize = 65536
   const globalCache = new Rache({ maxSize: maxCacheSize })
-  const nodes = pear(cmdArgs.filter((arg) => arg !== 'sidecar'))
+  const nodes = pear(
+    cmdArgs.filter((arg) => arg !== 'sidecar'),
+    { bails: true }
+  )
     .flags.dhtBootstrap?.split(',')
     .map((tuple) => {
       const [host, port] = tuple.split(':')
