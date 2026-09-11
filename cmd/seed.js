@@ -36,6 +36,16 @@ module.exports = async function seed(cmd) {
   })
   const ctrlTTY = terminalTableRenderer.ctrlTTY
   const initial = ctrlTTY ? ansi.dim('loading...') : 'loading...'
+  let blocksWidth = 0
+  const transformLength = ({ synced, length, isSynced }) => {
+    const percentage = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
+    const blocks = isSynced ? length : `${synced}/${length}`
+    if (!ctrlTTY) return `${blocks} [ ${percentage}% ]`
+    const blocksLabel = String(blocks).padEnd(blocksWidth)
+    const percentageLabel = `[${String(percentage).padStart(3)}%]`
+    const progress = `${blocksLabel}${percentageLabel}`
+    return isSynced ? `${blocksLabel}${ansi.gray(percentageLabel)}` : ansi.yellow(progress)
+  }
 
   const stats = new DictTable([
     {
@@ -45,20 +55,26 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
+      key: 'verlink',
+      label: ctrlTTY ? 'Verlink:' : '... verlink',
+      initial
+    },
+    {
       key: 'app',
       label: ctrlTTY ? 'App:' : '... app',
       initial
     },
     {
-      key: 'driveKey',
-      label: ctrlTTY ? 'Drive Key:' : '... drive key',
-      initial,
-      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
-    },
-    {
       key: 'driveLength',
       label: ctrlTTY ? 'Drive Length:' : '... drive length',
-      initial
+      initial,
+      transform: transformLength
+    },
+    {
+      key: 'blobsLength',
+      label: ctrlTTY ? 'Blobs Length:' : '... blobs length',
+      initial,
+      transform: transformLength
     },
     {
       key: 'blobsByteLength',
@@ -184,7 +200,11 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
+      driveFork,
+      driveSynced,
       driveLength,
+      blobsSynced,
+      blobsLength,
       blobsByteLength,
       name,
       semver,
@@ -199,11 +219,25 @@ module.exports = async function seed(cmd) {
       const network = ctrlTTY
         ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
         : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
+      const isDriveSynced = driveSynced === driveLength
+      const isBlobsSynced = hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
+      const driveBlocks = isDriveSynced ? driveLength : `${driveSynced}/${driveLength}`
+      const blobsBlocks = isBlobsSynced ? blobsLength : `${blobsSynced}/${blobsLength}`
+      blocksWidth = Math.max(String(driveBlocks).length, String(blobsBlocks).length) + 1
       stats.update({
-        driveKey: hypercoreid.normalize(driveKey),
-        driveLength,
-        blobsByteLength,
+        verlink: `pear://${driveFork}.${driveLength}.${driveKey}`,
         app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
+        driveLength: {
+          synced: driveSynced,
+          length: driveLength,
+          isSynced: isDriveSynced
+        },
+        blobsLength: {
+          synced: blobsSynced,
+          length: blobsLength,
+          isSynced: isBlobsSynced
+        },
+        blobsByteLength,
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)

@@ -1,6 +1,6 @@
 'use strict'
 const context = require('../context')
-const { outputter, ansi, byteSize } = require('../lib/terminal.js')
+const { outputter, ansi, byteSize, stdio } = require('../lib/terminal.js')
 
 const TYPES = ['core', 'blobs']
 const TYPE_WIDTH = Math.max(...TYPES.map((type) => type.length))
@@ -28,7 +28,7 @@ module.exports = async function cores(cmd) {
   const json = cmd.flags.json
   const allCores = cmd.flags.allCores
   await output(
-    { json, ctrlTTY: false, log: (line) => console.log(line) },
+    { json, ctrlTTY: false, log: (line) => stdio.out.write(`${line}\n`) },
     ipc.cores({ allCores }),
     { cores: [] }
   )
