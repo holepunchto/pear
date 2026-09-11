@@ -27,6 +27,7 @@ module.exports = class Seed extends Opstream {
         firewalled: dht.bootstrapped ? (dht.firewalled ? true : false) : undefined,
         peers: core.peers.length,
         driveKey: drive.key ? hypercoreid.encode(drive.key) : undefined,
+        driveFork: core.fork,
         driveSynced: core.core.bitfield.countSet(0, core.length) ?? 0,
         driveLength: core.length ?? 0,
         blobsSynced: blobs?.core.bitfield.countSet(0, blobs.length) ?? 0,

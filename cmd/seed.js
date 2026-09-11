@@ -40,10 +40,11 @@ module.exports = async function seed(cmd) {
   const transformLength = ({ synced, length, isSynced }) => {
     const percentage = isSynced ? 100 : length === 0 ? 0 : Math.floor((synced / length) * 100)
     const blocks = isSynced ? length : `${synced}/${length}`
-    const blocksLabel = ctrlTTY ? String(blocks).padEnd(blocksWidth) : `${blocks} `
-    const progress = `${blocksLabel}[ ${percentage}% ]`
-    if (!ctrlTTY) return progress
-    return isSynced ? `${blocksLabel}${ansi.gray(`[ ${percentage}% ]`)}` : ansi.yellow(progress)
+    if (!ctrlTTY) return `${blocks} [ ${percentage}% ]`
+    const blocksLabel = String(blocks).padEnd(blocksWidth)
+    const percentageLabel = `[${String(percentage).padStart(3)}%]`
+    const progress = `${blocksLabel}${percentageLabel}`
+    return isSynced ? `${blocksLabel}${ansi.gray(percentageLabel)}` : ansi.yellow(progress)
   }
 
   const stats = new DictTable([
@@ -54,15 +55,14 @@ module.exports = async function seed(cmd) {
       transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
     },
     {
-      key: 'app',
-      label: ctrlTTY ? 'App:' : '... app',
+      key: 'verlink',
+      label: ctrlTTY ? 'Verlink:' : '... verlink',
       initial
     },
     {
-      key: 'driveKey',
-      label: ctrlTTY ? 'Drive Key:' : '... drive key',
-      initial,
-      transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
+      key: 'app',
+      label: ctrlTTY ? 'App:' : '... app',
+      initial
     },
     {
       key: 'driveLength',
@@ -200,6 +200,7 @@ module.exports = async function seed(cmd) {
     stats({
       peers,
       driveKey,
+      driveFork,
       driveSynced,
       driveLength,
       blobsSynced,
@@ -224,7 +225,8 @@ module.exports = async function seed(cmd) {
       const blobsBlocks = isBlobsSynced ? blobsLength : `${blobsSynced}/${blobsLength}`
       blocksWidth = Math.max(String(driveBlocks).length, String(blobsBlocks).length) + 1
       stats.update({
-        driveKey: hypercoreid.normalize(driveKey),
+        verlink: `pear://${driveFork}.${driveLength}.${driveKey}`,
+        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         driveLength: {
           synced: driveSynced,
           length: driveLength,
@@ -236,7 +238,6 @@ module.exports = async function seed(cmd) {
           isSynced: isBlobsSynced
         },
         blobsByteLength,
-        app: `${name ?? ''}${semver ? `@${semver}` : ''}` || '-',
         discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
