@@ -15,7 +15,7 @@ test('pear seed basic stage and seed', async function ({
   timeout
 }) {
   timeout(180000)
-  plan(18)
+  plan(19)
 
   const dir = Helper.fixture('versions')
 
@@ -53,6 +53,7 @@ test('pear seed basic stage and seed', async function ({
 
   const stats = await until.stats
   is(stats.driveKey, hypercoreid.normalize(stats.driveKey), 'stats driveKey is z32')
+  ok(Number.isInteger(stats.driveFork), 'stats have driveFork')
   is(stats.driveLength, addendum.version, 'stats have driveLength')
   ok(Number.isInteger(stats.blobsByteLength), 'stats have blobsByteLength')
   is(stats.name, 'versions', 'stats have package name')
