@@ -3,7 +3,6 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 const { outputter } = require('../lib/terminal.js')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { hint } = require('../lib/terminal')
 const { parse } = require('../lib/link')
 
 const output = outputter('blind-peer', {
@@ -32,13 +31,6 @@ const output = outputter('blind-peer', {
   'core-client-mode-changed': ({ key, isClient }) =>
     `Announced core ${isClient ? 'enabled' : 'disabled'} client mode: ${key}`,
   final: (data) => {
-    if (data.subcommand === 'identity') {
-      return {
-        output: 'print',
-        success: Infinity,
-        message: data.publicKey
-      }
-    }
     if (data.subcommand === 'request') {
       return {
         output: 'status',
@@ -57,23 +49,7 @@ module.exports = async function blindPeer(cmd) {
   const data = validators[subcommand] ? await validators[subcommand](cmd) : null
   const stream = ipc.blindPeer({ subcommand, data })
 
-  const isIdentity = subcommand === 'identity'
-  const log = isIdentity ? (line) => console.log(line) : undefined
-
-  const final = await output({ json, ctrlTTY: !isIdentity, log }, stream)
-
-  if (hinters[subcommand]) hinters[subcommand]({ json, final })
-}
-
-const hinters = {
-  identity({ json, final }) {
-    if (!json) {
-      hint('Use the key above as a trusted peer for your blind peer', [
-        `pear blind-peer start --trusted-peer=${final.publicKey}`
-      ])
-    }
-    return null
-  }
+  await output({ json }, stream)
 }
 
 const validators = {
