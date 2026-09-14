@@ -521,14 +521,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const identity = command(
     'identity',
     summary('Show local network public keys'),
-    command('seed', summary("Show seed's swarm key (Whoami)"), commands.identity),
-    command('blind-relay', summary('Show blind relay listening key'), commands.identity),
-    command('blind-peer', summary('Show blind peer listening key'), commands.identity),
-    command(
-      'blind-peer-client',
-      summary('Show DHT client key for blind-peer start --trusted-peer'),
-      commands.identity
-    ),
+    command('seed', summary('Show seed key'), commands.identity),
+    command('blind-relay', summary('Show blind relay key'), commands.identity),
+    command('blind-peer', summary('Show blind peer key'), commands.identity),
+    command('blind-peer-client', summary('Show blind peer client key'), commands.identity),
     () => {
       console.log(identity.help())
     }
