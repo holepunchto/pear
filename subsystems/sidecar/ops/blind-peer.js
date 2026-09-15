@@ -1,5 +1,4 @@
 'use strict'
-const path = require('bare-path')
 const hid = require('hypercore-id-encoding')
 const safetyCatch = require('safety-catch')
 const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
@@ -16,38 +15,8 @@ module.exports = class BlindPeerOp extends Opstream {
   async #op({ subcommand, data } = {}) {
     await this.sidecar.ready()
     if (subcommand === 'start') return this.start(data)
-    if (subcommand === 'identity') return this.identity(data)
     if (subcommand === 'request') return this.request(data)
     throw ERR_INVALID_INPUT('Unknown subcommand: ' + subcommand)
-  }
-
-  async identity({ type = 'dht' } = {}) {
-    const keyPairs = {
-      seed: this.sidecar.keyPair,
-      'blind-relay': this.sidecar.blindRelayKeyPair,
-      'blind-peer-client': this.sidecar.dhtKeyPair,
-      dht: this.sidecar.dhtKeyPair
-    }
-    let publicKey = keyPairs[type]?.publicKey
-    if (type === 'blind-peer') {
-      let blindPeer = this.sidecar.activeBlindPeer
-      if (blindPeer?.closing) await blindPeer.closing
-      if (!blindPeer || blindPeer.closed) {
-        const storagePath = path.join(
-          path.dirname(path.dirname(this.sidecar.corestore.storage.path)),
-          'blind-peer'
-        )
-        blindPeer = await this.session.add(
-          new BlindPeer(storagePath, { bootstrap: this.sidecar.nodes })
-        )
-      }
-      publicKey = blindPeer.publicKey
-    }
-    if (!publicKey) throw ERR_INVALID_INPUT('Unknown identity: ' + type)
-    this.final = {
-      subcommand: 'identity',
-      publicKey: hid.normalize(publicKey)
-    }
   }
 
   async start({ trustedPeers = [], downloadedDebounce = 10_000 } = {}) {
@@ -61,13 +30,8 @@ module.exports = class BlindPeerOp extends Opstream {
       }
     }
 
-    const storagePath = path.join(
-      path.dirname(path.dirname(sidecar.corestore.storage.path)),
-      'blind-peer'
-    )
-
     const blindPeer = await session.add(
-      new BlindPeer(storagePath, {
+      new BlindPeer(sidecar.blindPeerPath(), {
         bootstrap: sidecar.nodes,
         trustedPubKeys: trustedPeers.map((peer) => hid.decode(peer))
       })

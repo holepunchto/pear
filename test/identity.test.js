@@ -13,7 +13,7 @@ test('pear identity returns z32 identities', async function ({ teardown, plan, i
   let blindPeerIdentity
   let blindPeerClientIdentity
   for (const type of ['seed', 'blind-relay', 'blind-peer', 'blind-peer-client']) {
-    const stream = helper.blindPeer({ subcommand: 'identity', data: { type } })
+    const stream = helper.identity({ type })
     teardown(() => Helper.teardownStream(stream))
     const { final } = await Helper.pick(stream, [{ tag: 'final' }])
     const { publicKey } = await final
@@ -23,14 +23,14 @@ test('pear identity returns z32 identities', async function ({ teardown, plan, i
     await Helper.teardownStream(stream)
   }
 
-  const clientIdentityStream = helper.blindPeer({ subcommand: 'identity' })
+  const clientIdentityStream = helper.identity()
   teardown(() => Helper.teardownStream(clientIdentityStream))
   const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
   is(blindPeerClientIdentity, (await final).publicKey, 'client identity matches DHT key')
   await Helper.teardownStream(clientIdentityStream)
 
-  const stream = helper.blindPeer({ subcommand: 'start' })
-  teardown(() => Helper.teardownStream(stream))
-  const { listening } = await Helper.pick(stream, [{ tag: 'listening' }])
+  const startStream = helper.blindPeer({ subcommand: 'start' })
+  teardown(() => Helper.teardownStream(startStream))
+  const { listening } = await Helper.pick(startStream, [{ tag: 'listening' }])
   is(blindPeerIdentity, (await listening).publicKey, 'blind-peer identity matches listening key')
 })
