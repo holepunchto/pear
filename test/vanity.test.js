@@ -11,7 +11,7 @@ function pearKey(publicKey) {
   return z32.encode(Hypercore.key({ signers: [{ publicKey }] }))
 }
 
-function generateMultisigConfig(avoidPrefixes = []) {
+function generateMultisigConfig({ avoid = [] } = {}) {
   let config
   do {
     config = {
@@ -19,7 +19,7 @@ function generateMultisigConfig(avoidPrefixes = []) {
       namespace: 'test-namespace',
       quorum: 2
     }
-  } while (avoidPrefixes.some((prefix) => multisigKey(config.namespace, config).startsWith(prefix)))
+  } while (avoid.some((prefix) => multisigKey(config.namespace, config).startsWith(prefix)))
 
   return config
 }
@@ -66,7 +66,7 @@ test('repeated calls to touch should return different keys', async ({ plan, not 
 
 test('multisig vanity key should start with given two-char prefix', async ({ plan, ok }) => {
   plan(3)
-  const config = generateMultisigConfig(['pe', 'ea', 'rs'])
+  const config = generateMultisigConfig({ avoid: ['pe', 'ea', 'rs'] })
 
   {
     const prefix = 'pe'
@@ -90,7 +90,7 @@ test('multisig vanity key should start with given two-char prefix', async ({ pla
 test('repeated multisig vanity calls should return different namespaces', async ({ plan, not }) => {
   plan(1)
   const prefix = 'ab'
-  const config = generateMultisigConfig([prefix])
+  const config = generateMultisigConfig({ avoid: [prefix] })
 
   const namespace1 = await findVanityKey(prefix, 'multisig', config)
   const namespace2 = await findVanityKey(prefix, 'multisig', config)
@@ -101,7 +101,7 @@ test('repeated multisig vanity calls should return different namespaces', async 
 test('multisig vanity should retain namespace if already matching', async ({ plan, is }) => {
   plan(1)
   const prefix = 'pe'
-  const config = generateMultisigConfig([prefix])
+  const config = generateMultisigConfig({ avoid: [prefix] })
 
   const namespace1 = await findVanityKey(prefix, 'multisig', config)
   config.namespace = namespace1
