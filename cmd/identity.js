@@ -12,10 +12,11 @@ const output = outputter('identity', {
 
 module.exports = async function identity(cmd) {
   const ipc = context.getIPC()
+  const json = cmd.command.parent.flags.json
   const stream = ipc.blindPeer({
     subcommand: 'identity',
     data: { type: cmd.command.name }
   })
 
-  await output({ ctrlTTY: false, log: (line) => console.log(line) }, stream)
+  await output({ json, ctrlTTY: false, log: (line) => console.log(line) }, stream)
 }

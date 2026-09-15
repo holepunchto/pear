@@ -525,6 +525,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     command('blind-relay', summary('Show blind relay key'), commands.identity),
     command('blind-peer', summary('Show blind peer key'), commands.identity),
     command('blind-peer-client', summary('Show blind peer client key'), commands.identity),
+    flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(identity.help())
     }
