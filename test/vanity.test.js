@@ -11,15 +11,17 @@ function pearKey(publicKey) {
   return z32.encode(Hypercore.key({ signers: [{ publicKey }] }))
 }
 
-function generateMultisigConfig() {
-  const kp1 = crypto.keyPair()
-  const kp2 = crypto.keyPair()
-  const kp3 = crypto.keyPair()
-  return {
-    publicKeys: [kp1.publicKey, kp2.publicKey, kp3.publicKey],
-    namespace: 'test-namespace',
-    quorum: 2
-  }
+function generateMultisigConfig({ avoid = [] } = {}) {
+  let config
+  do {
+    config = {
+      publicKeys: Array.from({ length: 3 }, () => crypto.keyPair().publicKey),
+      namespace: 'test-namespace',
+      quorum: 2
+    }
+  } while (avoid.some((prefix) => multisigKey(config.namespace, config).startsWith(prefix)))
+
+  return config
 }
 
 function multisigKey(namespace, config) {
@@ -64,7 +66,7 @@ test('repeated calls to touch should return different keys', async ({ plan, not 
 
 test('multisig vanity key should start with given two-char prefix', async ({ plan, ok }) => {
   plan(3)
-  const config = generateMultisigConfig()
+  const config = generateMultisigConfig({ avoid: ['pe', 'ea', 'rs'] })
 
   {
     const prefix = 'pe'
@@ -88,7 +90,7 @@ test('multisig vanity key should start with given two-char prefix', async ({ pla
 test('repeated multisig vanity calls should return different namespaces', async ({ plan, not }) => {
   plan(1)
   const prefix = 'ab'
-  const config = generateMultisigConfig()
+  const config = generateMultisigConfig({ avoid: [prefix] })
 
   const namespace1 = await findVanityKey(prefix, 'multisig', config)
   const namespace2 = await findVanityKey(prefix, 'multisig', config)
@@ -99,7 +101,7 @@ test('repeated multisig vanity calls should return different namespaces', async 
 test('multisig vanity should retain namespace if already matching', async ({ plan, is }) => {
   plan(1)
   const prefix = 'pe'
-  const config = generateMultisigConfig()
+  const config = generateMultisigConfig({ avoid: [prefix] })
 
   const namespace1 = await findVanityKey(prefix, 'multisig', config)
   config.namespace = namespace1
