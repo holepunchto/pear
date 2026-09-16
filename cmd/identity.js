@@ -5,7 +5,7 @@ const { outputter } = require('../lib/terminal.js')
 const output = outputter('identity', {
   final: ({ publicKey }) => ({
     output: 'print',
-    success: Infinity,
+    success: Infinity, // omit success ansi tick
     message: publicKey
   })
 })
