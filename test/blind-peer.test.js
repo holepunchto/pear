@@ -110,11 +110,11 @@ test('blind peer should serve with trusted keys and announce when trusted client
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const server = new Helper(rig)
@@ -293,11 +293,11 @@ test('blind peer should download and sync core data from trusted client', async 
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const link = await Helper.touchLink(client)
@@ -389,11 +389,11 @@ test('blind peer should download and sync core data seeded by another host insta
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const server = new Helper(rig)
@@ -446,11 +446,11 @@ test('blind peer should add an unseeded core when coreOnly is true', async funct
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const unseededKey = hid.normalize(Helper.getRandomId())
@@ -500,11 +500,11 @@ test('blind peer request for unseeded drive should timeout waiting for blobs', a
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const unseededDriveKey = hid.normalize(Helper.getRandomId())
@@ -574,11 +574,11 @@ test('client identity should persist between sidecar restarts', async function (
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const identity = helper.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(identity))
-    const { final } = await Helper.pick(identity, [{ tag: 'final' }])
+    const identityStream = helper.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(identityStream))
+    const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
     identity1 = (await final).publicKey
-    await Helper.teardownStream(identity)
+    await Helper.teardownStream(identityStream)
 
     await shutdownAndGc(helper)
   }
@@ -589,11 +589,11 @@ test('client identity should persist between sidecar restarts', async function (
     teardown(() => shutdownAndGc(helper), { order: Infinity })
     await helper.ready()
 
-    const identity = helper.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(identity))
-    const { final } = await Helper.pick(identity, [{ tag: 'final' }])
+    const identityStream = helper.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(identityStream))
+    const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
     identity2 = (await final).publicKey
-    await Helper.teardownStream(identity)
+    await Helper.teardownStream(identityStream)
   }
 
   is(identity1, identity2, 'client identity remains the same after restart')
@@ -613,11 +613,11 @@ test('pear seed with --blind-peer flag adds and syncs drive with blind peer', as
 
   let clientPubKey
   {
-    const clientIdentity = client.identity({ type: 'blind-peer-client' })
-    teardown(() => Helper.teardownStream(clientIdentity))
-    const { final } = await Helper.pick(clientIdentity, [{ tag: 'final' }])
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
+    teardown(() => Helper.teardownStream(clientIdentityStream))
+    const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
-    await Helper.teardownStream(clientIdentity)
+    await Helper.teardownStream(clientIdentityStream)
   }
 
   const link = await Helper.touchLink(client)
