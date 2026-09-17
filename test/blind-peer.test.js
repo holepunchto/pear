@@ -561,7 +561,7 @@ test('blind peer request should timeout if blind peer is unreachable', async fun
   )
 })
 
-test('client identity should persist between sidecar restarts', async function ({
+test('blind peer identity should persist between sidecar restarts', async function ({
   teardown,
   plan,
   is
@@ -596,7 +596,7 @@ test('client identity should persist between sidecar restarts', async function (
     await Helper.teardownStream(identityStream)
   }
 
-  is(identity1, identity2, 'client identity remains the same after restart')
+  is(identity1, identity2, 'blind peer identity remains the same after restart')
 })
 
 test('pear seed with --blind-peer flag adds and syncs drive with blind peer', async function ({
