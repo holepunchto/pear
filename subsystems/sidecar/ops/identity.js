@@ -9,30 +9,35 @@ module.exports = class Identity extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ type = 'blind-peer-client' } = {}) {
+  async #op({ type } = {}) {
     await this.sidecar.ready()
+    if (type === 'seed') return this.seed()
+    if (type === 'blind-relay') return this.blindRelay()
+    if (type === 'blind-peer') return this.blindPeer()
+    if (type === 'blind-peer-client') return this.blindPeerClient()
+    throw ERR_INVALID_INPUT('Unknown identity: ' + type)
+  }
 
-    const keyPairs = {
-      seed: this.sidecar.keyPair,
-      'blind-relay': this.sidecar.blindRelayKeyPair,
-      'blind-peer-client': this.sidecar.dhtKeyPair
+  seed() {
+    this.final = { publicKey: hid.normalize(this.sidecar.keyPair.publicKey) }
+  }
+
+  blindRelay() {
+    this.final = { publicKey: hid.normalize(this.sidecar.blindRelayKeyPair.publicKey) }
+  }
+
+  async blindPeer() {
+    let blindPeer = this.sidecar.activeBlindPeer
+    if (blindPeer?.closing) await blindPeer.closing
+    if (!blindPeer || blindPeer.closed) {
+      blindPeer = await this.session.add(
+        new BlindPeer(this.sidecar.blindPeerPath(), { bootstrap: this.sidecar.nodes })
+      )
     }
+    this.final = { publicKey: hid.normalize(blindPeer.publicKey) }
+  }
 
-    let publicKey = keyPairs[type]?.publicKey
-
-    if (type === 'blind-peer') {
-      let blindPeer = this.sidecar.activeBlindPeer
-      if (blindPeer?.closing) await blindPeer.closing
-      if (!blindPeer || blindPeer.closed) {
-        blindPeer = await this.session.add(
-          new BlindPeer(this.sidecar.blindPeerPath(), { bootstrap: this.sidecar.nodes })
-        )
-      }
-      publicKey = blindPeer.publicKey
-    }
-
-    if (!publicKey) throw ERR_INVALID_INPUT('Unknown identity: ' + type)
-
-    this.final = { publicKey: hid.normalize(publicKey) }
+  blindPeerClient() {
+    this.final = { publicKey: hid.normalize(this.sidecar.dhtKeyPair.publicKey) }
   }
 }
