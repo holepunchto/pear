@@ -521,30 +521,11 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const identity = command(
     'identity',
     summary('Show local network public keys'),
-    command(
-      'seed',
-      summary('Show seed key'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.identity
-    ),
-    command(
-      'blind-relay',
-      summary('Show blind relay key'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.identity
-    ),
-    command(
-      'blind-peer',
-      summary('Show blind peer key'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.identity
-    ),
-    command(
-      'blind-peer-client',
-      summary('Show blind peer client key'),
-      flag('--json', 'Newline delimited JSON output'),
-      commands.identity
-    ),
+    command('seed', summary('Show seed key'), commands.identity),
+    command('blind-relay', summary('Show blind relay key'), commands.identity),
+    command('blind-peer', summary('Show blind peer key'), commands.identity),
+    command('blind-peer-client', summary('Show blind peer client key'), commands.identity),
+    flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(identity.help())
     }
