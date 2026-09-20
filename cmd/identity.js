@@ -22,4 +22,10 @@ module.exports = async function identity(cmd) {
       `pear blind-peer start --trusted-peer=${final.publicKey}`
     ])
   }
+  
+  if (!json && cmd.command.name === 'blind-relay') {
+    hint('Use the key above as a blind relay for your swarm', [
+      `pear --relay ${final.publicKey} seed pear://4qncit696i976zgmemwb8jmcu8hynoyo8y86y5h4xuhz5z19bc9y`
+    ])
+  }
 }
