@@ -1,5 +1,23 @@
 # Pear Runtime Changelog
 
+## v3.5.0
+
+### Features
+
+* CLI - `pear identity` - show local network public keys - `seed`, `blind-relay`, `blind-peer` and `blind-peer-client` subcommands
+* CLI - `pear seed` - `Verlink` field - `pear://<fork>.<length>.<key>`
+* CLI - `pear seed` - sync status - `Drive Length` and the new `Blobs Length` field report synced blocks and percentage as they sync
+
+### Improvements
+
+* CLI - `pear blind-peer identity` removed, use `pear identity blind-peer-client`
+* CLI - `pear seed` - `Drive Key` field removed in favour of `Verlink`
+* Internal - deps bump
+
+### Fixes
+
+* CLI - `pear cores` - unicode output fix
+
 ## v3.4.0
 
 ### Features

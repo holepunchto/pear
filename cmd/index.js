@@ -24,6 +24,7 @@ const commands = {
   sidecar: require('./sidecar'),
   gc: require('./gc'),
   cores: require('./cores'),
+  identity: require('./identity'),
   blindRelay: require('./blind-relay'),
   versions: require('./versions'),
   blindPeer: require('./blind-peer')
@@ -503,7 +504,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
       flag('--trusted-peer <peer>', 'Trusted peer key to allow requests from').multiple(),
       commands.blindPeer
     ),
-    command('identity', summary('Show peer identity key'), commands.blindPeer),
     command(
       'request',
       summary('Request a blind peer to seed'),
@@ -515,6 +515,19 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--json', 'Newline delimited JSON output'),
     () => {
       console.log(blindPeer.help())
+    }
+  )
+
+  const identity = command(
+    'identity',
+    summary('Show local network public keys'),
+    command('seed', summary('Show seed key'), commands.identity),
+    command('blind-relay', summary('Show blind relay key'), commands.identity),
+    command('blind-peer', summary('Show blind peer key'), commands.identity),
+    command('blind-peer-client', summary('Show blind peer client key'), commands.identity),
+    flag('--json', 'Newline delimited JSON output'),
+    () => {
+      console.log(identity.help())
     }
   )
 
@@ -608,6 +621,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     data,
     changelog,
     sidecar,
+    identity,
     blindPeer,
     gc,
     cores,

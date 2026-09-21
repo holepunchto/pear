@@ -26,6 +26,7 @@ const ops = {
   Provision: require('./ops/provision'),
   Dump: require('./ops/dump'),
   Info: require('./ops/info'),
+  Identity: require('./ops/identity'),
   Touch: require('./ops/touch'),
   Data: require('./ops/data'),
   Multisig: require('./ops/multisig'),
@@ -157,6 +158,10 @@ class Sidecar extends ReadyResource {
 
   info(params, client) {
     return new ops.Info(params, client, this)
+  }
+
+  identity(params, client) {
+    return new ops.Identity(params, client, this)
   }
 
   data(params, client) {
@@ -340,6 +345,10 @@ class Sidecar extends ReadyResource {
 
   getCorestore(opts) {
     return this.corestore.session({ writable: false, ...opts })
+  }
+
+  blindPeerPath() {
+    return path.join(path.dirname(path.dirname(this.corestore.storage.path)), 'blind-peer')
   }
 
   async #shutdown(client) {
