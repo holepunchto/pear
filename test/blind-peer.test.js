@@ -110,7 +110,7 @@ test('blind peer should serve with trusted keys and announce when trusted client
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
@@ -293,7 +293,7 @@ test('blind peer should download and sync core data from trusted client', async 
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
@@ -389,7 +389,7 @@ test('blind peer should download and sync core data seeded by another host insta
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
@@ -446,7 +446,7 @@ test('blind peer should add an unseeded core when coreOnly is true', async funct
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
@@ -500,7 +500,7 @@ test('blind peer request for unseeded drive should timeout waiting for blobs', a
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
@@ -574,7 +574,7 @@ test('blind peer identity should persist between sidecar restarts', async functi
     teardown(() => helper.close(), { order: Infinity })
     await helper.ready()
 
-    const identityStream = helper.blindPeer({ subcommand: 'identity' })
+    const identityStream = helper.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(identityStream))
     const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
     identity1 = (await final).publicKey
@@ -589,7 +589,7 @@ test('blind peer identity should persist between sidecar restarts', async functi
     teardown(() => shutdownAndGc(helper), { order: Infinity })
     await helper.ready()
 
-    const identityStream = helper.blindPeer({ subcommand: 'identity' })
+    const identityStream = helper.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(identityStream))
     const { final } = await Helper.pick(identityStream, [{ tag: 'final' }])
     identity2 = (await final).publicKey
@@ -613,7 +613,7 @@ test('pear seed with --blind-peer flag adds and syncs drive with blind peer', as
 
   let clientPubKey
   {
-    const clientIdentityStream = client.blindPeer({ subcommand: 'identity' })
+    const clientIdentityStream = client.identity({ type: 'blind-peer-client' })
     teardown(() => Helper.teardownStream(clientIdentityStream))
     const { final } = await Helper.pick(clientIdentityStream, [{ tag: 'final' }])
     clientPubKey = (await final).publicKey
