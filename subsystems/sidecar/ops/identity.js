@@ -33,6 +33,10 @@ module.exports = class Identity extends Opstream {
       blindPeer = await this.session.add(
         new BlindPeer(this.sidecar.blindPeerPath(), { bootstrap: this.sidecar.nodes })
       )
+      this.sidecar.activeBlindPeer = blindPeer
+      blindPeer.on('close', () => {
+        if (this.sidecar.activeBlindPeer === blindPeer) this.sidecar.activeBlindPeer = null
+      })
     }
     this.final = { publicKey: hid.normalize(blindPeer.publicKey) }
   }
