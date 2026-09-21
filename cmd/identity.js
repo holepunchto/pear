@@ -28,4 +28,16 @@ module.exports = async function identity(cmd) {
       `pear --relay ${final.publicKey} seed pear://4qncit696i976zgmemwb8jmcu8hynoyo8y86y5h4xuhz5z19bc9y`
     ])
   }
+
+  if (!json && cmd.command.name === 'seed') {
+    hint('Use the key above to wait until this peer has synced', [
+      `pear seed --until-sync=${final.publicKey} pear://4qncit696i976zgmemwb8jmcu8hynoyo8y86y5h4xuhz5z19bc9y`
+    ])
+  }
+
+  if (!json && cmd.command.name === 'blind-peer') {
+    hint('Use the key above as a blind peer for seeding', [
+      `pear seed --blind-peer=${final.publicKey} pear://4qncit696i976zgmemwb8jmcu8hynoyo8y86y5h4xuhz5z19bc9y`
+    ])
+  }
 }
