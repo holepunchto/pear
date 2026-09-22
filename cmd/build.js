@@ -32,6 +32,8 @@ module.exports = async function build(cmd) {
   if (!cmd.flags.package) throw ERR_INVALID_INPUT('package.json path must be specified.')
 
   const pkgPath = path.resolve(cmd.flags.package)
+
+  // TODO: Use pkg from pear-build when PR is merged
   const pkg = await getParsedJSON('package.json', pkgPath)
 
   const name = pkg.name || pkg.productName || ''
