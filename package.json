@@ -1,6 +1,6 @@
 {
   "name": "pear",
-  "version": "3.5.0-rc.3",
+  "version": "3.5.0",
   "bin": "pear",
   "productName": "pear",
   "upgrade": {
