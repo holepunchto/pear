@@ -656,6 +656,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_INVALID_MANIFEST', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
         ['ERR_NOT_FOUND', messageOnly],
+        ['ERR_INVALID_APP_NAME', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]
       ])
       const nouse = [messageOnly, opFail]
