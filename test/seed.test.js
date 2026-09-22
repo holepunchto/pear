@@ -4,6 +4,7 @@ const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Hyperswarm = require('hyperswarm')
 const hypercoreid = require('hypercore-id-encoding')
+const Localdrive = require('localdrive')
 const Helper = require('./helper')
 
 test('pear seed basic stage and seed', async function ({
@@ -68,6 +69,42 @@ test('pear seed basic stage and seed', async function ({
   ok(Number.isFinite(stats.download.speed), 'stats have download.speed')
   ok(Number.isInteger(stats.download.totalBytes), 'stats have download.totalBytes')
   ok(Number.isInteger(stats.download.totalBlocks), 'stats have download.totalBlocks')
+})
+
+test('pear seed updates app name after staging', async function ({
+  is,
+  plan,
+  teardown,
+  timeout,
+  tmp
+}) {
+  timeout(180000)
+  plan(2)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const link = await Helper.touchLink(helper)
+  const dir = await tmp()
+  const source = new Localdrive(dir)
+  await source.put('/package.json', JSON.stringify({ name: 'seed-v1' }))
+
+  const firstStage = helper.stage({ link, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(firstStage))
+  await Helper.pick(firstStage, { tag: 'final' })
+
+  const seeding = helper.seed({ link, statsInterval: 50 })
+  teardown(() => Helper.teardownStream(seeding))
+  const firstStats = await Helper.pick(seeding, [{ tag: 'stats' }])
+  is((await firstStats.stats).name, 'seed-v1', 'initial app name')
+
+  const updated = await Helper.pick(seeding, [{ tag: 'stats', data: { name: 'seed-v2' } }])
+  await source.put('/package.json', JSON.stringify({ name: 'seed-v2' }))
+  const secondStage = helper.stage({ link, dir, dryRun: false })
+  teardown(() => Helper.teardownStream(secondStage))
+  await Helper.pick(secondStage, { tag: 'final' })
+
+  is((await updated.stats).name, 'seed-v2', 'updated app name')
 })
 
 test('pear seed announces, join, drop', async function ({
