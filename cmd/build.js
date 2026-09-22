@@ -20,6 +20,7 @@ const output = outputter('build', {
     return {
       output: 'print',
       success: Infinity,
+      nonl: true,
       message: msg
     }
   }
