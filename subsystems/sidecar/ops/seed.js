@@ -127,8 +127,18 @@ module.exports = class Seed extends Opstream {
 
     const manifest = await drive.get('/package.json')
     const pkg = manifest ? JSON.parse(manifest) : {}
-    const name = pkg.name ?? ''
-    const semver = pkg.version ?? ''
+    let name = pkg.name ?? ''
+    let semver = pkg.version ?? ''
+    drive.core.on('append', () => {
+      drive
+        .get('/package.json')
+        .then((manifest) => {
+          const pkg = manifest ? JSON.parse(manifest) : {}
+          name = pkg.name ?? ''
+          semver = pkg.version ?? ''
+        })
+        .catch(safetyCatch)
+    })
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ drive, name, semver }))
