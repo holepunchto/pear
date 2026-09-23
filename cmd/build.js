@@ -33,9 +33,8 @@ module.exports = async function build(cmd) {
   outputPromise.catch(() => {})
 
   const builder = pearBuild(cmd.flags)
-  builder.on('error', (err) => {
-    stream.destroy(err)
-  })
+  // ignore emitted errors and handle it when builder.done() rejects instead
+  builder.on('error', () => {})
 
   builder.on('building', ({ pkg, target }) => {
     stream.push({
