@@ -157,6 +157,8 @@ module.exports = class Seed extends Opstream {
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
+      drive.core.off('append', onUpdate)
+      drive.core.off('truncate', onUpdate)
     })
 
     const blobs = await drive.getBlobs()
