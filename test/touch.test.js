@@ -1,7 +1,7 @@
 'use strict'
 const test = require('brittle')
 const hypercoreid = require('hypercore-id-encoding')
-const { spawn } = require('bare-subprocess')
+const { spawnSync } = require('bare-subprocess')
 const Helper = require('./helper')
 
 test('pear touch generates random pear links', async ({ teardown, plan, not, ok, is }) => {
@@ -57,35 +57,19 @@ test('pear touch [dir] still generates random links', async ({ teardown, plan, o
   not(result.key, result2.key)
 })
 
-test('standalone pear touch', async function (t) {
-  t.plan(1)
+test('standalone pear touch', ({ plan, ok }) => {
+  plan(1)
 
-  const touch = spawn(Helper.OUT, ['touch'], { stdio: ['ignore', 'pipe', 'ignore'] })
-  const untilExit = Helper.untilExit(touch)
-  let stdout = ''
-  for await (const data of touch.stdout) {
-    stdout += data.toString()
-  }
-  await untilExit
-
-  const key = stdout.trim().slice('pear://'.length)
-  t.ok(hypercoreid.isValid(key))
+  const { stdout } = spawnSync(Helper.OUT, ['touch'])
+  const key = stdout.toString().trim().slice('pear://'.length)
+  ok(hypercoreid.isValid(key))
 })
 
-test('standalone pear touch --vanity', async function (t) {
-  t.plan(2)
+test('standalone pear touch --vanity', ({ plan, ok }) => {
+  plan(2)
 
-  const touch = spawn(Helper.OUT, ['touch', '--vanity', 'pear'], {
-    stdio: ['ignore', 'pipe', 'ignore']
-  })
-  const untilExit = Helper.untilExit(touch)
-  let stdout = ''
-  for await (const data of touch.stdout) {
-    stdout += data.toString()
-  }
-  await untilExit
-
-  const key = stdout.trim().slice('pear://'.length)
-  t.ok(hypercoreid.isValid(key))
-  t.ok(key.startsWith('pear'))
+  const { stdout } = spawnSync(Helper.OUT, ['touch', '--vanity', 'pear'])
+  const key = stdout.toString().trim().slice('pear://'.length)
+  ok(hypercoreid.isValid(key))
+  ok(key.startsWith('pear'))
 })
