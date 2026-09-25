@@ -12,6 +12,7 @@
   "scripts": {
     "test:gen": "brittle -r test/all.mjs test/*.test.js",
     "test": "bare scripts/test.mjs",
+    "test:standalone": "npm run make && brittle-bare test/standalone/all.mjs",
     "format": "prettier --write . && lunte --fix",
     "lint": "prettier --check . && lunte",
     "make": "node scripts/make.js",

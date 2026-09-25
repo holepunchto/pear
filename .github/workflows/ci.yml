@@ -55,3 +55,6 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Test Standalone
+        run: npm run test:standalone
