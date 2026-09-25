@@ -59,7 +59,6 @@ test('pear touch [dir] still generates random links', async ({ teardown, plan, o
 
 test('standalone pear touch', ({ plan, ok }) => {
   plan(1)
-
   const { stdout } = spawnSync(Helper.OUT, ['touch'])
   const key = stdout.toString().trim().slice('pear://'.length)
   ok(hypercoreid.isValid(key))
@@ -67,7 +66,6 @@ test('standalone pear touch', ({ plan, ok }) => {
 
 test('standalone pear touch --vanity', ({ plan, ok }) => {
   plan(2)
-
   const { stdout } = spawnSync(Helper.OUT, ['touch', '--vanity', 'pear'])
   const key = stdout.toString().trim().slice('pear://'.length)
   ok(hypercoreid.isValid(key))
