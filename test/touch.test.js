@@ -1,6 +1,7 @@
 'use strict'
 const test = require('brittle')
 const hypercoreid = require('hypercore-id-encoding')
+const { spawnSync } = require('bare-subprocess')
 const Helper = require('./helper')
 
 test('pear touch generates random pear links', async ({ teardown, plan, not, ok, is }) => {
@@ -54,4 +55,19 @@ test('pear touch [dir] still generates random links', async ({ teardown, plan, o
   is(result2.link, 'pear://' + result2.key)
   not(result2.link, result.link)
   not(result.key, result2.key)
+})
+
+test('standalone pear touch', ({ plan, ok }) => {
+  plan(1)
+  const { stdout } = spawnSync(Helper.OUT, ['touch'])
+  const key = stdout.toString().trim().slice('pear://'.length)
+  ok(hypercoreid.isValid(key))
+})
+
+test('standalone pear touch --vanity', ({ plan, ok }) => {
+  plan(2)
+  const { stdout } = spawnSync(Helper.OUT, ['touch', '--vanity', 'pear'])
+  const key = stdout.toString().trim().slice('pear://'.length)
+  ok(hypercoreid.isValid(key))
+  ok(key.startsWith('pear'))
 })
