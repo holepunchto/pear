@@ -85,7 +85,7 @@
     "bare-build": "^1.0.4",
     "bare-env": "^3.0.0",
     "bare-runtime": "^1.30.3",
-    "brittle": "^4.0.0",
+    "brittle": "github:nicolasfont/brittle#jobs-uncaught",
     "lunte": "^1.6.0",
     "pear-interface": "^1.1.0",
     "prettier": "^3.6.2",
