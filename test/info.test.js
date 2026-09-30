@@ -89,6 +89,7 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   is(data.version, '1.0.0')
   is(data.productName, 'Pear Minimal')
   is(data.upgrade, 'pear://t8p9t3ec55qdm5mk5i8pyehr7zbi15ax76h8wamt63dk3j7su77y')
+  is(data.writable, true)
 })
 
 test('pear info on committed multisig link includes multisig by default', async ({

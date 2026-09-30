@@ -82,6 +82,7 @@ module.exports = class Info extends Opstream {
         const version = pkg?.version
         const productName = pkg?.productName
         const upgrade = pkg?.upgrade
+        const writable = Boolean((await corestore.storage.getInfo(drive.discoveryKey)).auth.keyPair)
         const length = drive.core.length
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
@@ -102,6 +103,7 @@ module.exports = class Info extends Opstream {
             version,
             productName,
             upgrade,
+            writable,
             length,
             byteLength,
             blobs,
