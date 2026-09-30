@@ -12,7 +12,7 @@ const { runMenu } = require('bare-tui-paparam')
 const commands = {
   touch: require('./touch'),
   stage: require('./stage'),
-  build: require('pear-build'),
+  build: require('./build'),
   seed: require('./seed'),
   provision: require('./provision'),
   multisig: require('./multisig'),
@@ -80,12 +80,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     commands.seed
   )
 
-  const build = command('build', require('pear-build/package.json').command, async (cmd) => {
-    const builder = commands.build(cmd.flags)
-    // suppress error event as .done also rejects on error
-    builder.on('error', () => {})
-    await builder.done()
-  })
+  const build = command('build', require('pear-build/package.json').command, commands.build)
 
   const stage = command(
     'stage',
@@ -661,6 +656,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
         ['ERR_INVALID_MANIFEST', messageOnly],
         ['ERR_DIR_NONEMPTY', messageOnly],
         ['ERR_NOT_FOUND', messageOnly],
+        ['ERR_INVALID_APP_NAME', messageOnly],
         ['ERR_OPERATION_FAILED', opFail]
       ])
       const nouse = [messageOnly, opFail]
