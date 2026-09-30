@@ -2,7 +2,7 @@
 const path = require('bare-path')
 const { Readable } = require('streamx')
 const pearBuild = require('pear-build')
-const { outputter, ansi, stdio } = require('../lib/terminal.js')
+const { outputter, ansi } = require('../lib/terminal.js')
 
 const output = outputter('build', {
   building: ({ name, version, target }) => {
@@ -15,14 +15,11 @@ const output = outputter('build', {
   executable: ({ file, origin }) => {
     return `${ansi.green('+')} ${file} (${ansi.dim('origin:')} ${origin})`
   },
-  final: () => {
-    stdio.out.write('\n')
-    return {
-      output: 'print',
-      success: Infinity,
-      message: 'Build complete!'
-    }
-  }
+  final: () => ({
+    output: 'print',
+    success: Infinity,
+    message: '\nBuild complete!'
+  })
 })
 
 module.exports = async function build(cmd) {
