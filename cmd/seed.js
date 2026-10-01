@@ -5,7 +5,6 @@ const hypercoreid = require('hypercore-id-encoding')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const { outputter, ansi, byteSize, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
-const { formatDuration } = require('../lib/format.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
@@ -136,8 +135,16 @@ module.exports = async function seed(cmd) {
 
   terminalTableRenderer.setFooter(() => {
     const elapsed = Date.now() - startTime
-    const uptimeStr = formatDuration(elapsed)
-    return ctrlTTY ? `  Uptime: ${uptimeStr}` : `  Uptime: ${uptimeStr}`
+    const days = Math.floor(elapsed / 86400000)
+    const hours = Math.floor((elapsed % 86400000) / 3600000)
+    const minutes = Math.floor((elapsed % 3600000) / 60000)
+    const seconds = Math.floor((elapsed % 60000) / 1000)
+    let uptime = ''
+    if (days) uptime += `${days}d `
+    if (hours || days) uptime += `${hours}h `
+    if (minutes || hours || days) uptime += `${minutes}m `
+    uptime += `${seconds}s`
+    return `  Uptime: ${uptime}`
   })
 
   const output = outputter('seed', {
