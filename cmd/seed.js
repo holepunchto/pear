@@ -3,9 +3,15 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, byteSize, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
+const {
+  outputter,
+  ansi,
+  byteSize,
+  formatDuration,
+  stdio,
+  TerminalTableRenderer
+} = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
-const { formatDuration } = require('../lib/format.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
 
