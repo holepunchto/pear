@@ -3,7 +3,14 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, byteSize, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
+const {
+  outputter,
+  ansi,
+  byteSize,
+  formatDuration,
+  stdio,
+  TerminalTableRenderer
+} = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
@@ -28,6 +35,7 @@ module.exports = async function seed(cmd) {
     throw ERR_INVALID_INPUT('--blind-peer <key> must supply a valid z32 key')
   }
   const id = Bare.pid
+  const startTime = Date.now()
 
   const terminalTableRenderer = new TerminalTableRenderer({
     tty,
@@ -131,6 +139,11 @@ module.exports = async function seed(cmd) {
   terminalTableRenderer.setTable(layout)
 
   stats.set('link', link)
+
+  terminalTableRenderer.setFooter(() => {
+    const elapsed = Date.now() - startTime
+    return `  Uptime: ${formatDuration(elapsed)}`
+  })
 
   const output = outputter('seed', {
     announced: () => {
