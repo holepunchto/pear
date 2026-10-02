@@ -642,11 +642,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       const opFail = (cmd) => cmd.err.info.message
       const codemap = new Map([
         ['UNKNOWN_FLAG', (bail) => 'Unrecognized Flag: --' + bail.flag.name],
-        [
-          'UNKNOWN_ARG',
-          (bail) =>
-            'Unrecognized Argument at index ' + bail.arg.index + ' with value ' + bail.arg.value
-        ],
+        ['UNKNOWN_ARG', (bail) => 'Unrecognized argument with value ' + bail.arg.value],
         ['MISSING_ARG', (bail) => bail.arg.value],
         ['INVALID', messageUsage],
         ['ERR_INVALID_INPUT', messageUsage],
