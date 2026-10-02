@@ -19,6 +19,7 @@ const info = ({
   version,
   productName,
   upgrade,
+  writable,
   length,
   byteLength,
   blobs,
@@ -30,6 +31,7 @@ const info = ({
  name              ${name}
  version           ${version}
  productName       ${productName}
+ writable          ${writable}
  length            ${length}
  fork              ${fork}
  byteLength        ${byteLength}
