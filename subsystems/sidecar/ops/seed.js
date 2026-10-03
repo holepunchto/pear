@@ -2,6 +2,7 @@
 const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
 const safetyCatch = require('safety-catch')
+const debounceify = require('debounceify')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
@@ -127,26 +128,12 @@ module.exports = class Seed extends Opstream {
 
     let name = ''
     let semver = ''
-    let updating = false
-    let pending = false
-    const updateManifest = async () => {
-      if (updating) {
-        pending = true
-        return
-      }
-      updating = true
-      try {
-        do {
-          pending = false
-          const manifest = await drive.get('/package.json')
-          const pkg = manifest ? JSON.parse(manifest) : {}
-          name = pkg.name ?? ''
-          semver = pkg.version ?? ''
-        } while (pending)
-      } finally {
-        updating = false
-      }
-    }
+    const updateManifest = debounceify(async () => {
+      const manifest = await drive.get('/package.json')
+      const pkg = manifest ? JSON.parse(manifest) : {}
+      name = pkg.name ?? ''
+      semver = pkg.version ?? ''
+    })
     const onUpdate = () => updateManifest().catch(safetyCatch)
     drive.core.on('append', onUpdate)
     drive.core.on('truncate', onUpdate)
