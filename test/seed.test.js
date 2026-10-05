@@ -79,7 +79,7 @@ test('pear seed updates app metadata after staging', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(4)
+  plan(5)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -109,6 +109,7 @@ test('pear seed updates app metadata after staging', async function ({
   await Helper.pick(secondStage, { tag: 'final' })
 
   const updatedStats = await updated.stats
+  is(updatedStats.driveLength > initialStats.driveLength, true, 'drive length increased')
   is(updatedStats.name, 'seed-v2', 'updated app name')
   is(updatedStats.semver, '2.0.0', 'updated app version')
 })
