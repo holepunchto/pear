@@ -1,13 +1,21 @@
 'use strict'
 const Corestore = require('corestore')
 const fs = require('bare-fs')
+const fsx = require('fs-native-extensions')
 const Rache = require('rache')
 const setupCrashHandlers = require('./lib/crasher.js')
 const gracedown = require('pear-gracedown')
 const os = require('bare-os')
 const pear = require('./lib/cmd').command
 const path = require('bare-path')
-const { GC, PLATFORM_CORESTORE, PLATFORM_DIR, LOCALDEV, UPGRADE } = require('./constants.js')
+const {
+  GC,
+  PLATFORM_CORESTORE,
+  PLATFORM_DIR,
+  PLATFORM_LOCK,
+  LOCALDEV,
+  UPGRADE
+} = require('./constants.js')
 
 const { version, productName, upgrade } = require('./package.json')
 const { cmdArgs } = require('./argv')
@@ -51,6 +59,9 @@ async function bootSidecar() {
     wait: true
   })
   await corestore.ready()
+
+  const lockFd = fs.openSync(PLATFORM_LOCK, 'a+')
+  if (!fsx.tryLock(lockFd)) throw new Error('Sidecar already running')
 
   const Sidecar = require('./subsystems/sidecar/index.js')
   const updater = createUpdater()
