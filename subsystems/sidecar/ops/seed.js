@@ -2,6 +2,7 @@
 const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
 const safetyCatch = require('safety-catch')
+const debounceify = require('debounceify')
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
@@ -125,16 +126,26 @@ module.exports = class Seed extends Opstream {
 
     drive.db.core.download({ start: 0, end: -1 })
 
-    const manifest = await drive.get('/package.json')
-    const pkg = manifest ? JSON.parse(manifest) : {}
-    const name = pkg.name ?? ''
-    const semver = pkg.version ?? ''
+    let name = ''
+    let semver = ''
+    const updateManifest = debounceify(async () => {
+      const manifest = await drive.get('/package.json')
+      const pkg = manifest ? JSON.parse(manifest) : {}
+      name = pkg.name ?? ''
+      semver = pkg.version ?? ''
+    })
+    const onUpdate = () => updateManifest().catch(safetyCatch)
+    drive.core.on('append', onUpdate)
+    drive.core.on('truncate', onUpdate)
+    await updateManifest()
 
     this._statsInterval = setInterval(() => {
       this.push(this._stats({ drive, name, semver }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
+      drive.core.off('append', onUpdate)
+      drive.core.off('truncate', onUpdate)
     })
 
     const blobs = await drive.getBlobs()
