@@ -7,7 +7,7 @@ const {
   outputter,
   ansi,
   byteSize,
-  formatDuration,
+  formatTime,
   stdio,
   TerminalTableRenderer
 } = require('../lib/terminal.js')
@@ -125,7 +125,7 @@ module.exports = async function seed(cmd) {
             key: 'uptime',
             label: 'Uptime:',
             initial,
-            transform: formatDuration
+            transform: formatTime
           }
         ]
       : []),
@@ -236,7 +236,7 @@ module.exports = async function seed(cmd) {
     }) {
       const network = ctrlTTY
         ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
-        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s, uptime ${uptime}ms`
+        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s, uptime ${formatTime(uptime)}`
       const isDriveSynced = driveSynced === driveLength
       const isBlobsSynced = hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
       const driveBlocks = isDriveSynced ? driveLength : `${driveSynced}/${driveLength}`
