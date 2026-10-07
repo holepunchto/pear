@@ -1,6 +1,8 @@
 'use strict'
 const context = require('../context')
 const path = require('bare-path')
+const fs = require('bare-fs')
+const fsx = require('fs-native-extensions')
 const gracedown = require('pear-gracedown')
 const { isWindows } = require('which-runtime')
 const { print, ansi, stdio, isTTY } = require('../lib/terminal.js')
@@ -28,6 +30,12 @@ module.exports = async function sidecar(cmd) {
   if (n > 0) print(`${n} client${n === 1 ? '' : 's'} closed`, true)
   print('Shutting down current Sidecar...', 0)
   await withTimeout(ipc.shutdown(), 8000)
+  const lockFd = fs.openSync(constants.PLATFORM_LOCK, 'a+')
+  try {
+    await fsx.waitForLock(lockFd)
+  } finally {
+    fs.closeSync(lockFd)
+  }
   print('Sidecar has shutdown', true)
   if (cmd.command.name === 'shutdown') return
 
