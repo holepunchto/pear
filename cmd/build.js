@@ -6,7 +6,7 @@ const { outputter, ansi } = require('../lib/terminal.js')
 
 const output = outputter('build', {
   building: ({ name, version, target }) => {
-    let msg = `\n${ansi.pear} Building ${name}\n\n`
+    let msg = `\n${ansi.pear} Building ${ansi.green(name)}\n\n`
     msg += `${ansi.bold('App:')}      ${name}\n`
     msg += `${ansi.bold('Version:')}  ${version}\n`
     msg += `${ansi.bold('Target:')}   ${target}\n`
@@ -18,7 +18,7 @@ const output = outputter('build', {
   final: () => ({
     output: 'print',
     success: Infinity,
-    message: '\nBuild complete!'
+    message: '\n' + ansi.green('Build complete!')
   })
 })
 

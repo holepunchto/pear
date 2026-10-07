@@ -12,25 +12,26 @@ const output = outputter('provision', {
       message: 'Synced ' + type + ' blocks ' + targetLength + ' / ' + productionLength
     }
   },
-  synced: ({ type }) => '\nCompleted ' + type + ' sync',
+  synced: ({ type }) => '\n' + ansi.green('Completed ' + type + ' sync'),
   diffing: () => 'Checking diff\n',
   diffed: ({ changes, semver, target }) => {
     const { core, blobs } = target
     return (
-      'Diffing complete\nTotal changes: ' +
-      changes +
+      ansi.green('Diffing complete') +
+      '\nTotal changes: ' +
+      ansi.green(changes) +
       '\nPackage version: ' +
-      semver +
+      ansi.green(semver) +
       '\n\nCore:\n' +
       '  Key: ' +
-      core.id +
+      ansi.gray(core.id) +
       '\n  Length: ' +
       core.length +
       '\n  Hash: ' +
       core.hash +
       '\n\nBlobs:\n' +
       '  Key: ' +
-      blobs.id +
+      ansi.gray(blobs.id) +
       '\n  Length: ' +
       blobs.length +
       '\n  Hash: ' +
@@ -38,7 +39,7 @@ const output = outputter('provision', {
       '\n'
     )
   },
-  dry: () => 'Dry Run Complete\n',
+  dry: () => ansi.green('Dry Run Complete') + '\n',
   cooldown: ({ time }) => {
     return (
       ansi.bold('NOT A DRY RUN!') +
@@ -58,11 +59,20 @@ const output = outputter('provision', {
     return {
       output: 'print',
       success: Infinity, // omit success tick
-      message: '\nProvisioned:\n  Verlink: ' + verlink + '\n\n  Hashlink: ' + hashlink + '\n'
+      message:
+        '\n' +
+        ansi.green('Provisioned:') +
+        '\n  Verlink: ' +
+        ansi.green(verlink) +
+        '\n\n  Hashlink: ' +
+        ansi.gray(hashlink) +
+        '\n'
     }
   },
   seeding: ({ cooloff, peers }) => {
-    return peers + ' connected. Seeding until exit or inactive after ' + cooloff / 1000 + 's'
+    return (
+      ansi.green(peers) + ' connected. Seeding until exit or inactive after ' + cooloff / 1000 + 's'
+    )
   },
   inactive: () => 'Inactive, exiting'
 })

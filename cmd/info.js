@@ -1,6 +1,6 @@
 'use strict'
 const context = require('../context')
-const { outputter } = require('../lib/terminal.js')
+const { outputter, ansi } = require('../lib/terminal.js')
 const os = require('bare-os')
 const path = require('bare-path')
 const { cmdArgs } = require('../argv')
@@ -55,7 +55,7 @@ const changelog = ({ changelog, full }) => `
 const output = outputter('info', {
   retrieving: ({ z32, onlyShowKey }, info) => {
     info.onlyShowKey = onlyShowKey
-    return onlyShowKey ? `pear://${z32}` : `---:\n pear://${z32}\n...`
+    return onlyShowKey ? `pear://${z32}` : `---:\n ${ansi.green(`pear://${z32}`)}\n...`
   },
   empty: (data, info) => {
     info.empty = true

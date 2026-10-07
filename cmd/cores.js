@@ -16,7 +16,7 @@ const output = outputter('cores', {
       count > 0
         ? [
             ...table(info.cores),
-            `Total cores: ${count}${ansi.gray(` (writable: ${writable})`)}\nTotal size:  ${byteSize(byteLength)}`
+            `Total cores: ${ansi.green(count)}${ansi.gray(` (writable: ${writable})`)}\nTotal size:  ${ansi.green(byteSize(byteLength))}`
           ]
         : '[ No cores ]'
   }),
@@ -60,11 +60,13 @@ function table(cores) {
       const sizeLabel = byteSize(byteLength).padEnd(sizeWidth)
       const prefix = index > 0 && drive !== cores[index - 1].drive ? separator + '\n' : ''
       const writableLabel = (writable ? '✔' : '').padEnd('Writable'.length)
-      const row = `${nameLabel}  ${type.padEnd(TYPE_WIDTH)}  ${link.padEnd(linkWidth)}  ${String(length).padEnd(lengthWidth)}  `
+      const typeLabel = type.padEnd(TYPE_WIDTH)
+      const linkLabel = link.padEnd(linkWidth)
+      const lengthLabel = String(length).padEnd(lengthWidth)
       if (blobs) {
-        return `${prefix} ${ansi.gray(row + writableLabel + '  ' + sizeLabel)}`
+        return `${prefix} ${ansi.gray(`${nameLabel}  ${typeLabel}  ${linkLabel}  ${lengthLabel}  ${writableLabel}  ${sizeLabel}`)}`
       }
-      return `${prefix} ${row}${writableLabel}  ${sizeLabel}`
+      return `${prefix} ${nameLabel}  ${typeLabel}  ${ansi.green(linkLabel)}  ${lengthLabel}  ${ansi.green(writableLabel)}  ${sizeLabel}`
     }),
     separator
   ]

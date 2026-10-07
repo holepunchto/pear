@@ -11,18 +11,18 @@ const { localPkg } = require('../lib/package')
 
 const output = outputter('stage', {
   staging: ({ name, link, verlink, current, dir }) => {
-    return `\n${ansi.pear} Staging ${name || dir}\n\n[  ${ansi.dim(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${current}\n`
+    return `\n${ansi.pear} Staging ${ansi.bold(name || dir)}\n\n[  ${ansi.green(link)}  ]\n${ansi.gray(ansi.dim(verlink))}\n\nCurrent: ${ansi.green(current)}\n`
   },
   skipping: ({ reason }) => 'Skipping (' + reason + ')',
   dry: 'NOTE: This is a dry run, no changes will be persisted.\n',
   complete: ({ dryRun }) => {
-    return dryRun ? '\nStaging dry run complete!\n' : '\nStaging complete!\n'
+    return '\n' + ansi.green(dryRun ? 'Staging dry run complete!' : 'Staging complete!') + '\n'
   },
   error: (err) => {
     return `Staging Error (code: ${err.code || 'none'}) ${err.stack}`
   },
   addendum: ({ version, link, verlink }) => {
-    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.bold(version)}\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.dim(link)}  ]\n`
+    return `${ansi.dim(ansi.bold('^'))}Latest: ${ansi.green(version)}\n\n${ansi.gray(ansi.dim(verlink))}\n[  ${ansi.green(link)}  ]\n`
   },
   ['byte-diff']: byteDiff,
   final: (data) => data

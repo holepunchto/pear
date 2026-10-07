@@ -5,23 +5,25 @@ const { outputter, ansi, byteSize, byteDiff } = require('../lib/terminal.js')
 
 const output = outputter('dump', {
   dumping: ({ link, dir }) =>
-    dir === '-' ? `${ansi.pear} Output ${link}` : `\n${ansi.pear} Dump ${link} into ${dir}`,
+    dir === '-'
+      ? `${ansi.pear} Output ${ansi.green(link)}`
+      : `\n${ansi.pear} Dump ${ansi.green(link)} into ${ansi.gray(dir)}`,
   file: ({ key, value }) => `${key}${value ? '\n' + value : ''}`,
   complete: ({ dryRun }) => {
-    return dryRun ? '\nDumping dry run complete\n' : '\nDumping complete\n'
+    return '\n' + ansi.green(dryRun ? 'Dumping dry run complete' : 'Dumping complete') + '\n'
   },
   stats({ upload, download, peers }) {
     const dl =
       download.bytes + download.speed === 0
         ? ''
-        : `[${ansi.down} ${byteSize(download.bytes)} - ${byteSize(download.speed)}/s ] `
+        : `[ ${ansi.down} ${ansi.green(byteSize(download.bytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ] `
     const ul =
       upload.bytes + upload.speed === 0
         ? ''
-        : `[${ansi.up} ${byteSize(upload.bytes)} - ${byteSize(upload.speed)}/s ] `
+        : `[ ${ansi.up} ${ansi.green(byteSize(upload.bytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ] `
     return {
       output: 'status',
-      message: `[ Peers: ${peers} ] ${dl}${ul}`
+      message: `[ Peers ${ansi.green(peers)} ]  ${dl}${ul}`
     }
   },
   error: (err) => {
