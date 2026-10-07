@@ -15,7 +15,7 @@ module.exports = class Seed extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  _stats({ drive, name, semver } = {}) {
+  _stats({ drive, name, semver, uptime } = {}) {
     const { swarm } = this.sidecar
     const totalConnections = swarm.connections.size
     const { dht } = swarm
@@ -39,6 +39,7 @@ module.exports = class Seed extends Opstream {
         discoveryKey: drive.discoveryKey ? hypercoreid.encode(drive.discoveryKey) : undefined,
         contentKey: drive.contentKey ? hypercoreid.encode(drive.contentKey) : 'pending',
         whoami: hypercoreid.encode(this.sidecar.keyPair.publicKey),
+        uptime,
         upload: {
           totalBytes: this.stats.totals.upload.bytes,
           totalBlocks: this.stats.totals.upload.blocks,
@@ -69,6 +70,7 @@ module.exports = class Seed extends Opstream {
     const { client, session } = this
     const parsed = parse(link)
     const key = parsed?.drive.key
+    const startTime = Date.now()
 
     // not an app but a long running process, setting userData for restart recognition:
     client.userData = { state: { cmdArgs, flags: { link, untilSync, blindPeer } } }
@@ -140,7 +142,8 @@ module.exports = class Seed extends Opstream {
     await updateManifest()
 
     this._statsInterval = setInterval(() => {
-      this.push(this._stats({ drive, name, semver }))
+      const uptime = Date.now() - startTime
+      this.push(this._stats({ drive, name, semver, uptime }))
     }, statsInterval)
     this.session.teardown(() => {
       clearInterval(this._statsInterval)
