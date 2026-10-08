@@ -16,7 +16,7 @@ test('pear seed basic stage and seed', async function ({
   timeout
 }) {
   timeout(180000)
-  plan(19)
+  plan(20)
 
   const dir = Helper.fixture('versions')
 
@@ -62,6 +62,7 @@ test('pear seed basic stage and seed', async function ({
   is(stats.discoveryKey, hypercoreid.normalize(stats.discoveryKey), 'stats discoveryKey is z32')
   is(stats.contentKey, hypercoreid.normalize(stats.contentKey), 'stats contentKey is z32')
   is(stats.whoami, hypercoreid.normalize(stats.whoami), 'stats whoami is z32')
+  ok(Number.isInteger(stats.uptime) && stats.uptime >= 0, 'stats have uptime milliseconds')
   ok(Number.isInteger(stats.peers), 'stats have peers')
   ok(Number.isFinite(stats.upload.speed), 'stats have upload.speed')
   ok(Number.isInteger(stats.upload.totalBytes), 'stats have upload.totalBytes')
@@ -79,7 +80,7 @@ test('pear seed updates app metadata after staging', async function ({
   tmp
 }) {
   timeout(180000)
-  plan(5)
+  plan(6)
 
   const helper = new Helper()
   teardown(() => helper.close(), { order: Infinity })
@@ -109,6 +110,7 @@ test('pear seed updates app metadata after staging', async function ({
   await Helper.pick(secondStage, { tag: 'final' })
 
   const updatedStats = await updated.stats
+  is(updatedStats.uptime > initialStats.uptime, true, 'uptime increases')
   is(updatedStats.driveLength > initialStats.driveLength, true, 'drive length increased')
   is(updatedStats.name, 'seed-v2', 'updated app name')
   is(updatedStats.semver, '2.0.0', 'updated app version')
