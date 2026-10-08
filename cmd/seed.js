@@ -3,7 +3,14 @@ const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { outputter, ansi, byteSize, stdio, TerminalTableRenderer } = require('../lib/terminal.js')
+const {
+  outputter,
+  ansi,
+  byteSize,
+  formatTime,
+  stdio,
+  TerminalTableRenderer
+} = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
@@ -112,6 +119,16 @@ module.exports = async function seed(cmd) {
       initial,
       transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
     },
+    ...(ctrlTTY
+      ? [
+          {
+            key: 'uptime',
+            label: 'Uptime:',
+            initial,
+            transform: formatTime
+          }
+        ]
+      : []),
     {
       key: 'network',
       label: ctrlTTY ? 'Network:' : '---',
@@ -213,12 +230,13 @@ module.exports = async function seed(cmd) {
       firewalled,
       natType,
       whoami,
+      uptime,
       upload,
       download
     }) {
       const network = ctrlTTY
         ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
-        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s`
+        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s, uptime ${formatTime(uptime)}`
       const isDriveSynced = driveSynced === driveLength
       const isBlobsSynced = hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
       const driveBlocks = isDriveSynced ? driveLength : `${driveSynced}/${driveLength}`
@@ -247,6 +265,7 @@ module.exports = async function seed(cmd) {
         whoami: hypercoreid.normalize(whoami),
         network
       })
+      if (ctrlTTY) stats.set('uptime', uptime)
 
       terminalTableRenderer.render()
     },
