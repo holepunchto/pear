@@ -1,6 +1,7 @@
 'use strict'
 const context = require('../context')
 const hypercoreid = require('hypercore-id-encoding')
+const fs = require('bare-fs')
 
 const { ERR_INVALID_INPUT } = require('pear-errors')
 const {
@@ -9,6 +10,7 @@ const {
   byteSize,
   formatTime,
   stdio,
+  print,
   TerminalTableRenderer
 } = require('../lib/terminal.js')
 const { Table, DictTable, TableLayout } = require('../lib/table.js')
@@ -274,7 +276,13 @@ module.exports = async function seed(cmd) {
     }
   })
 
-  await output(
+  const onclose = () => {
+    if (ctrlTTY) fs.writeSync(1, ansi.showCursor())
+    if (!json) print(ansi.red('x-x sidecar lost'))
+    Bare.exit(1)
+  }
+  ipc.once('close', onclose)
+  const result = await output(
     { json, ctrlTTY },
     ipc.seed({
       id,
@@ -285,6 +293,8 @@ module.exports = async function seed(cmd) {
       cmdArgs
     })
   )
+  ipc.off('close', onclose)
+  if (result === null) onclose()
 
   if (ctrlTTY && (untilSync || blindPeer)) Bare.exit(0)
 }
