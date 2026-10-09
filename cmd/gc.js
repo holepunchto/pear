@@ -7,9 +7,9 @@ const { ERR_INVALID_INPUT } = require('pear-errors')
 const output = outputter('gc', {
   cores: ({ link, skipped, content }) => {
     if (skipped) {
-      return `Skipped clearing core ~ ${link}. The core is writable or does not exist in the corestore`
+      return `${ansi.yellow('Skipped')} clearing core ~ ${ansi.gray(link)}. The core is writable or does not exist in the corestore`
     } else {
-      return `Cleared core ~ ${link}${content ? `\nCleared content core ~ ${content}` : ''}`
+      return `Cleared core ~ ${ansi.green(link)}${content ? `\nCleared content core ~ ${ansi.gray(content)}` : ''}`
     }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`

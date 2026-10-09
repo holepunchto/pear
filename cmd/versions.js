@@ -34,7 +34,7 @@ const output = outputter('versions', {
       message:
         vs({ pear: info.pear, bare: info.bare, ...versions }) +
         '\n\n' +
-        v('link', info.verlink) +
+        v('link', ansi.green(info.verlink)) +
         '\n'
     }
   },
