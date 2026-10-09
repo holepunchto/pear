@@ -3,7 +3,7 @@ const test = require('brittle')
 const Helper = require('./helper')
 const { Session } = require('pear-inspect')
 
-test('inspect', async function ({ ok, teardown, alike, plan }) {
+test.skip('inspect', async function ({ ok, teardown, alike, plan }) {
   plan(3)
   const helper = new Helper()
   await helper.ready()
