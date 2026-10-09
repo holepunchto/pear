@@ -3,10 +3,11 @@ const fsp = require('bare-fs/promises')
 const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
+const { fileURLToPath } = require('url-file-url')
 const { ERR_DIR_NONEMPTY, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
-const { parse } = require('../../../lib/link')
+const plink = require('pear-link')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
@@ -31,14 +32,15 @@ module.exports = class Dump extends Opstream {
       }
     }
 
-    const parsed = parse(link)
+    const parsed = plink.parse(link)
     const isFileLink = parsed.protocol === 'file:'
-    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
+    const localPath = isFileLink ? fileURLToPath(parsed.origin) : null
+    const isFile = isFileLink && (await fsp.stat(localPath)).isDirectory() === false
 
     const key = parsed.drive.key
     checkout = checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
-    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
+    const root = isFile ? path.dirname(localPath) : localPath
     let drive
     let replicator = null
     if (isFileLink) {
@@ -78,7 +80,7 @@ module.exports = class Dump extends Opstream {
 
     const prefix = isFileLink ? '/' : parsed.pathname
     const pathname =
-      !isFileLink && parsed.pathname === '/' ? '' : isFile ? path.basename(parsed.pathname) : prefix
+      !isFileLink && parsed.pathname === '/' ? '' : isFile ? path.basename(localPath) : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {
