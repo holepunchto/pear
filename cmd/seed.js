@@ -277,8 +277,11 @@ module.exports = async function seed(cmd) {
   })
 
   const onclose = () => {
-    if (ctrlTTY) fs.writeSync(1, ansi.showCursor())
-    if (!json) print(ansi.red('x-x sidecar lost'))
+    if (ctrlTTY) fs.writeSync(1, ansi.showCursor() + '\n')
+    if (!json) {
+      const msg = ctrlTTY ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}` : 'x-x sidecar lost'
+      print(msg)
+    }
     Bare.exit(1)
   }
   ipc.once('close', onclose)
