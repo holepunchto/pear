@@ -278,7 +278,15 @@ module.exports = async function seed(cmd) {
 
   const onclose = () => {
     if (ctrlTTY) fs.writeSync(1, ansi.showCursor() + '\n')
-    if (!json) {
+    if (json) {
+      print(
+        JSON.stringify({
+          cmd: 'seed',
+          tag: 'error',
+          data: { success: false, code: 'ERR_CONNECTION', message: 'sidecar lost' }
+        })
+      )
+    } else {
       const msg = ctrlTTY ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}` : 'x-x sidecar lost'
       print(msg)
     }
