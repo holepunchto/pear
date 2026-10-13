@@ -287,7 +287,9 @@ module.exports = async function seed(cmd) {
         })
       )
     } else {
-      const msg = ctrlTTY ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}` : 'x-x sidecar disconnected'
+      const msg = ctrlTTY
+        ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}`
+        : 'x-x sidecar disconnected'
       print(msg)
     }
     Bare.exit(1)
