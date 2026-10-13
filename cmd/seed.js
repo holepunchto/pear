@@ -233,8 +233,7 @@ module.exports = async function seed(cmd) {
       uptime,
       upload,
       download,
-      connectivity,
-      connections
+      connectivity
     }) {
       const offline =
         connectivity &&
