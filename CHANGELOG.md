@@ -1,5 +1,28 @@
 # Pear Runtime Changelog
 
+## v3.6.0
+
+### Features
+
+* CLI - `pear seed` - `Uptime` field in TTY mode, `uptime` included in non-TTY network output
+* CLI - `pear info` - `writable` field
+* CLI - `pear identity` - `seed` and `blind-peer` subcommands print usage hints for `pear seed --until-sync` and `pear seed --blind-peer`
+
+### Improvements
+
+* CLI - `pear build` - structured output showing app, version, target and each built executable with its origin, `--json` support
+* CLI - `pear seed` - app name and version fields refresh when the drive length updates
+* CLI - pear links are output in green across `build`, `cores`, `dump`, `gc`, `info`, `provision`, `stage` and `versions`
+* CLI - links wrapped in single or double quotes are accepted
+* CLI - unrecognized argument error simplified to `Unexpected argument '<value>'`
+* CLI - `pear identity blind-relay` - hint uses a `<link>` placeholder
+* CLI - `pear sidecar` - restart and shutdown wait for the sidecar to release its platform lock before continuing
+
+### Fixes
+
+* CLI - stdin is correctly handled and cleaned up on ctrl+c during interactive prompts
+* CLI - `pear build` - `ERR_INVALID_APP_NAME` prints the error message instead of a stack trace
+
 ## v3.5.0
 
 ### Features
