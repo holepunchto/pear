@@ -283,11 +283,11 @@ module.exports = async function seed(cmd) {
         JSON.stringify({
           cmd: 'seed',
           tag: 'error',
-          data: { success: false, code: 'ERR_CONNECTION', message: 'sidecar lost' }
+          data: { success: false, code: 'ERR_CONNECTION', message: 'sidecar disconnected' }
         })
       )
     } else {
-      const msg = ctrlTTY ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}` : 'x-x sidecar lost'
+      const msg = ctrlTTY ? `  ${ansi.gray('x-x')} ${ansi.red('sidecar lost')}` : 'x-x sidecar disconnected'
       print(msg)
     }
     Bare.exit(1)
