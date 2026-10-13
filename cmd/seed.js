@@ -293,7 +293,7 @@ module.exports = async function seed(cmd) {
     Bare.exit(1)
   }
   ipc.once('close', onclose)
-  const result = await output(
+  const final = await output(
     { json, ctrlTTY },
     ipc.seed({
       id,
@@ -305,7 +305,7 @@ module.exports = async function seed(cmd) {
     })
   )
   ipc.off('close', onclose)
-  if (result === null) onclose()
+  if (final === null) onclose()
 
   if (ctrlTTY && (untilSync || blindPeer)) Bare.exit(0)
 }
