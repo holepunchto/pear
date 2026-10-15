@@ -51,7 +51,12 @@ module.exports = class Seed extends Opstream {
           speed: this.stats.speed.download.bytes()
         },
         natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
-        connections: totalConnections
+        connections: totalConnections,
+        dht: {
+          bootstrapped: dht.bootstrapped,
+          degraded: dht.degraded,
+          online: dht.online
+        }
       }
     }
   }
