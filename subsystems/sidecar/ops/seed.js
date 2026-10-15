@@ -52,11 +52,10 @@ module.exports = class Seed extends Opstream {
         },
         natType: dht.bootstrapped ? (dht.port ? 'Consistent' : 'Random') : undefined,
         connections: totalConnections,
-        connectivity: {
+        dht: {
           bootstrapped: dht.bootstrapped,
-          firewalled: dht.firewalled,
-          degraded: dht.degraded,
-          online: dht.online
+          online: dht.online,
+          degraded: dht.degraded
         }
       }
     }

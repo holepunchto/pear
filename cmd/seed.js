@@ -233,18 +233,16 @@ module.exports = async function seed(cmd) {
       uptime,
       upload,
       download,
-      connectivity
+      dht
     }) {
-      const offline =
-        connectivity &&
-        (!connectivity.bootstrapped || !connectivity.online || connectivity.degraded)
-      const network = ctrlTTY
-        ? offline
-          ? ansi.yellow('connecting...')
-          : `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
-        : offline
-          ? 'connecting...'
-          : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s, uptime ${formatTime(uptime)}`
+      let status = ''
+      if (dht?.bootstrapped === false) status = 'bootstrapping'
+      else if (dht?.online === false) status = 'offline'
+      else if (dht?.degraded) status = 'degraded'
+      let network = ctrlTTY
+        ? `[ Peers ${ansi.green(peers)} ]  [ ${ansi.up} ${ansi.green(byteSize(upload.totalBytes))} - ${ansi.green(`${byteSize(upload.speed)}/s`)} ]  [ ${ansi.down} ${ansi.green(byteSize(download.totalBytes))} - ${ansi.green(`${byteSize(download.speed)}/s`)} ]`
+        : `network ${peers} peers, upload ${byteSize(upload.totalBytes)} - ${byteSize(upload.speed)}/s, download ${byteSize(download.totalBytes)} - ${byteSize(download.speed)}/s, uptime ${formatTime(uptime)}`
+      if (status) network = ctrlTTY ? `${ansi.yellow(status)}  ${network}` : `${status}, ${network}`
       const isDriveSynced = driveSynced === driveLength
       const isBlobsSynced = hypercoreid.isValid(contentKey) && blobsSynced === blobsLength
       const driveBlocks = isDriveSynced ? driveLength : `${driveSynced}/${driveLength}`
