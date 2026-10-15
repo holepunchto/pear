@@ -54,8 +54,8 @@ module.exports = class Seed extends Opstream {
         connections: totalConnections,
         dht: {
           bootstrapped: dht.bootstrapped,
-          online: dht.online,
-          degraded: dht.degraded
+          degraded: dht.degraded,
+          online: dht.online
         }
       }
     }
