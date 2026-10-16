@@ -103,10 +103,15 @@ function getContentLink(info) {
 }
 
 async function getName(corestore, key) {
-  const drive = new Hyperdrive(corestore, key, { active: false })
-  await drive.ready()
-  const buffer = await drive.get('/package.json', { wait: false }).catch(() => null)
-  if (buffer === null) return null
-  const pkg = JSON.parse(buffer)
-  return pkg?.name || null
+  try {
+    const drive = new Hyperdrive(corestore, key, { active: false })
+    await drive.ready()
+    const buffer = await drive.get('/package.json', { wait: false }).catch(() => null)
+    if (buffer === null) return null
+    const pkg = JSON.parse(buffer)
+    return pkg?.name || null
+  } catch (err) {
+    LOG.trace('cores', `Failed to read name for core ${hypercoreid.encode(key)}: ${err.message}`)
+    return null
+  }
 }
