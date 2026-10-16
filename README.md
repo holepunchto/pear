@@ -92,26 +92,26 @@ signing quorum.
 
 ## Commands
 
-| Command        | Purpose                                                  |
-| --------------- | --------------------------------------------------------- |
-| `touch`         | Generate a new project link                                |
-| `stage`         | Sync local disk changes into a project link                |
-| `build`         | Build native app installers                                 |
-| `seed`          | Announce a project link on the network and serve its blocks |
-| `dump`          | Sync files from a link to a directory (or stdout)           |
-| `info`          | View project metadata, manifest, keys                       |
-| `changelog`     | View a project's changelog                                  |
-| `provision`     | Block-sync a source link to a pre-production target link    |
-| `multisig`      | Quorum-based signing coordination for production releases   |
-| `install`       | Install a Pear link origin                                  |
-| `identity`      | Show this platform's local network public keys               |
-| `data`          | Explore the platform database (DHT cache, multisig records) |
-| `cores`         | List cores in the platform corestore                         |
-| `gc`            | Clear dangling cores and other platform resources            |
-| `sidecar`       | Run, inspect or shut down the local sidecar process          |
-| `blind-relay`   | Run a relay for peers that cannot hole-punch                 |
-| `blind-peer`    | Run or request a blind peer to seed on your behalf            |
-| `versions`      | View Pear's own dependency versions                           |
+| Command       | Purpose                                                     |
+| ------------- | ----------------------------------------------------------- |
+| `touch`       | Generate a new project link                                 |
+| `stage`       | Sync local disk changes into a project link                 |
+| `build`       | Build native app installers                                 |
+| `seed`        | Announce a project link on the network and serve its blocks |
+| `dump`        | Sync files from a link to a directory (or stdout)           |
+| `info`        | View project metadata, manifest, keys                       |
+| `changelog`   | View a project's changelog                                  |
+| `provision`   | Block-sync a source link to a pre-production target link    |
+| `multisig`    | Quorum-based signing coordination for production releases   |
+| `install`     | Install a Pear link origin                                  |
+| `identity`    | Show this platform's local network public keys              |
+| `data`        | Explore the platform database (DHT cache, multisig records) |
+| `cores`       | List cores in the platform corestore                        |
+| `gc`          | Clear dangling cores and other platform resources           |
+| `sidecar`     | Run, inspect or shut down the local sidecar process         |
+| `blind-relay` | Run a relay for peers that cannot hole-punch                |
+| `blind-peer`  | Run or request a blind peer to seed on your behalf          |
+| `versions`    | View Pear's own dependency versions                         |
 
 Run `pear help <command>` for the full set of arguments and flags on any of these.
 
