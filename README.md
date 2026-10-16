@@ -84,7 +84,6 @@ Peers who want to verify what changed, or inspect a project before syncing, use:
 ```sh
 pear info <link>           # project metadata, manifest, keys
 pear changelog <link>      # a project's changelog
-pear versions              # Pear's own dependency versions
 ```
 
 Production releases that require multiple sign-offs use `pear provision` and
