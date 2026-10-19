@@ -87,6 +87,7 @@ module.exports = class Info extends Opstream {
         const byteLength = drive.core.byteLength
         const blobs = drive.blobs
           ? {
+              key: hypercoreid.encode(drive.blobs.core.key),
               length: drive.blobs.core.length,
               fork: drive.blobs.core.fork,
               byteLength: drive.blobs.core.byteLength

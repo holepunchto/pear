@@ -1,65 +1,64 @@
 'use strict'
 const context = require('../context')
-const { outputter, ansi } = require('../lib/terminal.js')
+const { outputter, ansi, isTTY, byteSize, print, status } = require('../lib/terminal.js')
 const os = require('bare-os')
 const path = require('bare-path')
 const { cmdArgs } = require('../argv')
 const { parse } = require('../lib/link')
+const gray = isTTY ? ansi.gray : (value) => value
+const clear = isTTY ? '\x1b[2K\r' : ''
 
-const keys = ({ content, discovery, project }) => `
- keys         z32
------------  ------------------------------------------------------
- project      ${project}
- discovery    ${discovery}
- content      ${content}
-`
+const keys = (data, info) => {
+  info.keys = data
+}
 
-const info = ({
-  name,
-  version,
-  productName,
-  upgrade,
-  writable,
-  length,
-  byteLength,
-  blobs,
-  fork,
-  verlink
-}) => `
- info              value
------------------  -----------------
- name              ${name}
- version           ${version}
- productName       ${productName}
- writable          ${writable}
- length            ${length}
- fork              ${fork}
- byteLength        ${byteLength}
- ${
-   blobs
-     ? `blobs.length      ${blobs?.length}
- blobs.fork        ${blobs?.fork}
- blobs.byteLength  ${blobs?.byteLength}`
-     : ''
- }
- verlink           ${verlink}
- upgrade           ${typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)}
+const info = (
+  { name, version, productName, upgrade, writable, length, byteLength, blobs, fork, verlink },
+  { keys }
+) => {
+  const blobsInfo = blobs
+    ? `  Blobs Key:     ${gray(blobs.key)}
+  Blobs Fork:    ${blobs.fork}
+  Blobs Length:  ${blobs.length}
+  Blobs Size:    ${byteSize(blobs.byteLength)}
+
 `
+    : ''
+  return `${clear}  Verlink:       ${verlink}
+  App:           ${name}${version ? `@${version}` : ''}
+  Product Name:  ${productName}
+  Writable:      ${writable}
+
+  Drive Key:     ${gray(keys.project)}
+  Drive Fork:    ${fork}
+  Drive Length:  ${length}
+  Drive Size:    ${byteSize(byteLength)}
+
+${blobsInfo}  Discovery Key: ${gray(keys.discovery)}
+  Content Key:   ${gray(keys.content)}
+
+  Upgrade:       ${gray(typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)?.replace(/\n/g, '\n  '))}`
+}
 
 const changelog = ({ changelog, full }) => `
  changelog [ ${full ? 'full' : 'latest'} ]
--------------------------------------------------------------------------------
+───────────────────────────────────────────────────────────────────────────────
  ${changelog}
 `
 
 const output = outputter('info', {
   retrieving: ({ z32, onlyShowKey }, info) => {
     info.onlyShowKey = onlyShowKey
-    return onlyShowKey ? `pear://${z32}` : `---:\n ${ansi.green(`pear://${z32}`)}\n...`
+    if (onlyShowKey) return `pear://${z32}`
+    const link = `pear://${z32}`
+    const line = `  Info:          ${isTTY ? ansi.green(link) : link}`
+    if (!isTTY) return line
+    print(line)
+    status(`  ${gray('loading...')}`)
   },
   empty: (data, info) => {
     info.empty = true
-    return '[ Empty ]'
+    return `${clear}[ Empty ]`
   },
   keys,
   info,
@@ -73,12 +72,12 @@ const output = outputter('info', {
   multisig: ({ quorum, publicKeys, only }) => {
     let out =
       (only ? '' : '\n') +
-      ' multisig\n-----------\n quorum: ' +
+      '  Multisig Quorum: ' +
       quorum +
       ' / ' +
       publicKeys.length +
-      '\n public signing keys:'
-    for (const key of publicKeys) out += '\n    ' + key
+      '\n  Public Signing Keys:'
+    for (const key of publicKeys) out += '\n    ' + gray(key)
     return out + '\n'
   },
   final(data, info) {
