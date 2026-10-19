@@ -1,8 +1,54 @@
 'use strict'
 const test = require('brittle')
 const Localdrive = require('localdrive')
+const path = require('bare-path')
+const { pathToFileURL } = require('url-file-url')
 
 const Helper = require('./helper')
+
+test('pear dump returns ERR_INVALID_INPUT for local paths and file URLs', async function ({
+  is,
+  plan,
+  teardown,
+  tmp
+}) {
+  plan(13)
+
+  const helper = new Helper()
+  teardown(() => helper.close(), { order: Infinity })
+  await helper.ready()
+  const root = await tmp()
+  const sourceDir = path.join(root, 'source with space')
+  const sourceFile = path.join(sourceDir, 'file with space.txt')
+  const source = new Localdrive(sourceDir)
+  await source.put('/file with space.txt', 'source')
+  const dir = path.join(root, 'destination')
+  const destination = new Localdrive(dir)
+  await destination.put('/existing.txt', 'unchanged')
+
+  const sources = [
+    sourceDir,
+    sourceFile,
+    path.relative('.', sourceDir),
+    path.relative('.', sourceFile),
+    pathToFileURL(sourceDir).href,
+    pathToFileURL(sourceFile).href
+  ]
+
+  for (const link of sources) {
+    const dump = helper.dump({ link, dir })
+    teardown(() => Helper.teardownStream(dump))
+    try {
+      const untilDump = await Helper.pick(dump, [{ tag: 'final' }])
+      await untilDump.final
+    } catch (e) {
+      is(e.code, 'ERR_INVALID_INPUT')
+      is(e.message, 'A valid pear link must be specified.')
+    }
+  }
+
+  is((await destination.get('/existing.txt')).toString(), 'unchanged')
+})
 
 test('pear dump', async function ({ ok, plan, teardown, tmp }) {
   plan(2)
