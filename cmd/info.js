@@ -51,7 +51,7 @@ const output = outputter('info', {
     info.onlyShowKey = onlyShowKey
     if (onlyShowKey) return `pear://${z32}`
     const link = `pear://${z32}`
-    const line = `  Info:          ${isTTY ? ansi.green(link) : link}`
+    const line = `\n  Info:          ${isTTY ? ansi.green(link) : link}`
     if (!isTTY) return line
     print(line)
     status(`  ${gray('loading...')}`)
