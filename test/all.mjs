@@ -16,6 +16,7 @@ async function runTests() {
   await test.load(import.meta.resolve('./multisig.test.js'))
   await test.load(import.meta.resolve('./info.test.js'))
   await test.load(import.meta.resolve('./data.test.js'))
+  await test.load(import.meta.resolve('./tip.test.js'))
   await test.load(import.meta.resolve('./vanity.test.js'))
   await test.load(import.meta.resolve('./shutdown.test.js'))
   await test.load(import.meta.resolve('./changelog.test.js'))
