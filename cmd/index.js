@@ -721,6 +721,99 @@ module.exports = async (ipc, argv = cmdArgs) => {
     console.log(cmd.overview())
   }
 
+  const menuGroups = [
+    {
+      title: 'Ship',
+      description: 'create a project link, put files on it, share it',
+      help:
+        'A project moves through these in order:\n\n' +
+        '- `touch` generates a new project link\n' +
+        '- `stage` syncs local disk changes onto the link\n' +
+        '- `seed` announces the link on the network and serves it to peers\n' +
+        '- `build` packages native app installers that update from the link\n\n' +
+        'Re-run `stage` whenever the project changes; keep `seed` running so peers can sync.',
+      commands: ['touch', 'stage', 'seed', 'build']
+    },
+    {
+      title: 'Install & inspect',
+      description: 'look at a link, or put it on this machine',
+      help:
+        'Check a project before trusting it, then install it.\n\n' +
+        '- `info` shows metadata, manifest and keys\n' +
+        "- `changelog` shows a project's release notes (omit the link for Pear's own)\n" +
+        '- `dump` copies files from a link to a directory or stdout\n' +
+        '- `install` installs the app from its link onto this system\n\n' +
+        'None of these change the link.',
+      commands: ['info', 'changelog', 'dump', 'install']
+    },
+    {
+      title: 'Release',
+      description: 'promote to production under a signing quorum',
+      help:
+        'Production releases need sign-off from several keys.\n\n' +
+        '1. `provision` block-syncs a source link to a pre-production link\n' +
+        '2. `multisig request` asks signers to approve a length of it\n' +
+        '3. each signer runs `multisig sign`; collect the responses\n' +
+        '4. `multisig verify` checks quorum, then `multisig commit` writes to the production link\n\n' +
+        'Signers manage their keys with `multisig keys`. The quorum and public keys live under ' +
+        '`multisig` in pear.json.',
+      commands: [
+        'provision',
+        'multisig request',
+        'multisig sign',
+        'multisig verify',
+        'multisig commit',
+        'multisig link',
+        'multisig keys get',
+        'multisig keys list',
+        'multisig keys add',
+        'multisig keys remove',
+        'multisig keys paths'
+      ]
+    },
+    {
+      title: 'Network',
+      description: 'help other peers connect and stay seeded',
+      help:
+        'Long-running services that support peers on the network.\n\n' +
+        '- `blind-relay start` relays traffic for peers that cannot hole-punch\n' +
+        '- `blind-peer start` runs a blind peer that seeds keys for trusted peers\n' +
+        '- `blind-peer request` asks a blind peer to seed a key for you\n' +
+        '- `identity` shows the public keys this machine uses for these services',
+      commands: [
+        'blind-relay start',
+        'blind-peer start',
+        'blind-peer request',
+        'identity seed',
+        'identity blind-relay',
+        'identity blind-peer',
+        'identity blind-peer-client'
+      ]
+    },
+    {
+      title: 'Platform',
+      description: 'advanced: the local sidecar, storage and versions',
+      help:
+        'Inspect and maintain the Pear install on this machine. ' +
+        'You rarely need these when shipping apps.\n\n' +
+        '- `sidecar` shuts down or inspects the local IPC server every Pear app shares\n' +
+        '- `cores` lists the cores in the platform corestore; `gc cores` frees their disk space\n' +
+        '- `data` browses the DHT node cache and multisig records\n' +
+        "- `versions` lists Pear's own dependency versions",
+      collapsed: true,
+      commands: [
+        'sidecar shutdown',
+        'sidecar inspect',
+        'cores',
+        'gc cores',
+        'data dht',
+        'data multisig',
+        'versions',
+        'help'
+      ]
+    }
+  ]
+
   function stripPearPrefix(link) {
     if (typeof link !== 'string') return ''
     return link.startsWith('pear://') ? link.slice('pear://'.length) : link
@@ -747,6 +840,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       return null
     }
     const confirmed = await runMenu(cmd, {
+      groups: menuGroups,
       onComplete: (result, { argv: menuArgv }) => {
         program = cmd.parse(menuArgv)
       }

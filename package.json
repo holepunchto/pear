@@ -34,7 +34,7 @@
     "bare-stream": "^2.13.3",
     "bare-subprocess": "^6.1.0",
     "bare-tty": "^5.1.2",
-    "bare-tui-paparam": "^0.1.0",
+    "bare-tui-paparam": "^0.2.0",
     "bare-worker": "^4.4.0",
     "blind-peer": "^3.12.6",
     "blind-peering": "^2.6.3",
