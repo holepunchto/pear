@@ -13,7 +13,19 @@ const keys = (data, info) => {
 }
 
 const info = (
-  { name, version, productName, upgrade, writable, length, byteLength, blobs, fork, verlink },
+  {
+    name,
+    version,
+    productName,
+    upgrade,
+    writable,
+    length,
+    byteLength,
+    blobs,
+    fork,
+    verlink,
+    platforms
+  },
   { keys }
 ) => {
   const blobsInfo = blobs
@@ -24,12 +36,17 @@ const info = (
 
 `
     : ''
+  const platformsInfo = platforms.length
+    ? '  Targets:\n' +
+      platforms.map(({ platform, size }) => `    ${platform} (${byteSize(size)})`).join('\n') +
+      '\n\n'
+    : ''
   return `${clear}  Verlink:       ${verlink}
   App:           ${name}${version ? `@${version}` : ''}
   Product Name:  ${productName}
   Writable:      ${writable}
 
-  Drive Key:     ${gray(keys.project)}
+${platformsInfo}  Drive Key:     ${gray(keys.project)}
   Drive Fork:    ${fork}
   Drive Length:  ${length}
   Drive Size:    ${byteSize(byteLength)}
@@ -47,10 +64,9 @@ const changelog = ({ changelog, full }) => `
 `
 
 const output = outputter('info', {
-  retrieving: ({ z32, onlyShowKey }, info) => {
+  retrieving: ({ link, onlyShowKey }, info) => {
     info.onlyShowKey = onlyShowKey
-    if (onlyShowKey) return `pear://${z32}`
-    const link = `pear://${z32}`
+    if (onlyShowKey) return link
     const line = `\n  Info:          ${isTTY ? ansi.green(link) : link}`
     if (!isTTY) return line
     print(line)

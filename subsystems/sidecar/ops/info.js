@@ -33,10 +33,9 @@ module.exports = class Info extends Opstream {
     const key = link ? parse(link).drive.key : plink.parse(UPGRADE).drive.key
     const drive = await session.add(new Hyperdrive(corestore, key))
 
-    const z32 = drive.key ? hypercoreid.encode(drive.key) : 'dev'
     if (isEnabled(showKey)) {
       const onlyShowKey = enabledFlags.size === 1
-      this.push({ tag: 'retrieving', data: { z32, onlyShowKey } })
+      this.push({ tag: 'retrieving', data: { link: plink.serialize(drive.key), onlyShowKey } })
     }
 
     await this.sidecar.ready()
@@ -95,6 +94,14 @@ module.exports = class Info extends Opstream {
           : null
         const fork = drive.core.fork
         const verlink = plink.serialize({ drive: { key, fork, length } })
+        const platforms = []
+        for await (const platform of drive.readdir('/by-arch/')) {
+          let size = 0
+          for await (const { value } of drive.list('/by-arch/' + platform + '/')) {
+            if (value?.blob) size += await drive.blobs.getByteLength(value.blob)
+          }
+          platforms.push({ platform, size })
+        }
         this.push({
           tag: 'info',
           data: {
@@ -108,7 +115,8 @@ module.exports = class Info extends Opstream {
             length,
             byteLength,
             blobs,
-            fork
+            fork,
+            platforms
           }
         })
       }
