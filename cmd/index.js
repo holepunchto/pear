@@ -472,9 +472,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const sidecar = command(
     'sidecar',
     command('shutdown', commands.sidecar, summary('Shutdown running sidecar')),
-    command('inspect', commands.sidecar, summary('Enable running sidecar inspector')).hint(
-      'Opens the sidecar for remote debugging via Chrome DevTools. The inspector key it prints must be kept secret.'
-    ),
     summary('Advanced. Run sidecar in terminal'),
     description`
       The sidecar is a local IPC server that brokers corestore access
@@ -796,14 +793,13 @@ module.exports = async (ipc, argv = cmdArgs) => {
       help:
         'Inspect and maintain the Pear install on this machine. ' +
         'You rarely need these when shipping apps.\n\n' +
-        '- `sidecar` shuts down or inspects the local IPC server every Pear app shares\n' +
+        '- `sidecar shutdown` shuts down the local IPC server every Pear app shares\n' +
         '- `cores` lists the cores in the platform corestore; `gc cores` frees their disk space\n' +
         '- `data` browses the DHT node cache and multisig records\n' +
         "- `versions` lists Pear's own dependency versions",
       collapsed: true,
       commands: [
         'sidecar shutdown',
-        'sidecar inspect',
         'cores',
         'gc cores',
         'data dht',
