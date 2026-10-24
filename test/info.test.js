@@ -86,6 +86,7 @@ test('pear info seeded link returns info', async ({ ok, is, comment, teardown, t
   is(hypercoreid.normalize(keys.content), keys.content, 'content key is z32')
   const data = await until.info
   is(data.link, link)
+  is(data.blobs.key, keys.content, 'blobs key matches content key')
   is(data.version, '1.0.0')
   is(data.productName, 'Pear Minimal')
   is(data.upgrade, 'pear://t8p9t3ec55qdm5mk5i8pyehr7zbi15ax76h8wamt63dk3j7su77y')
