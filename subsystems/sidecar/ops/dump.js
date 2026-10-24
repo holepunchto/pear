@@ -1,6 +1,5 @@
 'use strict'
 const fsp = require('bare-fs/promises')
-const path = require('bare-path')
 const LocalDrive = require('localdrive')
 const Hyperdrive = require('hyperdrive')
 const { ERR_DIR_NONEMPTY, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
@@ -18,6 +17,7 @@ module.exports = class Dump extends Opstream {
     if (list) dir = '-'
     if (!link) throw ERR_INVALID_INPUT('<link> must be specified.')
     if (!dir) throw ERR_INVALID_INPUT('<dir> must be specified.')
+    const parsed = parse(link, 'pear:// Hyperdrive link')
     await sidecar.ready()
     if (dir !== '-') {
       try {
@@ -31,54 +31,40 @@ module.exports = class Dump extends Opstream {
       }
     }
 
-    const parsed = parse(link)
-    const isFileLink = parsed.protocol === 'file:'
-    const isFile = isFileLink && (await fsp.stat(parsed.pathname)).isDirectory() === false
-
     const key = parsed.drive.key
     checkout = checkout || checkout === 0 ? Number(checkout) : parsed.drive.length
 
-    const root = isFile ? path.dirname(parsed.pathname) : parsed.pathname
-    let drive
-    let replicator = null
-    if (isFileLink) {
-      drive = new LocalDrive(root, { followSymlinks: true })
-    } else {
-      const corestore = sidecar.getCorestore()
-      await corestore.ready()
-      drive = await session.add(new Hyperdrive(corestore, key))
-      replicator = await session.add(new Replicator(drive))
-    }
+    const corestore = sidecar.getCorestore()
+    await corestore.ready()
+    let drive = await session.add(new Hyperdrive(corestore, key))
+    const replicator = await session.add(new Replicator(drive))
 
     this.push({ tag: 'dumping', data: { link, dir } })
 
-    if (sidecar.swarm && replicator) {
+    if (sidecar.swarm) {
       await replicator.join(sidecar.swarm, { server: false, client: true })
     }
 
     if (dryRun) this.push({ tag: 'dry' })
 
-    if (!isFileLink) {
-      try {
-        if (drive.core.length === 0) {
-          await drive.core.update()
-        }
-
-        const length = Number.isInteger(checkout) ? +checkout : drive.core.length
-        drive = drive.checkout?.(length) ?? drive
-        await drive.ready()
-      } catch (err) {
-        await session.close()
-        throw err
+    try {
+      if (drive.core.length === 0) {
+        await drive.core.update()
       }
+
+      const length = Number.isInteger(checkout) ? +checkout : drive.core.length
+      drive = drive.checkout?.(length) ?? drive
+      await drive.ready()
+    } catch (err) {
+      await session.close()
+      throw err
     }
 
     const src = drive
     await src.ready()
 
-    const prefix = isFileLink ? '/' : parsed.pathname
-    const pathname =
-      !isFileLink && parsed.pathname === '/' ? '' : isFile ? path.basename(parsed.pathname) : prefix
+    const prefix = parsed.pathname
+    const pathname = parsed.pathname === '/' ? '' : prefix
     const entry = pathname === '' ? null : await src.entry(pathname)
 
     if (entry === null) {
@@ -101,7 +87,7 @@ module.exports = class Dump extends Opstream {
       }
 
       for await (const entry of src.list(pathname)) {
-        const key = isFileLink ? entry.key : entry.key.slice(prefix.length)
+        const key = entry.key.slice(prefix.length)
         if (list) {
           this.push({ tag: 'file', data: { key } })
           continue
@@ -128,10 +114,8 @@ module.exports = class Dump extends Opstream {
       prefix: prefixes,
       dedup: true
     })
-    if (!isFileLink) {
-      const monitor = mirror.monitor()
-      monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
-    }
+    const monitor = mirror.monitor()
+    monitor.on('update', (stats) => this.push({ tag: 'stats', data: stats }))
 
     for await (const diff of mirror) {
       if (diff.op === 'add') {
