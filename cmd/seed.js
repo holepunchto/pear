@@ -23,8 +23,7 @@ module.exports = async function seed(cmd) {
   const untilSync = cmd.flags.untilSync
   const blindPeer = cmd.flags.blindPeer
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
-  const link = cmd.args.link
-  parse(link)
+  const link = parse(cmd.args.link)
 
   statsInterval = +statsInterval
   if (Number.isInteger(+statsInterval) === false) {
@@ -149,7 +148,7 @@ module.exports = async function seed(cmd) {
   )
   terminalTableRenderer.setTable(layout)
 
-  stats.set('link', link)
+  stats.set('link', link.origin)
 
   const output = outputter('seed', {
     announced: () => {
@@ -305,7 +304,7 @@ module.exports = async function seed(cmd) {
     { json, ctrlTTY },
     ipc.seed({
       id,
-      link,
+      link: cmd.args.link,
       untilSync,
       blindPeer,
       statsInterval,
