@@ -2,6 +2,7 @@ const fsp = require('fs/promises')
 const path = require('path')
 const os = require('os')
 const { spawn } = require('child_process')
+const { waitForExit } = require('../lib/subprocess')
 
 const { env, platform, arch } = process
 const isWindows = platform === 'win32'
@@ -11,15 +12,6 @@ const exists = (filepath) =>
     .access(filepath)
     .then(() => true)
     .catch(() => false)
-
-function waitForExit(child) {
-  return new Promise((resolve, reject) => {
-    child.on('exit', (code, signal) => {
-      resolve(signal ? 128 + signal : code)
-    })
-    child.on('error', reject)
-  })
-}
 
 const gc = []
 async function make() {

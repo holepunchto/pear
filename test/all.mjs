@@ -23,6 +23,7 @@ async function runTests() {
   await test.load(import.meta.resolve('./identity.test.js'))
   await test.load(import.meta.resolve('./blind-relay.test.js'))
   await test.load(import.meta.resolve('./blind-peer.test.js'))
+  await test.load(import.meta.resolve('./make.test.js'))
 
   test.resume()
 }

@@ -111,6 +111,7 @@ signing quorum.
 | `sidecar`     | Run or shut down the local sidecar process                  |
 | `blind-relay` | Run a relay for peers that cannot hole-punch                |
 | `blind-peer`  | Run or request a blind peer to seed on your behalf          |
+| `make`        | Build a Pear CLI app                                        |
 | `versions`    | View Pear's own dependency versions                         |
 
 Run `pear help <command>` for the full set of arguments and flags on any of these.
