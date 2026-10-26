@@ -30,7 +30,8 @@ const ops = {
   Multisig: require('./ops/multisig'),
   Cores: require('./ops/cores'),
   BlindRelay: require('./ops/blind-relay'),
-  BlindPeer: require('./ops/blind-peer')
+  BlindPeer: require('./ops/blind-peer'),
+  Make: require('./ops/make')
 }
 
 const SWARM_DELAY = 5000
@@ -197,6 +198,10 @@ class Sidecar extends ReadyResource {
 
   blindPeer(params, client) {
     return new ops.BlindPeer(params, client, this)
+  }
+
+  make(params, client) {
+    return new ops.Make(params, client, this)
   }
 
   multisig(params, client) {
