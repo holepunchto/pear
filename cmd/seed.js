@@ -24,7 +24,7 @@ module.exports = async function seed(cmd) {
   const blindPeer = cmd.flags.blindPeer
   let statsInterval = cmd.flags.statsInterval ?? (tty === false ? 3000 : 500)
   const link = cmd.args.link
-  parse(link)
+  const pearLink = parse(link)
 
   statsInterval = +statsInterval
   if (Number.isInteger(+statsInterval) === false) {
@@ -149,7 +149,7 @@ module.exports = async function seed(cmd) {
   )
   terminalTableRenderer.setTable(layout)
 
-  stats.set('link', link)
+  stats.set('link', pearLink.origin)
 
   const output = outputter('seed', {
     announced: () => {
