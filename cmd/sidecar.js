@@ -10,15 +10,6 @@ const constants = require('../constants.js')
 const { upgrade: key, version } = require('../package.json')
 module.exports = async function sidecar(cmd) {
   const ipc = context.getIPC()
-  if (cmd.command.name === 'inspect') {
-    const inspectorKey = await ipc.inspect()
-    print(`\n${ansi.bold('Sidecar inspector enabled.')}\n`)
-    print(
-      `${ansi.yellow(ansi.bold('Security Warning:'))} Do not share this inspector key unless you trust the recipient and understand the risks.`
-    )
-    print(`${ansi.bold('Inspector Key:')} ${inspectorKey.toString('hex')}\n`)
-    return
-  }
   if (!isWindows && isTTY) {
     gracedown(() => {
       stdio.out.write('\x1B[1K\x1B[G')

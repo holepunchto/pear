@@ -1,6 +1,4 @@
 'use strict'
-const bareInspector = require('bare-inspector')
-const { Inspector } = require('pear-inspect')
 const path = require('bare-path')
 const ReadyResource = require('ready-resource')
 const HyperDHT = require('hyperdht')
@@ -93,11 +91,6 @@ class Sidecar extends ReadyResource {
     })
 
     this.replicator = updater ? new Replicator(updater.drive) : null
-
-    this._inspector = new Inspector({
-      inspector: bareInspector,
-      bootstrap: this.nodes
-    })
 
     this.lazySwarmTimeout = setTimeout(() => {
       // We defer the ready incase the sidecar is immediately killed afterwards
@@ -212,14 +205,6 @@ class Sidecar extends ReadyResource {
 
   shutdown(params, client) {
     return this.#shutdown(client)
-  }
-
-  inspect(params, client) {
-    if (!this._inspector.dht) {
-      return this._inspector.enable()
-    } else {
-      return this._inspector.inspectorKey
-    }
   }
 
   async isWritable(params, client) {
@@ -403,7 +388,6 @@ class Sidecar extends ReadyResource {
   async _close() {
     if (this.decomissioned) return
     this.decomissioned = true
-    await this._inspector.disable()
     for (const client of this.clients.toSorted((a, b) => b.at - a.at)) {
       // TODO: can teardown be respected here?
       await this.#endRPCStreams(client)

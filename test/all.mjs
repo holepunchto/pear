@@ -7,7 +7,6 @@ async function runTests() {
 
   test.pause()
 
-  await test.load(import.meta.resolve('./inspect.test.js'))
   await test.load(import.meta.resolve('./touch.test.js'))
   await test.load(import.meta.resolve('./stage.test.js'))
   await test.load(import.meta.resolve('./seed.test.js'))

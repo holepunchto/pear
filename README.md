@@ -108,7 +108,7 @@ signing quorum.
 | `data`        | Explore the platform database (DHT cache, multisig records) |
 | `cores`       | List cores in the platform corestore                        |
 | `gc`          | Clear dangling cores and other platform resources           |
-| `sidecar`     | Run, inspect or shut down the local sidecar process         |
+| `sidecar`     | Run or shut down the local sidecar process                  |
 | `blind-relay` | Run a relay for peers that cannot hole-punch                |
 | `blind-peer`  | Run or request a blind peer to seed on your behalf          |
 | `versions`    | View Pear's own dependency versions                         |
