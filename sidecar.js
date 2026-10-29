@@ -63,7 +63,7 @@ async function bootSidecar() {
   const lockFd = fs.openSync(PLATFORM_LOCK, 'a+')
   if (!fsx.tryLock(lockFd)) throw new Error('Sidecar already running')
 
-  const Sidecar = require('./subsystems/sidecar/index.js')
+  const Sidecar = require('./sidecar/index.js')
   const updater = createUpdater()
   if (updater) await updater.ready()
 
