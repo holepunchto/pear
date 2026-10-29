@@ -36,15 +36,23 @@ const info = (
 
 `
     : ''
+
   const platformsInfo = platforms.length
     ? '  Targets:\n' +
       platforms.map(({ platform, size }) => `    ${platform} (${byteSize(size)})`).join('\n') +
       '\n\n'
     : ''
+
+  const productNameInfo = productName === undefined ? '' : `  Product Name:  ${productName}\n`
+
+  const upgradeInfo =
+    upgrade === undefined
+      ? ''
+      : `\n\n  Upgrade:       ${gray(typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)?.replace(/\n/g, '\n  '))}`
+
   return `${clear}  Verlink:       ${verlink}
   App:           ${name}${version ? `@${version}` : ''}
-  Product Name:  ${productName}
-  Writable:      ${writable}
+${productNameInfo}  Writable:      ${writable}
 
 ${platformsInfo}  Drive Key:     ${gray(keys.project)}
   Drive Fork:    ${fork}
@@ -52,9 +60,7 @@ ${platformsInfo}  Drive Key:     ${gray(keys.project)}
   Drive Size:    ${byteSize(byteLength)}
 
 ${blobsInfo}  Discovery Key: ${gray(keys.discovery)}
-  Content Key:   ${gray(keys.content)}
-
-  Upgrade:       ${gray(typeof upgrade === 'string' ? upgrade : JSON.stringify(upgrade, 0, 2)?.replace(/\n/g, '\n  '))}`
+  Content Key:   ${gray(keys.content)}${upgradeInfo}`
 }
 
 const changelog = ({ changelog, full }) => `
