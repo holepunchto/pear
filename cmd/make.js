@@ -5,9 +5,9 @@ const which = require('bare-which')
 const install = require('pear-install/cmd').runner
 const { localPkg } = require('../lib/package')
 const { PEAR_MAKE_LINK } = require('../constants.js')
-const { ERR_INVALID_INPUT, ERR_INVALID_PROJECT_DIR } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_INVALID_PROJECT_DIR, ERR_NOT_FOUND } = require('pear-errors')
 const context = require('../context')
-const { outputter, stdio } = require('../lib/terminal.js')
+const { outputter, stdio, confirm, ansi, isTTY } = require('../lib/terminal.js')
 
 const output = outputter('make', {
   make: ({ chunk }) => chunk,
@@ -37,6 +37,20 @@ module.exports = async function make(cmd) {
     const found = await which(pearMakeCLI, { nothrow: true })
 
     if (!found) {
+      if (json || isTTY === false) {
+        throw ERR_NOT_FOUND(
+          `The pear-make CLI was not found. Please install using: pear install ${PEAR_MAKE_LINK}`
+        )
+      }
+
+      const dialog =
+        ansi.warning + `The pear-make CLI needs to be installed. To confirm type "INSTALL"\n`
+      const ask = `Install pear-make`
+      const delim = '?'
+      const validation = (value) => value === 'INSTALL'
+      const msg = '\n' + ansi.cross + ' uppercase INSTALL to confirm\n'
+      await confirm(dialog, ask, delim, validation, msg)
+
       const installCmd = {
         flags: {
           json: cmd.json
