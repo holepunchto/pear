@@ -583,6 +583,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     summary('Build a Pear CLI app'),
     flag('--host <host>', 'Host to target').hint('Defaults to the current host'),
     flag('--path <dir>', 'Output directory').hint('Defaults to the current directory'),
+    flag('--name <name>', 'Output file name').hint('Defaults to the package.json productName, name or App'),
     flag('--no-install', 'Do not run the pear-make CLI installation').hint(
       `Requires manually installing the pear-make CLI using: pear install ${PEAR_MAKE_LINK}`
     ),
