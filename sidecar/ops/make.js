@@ -2,7 +2,7 @@
 const { ERR_OPERATION_FAILED } = require('pear-errors')
 const { spawn } = require('bare-subprocess')
 const Opstream = require('../lib/opstream')
-const { waitForExit } = require('../../../lib/subprocess')
+const { waitForExit } = require('../../lib/subprocess')
 
 module.exports = class Make extends Opstream {
   constructor(...args) {
