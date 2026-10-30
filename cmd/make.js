@@ -19,8 +19,9 @@ module.exports = async function make(cmd) {
   const json = cmd.flags.json
   const version = cmd.flags.version
   const host = cmd.flags.host
-  const noInstall = !cmd.flags.install
   const name = cmd.flags.name
+  const noInstall = !cmd.flags.install
+  const installConfirmed = cmd.flags.install && cmd.indices.flags.install !== undefined
 
   const cwd = os.cwd()
   const pkg = await localPkg(cwd)
@@ -37,20 +38,22 @@ module.exports = async function make(cmd) {
     const pearMakeCLI = os.platform === 'win32' ? 'pear-make.exe' : 'pear-make'
     const found = await which(pearMakeCLI, { nothrow: true })
 
-    if (!found) {
-      if (json || isTTY === false) {
-        throw ERR_NOT_FOUND(
-          `The pear-make CLI was not found. Please install using: pear install ${PEAR_MAKE_LINK}`
-        )
-      }
+    if (installConfirmed || !found) {
+      if (!installConfirmed) {
+        if (json || isTTY === false) {
+          throw ERR_NOT_FOUND(
+            `The pear-make CLI was not found. Please install using: pear install ${PEAR_MAKE_LINK}`
+          )
+        }
 
-      const dialog =
-        ansi.warning + `The pear-make CLI needs to be installed. To confirm type "INSTALL"\n`
-      const ask = `Install pear-make`
-      const delim = '?'
-      const validation = (value) => value === 'INSTALL'
-      const msg = '\n' + ansi.cross + ' uppercase INSTALL to confirm\n'
-      await confirm(dialog, ask, delim, validation, msg)
+        const dialog =
+          ansi.warning + `The pear-make CLI needs to be installed. To confirm type "INSTALL"\n`
+        const ask = `Install pear-make`
+        const delim = '?'
+        const validation = (value) => value === 'INSTALL'
+        const msg = '\n' + ansi.cross + ' uppercase INSTALL to confirm\n'
+        await confirm(dialog, ask, delim, validation, msg)
+      }
 
       const installCmd = {
         flags: {
