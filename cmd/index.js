@@ -589,6 +589,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--no-install', 'Do not run the pear-make CLI installation').hint(
       `Requires manually installing the pear-make CLI using: pear install ${PEAR_MAKE_LINK}`
     ),
+    flag('--version|-v', 'Show version'),
     flag('--json', 'Newline delimited JSON output'),
     commands.make
   )
