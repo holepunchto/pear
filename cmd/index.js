@@ -358,9 +358,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       Supply a link to inspect a specific project, or omit it to view
       platform information.
     `,
-    arg('[link]', 'Project to view info for').hint(
-      'Must be a pear:// link with a drive key — file: URLs and local directory paths (which dump accepts) are rejected.'
-    ),
+    arg('[link]', 'Project to view info for').hint('Must be a pear:// link with a drive key.'),
     arg('[dir=.]', 'Project directory path').hint(
       'Currently has no effect on the output — info never reads this value; it only inspects the given link, or platform info when none is given.'
     ),
@@ -386,9 +384,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const dump = command(
     'dump',
     summary('Synchronize files from a link to a directory'),
-    arg('<link>', 'Link to dump from. May be file:, pear: or dir').hint(
-      'A pear:// link, a file: URL, or a plain local directory path.'
-    ),
+    arg('<link>', 'Link to dump from').hint('A pear:// link or verlink.'),
     arg('[dir]', 'Directory path to dump to. Use - for output-only').hint(
       'Use - instead of a path to print to stdout rather than writing files.'
     ),
@@ -451,7 +447,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       Pear's own changelog.
     `,
     arg('[link]', 'Project to view changelog of').hint(
-      'Must be a pear:// link that resolves to a real drive key — a local directory path or file: URL is rejected here, unlike pear dump.'
+      'Must be a pear:// link that resolves to a real drive key.'
     ),
     flag('--max|-m <n=10>', 'Maximum number of entries to show').hint(
       'Must be a whole number. Also ignored when --full is set, which shows every matching entry regardless of this limit.'
