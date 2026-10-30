@@ -17,6 +17,7 @@ const output = outputter('make', {
 module.exports = async function make(cmd) {
   const ipc = context.getIPC()
   const json = cmd.flags.json
+  const version = cmd.flags.version
   const host = cmd.flags.host
   const noInstall = !cmd.flags.install
   const name = cmd.flags.name
@@ -64,7 +65,7 @@ module.exports = async function make(cmd) {
     }
   }
 
-  const stream = ipc.make({ entrypoint, host, pathDir, name })
+  const stream = ipc.make({ entrypoint, host, pathDir, name, version })
   await output(
     {
       json,
