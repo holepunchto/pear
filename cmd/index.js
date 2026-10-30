@@ -586,8 +586,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--name <name>', 'Output file name').hint(
       'Defaults to the package.json productName, name or App'
     ),
-    flag('--no-install', 'Do not run the pear-make CLI installation').hint(
-      `Requires manually installing the pear-make CLI using: pear install ${PEAR_MAKE_LINK}`
+    flag('--no-install', 'Skip pear-make CLI installation').hint(
+      `By default, prompts to install pear-make if missing. Use --install to install without prompting or install manually using: pear install ${PEAR_MAKE_LINK}`
     ),
     flag('--version|-v', 'Show version'),
     flag('--json', 'Newline delimited JSON output'),
