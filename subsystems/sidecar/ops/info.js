@@ -94,13 +94,13 @@ module.exports = class Info extends Opstream {
           : null
         const fork = drive.core.fork
         const verlink = plink.serialize({ drive: { key, fork, length } })
-        const platforms = []
+        const targets = []
         for await (const platform of drive.readdir('/by-arch/')) {
           let size = 0
           for await (const { value } of drive.list('/by-arch/' + platform + '/')) {
             if (value?.blob) size += await drive.blobs.getByteLength(value.blob)
           }
-          platforms.push({ platform, size })
+          targets.push({ platform, size })
         }
         this.push({
           tag: 'info',
@@ -116,7 +116,7 @@ module.exports = class Info extends Opstream {
             byteLength,
             blobs,
             fork,
-            platforms
+            targets
           }
         })
       }

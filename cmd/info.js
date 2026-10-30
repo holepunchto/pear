@@ -24,7 +24,7 @@ const info = (
     blobs,
     fork,
     verlink,
-    platforms
+    targets
   },
   { keys }
 ) => {
@@ -32,14 +32,12 @@ const info = (
     ? `  Blobs Key:     ${gray(blobs.key)}
   Blobs Fork:    ${blobs.fork}
   Blobs Length:  ${blobs.length}
-  Blobs Size:    ${byteSize(blobs.byteLength)}
-
-`
+  Blobs Size:    ${byteSize(blobs.byteLength)}\n\n`
     : ''
 
-  const platformsInfo = platforms.length
+  const targetsInfo = targets.length
     ? '  Targets:\n' +
-      platforms.map(({ platform, size }) => `    ${platform} (${byteSize(size)})`).join('\n') +
+      targets.map(({ platform, size }) => `    ${platform} (${byteSize(size)})`).join('\n') +
       '\n\n'
     : ''
 
@@ -54,7 +52,7 @@ const info = (
   App:           ${name}${version ? `@${version}` : ''}
 ${productNameInfo}  Writable:      ${writable}
 
-${platformsInfo}  Drive Key:     ${gray(keys.project)}
+${targetsInfo}  Drive Key:     ${gray(keys.project)}
   Drive Fork:    ${fork}
   Drive Length:  ${length}
   Drive Size:    ${byteSize(byteLength)}

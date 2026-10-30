@@ -21,6 +21,7 @@ test('pear info without link returns platform info', async ({ ok, is, alike, tea
   const data = await until.info
   is(data.productName, pkg.productName)
   alike(data.upgrade, pkg.upgrade)
+  ok(Array.isArray(data.targets))
 
   const final = await until.final
   ok(final, 'stream completed with final tag')
