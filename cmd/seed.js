@@ -61,7 +61,7 @@ module.exports = async function seed(cmd) {
       key: 'link',
       label: ctrlTTY ? 'Seeding:' : '... seeding',
       initial,
-      transform: (v) => (ctrlTTY ? ansi.bold(ansi.green(v)) : v)
+      transform: (v) => (ctrlTTY ? ansi.green(v) : v)
     },
     {
       key: 'verlink',
