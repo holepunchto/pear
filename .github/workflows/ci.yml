@@ -53,13 +53,5 @@ jobs:
       - name: Install Bare
         run: npm i -g bare-runtime
 
-      - name: Install pear-make on Windows
-        if: ${{ runner.os == 'Windows' }}
-        run: out/make/pear.exe install "$(bare -p "require('./constants').PEAR_MAKE_LINK")"
-
-      - name: Install pear-make on macOS and Linux
-        if: ${{ runner.os != 'Windows' }}
-        run: out/make/pear install "$(bare -p "require('./constants').PEAR_MAKE_LINK")"
-
       - name: Test
         run: npm test
