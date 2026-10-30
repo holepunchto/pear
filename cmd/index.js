@@ -6,7 +6,7 @@ const { usage, print, isTTY } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
-const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
+const { UPGRADE, PEAR_DEV_ROOT, PEAR_MAKE_LINK } = require('../constants.js')
 const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
@@ -27,7 +27,8 @@ const commands = {
   identity: require('./identity'),
   blindRelay: require('./blind-relay'),
   versions: require('./versions'),
-  blindPeer: require('./blind-peer')
+  blindPeer: require('./blind-peer'),
+  make: require('./make')
 }
 
 module.exports = async (ipc, argv = cmdArgs) => {
@@ -573,6 +574,22 @@ module.exports = async (ipc, argv = cmdArgs) => {
     }
   )
 
+  const make = command(
+    'make',
+    summary('Build a Pear CLI app'),
+    flag('--host <host>', 'Host to target').hint('Defaults to the current host'),
+    flag('--path <dir>', 'Output directory').hint('Defaults to the current directory'),
+    flag('--name <name>', 'Output file name').hint(
+      'Defaults to the package.json productName, name or App'
+    ),
+    flag('--no-install', 'Skip pear-make CLI installation').hint(
+      `By default, prompts to install pear-make if missing. Use --install to install without prompting or install manually using: pear install ${PEAR_MAKE_LINK}`
+    ),
+    flag('--version|-v', 'Show version'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.make
+  )
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -614,6 +631,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     gc,
     cores,
     blindRelay,
+    make,
     versions,
     help,
     footer(usage.footer),
@@ -724,8 +742,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
         '- `stage` syncs local disk changes onto the link\n' +
         '- `seed` announces the link on the network and serves it to peers\n' +
         '- `build` packages native app installers that update from the link\n\n' +
+        '- `make` packages CLI apps that update from the link\n\n' +
         'Re-run `stage` whenever the project changes; keep `seed` running so peers can sync.',
-      commands: ['touch', 'stage', 'seed', 'build']
+      commands: ['touch', 'stage', 'seed', 'build', 'make']
     },
     {
       title: 'Install & inspect',
