@@ -9,7 +9,7 @@ const output = outputter('gc', {
     if (skipped) {
       return `${ansi.yellow('Skipped')} clearing core ~ ${ansi.gray(link)}. The core is writable or does not exist in the corestore`
     } else {
-      return `Cleared core ~ ${ansi.green(link)}${content ? `\nCleared content core ~ ${ansi.gray(content)}` : ''}`
+      return `Cleared core  ~ ${ansi.green(link)}${content ? `\nCleared blobs ~ ${ansi.gray(content)}` : ''}`
     }
   },
   error: ({ code, message, stack }) => `GC Error (code: ${code || 'none'}) ${message} ${stack}`

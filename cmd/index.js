@@ -68,7 +68,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     )
       .multiple()
       .hint(
-        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Discovery Key, Content Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
+        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Blobs Length, Blobs Size, Blobs Key, Discovery Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
       ),
     flag('--blind-peer <key>', 'Add the drive being seeded to this blind peer key').hint(
       'The public key of a blind peer to add the drive to.'
@@ -497,7 +497,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       summary('Request a blind peer to seed'),
       arg('<key>', 'Key to be seeded'),
       flag('--peer <peer>', 'Peer key to request from'),
-      flag('--core-only', 'Request only the db core instead of also the content core'),
+      flag('--core-only', 'Request only the db core instead of also the blobs core'),
       commands.blindPeer
     ),
     flag('--json', 'Newline delimited JSON output'),
@@ -527,7 +527,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       summary('Clear corestore cores'),
       flag('--force|-f', 'Clear writable cores without confirmation'),
       arg('<link|name>', 'Clear the cores belonging to this link or app name').hint(
-        "Clears this link's core, then its content core if the first one cleared. A core you can write to, or one the local corestore has never seen, is skipped rather than treated as an error — the output says which."
+        "Clears this link's core, then its blobs core if the first one cleared. A core you can write to, or one the local corestore has never seen, is skipped rather than treated as an error — the output says which."
       ),
       commands.gc
     ).hint(

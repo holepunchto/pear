@@ -92,16 +92,16 @@ module.exports = async function seed(cmd) {
       transform: byteSize
     },
     {
+      key: 'contentKey',
+      label: ctrlTTY ? 'Blobs Key:' : '... blobs key',
+      initial,
+      transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
+    },
+    {
       key: 'discoveryKey',
       label: ctrlTTY ? 'Discovery Key:' : '... discovery key',
       initial,
       transform: (v) => (ctrlTTY ? ansi.gray(v) : v)
-    },
-    {
-      key: 'contentKey',
-      label: ctrlTTY ? 'Content Key:' : '... content key',
-      initial,
-      transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
     },
     {
       key: 'firewalled',
@@ -264,10 +264,10 @@ module.exports = async function seed(cmd) {
           isSynced: isBlobsSynced
         },
         blobsByteLength,
-        discoveryKey: hypercoreid.normalize(discoveryKey),
         contentKey: hypercoreid.isValid(contentKey)
           ? hypercoreid.normalize(contentKey)
           : contentKey,
+        discoveryKey: hypercoreid.normalize(discoveryKey),
         firewalled,
         natType,
         whoami: hypercoreid.normalize(whoami),
