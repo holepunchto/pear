@@ -57,8 +57,7 @@ ${targetsInfo}  Drive Key:     ${gray(keys.project)}
   Drive Length:  ${length}
   Drive Size:    ${byteSize(byteLength)}
 
-${blobsInfo}  Discovery Key: ${gray(keys.discovery)}
-  Content Key:   ${gray(keys.content)}${upgradeInfo}`
+${blobsInfo}  Discovery Key: ${gray(keys.discovery)}${upgradeInfo}`
 }
 
 const changelog = ({ changelog, full }) => `
