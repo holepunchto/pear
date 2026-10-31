@@ -68,7 +68,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     )
       .multiple()
       .hint(
-        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Discovery Key, Blobs Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
+        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Blobs Length, Blobs Size, Blobs Key, Discovery Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
       ),
     flag('--blind-peer <key>', 'Add the drive being seeded to this blind peer key').hint(
       'The public key of a blind peer to add the drive to.'
