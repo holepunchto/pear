@@ -23,17 +23,6 @@ module.exports = async function make(cmd) {
   const noInstall = !cmd.flags.install
   const installConfirmed = cmd.flags.install && cmd.indices.flags.install !== undefined
 
-  const cwd = os.cwd()
-  const pkg = await localPkg(cwd)
-  if (!pkg) {
-    throw ERR_INVALID_PROJECT_DIR(`package.json not found in ${cwd}.`)
-  }
-  if (!pkg.bin) {
-    throw ERR_INVALID_INPUT(`bin field not found in package.json`)
-  }
-  const entrypoint = path.resolve(cwd, pkg.bin)
-  const pathDir = path.resolve(cwd, cmd.flags.path || '.')
-
   if (!noInstall) {
     const pearMakeCLI = os.platform === 'win32' ? 'pear-make.exe' : 'pear-make'
     const found = await which(pearMakeCLI, { nothrow: true })
@@ -67,6 +56,17 @@ module.exports = async function make(cmd) {
       await install(installCmd)
     }
   }
+
+  const cwd = os.cwd()
+  const pkg = await localPkg(cwd)
+  if (!pkg) {
+    throw ERR_INVALID_PROJECT_DIR(`package.json not found in ${cwd}.`)
+  }
+  if (!pkg.bin) {
+    throw ERR_INVALID_INPUT(`bin field not found in package.json`)
+  }
+  const entrypoint = path.resolve(cwd, pkg.bin)
+  const pathDir = path.resolve(cwd, cmd.flags.path || '.')
 
   const stream = ipc.make({ entrypoint, host, pathDir, name, version })
   await output(
