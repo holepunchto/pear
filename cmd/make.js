@@ -68,7 +68,7 @@ module.exports = async function make(cmd) {
   const entrypoint = path.resolve(cwd, pkg.bin)
   const pathDir = path.resolve(cwd, cmd.flags.path || '.')
 
-  const stream = ipc.make({ entrypoint, host, pathDir, name, version })
+  const stream = ipc.make({ cwd, entrypoint, host, pathDir, name, version })
   await output(
     {
       json,
