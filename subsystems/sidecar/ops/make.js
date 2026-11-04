@@ -9,8 +9,8 @@ module.exports = class Make extends Opstream {
     super((...args) => this.#op(...args), ...args)
   }
 
-  async #op({ entrypoint, host, pathDir, name, version }) {
-    LOG.trace('make', 'starting', { entrypoint, host, pathDir, name, version })
+  async #op({ cwd, entrypoint, host, pathDir, name, version }) {
+    LOG.trace('make', 'starting', { cwd, entrypoint, host, pathDir, name, version })
     const pearMakeProcess = spawn(
       'pear-make',
       [
@@ -20,7 +20,10 @@ module.exports = class Make extends Opstream {
         ...(name ? ['--name', name] : []),
         entrypoint
       ],
-      { stdio: ['ignore', 'pipe', 'pipe'] }
+      {
+        cwd,
+        stdio: ['ignore', 'pipe', 'pipe']
+      }
     )
 
     pearMakeProcess.stdout.on('data', (chunk) => {
