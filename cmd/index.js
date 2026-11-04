@@ -577,6 +577,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
   const make = command(
     'make',
     summary('Build a Pear CLI app'),
+    arg('[entry]', 'entry point of the app').hint('Required unless --version is passed'),
     flag('--host <host>', 'Host to target').hint('Defaults to the current host'),
     flag('--path <dir>', 'Output directory').hint('Defaults to the current directory'),
     flag('--name <name>', 'Output file name').hint(

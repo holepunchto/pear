@@ -58,6 +58,13 @@ module.exports = async function make(cmd) {
   }
 
   const cwd = os.cwd()
+
+  if (version) {
+    const stream = ipc.make({ cwd, version })
+    await output({ json, log: (line) => stdio.out.write(`${line}`) }, stream)
+    return
+  }
+
   const pkg = await localPkg(cwd)
   if (!pkg) {
     throw ERR_INVALID_PROJECT_DIR(`package.json not found in ${cwd}.`)
@@ -65,10 +72,11 @@ module.exports = async function make(cmd) {
   if (!pkg.bin) {
     throw ERR_INVALID_INPUT(`bin field not found in package.json`)
   }
-  const entrypoint = path.resolve(cwd, pkg.bin)
-  const pathDir = path.resolve(cwd, cmd.flags.path || '.')
 
-  const stream = ipc.make({ cwd, entrypoint, host, pathDir, name, version })
+  const entry = cmd.args.entry && path.resolve(cwd, cmd.args.entry)
+  const pathDir = path.resolve(cwd, cmd.flags.path || '.')
+  const stream = ipc.make({ entry, cwd, host, pathDir, name, version })
+
   await output(
     {
       json,
