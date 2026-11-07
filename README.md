@@ -29,6 +29,12 @@ curl -fsSL https://install.pears.com/pear.sh | sh
 irm https://install.pears.com/pear.ps1 | iex
 ```
 
+**brew** homebrew install on macOS
+
+```
+brew install pear
+```
+
 **Docker** — run Pear inside a container with nothing installed on the host:
 
 ```sh
@@ -39,7 +45,7 @@ This drops into a shell with `pear` ready to go.
 
 Be sure to follow the instructions for setting `PATH` as output by the installer.
 
-Via Node.js's npm's `npx`:
+**npx** via Node.js's npm's `npx`:
 
 ```sh
 npx pear-install
