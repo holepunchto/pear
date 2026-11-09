@@ -99,7 +99,7 @@ module.exports = async function seed(cmd) {
     },
     {
       key: 'contentKey',
-      label: ctrlTTY ? 'Content Key:' : '... content key',
+      label: ctrlTTY ? 'Blobs Key:' : '... blobs key',
       initial,
       transform: (v) => (ctrlTTY ? (v === 'pending' ? ansi.yellow(v) : ansi.gray(v)) : v)
     },
