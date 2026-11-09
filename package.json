@@ -60,7 +60,7 @@
     "pear-changelog": "^1.0.1",
     "pear-errors": "^1.0.1",
     "pear-gracedown": "^1.0.4",
-    "pear-install": "^1.0.8",
+    "pear-install": "github:holepunchto/pear-install#support-disabling-path-modification",
     "pear-ipc": "^6.17.0",
     "pear-link": "^5.0.0",
     "pear-opstream": "^1.0.0",
