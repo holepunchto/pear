@@ -586,6 +586,10 @@ module.exports = async (ipc, argv = cmdArgs) => {
     flag('--no-install', 'Skip pear-make CLI installation').hint(
       `By default, prompts to install pear-make if missing. Use --install to install without prompting or install manually using: pear install ${PEAR_MAKE_LINK}`
     ),
+    flag(
+      '--no-modify-path',
+      'Advanced. Do not modify the PATH when installing the pear-make CLI'
+    ).hide(),
     flag('--version|-v', 'Show version'),
     flag('--json', 'Newline delimited JSON output'),
     commands.make

@@ -46,7 +46,8 @@ module.exports = async function make(cmd) {
 
       const installCmd = {
         flags: {
-          json: cmd.json
+          json,
+          path: cmd.flags.modifyPath
         },
         args: {
           link: PEAR_MAKE_LINK
