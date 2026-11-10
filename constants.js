@@ -28,7 +28,7 @@ module.exports = {
   CONNECT_TIMEOUT: 20_000,
   SPINDOWN_TIMEOUT: 60_000,
   KNOWN_NODES_LIMIT: 100,
-  PEAR_MAKE_LINK: 'pear://m897mcrjujjk9hbcs18qf8yz993wkyhguttoxu8fre1qtd9dy3uo', // TODO: Use prod link (pear://eqzdcjwne7th93fo6d1ipbnh7cgqgetf93p56uh39bj1efhb3m5o).
+  PEAR_MAKE_LINK: 'pear://m897mcrjujjk9hbcs18qf8yz993wkyhguttoxu8fre1qtd9dy3uo', // TODO: Use prod link (pear://u3d888539k964t6omfzxdmf1a9c4jx4iiprm8jyt56x91izm78sy).
   get LOCALDEV() {
     return !_standalone
   },
