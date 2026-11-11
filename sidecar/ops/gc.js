@@ -1,7 +1,7 @@
 'use strict'
 const { ERR_INVALID_GC_RESOURCE, ERR_INVALID_INPUT } = require('pear-errors')
 const Opstream = require('../lib/opstream')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 const crypto = require('hypercore-crypto')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
