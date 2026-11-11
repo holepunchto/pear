@@ -6,7 +6,7 @@ const { usage, print, isTTY } = require('../lib/terminal.js')
 const { cmdArgs } = require('../argv')
 const errors = require('pear-errors')
 const { definition } = require('../lib/cmd')
-const { UPGRADE, PEAR_DEV_ROOT } = require('../constants.js')
+const { UPGRADE, PEAR_DEV_ROOT, PEAR_MAKE_LINK } = require('../constants.js')
 const { runMenu } = require('bare-tui-paparam')
 
 const commands = {
@@ -27,7 +27,8 @@ const commands = {
   identity: require('./identity'),
   blindRelay: require('./blind-relay'),
   versions: require('./versions'),
-  blindPeer: require('./blind-peer')
+  blindPeer: require('./blind-peer'),
+  make: require('./make')
 }
 
 module.exports = async (ipc, argv = cmdArgs) => {
@@ -68,7 +69,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     )
       .multiple()
       .hint(
-        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Discovery Key, Content Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
+        "A peer's public key (z32). The live view lists Seeding, Drive Key, Drive Length, Discovery Key, Blobs Key, Firewalled, NAT Type, Whoami and Network, then an unlabelled log below — the key to use here is the one printed after each peer join or peer sync line."
       ),
     flag('--blind-peer <key>', 'Add the drive being seeded to this blind peer key').hint(
       'The public key of a blind peer to add the drive to.'
@@ -496,7 +497,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       summary('Request a blind peer to seed'),
       arg('<key>', 'Key to be seeded'),
       flag('--peer <peer>', 'Peer key to request from'),
-      flag('--core-only', 'Request only the db core instead of also the content core'),
+      flag('--core-only', 'Request only the db core instead of also the blobs core'),
       commands.blindPeer
     ),
     flag('--json', 'Newline delimited JSON output'),
@@ -526,7 +527,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       summary('Clear corestore cores'),
       flag('--force|-f', 'Clear writable cores without confirmation'),
       arg('<link|name>', 'Clear the cores belonging to this link or app name').hint(
-        "Clears this link's core, then its content core if the first one cleared. A core you can write to, or one the local corestore has never seen, is skipped rather than treated as an error — the output says which."
+        "Clears this link's core, then its blobs core if the first one cleared. A core you can write to, or one the local corestore has never seen, is skipped rather than treated as an error — the output says which."
       ),
       commands.gc
     ).hint(
@@ -572,6 +573,23 @@ module.exports = async (ipc, argv = cmdArgs) => {
     }
   )
 
+  const make = command(
+    'make',
+    summary('Build a Pear CLI app'),
+    arg('[entry]', 'entry point of the app').hint('Required unless --version is passed'),
+    flag('--host <host>', 'Host to target').hint('Defaults to the current host'),
+    flag('--path <dir>', 'Output directory').hint('Defaults to the current directory'),
+    flag('--name <name>', 'Output file name').hint(
+      'Defaults to the package.json productName, name or App'
+    ),
+    flag('--no-install', 'Skip pear-make CLI installation').hint(
+      `By default, prompts to install pear-make if missing. Use --install to install without prompting or install manually using: pear install ${PEAR_MAKE_LINK}`
+    ),
+    flag('--version|-v', 'Show version'),
+    flag('--json', 'Newline delimited JSON output'),
+    commands.make
+  )
+
   const versions = command(
     'versions',
     summary('View dependency versions'),
@@ -613,6 +631,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     gc,
     cores,
     blindRelay,
+    make,
     versions,
     help,
     footer(usage.footer),
@@ -723,8 +742,9 @@ module.exports = async (ipc, argv = cmdArgs) => {
         '- `stage` syncs local disk changes onto the link\n' +
         '- `seed` announces the link on the network and serves it to peers\n' +
         '- `build` packages native app installers that update from the link\n\n' +
+        '- `make` packages CLI apps that update from the link\n\n' +
         'Re-run `stage` whenever the project changes; keep `seed` running so peers can sync.',
-      commands: ['touch', 'stage', 'seed', 'build']
+      commands: ['touch', 'stage', 'seed', 'build', 'make']
     },
     {
       title: 'Install & inspect',
