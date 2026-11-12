@@ -5,8 +5,8 @@ const plink = require('pear-link')
 const ReadyResource = require('ready-resource')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
-const { parse } = require('../../../lib/link')
-const { localPkg, validate } = require('../../../lib/package')
+const { parse } = require('../../lib/link')
+const { localPkg, validate } = require('../../lib/package')
 
 module.exports = class Stage extends Opstream {
   constructor(...args) {

@@ -6,12 +6,12 @@ const semifies = require('semifies')
 const plink = require('pear-link')
 const Hyperdrive = require('hyperdrive')
 const { ERR_INVALID_INPUT } = require('pear-errors')
-const { UPGRADE } = require('../../../constants.js')
-const platformPkg = require('../../../package.json')
-const platformChangelog = fs.readFileSync(require.asset('../../../CHANGELOG.md', __filename))
+const { UPGRADE } = require('../../constants.js')
+const platformPkg = require('../../package.json')
+const platformChangelog = fs.readFileSync(require.asset('../../CHANGELOG.md', __filename))
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 
 module.exports = class Info extends Opstream {
   constructor(...args) {
