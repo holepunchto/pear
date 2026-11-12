@@ -8,7 +8,7 @@ const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
 const Replicator = require('../lib/replicator')
 const { createClient, requestCores } = require('../lib/blind-peer')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 
 module.exports = class Seed extends Opstream {
   constructor(...args) {

@@ -6,7 +6,7 @@ const hypercoreid = require('hypercore-id-encoding')
 const Hyperdrive = require('hyperdrive')
 const z32 = require('z32')
 const Opstream = require('../lib/opstream')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 
 module.exports = class Multisig extends Opstream {
   constructor(...args) {

@@ -1,5 +1,28 @@
 # Pear Runtime Changelog
 
+## v3.7.0
+
+### Features
+
+* CLI - `pear make` - build a Pear CLI app executable - `[entry]`, `--host <host>`, `--path <dir>`, `--name <name>`, `--no-install`, `--version|-v`, `--json`; prompts to install the `pear-make` CLI when it is missing
+* CLI - `pear --menu` - commands are grouped into `Ship`, `Install & inspect`, `Release`, `Network` and `Platform` sections, each with its own description and help
+* CLI - `pear info` - `Targets` section listing the built platforms and their sizes
+* CLI - `pear info` - `Blobs Key` field
+* CLI - `pear seed` - network status - the network field reports `joining`, `unstable` or `unreachable` while the DHT is not fully online
+
+### Improvements
+
+* CLI - `pear info` - output restyled to match the other commands - aligned labels, `Verlink` and `App` first, loading status while retrieving, and undefined fields omitted
+* CLI - `pear seed` - the link is rendered without surrounding quotes
+* CLI - `pear seed` - exits with status 1 and reports `sidecar lost` (`ERR_CONNECTION` under `--json`) when the sidecar connection is lost
+* CLI - `pear dump` - local sources removed, `<link>` now takes a `pear://` link or verlink only, `file:` URLs and local directory paths are no longer accepted
+* CLI - `pear sidecar inspect` removed
+* Internal - deps bump - `pear-install`, `pear-ipc` and `bare-tui-paparam` updated, `bare-which` added, `bare-inspector` and `pear-inspect` dropped
+
+### Fixes
+
+* CLI - `pear cores` - a core whose `package.json` cannot be read or decoded no longer fails the listing, the app name is left empty and the error is traced to `pear.log`
+
 ## v3.6.0
 
 ### Features

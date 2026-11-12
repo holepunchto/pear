@@ -8,7 +8,7 @@ const path = require('bare-path')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 
 module.exports = class Provision extends Opstream {
   constructor(...args) {
