@@ -2,7 +2,7 @@
 'use strict'
 const fs = require('bare-fs')
 const os = require('bare-os')
-const { isWindows, isLinux } = require('which-runtime')
+const { isWindows } = require('which-runtime')
 const { PLATFORM_DIR, LOG_PATH } = require('./constants.js')
 const Logger = require('./lib/logger.js')
 const { cmdArgs } = require('./argv')
