@@ -1,8 +1,10 @@
 'use strict'
 const { ERR_OPERATION_FAILED } = require('pear-errors')
+const path = require('bare-path')
 const { spawn } = require('bare-subprocess')
 const Opstream = require('../lib/opstream')
 const { waitForExit } = require('../../lib/subprocess')
+const { platform, arch } = require('which-runtime')
 
 module.exports = class Make extends Opstream {
   constructor(...args) {
@@ -11,12 +13,17 @@ module.exports = class Make extends Opstream {
 
   async #op({ entry, cwd, host, pathDir, name, version }) {
     LOG.trace('make', 'starting', { entry, cwd, host, pathDir, name, version })
+
+    const distPath = pathDir
+      ? path.join(pathDir, 'by-arch', host || platform + '-' + arch, 'app')
+      : null
+
     const pearMakeProcess = spawn(
       'pear-make',
       [
         ...(version ? ['--version'] : []),
         ...(host ? ['--host', host] : []),
-        ...(pathDir ? ['--path', pathDir] : []),
+        ...(pathDir ? ['--path', distPath] : []),
         ...(name ? ['--name', name] : []),
         ...(entry ? [entry] : [])
       ],
