@@ -14,7 +14,9 @@ module.exports = class Make extends Opstream {
   async #op({ entry, cwd, host, pathDir, name, version }) {
     LOG.trace('make', 'starting', { entry, cwd, host, pathDir, name, version })
 
-    const distPath = path.join(pathDir, 'by-arch', host || platform + '-' + arch, 'app')
+    const distPath = pathDir
+      ? path.join(pathDir, 'by-arch', host || platform + '-' + arch, 'app')
+      : null
     console.log('distPath', distPath)
 
     const pearMakeProcess = spawn(
