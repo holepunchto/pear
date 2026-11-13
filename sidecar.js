@@ -22,7 +22,12 @@ const { cmdArgs } = require('./argv')
 
 setupCrashHandlers('sidecar')
 
-os.setProcessTitle('pear-sidecar')
+try {
+  os.setProcessTitle('pear-sidecar')
+} catch {
+  // throws when running in windows sidecar daemon
+}
+
 LOG.info('sidecar', '- Sidecar Booting')
 module.exports = bootSidecar().catch((err) => {
   LOG.error('internal', 'Sidecar Boot Failed', err)
@@ -63,7 +68,7 @@ async function bootSidecar() {
   const lockFd = fs.openSync(PLATFORM_LOCK, 'a+')
   if (!fsx.tryLock(lockFd)) throw new Error('Sidecar already running')
 
-  const Sidecar = require('./subsystems/sidecar/index.js')
+  const Sidecar = require('./sidecar/index.js')
   const updater = createUpdater()
   if (updater) await updater.ready()
 

@@ -5,7 +5,7 @@ const Hyperdrive = require('hyperdrive')
 const { ERR_DIR_NONEMPTY, ERR_INVALID_INPUT, ERR_NOT_FOUND } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Replicator = require('../lib/replicator')
-const { parse } = require('../../../lib/link')
+const { parse } = require('../../lib/link')
 
 module.exports = class Dump extends Opstream {
   constructor(...args) {
