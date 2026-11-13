@@ -17,7 +17,6 @@ module.exports = class Make extends Opstream {
     const distPath = pathDir
       ? path.join(pathDir, 'by-arch', host || platform + '-' + arch, 'app')
       : null
-    console.log('distPath', distPath)
 
     const pearMakeProcess = spawn(
       'pear-make',
