@@ -386,7 +386,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
     'dump',
     summary('Synchronize files from a link to a directory'),
     arg('<link>', 'Link to dump from').hint('A pear:// link or verlink.'),
-    arg('[dir]', 'Directory path to dump to. Use - for output-only').hint(
+    arg('<dir>', 'Directory path to dump to. Use - for output-only').hint(
       'Use - instead of a path to print to stdout rather than writing files.'
     ),
     flag('--dry-run|-d', 'Preview without writing any changes').hint(
@@ -412,7 +412,6 @@ module.exports = async (ipc, argv = cmdArgs) => {
       if (cmd.flags.list) cmd.args.dir = '-'
       return true
     }),
-    validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
     commands.dump
   )
 
