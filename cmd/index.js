@@ -18,7 +18,7 @@ const commands = {
   multisig: require('./multisig'),
   info: require('./info'),
   dump: require('./dump'),
-  install: require('pear-install/cmd').runner,
+  install: require('./install'),
   data: require('./data'),
   changelog: require('./changelog'),
   sidecar: require('./sidecar'),
