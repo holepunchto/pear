@@ -23,7 +23,7 @@ module.exports = class Make extends Opstream {
       [
         ...(version ? ['--version'] : []),
         ...(host ? ['--host', host] : []),
-        ...(pathDir ? ['--path', distPath] : []),
+        ...(distPath ? ['--path', distPath] : []),
         ...(name ? ['--name', name] : []),
         ...(entry ? [entry] : [])
       ],
