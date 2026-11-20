@@ -26,10 +26,13 @@ class BlindRelayServer extends ReadyResource {
       LOG.trace('blind-relay', 'connection accepted', {
         remotePublicKey: hypercoreid.encode(socket.remotePublicKey)
       })
-
-      return this.relay.accept(socket, {
+      const session = this.relay.accept(socket, {
         id: socket.remotePublicKey
       })
+      session.on('error', (err) => {
+        LOG.trace('blind-relay', 'relayed stream error', err)
+      })
+      return session
     })
 
     await this.server.listen(this.blindRelayKeyPair)
