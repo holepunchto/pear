@@ -2,6 +2,7 @@
 const sodium = require('sodium-native')
 const { isWindows, isLinux } = require('which-runtime')
 const { fileURLToPath, pathToFileURL } = require('url-file-url')
+const fs = require('bare-fs')
 const path = require('bare-path')
 const os = require('bare-os')
 const b4a = require('b4a')
@@ -87,9 +88,19 @@ function platformUrl() {
 }
 
 function platformDir() {
+  if (_platformDir !== null) return _platformDir
   if (!_standalone) return path.join(__dirname, 'pear')
   if (_pearDevRoot) return path.join(_pearDevRoot, 'pear')
-  if (isWindows) return path.join(os.homedir(), 'AppData', 'Roaming', 'pear')
+  if (isWindows) {
+    const appData = path.join(os.homedir(), 'AppData')
+    const roaming = path.join(appData, 'Roaming', 'pear')
+    try {
+      if (fs.statSync(roaming).isDirectory()) return roaming
+    } catch (err) {
+      if (err.code !== 'ENOENT' && err.code !== 'ENOTDIR') throw err
+    }
+    return path.join(os.getEnv('LOCALAPPDATA') || path.join(appData, 'Local'), 'pear')
+  }
   if (isLinux) return path.join(os.homedir(), '.config', 'pear')
   return path.join(os.homedir(), 'Library', 'Application Support', 'pear')
 }
