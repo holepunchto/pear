@@ -22,13 +22,12 @@ module.exports = class Install extends Opstream {
 
     const drive = await session.add(new Hyperdrive(corestore, driveInfo.key))
     const replicator = await session.add(new Replicator(drive))
-    const installer = session.add(
-      new Installer({
-        ...opts,
-        corestore: sidecar.corestore,
-        swarm: sidecar.swarm
-      })
-    )
+    const installer = new Installer({
+      ...opts,
+      corestore: sidecar.corestore,
+      swarm: sidecar.swarm
+    })
+    session.teardown(() => installer.close())
 
     installer.on('installing', (data) => {
       this.push({ tag: 'installing', data })
