@@ -1,6 +1,9 @@
 'use strict'
 
+const Hyperdrive = require('hyperdrive')
+const plink = require('pear-link')
 const Installer = require('pear-install')
+const Replicator = require('../lib/replicator')
 const Opstream = require('../lib/opstream')
 
 module.exports = class Install extends Opstream {
@@ -12,12 +15,20 @@ module.exports = class Install extends Opstream {
     const { session, sidecar } = this
     await sidecar.ready()
 
-    const installer = new Installer({
-      ...opts,
-      corestore: sidecar.corestore,
-      swarm: sidecar.swarm
-    })
-    session.teardown(() => installer.close())
+    const { drive: driveInfo } = plink.parse(opts.link)
+
+    const corestore = this.sidecar.getCorestore()
+    await corestore.ready()
+
+    const drive = await session.add(new Hyperdrive(corestore, driveInfo.key))
+    const replicator = await session.add(new Replicator(drive))
+    const installer = session.add(
+      new Installer({
+        ...opts,
+        corestore: sidecar.corestore,
+        swarm: sidecar.swarm
+      })
+    )
 
     installer.on('installing', (data) => {
       this.push({ tag: 'installing', data })
@@ -34,6 +45,8 @@ module.exports = class Install extends Opstream {
     installer.on('final', (data) => {
       this.final = data
     })
+
+    await replicator.join(sidecar.swarm, { server: false, client: true })
 
     try {
       await installer.ready()
