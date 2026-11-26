@@ -2,7 +2,7 @@
 const os = require('bare-os')
 const path = require('bare-path')
 const which = require('bare-which')
-const install = require('pear-install/cmd').runner
+const install = require('./install')
 const { localPkg } = require('../lib/package')
 const { PEAR_MAKE_LINK } = require('../constants.js')
 const { ERR_INVALID_INPUT, ERR_INVALID_PROJECT_DIR, ERR_NOT_FOUND } = require('pear-errors')
@@ -46,7 +46,7 @@ module.exports = async function make(cmd) {
 
       const installCmd = {
         flags: {
-          json: cmd.json
+          json
         },
         args: {
           link: PEAR_MAKE_LINK
