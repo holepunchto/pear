@@ -31,7 +31,8 @@ const ops = {
   Cores: require('./ops/cores'),
   BlindRelay: require('./ops/blind-relay'),
   BlindPeer: require('./ops/blind-peer'),
-  Make: require('./ops/make')
+  Make: require('./ops/make'),
+  Install: require('./ops/install')
 }
 
 const SWARM_DELAY = 5000
@@ -294,6 +295,10 @@ class Sidecar extends ReadyResource {
     }
 
     return metadata
+  }
+
+  install(params, client) {
+    return new ops.Install(params, client, this)
   }
 
   async #ensureSwarm() {
