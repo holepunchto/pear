@@ -408,11 +408,7 @@ module.exports = async (ipc, argv = cmdArgs) => {
       'Pruning is on unless you set this, so a plain dump deletes anything in <dir> that is not at <link>. No effect when <dir> is - or --list is set — those modes only read and print, so nothing is ever deleted either way.'
     ),
     flag('--json', 'Newline delimited JSON output'),
-    validate((cmd) => {
-      if (cmd.flags.list) cmd.args.dir = '-'
-      return true
-    }),
-    validate('<dir> is required', (cmd) => !!cmd.args.dir), // TODO fix in paparam
+    validate('<dir> is required', (cmd) => !!cmd.flags.list || !!cmd.args.dir),
     commands.dump
   )
 

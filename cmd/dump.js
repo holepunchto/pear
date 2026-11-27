@@ -40,6 +40,7 @@ module.exports = async function dump(cmd) {
   const { dryRun, checkout, json, only, force, prune, list } = cmd.flags
   const { link } = cmd.args
   let { dir } = cmd.args
+  if (list) dir = '-' // --list only prints
   dir = dir === '-' ? '-' : isAbsolute(dir) ? dir : resolve('.', dir)
   await output(
     json,
