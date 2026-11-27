@@ -3,6 +3,12 @@ const hypercoreid = require('hypercore-id-encoding')
 const { EventEmitter } = require('bare-events')
 
 module.exports = class Replicator extends EventEmitter {
+  static openDiscovery(drive, swarm, opts) {
+    const replicator = new Replicator(drive)
+    replicator._openDiscovery(swarm, opts)
+    return replicator
+  }
+
   constructor(drive) {
     super()
     this.drive = drive
@@ -22,7 +28,7 @@ module.exports = class Replicator extends EventEmitter {
   }
 
   leave() {
-    if (!this.announcing) return Promise.resolve()
+    if (!this.discovery && !this.announcing) return Promise.resolve()
     if (this.leaving) return this.leaving
     this.leaving = (this.discovery ? this.discovery.destroy() : this.announcing)
       .catch((err) => LOG.error('internal', 'Replicator leave error', err))
@@ -63,12 +69,7 @@ module.exports = class Replicator extends EventEmitter {
 
     LOG.info('sidecar', '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
     try {
-      const discovery = swarm.join(this.drive.discoveryKey, {
-        server,
-        client,
-        limit: 16
-      })
-      this.discovery = discovery
+      const discovery = this._openDiscovery(swarm, { server, client, limit: 16 })
       await discovery.flushed()
       if (discovery.destroyed || discovery.discovery.destroyed || swarm.destroyed) return fin()
     } catch (err) {
@@ -78,6 +79,14 @@ module.exports = class Replicator extends EventEmitter {
 
     this.emit('announce')
     swarm.flush().then(fin, fin)
+  }
+
+  _openDiscovery(swarm, opts) {
+    const discovery = this.discovery
+    if (!discovery || discovery.destroyed || discovery.discovery.destroyed) {
+      this.discovery = swarm.join(this.drive.discoveryKey, opts)
+    }
+    return this.discovery
   }
 
   ready() {}

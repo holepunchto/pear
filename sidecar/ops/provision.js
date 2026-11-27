@@ -8,6 +8,7 @@ const path = require('bare-path')
 const Corestore = require('corestore')
 const Hyperdrive = require('hyperdrive')
 const Opstream = require('../lib/opstream')
+const Replicator = require('../lib/replicator')
 const { parse } = require('../../lib/link')
 
 module.exports = class Provision extends Opstream {
@@ -56,14 +57,14 @@ module.exports = class Provision extends Opstream {
       await session.add(to)
     }
 
-    if (session.closed) return
     const join = (drive, server) => {
-      const discovery = sidecar.swarm.join(drive.discoveryKey, { client: true, server })
-      session.teardown(() => discovery.destroy())
+      if (session.closed) return
+      return session.add(Replicator.openDiscovery(drive, sidecar.swarm, { client: true, server }))
     }
-    if (!dryRun) join(to, true)
-    join(from, false)
-    join(prod, false)
+    if (!dryRun) await join(to, true)
+    await join(from, false)
+    await join(prod, false)
+    if (session.closed) return
 
     if (prod.core.length === 0 && production.drive.length !== 0) {
       await new Promise((resolve) => prod.core.once('append', () => resolve()))
