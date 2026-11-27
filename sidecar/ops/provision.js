@@ -31,23 +31,19 @@ module.exports = class Provision extends Opstream {
       })
     }
 
-    const { sidecar } = this
+    const { sidecar, session } = this
     await sidecar.ready()
 
-    const prod = new Hyperdrive(sidecar.getCorestore(), production.drive.key)
-    this.session.add(prod)
-    await prod.ready()
+    const prod = await session.add(new Hyperdrive(sidecar.getCorestore(), production.drive.key))
 
-    const from = new Hyperdrive(sidecar.getCorestore(), source.drive.key)
-    this.session.add(from)
-    await from.ready()
+    const from = await session.add(new Hyperdrive(sidecar.getCorestore(), source.drive.key))
 
     let to
     if (dryRun) {
       const tmp = path.join(os.tmpdir(), 'pear-provision-' + Math.random().toString(16).slice(2))
       const store = new Corestore(tmp)
       to = new Hyperdrive(store)
-      this.session.teardown(async () => {
+      session.teardown(async () => {
         await to.close()
         await store.close()
         await fs.promises.rm(tmp, { recursive: true, force: true })
@@ -57,30 +53,18 @@ module.exports = class Provision extends Opstream {
       to = new Hyperdrive(sidecar.getCorestore({ writable: true }), target.drive.key, {
         compat: false
       })
-      this.session.add(to)
-      await to.ready()
+      await session.add(to)
     }
 
-    if (!dryRun) {
-      sidecar.swarm.join(to.discoveryKey, {
-        client: true,
-        server: true
-      })
+    if (session.closed) return
+    const join = (drive, server) => {
+      const discovery = sidecar.swarm.join(drive.discoveryKey, { client: true, server })
+      session.teardown(() => discovery.destroy())
     }
-    sidecar.swarm.join(from.discoveryKey, {
-      client: true,
-      server: false
-    })
-    sidecar.swarm.join(prod.discoveryKey, {
-      client: true,
-      server: false
-    })
+    if (!dryRun) join(to, true)
+    join(from, false)
+    join(prod, false)
 
-    this.session.teardown(() => {
-      if (!dryRun) sidecar.swarm.leave(to.discoveryKey)
-      sidecar.swarm.leave(from.discoveryKey)
-      sidecar.swarm.leave(prod.discoveryKey)
-    })
     if (prod.core.length === 0 && production.drive.length !== 0) {
       await new Promise((resolve) => prod.core.once('append', () => resolve()))
     }
