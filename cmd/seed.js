@@ -276,6 +276,9 @@ module.exports = async function seed(cmd) {
       if (ctrlTTY) stats.set('uptime', uptime)
 
       terminalTableRenderer.render()
+    },
+    error: (err) => {
+      return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   })
 

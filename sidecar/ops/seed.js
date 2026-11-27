@@ -61,7 +61,14 @@ module.exports = class Seed extends Opstream {
     }
   }
 
-  async #op({ link, cmdArgs, untilSync = [], blindPeer, statsInterval = 500 } = {}) {
+  #op(params) {
+    const stopped = Promise.withResolvers()
+    this.session.teardown(stopped.resolve)
+    this.#seed(params, stopped.reject).catch(stopped.reject)
+    return stopped.promise
+  }
+
+  async #seed({ link, cmdArgs, untilSync = [], blindPeer, statsInterval = 500 } = {}, onloss) {
     if (
       untilSync &&
       (!Array.isArray(untilSync) || untilSync.some((k) => !hypercoreid.isValid(k)))
@@ -133,39 +140,24 @@ module.exports = class Seed extends Opstream {
     if (!swarm || swarm.destroyed) throw announcementError()
 
     const replicator = new Replicator(drive)
-    const stopped = Promise.withResolvers()
-    let announced = false
-    replicator.once('announce', () => {
-      if (drive.closing || !replicator.isAnnouncing) return
-      announced = true
-      this.push({ tag: 'announced' })
-    })
-
     const monitor = setInterval(() => {
       if (swarm.destroyed || (replicator.discovery && !replicator.isAnnouncing)) {
-        stopped.reject(announcementError())
+        onloss(announcementError())
       }
     }, 500)
     session.teardown(() => {
       clearInterval(monitor)
-      stopped.resolve()
       return replicator.discovery?.destroy()
     })
 
-    replicator
-      .join(swarm, { server: true, client: true })
-      .then(() => {
-        if (drive.closing) return
-        if (!announced || !replicator.isAnnouncing) throw announcementError()
-        return this.#seed({ drive, corestore, startTime, statsInterval, untilSync, blindPeer })
-      })
-      .catch(stopped.reject)
-
-    await stopped.promise
-  }
-
-  async #seed({ drive, corestore, startTime, statsInterval, untilSync, blindPeer }) {
-    const { session } = this
+    let announced = false
+    replicator.once('announce', () => {
+      announced = true
+    })
+    await replicator.join(swarm, { server: true, client: true })
+    if (drive.closing) return
+    if (!announced || !replicator.isAnnouncing) throw announcementError()
+    this.push({ tag: 'announced' })
 
     drive.db.core.download({ start: 0, end: -1 })
 
@@ -184,6 +176,7 @@ module.exports = class Seed extends Opstream {
     if (drive.closing) return
 
     this._statsInterval = setInterval(() => {
+      if (!replicator.isAnnouncing) return
       const uptime = Date.now() - startTime
       this.push(this._stats({ drive, name, semver, uptime }))
     }, statsInterval)
@@ -212,7 +205,7 @@ module.exports = class Seed extends Opstream {
     this.push({ tag: 'key', data: hypercoreid.encode(drive.key) })
 
     if (blindPeer) {
-      const client = createClient(this.sidecar.swarm.dht, corestore, blindPeer)
+      const client = createClient(swarm.dht, corestore, blindPeer)
       session.teardown(() => client.close().catch(safetyCatch))
       await requestCores(client, [drive.db.core, blobs.core], {
         peerKey: blindPeer,
