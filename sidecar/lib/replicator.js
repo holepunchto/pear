@@ -76,12 +76,7 @@ module.exports = class Replicator extends EventEmitter {
     if (this.drive.closing) return fin()
     LOG.info('sidecar', '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
     try {
-      const discovery = swarm.join(this.drive.discoveryKey, {
-        server,
-        client,
-        limit: 16
-      })
-      this.discovery = discovery
+      const discovery = this._openDiscovery(swarm, { server, client, limit: 16 })
       await discovery.flushed()
       if (discovery.destroyed || discovery.discovery.destroyed || swarm.destroyed) return fin()
     } catch (err) {
@@ -91,6 +86,14 @@ module.exports = class Replicator extends EventEmitter {
 
     this.emit('announce')
     swarm.flush().then(fin, fin)
+  }
+
+  _openDiscovery(swarm, opts) {
+    const discovery = this.discovery
+    if (!discovery || discovery.destroyed || discovery.discovery.destroyed) {
+      this.discovery = swarm.join(this.drive.discoveryKey, opts)
+    }
+    return this.discovery
   }
 
   ready() {}
