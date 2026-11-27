@@ -13,8 +13,9 @@ module.exports = class Replicator extends EventEmitter {
 
   get isAnnouncing() {
     const session = this.discovery
+    if (!session) return false
     return (
-      !!session?.isServer &&
+      session.isServer &&
       !session.destroyed &&
       !session.discovery.destroyed &&
       !session.swarm.destroyed
