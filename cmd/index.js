@@ -55,7 +55,8 @@ module.exports = async (ipc, argv = cmdArgs) => {
     description`
       Announce a project link on the network and serve its blocks to peers.
 
-      Runs until you exit, or until every --until-sync peer has fully synced.
+      Runs until you exit or every --until-sync peer has fully synced.
+      Exits with status 1 if the swarm announcement stops unexpectedly.
     `,
     arg('<link>', 'Pear link to seed').hint(
       'Accepts a versioned verlink too, but only the key is used — seed always replicates the full/latest history, never pinned to that version.'

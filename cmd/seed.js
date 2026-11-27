@@ -276,9 +276,6 @@ module.exports = async function seed(cmd) {
       if (ctrlTTY) stats.set('uptime', uptime)
 
       terminalTableRenderer.render()
-    },
-    error: (err) => {
-      return `Seed Error (code: ${err.code || 'none'}) ${err.stack}`
     }
   })
 
@@ -301,19 +298,16 @@ module.exports = async function seed(cmd) {
     Bare.exit(1)
   }
   ipc.once('close', onclose)
-  const final = await output(
-    { json, ctrlTTY },
-    ipc.seed({
-      id,
-      link,
-      untilSync,
-      blindPeer,
-      statsInterval,
-      cmdArgs
-    })
-  )
-  ipc.off('close', onclose)
-  if (final === null) onclose()
+  try {
+    const final = await output(
+      { json, ctrlTTY },
+      ipc.seed({ id, link, untilSync, blindPeer, statsInterval, cmdArgs })
+    )
+    if (final === null) onclose()
+  } finally {
+    ipc.off('close', onclose)
+    terminalTableRenderer.close()
+  }
 
   if (ctrlTTY && (untilSync || blindPeer)) Bare.exit(0)
 }

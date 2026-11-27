@@ -3,10 +3,9 @@ const hypercoreid = require('hypercore-id-encoding')
 const speedometer = require('speedometer')
 const safetyCatch = require('safety-catch')
 const debounceify = require('debounceify')
-const { ERR_INVALID_INPUT } = require('pear-errors')
+const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
-const Replicator = require('../lib/replicator')
 const { createClient, requestCores } = require('../lib/blind-peer')
 const { parse } = require('../../lib/link')
 
@@ -87,9 +86,8 @@ module.exports = class Seed extends Opstream {
     await corestore.ready()
 
     const drive = await session.add(new Hyperdrive(corestore, key))
-    const replicator = await session.add(new Replicator(drive))
+    if (session.closed || drive.closing) return
 
-    replicator.on('announce', () => this.push({ tag: 'announced' }))
     drive.core.on('peer-add', (peer) => {
       this.push({
         tag: 'peer-add',
@@ -129,7 +127,42 @@ module.exports = class Seed extends Opstream {
 
     if (!drive.opened) throw new Error('Cannot open Hyperdrive')
 
-    await replicator.join(this.sidecar.swarm, { server: true, client: true })
+    const { swarm } = this.sidecar
+    const announcementError = () => ERR_OPERATION_FAILED(`Swarm announcement stopped for ${link}`)
+    if (!swarm || swarm.destroyed) throw announcementError()
+
+    const discovery = swarm.join(drive.discoveryKey, { server: true, client: true, limit: 16 })
+    const doneFinding = drive.core.length === 0 ? drive.findingPeers() : null
+    const stopped = Promise.withResolvers()
+    // Hyperswarm has no leave event. Its session can outlive the underlying discovery.
+    const announcementStopped = () =>
+      swarm.destroyed || discovery.destroyed || discovery.discovery.destroyed || !discovery.isServer
+    const monitor = setInterval(() => {
+      if (announcementStopped()) stopped.reject(announcementError())
+    }, 500)
+    session.teardown(() => {
+      clearInterval(monitor)
+      stopped.resolve()
+      doneFinding?.()
+      return discovery.destroy()
+    })
+
+    discovery
+      .flushed()
+      .then(() => {
+        if (drive.closing) return
+        if (announcementStopped()) throw announcementError()
+        this.push({ tag: 'announced' })
+        if (doneFinding) swarm.flush().then(doneFinding, doneFinding)
+        return this.#seed({ drive, corestore, startTime, statsInterval, untilSync, blindPeer })
+      })
+      .catch((err) => stopped.reject(announcementStopped() ? announcementError() : err))
+
+    await stopped.promise
+  }
+
+  async #seed({ drive, corestore, startTime, statsInterval, untilSync, blindPeer }) {
+    const { session } = this
 
     drive.db.core.download({ start: 0, end: -1 })
 
@@ -145,6 +178,7 @@ module.exports = class Seed extends Opstream {
     drive.core.on('append', onUpdate)
     drive.core.on('truncate', onUpdate)
     await updateManifest()
+    if (drive.closing) return
 
     this._statsInterval = setInterval(() => {
       const uptime = Date.now() - startTime
@@ -157,6 +191,7 @@ module.exports = class Seed extends Opstream {
     })
 
     const blobs = await drive.getBlobs()
+    if (drive.closing) return
     blobs.core.on('upload', (index, byteLength) => {
       LOG.trace('seed', `Uploading blob block ${index} - ${byteLength}`)
       this.stats.totals.upload.blocks += 1
@@ -194,13 +229,9 @@ module.exports = class Seed extends Opstream {
       }
 
       for (const key of untilSync.map(hypercoreid.normalize)) {
-        while (!synced(drive.db.core, key)) {
+        while (!synced(drive.db.core, key) || (blobs.core.length && !synced(blobs.core, key))) {
+          if (drive.closing) return
           await new Promise((resolve) => setTimeout(resolve, 20))
-        }
-        if (blobs.core.length) {
-          while (!synced(blobs.core, key)) {
-            await new Promise((resolve) => setTimeout(resolve, 20))
-          }
         }
 
         LOG.info(
@@ -212,9 +243,6 @@ module.exports = class Seed extends Opstream {
 
       LOG.info('seed', `--until-sync ${untilSync} completed`)
       await this.session.close()
-      return
     }
-
-    await new Promise((resolve) => this.session.teardown(resolve))
   }
 }
