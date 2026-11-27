@@ -357,7 +357,7 @@ class Sidecar extends ReadyResource {
 
   async #close() {
     clearTimeout(this.lazySwarmTimeout)
-    if (this.replicator) await this.replicator.leave(this.swarm)
+    if (this.replicator) await this.replicator.close()
     if (this.swarm) {
       if (!this.nodes) {
         const knownNodes = this.swarm.dht.toArray({ limit: KNOWN_NODES_LIMIT })
