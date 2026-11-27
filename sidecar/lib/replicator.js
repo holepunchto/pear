@@ -6,9 +6,19 @@ module.exports = class Replicator extends EventEmitter {
   constructor(drive) {
     super()
     this.drive = drive
-    this.swarm = null
+    this.discovery = null
     this.announcing = null
     this.leaving = null
+  }
+
+  get isAnnouncing() {
+    const session = this.discovery
+    return (
+      !!session?.isServer &&
+      !session.destroyed &&
+      !session.discovery.destroyed &&
+      !session.swarm.destroyed
+    )
   }
 
   join(swarm, opts) {
@@ -63,18 +73,20 @@ module.exports = class Replicator extends EventEmitter {
       done()
     }
 
+    if (this.drive.closing) return fin()
     LOG.info('sidecar', '- Swarm join dkey of: ' + hypercoreid.encode(this.drive.key))
-    const topic = swarm.join(this.drive.discoveryKey, {
-      server,
-      client,
-      limit: 16
-    })
-
     try {
-      await topic.flushed()
-    } catch {
+      const discovery = swarm.join(this.drive.discoveryKey, {
+        server,
+        client,
+        limit: 16
+      })
+      this.discovery = discovery
+      await discovery.flushed()
+      if (discovery.destroyed || discovery.discovery.destroyed || swarm.destroyed) return fin()
+    } catch (err) {
       fin()
-      return
+      throw err
     }
 
     this.emit('announce')

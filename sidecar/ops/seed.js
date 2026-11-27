@@ -6,6 +6,7 @@ const debounceify = require('debounceify')
 const { ERR_INVALID_INPUT, ERR_OPERATION_FAILED } = require('pear-errors')
 const Opstream = require('../lib/opstream')
 const Hyperdrive = require('hyperdrive')
+const Replicator = require('../lib/replicator')
 const { createClient, requestCores } = require('../lib/blind-peer')
 const { parse } = require('../../lib/link')
 
@@ -131,32 +132,34 @@ module.exports = class Seed extends Opstream {
     const announcementError = () => ERR_OPERATION_FAILED(`Swarm announcement stopped for ${link}`)
     if (!swarm || swarm.destroyed) throw announcementError()
 
-    const discovery = swarm.join(drive.discoveryKey, { server: true, client: true, limit: 16 })
-    const doneFinding = drive.core.length === 0 ? drive.findingPeers() : null
+    const replicator = new Replicator(drive)
     const stopped = Promise.withResolvers()
-    // Hyperswarm has no leave event. Its session can outlive the underlying discovery.
-    const announcementStopped = () =>
-      swarm.destroyed || discovery.destroyed || discovery.discovery.destroyed || !discovery.isServer
+    let announced = false
+    replicator.once('announce', () => {
+      if (drive.closing || !replicator.isAnnouncing) return
+      announced = true
+      this.push({ tag: 'announced' })
+    })
+
     const monitor = setInterval(() => {
-      if (announcementStopped()) stopped.reject(announcementError())
+      if (swarm.destroyed || (replicator.discovery && !replicator.isAnnouncing)) {
+        stopped.reject(announcementError())
+      }
     }, 500)
     session.teardown(() => {
       clearInterval(monitor)
       stopped.resolve()
-      doneFinding?.()
-      return discovery.destroy()
+      return replicator.discovery?.destroy()
     })
 
-    discovery
-      .flushed()
+    replicator
+      .join(swarm, { server: true, client: true })
       .then(() => {
         if (drive.closing) return
-        if (announcementStopped()) throw announcementError()
-        this.push({ tag: 'announced' })
-        if (doneFinding) swarm.flush().then(doneFinding, doneFinding)
+        if (!announced || !replicator.isAnnouncing) throw announcementError()
         return this.#seed({ drive, corestore, startTime, statsInterval, untilSync, blindPeer })
       })
-      .catch((err) => stopped.reject(announcementStopped() ? announcementError() : err))
+      .catch(stopped.reject)
 
     await stopped.promise
   }
